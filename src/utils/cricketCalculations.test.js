@@ -293,8 +293,9 @@ describe('calculateCricketPointsTable', () => {
 
 describe('OVERS_PRESETS', () => {
   it('has correct presets', () => {
-    expect(OVERS_PRESETS).toHaveLength(4);
+    expect(OVERS_PRESETS).toHaveLength(5);
     expect(OVERS_PRESETS[0]).toEqual({ label: '2 ov', value: 2 });
     expect(OVERS_PRESETS[3]).toEqual({ label: '20 ov', value: 20 });
+    expect(OVERS_PRESETS[4]).toEqual({ label: '50 ov', value: 50 });
   });
 });

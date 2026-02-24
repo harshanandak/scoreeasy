@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sprint 5 focuses on comprehensive mobile device testing to ensure the GameScore application performs flawlessly on iOS and Android devices. This guide provides detailed test scenarios, expected behaviors, and device-specific considerations.
+Sprint 5 focuses on comprehensive mobile device testing to ensure the Score Easy application performs flawlessly on iOS and Android devices. This guide provides detailed test scenarios, expected behaviors, and device-specific considerations.
 
 ---
 
@@ -555,9 +555,9 @@ Test edge cases with multiple fingers, rapid taps, and unusual input patterns.
 
 #### 10.4 Background/Foreground
 1. Start live scoring match
-2. Switch to another app (background GameScore)
+2. Switch to another app (background Score Easy)
 3. Wait 30 seconds
-4. Return to GameScore
+4. Return to Score Easy
 5. **Verify:**
    - State preserved
    - Can continue scoring

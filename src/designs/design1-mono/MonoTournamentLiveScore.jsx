@@ -15,7 +15,7 @@ export default function MonoTournamentLiveScore() {
   // Cricket: check match-level format to pick scorer (bug fix 9f)
   if (sport === 'cricket' || getSportById(sport)?.engine === 'custom-cricket') {
     const sportConfig = getSportById(sport);
-    const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+    const storageKey = sportConfig?.storageKey || 'se_cricket';
     const tournaments = loadSportTournaments(storageKey);
     const tournament = tournaments.find(t => t.id === Number(id) || t.id === id);
     const match = tournament?.matches?.find(m => m.id === matchId || m.id === Number(matchId))

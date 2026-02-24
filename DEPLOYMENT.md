@@ -1,4 +1,4 @@
-# Deployment Guide - GameScore
+# Deployment Guide - Score Easy
 
 ## Quick Deploy to Vercel
 
@@ -19,7 +19,7 @@
    - Click "Deploy"
 
 3. **Verify Deployment**
-   - Vercel will provide a URL (e.g., `gamescore.vercel.app`)
+   - Vercel will provide a URL (e.g., `scoreeasy.vercel.app`)
    - Test all features on production URL
    - Check that localStorage works (not in iframe)
 
@@ -43,7 +43,7 @@ vercel --prod
 - Set up and deploy? **Y**
 - Which scope? (Select your account)
 - Link to existing project? **N** (first time) or **Y** (subsequent)
-- Project name? **gamescore** (or your preferred name)
+- Project name? **score-easy** (or your preferred name)
 - Directory? **./** (current directory)
 - Auto-detect settings? **Y**
 
@@ -182,7 +182,7 @@ VITE_ANALYTICS_ID=your-analytics-id
 VITE_SENTRY_DSN=your-sentry-dsn
 ```
 
-**Note:** GameScore currently has no external dependencies or API keys, so this is optional.
+**Note:** Score Easy currently has no external dependencies or API keys, so this is optional.
 
 ---
 
@@ -195,7 +195,7 @@ VITE_SENTRY_DSN=your-sentry-dsn
 2. **Add domain in Vercel Dashboard:**
    - Go to Project → Settings → Domains
    - Click "Add Domain"
-   - Enter your domain (e.g., `gamescore.app`)
+   - Enter your domain (e.g., `scoreeasy.app`)
    - Follow DNS configuration instructions
 
 3. **Configure DNS:**
@@ -428,7 +428,7 @@ git checkout -b feature/new-sport
 git push origin feature/new-sport
 
 # Vercel creates preview deployment
-# URL: gamescore-git-feature-new-sport-yourname.vercel.app
+# URL: scoreeasy-git-feature-new-sport-yourname.vercel.app
 
 # Test preview deployment
 # Merge to main when ready
@@ -445,8 +445,8 @@ git push origin main
 
 After deployment, you'll have:
 
-- **Production:** `https://gamescore.vercel.app` (or custom domain)
-- **Preview:** `https://gamescore-git-branch-name.vercel.app` (for branches)
+- **Production:** `https://scoreeasy.vercel.app` (or custom domain)
+- **Preview:** `https://scoreeasy-git-branch-name.vercel.app` (for branches)
 - **Local Dev:** `http://localhost:5173`
 - **Local Preview:** `http://localhost:4173` (production build locally)
 

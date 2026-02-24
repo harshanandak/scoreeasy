@@ -1,15 +1,14 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
 import MonoSportHome from './MonoSportHome';
 import MonoSetup from './MonoSetup';
 import MonoLiveGame from './MonoLiveGame';
 import MonoHistory from './MonoHistory';
 import MonoTournamentList from './MonoTournamentList';
-import MonoTournamentSetup from './MonoTournamentSetup';
-import MonoQuickMatch from './MonoQuickMatch';
 import MonoTournamentLiveScore from './MonoTournamentLiveScore';
 import { getSportById } from '../../models/sportRegistry';
+import { useAuth } from '../../hooks/useAuth';
 import './mono.css';
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
@@ -17,16 +16,39 @@ const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
 const GenericSetsTournament = lazy(() => import('./GenericSetsTournament'));
 const GenericGoalsTournament = lazy(() => import('./GenericGoalsTournament'));
 const MonoStatistics = lazy(() => import('./MonoStatistics'));
+const MonoTournamentSetup = lazy(() => import('./MonoTournamentSetup'));
+const MonoQuickMatch = lazy(() => import('./MonoQuickMatch'));
 const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiveScore'));
 
 // Lazy-loaded showcase components (rarely visited)
 const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
 
+// Lazy-loaded auth pages (not needed for guests)
+const MonoLogin = lazy(() => import('./MonoLogin'));
+const MonoSignUp = lazy(() => import('./MonoSignUp'));
+const SSOCallback = lazy(() => import('./SSOCallback'));
+const MonoOnboarding = lazy(() => import('./MonoOnboarding'));
+const MonoProfile = lazy(() => import('./MonoProfile'));
+const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
+
 function LazyFallback() {
   return (
     <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading...</div>
   );
+}
+
+// Redirects authenticated users who haven't completed onboarding
+const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback'];
+function OnboardingGuard({ children }) {
+  const { needsOnboarding, isLoading } = useAuth();
+  const location = useLocation();
+  if (isLoading) return <LazyFallback />;
+  const bypassed = GUARD_BYPASS_PREFIXES.some((p) => location.pathname.startsWith(p));
+  if (needsOnboarding && !bypassed) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  return children;
 }
 
 // Dispatcher component that routes to the correct tournament component based on engine
@@ -103,33 +125,46 @@ export default function Design1Mono() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
-          <Routes>
-            {/* Landing page */}
-            <Route path="" element={<MonoLanding />} />
+          <OnboardingGuard>
+            <Routes>
+              {/* Landing page */}
+              <Route path="" element={<MonoLanding />} />
 
-            {/* Sport picker (secondary) */}
-            <Route path="play" element={<MonoSportHome />} />
+              {/* Auth pages — wildcard paths for Clerk's internal sub-routes */}
+              <Route path="login/*" element={<MonoLogin />} />
+              <Route path="signup/*" element={<MonoSignUp />} />
+              <Route path="sso-callback" element={<SSOCallback />} />
+              <Route path="onboarding" element={<MonoOnboarding />} />
 
-            {/* Generic sport routes (works for all 14 sports) */}
-            <Route path=":sport/tournament" element={<MonoTournamentList />} />
-            <Route path=":sport/tournament/new" element={<MonoTournamentSetup />} />
-            <Route path=":sport/tournament/:id" element={<TournamentDispatcher />} />
-            <Route path=":sport/tournament/:id/match/:matchId/score" element={<MonoTournamentLiveScore />} />
-            <Route path=":sport/quick" element={<MonoQuickMatch />} />
-            <Route path=":sport/quick/test/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} />
+              {/* User pages */}
+              <Route path="profile" element={<MonoProfile />} />
+              <Route path="profile/:username" element={<MonoProfile />} />
+              <Route path="users/search" element={<MonoUserSearch />} />
 
-            {/* Statistics */}
-            <Route path="statistics" element={<MonoStatistics />} />
+              {/* Sport picker (secondary) */}
+              <Route path="play" element={<MonoSportHome />} />
 
-            {/* Design showcase */}
-            <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
-            <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
+              {/* Generic sport routes (works for all 14 sports) */}
+              <Route path=":sport/tournament" element={<MonoTournamentList />} />
+              <Route path=":sport/tournament/new" element={<MonoTournamentSetup />} />
+              <Route path=":sport/tournament/:id" element={<TournamentDispatcher />} />
+              <Route path=":sport/tournament/:id/match/:matchId/score" element={<MonoTournamentLiveScore />} />
+              <Route path=":sport/quick" element={<MonoQuickMatch />} />
+              <Route path=":sport/quick/test/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} />
 
-            {/* Generic game routes (existing) */}
-            <Route path="setup" element={<MonoSetup />} />
-            <Route path="game/:id" element={<MonoLiveGame />} />
-            <Route path="history" element={<MonoHistory />} />
-          </Routes>
+              {/* Statistics */}
+              <Route path="statistics" element={<MonoStatistics />} />
+
+              {/* Design showcase */}
+              <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
+              <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
+
+              {/* Generic game routes (existing) */}
+              <Route path="setup" element={<MonoSetup />} />
+              <Route path="game/:id" element={<MonoLiveGame />} />
+              <Route path="history" element={<MonoHistory />} />
+            </Routes>
+          </OnboardingGuard>
         </Suspense>
       </main>
     </div>

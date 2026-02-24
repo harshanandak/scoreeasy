@@ -1,10 +1,35 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
 
+// One-time migration from old 'gamescore_' prefix to 'se_'
+function migrateStoragePrefix() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem('se_migrated')) return;
+    const keysToMigrate = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('gamescore_')) {
+        keysToMigrate.push(key);
+      }
+    }
+    for (const key of keysToMigrate) {
+      const newKey = key.replace('gamescore_', 'se_');
+      if (!localStorage.getItem(newKey)) {
+        localStorage.setItem(newKey, localStorage.getItem(key));
+      }
+    }
+    localStorage.setItem('se_migrated', '1');
+  } catch {
+    // Silently fail in environments without localStorage
+  }
+}
+migrateStoragePrefix();
+
 const STORAGE_KEYS = {
-  TOURNAMENTS: 'gamescore_tournaments',
-  STATISTICS: 'gamescore_statistics',
-  QUICK_MATCHES: 'gamescore_quickmatches',
+  TOURNAMENTS: 'se_tournaments',
+  STATISTICS: 'se_statistics',
+  QUICK_MATCHES: 'se_quickmatches',
 };
 
 // --- Safari Private Mode Detection & Memory Fallback ---
@@ -61,10 +86,10 @@ function safeSave(key, data) {
       error?.code === 22 ||
       error?.code === 1014 // Firefox
     ) {
-      console.warn(`[GameScore] Storage quota exceeded when saving "${key}".`);
+      console.warn(`[ScoreEasy] Storage quota exceeded when saving "${key}".`);
       return { success: false, error: 'QuotaExceededError' };
     }
-    console.warn(`[GameScore] Storage save failed for "${key}":`, error);
+    console.warn(`[ScoreEasy] Storage save failed for "${key}":`, error);
     return { success: false, error: error?.message || 'Unknown error' };
   }
 }
@@ -108,7 +133,7 @@ function isStorageNearFull(threshold = 0.8) {
 export const saveData = (key, data) => {
   const result = safeSave(key, data);
   if (!result.success) {
-    console.warn(`[GameScore] Failed to save "${key}": ${result.error}`);
+    console.warn(`[ScoreEasy] Failed to save "${key}": ${result.error}`);
     return false;
   }
   return true;

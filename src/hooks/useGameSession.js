@@ -71,7 +71,7 @@ export function useGameSession(sessionId = null) {
     });
   }, []);
 
-  const completeGame = useCallback((winnerId = null) => {
+  const completeGame = useCallback((winnerId = null, onComplete = null) => {
     setSession(prev => {
       if (!prev) return prev;
       const completed = {
@@ -82,6 +82,7 @@ export function useGameSession(sessionId = null) {
       };
       const record = createHistoryRecord(completed);
       saveHistory(record);
+      if (onComplete) onComplete(completed, record);
       return completed;
     });
   }, []);

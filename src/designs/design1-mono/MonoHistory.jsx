@@ -4,7 +4,7 @@ import { useGameHistory } from '../../hooks/useGameHistory';
 import { loadData, saveData } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 
-const QM_KEY = 'gamescore_quickmatches';
+const QM_KEY = 'se_quickmatches';
 
 export default function MonoHistory() {
   const navigate = useNavigate();

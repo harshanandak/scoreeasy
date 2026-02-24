@@ -195,15 +195,15 @@ describe('isPrivateMode', () => {
 
 describe('STORAGE_KEYS', () => {
   it('has all expected keys', () => {
-    expect(STORAGE_KEYS.TOURNAMENTS).toBe('gamescore_tournaments');
-    expect(STORAGE_KEYS.STATISTICS).toBe('gamescore_statistics');
+    expect(STORAGE_KEYS.TOURNAMENTS).toBe('se_tournaments');
+    expect(STORAGE_KEYS.STATISTICS).toBe('se_statistics');
   });
 });
 
 // ─── Generic sport storage ─────────────────────────────────────────────────────
 
 describe('Generic sport storage (saveSportTournament / loadSportTournaments / deleteSportTournament)', () => {
-  const key = 'gamescore_test_sport';
+  const key = 'se_test_sport';
   const t1 = { id: 's1', name: 'Tournament Alpha' };
   const t2 = { id: 's2', name: 'Tournament Beta' };
 
@@ -242,12 +242,12 @@ describe('Generic sport storage (saveSportTournament / loadSportTournaments / de
   });
 
   it('different sport keys are independent', () => {
-    saveSportTournament('gamescore_sport_a', t1);
-    saveSportTournament('gamescore_sport_b', t2);
-    expect(loadSportTournaments('gamescore_sport_a')).toHaveLength(1);
-    expect(loadSportTournaments('gamescore_sport_b')).toHaveLength(1);
-    expect(loadSportTournaments('gamescore_sport_a')[0].id).toBe('s1');
-    expect(loadSportTournaments('gamescore_sport_b')[0].id).toBe('s2');
+    saveSportTournament('se_sport_a', t1);
+    saveSportTournament('se_sport_b', t2);
+    expect(loadSportTournaments('se_sport_a')).toHaveLength(1);
+    expect(loadSportTournaments('se_sport_b')).toHaveLength(1);
+    expect(loadSportTournaments('se_sport_a')[0].id).toBe('s1');
+    expect(loadSportTournaments('se_sport_b')[0].id).toBe('s2');
   });
 });
 

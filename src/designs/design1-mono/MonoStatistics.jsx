@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData, saveData } from '../../utils/storage';
 import { getSportsList } from '../../models/sportRegistry';
 
-const QM_KEY = 'gamescore_quickmatches';
+const QM_KEY = 'se_quickmatches';
 
 export default function MonoStatistics() {
   const navigate = useNavigate();

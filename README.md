@@ -1,4 +1,4 @@
-# GameScore - Universal Sports Tracker
+# Score Easy - Universal Sports Tracker
 
 A React-based universal sports tournament management and live scoring application supporting **14 different sports** with authentic scoring rules, tap-to-score interfaces, and comprehensive tournament management.
 
@@ -167,7 +167,7 @@ Volleyball/
 
 ## 🎨 Design System: Mono
 
-GameScore uses the **Mono** design system - a clean, light, professional Swiss-inspired design.
+Score Easy uses the **Mono** design system - a clean, light, professional Swiss-inspired design.
 
 ### Color Palette
 | Role | Value | Usage |
@@ -380,7 +380,7 @@ See [PERFORMANCE.md](PERFORMANCE.md) for detailed performance analysis.
 
 ## ♿ Accessibility
 
-GameScore is **WCAG 2.1 Level AA compliant**:
+Score Easy is **WCAG 2.1 Level AA compliant**:
 
 - ✅ **Keyboard Navigation**: All features accessible via keyboard
 - ✅ **Screen Readers**: Full ARIA labels and live regions
@@ -457,7 +457,7 @@ MIT License - See LICENSE file for details
 
 - **Issues**: [GitHub Issues](your-repo-url/issues)
 - **Documentation**: See `/docs` folder
-- **Email**: support@gamescore.app (if applicable)
+- **Email**: support@scoreeasy.app (if applicable)
 
 ---
 
@@ -511,6 +511,6 @@ MIT License - See LICENSE file for details
 
 ---
 
-**Built with ❤️ by the GameScore Team**
+**Built with ❤️ by the Score Easy Team**
 
 🚀 **[Deploy to Vercel](DEPLOYMENT.md)** | 📖 **[View Docs](/docs)** | 🐛 **[Report Bug](issues)**

@@ -8,13 +8,23 @@
  * @module
  */
 
+import type * as lib_functions from "../lib/functions.js";
+import type * as matches from "../matches.js";
+import type * as teams from "../teams.js";
+import type * as users from "../users.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  "lib/functions": typeof lib_functions;
+  matches: typeof matches;
+  teams: typeof teams;
+  users: typeof users;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.

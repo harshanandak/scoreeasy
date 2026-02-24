@@ -9,7 +9,7 @@ export const SPORT_REGISTRY = {
     icon: '🏐',
     engine: 'sets',
     desc: 'Sets, rally scoring, deuce',
-    storageKey: 'gamescore_volleyball',
+    storageKey: 'se_volleyball',
     config: {
       pointsPerSet: 25,
       deciderPoints: 15,
@@ -37,7 +37,7 @@ export const SPORT_REGISTRY = {
     icon: '🏸',
     engine: 'sets',
     desc: 'Rally points, best of 3',
-    storageKey: 'gamescore_badminton',
+    storageKey: 'se_badminton',
     config: {
       pointsPerSet: 21,
       deciderPoints: 21,
@@ -65,7 +65,7 @@ export const SPORT_REGISTRY = {
     icon: '🏓',
     engine: 'sets',
     desc: 'Best of 5/7, 11 points',
-    storageKey: 'gamescore_tabletennis',
+    storageKey: 'se_tabletennis',
     config: {
       pointsPerSet: 11,
       deciderPoints: 11,
@@ -93,7 +93,7 @@ export const SPORT_REGISTRY = {
     icon: '🎾',
     engine: 'sets',
     desc: 'Sets, games, tiebreaks',
-    storageKey: 'gamescore_tennis',
+    storageKey: 'se_tennis',
     config: {
       pointsPerSet: 6, // Games to win a set
       deciderPoints: 6,
@@ -124,7 +124,7 @@ export const SPORT_REGISTRY = {
     icon: '🏓',
     engine: 'sets',
     desc: 'Rally scoring, fastest growing',
-    storageKey: 'gamescore_pickleball',
+    storageKey: 'se_pickleball',
     config: {
       pointsPerSet: 11,
       deciderPoints: 11,
@@ -151,7 +151,7 @@ export const SPORT_REGISTRY = {
     icon: '🎾',
     engine: 'sets',
     desc: 'PAR scoring, best of 3/5',
-    storageKey: 'gamescore_squash',
+    storageKey: 'se_squash',
     config: {
       pointsPerSet: 11,
       deciderPoints: 11,
@@ -179,7 +179,7 @@ export const SPORT_REGISTRY = {
     icon: '⚽',
     engine: 'goals',
     desc: 'Goals, draws, goal difference',
-    storageKey: 'gamescore_football',
+    storageKey: 'se_football',
     config: {
       scoringUnit: 'goal',
       pointIncrement: 1,
@@ -211,7 +211,7 @@ export const SPORT_REGISTRY = {
     icon: '🏀',
     engine: 'goals',
     desc: 'Points, no draws',
-    storageKey: 'gamescore_basketball',
+    storageKey: 'se_basketball',
     config: {
       scoringUnit: 'point',
       pointIncrement: 1,
@@ -247,7 +247,7 @@ export const SPORT_REGISTRY = {
     icon: '🏑',
     engine: 'goals',
     desc: 'Goals, GD standings',
-    storageKey: 'gamescore_hockey',
+    storageKey: 'se_hockey',
     config: {
       scoringUnit: 'goal',
       pointIncrement: 1,
@@ -279,7 +279,7 @@ export const SPORT_REGISTRY = {
     icon: '🤾',
     engine: 'goals',
     desc: 'Fast-paced goals',
-    storageKey: 'gamescore_handball',
+    storageKey: 'se_handball',
     config: {
       scoringUnit: 'goal',
       pointIncrement: 1,
@@ -311,7 +311,7 @@ export const SPORT_REGISTRY = {
     icon: '⚽',
     engine: 'goals',
     desc: 'Indoor football, 5v5',
-    storageKey: 'gamescore_futsal',
+    storageKey: 'se_futsal',
     config: {
       scoringUnit: 'goal',
       pointIncrement: 1,
@@ -343,7 +343,7 @@ export const SPORT_REGISTRY = {
     icon: '🤼',
     engine: 'goals',
     desc: 'Raids, tackles, all-out',
-    storageKey: 'gamescore_kabaddi',
+    storageKey: 'se_kabaddi',
     config: {
       scoringUnit: 'point',
       pointIncrement: 1,
@@ -379,7 +379,7 @@ export const SPORT_REGISTRY = {
     icon: '🏉',
     engine: 'goals',
     desc: 'Try, conversion, penalty, drop',
-    storageKey: 'gamescore_rugby',
+    storageKey: 'se_rugby',
     config: {
       scoringUnit: 'point',
       pointIncrement: 1,
@@ -418,7 +418,7 @@ export const SPORT_REGISTRY = {
     icon: '🏏',
     engine: 'custom-cricket',
     desc: 'Overs, wickets, NRR',
-    storageKey: 'gamescore_cricket',
+    storageKey: 'se_cricket',
     config: {
       scoringUnit: 'run',
       pointIncrement: 1,

@@ -156,7 +156,7 @@ export default function MonoCricketTournament() {
   const navigate = useNavigate();
   const { sport, id } = useParams();
   const sportConfig = getSportById(sport || 'cricket');
-  const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+  const storageKey = sportConfig?.storageKey || 'se_cricket';
   const [tournament, setTournament] = useState(null);
   const [tab, setTab] = useState('matches');
   const [visible, setVisible] = useState(false);

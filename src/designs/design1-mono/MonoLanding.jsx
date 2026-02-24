@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loadSportTournaments, loadData, saveData } from '../../utils/storage';
 import { getSportsList, getSportById } from '../../models/sportRegistry';
+import { useAuth } from '../../hooks/useAuth';
+import { SignedIn, SignedOut } from '../../components/AuthButtons';
 
-const QM_KEY = 'gamescore_quickmatches';
+const QM_KEY = 'se_quickmatches';
 
 export default function MonoLanding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [stats, setStats] = useState({ tournaments: 0, matches: 0, teams: 0 });
   const [activeTournaments, setActiveTournaments] = useState([]);
@@ -65,15 +68,19 @@ export default function MonoLanding() {
     setActiveTournaments(active);
     setRecentMatches(qm.slice(0, 5));
 
-    // Smart sort: most played first, then alphabetical
+    // Smart sort: user favorites first, then most played, then alphabetical
+    const favoriteIds = user?.favoriteGames || [];
     const sorted = [...allSports].sort((a, b) => {
+      const isFavA = favoriteIds.includes(a.id) ? 1 : 0;
+      const isFavB = favoriteIds.includes(b.id) ? 1 : 0;
+      if (isFavB !== isFavA) return isFavB - isFavA;
       const countA = sportPlayCounts[a.id] || 0;
       const countB = sportPlayCounts[b.id] || 0;
       if (countB !== countA) return countB - countA;
       return a.name.localeCompare(b.name);
     });
     setQuickStartSports(sorted.slice(0, 6));
-  }, []);
+  }, [user?.favoriteGames]);
 
   const hasData = stats.tournaments > 0 || stats.matches > 0;
 
@@ -108,9 +115,8 @@ export default function MonoLanding() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-base font-semibold tracking-tight" style={{ color: '#111' }}>
-              GameScore
+              Score Easy
             </span>
-            <span className="text-xs font-mono" style={{ color: '#bbb' }}>card</span>
           </div>
           <div className="flex items-center gap-4">
             {hasData && (
@@ -129,6 +135,33 @@ export default function MonoLanding() {
             >
               History
             </button>
+            <SignedIn>
+              <Link
+                to="/users/search"
+                className="text-xs font-swiss"
+                style={{ color: '#888', textDecoration: 'none' }}
+              >
+                Find players
+              </Link>
+            </SignedIn>
+            <SignedOut>
+              <Link
+                to="/login"
+                className="text-xs font-swiss"
+                style={{ color: '#0066ff', textDecoration: 'none' }}
+              >
+                Sign in
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <Link
+                to="/profile"
+                className="text-xs font-mono"
+                style={{ color: '#111', textDecoration: 'none' }}
+              >
+                @{user?.username || '...'}
+              </Link>
+            </SignedIn>
           </div>
         </div>
       </nav>
@@ -358,7 +391,7 @@ export default function MonoLanding() {
       <footer className="px-6 py-8" style={{ borderTop: hasData ? '1px solid #eee' : 'none' }}>
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <p className="text-xs" style={{ color: '#bbb' }}>
-            GameScore Card
+            Score Easy
           </p>
           <p className="text-xs font-mono" style={{ color: '#ccc' }}>
             v2.0

@@ -1,16 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { saveData, loadData } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
+import { useAuth } from '../../hooks/useAuth';
+import { normalizeMatchForConvex } from '../../utils/normalizeMatch';
+import { useDebounce } from '../../hooks/useDebounce';
+import PlayerSearchInput from './components/PlayerSearchInput';
 
 function saveQuickMatch(match) {
-  const all = loadData('gamescore_quickmatches', []);
+  const all = loadData('se_quickmatches', []);
   all.unshift(match);
-  saveData('gamescore_quickmatches', all);
+  saveData('se_quickmatches', all);
 }
 
 export default function MonoQuickMatch() {
@@ -46,6 +52,55 @@ export default function MonoQuickMatch() {
   const [cricketPreset, setCricketPreset] = useState(initialPreset);
   const [team1Name, setTeam1Name] = useState('');
   const [team2Name, setTeam2Name] = useState('');
+
+  // Auth + Convex integration for match saving
+  const { isAuthenticated, user } = useAuth();
+  const saveMatchMutation = useMutation(api.matches.save);
+
+  // Referee toggle (only for referee/both roles)
+  const showRefereeOption = isAuthenticated && (user?.role === 'referee' || user?.role === 'both');
+  const [isRefereeing, setIsRefereeing] = useState(user?.role === 'referee');
+
+  // Team search (autocomplete suggestions for authenticated users)
+  const debouncedTeam1 = useDebounce(team1Name, 300);
+  const debouncedTeam2 = useDebounce(team2Name, 300);
+  const [showTeam1Suggestions, setShowTeam1Suggestions] = useState(false);
+  const [showTeam2Suggestions, setShowTeam2Suggestions] = useState(false);
+  const team1Ref = useRef(null);
+  const team2Ref = useRef(null);
+
+  const team1Results = useQuery(
+    api.teams.search,
+    isAuthenticated && debouncedTeam1.length >= 2
+      ? { sport, prefix: debouncedTeam1 }
+      : 'skip'
+  );
+  const team2Results = useQuery(
+    api.teams.search,
+    isAuthenticated && debouncedTeam2.length >= 2
+      ? { sport, prefix: debouncedTeam2 }
+      : 'skip'
+  );
+
+  // Sort team results by matchCount descending
+  const sortedTeam1 = (team1Results || []).slice().sort((a, b) => b.matchCount - a.matchCount);
+  const sortedTeam2 = (team2Results || []).slice().sort((a, b) => b.matchCount - a.matchCount);
+
+  // Close team suggestion dropdowns on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (team1Ref.current && !team1Ref.current.contains(e.target)) setShowTeam1Suggestions(false);
+      if (team2Ref.current && !team2Ref.current.contains(e.target)) setShowTeam2Suggestions(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Team player rosters (optional tagging)
+  const [team1Players, setTeam1Players] = useState([]);
+  const [team2Players, setTeam2Players] = useState([]);
+  const [showTeam1Roster, setShowTeam1Roster] = useState(false);
+  const [showTeam2Roster, setShowTeam2Roster] = useState(false);
   const [format, setFormat] = useState(() => {
     if (isCricket) return buildCricketFormat(initialPreset);
     if (isGoals) return { mode: 'free' };
@@ -119,6 +174,18 @@ export default function MonoQuickMatch() {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Save match to Convex (alongside localStorage save)
+  const saveToConvex = (result) => {
+    if (!isAuthenticated || !user) return;
+    const normalized = normalizeMatchForConvex(result, sport);
+    saveMatchMutation({
+      ...normalized,
+      team1Players: team1Players.filter(p => p.type === 'user').map(p => p.userId),
+      team2Players: team2Players.filter(p => p.type === 'user').map(p => p.userId),
+      matchRole: isRefereeing ? 'refereeing' : 'playing',
+    }).catch(() => {}); // fire-and-forget, localStorage is primary
   };
 
   const totalBalls = isCricket
@@ -285,6 +352,7 @@ export default function MonoQuickMatch() {
     };
     setResult(r);
     saveQuickMatch(r);
+    saveToConvex(r);
     setPhase('result');
   };
 
@@ -339,6 +407,7 @@ export default function MonoQuickMatch() {
             };
             setResult(r);
             saveQuickMatch(r);
+            saveToConvex(r);
             setPhase('result');
           } else {
             // Start next set
@@ -374,6 +443,7 @@ export default function MonoQuickMatch() {
         };
         setResult(r);
         saveQuickMatch(r);
+        saveToConvex(r);
         setPhase('result');
       }
     }
@@ -418,6 +488,7 @@ export default function MonoQuickMatch() {
         };
         setResult(r);
         saveQuickMatch(r);
+        saveToConvex(r);
         setPhase('result');
       }
     }
@@ -447,6 +518,7 @@ export default function MonoQuickMatch() {
     };
     setResult(r);
     saveQuickMatch(r);
+    saveToConvex(r);
     setPhase('result');
   };
 
@@ -468,6 +540,7 @@ export default function MonoQuickMatch() {
       };
       setResult(r);
       saveQuickMatch(r);
+      saveToConvex(r);
       setPhase('result');
     }
   };
@@ -1130,22 +1203,144 @@ export default function MonoQuickMatch() {
                 <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
                   Team Names
                 </label>
-                <input
-                  type="text"
-                  className="mono-input mb-4"
-                  placeholder="Team 1 name"
-                  value={team1Name}
-                  onChange={e => setTeam1Name(e.target.value)}
-                  autoFocus
-                />
-                <input
-                  type="text"
-                  className="mono-input"
-                  placeholder="Team 2 name"
-                  value={team2Name}
-                  onChange={e => setTeam2Name(e.target.value)}
-                />
+
+                {/* Team 1 */}
+                <div ref={team1Ref} className="relative">
+                  <input
+                    type="text"
+                    className="mono-input mb-1"
+                    placeholder="Team 1 name"
+                    value={team1Name}
+                    onChange={e => { setTeam1Name(e.target.value); setShowTeam1Suggestions(e.target.value.length >= 2); }}
+                    onFocus={() => setShowTeam1Suggestions(true)}
+                    maxLength={50}
+                    autoFocus
+                  />
+                  {showTeam1Suggestions && sortedTeam1.length > 0 && (
+                    <div
+                      className="absolute left-0 right-0"
+                      style={{
+                        background: '#fff', border: '1px solid #eee',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 10,
+                        maxHeight: 180, overflowY: 'auto',
+                      }}
+                    >
+                      {sortedTeam1.map(t => (
+                        <button
+                          key={t._id}
+                          onClick={() => { setTeam1Name(t.name); setShowTeam1Suggestions(false); }}
+                          onMouseDown={e => e.preventDefault()}
+                          className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
+                          style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
+                        >
+                          <span className="text-sm" style={{ color: '#111' }}>{t.name}</span>
+                          <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                            {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTeam1Roster(v => !v)}
+                  className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-3 block"
+                  style={{ color: '#0066ff', padding: 0 }}
+                >
+                  {showTeam1Roster ? '− Hide players' : '+ Add players'}
+                  {team1Players.length > 0 && !showTeam1Roster && (
+                    <span style={{ color: '#888', marginLeft: 4 }}>({team1Players.length})</span>
+                  )}
+                </button>
+                {showTeam1Roster && (
+                  <div className="mb-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
+                    <PlayerSearchInput
+                      players={team1Players}
+                      onAdd={p => setTeam1Players(prev => [...prev, p])}
+                      onRemove={i => setTeam1Players(prev => prev.filter((_, idx) => idx !== i))}
+                      placeholder="Search @username or type name"
+                    />
+                  </div>
+                )}
+
+                {/* Team 2 */}
+                <div ref={team2Ref} className="relative">
+                  <input
+                    type="text"
+                    className="mono-input mb-1"
+                    placeholder="Team 2 name"
+                    value={team2Name}
+                    onChange={e => { setTeam2Name(e.target.value); setShowTeam2Suggestions(e.target.value.length >= 2); }}
+                    onFocus={() => setShowTeam2Suggestions(true)}
+                    maxLength={50}
+                  />
+                  {showTeam2Suggestions && sortedTeam2.length > 0 && (
+                    <div
+                      className="absolute left-0 right-0"
+                      style={{
+                        background: '#fff', border: '1px solid #eee',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 10,
+                        maxHeight: 180, overflowY: 'auto',
+                      }}
+                    >
+                      {sortedTeam2.map(t => (
+                        <button
+                          key={t._id}
+                          onClick={() => { setTeam2Name(t.name); setShowTeam2Suggestions(false); }}
+                          onMouseDown={e => e.preventDefault()}
+                          className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
+                          style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
+                        >
+                          <span className="text-sm" style={{ color: '#111' }}>{t.name}</span>
+                          <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                            {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTeam2Roster(v => !v)}
+                  className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-3 block"
+                  style={{ color: '#0066ff', padding: 0 }}
+                >
+                  {showTeam2Roster ? '− Hide players' : '+ Add players'}
+                  {team2Players.length > 0 && !showTeam2Roster && (
+                    <span style={{ color: '#888', marginLeft: 4 }}>({team2Players.length})</span>
+                  )}
+                </button>
+                {showTeam2Roster && (
+                  <div className="mb-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
+                    <PlayerSearchInput
+                      players={team2Players}
+                      onAdd={p => setTeam2Players(prev => [...prev, p])}
+                      onRemove={i => setTeam2Players(prev => prev.filter((_, idx) => idx !== i))}
+                      placeholder="Search @username or type name"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Referee checkbox */}
+              {showRefereeOption && (
+                <label
+                  className="flex items-center gap-3 mb-6 cursor-pointer"
+                  style={{ padding: '12px 0' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isRefereeing}
+                    onChange={e => setIsRefereeing(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: '#0066ff' }}
+                  />
+                  <span className="text-sm" style={{ color: '#111' }}>
+                    I'm refereeing this match
+                  </span>
+                </label>
+              )}
 
               <button
                 onClick={startMatch}
@@ -1215,6 +1410,7 @@ export default function MonoQuickMatch() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
                 {presetLabel && <span className="mono-badge">{presetLabel}</span>}
+                {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">Innings {innings}</span>
               </div>
             </div>
@@ -1368,9 +1564,12 @@ export default function MonoQuickMatch() {
                 </span>
                 <SwapButton />
               </div>
-              <span className="mono-badge mono-badge-live">
-                {isPointsMode ? `First to ${format.target}` : 'Live'}
-              </span>
+              <div className="flex items-center gap-2">
+                {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
+                <span className="mono-badge mono-badge-live">
+                  {isPointsMode ? `First to ${format.target}` : 'Live'}
+                </span>
+              </div>
             </div>
 
             {/* Score panels */}
@@ -1481,9 +1680,12 @@ export default function MonoQuickMatch() {
               <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
               <SwapButton />
             </div>
-            <span className="mono-badge mono-badge-live">
-              {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
-            </span>
+            <div className="flex items-center gap-2">
+              {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
+              <span className="mono-badge mono-badge-live">
+                {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
+              </span>
+            </div>
           </div>
 
           {/* Sets won (best-of only) */}

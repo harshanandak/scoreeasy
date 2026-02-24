@@ -43,7 +43,7 @@ export default function MonoSportHome() {
             </button>
             <div>
               <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-                GameScore
+                Score Easy
               </h1>
               <p className="text-xs mt-1" style={{ color: '#888' }}>
                 All sports

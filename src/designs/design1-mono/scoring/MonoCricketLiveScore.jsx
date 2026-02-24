@@ -82,7 +82,7 @@ export default function MonoCricketLiveScore() {
 
   // Load tournament and match
   useEffect(() => {
-    const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+    const storageKey = sportConfig?.storageKey || 'se_cricket';
     const tournaments = loadSportTournaments(storageKey);
     const found = tournaments.find(t => t.id === Number(id) || t.id === id);
     if (!found) return;
@@ -344,7 +344,7 @@ export default function MonoCricketLiveScore() {
 
   // Save draft
   const saveDraft = () => {
-    const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+    const storageKey = sportConfig?.storageKey || 'se_cricket';
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -399,7 +399,7 @@ export default function MonoCricketLiveScore() {
       triggerHaptic([100, 100, 100, 100, 100]);
     }
 
-    const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+    const storageKey = sportConfig?.storageKey || 'se_cricket';
 
     // Determine winner
     let winner = winnerOverride || null;

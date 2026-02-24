@@ -35,7 +35,7 @@ describe('SPORT_REGISTRY', () => {
       expect(typeof sport.icon).toBe('string');
       expect(['sets', 'goals', 'custom-cricket']).toContain(sport.engine);
       expect(typeof sport.storageKey).toBe('string');
-      expect(sport.storageKey.startsWith('gamescore_')).toBe(true);
+      expect(sport.storageKey.startsWith('se_')).toBe(true);
     });
   });
 
@@ -155,8 +155,8 @@ describe('Goals-based sports config', () => {
     expect(bb.config.quickButtons.map(b => b.value)).toEqual([1, 2, 3]);
   });
 
-  it('kabaddi awards 5 points for a win', () => {
-    expect(SPORT_REGISTRY.kabaddi.config.winPoints).toBe(5);
+  it('kabaddi awards 2 points for a win', () => {
+    expect(SPORT_REGISTRY.kabaddi.config.winPoints).toBe(2);
   });
 
   it('rugby awards 4 points for a win and 2 for draw', () => {
@@ -180,7 +180,7 @@ describe('Cricket config', () => {
   });
 
   it('has correct storageKey', () => {
-    expect(SPORT_REGISTRY.cricket.storageKey).toBe('gamescore_cricket');
+    expect(SPORT_REGISTRY.cricket.storageKey).toBe('se_cricket');
   });
 });
 
@@ -242,7 +242,7 @@ describe('getSportsByCategory', () => {
     expect(categories).toHaveProperty('Team Sports');
     expect(categories).toHaveProperty('Contact Sports');
     expect(categories).toHaveProperty('Net Sports');
-    expect(categories).toHaveProperty('Bat and Ball');
+    expect(categories).toHaveProperty('Cricket');
   });
 
   it('Racquet Sports has 5 sports', () => {
@@ -263,9 +263,9 @@ describe('getSportsByCategory', () => {
     expect(net[0].id).toBe('volleyball');
   });
 
-  it('Bat and Ball has 1 sport (cricket)', () => {
-    const bat = getSportsByCategory()['Bat and Ball'];
-    expect(bat).toHaveLength(1);
-    expect(bat[0].id).toBe('cricket');
+  it('Cricket has 1 sport (cricket)', () => {
+    const cricket = getSportsByCategory()['Cricket'];
+    expect(cricket).toHaveLength(1);
+    expect(cricket[0].id).toBe('cricket');
   });
 });

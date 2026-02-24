@@ -25,7 +25,7 @@ export default function MonoHome() {
         {/* Nav bar */}
         <nav className="flex items-center justify-between mb-12">
           <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-            GameScore
+            Score Easy
           </h1>
           <button
             onClick={() => navigate('/history')}

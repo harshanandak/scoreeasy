@@ -71,7 +71,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         setInnings(initInnings);
       }
     } else {
-      const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
       const tournaments = loadSportTournaments(storageKey);
       const found = tournaments.find(t => t.id === Number(id) || t.id === id);
       if (!found) return;
@@ -356,7 +356,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (isQuickMatch) {
       saveQuickMatch({ ...match, draftState, status: 'in-progress' });
     } else {
-      const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
         ...m, draftState, status: 'in-progress',
       }));
@@ -385,7 +385,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         completedAt: new Date().toISOString(),
       });
     } else {
-      const storageKey = sportConfig?.storageKey || 'gamescore_cricket';
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
         ...m,
         innings,

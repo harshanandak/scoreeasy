@@ -2,7 +2,7 @@
 
 ## Sprint 3: Accessibility Implementation Complete ✓
 
-This document outlines the accessibility features implemented in the GameScore application to ensure WCAG 2.1 Level AA compliance.
+This document outlines the accessibility features implemented in the Score Easy application to ensure WCAG 2.1 Level AA compliance.
 
 ---
 
@@ -431,12 +431,12 @@ When adding new interactive elements, ensure:
 
 ## 13. Accessibility Statement
 
-**GameScore** is committed to ensuring digital accessibility for all users, including those with disabilities. We continuously work to improve the accessibility of our application and comply with WCAG 2.1 Level AA standards.
+**Score Easy** is committed to ensuring digital accessibility for all users, including those with disabilities. We continuously work to improve the accessibility of our application and comply with WCAG 2.1 Level AA standards.
 
 ### Contact
 If you encounter any accessibility barriers or have suggestions for improvement, please:
 - Create an issue on GitHub
-- Email: accessibility@gamescore.app (if applicable)
+- Email: accessibility@scoreeasy.app (if applicable)
 
 ### Last Updated
 Sprint 3 completed: February 2026

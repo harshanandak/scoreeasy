@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to GameScore are documented in this file.
+All notable changes to Score Easy are documented in this file.
 
 ---
 
@@ -84,7 +84,7 @@ All notable changes to GameScore are documented in this file.
 - **Generic Components**: Reusable tournament components for similar sports
 
 ### Changed
-- **App Name**: Volleyball Tracker → GameScore (Universal Sports Tracker)
+- **App Name**: Volleyball Tracker → Score Easy (Universal Sports Tracker)
 - **Navigation**: Sport-specific routes (`/volleyball/tournament`, `/cricket/tournament`, etc.)
 - **Landing Page**: Browse all sports with icon grid
 
@@ -420,6 +420,6 @@ MIT License - See LICENSE file for details
 
 ---
 
-**GameScore v2.0.0 - Production Ready** 🚀
+**Score Easy v2.0.0 - Production Ready** 🚀
 
 Total Development Time: ~50 hours across 6 sprints + 1 major phase

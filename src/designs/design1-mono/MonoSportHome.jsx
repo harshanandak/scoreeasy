@@ -14,7 +14,7 @@ const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(f => ({
   players: f.players,
 }));
 
-const LAYOUT_KEY = 'gamescore_sport_layout';
+const LAYOUT_KEY = 'se_sport_layout';
 
 export default function MonoSportHome() {
   const navigate = useNavigate();
@@ -85,7 +85,7 @@ export default function MonoSportHome() {
             </button>
             <div>
               <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-                GameScore
+                Score Easy
               </h1>
               <p className="text-xs mt-1" style={{ color: '#888' }}>
                 All sports
