@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, deleteSportTournament } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 import { getCricketFormat } from '../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../utils/formatMigration';
+import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
+import BackArrow from './components/BackArrow';
 
 export default function MonoTournamentList() {
   const navigate = useNavigate();
@@ -43,11 +45,11 @@ export default function MonoTournamentList() {
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
           <button
             onClick={() => navigate('/')}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss"
+            className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1"
             style={{ color: '#888' }}
             aria-label="Go back to home"
           >
-            &larr; Home
+            <BackArrow /> Home
           </button>
         </nav>
 
@@ -76,10 +78,11 @@ export default function MonoTournamentList() {
         ) : (
           <div className="flex flex-col gap-3">
             {tournaments.map(t => {
-              const matchCount = t.matches?.length || 0;
-              const completedCount = t.matches?.filter(m =>
-                m.status === 'completed'
-              ).length || 0;
+              const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
+              const matchCount = allMatches.length;
+              const completedCount = allMatches.filter((m) =>
+                isTournamentMatchCompleted(m, sportConfig.engine)
+              ).length;
 
               return (
                 <div key={t.id} className="mono-card" style={{ padding: 0 }}>
@@ -96,7 +99,7 @@ export default function MonoTournamentList() {
                           {completedCount}/{matchCount}
                         </span>
                         {t.teams?.length === 2 && (
-                          <span className="text-xs px-2 py-1 rounded" style={{ background: '#f0f9ff', color: '#0066ff' }}>
+                          <span className="text-xs px-2 py-1 rounded" style={{ background: '#f0f6ff', color: '#0066ff' }}>
                             Head-to-head
                           </span>
                         )}

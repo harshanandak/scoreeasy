@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import PropTypes from "prop-types";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -171,3 +172,10 @@ export default function PlayerSearchInput({
     </div>
   );
 }
+
+PlayerSearchInput.propTypes = {
+  players: PropTypes.array,
+  onAdd: PropTypes.func,
+  onRemove: PropTypes.func,
+  placeholder: PropTypes.string,
+};

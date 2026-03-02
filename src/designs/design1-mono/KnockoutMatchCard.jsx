@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 
 function getScoreInfo(match, engine) {
   let hasScore = false;
@@ -144,3 +144,13 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
     </div>
   );
 }
+
+KnockoutMatchCard.propTypes = {
+  match: PropTypes.object,
+  tournament: PropTypes.object,
+  sport: PropTypes.string,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  navigate: PropTypes.func,
+  getTeamName: PropTypes.func,
+  engine: PropTypes.string,
+};

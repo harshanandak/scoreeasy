@@ -1,8 +1,8 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { getSportById } from '../../models/sportRegistry';
 import { loadSportTournaments } from '../../utils/storage';
 import { migrateCricketFormat } from '../../utils/formatMigration';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import MonoSetsLiveScore from './scoring/MonoSetsLiveScore';
 import MonoGoalsLiveScore from './scoring/MonoGoalsLiveScore';
 import MonoCricketLiveScore from './scoring/MonoCricketLiveScore';
@@ -12,48 +12,53 @@ import MonoTennisLiveScore from './scoring/MonoTennisLiveScore';
 export default function MonoTournamentLiveScore() {
   const { sport, id, matchId } = useParams();
 
-  // Cricket: check match-level format to pick scorer (bug fix 9f)
+  let scorer = null;
+
+  // Cricket: check match-level format to pick scorer
   if (sport === 'cricket' || getSportById(sport)?.engine === 'custom-cricket') {
     const sportConfig = getSportById(sport);
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const tournaments = loadSportTournaments(storageKey);
-    const tournament = tournaments.find(t => t.id === Number(id) || t.id === id);
-    const match = tournament?.matches?.find(m => m.id === matchId || m.id === Number(matchId))
-      || (tournament?.knockoutMatches || []).find(m => m.id === matchId || m.id === Number(matchId));
+    const tournament = tournaments.find((t) => t.id === Number(id) || t.id === id);
+    const match = tournament?.matches?.find((m) => m.id === matchId || m.id === Number(matchId))
+      || (tournament?.knockoutMatches || []).find((m) => m.id === matchId || m.id === Number(matchId));
     const format = migrateCricketFormat(match?.format || tournament?.knockoutConfig?.format || tournament?.format);
 
-    if (format?.totalInnings === 4) {
-      return <MonoCricketTestLiveScore />;
+    scorer = format?.totalInnings === 4
+      ? <MonoCricketTestLiveScore />
+      : <MonoCricketLiveScore />;
+  } else if (sport === 'tennis') {
+    scorer = <MonoTennisLiveScore />;
+  } else {
+    const sportConfig = getSportById(sport);
+
+    if (!sportConfig) {
+      return (
+        <div className="min-h-screen px-6 py-10 flex items-center justify-center">
+          <p style={{ color: '#888' }}>Sport not found</p>
+        </div>
+      );
     }
-    return <MonoCricketLiveScore />;
-  }
 
-  // Tennis uses real tennis scoring
-  if (sport === 'tennis') {
-    return <MonoTennisLiveScore />;
-  }
-
-  const sportConfig = getSportById(sport);
-
-  if (!sportConfig) {
-    return (
-      <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Sport not found</p>
-      </div>
-    );
-  }
-
-  if (sportConfig.engine === 'sets') {
-    return <MonoSetsLiveScore />;
-  }
-
-  if (sportConfig.engine === 'goals') {
-    return <MonoGoalsLiveScore />;
+    if (sportConfig.engine === 'sets') {
+      scorer = <MonoSetsLiveScore />;
+    } else if (sportConfig.engine === 'goals') {
+      scorer = <MonoGoalsLiveScore />;
+    } else {
+      return (
+        <div className="min-h-screen px-6 py-10 flex items-center justify-center">
+          <p style={{ color: '#888' }}>Live scoring for {sportConfig?.name || sport} coming soon...</p>
+        </div>
+      );
+    }
   }
 
   return (
-    <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Live scoring for {sportConfig?.name || sport} coming soon...</p>
-    </div>
+    <ErrorBoundary
+      title="Scoring screen crashed"
+      message="This match scorer failed to render. Reload to recover your draft state."
+    >
+      {scorer}
+    </ErrorBoundary>
   );
 }

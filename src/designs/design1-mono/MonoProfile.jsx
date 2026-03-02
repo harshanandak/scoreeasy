@@ -1,8 +1,30 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "../../hooks/useAuth";
+import BackArrow from "./components/BackArrow";
+import SportIcon from "./SportIcon";
+
+function getRoleLabel(stats) {
+  const played = stats?.totalMatches > 0;
+  const scored = stats?.gamesOperated > 0;
+  if (played && scored) return 'Player & Scorer \u00b7 ';
+  if (scored) return 'Scorer \u00b7 ';
+  if (played) return 'Player \u00b7 ';
+  return '';
+}
+
+function getStatsGridClass(stats) {
+  if (stats?.gamesOperated > 0) return 'grid gap-3 grid-cols-2 sm:grid-cols-4';
+  return 'grid gap-3 grid-cols-2 sm:grid-cols-3';
+}
+
+function getProfileQueryArg(paramUsername, isAuthenticated, currentUsername) {
+  if (paramUsername) return { username: paramUsername };
+  if (isAuthenticated && currentUsername) return { username: currentUsername };
+  return "skip";
+}
 
 export default function MonoProfile() {
   const navigate = useNavigate();
@@ -19,7 +41,7 @@ export default function MonoProfile() {
 
   const profileUser = useQuery(
     api.users.getByUsername,
-    paramUsername ? { username: paramUsername } : isAuthenticated && currentUser?.username ? { username: currentUser.username } : "skip"
+    getProfileQueryArg(paramUsername, isAuthenticated, currentUser?.username)
   );
 
   const userId = isOwnProfile ? currentUser?._id : profileUser?._id;
@@ -42,10 +64,10 @@ export default function MonoProfile() {
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => navigate("/")}
-            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 block"
+            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
             style={{ color: "#888" }}
           >
-            &larr; Back
+            <BackArrow /> Back
           </button>
           <p style={{ color: "#888" }}>Sign in to view your profile.</p>
         </div>
@@ -59,10 +81,10 @@ export default function MonoProfile() {
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => navigate(-1)}
-            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 block"
+            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
             style={{ color: "#888" }}
           >
-            &larr; Back
+            <BackArrow /> Back
           </button>
           <p style={{ color: "#888" }}>User @{paramUsername} not found.</p>
         </div>
@@ -80,16 +102,16 @@ export default function MonoProfile() {
       <div className="max-w-2xl mx-auto">
         <button
           onClick={() => navigate("/")}
-          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 block"
+          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
           style={{ color: "#888" }}
         >
-          &larr; Back
+          <BackArrow /> Back
         </button>
 
         {/* Identity */}
         <section className="mb-8">
           <div className="flex items-center gap-4 mb-2">
-            {displayUser?.avatarUrl && (
+            {displayUser?.avatarUrl ? (
               <img
                 src={displayUser.avatarUrl}
                 alt=""
@@ -100,6 +122,15 @@ export default function MonoProfile() {
                   border: "1px solid #eee",
                 }}
               />
+            ) : (
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%',
+                background: '#f0f0f0', border: '1px solid #eee',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.125rem', fontWeight: 700, color: '#888',
+              }}>
+                {(displayUser?.username || '?')[0].toUpperCase()}
+              </div>
             )}
             <div>
               <h1 className="text-xl font-bold font-mono" style={{ color: "#111" }}>
@@ -114,14 +145,7 @@ export default function MonoProfile() {
           </div>
           {displayUser?.createdAt && (
             <p className="text-xs" style={{ color: "#bbb" }}>
-              {(() => {
-                const played = stats?.totalMatches > 0;
-                const scored = stats?.gamesOperated > 0;
-                if (played && scored) return 'Player & Scorer \u00b7 ';
-                if (scored) return 'Scorer \u00b7 ';
-                if (played) return 'Player \u00b7 ';
-                return '';
-              })()}Joined {formatDate(displayUser.createdAt)}
+              {getRoleLabel(stats)}Joined {formatDate(displayUser.createdAt)}
             </p>
           )}
         </section>
@@ -136,7 +160,7 @@ export default function MonoProfile() {
           >
             Stats
           </h2>
-          <div className={`grid gap-3 ${stats?.gamesOperated > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
+          <div className={getStatsGridClass(stats)}>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
                 {stats?.totalMatches ?? "—"}
@@ -151,7 +175,7 @@ export default function MonoProfile() {
             </div>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.winRate != null ? `${stats.winRate}%` : "—"}
+                {stats?.winRate == null ? "—" : `${stats.winRate}%`}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Win Rate</p>
             </div>
@@ -201,7 +225,10 @@ export default function MonoProfile() {
                     {Object.entries(stats.sportBreakdown).map(([sport, s]) => (
                       <tr key={sport}>
                         <td className="text-sm" style={{ padding: "8px 12px", textTransform: "capitalize" }}>
-                          {sport}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <SportIcon name={sport.charAt(0).toUpperCase() + sport.slice(1)} size={16} color="#888" />
+                            {sport}
+                          </span>
                         </td>
                         <td className="text-sm font-mono" style={{ padding: "8px 12px", textAlign: "right" }}>
                           {s.played}

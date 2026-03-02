@@ -20,6 +20,8 @@ export const SPORT_REGISTRY = {
         { label: 'Best of 5', sets: 5 },
       ],
       defaultSetFormat: 2, // Best of 5
+      scoringModes: ['rally', 'side-out'],
+      defaultScoringMode: 'rally',
       serviceRotation: null, // No auto service tracking for volleyball
     },
     standingsColumns: ['P', 'W', 'L', 'SW', 'SL', 'PF', 'PA', '+/-', 'Pts'],
@@ -134,6 +136,8 @@ export const SPORT_REGISTRY = {
         { label: 'Best of 3', sets: 3 },
       ],
       defaultSetFormat: 1, // Best of 3
+      scoringModes: ['rally', 'side-out'],
+      defaultScoringMode: 'rally',
       serviceRotation: 1, // Rally scoring, service changes every point
     },
     standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { saveSportTournament } from '../../utils/storage';
 import { generateRoundRobinMatches } from '../../utils/roundRobin';
 import { getSportById } from '../../models/sportRegistry';
@@ -26,20 +26,36 @@ const SQUAD_LIMITS = {
   cricket: { playing: 11, max: 16 },
 };
 
+function makeTeam(index, existing, suggestedName) {
+  return {
+    id: existing?.id || `team-${Date.now()}-${index}`,
+    name: existing?.name || suggestedName || `Team ${index + 1}`,
+    members: existing?.members || [],
+  };
+}
+
 export default function MonoTournamentSetup() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { sport } = useParams();
   const [searchParams] = useSearchParams();
   const preselectedFormat = searchParams.get('format'); // e.g. ?format=T20
   const sportConfig = getSportById(sport);
+  const wizardTeams = Array.isArray(location.state?.teams)
+    ? location.state.teams.map((t) => t?.trim()).filter(Boolean).slice(0, 8)
+    : [];
+  const wizardTournamentName = typeof location.state?.tournamentName === 'string'
+    ? location.state.tournamentName.trim()
+    : '';
+  const wizardTeamCount = wizardTeams.length >= 2 ? wizardTeams.length : 4;
 
   const [step, setStep] = useState(1);
   const [formatMode, setFormatMode] = useState('standard');
-  const [name, setName] = useState('');
-  const [tournamentType, setTournamentType] = useState(null);
+  const [name, setName] = useState(wizardTournamentName);
+  const [tournamentType, setTournamentType] = useState(wizardTeams.length >= 2 ? 'round-robin' : null);
   const [seriesGames, setSeriesGames] = useState(3);
-  const [teamCount, setTeamCount] = useState(4);
-  const [teams, setTeams] = useState([]);
+  const [teamCount, setTeamCount] = useState(wizardTeamCount);
+  const [teams, setTeams] = useState(() => wizardTeams.map((teamName, idx) => makeTeam(idx, null, teamName)));
   const [format, setFormat] = useState(null);
   const [customOvers, setCustomOvers] = useState('');
   const [showCustomOvers, setShowCustomOvers] = useState(false);
@@ -53,11 +69,28 @@ export default function MonoTournamentSetup() {
   const [playerInputs, setPlayerInputs] = useState({});
   const [captains, setCaptains] = useState({}); // { teamIdx: playerName }
   const [showFormatGrid, setShowFormatGrid] = useState(false);
+  const [showHouseRules, setShowHouseRules] = useState(false);
+  const [saveWarning, setSaveWarning] = useState('');
 
   const isCricket = sportConfig?.engine === 'custom-cricket';
+  const supportedScoringModes = sportConfig?.config?.scoringModes || [];
+  const canConfigureScoringMode = sportConfig?.engine === 'sets' && supportedScoringModes.length > 1;
+
+  const ensureScoringMode = (nextFormat, previousFormat) => {
+    if (!canConfigureScoringMode) return nextFormat;
+    const fallback = previousFormat?.scoringMode
+      || nextFormat?.scoringMode
+      || sportConfig?.config?.defaultScoringMode
+      || supportedScoringModes[0];
+    return {
+      ...nextFormat,
+      scoringModes: supportedScoringModes,
+      scoringMode: supportedScoringModes.includes(fallback) ? fallback : supportedScoringModes[0],
+    };
+  };
 
   // Auto-configure from URL query param (e.g. ?format=T20)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!preselectedFormat || !isCricket) return;
     const matched = CRICKET_FORMATS.find(f => f.id === preselectedFormat);
     if (!matched) return;
@@ -67,14 +100,14 @@ export default function MonoTournamentSetup() {
   }, []); // Run once on mount
 
   // Initialize format based on sport and format mode
-  React.useEffect(() => {
+  useEffect(() => {
     if (!sportConfig || format !== null) return;
 
     // Try standard defaults first
     if (formatMode === 'standard') {
       const defaults = getSportDefaults(sport);
       if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(applyStandardDefaults(sport, {}));
+        setFormat(ensureScoringMode(applyStandardDefaults(sport, {}), format));
         return;
       }
     }
@@ -83,18 +116,18 @@ export default function MonoTournamentSetup() {
     if (sportConfig.engine === 'custom-cricket') {
       setFormat({ overs: 5, players: 6, solo: true });
     } else if (sportConfig.engine === 'sets') {
-      setFormat({ type: 'best-of', sets: 3, points: sportConfig.config.pointsPerSet });
+      setFormat(ensureScoringMode({ type: 'best-of', sets: 3, points: sportConfig.config.pointsPerSet }, format));
     } else if (sportConfig.engine === 'goals') {
       setFormat({ mode: 'free' });
     }
   }, [sportConfig, format, formatMode, sport]);
 
   // Apply standard defaults when format mode changes to 'standard'
-  React.useEffect(() => {
+  useEffect(() => {
     if (formatMode === 'standard' && sport && format) {
       const defaults = getSportDefaults(sport);
       if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(applyStandardDefaults(sport, {}));
+        setFormat(ensureScoringMode(applyStandardDefaults(sport, {}), format));
       }
     }
   }, [formatMode, sport]);
@@ -102,19 +135,25 @@ export default function MonoTournamentSetup() {
   const teamCountOptions = [2, 3, 4, 5, 6, 7, 8];
 
   const initTeams = (count) => {
-    setTeams(Array.from({ length: count }, (_, i) => ({
-      id: `team-${Date.now()}-${i}`,
-      name: `Team ${i + 1}`,
-      members: [],
-    })));
+    setTeams((prev) => {
+      if (prev.length === count) return prev;
+      return Array.from({ length: count }, (_, i) => makeTeam(i, prev[i], wizardTeams[i]));
+    });
   };
+
+  // Ensure wizard prefill is applied once even if route state arrives without refresh.
+  useEffect(() => {
+    if (wizardTournamentName && !name) {
+      setName(wizardTournamentName);
+    }
+  }, [wizardTournamentName, name]);
 
   // Step navigation
   const canAdvanceStep1 = name.trim() && tournamentType;
 
   const goToStep = (target) => {
     if (target === 3) {
-      // Initialize teams when entering step 3
+      // Initialize teams when entering step 3 without wiping existing edits.
       initTeams(teamCount);
     }
     setStep(target);
@@ -215,7 +254,12 @@ export default function MonoTournamentSetup() {
       knockoutMatches: [],
     };
 
-    saveSportTournament(sportConfig.storageKey, tournament);
+    const ok = saveSportTournament(sportConfig.storageKey, tournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
     navigate(`/${sport}/tournament/${tournament.id}`);
   };
 
@@ -227,8 +271,9 @@ export default function MonoTournamentSetup() {
       return `${oversLabel} · ${f.players || 6} players`;
     }
     if (sportConfig.engine === 'sets') {
-      if (f.type === 'best-of') return `Best of ${f.sets} sets · ${f.points} pts`;
-      return `Single set · ${f.points} pts`;
+      const scoringLabel = f.scoringMode === 'side-out' ? ' · side-out' : '';
+      if (f.type === 'best-of') return `Best of ${f.sets} sets · ${f.points} pts${scoringLabel}`;
+      return `Single set · ${f.points} pts${scoringLabel}`;
     }
     if (f.mode === 'free') return 'Free play';
     if (f.mode === 'timed') return `${Math.floor((f.timeLimit || 0) / 60)} min time limit`;
@@ -268,6 +313,11 @@ export default function MonoTournamentSetup() {
         <h1 className="text-xl font-semibold tracking-tight mb-4" style={{ color: '#111' }}>
           New Tournament
         </h1>
+        {saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            {saveWarning}
+          </div>
+        )}
 
         {/* Step indicator */}
         <div className="flex items-center gap-3 mb-8">
@@ -411,7 +461,7 @@ export default function MonoTournamentSetup() {
 
             {/* Pre-selected format badge */}
             {preselectedFormat && isCricket && (
-              <div className="mb-4 p-3 mono-card" style={{ background: '#f0f7ff', borderColor: '#bfdbfe' }}>
+              <div className="mb-4 p-3 mono-card" style={{ background: '#f0f6ff', borderColor: '#bfdbfe' }}>
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>Format</span>
@@ -495,7 +545,7 @@ export default function MonoTournamentSetup() {
                     <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                       Format
                     </span>
-                    <div className="mono-card p-4 mb-2" style={{ background: '#f0f7ff', borderColor: '#bfdbfe' }}>
+                    <div className="mono-card p-4 mb-2" style={{ background: '#f0f6ff', borderColor: '#bfdbfe' }}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-semibold" style={{ color: '#111' }}>
@@ -756,38 +806,49 @@ export default function MonoTournamentSetup() {
 
                 {cricketPreset === 'gully' && (
                   <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
-                      House rules
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, lastManStands: !prev.lastManStands }))}
-                        className={format.lastManStands ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                      >
-                        Last Man Batting
-                      </button>
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, trialBall: !prev.trialBall }))}
-                        className={format.trialBall ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                      >
-                        Trial Ball
-                      </button>
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, oneTipOneHand: !prev.oneTipOneHand }))}
-                        className={format.oneTipOneHand ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                      >
-                        One Tip One Hand
-                      </button>
-                    </div>
-                    <p className="text-xs mt-2" style={{ color: '#bbb' }}>
-                      {format.lastManStands && 'Last batter plays alone · '}
-                      {format.trialBall && 'First ball doesn\'t count · '}
-                      {format.oneTipOneHand && 'One-bounce catch = out'}
-                      {!format.lastManStands && !format.trialBall && !format.oneTipOneHand && 'Toggle rules on/off'}
-                    </p>
+                    <button
+                      onClick={() => setShowHouseRules(!showHouseRules)}
+                      className="text-xs bg-transparent border-none cursor-pointer font-swiss"
+                      style={{ color: '#0066ff', padding: '8px 0', marginBottom: showHouseRules ? 8 : 0 }}
+                    >
+                      {showHouseRules ? '- Hide house rules' : '+ House rules'}
+                    </button>
+                    {showHouseRules && (
+                      <div>
+                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                          House rules
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setFormat(prev => ({ ...prev, lastManStands: !prev.lastManStands }))}
+                            className={format.lastManStands ? 'mono-btn-primary' : 'mono-btn'}
+                            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                          >
+                            Last Man Batting
+                          </button>
+                          <button
+                            onClick={() => setFormat(prev => ({ ...prev, trialBall: !prev.trialBall }))}
+                            className={format.trialBall ? 'mono-btn-primary' : 'mono-btn'}
+                            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                          >
+                            Trial Ball
+                          </button>
+                          <button
+                            onClick={() => setFormat(prev => ({ ...prev, oneTipOneHand: !prev.oneTipOneHand }))}
+                            className={format.oneTipOneHand ? 'mono-btn-primary' : 'mono-btn'}
+                            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                          >
+                            One Tip One Hand
+                          </button>
+                        </div>
+                        <p className="text-xs mt-2" style={{ color: '#bbb' }}>
+                          {format.lastManStands && 'Last batter plays alone · '}
+                          {format.trialBall && 'First ball doesn\'t count · '}
+                          {format.oneTipOneHand && 'One-bounce catch = out'}
+                          {!format.lastManStands && !format.trialBall && !format.oneTipOneHand && 'Toggle rules on/off'}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -878,14 +939,14 @@ export default function MonoTournamentSetup() {
 
                 <div className="flex gap-2 mb-3">
                   <button
-                    onClick={() => setFormat({ type: 'best-of', sets: 3, points: sportConfig.config.pointsPerSet })}
+                    onClick={() => setFormat(prev => ensureScoringMode({ type: 'best-of', sets: 3, points: sportConfig.config.pointsPerSet }, prev))}
                     className={format.type === 'best-of' ? 'mono-btn-primary' : 'mono-btn'}
                     style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
                   >
                     Best-of
                   </button>
                   <button
-                    onClick={() => setFormat({ type: 'single', points: 15 })}
+                    onClick={() => setFormat(prev => ensureScoringMode({ type: 'single', points: 15 }, prev))}
                     className={format.type === 'single' ? 'mono-btn-primary' : 'mono-btn'}
                     style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
                   >
@@ -902,7 +963,7 @@ export default function MonoTournamentSetup() {
                       {sportConfig.config.setFormats.map((formatOption, idx) => (
                         <button
                           key={formatOption.sets}
-                          onClick={() => setFormat(prev => ({ ...prev, sets: formatOption.sets }))}
+                          onClick={() => setFormat(prev => ensureScoringMode({ ...prev, sets: formatOption.sets }, prev))}
                           className={format.sets === formatOption.sets ? 'mono-btn-primary' : 'mono-btn'}
                           style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
                         >
@@ -921,7 +982,7 @@ export default function MonoTournamentSetup() {
                     {[10, 15, 21, 25].map(pts => (
                       <button
                         key={pts}
-                        onClick={() => setFormat(prev => ({ ...prev, points: pts }))}
+                        onClick={() => setFormat(prev => ensureScoringMode({ ...prev, points: pts }, prev))}
                         className={format.points === pts ? 'mono-btn-primary' : 'mono-btn'}
                         style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
                       >
@@ -930,6 +991,30 @@ export default function MonoTournamentSetup() {
                     ))}
                   </div>
                 </div>
+
+                {canConfigureScoringMode && (
+                  <div className="mt-6">
+                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                      Scoring mode
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setFormat(prev => ensureScoringMode({ ...prev, scoringMode: 'rally' }, prev))}
+                        className={(format.scoringMode || sportConfig?.config?.defaultScoringMode || 'rally') === 'rally' ? 'mono-btn-primary' : 'mono-btn'}
+                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
+                      >
+                        Rally
+                      </button>
+                      <button
+                        onClick={() => setFormat(prev => ensureScoringMode({ ...prev, scoringMode: 'side-out' }, prev))}
+                        className={(format.scoringMode || sportConfig?.config?.defaultScoringMode || 'rally') === 'side-out' ? 'mono-btn-primary' : 'mono-btn'}
+                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
+                      >
+                        Side-out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1344,7 +1429,7 @@ export default function MonoTournamentSetup() {
                               background: isCaptain ? '#eff6ff' : '#f4f4f4',
                               border: isCaptain ? '1px solid #bfdbfe' : '1px solid #eee',
                               fontSize: '0.8125rem',
-                              color: '#333',
+                              color: '#111',
                             }}
                           >
                             <button
@@ -1447,7 +1532,9 @@ export default function MonoTournamentSetup() {
                       const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
                       return presetName + ' · ' + oversLabel + ' · ' + format.players + 'p';
                     })()}
-                    {sportConfig.engine === 'sets' && (format.type === 'best-of' ? `Best of ${format.sets} · ${format.points} pts` : `Single set · ${format.points} pts`)}
+                    {sportConfig.engine === 'sets' && (format.type === 'best-of'
+                      ? `Best of ${format.sets} · ${format.points} pts${format.scoringMode === 'side-out' ? ' · side-out' : ''}`
+                      : `Single set · ${format.points} pts${format.scoringMode === 'side-out' ? ' · side-out' : ''}`)}
                     {sportConfig.engine === 'goals' && (() => {
                       if (format.mode === 'free') return 'Free play';
                       if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;

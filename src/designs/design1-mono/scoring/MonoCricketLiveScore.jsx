@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
+import { useAuth } from '../../../hooks/useAuth';
+import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -46,6 +51,8 @@ export default function MonoCricketLiveScore() {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
   const sportConfig = getSportById(sport || 'cricket');
+  const { isAuthenticated } = useAuth();
+  const saveMatchMutation = useMutation(api.matches.save);
 
   // Core state
   const [tournament, setTournament] = useState(null);
@@ -61,6 +68,7 @@ export default function MonoCricketLiveScore() {
   });
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [scoreAnimKey, setScoreAnimKey] = useState(0);
 
   // Free hit state
   const [freeHit, setFreeHit] = useState(false);
@@ -75,10 +83,28 @@ export default function MonoCricketLiveScore() {
   const [superOverPhase, setSuperOverPhase] = useState('inactive');
   // States: 'inactive' → 'prompt' → 'team1_batting' → 'team2_batting' → 'result' → ('prompt')
   const [superOver, setSuperOver] = useState({ team1: { runs: 0, balls: 0, wickets: 0 }, team2: { runs: 0, balls: 0, wickets: 0 } });
+  const [saveWarning, setSaveWarning] = useState('');
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
+
+  const saveTournamentToConvex = (updatedTournament) => {
+    if (!isAuthenticated || !updatedTournament) return;
+    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
+      .find((m) => m.id === matchId || m.id === Number(matchId));
+    if (!savedMatch) return;
+    try {
+      const payload = buildTournamentConvexPayload({
+        sportId: sport || 'cricket',
+        tournament: updatedTournament,
+        match: savedMatch,
+      });
+      saveMatchMutation(payload).catch(() => {});
+    } catch {
+      // Local save is primary; sync failures are non-blocking.
+    }
+  };
 
   // Load tournament and match
   useEffect(() => {
@@ -180,6 +206,7 @@ export default function MonoCricketLiveScore() {
     }
 
     saveSnapshot();
+    setScoreAnimKey(k => k + 1);
 
     // Clear free hit after this delivery
     if (freeHit) setFreeHit(false);
@@ -220,6 +247,7 @@ export default function MonoCricketLiveScore() {
 
     triggerHaptic([80, 80, 80]);
     saveSnapshot();
+    setScoreAnimKey(k => k + 1);
 
     // Clear free hit after this delivery
     if (freeHit) setFreeHit(false);
@@ -256,6 +284,7 @@ export default function MonoCricketLiveScore() {
 
     triggerHaptic(30);
     saveSnapshot();
+    setScoreAnimKey(k => k + 1);
 
     const key = `team${battingTeam}`;
     setScores(prev => ({
@@ -359,7 +388,12 @@ export default function MonoCricketLiveScore() {
       },
     }));
 
-    saveSportTournament(storageKey, updatedTournament);
+    const ok = saveSportTournament(storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
     setHasChanges(false);
     alert('Draft saved! You can resume this match later.');
     navigate(`/${sport || 'cricket'}/tournament/${id}`);
@@ -417,9 +451,16 @@ export default function MonoCricketLiveScore() {
       superOver: superOverPhase !== 'inactive' ? superOver : undefined,
       status: 'completed',
       draftState: undefined,
+      completedAt: new Date().toISOString(),
     }));
 
-    saveSportTournament(storageKey, updatedTournament);
+    const ok = saveSportTournament(storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
+    saveTournamentToConvex(updatedTournament);
     setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
   };
 
@@ -471,6 +512,11 @@ export default function MonoCricketLiveScore() {
     return (
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+          {saveWarning && (
+            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              {saveWarning}
+            </div>
+          )}
           <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Match Tied!</h2>
           <p className="text-sm mb-2" style={{ color: '#888' }}>
             Both teams scored {scores.team1.runs}.
@@ -511,6 +557,11 @@ export default function MonoCricketLiveScore() {
     return (
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto">
+          {saveWarning && (
+            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              {saveWarning}
+            </div>
+          )}
           <div className="flex items-center justify-between mb-6">
             <span className="text-sm" style={{ color: '#888' }}>Super Over</span>
             <span className="mono-badge mono-badge-live">{soName} batting</span>
@@ -572,6 +623,11 @@ export default function MonoCricketLiveScore() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+            {saveWarning && (
+              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+                {saveWarning}
+              </div>
+            )}
             <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Super Over Tied!</h2>
             <p className="text-sm mb-8" style={{ color: '#888' }}>
               {team1Name}: {superOver.team1.runs}/{superOver.team1.wickets} · {team2Name}: {superOver.team2.runs}/{superOver.team2.wickets}
@@ -605,14 +661,19 @@ export default function MonoCricketLiveScore() {
   return (
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
+        {saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            {saveWarning}
+          </div>
+        )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={handleCancel}
             className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-            style={{ color: '#888' }}
+            style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
           >
-            &larr; Back
+            <BackArrow /> Back
           </button>
           <div className="flex items-center gap-2">
             {presetLabel && (
@@ -648,7 +709,7 @@ export default function MonoCricketLiveScore() {
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
             {currentName} batting
           </p>
-          <p className="text-6xl font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
+          <p key={scoreAnimKey} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-2" style={{ color: '#111' }}>
             {currentScore.runs}
             <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
           </p>
@@ -762,9 +823,6 @@ export default function MonoCricketLiveScore() {
               style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
-            </button>
-            <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
-              Discard
             </button>
             {hasChanges && (
               <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>

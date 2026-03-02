@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MonoMatchCardShowcase() {
@@ -97,7 +96,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v1-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded text-sm font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -124,7 +123,7 @@ export default function MonoMatchCardShowcase() {
               <span className="text-xs uppercase tracking-widest font-medium" style={{ color: '#888' }}>
                 Variation 2: Spacious (More Breathing Room)
               </span>
-              <span className="text-xs px-2 py-1 rounded" style={{ background: '#e0f2fe', color: '#0066ff' }}>
+              <span className="text-xs px-2 py-1 rounded" style={{ background: '#dcfce7', color: '#0066ff' }}>
                 Recommended
               </span>
             </div>
@@ -177,7 +176,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v2-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -256,7 +255,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v3-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -330,7 +329,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v4-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -409,7 +408,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v5-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -488,7 +487,7 @@ export default function MonoMatchCardShowcase() {
                   const isMatchWinnerSet = setWinner === matchWinner;
                   return (
                     <span
-                      key={i}
+                      key={`v6-set-${i}-${set.score1}-${set.score2}`}
                       className="px-3 py-1.5 rounded font-mono"
                       style={{
                         background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',

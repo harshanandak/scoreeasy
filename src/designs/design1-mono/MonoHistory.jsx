@@ -1,41 +1,219 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
-import { loadData, saveData } from '../../utils/storage';
-import { getSportById } from '../../models/sportRegistry';
+import { loadData, loadSportTournaments, saveData } from '../../utils/storage';
+import { getSportById, getSportsList } from '../../models/sportRegistry';
+import {
+  getCompletedAt,
+  getTournamentMatches,
+  isTournamentMatchCompleted,
+  normalizeNonTeamWinner,
+} from '../../utils/tournamentSync';
+import BackArrow from './components/BackArrow';
+import SportIcon from './SportIcon';
 
 const QM_KEY = 'se_quickmatches';
 
+function toTimestamp(value) {
+  const parsed = Date.parse(value || '');
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatDate(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '--';
+  const day = parsed.getDate().toString().padStart(2, '0');
+  const month = (parsed.getMonth() + 1).toString().padStart(2, '0');
+  const year = parsed.getFullYear().toString().slice(-2);
+  return `${day}.${month}.${year}`;
+}
+
+function formatElapsed(secs) {
+  if (!secs) return null;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function winnerLabel(winner) {
+  const normalized = normalizeNonTeamWinner(winner);
+  if (!normalized) return '--';
+  if (normalized === 'Draw') return 'Draw';
+  if (normalized === 'Tie') return 'Tied';
+  return `${normalized} won`;
+}
+
+function resolveTeamName(teams, ref, fallback = 'Unknown') {
+  if (ref === null || ref === undefined) return fallback;
+  const byId = teams.find((t) => t.id === ref)?.name;
+  if (byId) return byId;
+  if (typeof ref === 'number') return teams[ref]?.name || fallback;
+  return String(ref);
+}
+
+function resolveTournamentWinner(match, team1Name, team2Name) {
+  const winner = match?.winner;
+  if (!winner) return null;
+  if (winner === match.team1Id || winner === match.team1) return team1Name;
+  if (winner === match.team2Id || winner === match.team2) return team2Name;
+  return normalizeNonTeamWinner(winner);
+}
+
+function getSetsScore(match) {
+  if (!Array.isArray(match.sets)) return null;
+  const s1 = match.setsWon1 ?? match.sets.filter((s) => s.score1 > s.score2).length;
+  const s2 = match.setsWon2 ?? match.sets.filter((s) => s.score2 > s.score1).length;
+  return `${s1} - ${s2}`;
+}
+
+function getInningsTotals(match, team1Id, team2Id) {
+  if (!Array.isArray(match.innings) || match.innings.length === 0) return null;
+  const score1 = match.innings
+    .filter((inn) => inn.teamId === team1Id)
+    .reduce((sum, inn) => sum + (inn.runs || 0), 0);
+  const score2 = match.innings
+    .filter((inn) => inn.teamId === team2Id)
+    .reduce((sum, inn) => sum + (inn.runs || 0), 0);
+  return `${score1} - ${score2}`;
+}
+
+function matchScore(match, team1Id, team2Id) {
+  const inningsTotals = getInningsTotals(match, team1Id, team2Id);
+  if (inningsTotals) return inningsTotals;
+  if (match.team1Score && match.team2Score) {
+    return `${match.team1Score.runs}/${match.team1Score.wickets} vs ${match.team2Score.runs}/${match.team2Score.wickets}`;
+  }
+  const setsScore = getSetsScore(match);
+  if (setsScore) return setsScore;
+  if (typeof match.score1 === 'number' && typeof match.score2 === 'number') {
+    return `${match.score1} - ${match.score2}`;
+  }
+  return '--';
+}
+
+function buildTournamentEntries() {
+  const entries = [];
+  const sports = getSportsList();
+
+  sports.forEach((sport) => {
+    const tournaments = loadSportTournaments(sport.storageKey);
+    tournaments.forEach((tournament) => {
+      const teams = tournament.teams || [];
+      const matches = getTournamentMatches(tournament);
+
+      matches.forEach((match) => {
+        if (!isTournamentMatchCompleted(match, sport.engine)) return;
+
+        const team1Ref = match.team1Id ?? match.team1;
+        const team2Ref = match.team2Id ?? match.team2;
+        const team1Name = resolveTeamName(teams, team1Ref, 'Team 1');
+        const team2Name = resolveTeamName(teams, team2Ref, 'Team 2');
+
+        entries.push({
+          id: `tour-${sport.id}-${tournament.id}-${match.id}`,
+          source: 'tournament',
+          sport: sport.id,
+          sportName: sport.name,
+          tournamentName: tournament.name,
+          team1: team1Name,
+          team2: team2Name,
+          score: matchScore(match, team1Ref, team2Ref),
+          winner: resolveTournamentWinner(match, team1Name, team2Name),
+          elapsedSeconds: match.elapsedSeconds,
+          date: getCompletedAt(match) || tournament.createdAt,
+        });
+      });
+    });
+  });
+
+  return entries.sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
+}
+
 export default function MonoHistory() {
   const navigate = useNavigate();
-  const { history, clearAll: clearGeneric } = useGameHistory();
+  const { history, clearAll: clearLegacyHistory } = useGameHistory();
   const [visible, setVisible] = useState(false);
   const [quickMatches, setQuickMatches] = useState([]);
+  const [tournamentEntries, setTournamentEntries] = useState([]);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
-    const loaded = loadData(QM_KEY, []);
-    loaded.sort((a, b) => new Date(b.date) - new Date(a.date));
-    setQuickMatches(loaded);
+
+    const loadedQuick = loadData(QM_KEY, []);
+    loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
+
+    setQuickMatches(loadedQuick);
+    setTournamentEntries(buildTournamentEntries());
   }, []);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear().toString().slice(-2);
-    return `${day}.${month}.${year}`;
-  };
+  const quickEntries = useMemo(() => {
+    return quickMatches.map((qm) => {
+      const sportConfig = getSportById(qm.sport);
+      const inningsScore = Array.isArray(qm.innings) && qm.innings.length > 0
+        ? `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`
+        : null;
+      const score = inningsScore
+        || (qm.team1Score && qm.team2Score
+          ? `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score.runs}/${qm.team2Score.wickets}`
+          : `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`);
 
-  const formatElapsed = (secs) => {
-    if (!secs) return null;
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
+      return {
+        id: `quick-${qm.id}`,
+        rawId: qm.id,
+        source: 'quick',
+        sport: qm.sport,
+        sportName: sportConfig?.name || qm.sport,
+        team1: qm.team1,
+        team2: qm.team2,
+        score,
+        winner: normalizeNonTeamWinner(qm.winner),
+        elapsedSeconds: qm.elapsedSeconds,
+        date: qm.completedAt || qm.date || qm.createdAt,
+      };
+    });
+  }, [quickMatches]);
+
+  const legacyEntries = useMemo(() => {
+    return [...history]
+      .sort((a, b) => toTimestamp(b.completedAt) - toTimestamp(a.completedAt))
+      .map((record) => {
+        const participants = record.participants || [];
+        const scores = participants.map((name) => record.finalScores?.[name] ?? 0).join(' - ');
+
+        return {
+          id: `legacy-${record.id}`,
+          source: 'tournament',
+          sportName: 'Custom',
+          tournamentName: record.gameName,
+          team1: participants[0] || 'Player 1',
+          team2: participants[1] || 'Player 2',
+          participants: participants.join(', '),
+          score: scores || '--',
+          winner: record.winner,
+          date: record.completedAt,
+          isLegacy: true,
+        };
+      });
+  }, [history]);
+
+  const allEntries = useMemo(() => {
+    return [...quickEntries, ...tournamentEntries, ...legacyEntries]
+      .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
+  }, [quickEntries, tournamentEntries, legacyEntries]);
+
+  const filteredEntries = useMemo(() => {
+    if (filter === 'all') return allEntries;
+    return allEntries.filter((entry) => entry.source === filter);
+  }, [allEntries, filter]);
+
+  const quickCount = quickEntries.length;
+  const tournamentCount = tournamentEntries.length + legacyEntries.length;
+  const totalCount = allEntries.length;
+  const clearableCount = quickCount + legacyEntries.length;
 
   const deleteQuickMatch = (id) => {
-    const updated = quickMatches.filter(qm => qm.id !== id);
+    const updated = quickMatches.filter((qm) => qm.id !== id);
     setQuickMatches(updated);
     saveData(QM_KEY, updated);
   };
@@ -45,25 +223,15 @@ export default function MonoHistory() {
     saveData(QM_KEY, []);
   };
 
-  const clearEverything = () => {
-    clearGeneric();
+  const clearMutableHistory = () => {
+    clearLegacyHistory();
     clearAllQuickMatches();
-  };
-
-  const totalCount = history.length + quickMatches.length;
-
-  const getScore = (qm) => {
-    if (qm.team1Score) {
-      return `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score?.runs}/${qm.team2Score?.wickets}`;
-    }
-    return `${qm.score1} - ${qm.score2}`;
   };
 
   return (
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <nav className="flex items-center justify-between mb-10" aria-label="History navigation">
+        <nav className="flex items-center justify-between mb-6" aria-label="History navigation">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/')}
@@ -71,139 +239,109 @@ export default function MonoHistory() {
               style={{ color: '#888' }}
               aria-label="Go back to home"
             >
-              &larr;
+              <BackArrow />
             </button>
             <h1 className="text-xl font-semibold" style={{ color: '#111' }}>
               History
             </h1>
           </div>
-          {totalCount > 0 && (
+          {clearableCount > 0 && (
             <button
-              onClick={clearEverything}
-              className="bg-transparent border-none cursor-pointer font-swiss text-sm"
+              onClick={clearMutableHistory}
+              className="bg-transparent border-none cursor-pointer font-swiss text-xs"
               style={{ color: '#dc2626' }}
             >
-              Clear All
+              Clear Quick + Legacy
             </button>
           )}
         </nav>
 
-        {/* Empty state */}
-        {totalCount === 0 ? (
-          <div className="flex items-center justify-center" style={{ minHeight: '50vh' }}>
-            <p className="text-sm" style={{ color: '#888' }}>
-              No games played yet
-            </p>
+        <div className="flex gap-2 mb-6" role="tablist" aria-label="History filters">
+          {[
+            { id: 'all', label: 'All', count: totalCount },
+            { id: 'quick', label: 'Quick', count: quickCount },
+            { id: 'tournament', label: 'Tournament', count: tournamentCount },
+          ].map((chip) => (
+            <button
+              key={chip.id}
+              role="tab"
+              aria-selected={filter === chip.id}
+              className={filter === chip.id ? 'mono-btn-primary' : 'mono-btn'}
+              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              onClick={() => setFilter(chip.id)}
+            >
+              {chip.label} ({chip.count})
+            </button>
+          ))}
+        </div>
+
+        {filteredEntries.length === 0 ? (
+          <div className="flex items-center justify-center" style={{ minHeight: '45vh' }}>
+            <p className="text-sm" style={{ color: '#888' }}>No matches in this filter</p>
           </div>
         ) : (
-          <>
-            {/* Quick Matches */}
-            {quickMatches.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
-                    Quick matches ({quickMatches.length})
-                  </h2>
-                  {quickMatches.length > 1 && (
+          <div className="flex flex-col gap-2">
+            {filteredEntries.map((entry) => (
+              <div key={entry.id} className="mono-card" style={{ padding: '14px 16px' }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <SportIcon name={entry.sportName} size={18} color="#888" />
+                      <span className="text-sm font-medium" style={{ color: '#111' }}>
+                        {entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`}
+                      </span>
+                    </div>
+
+                    {entry.isLegacy && (
+                      <p className="text-xs mb-1" style={{ color: '#888' }}>{entry.participants}</p>
+                    )}
+
+                    {!entry.isLegacy && entry.tournamentName && (
+                      <p className="text-xs mb-1" style={{ color: '#888' }}>{entry.tournamentName}</p>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-mono font-bold" style={{ color: '#111' }}>
+                        {entry.score}
+                      </span>
+                      <span className="text-xs" style={{ color: '#0066ff' }}>
+                        {winnerLabel(entry.winner)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                        {formatDate(entry.date)}
+                      </span>
+                      {entry.elapsedSeconds > 0 && (
+                        <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                          {formatElapsed(entry.elapsedSeconds)}
+                        </span>
+                      )}
+                      <span className="text-xs" style={{ color: '#bbb' }}>
+                        {entry.sportName}
+                      </span>
+                      <span className="text-xs" style={{ color: '#bbb' }}>
+                        {entry.source === 'quick' ? 'Quick' : 'Tournament'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {entry.source === 'quick' && (
                     <button
-                      onClick={clearAllQuickMatches}
-                      className="bg-transparent border-none cursor-pointer font-swiss text-xs"
-                      style={{ color: '#dc2626' }}
+                      onClick={() => deleteQuickMatch(entry.rawId)}
+                      className="bg-transparent border-none cursor-pointer text-sm"
+                      style={{ color: '#888', padding: '2px 6px' }}
+                      title="Delete this match"
+                      aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
                     >
-                      Clear quick matches
+                      &times;
                     </button>
                   )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  {quickMatches.map(qm => {
-                    const sportConfig = getSportById(qm.sport);
-                    return (
-                      <div key={qm.id} className="mono-card" style={{ padding: '14px 16px' }}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-base">{sportConfig?.icon || ''}</span>
-                              <span className="text-sm font-medium" style={{ color: '#111' }}>
-                                {qm.team1} vs {qm.team2}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-mono font-bold" style={{ color: '#111' }}>
-                                {getScore(qm)}
-                              </span>
-                              <span className="text-xs" style={{ color: '#0066ff' }}>
-                                {qm.winner === 'Draw' ? 'Draw' : qm.winner === 'Tie' ? 'Tied' : `${qm.winner} won`}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-xs font-mono" style={{ color: '#bbb' }}>
-                                {formatDate(qm.date)}
-                              </span>
-                              {qm.elapsedSeconds > 0 && (
-                                <span className="text-xs font-mono" style={{ color: '#bbb' }}>
-                                  {formatElapsed(qm.elapsedSeconds)}
-                                </span>
-                              )}
-                              <span className="text-xs" style={{ color: '#bbb' }}>
-                                {sportConfig?.name || qm.sport}
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => deleteQuickMatch(qm.id)}
-                            className="bg-transparent border-none cursor-pointer text-sm"
-                            style={{ color: '#bbb', padding: '2px 6px' }}
-                            title="Delete this match"
-                            aria-label={`Delete match ${qm.team1} vs ${qm.team2}`}
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
-            )}
-
-            {/* Generic Games (old system) */}
-            {history.length > 0 && (
-              <div>
-                <h2 className="text-xs uppercase tracking-widest font-normal mb-4" style={{ color: '#888' }}>
-                  Custom games ({history.length})
-                </h2>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <caption className="sr-only">Game history</caption>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #eee' }}>
-                      <th scope="col" className="text-xs uppercase tracking-widest font-normal text-left py-3" style={{ color: '#888', width: '72px' }}>Date</th>
-                      <th scope="col" className="text-xs uppercase tracking-widest font-normal text-left py-3" style={{ color: '#888' }}>Game</th>
-                      <th scope="col" className="text-xs uppercase tracking-widest font-normal text-left py-3" style={{ color: '#888' }}>Players</th>
-                      <th scope="col" className="text-xs uppercase tracking-widest font-normal text-left py-3" style={{ color: '#888', width: '80px' }}>Score</th>
-                      <th scope="col" className="text-xs uppercase tracking-widest font-normal text-left py-3" style={{ color: '#888', width: '80px' }}>Winner</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...history].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt)).map((record) => {
-                      const scores = record.participants
-                        .map((name) => record.finalScores[name] ?? 0)
-                        .join(' : ');
-
-                      return (
-                        <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
-                          <td className="text-sm font-mono py-3" style={{ color: '#111' }}>{formatDate(record.completedAt)}</td>
-                          <td className="text-sm py-3" style={{ color: '#111' }}>{record.gameName}</td>
-                          <td className="text-sm py-3" style={{ color: '#888' }}>{record.participants.join(', ')}</td>
-                          <td className="text-sm font-mono mono-score py-3" style={{ color: '#111' }}>{scores}</td>
-                          <td className="text-sm py-3" style={{ color: record.winner ? '#0066ff' : '#888' }}>{record.winner || '--'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData, saveData } from '../../utils/storage';
 import { getSportsList } from '../../models/sportRegistry';
+import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
+import BackArrow from './components/BackArrow';
+import SportIcon from './SportIcon';
 
 const QM_KEY = 'se_quickmatches';
 
@@ -16,7 +20,7 @@ export default function MonoStatistics() {
     requestAnimationFrame(() => setVisible(true));
 
     const qm = loadData(QM_KEY, []);
-    qm.sort((a, b) => new Date(b.date) - new Date(a.date));
+    qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
     setQuickMatches(qm);
 
     // Load stats for ALL sports
@@ -29,12 +33,8 @@ export default function MonoStatistics() {
       const teams = new Set();
 
       tournaments.forEach(t => {
-        // Count matches based on sport type
-        if (sport.engine === 'custom-cricket') {
-          matches += t.matches?.filter(m => m.status === 'completed' || m.team1Score).length || 0;
-        } else {
-          matches += t.matches?.filter(m => m.score1 !== null && m.score1 !== undefined).length || 0;
-        }
+        const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
+        matches += allMatches.filter((m) => isTournamentMatchCompleted(m, sport.engine)).length;
         t.teams?.forEach(team => teams.add(team.name));
       });
 
@@ -80,8 +80,8 @@ export default function MonoStatistics() {
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-2xl mx-auto">
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#888' }} aria-label="Go back to home">
-            &larr; Home
+          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1" style={{ color: '#888' }} aria-label="Go back to home">
+            <BackArrow /> Home
           </button>
         </nav>
 
@@ -126,7 +126,7 @@ export default function MonoStatistics() {
               {sportsWithData.map(sportData => (
                 <div key={sportData.sport.id} className="mono-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{sportData.sport.icon}</span>
+                    <SportIcon name={sportData.sport.name} size={24} color="#111" />
                     <div>
                       <p className="text-sm font-medium" style={{ color: '#111' }}>{sportData.sport.name}</p>
                       <p className="text-xs" style={{ color: '#888' }}>
@@ -170,7 +170,7 @@ export default function MonoStatistics() {
               <TeamStatsTable
                 sportId={sportData.sport.id}
                 sportName={sportData.sport.name}
-                sportIcon={sportData.sport.icon}
+                sportIcon={sportData.sport.name}
                 tournaments={sportData.tournamentsRaw}
                 engine={sportData.sport.engine}
               />
@@ -197,7 +197,7 @@ export default function MonoStatistics() {
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
-                  {quickMatches.map(qm => (
+          {quickMatches.map(qm => (
                     <div key={qm.id} className="mono-card" style={{ padding: '12px 16px' }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
@@ -208,14 +208,16 @@ export default function MonoStatistics() {
                             <span className="text-xs font-mono" style={{ color: '#888' }}>
                               {qm.score1 !== undefined
                                 ? `${qm.score1}-${qm.score2}`
-                                : `${qm.team1Score?.runs}/${qm.team1Score?.wickets} vs ${qm.team2Score?.runs}/${qm.team2Score?.wickets}`
+                                : Array.isArray(qm.innings) && qm.innings.length > 0
+                                  ? `${qm.score1 ?? 0}-${qm.score2 ?? 0}`
+                                  : `${qm.team1Score?.runs}/${qm.team1Score?.wickets} vs ${qm.team2Score?.runs}/${qm.team2Score?.wickets}`
                               }
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-xs" style={{ color: '#0066ff' }}>{qm.winner}</span>
                             <span className="text-xs" style={{ color: '#bbb' }}>
-                              {new Date(qm.date).toLocaleDateString()}
+                              {new Date(qm.completedAt || qm.date || qm.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         </div>
@@ -250,16 +252,31 @@ function StatCard({ label, value }) {
   );
 }
 
+StatCard.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
 function EmptyState({ icon, label }) {
+  const isEmoji = icon && icon.length <= 2;
   return (
     <div className="flex flex-col items-center justify-center" style={{ minHeight: '20vh' }}>
-      <span className="text-4xl mb-3">{icon}</span>
+      {isEmoji ? (
+        <span className="text-4xl mb-3">{icon}</span>
+      ) : (
+        <div className="mb-3"><SportIcon name={icon} size={36} color="#bbb" /></div>
+      )}
       <p className="text-sm" style={{ color: '#888' }}>{label}</p>
     </div>
   );
 }
 
-function TeamStatsTable({ sportId, sportName, sportIcon, tournaments, engine }) {
+EmptyState.propTypes = {
+  icon: PropTypes.string,
+  label: PropTypes.string,
+};
+
+function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // sportId intentionally omitted — unused param removed (S1854)
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -272,10 +289,11 @@ function TeamStatsTable({ sportId, sportName, sportIcon, tournaments, engine }) 
         }
       });
 
-      t.matches?.forEach(match => {
+      const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
+      allMatches.forEach(match => {
         if (engine === 'custom-cricket') {
           // Cricket scoring
-          if (match.status !== 'completed' && !match.team1Score) return;
+          if (!isTournamentMatchCompleted(match, engine)) return;
           const t1 = t.teams?.find(te => te.id === match.team1Id)?.name;
           const t2 = t.teams?.find(te => te.id === match.team2Id)?.name;
           if (!t1 || !t2 || !teamMap[t1] || !teamMap[t2]) return;
@@ -283,13 +301,17 @@ function TeamStatsTable({ sportId, sportName, sportIcon, tournaments, engine }) 
           teamMap[t1].played++;
           teamMap[t2].played++;
 
-          const s1 = match.team1Score?.runs || 0;
-          const s2 = match.team2Score?.runs || 0;
+          const s1 = typeof match.score1 === 'number'
+            ? match.score1
+            : (match.team1Score?.runs || 0);
+          const s2 = typeof match.score2 === 'number'
+            ? match.score2
+            : (match.team2Score?.runs || 0);
           if (s1 > s2) { teamMap[t1].won++; teamMap[t2].lost++; }
           else if (s2 > s1) { teamMap[t2].won++; teamMap[t1].lost++; }
         } else {
           // Sets/Goals scoring
-          if (match.score1 === null || match.score1 === undefined) return;
+          if (!isTournamentMatchCompleted(match, engine)) return;
           const idx1 = match.team1Id ?? match.team1;
           const idx2 = match.team2Id ?? match.team2;
           const t1 = typeof idx1 === 'number' ? t.teams?.[idx1]?.name : t.teams?.find(te => te.id === idx1)?.name;
@@ -298,8 +320,16 @@ function TeamStatsTable({ sportId, sportName, sportIcon, tournaments, engine }) 
 
           teamMap[t1].played++;
           teamMap[t2].played++;
-          if (match.score1 > match.score2) { teamMap[t1].won++; teamMap[t2].lost++; }
-          else { teamMap[t2].won++; teamMap[t1].lost++; }
+          if (Array.isArray(match.sets) && match.sets.length > 0) {
+            const sets1 = match.setsWon1 ?? match.sets.filter((s) => s.score1 > s.score2).length;
+            const sets2 = match.setsWon2 ?? match.sets.filter((s) => s.score2 > s.score1).length;
+            if (sets1 > sets2) { teamMap[t1].won++; teamMap[t2].lost++; }
+            else if (sets2 > sets1) { teamMap[t2].won++; teamMap[t1].lost++; }
+          } else if (match.score1 > match.score2) {
+            teamMap[t1].won++; teamMap[t2].lost++;
+          } else if (match.score2 > match.score1) {
+            teamMap[t2].won++; teamMap[t1].lost++;
+          }
         }
       });
     });
@@ -339,3 +369,10 @@ function TeamStatsTable({ sportId, sportName, sportIcon, tournaments, engine }) 
     </div>
   );
 }
+
+TeamStatsTable.propTypes = {
+  sportName: PropTypes.string,
+  sportIcon: PropTypes.string,
+  tournaments: PropTypes.array,
+  engine: PropTypes.string,
+};

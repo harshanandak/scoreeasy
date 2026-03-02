@@ -1,14 +1,15 @@
-import React, { useEffect, Suspense, lazy } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
+import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
 import MonoSportHome from './MonoSportHome';
-import MonoSetup from './MonoSetup';
-import MonoLiveGame from './MonoLiveGame';
 import MonoHistory from './MonoHistory';
 import MonoTournamentList from './MonoTournamentList';
 import MonoTournamentLiveScore from './MonoTournamentLiveScore';
 import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
+import ErrorBoundary from '../../components/ErrorBoundary';
+import OfflineFallback from '../../components/OfflineFallback';
 import './mono.css';
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
@@ -23,6 +24,8 @@ const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiv
 // Lazy-loaded showcase components (rarely visited)
 const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
+const BrutalistColorShowcase = lazy(() => import('./landing-designs/BrutalistColorShowcase'));
+const DashboardShowcase = lazy(() => import('./landing/DashboardShowcase'));
 
 // Lazy-loaded auth pages (not needed for guests)
 const MonoLogin = lazy(() => import('./MonoLogin'));
@@ -39,7 +42,7 @@ function LazyFallback() {
 }
 
 // Redirects authenticated users who haven't completed onboarding
-const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback'];
+const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
 function OnboardingGuard({ children }) {
   const { needsOnboarding, isLoading } = useAuth();
   const location = useLocation();
@@ -50,6 +53,10 @@ function OnboardingGuard({ children }) {
   }
   return children;
 }
+
+OnboardingGuard.propTypes = {
+  children: PropTypes.node,
+};
 
 // Dispatcher component that routes to the correct tournament component based on engine
 function TournamentDispatcher() {
@@ -64,17 +71,14 @@ function TournamentDispatcher() {
     );
   }
 
-  // Cricket uses custom component
   if (sportConfig.engine === 'custom-cricket') {
     return <MonoCricketTournament />;
   }
 
-  // Sets-based sports use GenericSetsTournament
   if (sportConfig.engine === 'sets') {
     return <GenericSetsTournament />;
   }
 
-  // Goals-based sports use GenericGoalsTournament
   if (sportConfig.engine === 'goals') {
     return <GenericGoalsTournament />;
   }
@@ -91,18 +95,16 @@ export default function Design1Mono() {
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {
-    const isGameRoute = /\/(game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(location.pathname);
+    const isGameRoute = /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(location.pathname);
 
     if (!isGameRoute) return;
 
-    // Push a dummy history entry so back button triggers popstate
-    window.history.pushState({ gameProtection: true }, '');
+    globalThis.history.pushState({ gameProtection: true }, '');
 
-    const handlePopState = (e) => {
-      const leave = window.confirm('Leave this page? Your unsaved scoring progress may be lost.');
+    const handlePopState = () => {
+      const leave = globalThis.confirm('Leave this page? Your unsaved scoring progress may be lost.');
       if (!leave) {
-        // Re-push dummy entry to keep them on the page
-        window.history.pushState({ gameProtection: true }, '');
+        globalThis.history.pushState({ gameProtection: true }, '');
       }
     };
 
@@ -111,60 +113,55 @@ export default function Design1Mono() {
       e.returnValue = '';
     };
 
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    globalThis.addEventListener('popstate', handlePopState);
+    globalThis.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      globalThis.removeEventListener('popstate', handlePopState);
+      globalThis.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [location.pathname]);
 
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <OfflineFallback />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
-          <OnboardingGuard>
-            <Routes>
-              {/* Landing page */}
-              <Route path="" element={<MonoLanding />} />
+          <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
+            <OnboardingGuard>
+              <Routes>
+                <Route path="" element={<MonoLanding />} />
 
-              {/* Auth pages — wildcard paths for Clerk's internal sub-routes */}
-              <Route path="login/*" element={<MonoLogin />} />
-              <Route path="signup/*" element={<MonoSignUp />} />
-              <Route path="sso-callback" element={<SSOCallback />} />
-              <Route path="onboarding" element={<MonoOnboarding />} />
+                <Route path="login/*" element={<MonoLogin />} />
+                <Route path="signup/*" element={<MonoSignUp />} />
+                <Route path="sso-callback" element={<SSOCallback />} />
+                <Route path="onboarding" element={<MonoOnboarding />} />
 
-              {/* User pages */}
-              <Route path="profile" element={<MonoProfile />} />
-              <Route path="profile/:username" element={<MonoProfile />} />
-              <Route path="users/search" element={<MonoUserSearch />} />
+                <Route path="profile" element={<MonoProfile />} />
+                <Route path="profile/:username" element={<MonoProfile />} />
+                <Route path="users/search" element={<MonoUserSearch />} />
 
-              {/* Sport picker (secondary) */}
-              <Route path="play" element={<MonoSportHome />} />
+                <Route path="play" element={<MonoSportHome />} />
 
-              {/* Generic sport routes (works for all 14 sports) */}
-              <Route path=":sport/tournament" element={<MonoTournamentList />} />
-              <Route path=":sport/tournament/new" element={<MonoTournamentSetup />} />
-              <Route path=":sport/tournament/:id" element={<TournamentDispatcher />} />
-              <Route path=":sport/tournament/:id/match/:matchId/score" element={<MonoTournamentLiveScore />} />
-              <Route path=":sport/quick" element={<MonoQuickMatch />} />
-              <Route path=":sport/quick/test/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} />
+                <Route path=":sport/tournament" element={<MonoTournamentList />} />
+                <Route path=":sport/tournament/new" element={<MonoTournamentSetup />} />
+                <Route path=":sport/tournament/:id" element={<TournamentDispatcher />} />
+                <Route path=":sport/tournament/:id/match/:matchId/score" element={<MonoTournamentLiveScore />} />
+                <Route path=":sport/quick" element={<MonoQuickMatch />} />
+                <Route path=":sport/quick/test/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} />
 
-              {/* Statistics */}
-              <Route path="statistics" element={<MonoStatistics />} />
+                <Route path="statistics" element={<MonoStatistics />} />
 
-              {/* Design showcase */}
-              <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
-              <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
+                <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
+                <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
+                <Route path="showcase/brutalist-colors" element={<BrutalistColorShowcase />} />
+                <Route path="showcase/dashboard-variants" element={<DashboardShowcase />} />
 
-              {/* Generic game routes (existing) */}
-              <Route path="setup" element={<MonoSetup />} />
-              <Route path="game/:id" element={<MonoLiveGame />} />
-              <Route path="history" element={<MonoHistory />} />
-            </Routes>
-          </OnboardingGuard>
+                <Route path="history" element={<MonoHistory />} />
+              </Routes>
+            </OnboardingGuard>
+          </ErrorBoundary>
         </Suspense>
       </main>
     </div>

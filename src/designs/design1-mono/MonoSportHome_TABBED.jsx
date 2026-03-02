@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
+import BackArrow from './components/BackArrow';
+import SportIcon from './SportIcon';
 
 export default function MonoSportHome() {
   const navigate = useNavigate();
@@ -39,12 +41,14 @@ export default function MonoSportHome() {
               className="text-sm bg-transparent border-none cursor-pointer font-swiss"
               style={{ color: '#888' }}
             >
-              &larr;
+              <BackArrow />
             </button>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-                Score Easy
-              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="font-mono" style={{ fontSize: '0.6875rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#111', lineHeight: 1.1 }}>
+                  SCORE EASY
+                </span>
+              </div>
               <p className="text-xs mt-1" style={{ color: '#888' }}>
                 All sports
               </p>
@@ -96,7 +100,7 @@ export default function MonoSportHome() {
                 <div key={sport.id} className="mono-card" style={{ padding: 0 }}>
                   <div style={{ padding: '20px 24px' }}>
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-3xl">{sport.icon}</span>
+                      <SportIcon name={sport.name} size={32} color="#111" />
                       <div className="flex-1">
                         <h3 className="text-base font-semibold mb-1" style={{ color: '#111' }}>
                           {sport.name}

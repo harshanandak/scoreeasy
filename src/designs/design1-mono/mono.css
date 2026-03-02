@@ -8,6 +8,7 @@
   background: #ffffff;
   border: 1px solid #eee;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 200ms ease;
 }
 
 .mono-card:hover {

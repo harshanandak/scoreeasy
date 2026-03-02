@@ -1,18 +1,28 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { ClerkProvider, useAuth } from '@clerk/clerk-react'
-import { ConvexProviderWithClerk } from 'convex/react-clerk'
-import { ConvexReactClient } from 'convex/react'
-import App from './App.jsx'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { ClerkProvider, useAuth } from '@clerk/clerk-react';
+import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { ConvexReactClient } from 'convex/react';
+import * as Sentry from '@sentry/react';
+import App from './App.jsx';
+import './index.css';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env.local')
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env.local');
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: import.meta.env.MODE,
+    tracesSampleRate: 0.1,
+  });
+}
+
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL);
 
 // Load React Grab in development mode
 if (import.meta.env.DEV) {
@@ -32,4 +42,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       </ConvexProviderWithClerk>
     </ClerkProvider>
   </React.StrictMode>,
-)
+);

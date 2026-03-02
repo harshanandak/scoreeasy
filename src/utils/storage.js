@@ -4,24 +4,24 @@ import { migrateTournaments } from './formatMigration';
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
   try {
-    if (typeof localStorage === 'undefined') return;
-    if (localStorage.getItem('se_migrated')) return;
+    if (globalThis.localStorage === undefined) return;
+    if (globalThis.localStorage.getItem('se_migrated')) return;
     const keysToMigrate = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    for (let i = 0; i < globalThis.localStorage.length; i++) {
+      const key = globalThis.localStorage.key(i);
       if (key && key.startsWith('gamescore_')) {
         keysToMigrate.push(key);
       }
     }
     for (const key of keysToMigrate) {
       const newKey = key.replace('gamescore_', 'se_');
-      if (!localStorage.getItem(newKey)) {
-        localStorage.setItem(newKey, localStorage.getItem(key));
+      if (!globalThis.localStorage.getItem(newKey)) {
+        globalThis.localStorage.setItem(newKey, globalThis.localStorage.getItem(key));
       }
     }
-    localStorage.setItem('se_migrated', '1');
+    globalThis.localStorage.setItem('se_migrated', '1');
   } catch {
-    // Silently fail in environments without localStorage
+    // Silently fail in environments without globalThis.localStorage
   }
 }
 migrateStoragePrefix();
@@ -52,9 +52,9 @@ function createMemoryFallback() {
 function isStorageAvailable() {
   const testKey = '__gs_storage_test__';
   try {
-    localStorage.setItem(testKey, 'test');
-    const result = localStorage.getItem(testKey);
-    localStorage.removeItem(testKey);
+    globalThis.localStorage.setItem(testKey, 'test');
+    const result = globalThis.localStorage.getItem(testKey);
+    globalThis.localStorage.removeItem(testKey);
     return result === 'test';
   } catch {
     return false;
@@ -67,7 +67,7 @@ const isPrivateMode = !storageAvailable;
 
 // Get the active storage backend
 function getStorage() {
-  return storageAvailable ? localStorage : memoryFallback;
+  return storageAvailable ? globalThis.localStorage : memoryFallback;
 }
 
 // --- Quota Handling ---
@@ -96,7 +96,7 @@ function safeSave(key, data) {
 
 /**
  * Estimate storage usage. Returns { used, total, percentage }.
- * total is estimated at 5MB for localStorage.
+ * total is estimated at 5MB for globalThis.localStorage.
  */
 function getStorageUsage() {
   const ESTIMATED_TOTAL = 5 * 1024 * 1024; // 5 MB
@@ -104,9 +104,9 @@ function getStorageUsage() {
   try {
     // For memory fallback, we can't measure usage
     if (storageAvailable) {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const value = localStorage.getItem(key);
+      for (let i = 0; i < globalThis.localStorage.length; i++) {
+        const key = globalThis.localStorage.key(i);
+        const value = globalThis.localStorage.getItem(key);
         used += (key.length + (value ? value.length : 0)) * 2; // UTF-16
       }
     }

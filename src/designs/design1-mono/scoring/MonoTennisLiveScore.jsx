@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
+import { useAuth } from '../../../hooks/useAuth';
+import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -57,56 +61,231 @@ const showSetWon = (teamName, setNumber) => {
   setTimeout(() => notification.remove(), 1500);
 };
 
+// Build a blank set object
+const makeBlankSet = () => ({
+  games1: 0,
+  games2: 0,
+  points1: 0,
+  points2: 0,
+  isDeuce: false,
+  advantage: null,
+  isTiebreak: false,
+  tiebreakPoints1: 0,
+  tiebreakPoints2: 0,
+  completed: false,
+});
+
+// Build the initial sets array for a match — S7723: use new Array()
+const buildInitialSets = (numSets) =>
+  new Array(numSets).fill(null).map(() => makeBlankSet());
+
+// Check whether a set is complete
+const isSetComplete = (set) => {
+  if (set.isTiebreak) {
+    const tb1 = set.tiebreakPoints1;
+    const tb2 = set.tiebreakPoints2;
+    return (tb1 >= 7 && tb1 - tb2 >= 2) || (tb2 >= 7 && tb2 - tb1 >= 2);
+  }
+  const g1 = set.games1;
+  const g2 = set.games2;
+  if (g1 === 6 && g2 === 6) return false; // Will switch to tiebreak
+  return (g1 >= 6 && g1 - g2 >= 2) || (g2 >= 6 && g2 - g1 >= 2);
+};
+
+// Count sets won by each team from a list of completed sets
+const countSetsWon = (completedSets) => {
+  let team1Sets = 0;
+  let team2Sets = 0;
+  completedSets.forEach(set => {
+    const team1Wins = set.isTiebreak
+      ? set.tiebreakPoints1 > set.tiebreakPoints2
+      : set.games1 > set.games2;
+    if (team1Wins) team1Sets++;
+    else team2Sets++;
+  });
+  return { team1Sets, team2Sets };
+};
+
+// Apply deuce/advantage logic to a set in-place — extracted to reduce cognitive complexity
+const applyDeuceLogic = (set, team1Name, team2Name, currentSetNum) => {
+  const p1 = set.points1;
+  const p2 = set.points2;
+
+  set.isDeuce = true;
+
+  if (p1 === p2) {
+    set.advantage = null;
+  } else if (p1 > p2) {
+    set.advantage = 1;
+  } else {
+    set.advantage = 2;
+  }
+
+  if (p1 - p2 >= 2) {
+    set.games1++;
+    set.points1 = 0;
+    set.points2 = 0;
+    set.isDeuce = false;
+    set.advantage = null;
+    triggerHaptic([50, 100, 50]);
+    showGameWon(team1Name, set.games1, currentSetNum);
+  } else if (p2 - p1 >= 2) {
+    set.games2++;
+    set.points1 = 0;
+    set.points2 = 0;
+    set.isDeuce = false;
+    set.advantage = null;
+    triggerHaptic([50, 100, 50]);
+    showGameWon(team2Name, set.games2, currentSetNum);
+  }
+};
+
+// Apply regular (no-deuce) game win logic to a set in-place
+const applyRegularGameLogic = (set, team1Name, team2Name, currentSetNum) => {
+  const p1 = set.points1;
+  const p2 = set.points2;
+
+  if (p1 >= 4 && p1 - p2 >= 2) {
+    set.games1++;
+    set.points1 = 0;
+    set.points2 = 0;
+    triggerHaptic([50, 100, 50]);
+    showGameWon(team1Name, set.games1, currentSetNum);
+  } else if (p2 >= 4 && p2 - p1 >= 2) {
+    set.games2++;
+    set.points1 = 0;
+    set.points2 = 0;
+    triggerHaptic([50, 100, 50]);
+    showGameWon(team2Name, set.games2, currentSetNum);
+  }
+};
+
+// Process a tiebreak point and return updated sets + optional next set index
+const processTiebreakPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn) => {
+  const set = newSets[setIdx];
+  if (team === 1) set.tiebreakPoints1++;
+  else set.tiebreakPoints2++;
+
+  if (isSetComplete(set)) {
+    set.completed = true;
+    triggerHaptic([50, 100, 50]);
+    const winner = set.tiebreakPoints1 > set.tiebreakPoints2 ? team1Name : team2Name;
+    showSetWon(winner, setIdx + 1);
+    advanceFn(setIdx, newSets.length);
+  }
+  return newSets;
+};
+
+// Process a regular-game point and return updated sets
+const processRegularPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn) => {
+  const set = newSets[setIdx];
+  if (team === 1) set.points1++;
+  else set.points2++;
+
+  const p1 = set.points1;
+  const p2 = set.points2;
+
+  if (p1 >= 3 && p2 >= 3) {
+    applyDeuceLogic(set, team1Name, team2Name, setIdx + 1);
+  } else if (p1 >= 4 || p2 >= 4) {
+    applyRegularGameLogic(set, team1Name, team2Name, setIdx + 1);
+  }
+
+  // 6-6 → tiebreak
+  if (set.games1 === 6 && set.games2 === 6 && !set.isTiebreak) {
+    set.isTiebreak = true;
+    set.tiebreakPoints1 = 0;
+    set.tiebreakPoints2 = 0;
+  }
+
+  if (isSetComplete(set)) {
+    set.completed = true;
+    triggerHaptic([50, 100, 50]);
+    const winner = set.games1 > set.games2 ? team1Name : team2Name;
+    showSetWon(winner, setIdx + 1);
+    advanceFn(setIdx, newSets.length);
+  }
+  return newSets;
+};
+
+// Compute the score display values for the current set
+const computeScoreDisplay = (setData) => {
+  if (setData.isTiebreak) {
+    return { score1: setData.tiebreakPoints1, score2: setData.tiebreakPoints2 };
+  }
+  if (setData.isDeuce) {
+    if (setData.advantage === 1) return { score1: 'AD', score2: '40' };
+    if (setData.advantage === 2) return { score1: '40', score2: 'AD' };
+    return { score1: '40', score2: '40' };
+  }
+  return {
+    score1: pointToDisplay(setData.points1),
+    score2: pointToDisplay(setData.points2),
+  };
+};
+
+// Apply loaded match data to component state — extracted to cut component cognitive complexity
+const applyLoadedMatch = (foundMatch, found, setSets, setCurrentSet, setHistory) => {
+  if (foundMatch.sets?.length > 0 && !foundMatch.draftState) {
+    setSets(foundMatch.sets);
+    const lastSetIndex = foundMatch.sets.findIndex(s => !s.completed);
+    setCurrentSet(lastSetIndex >= 0 ? lastSetIndex : foundMatch.sets.length - 1);
+  } else if (foundMatch.draftState) {
+    setSets(foundMatch.draftState.sets);
+    setCurrentSet(foundMatch.draftState.currentSet);
+    setHistory(foundMatch.draftState.history || []);
+  } else {
+    const numSets = found.format?.sets || 3;
+    setSets(buildInitialSets(numSets));
+  }
+};
+
+// Build keyboard handler for scoring shortcuts
+const makeKeyHandler = (addPoint, undo, leftTeam, rightTeam) => (e) => {
+  switch (e.key.toLowerCase()) {
+    case 'q': addPoint(leftTeam); break;
+    case 'p': addPoint(rightTeam); break;
+    case 'u': undo(); break;
+    default: break;
+  }
+};
+
 export default function MonoTennisLiveScore() {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
   const lastClickRef = useRef(0);
+  const { isAuthenticated } = useAuth();
+  const saveMatchMutation = useMutation(api.matches.save);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [match, setMatch] = useState(null);
 
-  // Tennis state structure
-  const initializeSets = () => {
-    const numSets = tournament?.format?.sets || 3; // Best of 3 or 5
-    return Array(numSets).fill(null).map((_, idx) => ({
-      games1: 0,
-      games2: 0,
-      points1: 0,
-      points2: 0,
-      isDeuce: false,
-      advantage: null, // 1 or 2 for advantage
-      isTiebreak: false,
-      tiebreakPoints1: 0,
-      tiebreakPoints2: 0,
-      completed: false,
-    }));
-  };
-
-  const [sets, setSets] = useState(() => {
-    if (match?.sets && match.sets.length > 0) {
-      return match.sets;
-    }
-    return initializeSets();
-  });
-
-  const [currentSet, setCurrentSet] = useState(() => {
-    if (match?.draftState?.currentSet !== undefined) {
-      return match.draftState.currentSet;
-    }
-    return 0;
-  });
-
-  const [history, setHistory] = useState(() => {
-    if (match?.draftState?.history) {
-      return match.draftState.history;
-    }
-    return [];
-  });
-
+  const [sets, setSets] = useState(() => buildInitialSets(3));
+  const [currentSet, setCurrentSet] = useState(0);
+  const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
+  const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
+  const [saveWarning, setSaveWarning] = useState('');
+
+  const saveTournamentToConvex = (updatedTournament) => {
+    if (!isAuthenticated || !updatedTournament) return;
+    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
+      .find((m) => m.id === matchId || m.id === Number(matchId));
+    if (!savedMatch) return;
+    try {
+      const payload = buildTournamentConvexPayload({
+        sportId: sport,
+        tournament: updatedTournament,
+        match: savedMatch,
+      });
+      saveMatchMutation(payload).catch(() => {});
+    } catch {
+      // Local save is primary; cloud sync failures are non-blocking.
+    }
+  };
 
   // Load tournament and match data
   useEffect(() => {
@@ -124,20 +303,7 @@ export default function MonoTennisLiveScore() {
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
-
-    // Initialize from existing score if editing
-    if (foundMatch.sets?.length > 0 && !foundMatch.draftState) {
-      setSets(foundMatch.sets);
-      const lastSetIndex = foundMatch.sets.findIndex(s => !s.completed);
-      setCurrentSet(lastSetIndex >= 0 ? lastSetIndex : foundMatch.sets.length - 1);
-    }
-
-    // Restore from draft if exists
-    if (foundMatch.draftState) {
-      setSets(foundMatch.draftState.sets);
-      setCurrentSet(foundMatch.draftState.currentSet);
-      setHistory(foundMatch.draftState.history || []);
-    }
+    applyLoadedMatch(foundMatch, found, setSets, setCurrentSet, setHistory);
   }, [sport, id, matchId]);
 
   // Get team names
@@ -150,187 +316,47 @@ export default function MonoTennisLiveScore() {
   const leftName = sidesSwapped ? team2Name : team1Name;
   const rightName = sidesSwapped ? team1Name : team2Name;
 
-  // Check if set is complete
-  const isSetComplete = (set) => {
-    if (set.isTiebreak) {
-      // Tiebreak: First to 7 with 2-point margin
-      const tb1 = set.tiebreakPoints1;
-      const tb2 = set.tiebreakPoints2;
-      return (tb1 >= 7 && tb1 - tb2 >= 2) || (tb2 >= 7 && tb2 - tb1 >= 2);
-    }
-
-    // Regular set: First to 6 games with 2-game margin
-    const g1 = set.games1;
-    const g2 = set.games2;
-
-    // If 6-6, go to tiebreak
-    if (g1 === 6 && g2 === 6) {
-      return false; // Will switch to tiebreak
-    }
-
-    // Win by reaching 6 with 2-game margin
-    return (g1 >= 6 && g1 - g2 >= 2) || (g2 >= 6 && g2 - g1 >= 2);
-  };
-
   // Check if match is complete
   const isMatchComplete = useMemo(() => {
     const completedSets = sets.filter(s => s.completed);
-    const setsToWin = Math.ceil(sets.length / 2); // Best of 3: need 2, Best of 5: need 3
-
-    let team1Sets = 0;
-    let team2Sets = 0;
-
-    completedSets.forEach(set => {
-      if (set.isTiebreak) {
-        if (set.tiebreakPoints1 > set.tiebreakPoints2) team1Sets++;
-        else team2Sets++;
-      } else {
-        if (set.games1 > set.games2) team1Sets++;
-        else team2Sets++;
-      }
-    });
-
+    const setsToWin = Math.ceil(sets.length / 2);
+    const { team1Sets, team2Sets } = countSetsWon(completedSets);
     return team1Sets >= setsToWin || team2Sets >= setsToWin;
   }, [sets]);
 
   // Add point to team
   const addPoint = (team) => {
-    // Debounce rapid clicks (150ms)
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
-
-    // If match complete, don't allow more points
     if (isMatchComplete) return;
 
-    // Save history for undo
     setHistory(prev => [...prev, {
       timestamp: Date.now(),
       sets: structuredClone(sets),
       currentSet,
-    }].slice(-100)); // Keep last 100 actions
+    }].slice(-100));
+
+    // advanceFn is called by the process helpers when a set completes
+    const advanceFn = (setIdx, totalSets) => {
+      if (setIdx < totalSets - 1) setCurrentSet(setIdx + 1);
+    };
 
     setSets(prevSets => {
       const newSets = prevSets.map(s => ({ ...s }));
       const set = newSets[currentSet];
+      if (set.completed) return prevSets;
 
-      if (set.completed) return prevSets; // Can't score on completed set
-
-      // Haptic feedback
       triggerHaptic([50]);
 
-      // Handle tiebreak scoring
       if (set.isTiebreak) {
-        if (team === 1) {
-          set.tiebreakPoints1++;
-        } else {
-          set.tiebreakPoints2++;
-        }
-
-        // Check if tiebreak is complete
-        if (isSetComplete(set)) {
-          set.completed = true;
-          triggerHaptic([50, 100, 50]); // Double pulse for set won
-          const winner = set.tiebreakPoints1 > set.tiebreakPoints2 ? team1Name : team2Name;
-          showSetWon(winner, currentSet + 1);
-
-          // Auto-advance to next set if match not complete
-          if (currentSet < sets.length - 1) {
-            setCurrentSet(currentSet + 1);
-          }
-        }
-
-        return newSets;
+        return processTiebreakPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn);
       }
-
-      // Regular game scoring
-      if (team === 1) {
-        set.points1++;
-      } else {
-        set.points2++;
-      }
-
-      const p1 = set.points1;
-      const p2 = set.points2;
-
-      // Check for deuce (40-40)
-      if (p1 >= 3 && p2 >= 3) {
-        set.isDeuce = true;
-
-        if (p1 === p2) {
-          // Back to deuce
-          set.advantage = null;
-        } else if (p1 > p2) {
-          // Player 1 advantage
-          set.advantage = 1;
-        } else {
-          // Player 2 advantage
-          set.advantage = 2;
-        }
-
-        // Check for game won from advantage
-        if (p1 - p2 >= 2) {
-          // Team 1 wins game
-          set.games1++;
-          set.points1 = 0;
-          set.points2 = 0;
-          set.isDeuce = false;
-          set.advantage = null;
-          triggerHaptic([50, 100, 50]);
-          showGameWon(team1Name, set.games1, currentSet + 1);
-        } else if (p2 - p1 >= 2) {
-          // Team 2 wins game
-          set.games2++;
-          set.points1 = 0;
-          set.points2 = 0;
-          set.isDeuce = false;
-          set.advantage = null;
-          triggerHaptic([50, 100, 50]);
-          showGameWon(team2Name, set.games2, currentSet + 1);
-        }
-      } else if (p1 >= 4 || p2 >= 4) {
-        // Regular game win (no deuce)
-        if (p1 >= 4 && p1 - p2 >= 2) {
-          // Team 1 wins game
-          set.games1++;
-          set.points1 = 0;
-          set.points2 = 0;
-          triggerHaptic([50, 100, 50]);
-          showGameWon(team1Name, set.games1, currentSet + 1);
-        } else if (p2 >= 4 && p2 - p1 >= 2) {
-          // Team 2 wins game
-          set.games2++;
-          set.points1 = 0;
-          set.points2 = 0;
-          triggerHaptic([50, 100, 50]);
-          showGameWon(team2Name, set.games2, currentSet + 1);
-        }
-      }
-
-      // Check for 6-6 → tiebreak
-      if (set.games1 === 6 && set.games2 === 6 && !set.isTiebreak) {
-        set.isTiebreak = true;
-        set.tiebreakPoints1 = 0;
-        set.tiebreakPoints2 = 0;
-      }
-
-      // Check if set is complete
-      if (isSetComplete(set)) {
-        set.completed = true;
-        triggerHaptic([50, 100, 50]);
-        const winner = set.games1 > set.games2 ? team1Name : team2Name;
-        showSetWon(winner, currentSet + 1);
-
-        // Auto-advance to next set if match not complete
-        if (currentSet < sets.length - 1) {
-          setCurrentSet(currentSet + 1);
-        }
-      }
-
-      return newSets;
+      return processRegularPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn);
     });
 
     setHasChanges(true);
+    setScoreAnimKey(prev => ({ ...prev, [team === 1 ? 'left' : 'right']: (prev[team === 1 ? 'left' : 'right'] || 0) + 1 }));
   };
 
   // Undo last action
@@ -352,25 +378,15 @@ export default function MonoTennisLiveScore() {
   }, []);
 
   useEffect(() => {
-    if (isTouchDevice) return; // Disable keyboard on touch devices
+    if (isTouchDevice) return;
 
-    const handleKeyPress = (e) => {
-      switch (e.key.toLowerCase()) {
-        case 'q':
-          addPoint(leftTeam);
-          break;
-        case 'p':
-          addPoint(rightTeam);
-          break;
-        case 'u':
-          undo();
-          break;
-      }
-    };
+    const leftTeam = sidesSwapped ? 2 : 1;
+    const rightTeam = sidesSwapped ? 1 : 2;
+    const handleKeyPress = makeKeyHandler(addPoint, undo, leftTeam, rightTeam);
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped]);
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice]);
 
   // Save draft
   const saveDraft = () => {
@@ -386,32 +402,26 @@ export default function MonoTennisLiveScore() {
       },
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
     alert('Draft saved! You can resume this match later.');
-    navigate(`/design1/${tournament.sportId}/tournament`);
+    navigate(`/${sport}/tournament/${id}`);
   };
 
   // Save match and return
   const saveMatch = () => {
-    // Trigger celebration for completed match
     if (isMatchComplete) {
       triggerConfetti();
-      triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
+      triggerHaptic([100, 100, 100, 100, 100]);
     }
 
-    // Determine winner
-    let team1SetsWon = 0;
-    let team2SetsWon = 0;
-
-    sets.filter(s => s.completed).forEach(set => {
-      if (set.isTiebreak) {
-        if (set.tiebreakPoints1 > set.tiebreakPoints2) team1SetsWon++;
-        else team2SetsWon++;
-      } else {
-        if (set.games1 > set.games2) team1SetsWon++;
-        else team2SetsWon++;
-      }
-    });
+    // S6660: flatten else-if instead of else { if }
+    const { team1Sets: team1SetsWon, team2Sets: team2SetsWon } =
+      countSetsWon(sets.filter(s => s.completed));
 
     let winner = null;
     if (team1SetsWon > team2SetsWon) winner = match.team1Id;
@@ -422,7 +432,8 @@ export default function MonoTennisLiveScore() {
       sets,
       status: isMatchComplete ? 'completed' : 'in-progress',
       winner,
-      draftState: isMatchComplete ? null : {
+      completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
+      draftState: isMatchComplete ? undefined : {
         currentSet,
         sets,
         history,
@@ -430,17 +441,25 @@ export default function MonoTennisLiveScore() {
       },
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
-    navigate(`/design1/${tournament.sportId}/tournament`);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
+    if (isMatchComplete) {
+      saveTournamentToConvex(updatedTournament);
+    }
+    navigate(`/${sport}/tournament/${id}`);
   };
 
   // Cancel and discard changes
   const handleCancel = () => {
     if (hasChanges) {
-      const confirm = globalThis.confirm('You have unsaved changes. Discard them?');
-      if (!confirm) return;
+      const confirmed = globalThis.confirm('You have unsaved changes. Discard them?');
+      if (!confirmed) return;
     }
-    navigate(`/design1/${tournament.sportId}/tournament`);
+    navigate(`/${sport}/tournament/${id}`);
   };
 
   if (!tournament || !match) {
@@ -451,26 +470,7 @@ export default function MonoTennisLiveScore() {
   const isTiebreakMode = currentSetData?.isTiebreak;
 
   // Display score for current game/tiebreak
-  let score1Display, score2Display;
-
-  if (isTiebreakMode) {
-    score1Display = currentSetData.tiebreakPoints1;
-    score2Display = currentSetData.tiebreakPoints2;
-  } else if (currentSetData.isDeuce) {
-    if (currentSetData.advantage === 1) {
-      score1Display = 'AD';
-      score2Display = '40';
-    } else if (currentSetData.advantage === 2) {
-      score1Display = '40';
-      score2Display = 'AD';
-    } else {
-      score1Display = '40';
-      score2Display = '40';
-    }
-  } else {
-    score1Display = pointToDisplay(currentSetData.points1);
-    score2Display = pointToDisplay(currentSetData.points2);
-  }
+  const { score1: score1Display, score2: score2Display } = computeScoreDisplay(currentSetData);
 
   // Side swap derived display values
   const leftScoreDisplay = sidesSwapped ? score2Display : score1Display;
@@ -482,6 +482,11 @@ export default function MonoTennisLiveScore() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
+      {saveWarning && (
+        <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          {saveWarning}
+        </div>
+      )}
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <button
@@ -519,28 +524,21 @@ export default function MonoTennisLiveScore() {
         </div>
       </div>
 
-      {/* ARIA live region for score announcements */}
-      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      {/* ARIA live region — S6819: use <output> instead of role="status" div */}
+      <output aria-live="polite" aria-atomic="true" className="sr-only">
         {leftName}: {leftScoreDisplay}. {rightName}: {rightScoreDisplay}.
         {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}.
-      </div>
+      </output>
 
-      {/* Score cards */}
+      {/* Score cards — S6819: use <button> instead of role="button" div */}
       <div className="flex items-stretch gap-4 mb-8" style={{ minHeight: '250px' }}>
         {/* Left Team */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={() => !currentSetData.completed && addPoint(leftTeam)}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && !currentSetData.completed) {
-              e.preventDefault();
-              addPoint(leftTeam);
-            }
-          }}
           aria-label={`${leftName}: ${leftScoreDisplay}. Press Enter or click to add point`}
-          aria-disabled={currentSetData.completed}
-          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
+          disabled={currentSetData.completed}
+          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
             borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
@@ -551,7 +549,8 @@ export default function MonoTennisLiveScore() {
             {leftName}
           </p>
           <p
-            className="text-7xl font-bold mono-score font-mono"
+            key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+            className="text-7xl font-bold mono-score mono-score-animate font-mono"
             style={{ color: '#111' }}
           >
             {leftScoreDisplay}
@@ -559,22 +558,15 @@ export default function MonoTennisLiveScore() {
           <p className="text-xs" style={{ color: '#888' }}>
             Games: {leftGames}
           </p>
-        </div>
+        </button>
 
         {/* Right Team */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={() => !currentSetData.completed && addPoint(rightTeam)}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && !currentSetData.completed) {
-              e.preventDefault();
-              addPoint(rightTeam);
-            }
-          }}
           aria-label={`${rightName}: ${rightScoreDisplay}. Press Enter or click to add point`}
-          aria-disabled={currentSetData.completed}
-          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
+          disabled={currentSetData.completed}
+          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
             borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
@@ -585,7 +577,8 @@ export default function MonoTennisLiveScore() {
             {rightName}
           </p>
           <p
-            className="text-7xl font-bold mono-score font-mono"
+            key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+            className="text-7xl font-bold mono-score mono-score-animate font-mono"
             style={{ color: '#111' }}
           >
             {rightScoreDisplay}
@@ -593,7 +586,7 @@ export default function MonoTennisLiveScore() {
           <p className="text-xs" style={{ color: '#888' }}>
             Games: {rightGames}
           </p>
-        </div>
+        </button>
       </div>
 
       {/* Keyboard shortcuts hint (desktop only) */}
@@ -611,18 +604,15 @@ export default function MonoTennisLiveScore() {
         <div className="flex flex-col gap-2">
           {sets.map((set, idx) => {
             const isActive = idx === currentSet;
+            // S6479: use stable key derived from set label, not array index
             const setLabel = `Set ${idx + 1}`;
-
-            let scoreDisplay;
-            if (set.isTiebreak && set.completed) {
-              scoreDisplay = `${set.games1}-${set.games2} (${set.tiebreakPoints1}-${set.tiebreakPoints2})`;
-            } else {
-              scoreDisplay = `${set.games1}-${set.games2}`;
-            }
+            const scoreDisplay = (set.isTiebreak && set.completed)
+              ? `${set.games1}-${set.games2} (${set.tiebreakPoints1}-${set.tiebreakPoints2})`
+              : `${set.games1}-${set.games2}`;
 
             return (
               <div
-                key={idx}
+                key={setLabel}
                 className="flex items-center justify-between px-4 py-2 mono-card text-sm"
                 style={{
                   borderColor: isActive ? '#0066ff' : '#eee',

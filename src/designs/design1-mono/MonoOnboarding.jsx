@@ -1,73 +1,188 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAuth } from "../../hooks/useAuth";
 import { getSportsByCategory } from "../../models/sportRegistry";
+import BackArrow from "./components/BackArrow";
+import SportIcon from "./SportIcon";
+
+// ---------------------------------------------------------------------------
+// Profanity filter — regex-based with leetspeak & separator detection
+// ---------------------------------------------------------------------------
+
+// Leetspeak substitution map: each letter maps to a character class
+const LEET_MAP = {
+  a: "[a@4]", b: "[b8]", c: "[ck]", d: "[d]", e: "[e3]",
+  f: "[f]", g: "[g9]", h: "[h]", i: "[i1!l]", j: "[j]",
+  k: "[k]", l: "[l1!i]", m: "[m]", n: "[n]", o: "[o0]",
+  p: "[p]", q: "[q]", r: "[r]", s: "[s$5z]", t: "[t7]",
+  u: "[uv]", v: "[vu]", w: "[w]", x: "[x]", y: "[y]", z: "[zs]",
+};
+
+// Optional separator between characters: allows _ . 0 or nothing
+const SEP = "[_.0-9]?";
+
+/**
+ * Converts a blocked word into a regex that catches:
+ *  - Leetspeak: sh1t, fvck, @ss, b1tch
+ *  - Repeated chars: fuuuck, shiiiit
+ *  - Separators: f.u.c.k, s_h_i_t
+ */
+function wordToPattern(word) {
+  return word
+    .split("")
+    .map((ch) => {
+      const cls = LEET_MAP[ch] || ch;
+      // Allow the character (or its leet variant) repeated 1+ times
+      return `${cls}+`;
+    })
+    .join(SEP);
+}
+
+// Base blocked words (lowercase)
+const BLOCKED_WORDS = [
+  // English
+  "fuck", "shit", "cunt", "bitch", "dick", "cock", "pussy", "asshole",
+  "bastard", "slut", "whore", "nigger", "nigga", "faggot", "retard",
+  "wank", "twat", "bollocks", "prick", "arse",
+  // Hindi / Urdu — core (romanized, most common across north India)
+  "chutiya", "chutia", "chutiye", "madarchod", "bhenchod", "bhosdike",
+  "bsdk", "gandu", "randi", "haramkhor", "harami", "lodu", "lavde",
+  "jhatu", "choot", "gaand", "tatti", "kutte", "kuttiya", "saala",
+  "hramzada", "bhosdi", "lund", "chinal", "raand", "dalla",
+  "kamina", "kamine", "kaminey", "hijra", "chakka", "laudu",
+  "bhadwa", "bhadwe", "chodu", "chodna", "behenchod",
+  // Hindi / Urdu — extended variations
+  "machar", "maderchod", "bhenkelode", "chodu", "chodoo",
+  "gandmara", "gandphadu", "jhaant", "jhaantu", "bhosad",
+  "tharki", "lauda", "laude", "lundure", "gaandmara",
+  // Punjabi (romanized)
+  "penchod", "bhenchodd", "kutti", "khotey", "khotay",
+  "chootad", "teri_maa", "panchod", "gashti", "kanjar",
+  "tattay", "phuddi", "phuddu", "ghasti",
+  // Bhojpuri / UP-Bihar (romanized)
+  "maichod", "bhokal", "bhokaal", "chootmarani", "gandwa",
+  "raandwa", "bhadwi", "khanki", "suar", "suwar",
+  // Haryanvi / Rajasthani (romanized)
+  "bhadvo", "randvo", "kutto", "gandiya", "chootad",
+  // Marathi (romanized)
+  "zhavnya", "raand", "chhinaal", "aaizhavadya", "bhikarchot",
+  "maadarchod", "gaandit", "zavnya",
+  // Tamil (romanized)
+  "thevidiya", "thevdiya", "oombu", "sunni", "punda", "pundai",
+  "myiru", "baadu", "vesai", "vesi", "thayoli", "okka",
+  "otha", "koothi", "naayee",
+  // Telugu (romanized)
+  "lanja", "lanjakodaka", "pooka", "modda", "dengey", "gudda",
+  "sulli", "erripuka", "donga", "denga", "lanjodaka",
+  // Kannada (romanized)
+  "sule", "sulemaga", "bolimaga", "tunne", "munde", "hendti",
+  "soolemaga",
+  // Bengali (romanized)
+  "banchod", "magi", "chodu", "bokachoda", "shala", "haramjada",
+  "baal", "nangta", "khanki", "fatichod",
+  // Malayalam (romanized)
+  "myiru", "thayoli", "kunna", "pooru", "thendi", "mandan",
+  // Gujarati (romanized)
+  "gando", "gandi", "bhosdo", "chootiya", "lodo",
+];
+
+// Pre-compile all patterns into a single regex for performance
+const PROFANITY_REGEX = new RegExp(
+  BLOCKED_WORDS.map((w) => `(?:${wordToPattern(w)})`).join("|")
+);
+
+/**
+ * Checks if a username contains profanity (with fuzzy matching).
+ * @param {string} value - Lowercase username
+ * @returns {boolean}
+ */
+function containsProfanity(value) {
+  return PROFANITY_REGEX.test(value);
+}
 
 /**
  * Validates a username string against the gamertag rules.
+ * Instagram-style: lowercase letters, numbers, underscore, period.
  * @param {string} value - The username to validate.
  * @returns {string|null} An error message, or null if valid.
  */
 function validateUsername(value) {
-  if (value.length < 3) return "At least 3 characters";
+  if (value.length < 4) return "At least 4 characters";
   if (value.length > 20) return "Maximum 20 characters";
-  if (!/^[a-z0-9_]+$/.test(value))
-    return "Only lowercase letters, numbers, and underscore";
-  if (/^_|_$/.test(value)) return "Cannot start or end with underscore";
+  if (!/^[a-z0-9_.]+$/.test(value))
+    return "Only letters, numbers, underscore, and period";
+  if (/(?:^[_.])|(?:[_.]$)/.test(value))
+    return "Cannot start or end with underscore or period";
+  if (/(?:\.\.)|(?:__)|(?:\._)|(?:_\.)/.test(value))
+    return "No consecutive special characters";
+  if (containsProfanity(value))
+    return "Username contains inappropriate language";
   return null;
 }
 
 // ---------------------------------------------------------------------------
-// Step Indicator
+// Step Indicator — progress bar
 // ---------------------------------------------------------------------------
 
-/**
- * Renders progress dots for the onboarding wizard.
- * @param {{ current: number, total: number }} props
- */
+const STEP_LABELS = ["Name", "Gamertag", "Preferences", "Sports"];
+
 function StepIndicator({ current, total }) {
+  const progress = ((current + 1) / total) * 100;
+
   return (
-    <div
-      className="flex items-center gap-2 mb-10"
-      role="progressbar"
-      aria-valuenow={current + 1}
-      aria-valuemin={1}
-      aria-valuemax={total}
-      aria-label={`Step ${current + 1} of ${total}`}
-    >
-      {Array.from({ length: total }, (_, i) => (
+    <div className="mb-10">
+      {/* Progress bar */}
+      <div
+        style={{
+          width: "100%",
+          height: 2,
+          background: "#eee",
+          marginBottom: 12,
+        }}
+      >
         <div
-          key={i}
           style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: i <= current ? "#0066ff" : "transparent",
-            border: i <= current ? "1px solid #0066ff" : "1px solid #ddd",
-            transition: "background 200ms ease, border-color 200ms ease",
+            width: `${progress}%`,
+            height: "100%",
+            background: "#0066ff",
+            transition: "width 300ms ease",
           }}
         />
-      ))}
-      <span
-        className="text-xs font-swiss ml-1"
-        style={{ color: "#888" }}
-      >
-        Step {current + 1} of {total}
-      </span>
+      </div>
+
+      {/* Step labels */}
+      <div className="flex items-center justify-between">
+        {STEP_LABELS.map((label, i) => (
+          <span
+            key={label}
+            className="text-xs font-swiss"
+            style={{
+              color: i <= current ? "#0066ff" : "#ccc",
+              fontWeight: i === current ? 500 : 400,
+              transition: "color 200ms ease",
+            }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
+
+StepIndicator.propTypes = {
+  current: PropTypes.number.isRequired,
+  total: PropTypes.number.isRequired,
+};
 
 // ---------------------------------------------------------------------------
 // Step 1 — Name
 // ---------------------------------------------------------------------------
 
-/**
- * @param {{ firstName: string, lastName: string, onChange: Function, onNext: Function, clerkUser: object|null }} props
- */
 function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
   const firstRef = useRef(null);
 
@@ -159,13 +274,21 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
   );
 }
 
+StepName.propTypes = {
+  firstName: PropTypes.string.isRequired,
+  lastName: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onNext: PropTypes.func.isRequired,
+  clerkUser: PropTypes.shape({
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+  }),
+};
+
 // ---------------------------------------------------------------------------
 // Step 2 — Username
 // ---------------------------------------------------------------------------
 
-/**
- * @param {{ username: string, onChange: Function, onNext: Function, onBack: Function }} props
- */
 function StepUsername({ username, onChange, onNext, onBack }) {
   const inputRef = useRef(null);
 
@@ -173,13 +296,13 @@ function StepUsername({ username, onChange, onNext, onBack }) {
     if (inputRef.current) inputRef.current.focus();
   }, []);
 
-  const normalized = username.toLowerCase().replace(/[^a-z0-9_]/g, "");
+  const normalized = username.toLowerCase().replaceAll(/[^a-z0-9_.]/g, "");
   const validationError = normalized.length > 0 ? validateUsername(normalized) : null;
   const debouncedUsername = useDebounce(normalized, 300);
 
   const isAvailable = useQuery(
     api.users.checkUsername,
-    !validationError && debouncedUsername.length >= 3
+    !validationError && debouncedUsername.length >= 4
       ? { username: debouncedUsername }
       : "skip"
   );
@@ -206,10 +329,10 @@ function StepUsername({ username, onChange, onNext, onBack }) {
       <button
         type="button"
         onClick={onBack}
-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 block"
+        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
         style={{ color: "#888", padding: 0 }}
       >
-        &larr; Back
+        <BackArrow /> Back
       </button>
 
       <h1
@@ -244,7 +367,7 @@ function StepUsername({ username, onChange, onNext, onBack }) {
           placeholder="username"
           value={username}
           onChange={(e) =>
-            onChange("username", e.target.value.toLowerCase().replace(/\s/g, ""))
+            onChange("username", e.target.value.toLowerCase().replaceAll(/\s/g, ""))
           }
           autoComplete="off"
           maxLength={20}
@@ -259,7 +382,7 @@ function StepUsername({ username, onChange, onNext, onBack }) {
       )}
 
       <p className="text-xs mb-6" style={{ color: "#bbb" }}>
-        3-20 characters. Letters, numbers, underscore only.
+        4-20 characters. Letters, numbers, underscore, and period.
       </p>
 
       <button
@@ -273,6 +396,13 @@ function StepUsername({ username, onChange, onNext, onBack }) {
     </form>
   );
 }
+
+StepUsername.propTypes = {
+  username: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onNext: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+};
 
 // ---------------------------------------------------------------------------
 // Step 3 — Role and Play Style
@@ -290,9 +420,6 @@ const PLAY_STYLES = [
   { id: "tournaments", label: "Tournaments" },
 ];
 
-/**
- * @param {{ role: string, playStyles: string[], onChange: Function, onNext: Function, onBack: Function }} props
- */
 function StepPreferences({ role, playStyles, onChange, onNext, onBack }) {
   function togglePlayStyle(id) {
     const next = playStyles.includes(id)
@@ -311,10 +438,10 @@ function StepPreferences({ role, playStyles, onChange, onNext, onBack }) {
       <button
         type="button"
         onClick={onBack}
-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 block"
+        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
         style={{ color: "#888", padding: 0 }}
       >
-        &larr; Back
+        <BackArrow /> Back
       </button>
 
       <h1
@@ -419,13 +546,18 @@ function StepPreferences({ role, playStyles, onChange, onNext, onBack }) {
   );
 }
 
+StepPreferences.propTypes = {
+  role: PropTypes.string.isRequired,
+  playStyles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onChange: PropTypes.func.isRequired,
+  onNext: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+};
+
 // ---------------------------------------------------------------------------
 // Step 4 — Favorite Games
 // ---------------------------------------------------------------------------
 
-/**
- * @param {{ selectedGames: string[], onChange: Function, onSubmit: Function, onBack: Function, isSubmitting: boolean, error: string }} props
- */
 function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, error }) {
   const categories = getSportsByCategory();
 
@@ -446,10 +578,10 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
       <button
         type="button"
         onClick={onBack}
-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 block"
+        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
         style={{ color: "#888", padding: 0 }}
       >
-        &larr; Back
+        <BackArrow /> Back
       </button>
 
       <h1
@@ -494,9 +626,7 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
                     transition: "border-color 200ms ease, background 200ms ease",
                   }}
                 >
-                  <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>
-                    {sport.icon}
-                  </span>
+                  <SportIcon name={sport.name} size={24} color={selected ? "#0066ff" : "#888"} />
                   <span
                     className="text-xs font-swiss"
                     style={{
@@ -527,7 +657,7 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
           className="text-sm font-swiss bg-transparent border-none cursor-pointer"
           style={{ color: "#888", padding: 0 }}
         >
-          Skip
+          Skip for now
         </button>
         <button
           type="submit"
@@ -542,17 +672,19 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
   );
 }
 
+StepGames.propTypes = {
+  selectedGames: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+  isSubmitting: PropTypes.bool.isRequired,
+  error: PropTypes.string.isRequired,
+};
+
 // ---------------------------------------------------------------------------
 // Main Onboarding Component
 // ---------------------------------------------------------------------------
 
-/**
- * 4-step onboarding wizard for GameScore.
- * Collects name, gamertag, role/play-style, and favorite sports,
- * then calls `completeOnboarding` to persist everything atomically.
- *
- * @returns {JSX.Element}
- */
 export default function MonoOnboarding() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading, clerkUser } = useAuth();
@@ -649,7 +781,7 @@ export default function MonoOnboarding() {
     setIsSubmitting(true);
     setError("");
 
-    const normalizedUsername = username.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const normalizedUsername = username.toLowerCase().replaceAll(/[^a-z0-9_.]/g, "");
 
     try {
       await completeOnboarding({
@@ -696,11 +828,8 @@ export default function MonoOnboarding() {
   if (!isAuthenticated) return null;
 
   // --- Compute animation styles ---
-  // Exiting: current step slides out in the opposite direction of travel
-  // Entering: new step slides in from the direction of travel
   const getStepStyle = () => {
     if (isAnimating) {
-      // Slide out
       return {
         opacity: 0,
         transform:
@@ -708,7 +837,6 @@ export default function MonoOnboarding() {
         transition: "opacity 250ms ease, transform 250ms ease",
       };
     }
-    // Normal visible state (just arrived or idle)
     return {
       opacity: 1,
       transform: "translateX(0)",
@@ -766,10 +894,21 @@ export default function MonoOnboarding() {
 
   return (
     <div
-      className={`min-h-screen px-6 py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
+      className={`min-h-screen px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
       style={{ background: "#fafafa" }}
     >
-      <div className="max-w-sm mx-auto" style={{ paddingTop: "4vh" }}>
+      <div className="max-w-sm mx-auto" style={{ paddingTop: "8vh" }}>
+        {/* Branding */}
+        <div className="mb-8" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <SportIcon name="Volleyball" size={20} color="#111" />
+          <span
+            className="font-mono"
+            style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#111', lineHeight: 1.1 }}
+          >
+            SCORE<br />EASY
+          </span>
+        </div>
+
         <StepIndicator current={step} total={TOTAL_STEPS} />
 
         <div style={getStepStyle()}>

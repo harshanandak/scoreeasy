@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import {
   SignInButton,
   SignUpButton,
@@ -15,6 +16,10 @@ export function AuthSignInButton({ children, ...props }) {
   );
 }
 
+AuthSignInButton.propTypes = {
+  children: PropTypes.node,
+};
+
 export function AuthSignUpButton({ children, ...props }) {
   return (
     <SignUpButton mode="modal" {...props}>
@@ -23,12 +28,20 @@ export function AuthSignUpButton({ children, ...props }) {
   );
 }
 
+AuthSignUpButton.propTypes = {
+  children: PropTypes.node,
+};
+
 export function AuthUserButton(props) {
   return <UserButton {...props} />;
 }
 
+AuthUserButton.propTypes = {};
+
 export function AuthGoogleOneTap(props) {
   return <GoogleOneTap {...props} />;
 }
+
+AuthGoogleOneTap.propTypes = {};
 
 export { SignedIn, SignedOut };

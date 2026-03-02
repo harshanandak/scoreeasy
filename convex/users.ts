@@ -2,6 +2,81 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authedQuery, authedMutation } from "./lib/functions";
 
+// ---------------------------------------------------------------------------
+// Profanity filter — regex with leetspeak & separator detection
+// ---------------------------------------------------------------------------
+
+const LEET_MAP: Record<string, string> = {
+  a: "[a@4]", b: "[b8]", c: "[ck]", d: "[d]", e: "[e3]",
+  f: "[f]", g: "[g9]", h: "[h]", i: "[i1!l]", j: "[j]",
+  k: "[k]", l: "[l1!i]", m: "[m]", n: "[n]", o: "[o0]",
+  p: "[p]", q: "[q]", r: "[r]", s: "[s$5z]", t: "[t7]",
+  u: "[uv]", v: "[vu]", w: "[w]", x: "[x]", y: "[y]", z: "[zs]",
+};
+
+const SEP = "[_.0-9]?";
+
+function wordToPattern(word: string): string {
+  return word
+    .split("")
+    .map((ch) => {
+      const cls = LEET_MAP[ch] || ch;
+      return `${cls}+`;
+    })
+    .join(SEP);
+}
+
+const BLOCKED_WORDS = [
+  // English
+  "fuck", "shit", "cunt", "bitch", "dick", "cock", "pussy", "asshole",
+  "bastard", "slut", "whore", "nigger", "nigga", "faggot", "retard",
+  "wank", "twat", "bollocks", "prick", "arse",
+  // Hindi / Urdu — core (romanized, most common across north India)
+  "chutiya", "chutia", "chutiye", "madarchod", "bhenchod", "bhosdike",
+  "bsdk", "gandu", "randi", "haramkhor", "harami", "lodu", "lavde",
+  "jhatu", "choot", "gaand", "tatti", "kutte", "kuttiya", "saala",
+  "hramzada", "bhosdi", "lund", "chinal", "raand", "dalla",
+  "kamina", "kamine", "kaminey", "hijra", "chakka", "laudu",
+  "bhadwa", "bhadwe", "chodu", "chodna", "behenchod",
+  // Hindi / Urdu — extended variations
+  "machar", "maderchod", "bhenkelode", "chodoo",
+  "gandmara", "gandphadu", "jhaant", "jhaantu", "bhosad",
+  "tharki", "lauda", "laude", "lundure", "gaandmara",
+  // Punjabi (romanized)
+  "penchod", "bhenchodd", "kutti", "khotey", "khotay",
+  "chootad", "teri_maa", "panchod", "gashti", "kanjar",
+  "tattay", "phuddi", "phuddu", "ghasti",
+  // Bhojpuri / UP-Bihar (romanized)
+  "maichod", "bhokal", "bhokaal", "chootmarani", "gandwa",
+  "raandwa", "bhadwi", "khanki", "suar", "suwar",
+  // Haryanvi / Rajasthani (romanized)
+  "bhadvo", "randvo", "kutto", "gandiya", "chootad",
+  // Marathi (romanized)
+  "zhavnya", "raand", "chhinaal", "aaizhavadya", "bhikarchot",
+  "maadarchod", "gaandit", "zavnya",
+  // Tamil (romanized)
+  "thevidiya", "thevdiya", "oombu", "sunni", "punda", "pundai",
+  "myiru", "baadu", "vesai", "vesi", "thayoli", "okka",
+  "otha", "koothi", "naayee",
+  // Telugu (romanized)
+  "lanja", "lanjakodaka", "pooka", "modda", "dengey", "gudda",
+  "sulli", "erripuka", "donga", "denga", "lanjodaka",
+  // Kannada (romanized)
+  "sule", "sulemaga", "bolimaga", "tunne", "munde", "hendti",
+  "soolemaga",
+  // Bengali (romanized)
+  "banchod", "magi", "chodu", "bokachoda", "shala", "haramjada",
+  "baal", "nangta", "khanki", "fatichod",
+  // Malayalam (romanized)
+  "myiru", "thayoli", "kunna", "pooru", "thendi", "mandan",
+  // Gujarati (romanized)
+  "gando", "gandi", "bhosdo", "chootiya", "lodo",
+];
+
+const PROFANITY_REGEX = new RegExp(
+  BLOCKED_WORDS.map((w) => `(?:${wordToPattern(w)})`).join("|")
+);
+
 // Idempotent — called on every sign-in via useAuth hook
 export const store = mutation({
   args: {},
@@ -80,7 +155,7 @@ export const checkUsername = query({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
     const normalized = username.toLowerCase().trim();
-    if (normalized.length < 3) return false;
+    if (normalized.length < 4) return false;
 
     const existing = await ctx.db
       .query("users")
@@ -150,15 +225,21 @@ export const completeOnboarding = authedMutation({
   handler: async (ctx, args) => {
     const normalized = args.username.toLowerCase().trim();
 
-    // Validate username
-    if (normalized.length < 3 || normalized.length > 20) {
-      throw new Error("Username must be 3-20 characters");
+    // Validate username (Instagram-style: letters, numbers, underscore, period)
+    if (normalized.length < 4 || normalized.length > 20) {
+      throw new Error("Username must be 4-20 characters");
     }
-    if (!/^[a-z0-9_]+$/.test(normalized)) {
-      throw new Error("Only lowercase letters, numbers, and underscore allowed");
+    if (!/^[a-z0-9_.]+$/.test(normalized)) {
+      throw new Error("Only lowercase letters, numbers, underscore, and period allowed");
     }
-    if (/^_|_$/.test(normalized)) {
-      throw new Error("Cannot start or end with underscore");
+    if (/(?:^[_.])|(?:[_.]$)/.test(normalized)) {
+      throw new Error("Cannot start or end with underscore or period");
+    }
+    if (/\.\.|__|_\.|\._./.test(normalized)) {
+      throw new Error("No consecutive special characters");
+    }
+    if (PROFANITY_REGEX.test(normalized)) {
+      throw new Error("Username contains inappropriate language");
     }
 
     // Check uniqueness via transactional index

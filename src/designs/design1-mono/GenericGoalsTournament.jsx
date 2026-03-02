@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
 import { calculateGoalsStandings } from '../../utils/standingsCalculator';
@@ -523,7 +523,7 @@ export default function GenericGoalsTournament() {
                         <span
                           key={mIdx}
                           className="text-xs px-2 py-1 rounded"
-                          style={{ background: '#f5f5f5', color: '#666' }}
+                          style={{ background: '#f5f5f5', color: '#888' }}
                         >
                           {member}
                         </span>

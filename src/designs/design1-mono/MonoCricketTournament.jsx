@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
 import { ballsToOvers, calculateCricketPointsTable, getCricketFormat } from '../../utils/cricketCalculations';
@@ -425,7 +425,7 @@ export default function MonoCricketTournament() {
                     className="cursor-pointer w-full text-left bg-transparent border-none"
                     style={{
                       padding: '16px 20px',
-                      background: isLive ? '#f0f9ff' : 'transparent',
+                      background: isLive ? '#f0f6ff' : 'transparent',
                     }}
                   >
                     {renderMatchCard({ match, t1Name, t2Name, t1Wins, t2Wins, winDesc, matchFormat, isLive, isComplete, isTestMatch })}
@@ -685,7 +685,7 @@ export default function MonoCricketTournament() {
                           <span
                             key={member}
                             className="text-xs px-2 py-1 rounded"
-                            style={{ background: '#f5f5f5', color: '#666' }}
+                            style={{ background: '#f5f5f5', color: '#888' }}
                           >
                             {member}
                           </span>

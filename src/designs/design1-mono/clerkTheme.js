@@ -13,27 +13,28 @@ export const monoClerkAppearance = {
     fontSize: "14px",
   },
   elements: {
+    rootBox: {
+      width: "100%",
+    },
     card: {
-      boxShadow: "none",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       border: "1px solid #eeeeee",
       borderRadius: "0",
+      padding: "32px",
     },
     headerTitle: {
-      fontSize: "12px",
-      fontWeight: "400",
-      textTransform: "uppercase",
-      letterSpacing: "0.1em",
-      color: "#888888",
+      display: "none",
     },
     headerSubtitle: {
-      color: "#888888",
-      fontSize: "13px",
+      display: "none",
     },
     formButtonPrimary: {
       backgroundColor: "#0066ff",
       borderRadius: "0",
       fontWeight: "500",
       textTransform: "none",
+      fontSize: "14px",
+      padding: "12px 16px",
       "&:hover": {
         backgroundColor: "#0052cc",
       },
@@ -41,29 +42,45 @@ export const monoClerkAppearance = {
     formFieldInput: {
       borderRadius: "0",
       borderColor: "#dddddd",
+      padding: "10px 12px",
       "&:focus": {
         borderColor: "#0066ff",
         boxShadow: "none",
       },
     },
+    formFieldLabel: {
+      fontSize: "12px",
+      fontWeight: "400",
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      color: "#888888",
+    },
     socialButtonsBlockButton: {
       borderRadius: "0",
       border: "1px solid #dddddd",
+      padding: "12px 16px",
+      fontSize: "14px",
       "&:hover": {
         backgroundColor: "#f5f5f5",
       },
     },
     dividerLine: {
-      backgroundColor: "#dddddd",
+      backgroundColor: "#eeeeee",
     },
     dividerText: {
       color: "#888888",
       fontSize: "12px",
+      textTransform: "lowercase",
     },
     footerActionLink: {
       color: "#0066ff",
       "&:hover": {
         color: "#0052cc",
+      },
+    },
+    footer: {
+      "& + div": {
+        display: "none",
       },
     },
     identityPreview: {

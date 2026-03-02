@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
+import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { saveData, loadData } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
@@ -15,12 +16,30 @@ import PlayerSearchInput from './components/PlayerSearchInput';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
-  all.unshift(match);
-  saveData('se_quickmatches', all);
+  const idx = all.findIndex((m) => m.id === match.id);
+  if (idx >= 0) all[idx] = match;
+  else all.unshift(match);
+  return saveData('se_quickmatches', all);
+}
+
+// Swap button — defined outside component to avoid S6478 (component defined inside render)
+function SwapButton({ onSwap }) {
+  return (
+    <button
+      onClick={onSwap}
+      className="mono-btn"
+      style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+      title="Swap sides"
+      aria-label="Swap team sides"
+    >
+      ⇄ Swap
+    </button>
+  );
 }
 
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { sport } = useParams();
   const [searchParams] = useSearchParams();
   const preselectedFormat = searchParams.get('format');
@@ -33,9 +52,10 @@ export default function MonoQuickMatch() {
   const startedAtRef = useRef(null);
 
   const [phase, setPhase] = useState('setup'); // setup | scoring | result
-  const [visible] = useState(true);
+  const visible = true; // always visible; no fade-in needed for quick match
   const [setupStep, setSetupStep] = useState(1); // 1: Format, 2: Rules (cricket only), 3: Teams
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
@@ -50,8 +70,10 @@ export default function MonoQuickMatch() {
 
   const [formatMode, setFormatMode] = useState(initialFormatMode);
   const [cricketPreset, setCricketPreset] = useState(initialPreset);
-  const [team1Name, setTeam1Name] = useState('');
-  const [team2Name, setTeam2Name] = useState('');
+  const wizardTeams = Array.isArray(location.state?.teams) ? location.state.teams : null;
+  const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || '');
+  const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || '');
+  const [saveWarning, setSaveWarning] = useState('');
 
   // Auth + Convex integration for match saving
   const { isAuthenticated, user } = useAuth();
@@ -188,6 +210,62 @@ export default function MonoQuickMatch() {
     }).catch(() => {}); // fire-and-forget, localStorage is primary
   };
 
+  const normalizeWinnerToken = (winner) => {
+    if (typeof winner !== 'string') return winner;
+    const lower = winner.trim().toLowerCase();
+    if (lower === 'draw') return 'Draw';
+    if (lower === 'tie') return 'Tie';
+    return winner;
+  };
+
+  const summarizeInningsScore = (entry) => {
+    if (!Array.isArray(entry.innings) || entry.innings.length === 0) return null;
+    const t1Id = entry.team1Id || 'team1';
+    const t2Id = entry.team2Id || 'team2';
+    const score1 = entry.innings
+      .filter((inn) => inn.teamId === t1Id)
+      .reduce((sum, inn) => sum + (inn.runs || 0), 0);
+    const score2 = entry.innings
+      .filter((inn) => inn.teamId === t2Id)
+      .reduce((sum, inn) => sum + (inn.runs || 0), 0);
+    return { score1, score2 };
+  };
+
+  const persistQuickMatch = (entry) => {
+    const nowIso = new Date().toISOString();
+    const inningsSummary = summarizeInningsScore(entry);
+    const canonicalTeam1 = entry.team1 || entry.team1Name || team1Name.trim();
+    const canonicalTeam2 = entry.team2 || entry.team2Name || team2Name.trim();
+    const score1 = typeof entry.score1 === 'number'
+      ? entry.score1
+      : (inningsSummary?.score1 ?? entry.team1Score?.runs ?? 0);
+    const score2 = typeof entry.score2 === 'number'
+      ? entry.score2
+      : (inningsSummary?.score2 ?? entry.team2Score?.runs ?? 0);
+    const canonicalDate = entry.date || entry.completedAt || entry.createdAt || nowIso;
+    const normalized = {
+      ...entry,
+      team1: canonicalTeam1,
+      team2: canonicalTeam2,
+      team1Name: entry.team1Name || canonicalTeam1,
+      team2Name: entry.team2Name || canonicalTeam2,
+      score1,
+      score2,
+      date: canonicalDate,
+      winner: normalizeWinnerToken(entry.winner),
+    };
+    if ((normalized.status === 'completed' || normalized.winner) && !normalized.completedAt) {
+      normalized.completedAt = canonicalDate;
+    }
+    const ok = saveQuickMatch(normalized);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return false;
+    }
+    setSaveWarning('');
+    return true;
+  };
+
   const totalBalls = isCricket
     ? (format.trackOvers !== false
       ? (format.overs ? format.overs * 6 : Infinity)
@@ -203,16 +281,21 @@ export default function MonoQuickMatch() {
     // Test format (4 innings) → save to quick match storage and navigate to test scorer
     if (isCricket && format.totalInnings === 4) {
       const matchId = Date.now();
+      const nowIso = new Date().toISOString();
       const match = {
         id: matchId, sport,
         team1Id: 'team1', team2Id: 'team2',
+        team1: team1Name.trim(), team2: team2Name.trim(),
         team1Name: team1Name.trim(), team2Name: team2Name.trim(),
         format,
         status: 'in-progress',
         innings: [],
-        createdAt: new Date().toISOString(),
+        score1: 0,
+        score2: 0,
+        date: nowIso,
+        createdAt: nowIso,
       };
-      saveQuickMatch(match);
+      if (!persistQuickMatch(match)) return;
       navigate(`/${sport}/quick/test/${matchId}`);
       return;
     }
@@ -351,7 +434,7 @@ export default function MonoQuickMatch() {
       ...makeTimerFields(),
     };
     setResult(r);
-    saveQuickMatch(r);
+    persistQuickMatch(r);
     saveToConvex(r);
     setPhase('result');
   };
@@ -406,7 +489,7 @@ export default function MonoQuickMatch() {
               ...makeTimerFields(),
             };
             setResult(r);
-            saveQuickMatch(r);
+            persistQuickMatch(r);
             saveToConvex(r);
             setPhase('result');
           } else {
@@ -442,7 +525,7 @@ export default function MonoQuickMatch() {
           ...makeTimerFields(),
         };
         setResult(r);
-        saveQuickMatch(r);
+        persistQuickMatch(r);
         saveToConvex(r);
         setPhase('result');
       }
@@ -487,7 +570,7 @@ export default function MonoQuickMatch() {
           ...makeTimerFields(),
         };
         setResult(r);
-        saveQuickMatch(r);
+        persistQuickMatch(r);
         saveToConvex(r);
         setPhase('result');
       }
@@ -517,7 +600,7 @@ export default function MonoQuickMatch() {
       ...makeTimerFields(),
     };
     setResult(r);
-    saveQuickMatch(r);
+    persistQuickMatch(r);
     saveToConvex(r);
     setPhase('result');
   };
@@ -539,7 +622,7 @@ export default function MonoQuickMatch() {
         ...makeTimerFields(),
       };
       setResult(r);
-      saveQuickMatch(r);
+      persistQuickMatch(r);
       saveToConvex(r);
       setPhase('result');
     }
@@ -582,6 +665,11 @@ export default function MonoQuickMatch() {
     return (
       <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
         <div className="max-w-2xl mx-auto">
+          {saveWarning && (
+            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              {saveWarning}
+            </div>
+          )}
           {/* Header */}
           <nav className="flex items-center gap-4 mb-6">
             <button
@@ -593,7 +681,7 @@ export default function MonoQuickMatch() {
               style={{ color: '#888' }}
               aria-label={setupStep > 1 ? 'Go back to previous step' : 'Go back'}
             >
-              &larr;
+              <BackArrow />
             </button>
             <div className="flex-1">
               <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
@@ -609,7 +697,7 @@ export default function MonoQuickMatch() {
           <div className="flex gap-1 mb-8">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div
-                key={i}
+                key={`step-bar-${i}`}
                 className="flex-1"
                 style={{
                   height: '3px',
@@ -647,7 +735,7 @@ export default function MonoQuickMatch() {
                             padding: '16px',
                             cursor: 'pointer',
                             border: isSelected ? '2px solid #0066ff' : '1px solid #eee',
-                            background: isSelected ? '#f0f7ff' : '#fff',
+                            background: isSelected ? '#f0f6ff' : '#fff',
                           }}
                         >
                           <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>
@@ -680,7 +768,7 @@ export default function MonoQuickMatch() {
                         padding: '16px',
                         cursor: 'pointer',
                         border: formatMode === 'standard' ? '2px solid #0066ff' : '1px solid #eee',
-                        background: formatMode === 'standard' ? '#f0f7ff' : '#fff',
+                        background: formatMode === 'standard' ? '#f0f6ff' : '#fff',
                       }}
                     >
                       <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Standard</p>
@@ -693,7 +781,7 @@ export default function MonoQuickMatch() {
                         padding: '16px',
                         cursor: 'pointer',
                         border: formatMode === 'custom' ? '2px solid #0066ff' : '1px solid #eee',
-                        background: formatMode === 'custom' ? '#f0f7ff' : '#fff',
+                        background: formatMode === 'custom' ? '#f0f6ff' : '#fff',
                       }}
                     >
                       <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Custom</p>
@@ -950,38 +1038,49 @@ export default function MonoQuickMatch() {
                   {/* House Rules (Gully only) */}
                   {cricketPreset === 'gully' && (
                     <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
-                        House rules
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, lastManStands: !prev.lastManStands }))}
-                          className={format.lastManStands ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          Last Man Batting
-                        </button>
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, trialBall: !prev.trialBall }))}
-                          className={format.trialBall ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          Trial Ball
-                        </button>
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, oneTipOneHand: !prev.oneTipOneHand }))}
-                          className={format.oneTipOneHand ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          One Tip One Hand
-                        </button>
-                      </div>
-                      <p className="text-xs mt-2" style={{ color: '#bbb' }}>
-                        {format.lastManStands && 'Last batter plays alone \u00B7 '}
-                        {format.trialBall && 'First ball doesn\'t count \u00B7 '}
-                        {format.oneTipOneHand && 'One-bounce catch = out'}
-                        {!format.lastManStands && !format.trialBall && !format.oneTipOneHand && 'Toggle rules on/off'}
-                      </p>
+                      <button
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        className="text-xs bg-transparent border-none cursor-pointer font-swiss"
+                        style={{ color: '#0066ff', padding: '8px 0', marginBottom: showAdvanced ? 8 : 0 }}
+                      >
+                        {showAdvanced ? '- Hide advanced options' : '+ Advanced options'}
+                      </button>
+                      {showAdvanced && (
+                        <div>
+                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                            House rules
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setFormat(prev => ({ ...prev, lastManStands: !prev.lastManStands }))}
+                              className={format.lastManStands ? 'mono-btn-primary' : 'mono-btn'}
+                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                            >
+                              Last Man Batting
+                            </button>
+                            <button
+                              onClick={() => setFormat(prev => ({ ...prev, trialBall: !prev.trialBall }))}
+                              className={format.trialBall ? 'mono-btn-primary' : 'mono-btn'}
+                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                            >
+                              Trial Ball
+                            </button>
+                            <button
+                              onClick={() => setFormat(prev => ({ ...prev, oneTipOneHand: !prev.oneTipOneHand }))}
+                              className={format.oneTipOneHand ? 'mono-btn-primary' : 'mono-btn'}
+                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
+                            >
+                              One Tip One Hand
+                            </button>
+                          </div>
+                          <p className="text-xs mt-2" style={{ color: '#bbb' }}>
+                            {format.lastManStands && 'Last batter plays alone \u00B7 '}
+                            {format.trialBall && 'First ball doesn\'t count \u00B7 '}
+                            {format.oneTipOneHand && 'One-bounce catch = out'}
+                            {!format.lastManStands && !format.trialBall && !format.oneTipOneHand && 'Toggle rules on/off'}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1024,7 +1123,7 @@ export default function MonoQuickMatch() {
                             <div className="flex gap-2 flex-wrap">
                               {sportConfig.config.setFormats.filter(f => f.sets > 1).map((formatOption, idx) => (
                                 <button
-                                  key={idx}
+                                  key={`set-format-${formatOption.sets}-${idx}`}
                                   onClick={() => setFormat(prev => ({ ...prev, type: 'best-of', sets: formatOption.sets }))}
                                   className={format.sets === formatOption.sets ? 'mono-btn-primary' : 'mono-btn'}
                                   style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
@@ -1402,6 +1501,11 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            {saveWarning && (
+              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+                {saveWarning}
+              </div>
+            )}
             {/* Top bar */}
             <div className="flex items-center justify-between mb-6">
               <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
@@ -1533,17 +1637,7 @@ export default function MonoQuickMatch() {
     const leftName = sidesSwapped ? team2Name : team1Name;
     const rightName = sidesSwapped ? team1Name : team2Name;
 
-    const SwapButton = () => (
-      <button
-        onClick={() => setSidesSwapped(prev => !prev)}
-        className="mono-btn"
-        style={{ padding: '6px 10px', fontSize: '0.75rem' }}
-        title="Swap sides"
-        aria-label="Swap team sides"
-      >
-        ⇄ Swap
-      </button>
-    );
+    const handleSwap = () => setSidesSwapped(prev => !prev);
 
     // Goals-based scoring
     if (isGoals) {
@@ -1553,6 +1647,11 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            {saveWarning && (
+              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+                {saveWarning}
+              </div>
+            )}
             {/* Top bar */}
             <div className="flex items-center justify-between mb-6">
               <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
@@ -1562,7 +1661,7 @@ export default function MonoQuickMatch() {
                 <span className="text-sm font-mono" style={{ color: timerColor }}>
                   {isTimeUp ? "Time's up!" : timerDisplay}
                 </span>
-                <SwapButton />
+                <SwapButton onSwap={handleSwap} />
               </div>
               <div className="flex items-center gap-2">
                 {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
@@ -1672,13 +1771,18 @@ export default function MonoQuickMatch() {
     return (
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto">
+          {saveWarning && (
+            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              {saveWarning}
+            </div>
+          )}
           <div className="flex items-center justify-between mb-6">
             <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
               End Match
             </button>
             <div className="flex items-center gap-2">
               <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
-              <SwapButton />
+              <SwapButton onSwap={() => setSidesSwapped(prev => !prev)} />
             </div>
             <div className="flex items-center gap-2">
               {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
@@ -1776,6 +1880,11 @@ export default function MonoQuickMatch() {
   return (
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-2xl mx-auto">
+        {saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            {saveWarning}
+          </div>
+        )}
         <div className="text-center mb-10" style={{ paddingTop: '40px' }}>
           <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
             Match Result

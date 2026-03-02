@@ -1,9 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
+import { useAuth } from '../../../hooks/useAuth';
+import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -51,6 +55,8 @@ const triggerConfetti = () => {
 export default function MonoGoalsLiveScore() {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
+  const { isAuthenticated } = useAuth();
+  const saveMatchMutation = useMutation(api.matches.save);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -63,6 +69,8 @@ export default function MonoGoalsLiveScore() {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
+  const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
+  const [saveWarning, setSaveWarning] = useState('');
 
   // Timer for timed mode
   const timer = useTimer();
@@ -76,6 +84,23 @@ export default function MonoGoalsLiveScore() {
   const score2Ref = useRef(score2);
   score1Ref.current = score1;
   score2Ref.current = score2;
+
+  const saveTournamentToConvex = (updatedTournament) => {
+    if (!isAuthenticated || !updatedTournament) return;
+    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
+      .find((m) => m.id === matchId || m.id === Number(matchId));
+    if (!savedMatch) return;
+    try {
+      const payload = buildTournamentConvexPayload({
+        sportId: sport,
+        tournament: updatedTournament,
+        match: savedMatch,
+      });
+      saveMatchMutation(payload).catch(() => {});
+    } catch {
+      // Local save is primary; sync failures are non-blocking.
+    }
+  };
 
   // Load tournament and match
   useEffect(() => {
@@ -144,8 +169,15 @@ export default function MonoGoalsLiveScore() {
           status: 'completed',
           winner: determineWinner(score1, score2, m),
           draftState: undefined,
+          completedAt: new Date().toISOString(),
         }));
-        saveSportTournament(sportConfig.storageKey, updatedTournament);
+        const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+        if (!ok) {
+          setSaveWarning('Save failed - storage may be full. Export your data.');
+          return;
+        }
+        setSaveWarning('');
+        saveTournamentToConvex(updatedTournament);
         navigate(`/${sport}/tournament/${id}`);
       }, 300);
     }
@@ -183,6 +215,7 @@ export default function MonoGoalsLiveScore() {
     }].slice(-100));
 
     setHasChanges(true);
+    setScoreAnimKey(prev => ({ ...prev, [team === 1 ? 'left' : 'right']: (prev[team === 1 ? 'left' : 'right'] || 0) + 1 }));
 
     // Calculate new scores
     const newScore1 = team === 1 ? score1Ref.current + value : score1Ref.current;
@@ -210,8 +243,15 @@ export default function MonoGoalsLiveScore() {
             status: 'completed',
             winner: determineWinner(newScore1, newScore2, m),
             draftState: undefined,
+            completedAt: new Date().toISOString(),
           }));
-          saveSportTournament(sportConfig.storageKey, updatedTournament);
+          const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+          if (!ok) {
+            setSaveWarning('Save failed - storage may be full. Export your data.');
+            return;
+          }
+          setSaveWarning('');
+          saveTournamentToConvex(updatedTournament);
           navigate(`/${sport}/tournament/${id}`);
         }, 300);
       }
@@ -241,7 +281,12 @@ export default function MonoGoalsLiveScore() {
       },
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
 
     setHasChanges(false);
     alert('Draft saved! You can resume this match later.');
@@ -296,9 +341,16 @@ export default function MonoGoalsLiveScore() {
       status: 'completed',
       winner: determineWinner(score1, score2, m),
       draftState: undefined,
+      completedAt: new Date().toISOString(),
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
+    saveTournamentToConvex(updatedTournament);
 
     // Delay navigation slightly to show confetti
     setTimeout(() => {
@@ -349,6 +401,11 @@ export default function MonoGoalsLiveScore() {
   return (
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
+        {saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            {saveWarning}
+          </div>
+        )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
@@ -409,7 +466,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {leftName}
             </p>
-            <p className="text-6xl font-bold font-mono mono-score mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
               {leftScore}
             </p>
 
@@ -418,7 +475,7 @@ export default function MonoGoalsLiveScore() {
               {quickButtons ? (
                 quickButtons.map((btn, idx) => (
                   <button
-                    key={idx}
+                    key={`left-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(leftTeam, btn.value)}
                     className="mono-btn text-sm py-2"
                     style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
@@ -452,7 +509,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {rightName}
             </p>
-            <p className="text-6xl font-bold font-mono mono-score mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
               {rightScore}
             </p>
 
@@ -461,7 +518,7 @@ export default function MonoGoalsLiveScore() {
               {quickButtons ? (
                 quickButtons.map((btn, idx) => (
                   <button
-                    key={idx}
+                    key={`right-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(rightTeam, btn.value)}
                     className="mono-btn text-sm py-2"
                     style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}

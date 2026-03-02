@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation } from 'convex/react';
+import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
+import { useAuth } from '../../../hooks/useAuth';
+import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -43,6 +47,8 @@ const triggerConfetti = () => {
 export default function MonoSetsLiveScore() {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
+  const { isAuthenticated } = useAuth();
+  const saveMatchMutation = useMutation(api.matches.save);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -55,14 +61,35 @@ export default function MonoSetsLiveScore() {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
+  const [saveWarning, setSaveWarning] = useState('');
+  const [servingTeam, setServingTeam] = useState(1);
+  const [scoringMode, setScoringMode] = useState('rally');
 
   // Animation state
   const [showSetWon, setShowSetWon] = useState(false);
   const [setWonTeam, setSetWonTeam] = useState('');
+  const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
+
+  const saveTournamentToConvex = (updatedTournament) => {
+    if (!isAuthenticated || !updatedTournament) return;
+    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
+      .find((m) => m.id === matchId || m.id === Number(matchId));
+    if (!savedMatch) return;
+    try {
+      const payload = buildTournamentConvexPayload({
+        sportId: sport,
+        tournament: updatedTournament,
+        match: savedMatch,
+      });
+      saveMatchMutation(payload).catch(() => {});
+    } catch {
+      // Local save is primary; sync failures are non-blocking.
+    }
+  };
 
   // Load tournament and match
   useEffect(() => {
@@ -83,6 +110,19 @@ export default function MonoSetsLiveScore() {
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
+    const supportedModes = config?.config?.scoringModes;
+    const defaultScoringMode = (Array.isArray(supportedModes) && supportedModes.includes(config?.config?.defaultScoringMode))
+      ? config.config.defaultScoringMode
+      : (config?.config?.scoringType === 'side-out' ? 'side-out' : 'rally');
+    const loadedMode = foundMatch.scoringMode
+      || foundMatch.draftState?.scoringMode
+      || foundMatch.format?.scoringMode
+      || defaultScoringMode;
+    const validMode = Array.isArray(supportedModes) && supportedModes.length > 0
+      ? (supportedModes.includes(loadedMode) ? loadedMode : defaultScoringMode)
+      : loadedMode;
+    setScoringMode(validMode);
+    setServingTeam(foundMatch.draftState?.servingTeam || 1);
 
     // Initialize from existing score if editing
     if (foundMatch.sets?.length > 0 && !foundMatch.draftState) {
@@ -96,6 +136,8 @@ export default function MonoSetsLiveScore() {
       setSets(foundMatch.draftState.sets);
       setCurrentSet(foundMatch.draftState.currentSet);
       setHistory(foundMatch.draftState.history || []);
+      if (foundMatch.draftState.servingTeam) setServingTeam(foundMatch.draftState.servingTeam);
+      if (foundMatch.draftState.scoringMode) setScoringMode(foundMatch.draftState.scoringMode);
     }
   }, [sport, id, matchId]);
 
@@ -141,6 +183,34 @@ export default function MonoSetsLiveScore() {
     return true;
   };
 
+  const getCurrentSetTarget = (setIndex, format) => {
+    if (!sportConfig) return 0;
+    const formatType = format.type || 'best-of';
+    if (formatType === 'single') return format.points;
+    const { pointsPerSet, deciderPoints } = sportConfig.config;
+    const isDecider = format.sets > 1 && setIndex === (format.sets - 1);
+    return isDecider && deciderPoints ? deciderPoints : (format.points || pointsPerSet);
+  };
+
+  const rotateServeAfterPoint = (setScore) => {
+    const rotation = sportConfig?.config?.serviceRotation;
+    if (!rotation) return;
+    if (rotation === 1) {
+      setServingTeam((prev) => (prev === 1 ? 2 : 1));
+      return;
+    }
+    const target = getCurrentSetTarget(currentSet, effectiveFormat);
+    const totalPoints = (setScore?.score1 || 0) + (setScore?.score2 || 0);
+    const atDeuce = (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
+    if (atDeuce) {
+      setServingTeam((prev) => (prev === 1 ? 2 : 1));
+      return;
+    }
+    if (totalPoints % rotation === 0) {
+      setServingTeam((prev) => (prev === 1 ? 2 : 1));
+    }
+  };
+
   // Add point
   const addPoint = (team) => {
     if (!sportConfig || !tournament) return;
@@ -161,14 +231,26 @@ export default function MonoSetsLiveScore() {
       timestamp: Date.now(),
       sets: structuredClone(sets),
       currentSet,
+      servingTeam,
+      scoringMode,
     }].slice(-100)); // Keep last 100
 
     setHasChanges(true);
+    setScoreAnimKey(prev => ({ ...prev, [team === 1 ? 'left' : 'right']: (prev[team === 1 ? 'left' : 'right'] || 0) + 1 }));
+
+    // Side-out scoring: non-serving team tap switches serve without adding a point.
+    if (scoringMode === 'side-out' && team !== servingTeam) {
+      setServingTeam(team);
+      return;
+    }
 
     setSets(prevSets => {
       const newSets = prevSets.map(s => ({ ...s }));
       const scoreKey = team === 1 ? 'score1' : 'score2';
       newSets[currentSet][scoreKey]++;
+      if (scoringMode !== 'side-out') {
+        rotateServeAfterPoint(newSets[currentSet]);
+      }
 
       // Check if set complete
       const isComplete = checkSetComplete(newSets[currentSet]);
@@ -225,6 +307,8 @@ export default function MonoSetsLiveScore() {
     const last = history[history.length - 1];
     setSets(last.sets);
     setCurrentSet(last.currentSet);
+    if (last.servingTeam) setServingTeam(last.servingTeam);
+    if (last.scoringMode) setScoringMode(last.scoringMode);
     setHistory(prev => prev.slice(0, -1));
   };
 
@@ -233,15 +317,23 @@ export default function MonoSetsLiveScore() {
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
+      format: { ...(m.format || effectiveFormat || {}), scoringMode },
       draftState: {
         currentSet,
         sets: structuredClone(sets),
         history: structuredClone(history.slice(-50)),
+        servingTeam,
+        scoringMode,
         savedAt: new Date().toISOString(),
       },
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
 
     setHasChanges(false);
     alert('Draft saved! You can resume this match later.');
@@ -275,15 +367,30 @@ export default function MonoSetsLiveScore() {
       sets: setsToSave,
       status: isMatchComplete ? 'completed' : 'in-progress',
       winner: isMatchComplete ? (t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id) : null,
+      format: { ...(m.format || effectiveFormat || {}), scoringMode },
+      setsWon1: t1SetsWon,
+      setsWon2: t2SetsWon,
+      scoringMode,
+      completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
       draftState: isMatchComplete ? undefined : {
         currentSet,
         sets: structuredClone(sets),
         history: structuredClone(history.slice(-50)),
+        servingTeam,
+        scoringMode,
         savedAt: new Date().toISOString(),
       },
     }));
 
-    saveSportTournament(sportConfig.storageKey, updatedTournament);
+    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+    setSaveWarning('');
+    if (isMatchComplete) {
+      saveTournamentToConvex(updatedTournament);
+    }
 
     navigate(`/${sport}/tournament/${id}`);
   };
@@ -313,7 +420,7 @@ export default function MonoSetsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped]); // Dependencies for addPoint/undo
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, servingTeam, scoringMode, effectiveFormat]); // Dependencies for addPoint/undo
 
   // Cancel and return
   const handleCancel = () => {
@@ -341,6 +448,11 @@ export default function MonoSetsLiveScore() {
   const rightName = sidesSwapped ? team1Name : team2Name;
   const leftScore = sidesSwapped ? (sets[currentSet]?.score2 || 0) : (sets[currentSet]?.score1 || 0);
   const rightScore = sidesSwapped ? (sets[currentSet]?.score1 || 0) : (sets[currentSet]?.score2 || 0);
+  const availableScoringModes = effectiveFormat?.scoringModes || sportConfig?.config?.scoringModes || ['rally'];
+  const showServeIndicator = scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
+  const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
+  const rightServing = sidesSwapped ? servingTeam === 1 : servingTeam === 2;
+  const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally');
 
   const { pointsPerSet, deciderPoints, winBy } = sportConfig.config;
   const formatType = effectiveFormat.type || 'best-of';
@@ -358,6 +470,11 @@ export default function MonoSetsLiveScore() {
   return (
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
+        {saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            {saveWarning}
+          </div>
+        )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
@@ -387,6 +504,22 @@ export default function MonoSetsLiveScore() {
             <span className={`mono-badge ${isCurrentSetComplete ? 'mono-badge-final' : 'mono-badge-live'}`}>
               {formatType === 'single' ? 'Single Set' : `Set ${currentSet + 1} of ${effectiveFormat.sets}`}
             </span>
+            {canToggleScoringMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  const next = scoringMode === 'side-out' ? 'rally' : 'side-out';
+                  if (!availableScoringModes.includes(next)) return;
+                  setScoringMode(next);
+                  setServingTeam(1);
+                }}
+                className="mono-btn"
+                style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+                title="Toggle scoring model"
+              >
+                {scoringMode === 'side-out' ? 'Side-out' : 'Rally'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -424,9 +557,9 @@ export default function MonoSetsLiveScore() {
             }}
           >
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
-              {leftName}
+              {leftName} {showServeIndicator && leftServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
             </p>
-            <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }} aria-hidden="true">
+            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate" style={{ color: '#111' }} aria-hidden="true">
               {leftScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
@@ -456,9 +589,9 @@ export default function MonoSetsLiveScore() {
             }}
           >
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
-              {rightName}
+              {rightName} {showServeIndicator && rightServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
             </p>
-            <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }} aria-hidden="true">
+            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate" style={{ color: '#111' }} aria-hidden="true">
               {rightScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
@@ -482,7 +615,7 @@ export default function MonoSetsLiveScore() {
           <div className="py-4 text-center text-sm mb-6" style={{ color: '#888', borderTop: '1px solid #eee' }}>
             <div className="flex justify-center gap-3 flex-wrap">
               {sets.filter(s => s.completed).map((s, i) => (
-                <span key={i} className="font-mono">
+                <span key={`completed-set-${i}-${s.score1}-${s.score2}`} className="font-mono">
                   Set {i + 1}: {s.score1}-{s.score2}
                 </span>
               ))}

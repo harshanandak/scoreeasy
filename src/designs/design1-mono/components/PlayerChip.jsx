@@ -1,4 +1,4 @@
-import React from "react";
+import PropTypes from "prop-types";
 
 export default function PlayerChip({ player, onRemove }) {
   const isUser = player.type === "user";
@@ -35,3 +35,8 @@ export default function PlayerChip({ player, onRemove }) {
     </span>
   );
 }
+
+PlayerChip.propTypes = {
+  player: PropTypes.object,
+  onRemove: PropTypes.func,
+};

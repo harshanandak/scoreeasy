@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
+import BackArrow from './components/BackArrow';
+import SportIcon from './SportIcon';
 
 // Cricket formats as individual sport-like cards
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(f => ({
@@ -81,12 +83,14 @@ export default function MonoSportHome() {
               style={{ color: '#888' }}
               aria-label="Go back to home"
             >
-              &larr;
+              <BackArrow />
             </button>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-                Score Easy
-              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="font-mono" style={{ fontSize: '0.6875rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#111', lineHeight: 1.1 }}>
+                  SCORE EASY
+                </span>
+              </div>
               <p className="text-xs mt-1" style={{ color: '#888' }}>
                 All sports
               </p>
@@ -95,12 +99,14 @@ export default function MonoSportHome() {
           <div className="flex items-center gap-3">
             <button
               onClick={switchLayout}
-              className="mono-btn flex items-center gap-2.5"
-              style={{ fontSize: '0.9375rem', padding: '10px 18px', fontWeight: '500' }}
-              title={layout === 'tabs' ? 'Switch to grid view' : 'Switch to tabs view'}
+              style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', background: '#fff', color: '#888', cursor: 'pointer' }}
+              title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
             >
-              <span style={{ fontSize: '1.125rem' }}>{layout === 'tabs' ? '⊞' : '☰'}</span>
-              <span>View: {layout === 'tabs' ? 'Grid' : 'Tabs'}</span>
+              {layout === 'grid' ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+              )}
             </button>
             <button
               onClick={() => navigate('/statistics')}
@@ -135,7 +141,7 @@ export default function MonoSportHome() {
                   <div key={entry.id} className="mono-card flex flex-col" style={{ padding: 0 }}>
                     <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-3xl" aria-hidden="true">{entry.icon}</span>
+                        <SportIcon name={entry.type === 'cricket-format' ? 'Cricket' : entry.name} size={32} color="#111" />
                         <div className="flex-1">
                           <h3 className="text-base font-semibold" style={{ color: '#111' }}>
                             {entry.name}
@@ -242,7 +248,7 @@ export default function MonoSportHome() {
                         <div key={cf.id} className="mono-card flex flex-col" style={{ padding: 0 }}>
                           <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
                             <div className="flex items-center gap-3 mb-3">
-                              <span className="text-3xl" aria-hidden="true">{cf.icon}</span>
+                              <SportIcon name="Cricket" size={32} color="#111" />
                               <div className="flex-1">
                                 <h3 className="text-base font-semibold" style={{ color: '#111' }}>
                                   {cf.name}
@@ -292,7 +298,7 @@ export default function MonoSportHome() {
                       <div key={sport.id} className="mono-card flex flex-col" style={{ padding: 0 }}>
                         <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
                           <div className="flex items-center gap-3 mb-3">
-                            <span className="text-3xl" aria-hidden="true">{sport.icon}</span>
+                            <SportIcon name={sport.name} size={32} color="#111" />
                             <div className="flex-1">
                               <h3 className="text-base font-semibold" style={{ color: '#111' }}>
                                 {sport.name}
@@ -366,7 +372,7 @@ export default function MonoSportHome() {
                               aria-label={`Select ${cf.name}`}
                             >
                               <div className="flex flex-col items-center text-center">
-                                <span className="text-3xl mb-2" aria-hidden="true">{cf.icon}</span>
+                                <SportIcon name="Cricket" size={28} color="#111" />
                                 <span className="text-sm font-semibold mb-1 block" style={{ color: '#111' }}>
                                   {cf.name}
                                 </span>
@@ -418,7 +424,7 @@ export default function MonoSportHome() {
                               aria-label={`Select ${sport.name}`}
                             >
                               <div className="flex flex-col items-center text-center">
-                                <span className="text-3xl mb-2" aria-hidden="true">{sport.icon}</span>
+                                <SportIcon name={sport.name} size={28} color="#111" />
                                 <span className="text-sm font-semibold mb-1 block" style={{ color: '#111' }}>
                                   {sport.name}
                                 </span>

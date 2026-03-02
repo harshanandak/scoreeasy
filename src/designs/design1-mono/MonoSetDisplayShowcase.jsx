@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function MonoSetDisplayShowcase() {
@@ -48,7 +47,7 @@ export default function MonoSetDisplayShowcase() {
               <span className="text-xs uppercase tracking-widest font-medium" style={{ color: '#888' }}>
                 Variation 1: Match winner's sets (green) vs loser's sets (red)
               </span>
-              <span className="text-xs px-2 py-1 rounded" style={{ background: '#e0f2fe', color: '#0066ff' }}>
+              <span className="text-xs px-2 py-1 rounded" style={{ background: '#dcfce7', color: '#0066ff' }}>
                 Recommended
               </span>
             </div>
@@ -77,7 +76,7 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v1-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
                       background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
@@ -125,7 +124,7 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v6-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded font-mono"
                     style={{
                       background: isMatchWinnerSet ? 'rgba(5, 150, 105, 0.15)' : 'rgba(220, 38, 38, 0.15)',
@@ -177,7 +176,7 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v7-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
                       background: isMatchWinnerSet
@@ -227,7 +226,7 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v8-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
                       background: '#fafafa',
@@ -276,7 +275,7 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v9-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
                       background: isMatchWinnerSet ? '#e5e5e5' : '#f5f5f5',
@@ -325,10 +324,10 @@ export default function MonoSetDisplayShowcase() {
                 const isMatchWinnerSet = setWinner === matchWinner;
                 return (
                   <span
-                    key={i}
+                    key={`v10-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
-                      background: isMatchWinnerSet ? '#e0f2fe' : '#f5f5f5',
+                      background: isMatchWinnerSet ? '#dcfce7' : '#f5f5f5',
                       color: isMatchWinnerSet ? '#0066ff' : '#888',
                       fontWeight: isMatchWinnerSet ? '600' : 'normal'
                     }}
@@ -372,7 +371,7 @@ export default function MonoSetDisplayShowcase() {
               {match.sets.map((s, i) => {
                 return (
                   <span
-                    key={i}
+                    key={`v11-set-${i}-${s.score1}-${s.score2}`}
                     className="px-3 py-1.5 rounded text-sm font-mono"
                     style={{
                       background: '#f5f5f5',

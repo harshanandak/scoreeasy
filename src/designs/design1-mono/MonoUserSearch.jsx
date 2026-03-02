@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
+import BackArrow from "./components/BackArrow";
 
 export default function MonoUserSearch() {
   const navigate = useNavigate();
@@ -27,10 +28,10 @@ export default function MonoUserSearch() {
       <div className="max-w-2xl mx-auto">
         <button
           onClick={() => navigate(-1)}
-          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 block"
+          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
           style={{ color: "#888" }}
         >
-          &larr; Back
+          <BackArrow /> Back
         </button>
 
         <h1
@@ -42,15 +43,26 @@ export default function MonoUserSearch() {
 
         <hr className="mono-divider mb-6" />
 
-        <input
-          type="text"
-          className="mono-input w-full mb-6"
-          placeholder="Search by @username..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoFocus
-          autoComplete="off"
-        />
+        <div style={{ position: 'relative', marginBottom: 24 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+            <circle cx="7" cy="7" r="4.5" />
+            <path d="M10.5 10.5L14 14" />
+          </svg>
+          <input
+            type="text"
+            className="mono-input w-full"
+            placeholder="Search by @username..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+            autoComplete="off"
+            style={{ paddingLeft: 24 }}
+          />
+        </div>
+
+        {query.length >= 2 && debouncedQuery !== query && (
+          <p className="text-xs mb-4" style={{ color: '#bbb' }}>Searching...</p>
+        )}
 
         {results && results.length > 0 && (
           <div className="space-y-2">
@@ -58,14 +70,14 @@ export default function MonoUserSearch() {
               <Link
                 key={user._id}
                 to={`/profile/${user.username}`}
-                className="mono-card flex items-center gap-3 block"
+                className="mono-card flex items-center gap-3"
                 style={{
                   padding: "12px 16px",
                   textDecoration: "none",
                   color: "inherit",
                 }}
               >
-                {user.avatarUrl && (
+                {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}
                     alt=""
@@ -76,6 +88,16 @@ export default function MonoUserSearch() {
                       border: "1px solid #eee",
                     }}
                   />
+                ) : (
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: '#f0f0f0', border: '1px solid #eee',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.75rem', fontWeight: 700, color: '#888',
+                    flexShrink: 0,
+                  }}>
+                    {(user.username || '?')[0].toUpperCase()}
+                  </div>
                 )}
                 <div className="flex-1">
                   <p className="text-sm font-mono font-bold" style={{ color: "#111" }}>
