@@ -81,7 +81,7 @@ export default function MonoTournamentList() {
               const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
               const matchCount = allMatches.length;
               const completedCount = allMatches.filter((m) =>
-                isTournamentMatchCompleted(m, sportConfig.engine)
+                isTournamentMatchCompleted(m, sportConfig.engine, m.format || t.format)
               ).length;
 
               return (
@@ -144,3 +144,4 @@ export default function MonoTournamentList() {
     </div>
   );
 }
+

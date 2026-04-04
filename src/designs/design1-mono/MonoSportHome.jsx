@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadSportTournaments } from '../../utils/storage';
+import { loadSportTournaments, loadPreference, savePreference } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
@@ -26,7 +26,7 @@ export default function MonoSportHome() {
   const [selectedSportId, setSelectedSportId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [layout, setLayout] = useState(() => {
-    return localStorage.getItem(LAYOUT_KEY) || 'tabs'; // 'tabs' or 'grid'
+    return loadPreference(LAYOUT_KEY, 'tabs'); // 'tabs' or 'grid'
   });
 
   const SPORT_CATEGORIES = getSportsByCategory();
@@ -51,7 +51,7 @@ export default function MonoSportHome() {
   const switchLayout = () => {
     const newLayout = layout === 'tabs' ? 'grid' : 'tabs';
     setLayout(newLayout);
-    localStorage.setItem(LAYOUT_KEY, newLayout);
+    savePreference(LAYOUT_KEY, newLayout);
   };
 
   const allSports = Object.values(SPORT_CATEGORIES).flat().filter(s => s.id !== 'cricket');

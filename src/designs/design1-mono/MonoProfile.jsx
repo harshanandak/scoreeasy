@@ -9,56 +9,71 @@ import SportIcon from "./SportIcon";
 function getRoleLabel(stats) {
   const played = stats?.totalMatches > 0;
   const scored = stats?.gamesOperated > 0;
-  if (played && scored) return 'Player & Scorer \u00b7 ';
-  if (scored) return 'Scorer \u00b7 ';
-  if (played) return 'Player \u00b7 ';
-  return '';
+  if (played && scored) return "Player & Scorer · ";
+  if (scored) return "Scorer · ";
+  if (played) return "Player · ";
+  return "";
 }
 
 function getStatsGridClass(stats) {
-  if (stats?.gamesOperated > 0) return 'grid gap-3 grid-cols-2 sm:grid-cols-4';
-  return 'grid gap-3 grid-cols-2 sm:grid-cols-3';
+  if (stats?.gamesOperated > 0) return "grid gap-3 grid-cols-2 sm:grid-cols-4";
+  return "grid gap-3 grid-cols-2 sm:grid-cols-3";
 }
 
-function getProfileQueryArg(paramUsername, isAuthenticated, currentUsername) {
-  if (paramUsername) return { username: paramUsername };
-  if (isAuthenticated && currentUsername) return { username: currentUsername };
-  return "skip";
+function LoadingState({ onBack }) {
+  return (
+    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={onBack}
+          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
+          style={{ color: "#888" }}
+        >
+          <BackArrow /> Back
+        </button>
+        <p style={{ color: "#888" }}>Loading profile...</p>
+      </div>
+    </div>
+  );
 }
 
 export default function MonoProfile() {
   const navigate = useNavigate();
   const { username: paramUsername } = useParams();
-  const { user: currentUser, isAuthenticated } = useAuth();
+  const {
+    user: currentUser,
+    isAuthenticated,
+    isLoading: authLoading,
+    isUserReady,
+  } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  // Determine which profile to show: own or someone else's
   const isOwnProfile = !paramUsername || paramUsername === currentUser?.username;
-
+  const profileUsername = paramUsername || currentUser?.username || null;
   const profileUser = useQuery(
     api.users.getByUsername,
-    getProfileQueryArg(paramUsername, isAuthenticated, currentUser?.username)
+    paramUsername ? { username: paramUsername } : "skip"
   );
-
-  const userId = isOwnProfile ? currentUser?._id : profileUser?._id;
-
   const stats = useQuery(
-    api.matches.getUserStats,
-    userId ? { userId } : "skip"
+    api.matches.getPublicUserStatsByUsername,
+    profileUsername ? { username: profileUsername } : "skip"
   );
-
   const recentMatches = useQuery(
-    api.matches.getRecent,
-    userId ? { userId } : "skip"
+    api.matches.getPublicRecentByUsername,
+    profileUsername ? { username: profileUsername } : "skip"
   );
 
   const displayUser = isOwnProfile ? currentUser : profileUser;
 
-  if (!displayUser && !paramUsername) {
+  if (!paramUsername && (authLoading || (isAuthenticated && !isUserReady))) {
+    return <LoadingState onBack={() => navigate("/")} />;
+  }
+
+  if (!paramUsername && !displayUser && !isAuthenticated) {
     return (
       <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
         <div className="max-w-2xl mx-auto">
@@ -73,6 +88,10 @@ export default function MonoProfile() {
         </div>
       </div>
     );
+  }
+
+  if (paramUsername && profileUser === undefined) {
+    return <LoadingState onBack={() => navigate(-1)} />;
   }
 
   if (paramUsername && profileUser === null) {
@@ -108,7 +127,6 @@ export default function MonoProfile() {
           <BackArrow /> Back
         </button>
 
-        {/* Identity */}
         <section className="mb-8">
           <div className="flex items-center gap-4 mb-2">
             {displayUser?.avatarUrl ? (
@@ -123,13 +141,22 @@ export default function MonoProfile() {
                 }}
               />
             ) : (
-              <div style={{
-                width: 48, height: 48, borderRadius: '50%',
-                background: '#f0f0f0', border: '1px solid #eee',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.125rem', fontWeight: 700, color: '#888',
-              }}>
-                {(displayUser?.username || '?')[0].toUpperCase()}
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: "#f0f0f0",
+                  border: "1px solid #eee",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.125rem",
+                  fontWeight: 700,
+                  color: "#888",
+                }}
+              >
+                {(displayUser?.username || "?")[0].toUpperCase()}
               </div>
             )}
             <div>
@@ -152,7 +179,6 @@ export default function MonoProfile() {
 
         <hr className="mono-divider mb-8" />
 
-        {/* Stats */}
         <section className="mb-8">
           <h2
             className="text-xs uppercase tracking-widest font-normal mb-4"
@@ -163,19 +189,19 @@ export default function MonoProfile() {
           <div className={getStatsGridClass(stats)}>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.totalMatches ?? "â€”"}
+                {stats?.totalMatches ?? "—"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Matches</p>
             </div>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.wins ?? "â€”"}
+                {stats?.wins ?? "—"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Wins</p>
             </div>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.winRate == null ? "â€”" : `${stats.winRate}%`}
+                {stats?.winRate == null ? "—" : `${stats.winRate}%`}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Win Rate</p>
             </div>
@@ -190,7 +216,6 @@ export default function MonoProfile() {
           </div>
         </section>
 
-        {/* Sport Breakdown */}
         {stats?.sportBreakdown && Object.keys(stats.sportBreakdown).length > 0 && (
           <>
             <hr className="mono-divider mb-8" />
@@ -225,7 +250,7 @@ export default function MonoProfile() {
                     {Object.entries(stats.sportBreakdown).map(([sport, s]) => (
                       <tr key={sport}>
                         <td className="text-sm" style={{ padding: "8px 12px", textTransform: "capitalize" }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                             <SportIcon name={sport.charAt(0).toUpperCase() + sport.slice(1)} size={16} color="#888" />
                             {sport}
                           </span>
@@ -251,7 +276,6 @@ export default function MonoProfile() {
           </>
         )}
 
-        {/* Recent Matches */}
         {recentMatches && recentMatches.length > 0 && (
           <>
             <hr className="mono-divider mb-8" />
@@ -301,14 +325,13 @@ export default function MonoProfile() {
           </>
         )}
 
-        {/* Find Players Link */}
         <hr className="mono-divider mb-8" />
         <Link
           to="/users/search"
           className="text-sm"
           style={{ color: "#0066ff" }}
         >
-          Find players &rarr;
+          Find players ?
         </Link>
       </div>
     </div>

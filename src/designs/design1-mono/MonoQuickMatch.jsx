@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useMutation, useQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
@@ -10,7 +10,7 @@ import { getSportById } from '../../models/sportRegistry';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
-import { normalizeMatchForConvex } from '../../utils/normalizeMatch';
+import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
 import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 
@@ -77,7 +77,6 @@ export default function MonoQuickMatch() {
 
   // Auth + Convex integration for match saving
   const { isAuthenticated, user } = useAuth();
-  const saveMatchMutation = useMutation(api.matches.save);
 
   // Referee toggle (only for referee/both roles)
   const showRefereeOption = isAuthenticated && (user?.role === 'referee' || user?.role === 'both');
@@ -123,6 +122,14 @@ export default function MonoQuickMatch() {
   const [team2Players, setTeam2Players] = useState([]);
   const [showTeam1Roster, setShowTeam1Roster] = useState(false);
   const [showTeam2Roster, setShowTeam2Roster] = useState(false);
+  const { syncState, syncError, syncMatch, retrySync, resetSync } = useMatchSync({
+    sport,
+    isAuthenticated,
+    user,
+    team1Players,
+    team2Players,
+    isRefereeing,
+  });
   const [format, setFormat] = useState(() => {
     if (isCricket) return buildCricketFormat(initialPreset);
     if (isGoals) return { mode: 'free' };
@@ -165,6 +172,14 @@ export default function MonoQuickMatch() {
   // Result state
   const [result, setResult] = useState(null);
 
+  useEffect(() => {
+    if (user?.role === 'referee') {
+      setIsRefereeing(true);
+    } else if (user?.role && user.role !== 'both') {
+      setIsRefereeing(false);
+    }
+  }, [user?.role]);
+
   // Start timer when scoring begins
   useEffect(() => {
     if (phase === 'scoring') {
@@ -197,18 +212,11 @@ export default function MonoQuickMatch() {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
-
-  // Save match to Convex (alongside localStorage save)
-  const saveToConvex = (result) => {
-    if (!isAuthenticated || !user) return;
-    const normalized = normalizeMatchForConvex(result, sport);
-    saveMatchMutation({
-      ...normalized,
-      team1Players: team1Players.filter(p => p.type === 'user').map(p => p.userId),
-      team2Players: team2Players.filter(p => p.type === 'user').map(p => p.userId),
-      matchRole: isRefereeing ? 'refereeing' : 'playing',
-    }).catch(() => {}); // fire-and-forget, localStorage is primary
-  };
+  const createSyncMeta = (status, error = '') => ({
+    status,
+    error,
+    updatedAt: new Date().toISOString(),
+  });
 
   const normalizeWinnerToken = (winner) => {
     if (typeof winner !== 'string') return winner;
@@ -264,6 +272,71 @@ export default function MonoQuickMatch() {
     }
     setSaveWarning('');
     return true;
+  };
+
+  const applySyncStateToResult = (entry, status, error = '', clientMatchId = entry.clientMatchId) => {
+    const nextResult = {
+      ...entry,
+      clientMatchId,
+      sync: createSyncMeta(status, error),
+    };
+    setResult(nextResult);
+    persistQuickMatch(nextResult);
+  };
+
+  const syncCompletedMatch = (entry) => {
+    if (!isAuthenticated || !user) {
+      resetSync();
+      return;
+    }
+
+    void syncMatch(entry).then((response) => {
+      if (!response) return;
+      if (response.status === 'synced') {
+        applySyncStateToResult(entry, 'synced', '', response.clientMatchId);
+        return;
+      }
+      if (response.status === 'failed') {
+        applySyncStateToResult(entry, 'failed', response.error, response.clientMatchId);
+      }
+    });
+  };
+
+  const finalizeMatch = (entry) => {
+    const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, entry.id);
+    const nextResult = {
+      ...entry,
+      clientMatchId,
+      sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
+    };
+
+    setResult(nextResult);
+    persistQuickMatch(nextResult);
+    setPhase('result');
+    syncCompletedMatch(nextResult);
+  };
+
+  const retryResultSync = () => {
+    if (!result) return;
+
+    const nextResult = {
+      ...result,
+      clientMatchId: result.clientMatchId || buildQuickMatchClientId(sport, result.id),
+    };
+
+    applySyncStateToResult(nextResult, 'syncing', '', nextResult.clientMatchId);
+
+    const request = syncState === 'failed' ? retrySync() : syncMatch(nextResult);
+    void request.then((response) => {
+      if (!response) return;
+      if (response.status === 'synced') {
+        applySyncStateToResult(nextResult, 'synced', '', response.clientMatchId);
+        return;
+      }
+      if (response.status === 'failed') {
+        applySyncStateToResult(nextResult, 'failed', response.error, response.clientMatchId);
+      }
+    });
   };
 
   const totalBalls = isCricket
@@ -433,10 +506,7 @@ export default function MonoQuickMatch() {
       date: new Date().toISOString(),
       ...makeTimerFields(),
     };
-    setResult(r);
-    persistQuickMatch(r);
-    saveToConvex(r);
-    setPhase('result');
+            finalizeMatch(r);
   };
 
   // Volleyball: Add point
@@ -488,10 +558,7 @@ export default function MonoQuickMatch() {
               date: new Date().toISOString(),
               ...makeTimerFields(),
             };
-            setResult(r);
-            persistQuickMatch(r);
-            saveToConvex(r);
-            setPhase('result');
+            finalizeMatch(r);
           } else {
             // Start next set
             newSets.push({ score1: 0, score2: 0, completed: false });
@@ -524,10 +591,7 @@ export default function MonoQuickMatch() {
           date: new Date().toISOString(),
           ...makeTimerFields(),
         };
-        setResult(r);
-        persistQuickMatch(r);
-        saveToConvex(r);
-        setPhase('result');
+            finalizeMatch(r);
       }
     }
   };
@@ -569,10 +633,7 @@ export default function MonoQuickMatch() {
           date: new Date().toISOString(),
           ...makeTimerFields(),
         };
-        setResult(r);
-        persistQuickMatch(r);
-        saveToConvex(r);
-        setPhase('result');
+            finalizeMatch(r);
       }
     }
   };
@@ -599,10 +660,7 @@ export default function MonoQuickMatch() {
       date: new Date().toISOString(),
       ...makeTimerFields(),
     };
-    setResult(r);
-    persistQuickMatch(r);
-    saveToConvex(r);
-    setPhase('result');
+            finalizeMatch(r);
   };
 
   const endMatchManually = () => {
@@ -621,10 +679,7 @@ export default function MonoQuickMatch() {
         winner, format, date: new Date().toISOString(),
         ...makeTimerFields(),
       };
-      setResult(r);
-      persistQuickMatch(r);
-      saveToConvex(r);
-      setPhase('result');
+            finalizeMatch(r);
     }
   };
 
@@ -1885,6 +1940,33 @@ export default function MonoQuickMatch() {
             {saveWarning}
           </div>
         )}
+        {isAuthenticated && syncState !== 'idle' && (
+          <div
+            className="mono-card mb-4"
+            style={{
+              padding: '10px 12px',
+              borderColor: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#16a34a' : '#0066ff',
+              color: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#166534' : '#0066ff',
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm" style={{ margin: 0 }}>
+                {syncState === 'syncing' && 'Syncing this match to your profile...'}
+                {syncState === 'synced' && 'Synced to your profile.'}
+                {syncState === 'failed' && (syncError || 'Could not sync this match to your profile.')}
+              </p>
+              {syncState === 'failed' && (
+                <button
+                  onClick={retryResultSync}
+                  className="mono-btn"
+                  style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <div className="text-center mb-10" style={{ paddingTop: '40px' }}>
           <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
             Match Result
@@ -1975,6 +2057,7 @@ export default function MonoQuickMatch() {
               setInnings(1);
               setBattingTeam(1);
               setResult(null);
+              resetSync();
               timer.reset();
               startedAtRef.current = null;
             }}
@@ -1988,3 +2071,17 @@ export default function MonoQuickMatch() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

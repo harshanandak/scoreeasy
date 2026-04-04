@@ -159,6 +159,35 @@ export const clearData = (key) => {
   }
 };
 
+
+const isPlainPreferenceString = (value) => typeof value === 'string';
+
+export const savePreference = (key, value) => {
+  try {
+    const serialized = isPlainPreferenceString(value) ? value : JSON.stringify(value);
+    getStorage().setItem(key, serialized);
+    return true;
+  } catch (error) {
+    console.error(`Error saving preference '${key}':`, error);
+    return false;
+  }
+};
+
+export const loadPreference = (key, defaultValue = null) => {
+  try {
+    const value = getStorage().getItem(key);
+    if (value === null) return defaultValue;
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  } catch (error) {
+    console.error(`Error loading preference '${key}':`, error);
+    return defaultValue;
+  }
+};
 // Statistics storage
 export const saveStatistics = (sport, stats) => {
   const allStats = loadData(STORAGE_KEYS.STATISTICS, {});

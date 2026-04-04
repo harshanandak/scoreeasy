@@ -110,7 +110,7 @@ function collectTournamentsBySport(sports) {
     const sportTournaments = loadSportTournaments(sport.storageKey);
     for (const tr of sportTournaments) {
       const allMatches = [...(tr.matches || []), ...(tr.knockoutMatches || [])];
-      const completed = allMatches.filter((m) => isTournamentMatchCompleted(m, sport.engine)).length;
+      const completed = allMatches.filter((m) => isTournamentMatchCompleted(m, sport.engine, m.format || tr.format)).length;
       const total = allMatches.length;
       tournaments.push({
         ...tr,
@@ -945,3 +945,5 @@ export default function DashboardLanding() {
     </div>
   );
 }
+
+

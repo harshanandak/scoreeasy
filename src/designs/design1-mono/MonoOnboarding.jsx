@@ -200,8 +200,6 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
         onChange("lastName", clerkUser.lastName);
       }
     }
-    // Only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canContinue = firstName.trim().length > 0 && lastName.trim().length > 0;
@@ -918,3 +916,4 @@ export default function MonoOnboarding() {
     </div>
   );
 }
+

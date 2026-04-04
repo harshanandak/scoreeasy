@@ -34,7 +34,7 @@ export default function MonoStatistics() {
 
       tournaments.forEach(t => {
         const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
-        matches += allMatches.filter((m) => isTournamentMatchCompleted(m, sport.engine)).length;
+        matches += allMatches.filter((m) => isTournamentMatchCompleted(m, sport.engine, m.format || t.format)).length;
         t.teams?.forEach(team => teams.add(team.name));
       });
 
@@ -293,7 +293,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
       allMatches.forEach(match => {
         if (engine === 'custom-cricket') {
           // Cricket scoring
-          if (!isTournamentMatchCompleted(match, engine)) return;
+          if (!isTournamentMatchCompleted(match, engine, match.format || t.format)) return;
           const t1 = t.teams?.find(te => te.id === match.team1Id)?.name;
           const t2 = t.teams?.find(te => te.id === match.team2Id)?.name;
           if (!t1 || !t2 || !teamMap[t1] || !teamMap[t2]) return;
@@ -311,7 +311,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           else if (s2 > s1) { teamMap[t2].won++; teamMap[t1].lost++; }
         } else {
           // Sets/Goals scoring
-          if (!isTournamentMatchCompleted(match, engine)) return;
+          if (!isTournamentMatchCompleted(match, engine, match.format || t.format)) return;
           const idx1 = match.team1Id ?? match.team1;
           const idx2 = match.team2Id ?? match.team2;
           const t1 = typeof idx1 === 'number' ? t.teams?.[idx1]?.name : t.teams?.find(te => te.id === idx1)?.name;
@@ -376,3 +376,4 @@ TeamStatsTable.propTypes = {
   tournaments: PropTypes.array,
   engine: PropTypes.string,
 };
+

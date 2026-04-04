@@ -8,6 +8,8 @@ import {
   isStorageAvailable,
   isPrivateMode,
   STORAGE_KEYS,
+  loadPreference,
+  savePreference,
   saveSportTournament,
   loadSportTournaments,
   deleteSportTournament,
@@ -84,6 +86,24 @@ describe('saveData / loadData / clearData', () => {
 });
 
 // ─── safeSave ──────────────────────────────────────────────────────────────────
+
+
+describe('savePreference / loadPreference', () => {
+  it('saves and loads string preferences', () => {
+    expect(savePreference('se_layout', 'grid')).toBe(true);
+    expect(loadPreference('se_layout', 'tabs')).toBe('grid');
+  });
+
+  it('falls back to the default value when missing', () => {
+    expect(loadPreference('missing_preference', 'tabs')).toBe('tabs');
+  });
+
+  it('supports JSON-serializable values', () => {
+    const value = { theme: 'mono', compact: true };
+    expect(savePreference('se_settings', value)).toBe(true);
+    expect(loadPreference('se_settings', null)).toEqual(value);
+  });
+});
 
 describe('safeSave', () => {
   it('returns { success: true } on normal save', () => {

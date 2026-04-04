@@ -10,7 +10,7 @@ function normalizeToken(value) {
 
 function getTeamNameFromId(teams, id, fallback) {
   if (id === null || id === undefined) return fallback || 'Unknown';
-  const fromId = teams.find((t) => t.id === id)?.name;
+  const fromId = teams.find((team) => team.id === id)?.name;
   if (fromId) return fromId;
   if (typeof id === 'number') return teams[id]?.name || fallback || `Team ${id + 1}`;
   return fallback || String(id);
@@ -31,10 +31,58 @@ function computeSetsWon(sets = []) {
   let setsWon1 = 0;
   let setsWon2 = 0;
   for (const set of sets) {
-    if (set?.score1 > set?.score2) setsWon1++;
-    else if (set?.score2 > set?.score1) setsWon2++;
+    if (set?.score1 > set?.score2) setsWon1 += 1;
+    else if (set?.score2 > set?.score1) setsWon2 += 1;
   }
   return { setsWon1, setsWon2 };
+}
+
+function getSetsFormat(match, fallbackFormat) {
+  return match?.format || fallbackFormat || null;
+}
+
+function isCompletedSetsMatch(match, format) {
+  if (!Array.isArray(match?.sets) || match.sets.length === 0) {
+    return false;
+  }
+
+  if (match.winner) {
+    return true;
+  }
+
+  const { setsWon1, setsWon2 } = computeSetsWon(match.sets);
+  const effectiveFormat = getSetsFormat(match, format);
+
+  if (effectiveFormat?.type === 'single') {
+    return match.sets.some((set) => set?.completed === true);
+  }
+
+  const setsToWin = Math.ceil((effectiveFormat?.sets || 3) / 2);
+  return setsWon1 >= setsToWin || setsWon2 >= setsToWin;
+}
+
+function isCompletedCricketMatch(match) {
+  if (match?.winner || match?.winDesc) {
+    return true;
+  }
+
+  if (Array.isArray(match?.innings) && match.innings.length > 0) {
+    return Boolean(match?.status === 'completed');
+  }
+
+  return Boolean(match?.team1Score && match?.team2Score && match?.status === 'completed');
+}
+
+function isCompletedGoalsMatch(match) {
+  if (match?.winner) {
+    return true;
+  }
+
+  return Boolean(
+    match?.status === 'completed' &&
+      typeof match?.score1 === 'number' &&
+      typeof match?.score2 === 'number'
+  );
 }
 
 function toTimestamp(dateValue) {
@@ -48,22 +96,19 @@ export function normalizeNonTeamWinner(winner) {
   return normalizeToken(winner);
 }
 
-export function isTournamentMatchCompleted(match, engine) {
+export function isTournamentMatchCompleted(match, engine, format = null) {
   if (!match) return false;
   if (match.status === 'completed') return true;
 
   if (engine === 'custom-cricket') {
-    if (Array.isArray(match.innings) && match.innings.length > 0) return true;
-    return Boolean(match.team1Score || match.team2Score);
+    return isCompletedCricketMatch(match);
   }
 
   if (engine === 'sets') {
-    if (Array.isArray(match.sets) && match.sets.some((s) => (s?.score1 ?? 0) > 0 || (s?.score2 ?? 0) > 0)) {
-      return true;
-    }
+    return isCompletedSetsMatch(match, format);
   }
 
-  return typeof match.score1 === 'number' && typeof match.score2 === 'number';
+  return isCompletedGoalsMatch(match);
 }
 
 export function getCompletedAt(match) {
@@ -72,6 +117,10 @@ export function getCompletedAt(match) {
 
 export function getTournamentMatches(tournament) {
   return [...(tournament?.matches || []), ...(tournament?.knockoutMatches || [])];
+}
+
+export function getTournamentMatchClientId({ sportId, tournament, match }) {
+  return `tournament:${sportId}:${tournament?.id ?? 'unknown'}:${match?.id ?? 'unknown'}`;
 }
 
 export function buildTournamentConvexPayload({ sportId, tournament, match }) {
@@ -124,11 +173,14 @@ export function buildTournamentConvexPayload({ sportId, tournament, match }) {
 
   const normalized = normalizeMatchForConvex(resultShape, sportId);
   normalized.date = toTimestamp(getCompletedAt(match));
+  normalized.clientMatchId = getTournamentMatchClientId({ sportId, tournament, match });
+
   if (winner) {
     normalized.winner = winner;
   }
   if (match.matchRole) {
     normalized.matchRole = match.matchRole;
   }
+
   return normalized;
 }

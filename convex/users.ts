@@ -2,10 +2,6 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authedQuery, authedMutation } from "./lib/functions";
 
-// ---------------------------------------------------------------------------
-// Profanity filter — regex with leetspeak & separator detection
-// ---------------------------------------------------------------------------
-
 const LEET_MAP: Record<string, string> = {
   a: "[a@4]", b: "[b8]", c: "[ck]", d: "[d]", e: "[e3]",
   f: "[f]", g: "[g9]", h: "[h]", i: "[i1!l]", j: "[j]",
@@ -27,49 +23,36 @@ function wordToPattern(word: string): string {
 }
 
 const BLOCKED_WORDS = [
-  // English
   "fuck", "shit", "cunt", "bitch", "dick", "cock", "pussy", "asshole",
   "bastard", "slut", "whore", "nigger", "nigga", "faggot", "retard",
   "wank", "twat", "bollocks", "prick", "arse",
-  // Hindi / Urdu — core (romanized, most common across north India)
   "chutiya", "chutia", "chutiye", "madarchod", "bhenchod", "bhosdike",
   "bsdk", "gandu", "randi", "haramkhor", "harami", "lodu", "lavde",
   "jhatu", "choot", "gaand", "tatti", "kutte", "kuttiya", "saala",
   "hramzada", "bhosdi", "lund", "chinal", "raand", "dalla",
   "kamina", "kamine", "kaminey", "hijra", "chakka", "laudu",
   "bhadwa", "bhadwe", "chodu", "chodna", "behenchod",
-  // Hindi / Urdu — extended variations
   "machar", "maderchod", "bhenkelode", "chodoo",
   "gandmara", "gandphadu", "jhaant", "jhaantu", "bhosad",
   "tharki", "lauda", "laude", "lundure", "gaandmara",
-  // Punjabi (romanized)
   "penchod", "bhenchodd", "kutti", "khotey", "khotay",
   "chootad", "teri_maa", "panchod", "gashti", "kanjar",
   "tattay", "phuddi", "phuddu", "ghasti",
-  // Bhojpuri / UP-Bihar (romanized)
   "maichod", "bhokal", "bhokaal", "chootmarani", "gandwa",
   "raandwa", "bhadwi", "khanki", "suar", "suwar",
-  // Haryanvi / Rajasthani (romanized)
   "bhadvo", "randvo", "kutto", "gandiya", "chootad",
-  // Marathi (romanized)
   "zhavnya", "raand", "chhinaal", "aaizhavadya", "bhikarchot",
   "maadarchod", "gaandit", "zavnya",
-  // Tamil (romanized)
   "thevidiya", "thevdiya", "oombu", "sunni", "punda", "pundai",
   "myiru", "baadu", "vesai", "vesi", "thayoli", "okka",
   "otha", "koothi", "naayee",
-  // Telugu (romanized)
   "lanja", "lanjakodaka", "pooka", "modda", "dengey", "gudda",
   "sulli", "erripuka", "donga", "denga", "lanjodaka",
-  // Kannada (romanized)
   "sule", "sulemaga", "bolimaga", "tunne", "munde", "hendti",
   "soolemaga",
-  // Bengali (romanized)
   "banchod", "magi", "chodu", "bokachoda", "shala", "haramjada",
   "baal", "nangta", "khanki", "fatichod",
-  // Malayalam (romanized)
   "myiru", "thayoli", "kunna", "pooru", "thendi", "mandan",
-  // Gujarati (romanized)
   "gando", "gandi", "bhosdo", "chootiya", "lodo",
 ];
 
@@ -77,22 +60,66 @@ const PROFANITY_REGEX = new RegExp(
   BLOCKED_WORDS.map((w) => `(?:${wordToPattern(w)})`).join("|")
 );
 
-// Idempotent — called on every sign-in via useAuth hook
+function normalizeUsernameValue(username: string) {
+  return username.toLowerCase().trim();
+}
+
+function validateUsernameValue(username: string) {
+  if (username.length < 4 || username.length > 20) {
+    throw new Error("Username must be 4-20 characters");
+  }
+  if (!/^[a-z0-9_.]+$/.test(username)) {
+    throw new Error("Only lowercase letters, numbers, underscore, and period allowed");
+  }
+  if (/(?:^[_.])|(?:[_.]$)/.test(username)) {
+    throw new Error("Cannot start or end with underscore or period");
+  }
+  if (/(?:\.\.)|(?:__)|(?:_\.)|(?:\._)/.test(username)) {
+    throw new Error("No consecutive special characters");
+  }
+  if (PROFANITY_REGEX.test(username)) {
+    throw new Error("Username contains inappropriate language");
+  }
+}
+
+async function getUserByTokenIdentifier(ctx: { db: any }, tokenIdentifier: string) {
+  return ctx.db
+    .query("users")
+    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", tokenIdentifier))
+    .unique();
+}
+
+async function getUserByUsername(ctx: { db: any }, username: string) {
+  return ctx.db
+    .query("users")
+    .withIndex("by_username", (q: any) => q.eq("username", normalizeUsernameValue(username)))
+    .unique();
+}
+
+function toSafeCurrentUser(user: any) {
+  if (!user) return null;
+  const { tokenIdentifier, email, migratedAt, ...safe } = user;
+  return safe;
+}
+
+function toPublicProfile(user: any) {
+  if (!user) return null;
+  return {
+    username: user.username,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    createdAt: user.createdAt,
+  };
+}
+
 export const store = mutation({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique();
-
+    const existing = await getUserByTokenIdentifier(ctx, identity.tokenIdentifier);
     if (existing) {
-      // Update avatar/email if changed
       const updates: Record<string, string> = {};
       if (identity.pictureUrl && identity.pictureUrl !== existing.avatarUrl) {
         updates.avatarUrl = identity.pictureUrl;
@@ -109,7 +136,7 @@ export const store = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("users", {
+    return ctx.db.insert("users", {
       tokenIdentifier: identity.tokenIdentifier,
       displayName: identity.name ?? undefined,
       avatarUrl: identity.pictureUrl ?? undefined,
@@ -119,30 +146,19 @@ export const store = mutation({
   },
 });
 
-// Claim a unique gamertag
 export const claimUsername = authedMutation({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    const normalized = username.toLowerCase().trim();
+    const normalized = normalizeUsernameValue(username);
+    validateUsernameValue(normalized);
 
-    if (normalized.length < 3 || normalized.length > 20) {
-      throw new Error("Username must be 3-20 characters");
-    }
-    if (!/^[a-z0-9_]+$/.test(normalized)) {
-      throw new Error("Only lowercase letters, numbers, and underscore allowed");
-    }
-    if (/^_|_$/.test(normalized)) {
-      throw new Error("Cannot start or end with underscore");
-    }
-
-    // Check uniqueness via transactional index (NOT search index)
     const taken = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", normalized))
       .unique();
 
     if (taken) {
-      if (taken._id === ctx.user._id) return; // Already yours, no-op
+      if (taken._id === ctx.user._id) return;
       throw new Error("Username already taken");
     }
 
@@ -150,11 +166,10 @@ export const claimUsername = authedMutation({
   },
 });
 
-// Live availability check (uses by_username index, NOT search)
 export const checkUsername = query({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    const normalized = username.toLowerCase().trim();
+    const normalized = normalizeUsernameValue(username);
     if (normalized.length < 4) return false;
 
     const existing = await ctx.db
@@ -166,7 +181,6 @@ export const checkUsername = query({
   },
 });
 
-// Prefix search for player tagging
 export const search = query({
   args: { prefix: v.string() },
   handler: async (ctx, { prefix }) => {
@@ -190,29 +204,14 @@ export const search = query({
   },
 });
 
-// Public profile lookup by username
 export const getByUsername = query({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) =>
-        q.eq("username", username.toLowerCase())
-      )
-      .unique();
-
-    if (!user) return null;
-    return {
-      _id: user._id,
-      username: user.username,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      createdAt: user.createdAt,
-    };
+    const user = await getUserByUsername(ctx, username);
+    return toPublicProfile(user);
   },
 });
 
-// Complete onboarding — saves name, gamertag, role, preferences atomically
 export const completeOnboarding = authedMutation({
   args: {
     firstName: v.string(),
@@ -223,26 +222,9 @@ export const completeOnboarding = authedMutation({
     playStyle: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const normalized = args.username.toLowerCase().trim();
+    const normalized = normalizeUsernameValue(args.username);
+    validateUsernameValue(normalized);
 
-    // Validate username (Instagram-style: letters, numbers, underscore, period)
-    if (normalized.length < 4 || normalized.length > 20) {
-      throw new Error("Username must be 4-20 characters");
-    }
-    if (!/^[a-z0-9_.]+$/.test(normalized)) {
-      throw new Error("Only lowercase letters, numbers, underscore, and period allowed");
-    }
-    if (/(?:^[_.])|(?:[_.]$)/.test(normalized)) {
-      throw new Error("Cannot start or end with underscore or period");
-    }
-    if (/\.\.|__|_\.|\._./.test(normalized)) {
-      throw new Error("No consecutive special characters");
-    }
-    if (PROFANITY_REGEX.test(normalized)) {
-      throw new Error("Username contains inappropriate language");
-    }
-
-    // Check uniqueness via transactional index
     const taken = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", normalized))
@@ -265,11 +247,18 @@ export const completeOnboarding = authedMutation({
   },
 });
 
-// Current user's own record (strips internal fields)
-export const getMe = authedQuery({
+export const getCurrent = query({
   args: {},
   handler: async (ctx) => {
-    const { tokenIdentifier, email, migratedAt, ...safe } = ctx.user;
-    return safe;
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const user = await getUserByTokenIdentifier(ctx, identity.tokenIdentifier);
+    return toSafeCurrentUser(user);
   },
+});
+
+export const getMe = authedQuery({
+  args: {},
+  handler: async (ctx) => toSafeCurrentUser(ctx.user),
 });

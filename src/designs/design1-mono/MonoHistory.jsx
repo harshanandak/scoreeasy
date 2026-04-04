@@ -102,7 +102,7 @@ function buildTournamentEntries() {
       const matches = getTournamentMatches(tournament);
 
       matches.forEach((match) => {
-        if (!isTournamentMatchCompleted(match, sport.engine)) return;
+        if (!isTournamentMatchCompleted(match, sport.engine, match.format || tournament.format)) return;
 
         const team1Ref = match.team1Id ?? match.team1;
         const team2Ref = match.team2Id ?? match.team2;
@@ -347,3 +347,4 @@ export default function MonoHistory() {
     </div>
   );
 }
+

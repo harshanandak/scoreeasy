@@ -37,8 +37,10 @@ export default defineSchema({
     team1Id: v.optional(v.id("teams")),
     team2Id: v.optional(v.id("teams")),
     matchRole: v.optional(v.string()),
+    clientMatchId: v.optional(v.string()),
   })
     .index("by_operator", ["operatedBy"])
+    .index("by_operator_client_match", ["operatedBy", "clientMatchId"])
     .index("by_date", ["date"]),
 
   matchPlayers: defineTable({
