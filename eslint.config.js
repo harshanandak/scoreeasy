@@ -2,7 +2,14 @@ import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**", "convex/_generated/**"]
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "convex/_generated/**",
+      "android/**/build/**",
+      "android/app/src/main/assets/public/**",
+      "ios/App/App/public/**"
+    ]
   },
   {
     files: ["**/*.{js,jsx}"],

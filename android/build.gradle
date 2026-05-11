@@ -1,0 +1,76 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.google.protobuf'
+                    && ['protobuf-java', 'protobuf-java-util', 'protobuf-kotlin'].contains(details.requested.name)) {
+                details.useVersion '3.25.5'
+                details.because 'Avoid vulnerable protobuf versions in Android build tooling'
+            }
+            if (details.requested.group == 'io.netty' && details.requested.name.startsWith('netty-')) {
+                details.useVersion '4.1.118.Final'
+                details.because 'Avoid vulnerable Netty versions in Android build tooling'
+            }
+            if (details.requested.group == 'org.bouncycastle'
+                    && ['bcprov-jdk18on', 'bcpkix-jdk18on', 'bcutil-jdk18on'].contains(details.requested.name)) {
+                details.useVersion '1.84'
+                details.because 'Avoid vulnerable Bouncy Castle versions in Android build tooling'
+            }
+            if (details.requested.group == 'org.bitbucket.b_c' && details.requested.name == 'jose4j') {
+                details.useVersion '0.9.6'
+                details.because 'Avoid vulnerable jose4j versions in Android build tooling'
+            }
+            if (details.requested.group == 'org.jdom' && details.requested.name == 'jdom2') {
+                details.useVersion '2.0.6.1'
+                details.because 'Avoid vulnerable JDOM versions in Android build tooling'
+            }
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.google.protobuf'
+                    && ['protobuf-java', 'protobuf-java-util', 'protobuf-kotlin'].contains(details.requested.name)) {
+                details.useVersion '3.25.5'
+                details.because 'Avoid vulnerable protobuf versions in Android test tooling'
+            }
+            if (details.requested.group == 'io.netty' && details.requested.name.startsWith('netty-')) {
+                details.useVersion '4.1.118.Final'
+                details.because 'Avoid vulnerable Netty versions in Android test tooling'
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
