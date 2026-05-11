@@ -5,8 +5,9 @@
 This repo includes build workflows that can be triggered from Windows through the GitHub CLI:
 
 ```powershell
-gh workflow run "iOS Build Check" --ref feat/mobile-app-plan
-gh workflow run "Android Build Check" --ref feat/mobile-app-plan
+$branch = git branch --show-current
+gh workflow run "iOS Build Check" --ref $branch
+gh workflow run "Android Build Check" --ref $branch
 gh run list --workflow "iOS Build Check" --limit 5
 gh run watch
 ```

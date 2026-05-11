@@ -2,7 +2,7 @@
 
 ## Android
 
-Verified on Windows from `.worktrees/mobile-app-plan`.
+Verified on Windows from your local worktree.
 
 Required local tools:
 

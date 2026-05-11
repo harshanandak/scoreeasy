@@ -37,4 +37,17 @@ describe('shareText', () => {
       method: 'clipboard-failed',
     });
   });
+
+  it('copies URL-only payloads with the clipboard fallback', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', {
+      clipboard: { writeText },
+    });
+
+    await expect(shareText({ url: 'https://scoreeasy.example/match/1' })).resolves.toEqual({
+      shared: true,
+      method: 'clipboard',
+    });
+    expect(writeText).toHaveBeenCalledWith('https://scoreeasy.example/match/1');
+  });
 });

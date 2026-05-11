@@ -110,8 +110,8 @@ Alternatives rejected:
 Sources checked:
 
 - Capacitor docs: `https://capacitorjs.com/docs`
-- Capacitor build workflow: `https://capacitorjs.jp/docs/v2/basics/building-your-app`
-- Capacitor deep links: `https://capacitorjs.ru/docs/guides/deep-links`
+- Capacitor build workflow: `https://capacitorjs.com/docs/basics/workflow`
+- Capacitor deep links: `https://capacitorjs.com/docs/guides/deep-links`
 - Apple App Store Review Guidelines: `https://developer.apple.com/appstore/resources/approval/guidelines.html`
 - Android core app quality: `https://developer.android.com/docs/quality-guidelines/core-app-quality`
 - Expo docs: `https://docs.expo.dev/`

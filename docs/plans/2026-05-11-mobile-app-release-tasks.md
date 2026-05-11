@@ -204,7 +204,7 @@ What to implement: run Capacitor Android add/sync, configure package id, app nam
 TDD steps:
 
 1. Run `bun run build`.
-2. Run `npx cap sync android`.
+2. Run `bunx cap sync android`.
 3. Build debug APK/AAB.
 4. Smoke test routes, auth, scoring, offline, resume, back button.
 5. Commit: `build: add android native project`
@@ -241,7 +241,7 @@ What to implement: run Capacitor iOS add/sync, configure bundle id, app name, ic
 TDD steps:
 
 1. Run `bun run build`.
-2. Run `npx cap sync ios`.
+2. Run `bunx cap sync ios`.
 3. Build in Xcode simulator.
 4. Smoke test auth, scoring, offline, resume, rotation, keyboard, and safe areas.
 5. Commit: `build: add ios native project`

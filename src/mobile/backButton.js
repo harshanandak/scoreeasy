@@ -2,7 +2,9 @@ import { App } from '@capacitor/app';
 import { hasNativePlugin, isNativeMobile } from './platform';
 
 export function isProtectedScoringRoute(pathname) {
-  return /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(pathname);
+  return pathname.includes('/game/')
+    || pathname.includes('/quick')
+    || (pathname.includes('/tournament/') && pathname.includes('/match/') && pathname.includes('/score'));
 }
 
 export function installNativeBackButtonGuard({
@@ -18,7 +20,7 @@ export function installNativeBackButtonGuard({
   let isActive = true;
   let removeNativeListener = () => {};
 
-  void App.addListener('backButton', ({ canGoBack }) => {
+  App.addListener('backButton', ({ canGoBack }) => {
     const pathname = getPathname?.() || globalThis.location.pathname;
 
     if (canGoBack) {
@@ -40,6 +42,8 @@ export function installNativeBackButtonGuard({
     removeNativeListener = () => {
       handle.remove();
     };
+  }).catch((error) => {
+    console.warn('Failed to register native backButton listener', error);
   });
 
   return () => {

@@ -92,4 +92,23 @@ describe('installNativeBackButtonGuard', () => {
     expect(goBack).toHaveBeenCalledTimes(1);
     expect(exitApp).not.toHaveBeenCalled();
   });
+
+  it('handles native listener registration failures', async () => {
+    mocks.hasNativePlugin.mockReturnValue(true);
+    mocks.isNativeMobile.mockReturnValue(true);
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const error = new Error('listener failed');
+    mocks.addListener.mockRejectedValue(error);
+
+    const cleanup = installNativeBackButtonGuard({
+      getPathname: () => '/play',
+    });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    cleanup();
+
+    expect(warn).toHaveBeenCalledWith('Failed to register native backButton listener', error);
+  });
 });
