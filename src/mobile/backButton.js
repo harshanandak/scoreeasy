@@ -5,7 +5,7 @@ export function isProtectedScoringRoute(pathname) {
   return /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(pathname);
 }
 
-export async function installNativeBackButtonGuard({
+export function installNativeBackButtonGuard({
   getPathname,
   confirmLeave = globalThis.confirm,
   goBack = () => globalThis.history.back(),
@@ -15,7 +15,10 @@ export async function installNativeBackButtonGuard({
     return () => {};
   }
 
-  const handle = await App.addListener('backButton', ({ canGoBack }) => {
+  let isActive = true;
+  let removeNativeListener = () => {};
+
+  void App.addListener('backButton', ({ canGoBack }) => {
     const pathname = getPathname?.() || globalThis.location.pathname;
 
     if (isProtectedScoringRoute(pathname) && !confirmLeave('Leave this page? Your unsaved scoring progress may be lost.')) {
@@ -28,9 +31,19 @@ export async function installNativeBackButtonGuard({
     }
 
     exitApp();
+  }).then((handle) => {
+    if (!isActive) {
+      handle.remove();
+      return;
+    }
+
+    removeNativeListener = () => {
+      handle.remove();
+    };
   });
 
   return () => {
-    handle.remove();
+    isActive = false;
+    removeNativeListener();
   };
 }

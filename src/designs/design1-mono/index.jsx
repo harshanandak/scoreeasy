@@ -100,8 +100,6 @@ export default function Design1Mono() {
 
     if (!isGameRoute) return;
 
-    let cleanupNativeBackButton = () => {};
-
     globalThis.history.pushState({ gameProtection: true }, '');
 
     const handlePopState = () => {
@@ -118,10 +116,8 @@ export default function Design1Mono() {
 
     globalThis.addEventListener('popstate', handlePopState);
     globalThis.addEventListener('beforeunload', handleBeforeUnload);
-    void installNativeBackButtonGuard({
+    const cleanupNativeBackButton = installNativeBackButtonGuard({
       getPathname: () => globalThis.location.pathname,
-    }).then((cleanup) => {
-      cleanupNativeBackButton = cleanup;
     });
 
     return () => {
