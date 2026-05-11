@@ -6,6 +6,7 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
 import * as Sentry from '@sentry/react';
 import App from './App.jsx';
+import { setupNativeChrome } from './mobile/nativeChrome';
 import './index.css';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -31,6 +32,8 @@ if (import.meta.env.DEV) {
   script.crossOrigin = 'anonymous';
   document.head.appendChild(script);
 }
+
+void setupNativeChrome();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

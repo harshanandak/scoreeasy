@@ -10,6 +10,7 @@ import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
+import { installNativeBackButtonGuard } from '../../mobile/backButton';
 import './mono.css';
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
@@ -99,6 +100,8 @@ export default function Design1Mono() {
 
     if (!isGameRoute) return;
 
+    let cleanupNativeBackButton = () => {};
+
     globalThis.history.pushState({ gameProtection: true }, '');
 
     const handlePopState = () => {
@@ -115,10 +118,16 @@ export default function Design1Mono() {
 
     globalThis.addEventListener('popstate', handlePopState);
     globalThis.addEventListener('beforeunload', handleBeforeUnload);
+    void installNativeBackButtonGuard({
+      getPathname: () => globalThis.location.pathname,
+    }).then((cleanup) => {
+      cleanupNativeBackButton = cleanup;
+    });
 
     return () => {
       globalThis.removeEventListener('popstate', handlePopState);
       globalThis.removeEventListener('beforeunload', handleBeforeUnload);
+      cleanupNativeBackButton();
     };
   }, [location.pathname]);
 
