@@ -23,6 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -33,6 +38,7 @@ jobs:
           sw_vers
           xcodebuild -version
           xcodebuild -showsdks
+          node --version
           bun --version
 
       - name: Install dependencies

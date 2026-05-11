@@ -29,6 +29,11 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -37,6 +42,7 @@ jobs:
       - name: Show toolchain
         run: |
           java -version
+          node --version
           echo "ANDROID_HOME=$ANDROID_HOME"
           bun --version
 
