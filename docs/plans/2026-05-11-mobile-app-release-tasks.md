@@ -4,6 +4,51 @@
 
 This task list implements the `2026-05-11-mobile-app-release-design.md` plan in small, verifiable steps. The order favors Android first for faster release feedback, then iOS polish and submission.
 
+## Forge /plan Execution Structure
+
+This task file follows the Forge `/plan` output model:
+
+- Design artifact: `docs/plans/2026-05-11-mobile-app-release-design.md`
+- Task artifact: `docs/plans/2026-05-11-mobile-app-release-tasks.md`
+- Feature branch: `feat/mobile-app-plan`
+- Feature worktree: `.worktrees/mobile-app-plan`
+- Implementation rule: every task owns explicit files and includes test-first verification steps.
+
+Before `/dev`, the Forge-ready state should be:
+
+1. Main repo has Forge/Beads initialized.
+2. Feature worktree is on `feat/mobile-app-plan`.
+3. Design and task docs are committed.
+4. Baseline commands are known: `bun run lint`, `bun run type-check`, `bun run test`, `bun run build`.
+5. If a Beads epic is required, create it after the initialized `.beads` state is available in the branch/worktree.
+
+## Target Folder Structure
+
+```text
+.worktrees/mobile-app-plan/
+  capacitor.config.ts
+  android/
+  ios/
+  docs/
+    plans/
+      2026-05-11-mobile-app-release-design.md
+      2026-05-11-mobile-app-release-tasks.md
+    mobile/
+      android-release.md
+      ios-release.md
+      smoke-test-results.md
+  src/
+    mobile/
+      platform.js
+      lifecycle.js
+      backButton.js
+      nativeChrome.js
+      share.js
+      haptics.js
+```
+
+`android/`, `ios/`, `capacitor.config.ts`, `docs/mobile/`, and `src/mobile/` are intentionally planned outputs, not present at planning start.
+
 ## Phase 0: Baseline And Tooling
 
 ### Task 1: Verify Web Baseline

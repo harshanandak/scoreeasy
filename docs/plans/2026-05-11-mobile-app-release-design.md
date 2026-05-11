@@ -7,6 +7,44 @@
 - Branch: feat/mobile-app-plan
 - Status: planned
 
+## Forge /plan Compliance
+
+This plan is organized to match the Forge `/plan` skill workflow:
+
+1. **Phase 1: Design Intent** - captured in this design doc: purpose, success criteria, out of scope, selected approach, constraints, edge cases, and ambiguity policy.
+2. **Phase 2: Technical Research** - captured below under `Technical Research`, `Expected Issues And Solutions`, `OWASP / Security Notes`, and `TDD / Verification Scenarios`.
+3. **Phase 3: Setup + Task List** - captured in `docs/plans/2026-05-11-mobile-app-release-tasks.md` with ordered tasks, owned files, TDD steps, expected outputs, and commits.
+
+Forge setup note: the main repo was initialized with Forge after this planning worktree was first created. Future `/plan` runs should start from the initialized main repo, create a fresh `.worktrees/<slug>` worktree, create/link the Beads epic, then write the design and task docs in `docs/plans/`.
+
+## Forge Folder Structure
+
+Expected layout for this feature:
+
+```text
+Volleyball/
+  .beads/                                      # Forge/Beads issue database in the main repo
+  .worktrees/
+    mobile-app-plan/                          # isolated planning worktree
+      docs/
+        plans/
+          2026-05-11-mobile-app-release-design.md
+          2026-05-11-mobile-app-release-tasks.md
+      capacitor.config.ts                     # added during implementation
+      android/                                # generated during Android phase
+      ios/                                    # generated during iOS phase
+      docs/
+        mobile/
+          android-release.md
+          ios-release.md
+          smoke-test-results.md
+  docs/
+    forge/                                    # Forge setup docs in main repo
+  lefthook.yml                                # Forge-compatible hook config in main repo
+```
+
+Do not implement Android/iOS native folders in the main worktree directly. Implementation should happen in the feature worktree/branch, then merge back through the normal Forge flow.
+
 ## Purpose
 
 Ship Score Easy as lightweight, fast, app-store-ready Android and iOS apps without rewriting the product. The first release should reuse the existing Vite React app, preserve the current web/PWA release path, and add only the native layer needed for store distribution, device polish, and mobile reliability.
