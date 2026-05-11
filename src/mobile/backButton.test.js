@@ -63,4 +63,33 @@ describe('installNativeBackButtonGuard', () => {
 
     expect(remove).toHaveBeenCalledTimes(1);
   });
+
+  it('lets the browser popstate guard handle protected routes when native history can go back', async () => {
+    mocks.hasNativePlugin.mockReturnValue(true);
+    mocks.isNativeMobile.mockReturnValue(true);
+
+    let backButtonHandler;
+    mocks.addListener.mockImplementation((eventName, handler) => {
+      backButtonHandler = handler;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+
+    const confirmLeave = vi.fn();
+    const goBack = vi.fn();
+    const exitApp = vi.fn();
+
+    installNativeBackButtonGuard({
+      confirmLeave,
+      exitApp,
+      getPathname: () => '/volleyball/quick',
+      goBack,
+    });
+    await Promise.resolve();
+
+    backButtonHandler({ canGoBack: true });
+
+    expect(confirmLeave).not.toHaveBeenCalled();
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(exitApp).not.toHaveBeenCalled();
+  });
 });

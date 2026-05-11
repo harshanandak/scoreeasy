@@ -23,8 +23,12 @@ export async function shareText({ title = 'Score Easy', text, url, dialogTitle =
   }
 
   if (globalThis.navigator?.clipboard && text) {
-    await globalThis.navigator.clipboard.writeText(url ? `${text}\n${url}` : text);
-    return { shared: true, method: 'clipboard' };
+    try {
+      await globalThis.navigator.clipboard.writeText(url ? `${text}\n${url}` : text);
+      return { shared: true, method: 'clipboard' };
+    } catch {
+      return { shared: false, method: 'clipboard-failed' };
+    }
   }
 
   return { shared: false, method: 'unsupported' };

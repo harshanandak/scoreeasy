@@ -25,4 +25,16 @@ describe('shareText', () => {
       url: undefined,
     });
   });
+
+  it('returns a structured failure when clipboard fallback is blocked', async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error('Permission denied'));
+    vi.stubGlobal('navigator', {
+      clipboard: { writeText },
+    });
+
+    await expect(shareText({ text: 'Final score: 25-20' })).resolves.toEqual({
+      shared: false,
+      method: 'clipboard-failed',
+    });
+  });
 });
