@@ -1,6 +1,10 @@
 import { Share } from '@capacitor/share';
 import { hasNativePlugin, isNativeMobile } from './platform';
 
+function getClipboardPayload({ text, url }) {
+  return text && url ? `${text}\n${url}` : (text || url);
+}
+
 export async function shareText({ title = 'Score Easy', text, url, dialogTitle = 'Share score' }) {
   if (!text && !url) return { shared: false, method: 'empty' };
 
@@ -24,8 +28,7 @@ export async function shareText({ title = 'Score Easy', text, url, dialogTitle =
 
   if (globalThis.navigator?.clipboard && (text || url)) {
     try {
-      const payload = text && url ? `${text}\n${url}` : (text || url);
-      await globalThis.navigator.clipboard.writeText(payload);
+      await globalThis.navigator.clipboard.writeText(getClipboardPayload({ text, url }));
       return { shared: true, method: 'clipboard' };
     } catch {
       return { shared: false, method: 'clipboard-failed' };
