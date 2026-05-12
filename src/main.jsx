@@ -12,17 +12,15 @@ import './index.css';
 const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
-const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine;
-const authBootstrap = getAuthBootstrapMode({
-  clerkPublishableKey: PUBLISHABLE_KEY,
-  convexUrl: CONVEX_URL,
-  isOnline,
-});
 
 const localConvex = new ConvexReactClient('https://offline-placeholder.convex.cloud');
 
 function isNativeRuntime() {
   return Capacitor.isNativePlatform();
+}
+
+function getCurrentOnlineState() {
+  return typeof navigator === 'undefined' ? true : navigator.onLine;
 }
 
 async function cleanupNativeServiceWorkerCache() {
@@ -99,17 +97,35 @@ registerWebServiceWorker();
 initSentryAfterStartup();
 
 function RootApp() {
+  const [isOnlineState, setIsOnlineState] = useState(getCurrentOnlineState);
+  const authBootstrap = getAuthBootstrapMode({
+    clerkPublishableKey: PUBLISHABLE_KEY,
+    convexUrl: CONVEX_URL,
+    isOnline: isOnlineState,
+  });
   const shouldProbeNativeCloud =
     authBootstrap.mode === 'cloud' && isNativeRuntime();
-  const [nativeCloudReachable, setNativeCloudReachable] = useState(
-    !shouldProbeNativeCloud,
-  );
+  const [nativeProbeStatus, setNativeProbeStatus] = useState('idle');
+
+  useEffect(() => {
+    const updateOnlineState = () => setIsOnlineState(getCurrentOnlineState());
+
+    globalThis.addEventListener('online', updateOnlineState);
+    globalThis.addEventListener('offline', updateOnlineState);
+
+    return () => {
+      globalThis.removeEventListener('online', updateOnlineState);
+      globalThis.removeEventListener('offline', updateOnlineState);
+    };
+  }, []);
 
   useEffect(() => {
     if (!shouldProbeNativeCloud) {
+      setNativeProbeStatus('idle');
       return;
     }
 
+    setNativeProbeStatus('probing');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
 
@@ -119,10 +135,10 @@ function RootApp() {
       signal: controller.signal,
     })
       .then(() => {
-        setNativeCloudReachable(true);
+        setNativeProbeStatus('reachable');
       })
       .catch(() => {
-        setNativeCloudReachable(false);
+        setNativeProbeStatus('unreachable');
       })
       .finally(() => {
         clearTimeout(timeout);
@@ -134,7 +150,10 @@ function RootApp() {
     };
   }, [shouldProbeNativeCloud]);
 
-  if (authBootstrap.mode === 'cloud' && nativeCloudReachable) {
+  if (
+    authBootstrap.mode === 'cloud' &&
+    (!shouldProbeNativeCloud || nativeProbeStatus === 'reachable')
+  ) {
     return (
       <Suspense fallback={null}>
         <CloudAuthRoot convexUrl={CONVEX_URL} publishableKey={PUBLISHABLE_KEY}>
@@ -143,6 +162,14 @@ function RootApp() {
           </BrowserRouter>
         </CloudAuthRoot>
       </Suspense>
+    );
+  }
+
+  if (shouldProbeNativeCloud && nativeProbeStatus !== 'unreachable') {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+        Loading...
+      </div>
     );
   }
 
