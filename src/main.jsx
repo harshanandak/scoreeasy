@@ -12,6 +12,7 @@ import './index.css';
 const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
+const NATIVE_CLOUD_RETRY_DELAY_MS = 5000;
 
 const localConvex = new ConvexReactClient('https://offline-placeholder.convex.cloud');
 
@@ -106,6 +107,7 @@ function RootApp() {
   const shouldProbeNativeCloud =
     authBootstrap.mode === 'cloud' && isNativeRuntime();
   const [nativeProbeStatus, setNativeProbeStatus] = useState('idle');
+  const [nativeProbeAttempt, setNativeProbeAttempt] = useState(0);
 
   useEffect(() => {
     const updateOnlineState = () => setIsOnlineState(getCurrentOnlineState());
@@ -122,12 +124,17 @@ function RootApp() {
   useEffect(() => {
     if (!shouldProbeNativeCloud) {
       setNativeProbeStatus('idle');
+      setNativeProbeAttempt(0);
       return;
     }
 
-    setNativeProbeStatus('probing');
+    setNativeProbeStatus((status) =>
+      status === 'unreachable' ? 'retrying' : 'probing',
+    );
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
+    let retryTimeout;
+    let cancelled = false;
 
     fetch(CONVEX_URL, {
       cache: 'no-store',
@@ -135,20 +142,33 @@ function RootApp() {
       signal: controller.signal,
     })
       .then(() => {
+        if (cancelled) {
+          return;
+        }
+
         setNativeProbeStatus('reachable');
       })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
         setNativeProbeStatus('unreachable');
+        retryTimeout = setTimeout(() => {
+          setNativeProbeAttempt((attempt) => attempt + 1);
+        }, NATIVE_CLOUD_RETRY_DELAY_MS);
       })
       .finally(() => {
         clearTimeout(timeout);
       });
 
     return () => {
+      cancelled = true;
       clearTimeout(timeout);
+      clearTimeout(retryTimeout);
       controller.abort();
     };
-  }, [shouldProbeNativeCloud]);
+  }, [nativeProbeAttempt, shouldProbeNativeCloud]);
 
   if (
     authBootstrap.mode === 'cloud' &&
@@ -165,7 +185,10 @@ function RootApp() {
     );
   }
 
-  if (shouldProbeNativeCloud && nativeProbeStatus !== 'unreachable') {
+  if (
+    shouldProbeNativeCloud &&
+    (nativeProbeStatus === 'idle' || nativeProbeStatus === 'probing')
+  ) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
         Loading...
