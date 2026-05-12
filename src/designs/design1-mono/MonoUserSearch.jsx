@@ -3,10 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useAuth } from "../../hooks/useAuth";
 import BackArrow from "./components/BackArrow";
 
 export default function MonoUserSearch() {
   const navigate = useNavigate();
+  const { cloudAuthAvailable } = useAuth();
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(false);
 
@@ -15,10 +17,11 @@ export default function MonoUserSearch() {
   }, []);
 
   const debouncedQuery = useDebounce(query, 300);
+  const canSearchCloud = cloudAuthAvailable && debouncedQuery.length >= 2;
 
   const results = useQuery(
     api.users.search,
-    debouncedQuery.length >= 2 ? { prefix: debouncedQuery } : "skip"
+    canSearchCloud ? { prefix: debouncedQuery } : "skip"
   );
 
   return (

@@ -1,17 +1,29 @@
 import { useState, useEffect } from "react";
 import { SignIn } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import { monoClerkAppearance } from "./clerkTheme";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
 
 export default function MonoLogin() {
   const navigate = useNavigate();
+  const { cloudAuthAvailable } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
+
+  useEffect(() => {
+    if (!cloudAuthAvailable) {
+      navigate("/", { replace: true });
+    }
+  }, [cloudAuthAvailable, navigate]);
+
+  if (!cloudAuthAvailable) {
+    return null;
+  }
 
   return (
     <div

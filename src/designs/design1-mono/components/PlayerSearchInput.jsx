@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { useAuth } from "../../../hooks/useAuth";
 import PlayerChip from "./PlayerChip";
 
 export default function PlayerSearchInput({
@@ -15,12 +16,15 @@ export default function PlayerSearchInput({
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
+  const { cloudAuthAvailable, isAuthenticated } = useAuth();
 
   const debouncedQuery = useDebounce(query, 300);
+  const canSearchCloud =
+    cloudAuthAvailable && isAuthenticated && debouncedQuery.length >= 2;
 
   const searchResults = useQuery(
     api.users.search,
-    debouncedQuery.length >= 2 ? { prefix: debouncedQuery } : "skip"
+    canSearchCloud ? { prefix: debouncedQuery } : "skip"
   );
 
   // Filter out already-tagged users

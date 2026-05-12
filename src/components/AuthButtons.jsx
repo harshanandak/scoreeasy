@@ -3,12 +3,17 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
-  SignedIn,
-  SignedOut,
   GoogleOneTap,
 } from "@clerk/clerk-react";
+import { useAuth } from '../hooks/useAuth';
 
 export function AuthSignInButton({ children, ...props }) {
+  const { cloudAuthAvailable } = useAuth();
+
+  if (!cloudAuthAvailable) {
+    return null;
+  }
+
   return (
     <SignInButton mode="modal" {...props}>
       {children}
@@ -21,6 +26,12 @@ AuthSignInButton.propTypes = {
 };
 
 export function AuthSignUpButton({ children, ...props }) {
+  const { cloudAuthAvailable } = useAuth();
+
+  if (!cloudAuthAvailable) {
+    return null;
+  }
+
   return (
     <SignUpButton mode="modal" {...props}>
       {children}
@@ -33,15 +44,53 @@ AuthSignUpButton.propTypes = {
 };
 
 export function AuthUserButton(props) {
+  const { cloudAuthAvailable } = useAuth();
+
+  if (!cloudAuthAvailable) {
+    return null;
+  }
+
   return <UserButton {...props} />;
 }
 
 AuthUserButton.propTypes = {};
 
 export function AuthGoogleOneTap(props) {
+  const { cloudAuthAvailable } = useAuth();
+
+  if (!cloudAuthAvailable) {
+    return null;
+  }
+
   return <GoogleOneTap {...props} />;
 }
 
 AuthGoogleOneTap.propTypes = {};
 
-export { SignedIn, SignedOut };
+export function SignedIn({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading || !isAuthenticated) {
+    return null;
+  }
+
+  return children;
+}
+
+SignedIn.propTypes = {
+  children: PropTypes.node,
+};
+
+export function SignedOut({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading || isAuthenticated) {
+    return null;
+  }
+
+  return children;
+}
+
+SignedOut.propTypes = {
+  children: PropTypes.node,
+};
