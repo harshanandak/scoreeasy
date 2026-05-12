@@ -60,16 +60,21 @@ jobs:
 
       - name: Check mobile web env
         env:
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
         run: |
+          if [ "$IS_FORK_PR" = "true" ]; then
+            echo "Skipping repository secret check for forked pull_request validation."
+            exit 0
+          fi
           test -n "$VITE_CLERK_PUBLISHABLE_KEY"
           test -n "$VITE_CONVEX_URL"
 
       - name: Build web bundle
         env:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder' }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL || 'https://example.invalid' }}
         run: bun run build
 
       - name: Sync Capacitor Android
