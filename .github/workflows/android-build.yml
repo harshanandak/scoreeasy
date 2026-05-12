@@ -58,7 +58,18 @@ jobs:
       - name: Run web unit tests
         run: bun run test
 
+      - name: Check mobile web env
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
+        run: |
+          test -n "$VITE_CLERK_PUBLISHABLE_KEY"
+          test -n "$VITE_CONVEX_URL"
+
       - name: Build web bundle
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
         run: bun run build
 
       - name: Sync Capacitor Android
