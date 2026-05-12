@@ -143,9 +143,29 @@ function RootApp() {
       status === 'unreachable' ? 'retrying' : 'probing',
     );
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
+    let settled = false;
     let retryTimeout;
     let cancelled = false;
+
+    const finishProbe = (status) => {
+      if (cancelled || settled) {
+        return;
+      }
+
+      settled = true;
+      setNativeProbeStatus(status);
+
+      if (status === 'unreachable') {
+        retryTimeout = setTimeout(() => {
+          setNativeProbeAttempt((attempt) => attempt + 1);
+        }, NATIVE_CLOUD_RETRY_DELAY_MS);
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+      finishProbe('unreachable');
+    }, 2500);
 
     fetch(CONVEX_URL, {
       cache: 'no-store',
@@ -153,21 +173,10 @@ function RootApp() {
       signal: controller.signal,
     })
       .then(() => {
-        if (cancelled) {
-          return;
-        }
-
-        setNativeProbeStatus('reachable');
+        finishProbe('reachable');
       })
       .catch(() => {
-        if (cancelled) {
-          return;
-        }
-
-        setNativeProbeStatus('unreachable');
-        retryTimeout = setTimeout(() => {
-          setNativeProbeAttempt((attempt) => attempt + 1);
-        }, NATIVE_CLOUD_RETRY_DELAY_MS);
+        finishProbe('unreachable');
       })
       .finally(() => {
         clearTimeout(timeout);

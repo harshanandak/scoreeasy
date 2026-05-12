@@ -6,7 +6,10 @@ let clerkComponentsPromise;
 
 function loadClerkComponents() {
   if (!clerkComponentsPromise) {
-    clerkComponentsPromise = import('@clerk/clerk-react');
+    clerkComponentsPromise = import('@clerk/clerk-react').catch((error) => {
+      clerkComponentsPromise = undefined;
+      throw error;
+    });
   }
 
   return clerkComponentsPromise;
@@ -22,11 +25,17 @@ function useClerkComponents(enabled) {
     }
 
     let cancelled = false;
-    loadClerkComponents().then((module) => {
-      if (!cancelled) {
-        setComponents(module);
-      }
-    });
+    loadClerkComponents()
+      .then((module) => {
+        if (!cancelled) {
+          setComponents(module);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setComponents(null);
+        }
+      });
 
     return () => {
       cancelled = true;
