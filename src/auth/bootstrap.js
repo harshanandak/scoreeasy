@@ -72,5 +72,8 @@ export function shouldShowNativeCloudProbeLoading({
     return false;
   }
 
-  return nativeProbeStatus === 'idle' || nativeProbeStatus === 'probing';
+  return (
+    nativeProbeAttempt === 0 &&
+    (nativeProbeStatus === 'idle' || nativeProbeStatus === 'probing')
+  );
 }

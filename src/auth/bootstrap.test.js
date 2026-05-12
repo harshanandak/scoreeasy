@@ -124,5 +124,14 @@ describe('shouldShowNativeCloudProbeLoading', () => {
         pathname: '/login',
       }),
     ).toBe(false);
+
+    expect(
+      shouldShowNativeCloudProbeLoading({
+        shouldProbeNativeCloud: true,
+        nativeProbeStatus: 'probing',
+        nativeProbeAttempt: 1,
+        pathname: '/',
+      }),
+    ).toBe(false);
   });
 });
