@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -33,13 +33,16 @@ function getClerkSyncFingerprint(isAuthenticated, isClerkLoaded, clerkUser) {
 }
 
 export function LocalAuthProvider({ children, reason = 'missing-config' }) {
+  const value = useMemo(
+    () => ({
+      ...LOCAL_AUTH_STATE,
+      authModeReason: reason,
+    }),
+    [reason],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        ...LOCAL_AUTH_STATE,
-        authModeReason: reason,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -55,7 +58,9 @@ export function CloudAuthProvider({ children }) {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const storeUser = useMutation(api.users.store);
   const [isBootstrappingUser, setIsBootstrappingUser] = useState(false);
+  const [storeRetryTick, setStoreRetryTick] = useState(0);
   const lastStoreFingerprintRef = useRef(null);
+  const nextStoreAttemptAtRef = useRef(0);
   const convexUser = useQuery(
     api.users.getCurrent,
     isAuthenticated ? {} : 'skip',
@@ -70,6 +75,7 @@ export function CloudAuthProvider({ children }) {
     if (!isAuthenticated) {
       setIsBootstrappingUser(false);
       lastStoreFingerprintRef.current = null;
+      nextStoreAttemptAtRef.current = 0;
       return;
     }
 
@@ -78,21 +84,32 @@ export function CloudAuthProvider({ children }) {
       convexUser === undefined ||
       !clerkSyncFingerprint ||
       isBootstrappingUser ||
+      Date.now() < nextStoreAttemptAtRef.current ||
       lastStoreFingerprintRef.current === clerkSyncFingerprint
     ) {
       return;
     }
 
     let cancelled = false;
+    let retryTimer = null;
     setIsBootstrappingUser(true);
 
     storeUser()
       .then(() => {
         if (!cancelled) {
           lastStoreFingerprintRef.current = clerkSyncFingerprint;
+          nextStoreAttemptAtRef.current = 0;
         }
       })
-      .catch(() => {})
+      .catch((error) => {
+        if (!cancelled) {
+          nextStoreAttemptAtRef.current = Date.now() + 5000;
+          console.warn('[ScoreEasy] Convex user bootstrap failed; retrying later.', error);
+          retryTimer = setTimeout(() => {
+            setStoreRetryTick((tick) => tick + 1);
+          }, 5000);
+        }
+      })
       .finally(() => {
         if (!cancelled) {
           setIsBootstrappingUser(false);
@@ -101,6 +118,9 @@ export function CloudAuthProvider({ children }) {
 
     return () => {
       cancelled = true;
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
     };
   }, [
     clerkSyncFingerprint,
@@ -109,6 +129,7 @@ export function CloudAuthProvider({ children }) {
     isBootstrappingUser,
     isClerkLoaded,
     storeUser,
+    storeRetryTick,
   ]);
 
   const isUserReady = !isAuthenticated || Boolean(convexUser);
@@ -118,26 +139,34 @@ export function CloudAuthProvider({ children }) {
     (isAuthenticated &&
       (convexUser === undefined ||
         (convexUser === null && isBootstrappingUser)));
+  const value = useMemo(
+    () => ({
+      authMode: 'cloud',
+      authModeReason: 'available',
+      cloudAuthAvailable: true,
+      isAuthenticated,
+      isLoading,
+      isUserReady,
+      user: convexUser ?? null,
+      clerkUser,
+      needsUsername: Boolean(
+        isAuthenticated && convexUser && !convexUser.username,
+      ),
+      needsOnboarding: Boolean(
+        isAuthenticated && convexUser && !convexUser.onboardedAt,
+      ),
+    }),
+    [
+      clerkUser,
+      convexUser,
+      isAuthenticated,
+      isLoading,
+      isUserReady,
+    ],
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        authMode: 'cloud',
-        authModeReason: 'available',
-        cloudAuthAvailable: true,
-        isAuthenticated,
-        isLoading,
-        isUserReady,
-        user: convexUser ?? null,
-        clerkUser,
-        needsUsername: Boolean(
-          isAuthenticated && convexUser && !convexUser.username,
-        ),
-        needsOnboarding: Boolean(
-          isAuthenticated && convexUser && !convexUser.onboardedAt,
-        ),
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

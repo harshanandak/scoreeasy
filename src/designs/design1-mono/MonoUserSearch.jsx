@@ -67,6 +67,12 @@ export default function MonoUserSearch() {
           <p className="text-xs mb-4" style={{ color: '#bbb' }}>Searching...</p>
         )}
 
+        {debouncedQuery.length >= 2 && !canSearchCloud && (
+          <p className="text-xs mb-4" style={{ color: "#888" }}>
+            Cloud search unavailable offline
+          </p>
+        )}
+
         {results && results.length > 0 && (
           <div className="space-y-2">
             {results.map((user) => (

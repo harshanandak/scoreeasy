@@ -82,9 +82,9 @@ SignedIn.propTypes = {
 };
 
 export function SignedOut({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  if (isLoading || isAuthenticated) {
+  if (isAuthenticated) {
     return null;
   }
 

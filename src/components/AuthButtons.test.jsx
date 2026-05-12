@@ -1,7 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { LocalAuthProvider } from '../auth/AuthContext';
-import { SignedIn, SignedOut, AuthGoogleOneTap, AuthUserButton } from './AuthButtons';
+import {
+  SignedIn,
+  SignedOut,
+  AuthGoogleOneTap,
+  AuthSignInButton,
+  AuthSignUpButton,
+  AuthUserButton,
+} from './AuthButtons';
 
 describe('local auth button fallbacks', () => {
   it('renders signed-out content and hides signed-in content in local mode', () => {
@@ -25,6 +32,12 @@ describe('local auth button fallbacks', () => {
       <LocalAuthProvider reason="missing-config">
         <AuthUserButton />
         <AuthGoogleOneTap />
+        <AuthSignInButton>
+          <button type="button">Sign in</button>
+        </AuthSignInButton>
+        <AuthSignUpButton>
+          <button type="button">Sign up</button>
+        </AuthSignUpButton>
       </LocalAuthProvider>,
     );
 

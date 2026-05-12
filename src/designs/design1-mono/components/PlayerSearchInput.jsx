@@ -16,11 +16,11 @@ export default function PlayerSearchInput({
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
-  const { cloudAuthAvailable, isAuthenticated } = useAuth();
+  const { cloudAuthAvailable } = useAuth();
 
   const debouncedQuery = useDebounce(query, 300);
   const canSearchCloud =
-    cloudAuthAvailable && isAuthenticated && debouncedQuery.length >= 2;
+    cloudAuthAvailable && debouncedQuery.length >= 2;
 
   const searchResults = useQuery(
     api.users.search,
@@ -164,7 +164,7 @@ export default function PlayerSearchInput({
             </button>
           )}
 
-          {debouncedQuery.length >= 2 &&
+          {canSearchCloud &&
             filteredResults.length === 0 &&
             query.trim() && (
               <div style={{ padding: "8px 12px", color: "#888" }} className="text-xs">

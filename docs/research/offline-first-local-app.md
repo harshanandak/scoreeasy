@@ -5,7 +5,7 @@ Branch: feat/offline-first-local-app
 
 ## Current Setup
 
-- Capacitor packages the Vite build from `dist`; the mobile shell is already local-bundle based.
+- Capacitor packages the Vite build from `dist`; the mobile shell is already local-bundle-based.
 - App startup currently requires `VITE_CLERK_PUBLISHABLE_KEY` and constructs Clerk plus Convex providers before rendering routes.
 - Existing match and tournament flows already use local storage for quick matches, sport tournaments, history, statistics, and preferences.
 - Convex is used as the cloud/authenticated enhancement for users, team search, player search, match sync, profiles, onboarding, and public user search.
