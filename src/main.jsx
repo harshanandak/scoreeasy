@@ -1,16 +1,15 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { ClerkProvider, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import * as Sentry from '@sentry/react';
 import App from './App.jsx';
-import { CloudAuthProvider, LocalAuthProvider } from './auth/AuthContext';
+import { LocalAuthProvider } from './auth/AuthContext';
 import { getAuthBootstrapMode } from './auth/bootstrap';
 import { setupNativeChrome } from './mobile/nativeChrome';
 import './index.css';
 
+const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine;
@@ -29,11 +28,7 @@ if (sentryDsn) {
   });
 }
 
-const convex = new ConvexReactClient(
-  authBootstrap.mode === 'cloud'
-    ? CONVEX_URL
-    : 'https://offline-placeholder.convex.cloud',
-);
+const localConvex = new ConvexReactClient('https://offline-placeholder.convex.cloud');
 
 // Load React Grab in development mode
 if (import.meta.env.DEV) {
@@ -48,20 +43,18 @@ void setupNativeChrome();
 function RootApp() {
   if (authBootstrap.mode === 'cloud') {
     return (
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <ConvexProviderWithClerk client={convex} useAuth={useClerkAuth}>
-          <CloudAuthProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </CloudAuthProvider>
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
+      <Suspense fallback={null}>
+        <CloudAuthRoot convexUrl={CONVEX_URL} publishableKey={PUBLISHABLE_KEY}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </CloudAuthRoot>
+      </Suspense>
     );
   }
 
   return (
-    <ConvexProvider client={convex}>
+    <ConvexProvider client={localConvex}>
       <LocalAuthProvider reason={authBootstrap.reason}>
         <BrowserRouter>
           <App />

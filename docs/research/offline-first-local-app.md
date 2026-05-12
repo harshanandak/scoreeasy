@@ -23,6 +23,13 @@ The app should always open and support local scoring without internet. Clerk and
 5. Make auth UI wrappers render local/offline-safe controls when cloud auth is unavailable.
 6. Skip cloud search/sync hooks from user-facing behavior when unauthenticated/local-only; local match and tournament storage remains the source of truth.
 
+## Efficiency Notes
+
+- Keep Clerk provider code out of the local startup path with route/module-level lazy loading.
+- Keep cloud-only UI widgets behind dynamic imports so local mode does not fetch Clerk UI code before it is needed.
+- Preserve public Convex search in cloud mode, but skip it when the app starts in local mode.
+- Prefer memoized context values for auth state to avoid unnecessary subtree renders.
+
 ## Security Notes
 
 - Local-only mode must not fake an authenticated user.
