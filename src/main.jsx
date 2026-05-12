@@ -98,26 +98,37 @@ registerWebServiceWorker();
 initSentryAfterStartup();
 
 function RootApp() {
-  const [isOnlineState, setIsOnlineState] = useState(getCurrentOnlineState);
-  const authBootstrap = getAuthBootstrapMode({
+  const [authBootstrap, setAuthBootstrap] = useState(() => getAuthBootstrapMode({
     clerkPublishableKey: PUBLISHABLE_KEY,
     convexUrl: CONVEX_URL,
-    isOnline: isOnlineState,
-  });
+    isOnline: getCurrentOnlineState(),
+  }));
   const shouldProbeNativeCloud =
     authBootstrap.mode === 'cloud' && isNativeRuntime();
   const [nativeProbeStatus, setNativeProbeStatus] = useState('idle');
   const [nativeProbeAttempt, setNativeProbeAttempt] = useState(0);
 
   useEffect(() => {
-    const updateOnlineState = () => setIsOnlineState(getCurrentOnlineState());
+    const updateAuthBootstrap = () => {
+      setAuthBootstrap((currentBootstrap) => {
+        if (currentBootstrap.mode === 'cloud') {
+          return currentBootstrap;
+        }
 
-    globalThis.addEventListener('online', updateOnlineState);
-    globalThis.addEventListener('offline', updateOnlineState);
+        return getAuthBootstrapMode({
+          clerkPublishableKey: PUBLISHABLE_KEY,
+          convexUrl: CONVEX_URL,
+          isOnline: getCurrentOnlineState(),
+        });
+      });
+    };
+
+    globalThis.addEventListener('online', updateAuthBootstrap);
+    globalThis.addEventListener('offline', updateAuthBootstrap);
 
     return () => {
-      globalThis.removeEventListener('online', updateOnlineState);
-      globalThis.removeEventListener('offline', updateOnlineState);
+      globalThis.removeEventListener('online', updateAuthBootstrap);
+      globalThis.removeEventListener('offline', updateAuthBootstrap);
     };
   }, []);
 
