@@ -139,9 +139,9 @@ export default function Design1Mono() {
               <Routes>
                 <Route path="" element={<MonoLanding />} />
 
-                <Route path="login/*" element={<MonoLogin />} />
-                <Route path="signup/*" element={<MonoSignUp />} />
-                <Route path="sso-callback" element={<SSOCallback />} />
+                <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
+                <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
+                <Route path="sso-callback" element={<CloudAuthOnly><SSOCallback /></CloudAuthOnly>} />
                 <Route path="onboarding" element={<CloudAuthOnly><MonoOnboarding /></CloudAuthOnly>} />
 
                 <Route path="profile" element={<CloudAuthOnly><MonoProfile /></CloudAuthOnly>} />

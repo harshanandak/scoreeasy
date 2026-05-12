@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuth';
 import SportIcon from './sportIcons';
 import { sports, features, steps, tickerItems, heroScoreCards } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
 
 export default function GuestLanding() {
+  const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [hoveredSport, setHoveredSport] = useState(null);
@@ -106,15 +108,17 @@ export default function GuestLanding() {
             {!mobile && ['Features', 'Sports', 'How'].map(link => (
               <a key={link} href={`#${link.toLowerCase()}`} className="nav-link" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.08em', transition: 'color 150ms ease' }}>{link}</a>
             ))}
-            <Link to="/login" className="nav-signin" style={{
-              fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.75rem', fontWeight: 700,
-              color: t.text, textDecoration: 'none',
-              padding: mobile ? '6px 10px' : '8px 16px',
-              border: `${t.borderWeight} solid ${t.borderStrong}`, background: 'transparent',
-              transition: 'background 150ms ease, color 150ms ease',
-            }}>
-              Sign in &rarr;
-            </Link>
+            {cloudAuthAvailable && (
+              <Link to="/login" className="nav-signin" style={{
+                fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.75rem', fontWeight: 700,
+                color: t.text, textDecoration: 'none',
+                padding: mobile ? '6px 10px' : '8px 16px',
+                border: `${t.borderWeight} solid ${t.borderStrong}`, background: 'transparent',
+                transition: 'background 150ms ease, color 150ms ease',
+              }}>
+                Sign in &rarr;
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -145,14 +149,16 @@ export default function GuestLanding() {
                 }}>
                   START SCORING
                 </Link>
-                <Link to="/signup" style={{
-                  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
-                  padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
-                  background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
-                  flex: 1, textAlign: 'center',
-                }}>
-                  SIGN UP
-                </Link>
+                {cloudAuthAvailable && (
+                  <Link to="/signup" style={{
+                    fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
+                    padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
+                    background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
+                    flex: 1, textAlign: 'center',
+                  }}>
+                    SIGN UP
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -474,14 +480,16 @@ export default function GuestLanding() {
           }}>
             START SCORING
           </Link>
-          <Link to="/signup" style={{
-            fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
-            padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-            background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
-            width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
-          }}>
-            SIGN UP FREE
-          </Link>
+          {cloudAuthAvailable && (
+            <Link to="/signup" style={{
+              fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
+              padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
+              background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
+              width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
+            }}>
+              SIGN UP FREE
+            </Link>
+          )}
         </div>
       </section>
 

@@ -29,6 +29,8 @@ The app should always open and support local scoring without internet. Clerk and
 - Keep cloud-only UI widgets behind dynamic imports so local mode does not fetch Clerk UI code before it is needed.
 - Preserve public Convex search in cloud mode, but skip it when the app starts in local mode.
 - Prefer memoized context values for auth state to avoid unnecessary subtree renders.
+- On native shells, do not trust `navigator.onLine` alone; use a short first-party cloud reachability probe and keep local mode when the probe fails.
+- Keep PWA service-worker registration web-only; native WebViews already load packaged assets and stale service-worker caches can break chunk loading after APK/IPA updates.
 
 ## Security Notes
 

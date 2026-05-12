@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      injectRegister: false,
       registerType: 'autoUpdate',
+      cleanupOutdatedCaches: true,
       includeAssets: ['icons/icon-192.svg', 'icons/icon-512.svg'],
       manifest: {
         name: 'Score Easy',
