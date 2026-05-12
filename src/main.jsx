@@ -5,7 +5,11 @@ import { Capacitor } from '@capacitor/core';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import App from './App.jsx';
 import { LocalAuthProvider } from './auth/AuthContext';
-import { getAuthBootstrapMode } from './auth/bootstrap';
+import {
+  getAuthBootstrapMode,
+  shouldShowNativeCloudProbeLoading,
+  shouldUseCloudAuthRoot,
+} from './auth/bootstrap';
 import { setupNativeChrome } from './mobile/nativeChrome';
 import './index.css';
 
@@ -22,6 +26,12 @@ function isNativeRuntime() {
 
 function getCurrentOnlineState() {
   return typeof navigator === 'undefined' ? true : navigator.onLine;
+}
+
+function getCurrentPathname() {
+  return typeof globalThis.location?.pathname === 'string'
+    ? globalThis.location.pathname
+    : '/';
 }
 
 async function cleanupNativeServiceWorkerCache() {
@@ -139,9 +149,7 @@ function RootApp() {
       return;
     }
 
-    setNativeProbeStatus((status) =>
-      status === 'unreachable' ? 'retrying' : 'probing',
-    );
+    setNativeProbeStatus('probing');
     const controller = new AbortController();
     let settled = false;
     let retryTimeout;
@@ -153,7 +161,7 @@ function RootApp() {
       }
 
       settled = true;
-      setNativeProbeStatus(status);
+      setNativeProbeStatus(status === 'unreachable' ? 'retrying' : status);
 
       if (status === 'unreachable') {
         retryTimeout = setTimeout(() => {
@@ -190,10 +198,16 @@ function RootApp() {
     };
   }, [nativeProbeAttempt, shouldProbeNativeCloud]);
 
-  if (
-    authBootstrap.mode === 'cloud' &&
-    (!shouldProbeNativeCloud || nativeProbeStatus === 'reachable')
-  ) {
+  const pathname = getCurrentPathname();
+  const shouldRenderCloudAuthRoot = shouldUseCloudAuthRoot({
+    authMode: authBootstrap.mode,
+    shouldProbeNativeCloud,
+    nativeProbeStatus,
+    nativeProbeAttempt,
+    pathname,
+  });
+
+  if (shouldRenderCloudAuthRoot) {
     return (
       <Suspense fallback={null}>
         <CloudAuthRoot convexUrl={CONVEX_URL} publishableKey={PUBLISHABLE_KEY}>
@@ -206,8 +220,12 @@ function RootApp() {
   }
 
   if (
-    shouldProbeNativeCloud &&
-    (nativeProbeStatus === 'idle' || nativeProbeStatus === 'probing')
+    shouldShowNativeCloudProbeLoading({
+      shouldProbeNativeCloud,
+      nativeProbeStatus,
+      nativeProbeAttempt,
+      pathname,
+    })
   ) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
