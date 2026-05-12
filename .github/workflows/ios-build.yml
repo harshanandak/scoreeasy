@@ -2,6 +2,18 @@ name: iOS Build Check
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/ios-build.yml"
+      - "capacitor.config.ts"
+      - "ios/**"
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "bun.lock"
+      - "vite.config.js"
   pull_request:
     paths:
       - ".github/workflows/ios-build.yml"
