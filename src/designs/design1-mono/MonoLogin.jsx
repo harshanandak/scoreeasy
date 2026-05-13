@@ -48,11 +48,20 @@ export default function MonoLogin() {
             path="/login"
             signUpUrl="/signup"
             forceRedirectUrl="/"
+            fallbackRedirectUrl="/"
+            oauthFlow="redirect"
           />
         </div>
 
         {/* Back link */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-10 flex flex-col items-center gap-3">
+          <button
+            onClick={() => navigate("/play")}
+            className="mono-btn"
+            style={{ padding: "10px 18px", fontSize: "0.8125rem", borderColor: "#0066ff", color: "#0066ff" }}
+          >
+            Continue as guest
+          </button>
           <button
             onClick={() => navigate("/")}
             className="text-xs bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mx-auto"

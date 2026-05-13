@@ -50,6 +50,9 @@ export default defineConfig({
           },
         ],
       },
+      devOptions: {
+        enabled: true,
+      },
     }),
   ],
   build: {
@@ -60,5 +63,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.worktrees/**',
+      '**/android/**/build/**',
+      '**/ios/App/App/public/**',
+    ],
   },
 });

@@ -1,6 +1,6 @@
-import { useEffect, Suspense, lazy } from 'react';
+import { useEffect, Suspense, lazy, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
 import MonoSportHome from './MonoSportHome';
 import MonoHistory from './MonoHistory';
@@ -59,6 +59,126 @@ function OnboardingGuard({ children }) {
 OnboardingGuard.propTypes = {
   children: PropTypes.node,
 };
+
+function GlobalMobileMenu() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { cloudAuthAvailable, isAuthenticated } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  const go = (path) => {
+    navigate(path);
+    setOpen(false);
+  };
+
+  const items = [
+    { label: 'Home', path: '/' },
+    { label: 'Play', path: '/play' },
+    { label: 'History', path: '/history' },
+    { label: 'Statistics', path: '/statistics' },
+  ];
+
+  if (cloudAuthAvailable && !isAuthenticated) {
+    items.push({ label: 'Sign in', path: '/login' });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="global-mobile-menu-button"
+        aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+      {open && (
+        <div className="global-mobile-menu-panel" role="dialog" aria-label="Navigation menu">
+          {items.map((item) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => go(item.path)}
+              className="global-mobile-menu-item"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <style>{`
+        .global-mobile-menu-button,
+        .global-mobile-menu-panel {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .global-mobile-menu-button {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 200;
+            display: inline-flex;
+            width: 44px;
+            height: 44px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 1.5px solid #111;
+            background: #fafafa;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #111;
+          }
+
+          .global-mobile-menu-button span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: #111;
+          }
+
+          .global-mobile-menu-panel {
+            position: fixed;
+            top: 64px;
+            right: 12px;
+            z-index: 199;
+            display: flex;
+            min-width: 180px;
+            flex-direction: column;
+            border: 1.5px solid #111;
+            background: #fff;
+            box-shadow: 4px 4px 0 #111;
+          }
+
+          .global-mobile-menu-item {
+            border: 0;
+            border-bottom: 1px solid #eee;
+            background: transparent;
+            color: #111;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding: 14px 16px;
+            text-align: left;
+          }
+
+          .global-mobile-menu-item:last-child {
+            border-bottom: 0;
+          }
+        }
+      `}</style>
+    </>
+  );
+}
 
 // Dispatcher component that routes to the correct tournament component based on engine
 function TournamentDispatcher() {
@@ -131,6 +251,7 @@ export default function Design1Mono() {
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <GlobalMobileMenu />
       <OfflineFallback />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
