@@ -11,6 +11,7 @@ import { useAuth } from '../../hooks/useAuth';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
+import CloudAuthOnly from './components/CloudAuthOnly';
 import './mono.css';
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
@@ -138,14 +139,14 @@ export default function Design1Mono() {
               <Routes>
                 <Route path="" element={<MonoLanding />} />
 
-                <Route path="login/*" element={<MonoLogin />} />
-                <Route path="signup/*" element={<MonoSignUp />} />
-                <Route path="sso-callback" element={<SSOCallback />} />
-                <Route path="onboarding" element={<MonoOnboarding />} />
+                <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
+                <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
+                <Route path="sso-callback" element={<CloudAuthOnly><SSOCallback /></CloudAuthOnly>} />
+                <Route path="onboarding" element={<CloudAuthOnly><MonoOnboarding /></CloudAuthOnly>} />
 
-                <Route path="profile" element={<MonoProfile />} />
-                <Route path="profile/:username" element={<MonoProfile />} />
-                <Route path="users/search" element={<MonoUserSearch />} />
+                <Route path="profile" element={<CloudAuthOnly><MonoProfile /></CloudAuthOnly>} />
+                <Route path="profile/:username" element={<CloudAuthOnly><MonoProfile /></CloudAuthOnly>} />
+                <Route path="users/search" element={<CloudAuthOnly><MonoUserSearch /></CloudAuthOnly>} />
 
                 <Route path="play" element={<MonoSportHome />} />
 

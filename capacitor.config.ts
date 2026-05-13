@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Score Easy',
   webDir: 'dist',
   server: {
+    hostname: 'scoreeasy.app',
     androidScheme: 'https',
   },
   plugins: {

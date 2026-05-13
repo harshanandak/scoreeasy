@@ -3,6 +3,7 @@ import { SignIn } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { monoClerkAppearance } from "./clerkTheme";
 import BackArrow from "./components/BackArrow";
+import CloudAuthOnly from "./components/CloudAuthOnly";
 import SportIcon from "./SportIcon";
 
 export default function MonoLogin() {
@@ -14,10 +15,11 @@ export default function MonoLogin() {
   }, []);
 
   return (
-    <div
-      className={`min-h-screen flex flex-col items-center justify-center px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
-      style={{ background: "#fafafa" }}
-    >
+    <CloudAuthOnly>
+      <div
+        className={`min-h-screen flex flex-col items-center justify-center px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
+        style={{ background: "#fafafa" }}
+      >
       <div className="w-full max-w-sm">
         {/* Branding */}
         <div className="text-center mb-10">
@@ -60,6 +62,7 @@ export default function MonoLogin() {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </CloudAuthOnly>
   );
 }

@@ -1,5 +1,10 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import CloudAuthOnly from "./components/CloudAuthOnly";
 
 export default function SSOCallback() {
-  return <AuthenticateWithRedirectCallback />;
+  return (
+    <CloudAuthOnly>
+      <AuthenticateWithRedirectCallback />
+    </CloudAuthOnly>
+  );
 }
