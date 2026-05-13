@@ -1,0 +1,64 @@
+import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import BackArrow from "./components/BackArrow";
+import SportIcon from "./SportIcon";
+
+export default function MonoAuthPageFrame({ children, subtitle }) {
+  const navigate = useNavigate();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+  }, []);
+
+  return (
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
+      style={{ background: "#fafafa" }}
+    >
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-10">
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <SportIcon name="Volleyball" size={24} color="#111" />
+            <h1
+              className="font-mono"
+              style={{ fontSize: "0.875rem", fontWeight: 800, letterSpacing: "-0.02em", color: "#111", lineHeight: 1.1 }}
+            >
+              SCORE<br />EASY
+            </h1>
+          </div>
+          <p className="text-sm font-swiss" style={{ color: "#888" }}>
+            {subtitle}
+          </p>
+        </div>
+
+        <div style={{ border: "1.5px solid #1a1a1a", boxShadow: "6px 6px 0 -1.5px #fafafa, 6px 6px 0 0 #0066ff" }}>
+          {children}
+        </div>
+
+        <div className="text-center mt-10 flex flex-col items-center gap-3">
+          <button
+            onClick={() => navigate("/play")}
+            className="mono-btn"
+            style={{ padding: "10px 18px", fontSize: "0.8125rem", borderColor: "#0066ff", color: "#0066ff" }}
+          >
+            Continue as guest
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            className="text-xs bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mx-auto"
+            style={{ color: "#888" }}
+          >
+            <BackArrow /> Back to home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+MonoAuthPageFrame.propTypes = {
+  children: PropTypes.node,
+  subtitle: PropTypes.string.isRequired,
+};
