@@ -45,6 +45,12 @@ function LazyFallback() {
 
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
+const SCORING_EXIT_CONFIRMATION = 'Leave this page? Your unsaved scoring progress may be lost.';
+
+function isProtectedScoringPath(pathname = '') {
+  return /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(pathname);
+}
+
 function OnboardingGuard({ children }) {
   const { needsOnboarding, isLoading } = useAuth();
   const location = useLocation();
@@ -71,6 +77,11 @@ function GlobalMobileMenu() {
   }, [location.pathname]);
 
   const go = (path) => {
+    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
+      if (!leave) return;
+    }
+
     navigate(path);
     setOpen(false);
   };
@@ -217,14 +228,14 @@ export default function Design1Mono() {
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {
-    const isGameRoute = /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(location.pathname);
+    const isGameRoute = isProtectedScoringPath(location.pathname);
 
     if (!isGameRoute) return;
 
     globalThis.history.pushState({ gameProtection: true }, '');
 
     const handlePopState = () => {
-      const leave = globalThis.confirm('Leave this page? Your unsaved scoring progress may be lost.');
+      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
       if (!leave) {
         globalThis.history.pushState({ gameProtection: true }, '');
       }

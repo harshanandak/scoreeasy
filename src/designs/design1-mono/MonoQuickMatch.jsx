@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
 import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
+import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -520,7 +521,7 @@ export default function MonoQuickMatch() {
       team,
       vScore1,
       vScore2,
-      sets: structuredClone(sets),
+      sets: cloneSetsSnapshot(sets),
       currentSet,
     }].slice(-100));
 

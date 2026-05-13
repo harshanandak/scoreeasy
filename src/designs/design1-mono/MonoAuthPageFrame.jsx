@@ -9,7 +9,8 @@ export default function MonoAuthPageFrame({ children, subtitle }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
+    const frameId = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   return (
