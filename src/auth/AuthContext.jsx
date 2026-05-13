@@ -16,13 +16,18 @@ const LOCAL_AUTH_STATE = {
 
 export const AuthContext = createContext(LOCAL_AUTH_STATE);
 
-export function LocalAuthProvider({ children, reason = 'missing-config' }) {
+export function LocalAuthProvider({
+  children,
+  reason = 'missing-config',
+  cloudAuthAvailable = false,
+}) {
   const value = useMemo(
     () => ({
       ...LOCAL_AUTH_STATE,
+      cloudAuthAvailable,
       authModeReason: reason,
     }),
-    [reason],
+    [cloudAuthAvailable, reason],
   );
 
   return (
@@ -34,6 +39,7 @@ export function LocalAuthProvider({ children, reason = 'missing-config' }) {
 
 LocalAuthProvider.propTypes = {
   children: PropTypes.node,
+  cloudAuthAvailable: PropTypes.bool,
   reason: PropTypes.string,
 };
 

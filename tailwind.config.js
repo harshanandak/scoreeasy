@@ -19,8 +19,8 @@ export default {
         },
       },
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'monospace'],
-        swiss: ['"Inter"', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
+        swiss: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',

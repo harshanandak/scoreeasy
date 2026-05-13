@@ -1,5 +1,5 @@
-export const MONO = "'JetBrains Mono', monospace";
-export const SWISS = "'Inter', system-ui, sans-serif";
+export const MONO = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+export const SWISS = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 const warmBase = {
   blue: '#0066ff',

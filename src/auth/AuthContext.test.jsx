@@ -17,6 +17,8 @@ function AuthStateProbe() {
       <dd data-testid="auth-ready">{String(auth.isUserReady)}</dd>
       <dt>authenticated</dt>
       <dd data-testid="auth-authenticated">{String(auth.isAuthenticated)}</dd>
+      <dt>cloud available</dt>
+      <dd data-testid="cloud-available">{String(auth.cloudAuthAvailable)}</dd>
     </dl>
   );
 }
@@ -34,5 +36,18 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByTestId('auth-loading')).toHaveTextContent('false');
     expect(screen.getByTestId('auth-ready')).toHaveTextContent('true');
     expect(screen.getByTestId('auth-authenticated')).toHaveTextContent('false');
+    expect(screen.getByTestId('cloud-available')).toHaveTextContent('false');
+  });
+
+  it('can expose cloud availability without loading a cloud session', () => {
+    render(
+      <LocalAuthProvider reason="available" cloudAuthAvailable>
+        <AuthStateProbe />
+      </LocalAuthProvider>,
+    );
+
+    expect(screen.getByTestId('auth-mode')).toHaveTextContent('local');
+    expect(screen.getByTestId('auth-reason')).toHaveTextContent('available');
+    expect(screen.getByTestId('cloud-available')).toHaveTextContent('true');
   });
 });

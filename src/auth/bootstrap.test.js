@@ -85,14 +85,26 @@ describe('isCloudAuthRoute', () => {
 });
 
 describe('shouldUseCloudAuthRoot', () => {
-  it('uses cloud auth immediately for web cloud mode', () => {
+  it('uses cloud auth for web cloud auth routes', () => {
     expect(
       shouldUseCloudAuthRoot({
         authMode: 'cloud',
         shouldProbeNativeCloud: false,
         nativeProbeStatus: 'idle',
+        pathname: '/login',
       }),
     ).toBe(true);
+  });
+
+  it('keeps public web routes local-first even when cloud auth is available', () => {
+    expect(
+      shouldUseCloudAuthRoot({
+        authMode: 'cloud',
+        shouldProbeNativeCloud: false,
+        nativeProbeStatus: 'idle',
+        pathname: '/',
+      }),
+    ).toBe(false);
   });
 
   it('keeps native cloud routes mounted during retry cycles', () => {

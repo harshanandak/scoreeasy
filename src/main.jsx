@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import App from './App.jsx';
+import AppLoading from './components/AppLoading';
 import { LocalAuthProvider } from './auth/AuthContext';
 import {
   getAuthBootstrapMode,
@@ -286,15 +287,14 @@ function RootApp() {
     })
   ) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
-        Loading...
-      </div>
+      <AppLoading compact message="Checking cloud sign in" />
     );
   }
 
   return (
     <ConvexProvider client={localConvex}>
       <LocalAuthProvider
+        cloudAuthAvailable={authBootstrap.mode === 'cloud'}
         reason={shouldProbeNativeCloud ? 'native-offline' : authBootstrap.reason}
       >
         <BrowserRouter>

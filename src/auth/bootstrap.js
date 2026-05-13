@@ -52,6 +52,10 @@ export function shouldUseCloudAuthRoot({
     return false;
   }
 
+  if (!isCloudAuthRoute(pathname)) {
+    return false;
+  }
+
   if (!shouldProbeNativeCloud || nativeProbeStatus === 'reachable') {
     return true;
   }

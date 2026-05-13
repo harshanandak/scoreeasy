@@ -2,17 +2,20 @@ import { useEffect, Suspense, lazy, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
-import MonoSportHome from './MonoSportHome';
-import MonoHistory from './MonoHistory';
-import MonoTournamentList from './MonoTournamentList';
-import MonoTournamentLiveScore from './MonoTournamentLiveScore';
 import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
+import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import './mono.css';
+
+// Lazy-loaded primary app routes (not needed for the initial landing view)
+const MonoSportHome = lazy(() => import('./MonoSportHome'));
+const MonoHistory = lazy(() => import('./MonoHistory'));
+const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
+const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
 const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
@@ -38,9 +41,7 @@ const MonoProfile = lazy(() => import('./MonoProfile'));
 const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
 
 function LazyFallback() {
-  return (
-    <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading...</div>
-  );
+  return <AppLoading compact />;
 }
 
 // Redirects authenticated users who haven't completed onboarding
