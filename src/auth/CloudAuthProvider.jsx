@@ -24,8 +24,10 @@ export default function CloudAuthProvider({ children }) {
   const storeUser = useMutation(api.users.store);
   const [isBootstrappingUser, setIsBootstrappingUser] = useState(false);
   const [storeRetryTick, setStoreRetryTick] = useState(0);
+  const isStoreUserInFlightRef = useRef(false);
   const lastStoreFingerprintRef = useRef(null);
   const nextStoreAttemptAtRef = useRef(0);
+  const storeRetryTimerRef = useRef(null);
   const convexUser = useQuery(
     api.users.getCurrent,
     isAuthenticated ? {} : 'skip',
@@ -38,9 +40,14 @@ export default function CloudAuthProvider({ children }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
+      isStoreUserInFlightRef.current = false;
       setIsBootstrappingUser(false);
       lastStoreFingerprintRef.current = null;
       nextStoreAttemptAtRef.current = 0;
+      if (storeRetryTimerRef.current) {
+        clearTimeout(storeRetryTimerRef.current);
+        storeRetryTimerRef.current = null;
+      }
       return;
     }
 
@@ -48,7 +55,7 @@ export default function CloudAuthProvider({ children }) {
       !isClerkLoaded ||
       convexUser === undefined ||
       !clerkSyncFingerprint ||
-      isBootstrappingUser ||
+      isStoreUserInFlightRef.current ||
       Date.now() < nextStoreAttemptAtRef.current ||
       lastStoreFingerprintRef.current === clerkSyncFingerprint
     ) {
@@ -56,7 +63,7 @@ export default function CloudAuthProvider({ children }) {
     }
 
     let cancelled = false;
-    let retryTimer = null;
+    isStoreUserInFlightRef.current = true;
     setIsBootstrappingUser(true);
 
     storeUser()
@@ -64,6 +71,10 @@ export default function CloudAuthProvider({ children }) {
         if (!cancelled) {
           lastStoreFingerprintRef.current = clerkSyncFingerprint;
           nextStoreAttemptAtRef.current = 0;
+          if (storeRetryTimerRef.current) {
+            clearTimeout(storeRetryTimerRef.current);
+            storeRetryTimerRef.current = null;
+          }
         }
       })
       .catch((error) => {
@@ -73,32 +84,44 @@ export default function CloudAuthProvider({ children }) {
             '[ScoreEasy] Convex user bootstrap failed; retrying later.',
             error,
           );
-          retryTimer = setTimeout(() => {
+          if (storeRetryTimerRef.current) {
+            clearTimeout(storeRetryTimerRef.current);
+          }
+          storeRetryTimerRef.current = setTimeout(() => {
+            storeRetryTimerRef.current = null;
             setStoreRetryTick((tick) => tick + 1);
           }, 5000);
         }
       })
       .finally(() => {
         if (!cancelled) {
+          isStoreUserInFlightRef.current = false;
           setIsBootstrappingUser(false);
         }
       });
 
     return () => {
       cancelled = true;
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-      }
+      isStoreUserInFlightRef.current = false;
     };
   }, [
     clerkSyncFingerprint,
     convexUser,
     isAuthenticated,
-    isBootstrappingUser,
     isClerkLoaded,
     storeRetryTick,
     storeUser,
   ]);
+
+  useEffect(
+    () => () => {
+      if (storeRetryTimerRef.current) {
+        clearTimeout(storeRetryTimerRef.current);
+        storeRetryTimerRef.current = null;
+      }
+    },
+    [],
+  );
 
   const isUserReady = !isAuthenticated || Boolean(convexUser);
   const isLoading =

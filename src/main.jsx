@@ -34,6 +34,42 @@ function getCurrentPathname() {
     : '/';
 }
 
+function subscribeToPathnameChanges(onChange) {
+  if (typeof globalThis.addEventListener !== 'function') {
+    return () => {};
+  }
+
+  const notify = () => onChange(getCurrentPathname());
+  const history = globalThis.history;
+  const originalPushState = history?.pushState;
+  const originalReplaceState = history?.replaceState;
+
+  if (history && originalPushState && originalReplaceState) {
+    history.pushState = function pushState(...args) {
+      const result = originalPushState.apply(this, args);
+      notify();
+      return result;
+    };
+    history.replaceState = function replaceState(...args) {
+      const result = originalReplaceState.apply(this, args);
+      notify();
+      return result;
+    };
+  }
+
+  globalThis.addEventListener('popstate', notify);
+
+  return () => {
+    globalThis.removeEventListener('popstate', notify);
+    if (history?.pushState !== originalPushState && originalPushState) {
+      history.pushState = originalPushState;
+    }
+    if (history?.replaceState !== originalReplaceState && originalReplaceState) {
+      history.replaceState = originalReplaceState;
+    }
+  };
+}
+
 async function cleanupNativeServiceWorkerCache() {
   if (!isNativeRuntime() || !('serviceWorker' in navigator)) {
     return;
@@ -113,6 +149,7 @@ function RootApp() {
     convexUrl: CONVEX_URL,
     isOnline: getCurrentOnlineState(),
   }));
+  const [pathname, setPathname] = useState(getCurrentPathname);
   const shouldProbeNativeCloud =
     authBootstrap.mode === 'cloud' && isNativeRuntime();
   const [nativeProbeStatus, setNativeProbeStatus] = useState('idle');
@@ -141,6 +178,8 @@ function RootApp() {
       globalThis.removeEventListener('offline', updateAuthBootstrap);
     };
   }, []);
+
+  useEffect(() => subscribeToPathnameChanges(setPathname), []);
 
   useEffect(() => {
     if (!shouldProbeNativeCloud) {
@@ -198,7 +237,6 @@ function RootApp() {
     };
   }, [nativeProbeAttempt, shouldProbeNativeCloud]);
 
-  const pathname = getCurrentPathname();
   const shouldRenderCloudAuthRoot = shouldUseCloudAuthRoot({
     authMode: authBootstrap.mode,
     shouldProbeNativeCloud,
