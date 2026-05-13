@@ -46,6 +46,28 @@ describe('getAuthBootstrapMode', () => {
       }),
     ).toEqual({ mode: 'cloud', reason: 'available' });
   });
+
+  it('uses local mode when a production Clerk key is loaded on an unsupported host', () => {
+    expect(
+      getAuthBootstrapMode({
+        clerkPublishableKey: 'pk_live_123',
+        convexUrl: 'https://example.convex.cloud',
+        isOnline: true,
+        hostname: 'scoreeasy-git-branch-user.vercel.app',
+      }),
+    ).toEqual({ mode: 'local', reason: 'unsupported-origin' });
+  });
+
+  it('uses cloud mode when a production Clerk key is loaded on the configured domain', () => {
+    expect(
+      getAuthBootstrapMode({
+        clerkPublishableKey: 'pk_live_123',
+        convexUrl: 'https://example.convex.cloud',
+        isOnline: true,
+        hostname: 'scoreeasy.app',
+      }),
+    ).toEqual({ mode: 'cloud', reason: 'available' });
+  });
 });
 
 describe('isCloudAuthRoute', () => {

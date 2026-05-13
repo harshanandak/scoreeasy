@@ -34,6 +34,12 @@ function getCurrentPathname() {
     : '/';
 }
 
+function getCurrentHostname() {
+  return typeof globalThis.location?.hostname === 'string'
+    ? globalThis.location.hostname
+    : '';
+}
+
 function subscribeToPathnameChanges(onChange) {
   if (typeof globalThis.addEventListener !== 'function') {
     return () => {};
@@ -148,6 +154,7 @@ function RootApp() {
     clerkPublishableKey: PUBLISHABLE_KEY,
     convexUrl: CONVEX_URL,
     isOnline: getCurrentOnlineState(),
+    hostname: getCurrentHostname(),
   }));
   const [pathname, setPathname] = useState(getCurrentPathname);
   const shouldProbeNativeCloud =
@@ -166,6 +173,7 @@ function RootApp() {
           clerkPublishableKey: PUBLISHABLE_KEY,
           convexUrl: CONVEX_URL,
           isOnline: getCurrentOnlineState(),
+          hostname: getCurrentHostname(),
         });
       });
     };
