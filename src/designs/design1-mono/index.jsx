@@ -48,7 +48,14 @@ const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callbac
 const SCORING_EXIT_CONFIRMATION = 'Leave this page? Your unsaved scoring progress may be lost.';
 
 function isProtectedScoringPath(pathname = '') {
-  return /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(pathname);
+  const segments = pathname.split('/').filter(Boolean);
+  return segments.includes('game') ||
+    segments.includes('quick') ||
+    segments.some((segment, index) => (
+      segment === 'tournament' &&
+      segments[index + 2] === 'match' &&
+      segments[index + 4] === 'score'
+    ));
 }
 
 function OnboardingGuard({ children }) {
