@@ -74,7 +74,7 @@ OnboardingGuard.propTypes = {
   children: PropTypes.node,
 };
 
-function GlobalMobileMenu() {
+function GlobalNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
@@ -94,7 +94,7 @@ function GlobalMobileMenu() {
     setOpen(false);
   };
 
-  const items = [
+  const navItems = [
     { label: 'Home', path: '/' },
     { label: 'Play', path: '/play' },
     { label: 'History', path: '/history' },
@@ -102,11 +102,29 @@ function GlobalMobileMenu() {
   ];
 
   if (cloudAuthAvailable && !isAuthenticated) {
-    items.push({ label: 'Sign in', path: '/login' });
+    navItems.push({ label: 'Sign in', path: '/login' });
   }
 
   return (
-    <>
+    <header className="global-nav">
+      <button type="button" className="global-nav-brand" onClick={() => go('/')}>
+        SCORE<br />EASY
+      </button>
+
+      <nav className="global-nav-links" aria-label="Primary navigation">
+        {navItems.map((item) => (
+          <button
+            key={item.path}
+            type="button"
+            onClick={() => go(item.path)}
+            className="global-nav-link"
+            aria-current={location.pathname === item.path ? 'page' : undefined}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       <button
         type="button"
         className="global-mobile-menu-button"
@@ -120,7 +138,7 @@ function GlobalMobileMenu() {
       </button>
       {open && (
         <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
-          {items.map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.path}
               type="button"
@@ -133,17 +151,73 @@ function GlobalMobileMenu() {
         </nav>
       )}
       <style>{`
+        .global-nav {
+          position: sticky;
+          top: 0;
+          z-index: 200;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 56px;
+          padding: 0 32px;
+          border-bottom: 1.5px solid #111;
+          background: #fafafa;
+        }
+
+        .global-nav-brand {
+          border: 0;
+          background: transparent;
+          color: #111;
+          cursor: pointer;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.75rem;
+          font-weight: 800;
+          line-height: 1.1;
+          padding: 0;
+          text-align: left;
+        }
+
+        .global-nav-links {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .global-nav-link {
+          border: 1.5px solid transparent;
+          background: transparent;
+          color: #555;
+          cursor: pointer;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          padding: 9px 12px;
+          text-transform: uppercase;
+        }
+
+        .global-nav-link:hover,
+        .global-nav-link[aria-current="page"] {
+          border-color: #111;
+          color: #111;
+        }
+
         .global-mobile-menu-button,
         .global-mobile-menu-panel {
           display: none;
         }
 
         @media (max-width: 767px) {
+          .global-nav {
+            min-height: 56px;
+            padding: 0 16px;
+          }
+
+          .global-nav-links {
+            display: none;
+          }
+
           .global-mobile-menu-button {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            z-index: 200;
             display: inline-flex;
             width: 44px;
             height: 44px;
@@ -165,10 +239,10 @@ function GlobalMobileMenu() {
           }
 
           .global-mobile-menu-panel {
-            position: fixed;
-            top: 64px;
-            right: 12px;
-            z-index: 199;
+            position: absolute;
+            top: 56px;
+            right: 16px;
+            z-index: 201;
             display: flex;
             min-width: 180px;
             flex-direction: column;
@@ -195,7 +269,7 @@ function GlobalMobileMenu() {
           }
         }
       `}</style>
-    </>
+    </header>
   );
 }
 
@@ -270,7 +344,7 @@ export default function Design1Mono() {
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalMobileMenu />
+      <GlobalNavigation />
       <OfflineFallback />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
