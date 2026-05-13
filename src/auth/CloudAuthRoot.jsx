@@ -10,7 +10,11 @@ function navigateInApp(to, replace = false) {
   const target = new URL(to, globalThis.location.origin);
 
   if (target.origin !== globalThis.location.origin) {
-    globalThis.location.assign(target.href);
+    if (replace) {
+      globalThis.location.replace(target.href);
+    } else {
+      globalThis.location.assign(target.href);
+    }
     return;
   }
 

@@ -100,7 +100,7 @@ function GlobalMobileMenu() {
         <span />
       </button>
       {open && (
-        <div className="global-mobile-menu-panel" role="dialog" aria-label="Navigation menu">
+        <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
           {items.map((item) => (
             <button
               key={item.path}
@@ -111,7 +111,7 @@ function GlobalMobileMenu() {
               {item.label}
             </button>
           ))}
-        </div>
+        </nav>
       )}
       <style>{`
         .global-mobile-menu-button,
