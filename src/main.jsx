@@ -17,6 +17,9 @@ const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 const NATIVE_CLOUD_RETRY_DELAY_MS = 5000;
+const IS_VERCEL_PREVIEW =
+  import.meta.env.VITE_VERCEL_PREVIEW === true ||
+  import.meta.env.VITE_VERCEL_PREVIEW === 'true';
 
 const localConvex = new ConvexReactClient('https://offline-placeholder.convex.cloud');
 
@@ -40,8 +43,8 @@ function getCurrentHostname() {
     : '';
 }
 
-function isVercelPreviewHost() {
-  return getCurrentHostname().endsWith('.vercel.app');
+function isVercelPreviewBuild() {
+  return IS_VERCEL_PREVIEW;
 }
 
 function subscribeToPathnameChanges(onChange) {
@@ -81,7 +84,7 @@ function subscribeToPathnameChanges(onChange) {
 }
 
 async function cleanupServiceWorkerCache() {
-  const shouldClear = isNativeRuntime() || isVercelPreviewHost();
+  const shouldClear = isNativeRuntime() || isVercelPreviewBuild();
   if (!shouldClear || !('serviceWorker' in navigator)) {
     return;
   }
@@ -107,7 +110,7 @@ async function cleanupServiceWorkerCache() {
 function registerWebServiceWorker() {
   if (
     isNativeRuntime() ||
-    isVercelPreviewHost() ||
+    isVercelPreviewBuild() ||
     !import.meta.env.PROD ||
     !('serviceWorker' in navigator)
   ) {

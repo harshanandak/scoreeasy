@@ -33,6 +33,9 @@ self.addEventListener('activate', (event) => {
 }
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_VERCEL_PREVIEW': JSON.stringify(isVercelPreview),
+  },
   plugins: [
     react(),
     isVercelPreview ? previewServiceWorkerCleanup() : VitePWA({
