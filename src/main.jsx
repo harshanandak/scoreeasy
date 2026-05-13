@@ -40,6 +40,10 @@ function getCurrentHostname() {
     : '';
 }
 
+function isVercelPreviewHost() {
+  return getCurrentHostname().endsWith('.vercel.app');
+}
+
 function subscribeToPathnameChanges(onChange) {
   if (typeof globalThis.addEventListener !== 'function') {
     return () => {};
@@ -76,12 +80,16 @@ function subscribeToPathnameChanges(onChange) {
   };
 }
 
-async function cleanupNativeServiceWorkerCache() {
-  if (!isNativeRuntime() || !('serviceWorker' in navigator)) {
+async function cleanupServiceWorkerCache() {
+  const shouldClear = isNativeRuntime() || isVercelPreviewHost();
+  if (!shouldClear || !('serviceWorker' in navigator)) {
     return;
   }
 
   const hadController = Boolean(navigator.serviceWorker.controller);
+  const reloadKey = isNativeRuntime()
+    ? 'se-native-sw-cleared'
+    : 'se-preview-sw-cleared';
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations.map((registration) => registration.unregister()));
 
@@ -90,8 +98,8 @@ async function cleanupNativeServiceWorkerCache() {
     await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
   }
 
-  if (hadController && !sessionStorage.getItem('se-native-sw-cleared')) {
-    sessionStorage.setItem('se-native-sw-cleared', '1');
+  if (hadController && !sessionStorage.getItem(reloadKey)) {
+    sessionStorage.setItem(reloadKey, '1');
     globalThis.location.reload();
   }
 }
@@ -99,6 +107,7 @@ async function cleanupNativeServiceWorkerCache() {
 function registerWebServiceWorker() {
   if (
     isNativeRuntime() ||
+    isVercelPreviewHost() ||
     !import.meta.env.PROD ||
     !('serviceWorker' in navigator)
   ) {
@@ -145,7 +154,7 @@ if (import.meta.env.DEV) {
 }
 
 void setupNativeChrome();
-void cleanupNativeServiceWorkerCache();
+void cleanupServiceWorkerCache();
 registerWebServiceWorker();
 initSentryAfterStartup();
 
