@@ -8,7 +8,8 @@ export function getAuthBootstrapMode({
     return { mode: 'local', reason: 'missing-config' };
   }
 
-  const normalizedHostname = hostname.toLowerCase();
+  const normalizedHostname =
+    typeof hostname === 'string' ? hostname.toLowerCase() : '';
   const isProductionClerkKey = clerkPublishableKey.startsWith('pk_live_');
   const isAllowedProductionHost =
     normalizedHostname === 'scoreeasy.app' ||
