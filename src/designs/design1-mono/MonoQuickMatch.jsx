@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
 import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
+import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -516,7 +517,13 @@ export default function MonoQuickMatch() {
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
 
-    setVScoreHistory(prev => [...prev, { team }]);
+    setVScoreHistory(prev => [...prev, {
+      team,
+      vScore1,
+      vScore2,
+      sets: cloneSetsSnapshot(sets),
+      currentSet,
+    }].slice(-100));
 
     // Best-of format (multi-set)
     if (format.type === 'best-of' && sportConfig?.config) {
@@ -600,6 +607,18 @@ export default function MonoQuickMatch() {
     if (vScoreHistory.length === 0) return;
     const last = vScoreHistory[vScoreHistory.length - 1];
     setVScoreHistory(prev => prev.slice(0, -1));
+
+    if (Array.isArray(last.sets)) {
+      setSets(last.sets);
+      setCurrentSet(last.currentSet || 0);
+    }
+
+    if (typeof last.vScore1 === 'number' && typeof last.vScore2 === 'number') {
+      setVScore1(last.vScore1);
+      setVScore2(last.vScore2);
+      return;
+    }
+
     if (last.team === 1) setVScore1(prev => Math.max(0, prev - 1));
     else setVScore2(prev => Math.max(0, prev - 1));
   };

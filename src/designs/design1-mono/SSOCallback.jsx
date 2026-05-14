@@ -4,7 +4,7 @@ import CloudAuthOnly from "./components/CloudAuthOnly";
 export default function SSOCallback() {
   return (
     <CloudAuthOnly>
-      <AuthenticateWithRedirectCallback />
+      <AuthenticateWithRedirectCallback signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" />
     </CloudAuthOnly>
   );
 }

@@ -5,6 +5,7 @@ export default [
     ignores: [
       "dist/**",
       "node_modules/**",
+      ".worktrees/**",
       "convex/_generated/**",
       "android/**/build/**",
       "android/app/src/main/assets/public/**",

@@ -1,18 +1,21 @@
-import { useEffect, Suspense, lazy } from 'react';
+import { useEffect, Suspense, lazy, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
-import MonoSportHome from './MonoSportHome';
-import MonoHistory from './MonoHistory';
-import MonoTournamentList from './MonoTournamentList';
-import MonoTournamentLiveScore from './MonoTournamentLiveScore';
 import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
+import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import './mono.css';
+
+// Lazy-loaded primary app routes (not needed for the initial landing view)
+const MonoSportHome = lazy(() => import('./MonoSportHome'));
+const MonoHistory = lazy(() => import('./MonoHistory'));
+const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
+const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
 const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
@@ -38,13 +41,24 @@ const MonoProfile = lazy(() => import('./MonoProfile'));
 const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
 
 function LazyFallback() {
-  return (
-    <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>Loading...</div>
-  );
+  return <AppLoading compact />;
 }
 
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
+const SCORING_EXIT_CONFIRMATION = 'Leave this page? Your unsaved scoring progress may be lost.';
+
+function isProtectedScoringPath(pathname = '') {
+  const segments = pathname.split('/').filter(Boolean);
+  return segments.includes('game') ||
+    segments.includes('quick') ||
+    segments.some((segment, index) => (
+      segment === 'tournament' &&
+      segments[index + 2] === 'match' &&
+      segments[index + 4] === 'score'
+    ));
+}
+
 function OnboardingGuard({ children }) {
   const { needsOnboarding, isLoading } = useAuth();
   const location = useLocation();
@@ -59,6 +73,205 @@ function OnboardingGuard({ children }) {
 OnboardingGuard.propTypes = {
   children: PropTypes.node,
 };
+
+function GlobalNavigation() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { cloudAuthAvailable, isAuthenticated } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
+  const go = (path) => {
+    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
+      if (!leave) return;
+    }
+
+    navigate(path);
+    setOpen(false);
+  };
+
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Play', path: '/play' },
+    { label: 'History', path: '/history' },
+    { label: 'Statistics', path: '/statistics' },
+  ];
+
+  if (cloudAuthAvailable && !isAuthenticated) {
+    navItems.push({ label: 'Sign in', path: '/login' });
+  }
+
+  return (
+    <header className="global-nav">
+      <button type="button" className="global-nav-brand" onClick={() => go('/')}>
+        SCORE<br />EASY
+      </button>
+
+      <nav className="global-nav-links" aria-label="Primary navigation">
+        {navItems.map((item) => (
+          <button
+            key={item.path}
+            type="button"
+            onClick={() => go(item.path)}
+            className="global-nav-link"
+            aria-current={location.pathname === item.path ? 'page' : undefined}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        className="global-mobile-menu-button"
+        aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+      {open && (
+        <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => go(item.path)}
+              className="global-mobile-menu-item"
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      )}
+      <style>{`
+        .global-nav {
+          position: sticky;
+          top: 0;
+          z-index: 200;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 56px;
+          padding: 0 32px;
+          border-bottom: 1.5px solid #111;
+          background: #fafafa;
+        }
+
+        .global-nav-brand {
+          border: 0;
+          background: transparent;
+          color: #111;
+          cursor: pointer;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.75rem;
+          font-weight: 800;
+          line-height: 1.1;
+          padding: 0;
+          text-align: left;
+        }
+
+        .global-nav-links {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .global-nav-link {
+          border: 1.5px solid transparent;
+          background: transparent;
+          color: #555;
+          cursor: pointer;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.75rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          padding: 9px 12px;
+          text-transform: uppercase;
+        }
+
+        .global-nav-link:hover,
+        .global-nav-link[aria-current="page"] {
+          border-color: #111;
+          color: #111;
+        }
+
+        .global-mobile-menu-button,
+        .global-mobile-menu-panel {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .global-nav {
+            min-height: 56px;
+            padding: 0 16px;
+          }
+
+          .global-nav-links {
+            display: none;
+          }
+
+          .global-mobile-menu-button {
+            display: inline-flex;
+            width: 44px;
+            height: 44px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 1.5px solid #111;
+            background: #fafafa;
+            cursor: pointer;
+            box-shadow: 3px 3px 0 #111;
+          }
+
+          .global-mobile-menu-button span {
+            display: block;
+            width: 18px;
+            height: 2px;
+            background: #111;
+          }
+
+          .global-mobile-menu-panel {
+            position: absolute;
+            top: 56px;
+            right: 16px;
+            z-index: 201;
+            display: flex;
+            min-width: 180px;
+            flex-direction: column;
+            border: 1.5px solid #111;
+            background: #fff;
+            box-shadow: 4px 4px 0 #111;
+          }
+
+          .global-mobile-menu-item {
+            border: 0;
+            border-bottom: 1px solid #eee;
+            background: transparent;
+            color: #111;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding: 14px 16px;
+            text-align: left;
+          }
+
+          .global-mobile-menu-item:last-child {
+            border-bottom: 0;
+          }
+        }
+      `}</style>
+    </header>
+  );
+}
 
 // Dispatcher component that routes to the correct tournament component based on engine
 function TournamentDispatcher() {
@@ -97,14 +310,14 @@ export default function Design1Mono() {
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {
-    const isGameRoute = /\/(?:game\/|.*\/tournament\/\d+\/match\/.*\/score|.*\/quick)/.test(location.pathname);
+    const isGameRoute = isProtectedScoringPath(location.pathname);
 
     if (!isGameRoute) return;
 
     globalThis.history.pushState({ gameProtection: true }, '');
 
     const handlePopState = () => {
-      const leave = globalThis.confirm('Leave this page? Your unsaved scoring progress may be lost.');
+      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
       if (!leave) {
         globalThis.history.pushState({ gameProtection: true }, '');
       }
@@ -131,6 +344,7 @@ export default function Design1Mono() {
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <GlobalNavigation />
       <OfflineFallback />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>

@@ -46,6 +46,28 @@ describe('getAuthBootstrapMode', () => {
       }),
     ).toEqual({ mode: 'cloud', reason: 'available' });
   });
+
+  it('uses local mode when a production Clerk key is loaded on an unsupported host', () => {
+    expect(
+      getAuthBootstrapMode({
+        clerkPublishableKey: 'pk_live_123',
+        convexUrl: 'https://example.convex.cloud',
+        isOnline: true,
+        hostname: 'scoreeasy-git-branch-user.vercel.app',
+      }),
+    ).toEqual({ mode: 'local', reason: 'unsupported-origin' });
+  });
+
+  it('uses cloud mode when a production Clerk key is loaded on the configured domain', () => {
+    expect(
+      getAuthBootstrapMode({
+        clerkPublishableKey: 'pk_live_123',
+        convexUrl: 'https://example.convex.cloud',
+        isOnline: true,
+        hostname: 'scoreeasy.app',
+      }),
+    ).toEqual({ mode: 'cloud', reason: 'available' });
+  });
 });
 
 describe('isCloudAuthRoute', () => {
@@ -63,12 +85,24 @@ describe('isCloudAuthRoute', () => {
 });
 
 describe('shouldUseCloudAuthRoot', () => {
-  it('uses cloud auth immediately for web cloud mode', () => {
+  it('uses cloud auth for web cloud auth routes', () => {
     expect(
       shouldUseCloudAuthRoot({
         authMode: 'cloud',
         shouldProbeNativeCloud: false,
         nativeProbeStatus: 'idle',
+        pathname: '/login',
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps cloud auth mounted on public web routes', () => {
+    expect(
+      shouldUseCloudAuthRoot({
+        authMode: 'cloud',
+        shouldProbeNativeCloud: false,
+        nativeProbeStatus: 'idle',
+        pathname: '/',
       }),
     ).toBe(true);
   });

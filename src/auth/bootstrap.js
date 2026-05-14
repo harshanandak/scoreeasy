@@ -2,9 +2,21 @@ export function getAuthBootstrapMode({
   clerkPublishableKey,
   convexUrl,
   isOnline = true,
+  hostname = '',
 } = {}) {
   if (!clerkPublishableKey || !convexUrl) {
     return { mode: 'local', reason: 'missing-config' };
+  }
+
+  const normalizedHostname =
+    typeof hostname === 'string' ? hostname.toLowerCase() : '';
+  const isProductionClerkKey = clerkPublishableKey.startsWith('pk_live_');
+  const isAllowedProductionHost =
+    normalizedHostname === 'scoreeasy.app' ||
+    normalizedHostname.endsWith('.scoreeasy.app');
+
+  if (isProductionClerkKey && !isAllowedProductionHost) {
+    return { mode: 'local', reason: 'unsupported-origin' };
   }
 
   if (!isOnline) {

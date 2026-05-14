@@ -95,7 +95,7 @@ export default function GuestLanding() {
     <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}>
 
       {/* ═══ NAV ═══ */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: t.bg, borderBottom: `${t.borderWeight} solid ${t.borderStrong}` }}>
+      <nav aria-hidden="true" style={{ display: 'none' }}>
         <div style={{
           maxWidth: 1200, margin: '0 auto',
           padding: mobile ? '12px 16px' : '16px 32px',

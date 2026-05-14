@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import App from './App.jsx';
+import AppLoading from './components/AppLoading';
 import { LocalAuthProvider } from './auth/AuthContext';
 import {
   getAuthBootstrapMode,
@@ -17,6 +18,9 @@ const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 const NATIVE_CLOUD_RETRY_DELAY_MS = 5000;
+const IS_VERCEL_PREVIEW =
+  import.meta.env.VITE_VERCEL_PREVIEW === true ||
+  import.meta.env.VITE_VERCEL_PREVIEW === 'true';
 
 const localConvex = new ConvexReactClient('https://offline-placeholder.convex.cloud');
 
@@ -32,6 +36,16 @@ function getCurrentPathname() {
   return typeof globalThis.location?.pathname === 'string'
     ? globalThis.location.pathname
     : '/';
+}
+
+function getCurrentHostname() {
+  return typeof globalThis.location?.hostname === 'string'
+    ? globalThis.location.hostname
+    : '';
+}
+
+function isVercelPreviewBuild() {
+  return IS_VERCEL_PREVIEW;
 }
 
 function subscribeToPathnameChanges(onChange) {
@@ -70,12 +84,16 @@ function subscribeToPathnameChanges(onChange) {
   };
 }
 
-async function cleanupNativeServiceWorkerCache() {
-  if (!isNativeRuntime() || !('serviceWorker' in navigator)) {
+async function cleanupServiceWorkerCache() {
+  const shouldClear = isNativeRuntime() || isVercelPreviewBuild();
+  if (!shouldClear || !('serviceWorker' in navigator)) {
     return;
   }
 
   const hadController = Boolean(navigator.serviceWorker.controller);
+  const reloadKey = isNativeRuntime()
+    ? 'se-native-sw-cleared'
+    : 'se-preview-sw-cleared';
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations.map((registration) => registration.unregister()));
 
@@ -84,8 +102,8 @@ async function cleanupNativeServiceWorkerCache() {
     await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
   }
 
-  if (hadController && !sessionStorage.getItem('se-native-sw-cleared')) {
-    sessionStorage.setItem('se-native-sw-cleared', '1');
+  if (hadController && !sessionStorage.getItem(reloadKey)) {
+    sessionStorage.setItem(reloadKey, '1');
     globalThis.location.reload();
   }
 }
@@ -93,6 +111,7 @@ async function cleanupNativeServiceWorkerCache() {
 function registerWebServiceWorker() {
   if (
     isNativeRuntime() ||
+    isVercelPreviewBuild() ||
     !import.meta.env.PROD ||
     !('serviceWorker' in navigator)
   ) {
@@ -139,7 +158,7 @@ if (import.meta.env.DEV) {
 }
 
 void setupNativeChrome();
-void cleanupNativeServiceWorkerCache();
+void cleanupServiceWorkerCache();
 registerWebServiceWorker();
 initSentryAfterStartup();
 
@@ -148,6 +167,7 @@ function RootApp() {
     clerkPublishableKey: PUBLISHABLE_KEY,
     convexUrl: CONVEX_URL,
     isOnline: getCurrentOnlineState(),
+    hostname: getCurrentHostname(),
   }));
   const [pathname, setPathname] = useState(getCurrentPathname);
   const shouldProbeNativeCloud =
@@ -166,6 +186,7 @@ function RootApp() {
           clerkPublishableKey: PUBLISHABLE_KEY,
           convexUrl: CONVEX_URL,
           isOnline: getCurrentOnlineState(),
+          hostname: getCurrentHostname(),
         });
       });
     };
@@ -266,15 +287,14 @@ function RootApp() {
     })
   ) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
-        Loading...
-      </div>
+      <AppLoading compact message="Checking cloud sign in" />
     );
   }
 
   return (
     <ConvexProvider client={localConvex}>
       <LocalAuthProvider
+        cloudAuthAvailable={authBootstrap.mode === 'cloud'}
         reason={shouldProbeNativeCloud ? 'native-offline' : authBootstrap.reason}
       >
         <BrowserRouter>

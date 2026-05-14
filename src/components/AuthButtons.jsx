@@ -55,7 +55,7 @@ export function AuthSignInButton({ children, ...props }) {
 
   const { SignInButton } = clerkComponents;
   return (
-    <SignInButton mode="modal" {...props}>
+    <SignInButton mode="modal" oauthFlow="redirect" {...props}>
       {children}
     </SignInButton>
   );
@@ -75,7 +75,7 @@ export function AuthSignUpButton({ children, ...props }) {
 
   const { SignUpButton } = clerkComponents;
   return (
-    <SignUpButton mode="modal" {...props}>
+    <SignUpButton mode="modal" oauthFlow="redirect" {...props}>
       {children}
     </SignUpButton>
   );

@@ -2,10 +2,43 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const isVercelPreview = process.env.VERCEL_ENV === 'preview';
+
+function previewServiceWorkerCleanup() {
+  return {
+    name: 'preview-service-worker-cleanup',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sw.js',
+        source: `
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+    await self.clients.claim();
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    await Promise.all(clients.map((client) => client.navigate(client.url)));
+  })());
+});
+`.trim(),
+      });
+    },
+  };
+}
+
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_VERCEL_PREVIEW': JSON.stringify(isVercelPreview),
+  },
   plugins: [
     react(),
-    VitePWA({
+    isVercelPreview ? previewServiceWorkerCleanup() : VitePWA({
       injectRegister: false,
       registerType: 'autoUpdate',
       cleanupOutdatedCaches: true,
@@ -50,6 +83,9 @@ export default defineConfig({
           },
         ],
       },
+      devOptions: {
+        enabled: true,
+      },
     }),
   ],
   build: {
@@ -60,5 +96,12 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
     css: true,
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.worktrees/**',
+      '**/android/**/build/**',
+      '**/ios/App/App/public/**',
+    ],
   },
 });
