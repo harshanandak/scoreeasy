@@ -28,4 +28,9 @@ describe('applySetPoint', () => {
 
     expect(nextSets[0]).toMatchObject({ score1: 4, score2: 7, completed: false });
   });
+
+  it('rejects invalid team values instead of scoring team two', () => {
+    expect(() => applySetPoint([{ score1: 4, score2: 6, completed: false }], 0, 3))
+      .toThrow('Invalid team value: 3');
+  });
 });

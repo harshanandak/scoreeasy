@@ -8,8 +8,10 @@ export function applySetPoint(sets, currentSet, team) {
 
   if (team === 1) {
     set.score1 += 1;
-  } else {
+  } else if (team === 2) {
     set.score2 += 1;
+  } else {
+    throw new Error(`Invalid team value: ${team}`);
   }
 
   return nextSets;
