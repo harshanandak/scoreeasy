@@ -200,7 +200,7 @@ Base: `codex/mobile-home-discovery`
 
 Issues:
 - `P1-022`, `P1-023`, `P1-024`.
-- `DS-012`, `DS-018`.
+- `DS-018`.
 
 Primary files:
 - `src/designs/design1-mono/index.jsx`
@@ -258,6 +258,7 @@ Issues:
 - `P0-010` history clear confirmation/undo.
 - `P1-029`, `P1-030`.
 - `P2-002`, `P2-003`, `P2-004`.
+- `DS-012` where it applies to result action-row wrapping.
 
 Primary files:
 - `src/designs/design1-mono/MonoQuickMatch.jsx`
@@ -267,6 +268,7 @@ Primary files:
 
 Acceptance:
 - Result screen confirms saved state and offers Rematch, Share, View History, See Stats, New Match.
+- Result action rows remain readable and tappable at narrow mobile widths.
 - Share uses native share helper with copy fallback and visible feedback.
 - History cards open match detail with score/set summary.
 - Clear history uses confirmation and recovery/undo where feasible.
@@ -297,7 +299,7 @@ Primary files:
 - `src/designs/design1-mono/GenericGoalsTournament.jsx`
 
 Acceptance:
-- Review step is summary-first with generated schedule/bracket preview.
+- Review step is summary-first for the existing tournament setup data.
 - Tournament setup has sticky CTAs and reachable Back controls.
 - Empty list explains tournament value and offers clear actions.
 - Existing tournaments show explicit Continue.
