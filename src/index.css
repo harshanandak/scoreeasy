@@ -30,7 +30,16 @@ body {
 }
 
 .app-loading-compact {
-  min-height: 240px;
+  min-height: 96px;
+}
+
+.app-loading-compact .app-loading-panel {
+  width: min(100%, 220px);
+  gap: 10px;
+}
+
+.app-loading-compact .app-loading-board {
+  display: none;
 }
 
 .app-loading-panel {
