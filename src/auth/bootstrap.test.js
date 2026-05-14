@@ -96,7 +96,7 @@ describe('shouldUseCloudAuthRoot', () => {
     ).toBe(true);
   });
 
-  it('keeps public web routes local-first even when cloud auth is available', () => {
+  it('keeps cloud auth mounted on public web routes', () => {
     expect(
       shouldUseCloudAuthRoot({
         authMode: 'cloud',
@@ -104,7 +104,7 @@ describe('shouldUseCloudAuthRoot', () => {
         nativeProbeStatus: 'idle',
         pathname: '/',
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('keeps native cloud routes mounted during retry cycles', () => {
