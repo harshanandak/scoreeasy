@@ -14,6 +14,7 @@ import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync'
 import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
+import { applySetPoint } from '../../utils/quickMatchSets';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -528,12 +529,7 @@ export default function MonoQuickMatch() {
     // Best-of format (multi-set)
     if (format.type === 'best-of' && sportConfig?.config) {
       setSets(prevSets => {
-        const newSets = [...prevSets];
-        if (team === 1) {
-          newSets[currentSet].score1++;
-        } else {
-          newSets[currentSet].score2++;
-        }
+        const newSets = applySetPoint(prevSets, currentSet, team);
 
         // Check if current set is complete
         const { deciderPoints, winBy } = sportConfig.config;
