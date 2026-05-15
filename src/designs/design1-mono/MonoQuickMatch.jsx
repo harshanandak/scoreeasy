@@ -40,13 +40,21 @@ function SwapButton({ onSwap }) {
 }
 
 function EndMatchDialog({ onCancel, onConfirm }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ backgroundColor: 'rgba(17, 17, 17, 0.42)', padding: '16px' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="end-match-title"
+      tabIndex={-1}
     >
       <div className="mono-card w-full max-w-sm" style={{ padding: '18px' }}>
         <h2 id="end-match-title" className="text-lg font-bold mb-2">End match?</h2>
