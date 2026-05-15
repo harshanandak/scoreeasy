@@ -231,12 +231,12 @@ function GlobalNavigation() {
             aria-label="Dismiss navigation menu"
             onClick={() => setOpen(false)}
           />
-          <div
+          <dialog
             id="global-mobile-menu"
             className="global-mobile-menu-sheet"
-            role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
+            open
           >
             <div className="global-mobile-menu-heading">
               <span>Menu</span>
@@ -263,7 +263,7 @@ function GlobalNavigation() {
                 </button>
               ))}
             </nav>
-          </div>
+          </dialog>
         </>
       )}
       {showBottomNav && bottomNavItems.length > 0 && (
@@ -395,8 +395,13 @@ function GlobalNavigation() {
             left: 12px;
             z-index: 241;
             display: block;
+            max-width: none;
+            margin: 0;
             border: 1.5px solid #111;
             background: #fff;
+            color: #111;
+            padding: 0;
+            width: auto;
             box-shadow: 4px 4px 0 #111;
           }
 
