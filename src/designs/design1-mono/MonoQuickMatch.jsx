@@ -429,6 +429,7 @@ export default function MonoQuickMatch() {
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
+  const tracksPointWinnerServe = sport === 'volleyball' || sport === 'badminton';
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -607,6 +608,7 @@ export default function MonoQuickMatch() {
     setBattingTeam(1);
     setServingTeam(1);
     setLastAction('');
+    setSidesSwapped(false);
     setShowEndConfirm(false);
     timer.reset();
     startedAtRef.current = null;
@@ -779,8 +781,9 @@ export default function MonoQuickMatch() {
   };
 
   const completeSetIfNeeded = (candidateSets, setIndex, activeSetIndex = currentSet) => {
-    if (!(format.type === 'best-of' && sportConfig?.config)) return candidateSets;
-    if (!candidateSets[setIndex]) return candidateSets;
+    const update = { nextSets: candidateSets, nextActiveSetIndex: null, result: null };
+    if (!(format.type === 'best-of' && sportConfig?.config)) return update;
+    if (!candidateSets[setIndex]) return update;
 
     const s1 = candidateSets[setIndex].score1;
     const s2 = candidateSets[setIndex].score2;
@@ -788,7 +791,7 @@ export default function MonoQuickMatch() {
 
     if (!isSetComplete({ score1: s1, score2: s2 }, completionRule)) {
       candidateSets[setIndex].completed = false;
-      return candidateSets;
+      return update;
     }
 
     candidateSets[setIndex].completed = true;
@@ -811,16 +814,21 @@ export default function MonoQuickMatch() {
         date: new Date().toISOString(),
         ...makeTimerFields(),
       };
-      finalizeMatch(r);
-      return candidateSets;
+      return { ...update, result: r };
     }
 
     if (setIndex === activeSetIndex && !candidateSets[setIndex + 1]) {
       candidateSets.push({ score1: 0, score2: 0, completed: false });
-      setCurrentSet(setIndex + 1);
+      return { ...update, nextActiveSetIndex: setIndex + 1 };
     }
 
-    return candidateSets;
+    return update;
+  };
+
+  const applySetCompletionUpdate = (update) => {
+    setSets(update.nextSets);
+    if (typeof update.nextActiveSetIndex === 'number') setCurrentSet(update.nextActiveSetIndex);
+    if (update.result) finalizeMatch(update.result);
   };
 
   // Volleyball: Add point
@@ -829,7 +837,7 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
-    setServingTeam(team);
+    if (tracksPointWinnerServe) setServingTeam(team);
     setLastAction(`${getTeamLabel(team)} +1 ${scoringUnit}`);
 
     setVScoreHistory(prev => [...prev, {
@@ -843,10 +851,8 @@ export default function MonoQuickMatch() {
 
     // Best-of format (multi-set)
     if (format.type === 'best-of' && sportConfig?.config) {
-      setSets(prevSets => {
-        const newSets = applySetPoint(prevSets, currentSet, team);
-        return completeSetIfNeeded(newSets, currentSet);
-      });
+      const newSets = applySetPoint(sets, currentSet, team);
+      applySetCompletionUpdate(completeSetIfNeeded(newSets, currentSet));
     } else {
       // Single set format
       const target = format.target;
@@ -926,31 +932,33 @@ export default function MonoQuickMatch() {
     }].slice(-100));
 
     if (format.type === 'best-of') {
-      setSets(prevSets => {
-        const nextSets = cloneSetsSnapshot(prevSets);
-        const currentScores = nextSets[currentSet] || { score1: 0, score2: 0, completed: false };
-        const shouldCorrectPreviousSet = delta < 0
-          && currentSet > 0
-          && currentScores.score1 === 0
-          && currentScores.score2 === 0
-          && nextSets[currentSet - 1]?.completed;
-        const targetSet = shouldCorrectPreviousSet ? currentSet - 1 : currentSet;
+      const nextSets = cloneSetsSnapshot(sets);
+      const currentScores = nextSets[currentSet] || { score1: 0, score2: 0, completed: false };
+      const shouldCorrectPreviousSet = delta < 0
+        && currentSet > 0
+        && currentScores.score1 === 0
+        && currentScores.score2 === 0
+        && nextSets[currentSet - 1]?.completed;
+      const targetSet = shouldCorrectPreviousSet ? currentSet - 1 : currentSet;
 
-        if (!nextSets[targetSet]) nextSets[targetSet] = { score1: 0, score2: 0, completed: false };
-        const key = team === 1 ? 'score1' : 'score2';
-        nextSets[targetSet] = {
-          ...nextSets[targetSet],
-          [key]: Math.max(0, (nextSets[targetSet][key] || 0) + delta),
-          completed: false,
-        };
+      if (!nextSets[targetSet]) nextSets[targetSet] = { score1: 0, score2: 0, completed: false };
+      const key = team === 1 ? 'score1' : 'score2';
+      nextSets[targetSet] = {
+        ...nextSets[targetSet],
+        [key]: Math.max(0, (nextSets[targetSet][key] || 0) + delta),
+        completed: false,
+      };
 
-        if (shouldCorrectPreviousSet) {
-          nextSets.splice(targetSet + 1);
-          setCurrentSet(targetSet);
-        }
+      if (shouldCorrectPreviousSet) nextSets.splice(targetSet + 1);
 
-        return completeSetIfNeeded(nextSets, targetSet, targetSet);
-      });
+      const update = completeSetIfNeeded(nextSets, targetSet, targetSet);
+      setSets(update.nextSets);
+      if (typeof update.nextActiveSetIndex === 'number') {
+        setCurrentSet(update.nextActiveSetIndex);
+      } else if (shouldCorrectPreviousSet) {
+        setCurrentSet(targetSet);
+      }
+      if (update.result) finalizeMatch(update.result);
       return;
     }
 
@@ -981,6 +989,12 @@ export default function MonoQuickMatch() {
   };
 
   const finalizeGoalScore = (score1, score2) => {
+    const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
+    if (!drawAllowed && score1 === score2) {
+      setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
+      return;
+    }
+
     finalizeMatch({
       id: Date.now(), sport,
       team1: team1Name, team2: team2Name,
@@ -2285,8 +2299,8 @@ export default function MonoQuickMatch() {
           </div>
 
           <ScoringStatusStrip
-            label="Serving"
-            value={servingTeam === leftTeam ? leftName : rightName}
+            label={tracksPointWinnerServe ? 'Serving' : 'Scoring'}
+            value={tracksPointWinnerServe ? (servingTeam === leftTeam ? leftName : rightName) : `${leftName} vs ${rightName}`}
             lastAction={lastAction}
           />
 
