@@ -29,7 +29,7 @@ export default function MonoSportHome() {
   const categoryKeys = Object.keys(SPORT_CATEGORIES);
   const [visible, setVisible] = useState(false);
   const [tournamentCounts, setTournamentCounts] = useState({});
-  const [activeTab, setActiveTab] = useState(SPORT_CATEGORIES[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : categoryKeys[0]);
+  const [activeTab, setActiveTab] = useState(SPORT_CATEGORIES[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
   const [selectedSportId, setSelectedSportId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [layout, setLayout] = useState(() => {
@@ -74,6 +74,8 @@ export default function MonoSportHome() {
   const filteredSports = searchQuery.trim()
     ? allEntries.filter(s => s.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
     : [];
+  const activeSports = activeTab ? (SPORT_CATEGORIES[activeTab] ?? []) : [];
+  const activeTabPanelId = activeTab ? `tabpanel-${activeTab.replaceAll(/\s+/g, '-')}` : 'tabpanel-empty';
 
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
@@ -273,7 +275,7 @@ export default function MonoSportHome() {
               </div>
 
               {/* Tab Content */}
-              <div className="animate-fade-in" role="tabpanel" id={`tabpanel-${activeTab.replaceAll(/\s+/g, '-')}`} aria-label={activeTab}>
+              <div className="animate-fade-in" role="tabpanel" id={activeTabPanelId} aria-label={activeTab || 'No category selected'}>
                 {activeTab === 'Cricket' ? (
                   /* Cricket: each format is its own card */
                   <div>
@@ -342,7 +344,7 @@ export default function MonoSportHome() {
                 ) : (
                   /* Standard sports grid */
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {SPORT_CATEGORIES[activeTab].map(sport => (
+                    {activeSports.length > 0 ? activeSports.map(sport => (
                       <div key={sport.id} className="mono-card flex flex-col" style={{ padding: 0 }}>
                         <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
                           <div className="flex items-center gap-3 mb-3">
@@ -384,7 +386,9 @@ export default function MonoSportHome() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <p className="text-sm" style={{ color: '#888' }}>No sports available.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -437,16 +441,18 @@ export default function MonoSportHome() {
                                 <button
                                   onClick={() => navigate(`/cricket/tournament/new?format=${cf.id}`)}
                                   className="mono-btn-primary"
-                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
+                                  style={{ minHeight: 54, padding: '8px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}
                                 >
-                                  Tournament
+                                  <span>Tournament</span>
+                                  <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
                                 </button>
                                 <button
                                   onClick={() => navigate(`/cricket/quick?format=${cf.id}`)}
                                   className="mono-btn"
-                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
+                                  style={{ minHeight: 54, padding: '8px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}
                                 >
-                                  Quick Match
+                                  <span>Quick Match</span>
+                                  <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
                                 </button>
                               </div>
                             )}
@@ -491,16 +497,18 @@ export default function MonoSportHome() {
                                 <button
                                   onClick={() => navigate(`/${sport.id}/tournament`)}
                                   className="mono-btn-primary"
-                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
+                                  style={{ minHeight: 54, padding: '8px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}
                                 >
-                                  Tournament
+                                  <span>Tournament</span>
+                                  <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
                                 </button>
                                 <button
                                   onClick={() => navigate(`/${sport.id}/quick`)}
                                   className="mono-btn"
-                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
+                                  style={{ minHeight: 54, padding: '8px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }}
                                 >
-                                  Quick Match
+                                  <span>Quick Match</span>
+                                  <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
                                 </button>
                               </div>
                             )}
