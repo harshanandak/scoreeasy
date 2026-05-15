@@ -951,7 +951,7 @@ export default function MonoQuickMatch() {
           setCurrentSet(targetSet);
         }
 
-        return delta > 0 ? completeSetIfNeeded(nextSets, targetSet) : nextSets;
+        return completeSetIfNeeded(nextSets, targetSet);
       });
       return;
     }
