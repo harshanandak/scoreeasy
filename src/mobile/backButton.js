@@ -23,12 +23,12 @@ export function installNativeBackButtonGuard({
   App.addListener('backButton', ({ canGoBack }) => {
     const pathname = getPathname?.() || globalThis.location.pathname;
 
-    if (isProtectedScoringRoute(pathname) && !confirmLeave('Leave this page? Your unsaved scoring progress may be lost.')) {
+    if (canGoBack) {
+      goBack();
       return;
     }
 
-    if (canGoBack) {
-      goBack();
+    if (isProtectedScoringRoute(pathname) && !confirmLeave('Leave this page? Your unsaved scoring progress may be lost.')) {
       return;
     }
 

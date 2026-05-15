@@ -64,7 +64,7 @@ describe('installNativeBackButtonGuard', () => {
     expect(remove).toHaveBeenCalledTimes(1);
   });
 
-  it('guards protected routes before native history navigation', async () => {
+  it('lets browser popstate guard protected routes during native history navigation', async () => {
     mocks.hasNativePlugin.mockReturnValue(true);
     mocks.isNativeMobile.mockReturnValue(true);
 
@@ -88,8 +88,8 @@ describe('installNativeBackButtonGuard', () => {
 
     backButtonHandler({ canGoBack: true });
 
-    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
-    expect(goBack).not.toHaveBeenCalled();
+    expect(confirmLeave).not.toHaveBeenCalled();
+    expect(goBack).toHaveBeenCalledTimes(1);
     expect(exitApp).not.toHaveBeenCalled();
   });
 
@@ -117,8 +117,37 @@ describe('installNativeBackButtonGuard', () => {
 
     backButtonHandler({ canGoBack: true });
 
-    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(confirmLeave).not.toHaveBeenCalled();
     expect(goBack).toHaveBeenCalledTimes(1);
+    expect(exitApp).not.toHaveBeenCalled();
+  });
+
+  it('guards protected routes before exiting the native app', async () => {
+    mocks.hasNativePlugin.mockReturnValue(true);
+    mocks.isNativeMobile.mockReturnValue(true);
+
+    let backButtonHandler;
+    mocks.addListener.mockImplementation((eventName, handler) => {
+      backButtonHandler = handler;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+
+    const confirmLeave = vi.fn(() => false);
+    const goBack = vi.fn();
+    const exitApp = vi.fn();
+
+    installNativeBackButtonGuard({
+      confirmLeave,
+      exitApp,
+      getPathname: () => '/volleyball/quick',
+      goBack,
+    });
+    await Promise.resolve();
+
+    backButtonHandler({ canGoBack: false });
+
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });
 
