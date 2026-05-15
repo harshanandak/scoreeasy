@@ -48,7 +48,9 @@ export function summarizeBestOfSets(sets = []) {
   const completedSets = sets.filter((set) => set.completed);
   const setsWon1 = completedSets.filter((set) => set.score1 > set.score2).length;
   const setsWon2 = completedSets.filter((set) => set.score2 > set.score1).length;
-  const activeSet = sets.find((set) => !set.completed && (set.score1 > 0 || set.score2 > 0)) || sets[sets.length - 1] || { score1: 0, score2: 0 };
+  const activeSet = sets.find((set) => !set.completed && (set.score1 > 0 || set.score2 > 0))
+    || sets.find((set) => !set.completed)
+    || { score1: 0, score2: 0 };
 
   return {
     completedSets,

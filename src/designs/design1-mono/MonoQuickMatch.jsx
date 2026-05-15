@@ -195,7 +195,7 @@ export default function MonoQuickMatch() {
   // Start timer when scoring begins
   useEffect(() => {
     if (phase === 'scoring') {
-      startedAtRef.current = new Date().toISOString();
+      if (!startedAtRef.current) startedAtRef.current = new Date().toISOString();
       timer.start();
     } else if (phase === 'result') {
       timer.pause();
@@ -223,6 +223,10 @@ export default function MonoQuickMatch() {
     if (typeof draft.gScore2 === 'number') setGScore2(draft.gScore2);
     if (typeof draft.innings === 'number') setInnings(draft.innings);
     if (typeof draft.battingTeam === 'number') setBattingTeam(draft.battingTeam);
+    if (typeof draft.freeHit === 'boolean') setFreeHit(draft.freeHit);
+    if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
+    if (typeof draft.timerElapsed === 'number') timer.restore(draft.timerElapsed, false);
+    startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
   }, [quickMatchDraftKey, sport]);
@@ -245,9 +249,13 @@ export default function MonoQuickMatch() {
       gScore2,
       innings,
       battingTeam,
+      freeHit,
+      trialBallUsed,
+      timerElapsed: timer.elapsed,
+      startedAt: startedAtRef.current,
       updatedAt: new Date().toISOString(),
     });
-  }, [battingTeam, currentSet, format, gScore1, gScore2, innings, phase, quickMatchDraftKey, scores, sets, sport, team1Name, team2Name, vScore1, vScore2]);
+  }, [battingTeam, currentSet, format, freeHit, gScore1, gScore2, innings, phase, quickMatchDraftKey, scores, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2]);
 
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
@@ -371,8 +379,8 @@ export default function MonoQuickMatch() {
     };
 
     setResult(nextResult);
-    persistQuickMatch(nextResult);
-    clearData(quickMatchDraftKey);
+    const saved = persistQuickMatch(nextResult);
+    if (saved) clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
   };

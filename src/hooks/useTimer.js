@@ -26,6 +26,11 @@ export function useTimer() {
     setElapsed(0);
   }, []);
 
+  const restore = useCallback((seconds = 0, running = false) => {
+    setElapsed(Math.max(0, Number(seconds) || 0));
+    setIsRunning(Boolean(running));
+  }, []);
+
   const toggle = useCallback(() => {
     setIsRunning(prev => !prev);
   }, []);
@@ -64,6 +69,7 @@ export function useTimer() {
     start,
     pause,
     reset,
+    restore,
     toggle,
   };
 }

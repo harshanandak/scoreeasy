@@ -75,4 +75,12 @@ describe('getBestOfResultScore', () => {
 
     expect(summary).toMatchObject({ setsWon1: 0, setsWon2: 0, score1: 7, score2: 4 });
   });
+
+  it('does not use completed set points as the active fallback', () => {
+    const summary = getBestOfResultScore([
+      { score1: 25, score2: 20, completed: true },
+    ], { includeActiveWhenTied: true });
+
+    expect(summary).toMatchObject({ setsWon1: 1, setsWon2: 0, score1: 1, score2: 0 });
+  });
 });
