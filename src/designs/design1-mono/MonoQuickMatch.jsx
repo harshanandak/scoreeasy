@@ -205,6 +205,7 @@ export default function MonoQuickMatch() {
   useEffect(() => {
     if (draftHydratedSportRef.current === sport) return;
     draftHydratedSportRef.current = sport;
+    restoredDraftRef.current = false;
 
     const draft = loadData(quickMatchDraftKey, null);
     if (!draft || draft.sport !== sport || draft.phase !== 'scoring') return;
