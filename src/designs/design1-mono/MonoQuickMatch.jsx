@@ -5,7 +5,7 @@ import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
-import { saveData, loadData } from '../../utils/storage';
+import { clearData, saveData, loadData } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
@@ -14,7 +14,8 @@ import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync'
 import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
-import { applySetPoint } from '../../utils/quickMatchSets';
+import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { formatTennisPointScore } from '../../utils/tennisScoring';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -170,6 +171,9 @@ export default function MonoQuickMatch() {
   // Cricket: Free hit and trial ball state
   const [freeHit, setFreeHit] = useState(false);
   const [trialBallUsed, setTrialBallUsed] = useState(false);
+  const draftHydratedSportRef = useRef(null);
+  const restoredDraftRef = useRef(false);
+  const quickMatchDraftKey = `se_quickmatch_draft_${sport}`;
 
   // Result state
   const [result, setResult] = useState(null);
@@ -192,8 +196,55 @@ export default function MonoQuickMatch() {
     }
   }, [phase]);
 
+  useEffect(() => {
+    if (draftHydratedSportRef.current === sport) return;
+    draftHydratedSportRef.current = sport;
+
+    const draft = loadData(quickMatchDraftKey, null);
+    if (!draft || draft.sport !== sport || draft.phase !== 'scoring') return;
+
+    restoredDraftRef.current = true;
+    setTeam1Name(draft.team1Name || '');
+    setTeam2Name(draft.team2Name || '');
+    if (draft.format) setFormat(draft.format);
+    if (draft.scores) setScores(draft.scores);
+    if (Array.isArray(draft.sets)) setSets(draft.sets);
+    if (typeof draft.currentSet === 'number') setCurrentSet(draft.currentSet);
+    if (typeof draft.vScore1 === 'number') setVScore1(draft.vScore1);
+    if (typeof draft.vScore2 === 'number') setVScore2(draft.vScore2);
+    if (typeof draft.gScore1 === 'number') setGScore1(draft.gScore1);
+    if (typeof draft.gScore2 === 'number') setGScore2(draft.gScore2);
+    if (typeof draft.innings === 'number') setInnings(draft.innings);
+    if (typeof draft.battingTeam === 'number') setBattingTeam(draft.battingTeam);
+    setSaveWarning('Resumed your in-progress quick match on this device.');
+    setPhase('scoring');
+  }, [quickMatchDraftKey, sport]);
+
+  useEffect(() => {
+    if (phase !== 'scoring') return;
+
+    saveData(quickMatchDraftKey, {
+      phase,
+      sport,
+      team1Name,
+      team2Name,
+      format,
+      scores,
+      sets,
+      currentSet,
+      vScore1,
+      vScore2,
+      gScore1,
+      gScore2,
+      innings,
+      battingTeam,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [battingTeam, currentSet, format, gScore1, gScore2, innings, phase, quickMatchDraftKey, scores, sets, sport, team1Name, team2Name, vScore1, vScore2]);
+
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
+    if (restoredDraftRef.current) return;
     if (formatMode === 'standard' && sport) {
       const defaults = getSportDefaults(sport);
       if (defaults && Object.keys(defaults).length > 0) {
@@ -314,6 +365,7 @@ export default function MonoQuickMatch() {
 
     setResult(nextResult);
     persistQuickMatch(nextResult);
+    clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
   };
@@ -352,6 +404,24 @@ export default function MonoQuickMatch() {
 
   const startMatch = () => {
     if (!team1Name.trim() || !team2Name.trim()) return;
+    setSaveWarning('');
+    setResult(null);
+    resetSync();
+    clearData(quickMatchDraftKey);
+    setVScore1(0);
+    setVScore2(0);
+    setGScore1(0);
+    setGScore2(0);
+    setSets([{ score1: 0, score2: 0, completed: false }]);
+    setCurrentSet(0);
+    setVScoreHistory([]);
+    setGScoreHistory([]);
+    setCricketHistory([]);
+    setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
+    setInnings(1);
+    setBattingTeam(1);
+    timer.reset();
+    startedAtRef.current = null;
 
     // Test format (4 innings) → save to quick match storage and navigate to test scorer
     if (isCricket && format.totalInnings === 4) {
@@ -532,20 +602,17 @@ export default function MonoQuickMatch() {
         const newSets = applySetPoint(prevSets, currentSet, team);
 
         // Check if current set is complete
-        const { deciderPoints, winBy } = sportConfig.config;
-        const isDecider = format.sets > 1 && currentSet === format.sets - 1;
-        const target = isDecider && deciderPoints ? deciderPoints : (format.points || 25);
         const s1 = newSets[currentSet].score1;
         const s2 = newSets[currentSet].score2;
-        const max = Math.max(s1, s2);
-        const min = Math.min(s1, s2);
+        const completionRule = getSetWinRule({ format, sportConfig, currentSet });
 
-        if (max >= target && max - min >= winBy) {
+        if (isSetComplete({ score1: s1, score2: s2 }, completionRule)) {
           newSets[currentSet].completed = true;
 
           // Count sets won
-          const t1SetsWon = newSets.filter(s => s.completed && s.score1 > s.score2).length;
-          const t2SetsWon = newSets.filter(s => s.completed && s.score2 > s.score1).length;
+          const resultScore = getBestOfResultScore(newSets);
+          const t1SetsWon = resultScore.setsWon1;
+          const t2SetsWon = resultScore.setsWon2;
           const setsToWin = Math.ceil(format.sets / 2);
 
           // Check if match complete
@@ -555,6 +622,8 @@ export default function MonoQuickMatch() {
               id: Date.now(), sport,
               team1: team1Name, team2: team2Name,
               sets: newSets,
+              score1: resultScore.score1,
+              score2: resultScore.score2,
               setsWon1: t1SetsWon,
               setsWon2: t2SetsWon,
               winner, format,
@@ -663,6 +732,10 @@ export default function MonoQuickMatch() {
 
   const endMatchGoals = () => {
     const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
+    if (!drawAllowed && gScore1 === gScore2) {
+      setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
+      return;
+    }
     let winner;
     if (gScore1 > gScore2) winner = team1Name;
     else if (gScore2 > gScore1) winner = team2Name;
@@ -684,13 +757,19 @@ export default function MonoQuickMatch() {
     } else if (isGoals) {
       endMatchGoals();
     } else {
-      const winner = vScore1 > vScore2 ? team1Name
-        : vScore2 > vScore1 ? team2Name
+      const bestOfResult = format.type === 'best-of'
+        ? getBestOfResultScore(sets, { includeActiveWhenTied: true })
+        : null;
+      const finalScore1 = bestOfResult ? bestOfResult.score1 : vScore1;
+      const finalScore2 = bestOfResult ? bestOfResult.score2 : vScore2;
+      const winner = finalScore1 > finalScore2 ? team1Name
+        : finalScore2 > finalScore1 ? team2Name
         : 'Tie';
       const r = {
         id: Date.now(), sport,
         team1: team1Name, team2: team2Name,
-        score1: vScore1, score2: vScore2,
+        score1: finalScore1, score2: finalScore2,
+        ...(bestOfResult ? { sets, setsWon1: bestOfResult.setsWon1, setsWon2: bestOfResult.setsWon2 } : {}),
         winner, format, date: new Date().toISOString(),
         ...makeTimerFields(),
       };
@@ -1657,7 +1736,7 @@ export default function MonoQuickMatch() {
 
             {/* Run buttons */}
             <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {[0, 1, 2, 3, 4, 6].map(r => (
+              {[0, 1, 2, 3, 4, 5, 6].map(r => (
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
@@ -1831,12 +1910,18 @@ export default function MonoQuickMatch() {
     // Sets scoring (volleyball, badminton, etc.)
     const leftSetsWon = sets.filter(s => s.completed && (sidesSwapped ? s.score2 > s.score1 : s.score1 > s.score2)).length;
     const rightSetsWon = sets.filter(s => s.completed && (sidesSwapped ? s.score1 > s.score2 : s.score2 > s.score1)).length;
-    const leftSetScore = format.type === 'best-of'
+    const rawLeftSetScore = format.type === 'best-of'
       ? (sidesSwapped ? sets[currentSet]?.score2 || 0 : sets[currentSet]?.score1 || 0)
       : (sidesSwapped ? vScore2 : vScore1);
-    const rightSetScore = format.type === 'best-of'
+    const rawRightSetScore = format.type === 'best-of'
       ? (sidesSwapped ? sets[currentSet]?.score1 || 0 : sets[currentSet]?.score2 || 0)
       : (sidesSwapped ? vScore1 : vScore2);
+    const leftSetScore = sport === 'tennis'
+      ? formatTennisPointScore(rawLeftSetScore, rawRightSetScore)
+      : rawLeftSetScore;
+    const rightSetScore = sport === 'tennis'
+      ? formatTennisPointScore(rawRightSetScore, rawLeftSetScore)
+      : rawRightSetScore;
 
     return (
       <div className="min-h-screen px-6 py-10">
@@ -2058,6 +2143,7 @@ export default function MonoQuickMatch() {
           </button>
           <button
             onClick={() => {
+              restoredDraftRef.current = false;
               setPhase('setup');
               setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
               setVScore1(0);
@@ -2066,6 +2152,8 @@ export default function MonoQuickMatch() {
               setGScore2(0);
               setGScoreHistory([]);
               setVScoreHistory([]);
+              setSets([{ score1: 0, score2: 0, completed: false }]);
+              setCurrentSet(0);
               setCricketHistory([]);
               setFreeHit(false);
               setTrialBallUsed(false);
@@ -2073,6 +2161,7 @@ export default function MonoQuickMatch() {
               setBattingTeam(1);
               setResult(null);
               resetSync();
+              clearData(quickMatchDraftKey);
               timer.reset();
               startedAtRef.current = null;
             }}
