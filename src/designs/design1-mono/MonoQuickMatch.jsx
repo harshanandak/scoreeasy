@@ -779,7 +779,7 @@ export default function MonoQuickMatch() {
             finalizeMatch(r);
   };
 
-  const completeSetIfNeeded = (candidateSets, setIndex) => {
+  const completeSetIfNeeded = (candidateSets, setIndex, activeSetIndex = currentSet) => {
     if (!(format.type === 'best-of' && sportConfig?.config)) return candidateSets;
     if (!candidateSets[setIndex]) return candidateSets;
 
@@ -816,7 +816,7 @@ export default function MonoQuickMatch() {
       return candidateSets;
     }
 
-    if (setIndex === currentSet && !candidateSets[setIndex + 1]) {
+    if (setIndex === activeSetIndex && !candidateSets[setIndex + 1]) {
       candidateSets.push({ score1: 0, score2: 0, completed: false });
       setCurrentSet(setIndex + 1);
     }
@@ -950,7 +950,7 @@ export default function MonoQuickMatch() {
           setCurrentSet(targetSet);
         }
 
-        return completeSetIfNeeded(nextSets, targetSet);
+        return completeSetIfNeeded(nextSets, targetSet, targetSet);
       });
       return;
     }
