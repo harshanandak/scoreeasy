@@ -1,0 +1,90 @@
+name: CodeRabbit Review After Checks
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - Android Build Check
+      - iOS Build Check
+    types:
+      - completed
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  request-review:
+    name: Request CodeRabbit review
+    runs-on: ubuntu-latest
+    concurrency:
+      group: coderabbit-after-checks-${{ github.event.workflow_run.head_sha }}
+      cancel-in-progress: false
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Trigger CodeRabbit after required checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REQUIRED_CHECKS: |
+            verify
+            Build Android APK and AAB
+            Build iOS Simulator App
+        run: |
+          set -euo pipefail
+
+          prs_json="$(gh api -H "Accept: application/vnd.github+json" "/repos/$REPO/commits/$HEAD_SHA/pulls")"
+          pr_number="$(jq -r '[.[] | select(.state == "open" and .base.ref == "master")] | first | .number // empty' <<<"$prs_json")"
+
+          if [ -z "$pr_number" ]; then
+            echo "No open pull request for $HEAD_SHA against master."
+            exit 0
+          fi
+
+          pr_json="$(gh api "/repos/$REPO/pulls/$pr_number")"
+          current_head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
+
+          if [ "$current_head_sha" != "$HEAD_SHA" ]; then
+            echo "Skipping stale workflow run for $HEAD_SHA; PR #$pr_number is now at $current_head_sha."
+            exit 0
+          fi
+
+          checks_json="$(gh api "/repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100")"
+          missing_or_failed=""
+
+          while IFS= read -r check_name; do
+            [ -z "$check_name" ] && continue
+
+            check_state="$(
+              jq -r --arg name "$check_name" '
+                [.check_runs[] | select(.name == $name)]
+                | sort_by(.started_at // "", .completed_at // "", .id)
+                | last
+                | "\(.status // "missing"):\(.conclusion // "missing")"
+              ' <<<"$checks_json"
+            )"
+
+            if [ "$check_state" != "completed:success" ]; then
+              missing_or_failed="${missing_or_failed}${check_name}=${check_state}"$'\n'
+            fi
+          done <<<"$REQUIRED_CHECKS"
+
+          if [ -n "$missing_or_failed" ]; then
+            echo "Required checks are not all successful yet:"
+            printf "%s" "$missing_or_failed"
+            exit 0
+          fi
+
+          marker="<!-- coderabbit-after-checks:$HEAD_SHA -->"
+          comments_json="$(gh api --paginate --slurp "/repos/$REPO/issues/$pr_number/comments?per_page=100")"
+
+          if jq -e --arg marker "$marker" '.[][] | select(.body | contains($marker))' <<<"$comments_json" >/dev/null; then
+            echo "CodeRabbit review was already requested for $HEAD_SHA."
+            exit 0
+          fi
+
+          body="$marker"$'\n\n''@coderabbitai review'
+          gh api --method POST "/repos/$REPO/issues/$pr_number/comments" -f body="$body"
