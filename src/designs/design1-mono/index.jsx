@@ -44,6 +44,44 @@ function LazyFallback() {
   return <AppLoading compact />;
 }
 
+function NotFoundRoute() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
+      <div className="max-w-2xl mx-auto">
+        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
+          Page not found
+        </p>
+        <h1 className="text-2xl font-bold font-mono mb-3" style={{ color: '#111' }}>
+          This screen is not available
+        </h1>
+        <p className="text-sm mb-6" style={{ color: '#666' }}>
+          The link may be old, incomplete, or not part of the mobile app flow yet.
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="mono-btn-primary flex-1"
+            style={{ padding: '12px', fontSize: '0.875rem' }}
+            onClick={() => navigate('/play')}
+          >
+            Play
+          </button>
+          <button
+            type="button"
+            className="mono-btn flex-1"
+            style={{ padding: '12px', fontSize: '0.875rem' }}
+            onClick={() => navigate('/')}
+          >
+            Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
 const SCORING_EXIT_CONFIRMATION = 'Leave this page? Your unsaved scoring progress may be lost.';
@@ -358,8 +396,8 @@ export default function Design1Mono() {
                 <Route path="sso-callback" element={<CloudAuthOnly><SSOCallback /></CloudAuthOnly>} />
                 <Route path="onboarding" element={<CloudAuthOnly><MonoOnboarding /></CloudAuthOnly>} />
 
-                <Route path="profile" element={<CloudAuthOnly><MonoProfile /></CloudAuthOnly>} />
-                <Route path="profile/:username" element={<CloudAuthOnly><MonoProfile /></CloudAuthOnly>} />
+                <Route path="profile" element={<CloudAuthOnly><ErrorBoundary title="Profile unavailable" message="We could not load this profile. Try again or return home."><MonoProfile /></ErrorBoundary></CloudAuthOnly>} />
+                <Route path="profile/:username" element={<CloudAuthOnly><ErrorBoundary title="Profile unavailable" message="We could not load this profile. Try again or return home."><MonoProfile /></ErrorBoundary></CloudAuthOnly>} />
                 <Route path="users/search" element={<CloudAuthOnly><MonoUserSearch /></CloudAuthOnly>} />
 
                 <Route path="play" element={<MonoSportHome />} />
@@ -379,6 +417,7 @@ export default function Design1Mono() {
                 <Route path="showcase/dashboard-variants" element={<DashboardShowcase />} />
 
                 <Route path="history" element={<MonoHistory />} />
+                <Route path="*" element={<NotFoundRoute />} />
               </Routes>
             </OnboardingGuard>
           </ErrorBoundary>

@@ -27,6 +27,38 @@ beforeEach(() => {
   mocks.isNativeMobile.mockReturnValue(false);
 });
 
+function enableNativeApp() {
+  mocks.hasNativePlugin.mockReturnValue(true);
+  mocks.isNativeMobile.mockReturnValue(true);
+}
+
+async function setupNativeBackHandler({
+  confirmResult = false,
+  pathname = '/volleyball/quick',
+} = {}) {
+  enableNativeApp();
+
+  let backButtonHandler;
+  mocks.addListener.mockImplementation((eventName, handler) => {
+    backButtonHandler = handler;
+    return Promise.resolve({ remove: vi.fn() });
+  });
+
+  const confirmLeave = vi.fn(() => confirmResult);
+  const goBack = vi.fn();
+  const exitApp = vi.fn();
+
+  installNativeBackButtonGuard({
+    confirmLeave,
+    exitApp,
+    getPathname: () => pathname,
+    goBack,
+  });
+  await Promise.resolve();
+
+  return { backButtonHandler, confirmLeave, exitApp, goBack };
+}
+
 describe('isProtectedScoringRoute', () => {
   it('matches tournament scoring routes', () => {
     expect(isProtectedScoringRoute('/volleyball/tournament/123/match/abc/score')).toBe(true);
@@ -44,8 +76,7 @@ describe('isProtectedScoringRoute', () => {
 
 describe('installNativeBackButtonGuard', () => {
   it('removes the native listener when cleanup runs before listener registration resolves', async () => {
-    mocks.hasNativePlugin.mockReturnValue(true);
-    mocks.isNativeMobile.mockReturnValue(true);
+    enableNativeApp();
 
     const remove = vi.fn();
     let resolveAddListener;
@@ -64,27 +95,8 @@ describe('installNativeBackButtonGuard', () => {
     expect(remove).toHaveBeenCalledTimes(1);
   });
 
-  it('lets the browser popstate guard handle protected routes when native history can go back', async () => {
-    mocks.hasNativePlugin.mockReturnValue(true);
-    mocks.isNativeMobile.mockReturnValue(true);
-
-    let backButtonHandler;
-    mocks.addListener.mockImplementation((eventName, handler) => {
-      backButtonHandler = handler;
-      return Promise.resolve({ remove: vi.fn() });
-    });
-
-    const confirmLeave = vi.fn();
-    const goBack = vi.fn();
-    const exitApp = vi.fn();
-
-    installNativeBackButtonGuard({
-      confirmLeave,
-      exitApp,
-      getPathname: () => '/volleyball/quick',
-      goBack,
-    });
-    await Promise.resolve();
+  it('lets browser popstate guard protected routes during native history navigation', async () => {
+    const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler();
 
     backButtonHandler({ canGoBack: true });
 
@@ -93,9 +105,30 @@ describe('installNativeBackButtonGuard', () => {
     expect(exitApp).not.toHaveBeenCalled();
   });
 
+  it('navigates back from protected routes after confirmation', async () => {
+    const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler({
+      confirmResult: true,
+    });
+
+    backButtonHandler({ canGoBack: true });
+
+    expect(confirmLeave).not.toHaveBeenCalled();
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(exitApp).not.toHaveBeenCalled();
+  });
+
+  it('guards protected routes before exiting the native app', async () => {
+    const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler();
+
+    backButtonHandler({ canGoBack: false });
+
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(goBack).not.toHaveBeenCalled();
+    expect(exitApp).not.toHaveBeenCalled();
+  });
+
   it('handles native listener registration failures', async () => {
-    mocks.hasNativePlugin.mockReturnValue(true);
-    mocks.isNativeMobile.mockReturnValue(true);
+    enableNativeApp();
 
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const error = new Error('listener failed');

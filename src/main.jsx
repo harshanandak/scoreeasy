@@ -12,6 +12,7 @@ import {
   shouldUseCloudAuthRoot,
 } from './auth/bootstrap';
 import { setupNativeChrome } from './mobile/nativeChrome';
+import { shouldLoadReactGrab } from './utils/reactGrab';
 import './index.css';
 
 const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
@@ -149,8 +150,8 @@ function initSentryAfterStartup() {
   globalThis.addEventListener('load', () => setTimeout(init, 0), { once: true });
 }
 
-// Load React Grab in development mode
-if (import.meta.env.DEV) {
+// Load React Grab only when explicitly requested for local visual debugging.
+if (shouldLoadReactGrab(import.meta.env)) {
   const script = document.createElement('script');
   script.src = 'https://unpkg.com/react-grab/dist/index.global.js';
   script.crossOrigin = 'anonymous';
