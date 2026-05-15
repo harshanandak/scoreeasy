@@ -1,5 +1,33 @@
 // Universal data model factories for the score tracker
 
+let fallbackIdCounter = 0;
+let fallbackRandomCounter = 0;
+
+/**
+ * Returns the platform crypto API when it is available.
+ */
+function getCrypto() {
+  return globalThis.crypto ?? null;
+}
+
+/**
+ * Picks an index using secure randomness when available.
+ */
+function randomIndex(max) {
+  const cryptoApi = getCrypto();
+  if (cryptoApi?.getRandomValues) {
+    const value = new Uint32Array(1);
+    cryptoApi.getRandomValues(value);
+    return value[0] % max;
+  }
+
+  fallbackRandomCounter += 1;
+  return fallbackRandomCounter % max;
+}
+
+/**
+ * Creates a reusable scoring template definition.
+ */
 export function createGameTemplate({
   name,
   icon = '🎮',
@@ -24,17 +52,23 @@ export function createGameTemplate({
   };
 }
 
+/**
+ * Creates a participant record with a generated ID and default display fields.
+ */
 export function createParticipant({ name, members = [], color = null, avatar = null } = {}) {
   const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
   return {
     id: generateId(),
     name,
     members,
-    color: color || colors[Math.floor(Math.random() * colors.length)],
+    color: color || colors[randomIndex(colors.length)],
     avatar: avatar || name.charAt(0).toUpperCase(),
   };
 }
 
+/**
+ * Creates an active game session from a template and participant list.
+ */
 export function createGameSession({ templateId, templateName, templateIcon, name, participants = [] } = {}) {
   const scores = {};
   participants.forEach(p => {
@@ -61,6 +95,9 @@ export function createGameSession({ templateId, templateName, templateIcon, name
   };
 }
 
+/**
+ * Converts a completed session into a compact history record.
+ */
 export function createHistoryRecord(session) {
   const finalScores = {};
   session.participants.forEach(p => {
@@ -85,6 +122,19 @@ export function createHistoryRecord(session) {
   };
 }
 
+/**
+ * Generates a stable local identifier without using predictable Math.random values.
+ */
 export function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  const cryptoApi = getCrypto();
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+
+  if (cryptoApi?.getRandomValues) {
+    const values = new Uint32Array(2);
+    cryptoApi.getRandomValues(values);
+    return `${Date.now().toString(36)}-${values[0].toString(36)}${values[1].toString(36)}`;
+  }
+
+  fallbackIdCounter += 1;
+  return `${Date.now().toString(36)}-${fallbackIdCounter.toString(36)}`;
 }

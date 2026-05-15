@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   checks: read
-  pull-requests: read
+  pull-requests: write
   issues: write
 
 jobs:
@@ -22,19 +22,30 @@ jobs:
     concurrency:
       group: coderabbit-after-checks-${{ github.event.workflow_run.head_sha }}
       cancel-in-progress: false
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Trigger CodeRabbit after required checks pass
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          TRIGGER_EVENT: ${{ github.event.workflow_run.event }}
+          TRIGGER_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           REQUIRED_CHECKS: |
             verify
             Build Android APK and AAB
             Build iOS Simulator App
         run: |
           set -euo pipefail
+
+          if [ "$TRIGGER_EVENT" != "pull_request" ]; then
+            echo "Not a pull_request workflow_run event: $TRIGGER_EVENT."
+            exit 0
+          fi
+
+          if [ "$TRIGGER_CONCLUSION" != "success" ]; then
+            echo "Triggering workflow did not pass: $TRIGGER_CONCLUSION."
+            exit 0
+          fi
 
           prs_json="$(gh api -H "Accept: application/vnd.github+json" "/repos/$REPO/commits/$HEAD_SHA/pulls")"
           pr_number="$(jq -r '[.[] | select(.state == "open" and .base.ref == "master")] | first | .number // empty' <<<"$prs_json")"
