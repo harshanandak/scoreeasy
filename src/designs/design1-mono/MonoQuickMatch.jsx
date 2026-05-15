@@ -40,6 +40,12 @@ function SwapButton({ onSwap }) {
   );
 }
 
+function getWinnerName(score1, score2, team1Name, team2Name, tiedName = 'Tie') {
+  if (score1 > score2) return team1Name;
+  if (score2 > score1) return team2Name;
+  return tiedName;
+}
+
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -751,26 +757,38 @@ export default function MonoQuickMatch() {
             finalizeMatch(r);
   };
 
+  const getManualSetsResult = () => {
+    if (format.type === 'best-of') {
+      const bestOfResult = getBestOfResultScore(sets, { includeActiveWhenTied: true });
+      return {
+        score1: bestOfResult.score1,
+        score2: bestOfResult.score2,
+        winner: getWinnerName(bestOfResult.score1, bestOfResult.score2, team1Name, team2Name),
+        extra: { sets, setsWon1: bestOfResult.setsWon1, setsWon2: bestOfResult.setsWon2 },
+      };
+    }
+
+    return {
+      score1: vScore1,
+      score2: vScore2,
+      winner: getWinnerName(vScore1, vScore2, team1Name, team2Name),
+      extra: {},
+    };
+  };
+
   const endMatchManually = () => {
     if (isCricket) {
       finishCricketMatch(scores);
     } else if (isGoals) {
       endMatchGoals();
     } else {
-      const bestOfResult = format.type === 'best-of'
-        ? getBestOfResultScore(sets, { includeActiveWhenTied: true })
-        : null;
-      const finalScore1 = bestOfResult ? bestOfResult.score1 : vScore1;
-      const finalScore2 = bestOfResult ? bestOfResult.score2 : vScore2;
-      const winner = finalScore1 > finalScore2 ? team1Name
-        : finalScore2 > finalScore1 ? team2Name
-        : 'Tie';
+      const manualResult = getManualSetsResult();
       const r = {
         id: Date.now(), sport,
         team1: team1Name, team2: team2Name,
-        score1: finalScore1, score2: finalScore2,
-        ...(bestOfResult ? { sets, setsWon1: bestOfResult.setsWon1, setsWon2: bestOfResult.setsWon2 } : {}),
-        winner, format, date: new Date().toISOString(),
+        score1: manualResult.score1, score2: manualResult.score2,
+        ...manualResult.extra,
+        winner: manualResult.winner, format, date: new Date().toISOString(),
         ...makeTimerFields(),
       };
             finalizeMatch(r);
