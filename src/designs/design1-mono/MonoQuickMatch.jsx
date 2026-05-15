@@ -312,6 +312,7 @@ export default function MonoQuickMatch() {
   const [trialBallUsed, setTrialBallUsed] = useState(false);
   const draftHydratedSportRef = useRef(null);
   const restoredDraftRef = useRef(false);
+  const skipDraftSaveRef = useRef(false);
   const quickMatchDraftKey = `se_quickmatch_draft_${sport}`;
 
   // Result state
@@ -337,11 +338,20 @@ export default function MonoQuickMatch() {
 
   useEffect(() => {
     if (draftHydratedSportRef.current === sport) return;
+    const previousSport = draftHydratedSportRef.current;
     draftHydratedSportRef.current = sport;
     restoredDraftRef.current = false;
+    skipDraftSaveRef.current = true;
 
     const draft = loadData(quickMatchDraftKey, null);
-    if (!draft || draft.sport !== sport || draft.phase !== 'scoring') return;
+    if (!draft || draft.sport !== sport || draft.phase !== 'scoring') {
+      if (previousSport && phase === 'scoring') {
+        setPhase('setup');
+        timer.pause();
+        setSaveWarning('');
+      }
+      return;
+    }
 
     restoredDraftRef.current = true;
     setTeam1Name(draft.team1Name || '');
@@ -371,6 +381,10 @@ export default function MonoQuickMatch() {
 
   useEffect(() => {
     if (phase !== 'scoring') return;
+    if (skipDraftSaveRef.current) {
+      skipDraftSaveRef.current = false;
+      return;
+    }
 
     saveData(quickMatchDraftKey, {
       phase,
@@ -887,8 +901,16 @@ export default function MonoQuickMatch() {
 
   const adjustSetScore = (team, delta) => {
     const teamName = getTeamLabel(team);
+    const activeSetScore = sets[currentSet] || { score1: 0, score2: 0, completed: false };
+    const correctsPreviousSet = format.type === 'best-of'
+      && delta < 0
+      && currentSet > 0
+      && activeSetScore.score1 === 0
+      && activeSetScore.score2 === 0
+      && sets[currentSet - 1]?.completed;
+    const correctionSet = correctsPreviousSet ? sets[currentSet - 1] : activeSetScore;
     const activeScore = format.type === 'best-of'
-      ? (team === 1 ? sets[currentSet]?.score1 || 0 : sets[currentSet]?.score2 || 0)
+      ? (team === 1 ? correctionSet?.score1 || 0 : correctionSet?.score2 || 0)
       : (team === 1 ? vScore1 : vScore2);
     if (delta < 0 && activeScore === 0) {
       setLastAction(`${teamName} already at 0`);
@@ -953,6 +975,25 @@ export default function MonoQuickMatch() {
     }
   };
 
+  const getGoalWinner = (score1, score2) => {
+    const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
+    if (score1 > score2) return team1Name;
+    if (score2 > score1) return team2Name;
+    return drawAllowed ? 'Draw' : 'Tie';
+  };
+
+  const finalizeGoalScore = (score1, score2) => {
+    finalizeMatch({
+      id: Date.now(), sport,
+      team1: team1Name, team2: team2Name,
+      score1, score2,
+      winner: getGoalWinner(score1, score2),
+      format,
+      date: new Date().toISOString(),
+      ...makeTimerFields(),
+    });
+  };
+
   // Goals: Add score for a team
   const addGoal = (team, value = 1) => {
     const now = Date.now();
@@ -970,20 +1011,7 @@ export default function MonoQuickMatch() {
     // Auto-end in points mode
     if (isPointsMode && format.target) {
       if (newS1 >= format.target || newS2 >= format.target) {
-        const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
-        let winner;
-        if (newS1 > newS2) winner = team1Name;
-        else if (newS2 > newS1) winner = team2Name;
-        else winner = drawAllowed ? 'Draw' : 'Tie';
-        const r = {
-          id: Date.now(), sport,
-          team1: team1Name, team2: team2Name,
-          score1: newS1, score2: newS2,
-          winner, format,
-          date: new Date().toISOString(),
-          ...makeTimerFields(),
-        };
-            finalizeMatch(r);
+        finalizeGoalScore(newS1, newS2);
       }
     }
   };
@@ -1013,20 +1041,7 @@ export default function MonoQuickMatch() {
     setLastAction(`${teamName} ${delta > 0 ? '+1' : '-1'} correction`);
 
     if (delta > 0 && isPointsMode && format.target && (newS1 >= format.target || newS2 >= format.target)) {
-      const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
-      let winner;
-      if (newS1 > newS2) winner = team1Name;
-      else if (newS2 > newS1) winner = team2Name;
-      else winner = drawAllowed ? 'Draw' : 'Tie';
-      const r = {
-        id: Date.now(), sport,
-        team1: team1Name, team2: team2Name,
-        score1: newS1, score2: newS2,
-        winner, format,
-        date: new Date().toISOString(),
-        ...makeTimerFields(),
-      };
-      finalizeMatch(r);
+      finalizeGoalScore(newS1, newS2);
     }
   };
 
@@ -1036,19 +1051,7 @@ export default function MonoQuickMatch() {
       setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
       return;
     }
-    let winner;
-    if (gScore1 > gScore2) winner = team1Name;
-    else if (gScore2 > gScore1) winner = team2Name;
-    else winner = drawAllowed ? 'Draw' : 'Tie';
-    const r = {
-      id: Date.now(), sport,
-      team1: team1Name, team2: team2Name,
-      score1: gScore1, score2: gScore2,
-      winner, format,
-      date: new Date().toISOString(),
-      ...makeTimerFields(),
-    };
-            finalizeMatch(r);
+    finalizeGoalScore(gScore1, gScore2);
   };
 
   const getManualSetsResult = () => {
