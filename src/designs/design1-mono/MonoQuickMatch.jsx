@@ -312,7 +312,7 @@ export default function MonoQuickMatch() {
   const [trialBallUsed, setTrialBallUsed] = useState(false);
   const draftHydratedSportRef = useRef(null);
   const restoredDraftRef = useRef(false);
-  const skipDraftSaveRef = useRef(false);
+  const scoringSportRef = useRef(null);
   const quickMatchDraftKey = `se_quickmatch_draft_${sport}`;
 
   // Result state
@@ -341,7 +341,7 @@ export default function MonoQuickMatch() {
     const previousSport = draftHydratedSportRef.current;
     draftHydratedSportRef.current = sport;
     restoredDraftRef.current = false;
-    skipDraftSaveRef.current = true;
+    scoringSportRef.current = null;
 
     const draft = loadData(quickMatchDraftKey, null);
     if (!draft || draft.sport !== sport || draft.phase !== 'scoring') {
@@ -354,6 +354,7 @@ export default function MonoQuickMatch() {
     }
 
     restoredDraftRef.current = true;
+    scoringSportRef.current = sport;
     setTeam1Name(draft.team1Name || '');
     setTeam2Name(draft.team2Name || '');
     if (draft.format) setFormat(draft.format);
@@ -381,10 +382,7 @@ export default function MonoQuickMatch() {
 
   useEffect(() => {
     if (phase !== 'scoring') return;
-    if (skipDraftSaveRef.current) {
-      skipDraftSaveRef.current = false;
-      return;
-    }
+    if (scoringSportRef.current !== sport) return;
 
     saveData(quickMatchDraftKey, {
       phase,
@@ -613,6 +611,7 @@ export default function MonoQuickMatch() {
     setShowEndConfirm(false);
     timer.reset();
     startedAtRef.current = null;
+    scoringSportRef.current = sport;
 
     // Test format (4 innings) → save to quick match storage and navigate to test scorer
     if (isCricket && format.totalInnings === 4) {
