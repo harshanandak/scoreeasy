@@ -46,6 +46,14 @@ function getWinnerName(score1, score2, team1Name, team2Name, tiedName = 'Tie') {
   return tiedName;
 }
 
+function getRestoredTimerElapsed(draft) {
+  const savedElapsed = Math.max(0, Number(draft?.timerElapsed) || 0);
+  const savedAt = Date.parse(draft?.updatedAt || '');
+  if (!Number.isFinite(savedAt)) return savedElapsed;
+
+  return savedElapsed + Math.max(0, Math.floor((Date.now() - savedAt) / 1000));
+}
+
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -225,7 +233,7 @@ export default function MonoQuickMatch() {
     if (typeof draft.battingTeam === 'number') setBattingTeam(draft.battingTeam);
     if (typeof draft.freeHit === 'boolean') setFreeHit(draft.freeHit);
     if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
-    if (typeof draft.timerElapsed === 'number') timer.restore(draft.timerElapsed, false);
+    timer.restore(getRestoredTimerElapsed(draft), false);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
