@@ -938,6 +938,7 @@ export default function MonoQuickMatch() {
       currentSet,
       servingTeam,
     }].slice(-100));
+    if (delta > 0 && tracksPointWinnerServe) setServingTeam(team);
 
     if (format.type === 'best-of') {
       const nextSets = cloneSetsSnapshot(sets);
