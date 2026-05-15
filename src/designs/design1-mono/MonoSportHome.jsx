@@ -586,6 +586,7 @@ export default function MonoSportHome() {
           <div className="flex items-center gap-3">
             <button
               onClick={switchLayout}
+              aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
               style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', background: '#fff', color: '#888', cursor: 'pointer' }}
               title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
             >
@@ -605,6 +606,7 @@ export default function MonoSportHome() {
           <input
             type="text"
             className="mono-input"
+            aria-label="Search sports"
             placeholder="Search sports..."
             value={searchQuery}
             onChange={event => {
