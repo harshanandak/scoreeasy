@@ -219,10 +219,21 @@ function getRuleSummary({ engine, format, formatMode, isCricket, isGoals, sportC
   return formatMode === 'standard' ? 'Standard rules' : 'Custom rules';
 }
 
+function getResultOutcome(winner) {
+  if (winner === 'Tie') return 'Match Tied';
+  if (winner === 'Draw') return 'Match Drawn';
+  return `${winner} won`;
+}
+
+function getShareStatusText(response) {
+  if (!response.shared) return 'Share is not available on this device.';
+  if (response.method === 'clipboard') return 'Result copied.';
+  return 'Share sheet opened.';
+}
+
 function buildResultShareText(result, isCricket) {
   if (!result) return '';
-  const winner = result.winner;
-  const outcome = winner === 'Tie' ? 'Match Tied' : winner === 'Draw' ? 'Match Drawn' : `${winner} won`;
+  const outcome = getResultOutcome(result.winner);
 
   if (isCricket && result.team1Score) {
     const team1Score = `${result.team1Score.runs}/${result.team1Score.wickets} (${ballsToOvers(result.team1Score.balls)} ov)`;
@@ -1206,9 +1217,7 @@ export default function MonoQuickMatch() {
       text: buildResultShareText(result, isCricket),
       dialogTitle: 'Share match result',
     });
-    setShareStatus(response.shared
-      ? (response.method === 'clipboard' ? 'Result copied.' : 'Share sheet opened.')
-      : 'Share is not available on this device.');
+    setShareStatus(getShareStatusText(response));
   };
 
   // === SETUP PHASE ===

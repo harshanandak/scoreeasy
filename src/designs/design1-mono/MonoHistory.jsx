@@ -50,6 +50,12 @@ function buildEntryShareText(entry) {
   return `${title} - ${entry.score} - ${winnerLabel(entry.winner)}`;
 }
 
+function getShareStatusText(response) {
+  if (!response.shared) return 'Share is not available on this device.';
+  if (response.method === 'clipboard') return 'Result copied.';
+  return 'Share sheet opened.';
+}
+
 function resolveTeamName(teams, ref, fallback = 'Unknown') {
   if (ref === null || ref === undefined) return fallback;
   const byId = teams.find((t) => t.id === ref)?.name;
@@ -265,9 +271,7 @@ export default function MonoHistory() {
       text: buildEntryShareText(entry),
       dialogTitle: 'Share match result',
     });
-    setHistoryStatus(response.shared
-      ? (response.method === 'clipboard' ? 'Result copied.' : 'Share sheet opened.')
-      : 'Share is not available on this device.');
+    setHistoryStatus(getShareStatusText(response));
   };
 
   const rematchEntry = (entry) => {
