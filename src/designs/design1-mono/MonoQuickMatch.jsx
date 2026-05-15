@@ -15,7 +15,6 @@ import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
-import { formatTennisPointScore } from '../../utils/tennisScoring';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -2257,12 +2256,8 @@ export default function MonoQuickMatch() {
     const rawRightSetScore = format.type === 'best-of'
       ? (sidesSwapped ? sets[currentSet]?.score1 || 0 : sets[currentSet]?.score2 || 0)
       : (sidesSwapped ? vScore1 : vScore2);
-    const leftSetScore = sport === 'tennis'
-      ? formatTennisPointScore(rawLeftSetScore, rawRightSetScore)
-      : rawLeftSetScore;
-    const rightSetScore = sport === 'tennis'
-      ? formatTennisPointScore(rawRightSetScore, rawLeftSetScore)
-      : rawRightSetScore;
+    const leftSetScore = rawLeftSetScore;
+    const rightSetScore = rawRightSetScore;
 
     return (
       <div className="min-h-screen px-6 py-10">

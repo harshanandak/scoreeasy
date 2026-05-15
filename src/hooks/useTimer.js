@@ -27,7 +27,9 @@ export function useTimer() {
   }, []);
 
   const restore = useCallback((seconds = 0, running = false) => {
-    setElapsed(Math.max(0, Number(seconds) || 0));
+    const parsed = Number(seconds);
+    const normalized = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    setElapsed(normalized);
     setIsRunning(Boolean(running));
   }, []);
 
