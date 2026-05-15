@@ -117,13 +117,26 @@ function GlobalNavigation() {
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
+  const pathname = location.pathname;
+  const showBottomNav = !isProtectedScoringPath(pathname);
 
   useEffect(() => {
     setOpen(false);
-  }, [location.pathname]);
+  }, [pathname]);
+
+  useEffect(() => {
+    const body = globalThis.document?.body;
+    if (!body) return undefined;
+
+    body.classList.toggle('has-mobile-bottom-nav', showBottomNav);
+
+    return () => {
+      body.classList.remove('has-mobile-bottom-nav');
+    };
+  }, [showBottomNav]);
 
   const go = (path) => {
-    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+    if (path !== pathname && isProtectedScoringPath(pathname)) {
       const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
       if (!leave) return;
     }
@@ -139,49 +152,133 @@ function GlobalNavigation() {
     { label: 'Statistics', path: '/statistics' },
   ];
 
-  if (cloudAuthAvailable && !isAuthenticated) {
-    navItems.push({ label: 'Sign in', path: '/login' });
+  if (cloudAuthAvailable) {
+    navItems.push({
+      label: isAuthenticated ? 'Profile' : 'Sign in',
+      path: isAuthenticated ? '/profile' : '/login',
+    });
   }
 
+  const bottomNavItems = [
+    { label: 'Play', path: '/play' },
+    { label: 'History', path: '/history' },
+    { label: 'Stats', path: '/statistics' },
+    cloudAuthAvailable
+      ? { label: isAuthenticated ? 'Profile' : 'Sign in', path: isAuthenticated ? '/profile' : '/login' }
+      : null,
+  ].filter(Boolean);
+
+  const isActive = (item) => {
+    if (item.path === '/') return pathname === '/';
+    if (item.path === '/play') {
+      return pathname === '/play' ||
+        /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
+    }
+    if (item.path === '/login') {
+      return pathname.startsWith('/login') ||
+        pathname.startsWith('/signup') ||
+        pathname.startsWith('/onboarding');
+    }
+    if (item.path === '/profile') {
+      return pathname.startsWith('/profile') ||
+        pathname.startsWith('/users/search') ||
+        pathname.startsWith('/onboarding');
+    }
+    return pathname === item.path || pathname.startsWith(`${item.path}/`);
+  };
+
+  const currentItem = navItems.find(isActive);
+
   return (
-    <header className="global-nav">
-      <button type="button" className="global-nav-brand" onClick={() => go('/')}>
-        SCORE<br />EASY
-      </button>
+    <>
+      <header className="global-nav">
+        <button type="button" className="global-nav-brand" onClick={() => go('/')}>
+          SCORE<br />EASY
+        </button>
 
-      <nav className="global-nav-links" aria-label="Primary navigation">
-        {navItems.map((item) => (
-          <button
-            key={item.path}
-            type="button"
-            onClick={() => go(item.path)}
-            className="global-nav-link"
-            aria-current={location.pathname === item.path ? 'page' : undefined}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
-
-      <button
-        type="button"
-        className="global-mobile-menu-button"
-        aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-      {open && (
-        <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
+        <nav className="global-nav-links" aria-label="Primary navigation">
           {navItems.map((item) => (
             <button
               key={item.path}
               type="button"
               onClick={() => go(item.path)}
-              className="global-mobile-menu-item"
+              className="global-nav-link"
+              aria-current={isActive(item) ? 'page' : undefined}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <button
+          type="button"
+          className="global-mobile-menu-button"
+          aria-label="Navigation menu"
+          aria-expanded={open}
+          aria-controls="global-mobile-menu"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
+      {open && (
+        <>
+          <button
+            type="button"
+            className="global-mobile-menu-backdrop"
+            aria-label="Dismiss navigation menu"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            id="global-mobile-menu"
+            className="global-mobile-menu-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <div className="global-mobile-menu-heading">
+              <span>Menu</span>
+              <span>{currentItem?.label ?? 'Home'}</span>
+              <button
+                type="button"
+                className="global-mobile-menu-close"
+                aria-label="Close navigation menu"
+                onClick={() => setOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
+              {navItems.map((item) => (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() => go(item.path)}
+                  className="global-mobile-menu-item"
+                  aria-current={isActive(item) ? 'page' : undefined}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </>
+      )}
+      {showBottomNav && bottomNavItems.length > 0 && (
+        <nav
+          className="global-bottom-nav"
+          aria-label="App navigation"
+          style={{ '--bottom-nav-count': bottomNavItems.length }}
+        >
+          {bottomNavItems.map((item) => (
+            <button
+              key={item.path}
+              type="button"
+              onClick={() => go(item.path)}
+              className="global-bottom-nav-item"
+              aria-current={isActive(item) ? 'page' : undefined}
             >
               {item.label}
             </button>
@@ -241,14 +338,20 @@ function GlobalNavigation() {
         }
 
         .global-mobile-menu-button,
-        .global-mobile-menu-panel {
+        .global-mobile-menu-backdrop,
+        .global-mobile-menu-sheet,
+        .global-bottom-nav {
           display: none;
         }
 
         @media (max-width: 767px) {
+          body.has-mobile-bottom-nav {
+            padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+          }
+
           .global-nav {
             min-height: 56px;
-            padding: 0 16px;
+            padding: env(safe-area-inset-top, 0px) 16px 0;
           }
 
           .global-nav-links {
@@ -276,17 +379,58 @@ function GlobalNavigation() {
             background: #111;
           }
 
-          .global-mobile-menu-panel {
-            position: absolute;
-            top: 56px;
-            right: 16px;
-            z-index: 201;
-            display: flex;
-            min-width: 180px;
-            flex-direction: column;
+          .global-mobile-menu-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 240;
+            display: block;
+            border: 0;
+            background: rgba(17, 17, 17, 0.38);
+          }
+
+          .global-mobile-menu-sheet {
+            position: fixed;
+            right: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+            left: 12px;
+            z-index: 241;
+            display: block;
             border: 1.5px solid #111;
             background: #fff;
             box-shadow: 4px 4px 0 #111;
+          }
+
+          .global-mobile-menu-heading {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            min-height: 48px;
+            align-items: center;
+            border-bottom: 1.5px solid #111;
+            color: #555;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            padding: 0 16px;
+            text-transform: uppercase;
+          }
+
+          .global-mobile-menu-close {
+            min-height: 36px;
+            border: 1.5px solid #111;
+            background: #fafafa;
+            color: #111;
+            cursor: pointer;
+            font: inherit;
+            padding: 0 10px;
+            text-transform: uppercase;
+          }
+
+          .global-mobile-menu-panel {
+            display: flex;
+            flex-direction: column;
+            background: #fff;
           }
 
           .global-mobile-menu-item {
@@ -298,16 +442,57 @@ function GlobalNavigation() {
             font-family: inherit;
             font-size: 0.875rem;
             font-weight: 700;
+            min-height: 48px;
             padding: 14px 16px;
             text-align: left;
+          }
+
+          .global-mobile-menu-item[aria-current="page"] {
+            background: #f0f6ff;
+            color: #0066ff;
           }
 
           .global-mobile-menu-item:last-child {
             border-bottom: 0;
           }
+
+          .global-bottom-nav {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 210;
+            display: grid;
+            grid-template-columns: repeat(var(--bottom-nav-count), minmax(0, 1fr));
+            gap: 0;
+            border-top: 1.5px solid #111;
+            background: #fafafa;
+            padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -3px 0 rgba(17, 17, 17, 0.08);
+          }
+
+          .global-bottom-nav-item {
+            min-height: 52px;
+            border: 1.5px solid transparent;
+            background: transparent;
+            color: #555;
+            cursor: pointer;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            font-size: 0.6875rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+
+          .global-bottom-nav-item[aria-current="page"] {
+            border-color: #111;
+            background: #fff;
+            color: #111;
+            box-shadow: 2px 2px 0 #111;
+          }
         }
       `}</style>
-    </header>
+    </>
   );
 }
 
