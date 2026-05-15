@@ -1,3 +1,10 @@
+import PropTypes from 'prop-types';
+
+const iconPropTypes = {
+  size: PropTypes.number,
+  color: PropTypes.string,
+};
+
 function VolleyballIcon({ size = 32, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -120,6 +127,11 @@ function KabaddiIcon({ size = 32, color = 'currentColor' }) {
     </svg>
   );
 }
+
+PickleballIcon.propTypes = iconPropTypes;
+SquashIcon.propTypes = iconPropTypes;
+FutsalIcon.propTypes = iconPropTypes;
+KabaddiIcon.propTypes = iconPropTypes;
 
 function BadmintonIcon({ size = 32, color = 'currentColor' }) {
   return (
