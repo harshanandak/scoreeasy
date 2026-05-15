@@ -40,6 +40,128 @@ function SwapButton({ onSwap }) {
   );
 }
 
+function EndMatchDialog({ onCancel, onConfirm }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ backgroundColor: 'rgba(17, 17, 17, 0.42)', padding: '16px' }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="end-match-title"
+    >
+      <div className="mono-card w-full max-w-sm" style={{ padding: '18px' }}>
+        <h2 id="end-match-title" className="text-lg font-bold mb-2">End match?</h2>
+        <p className="text-sm mb-5" style={{ color: '#555' }}>
+          This will finish the current match and save the result.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="mono-btn flex-1"
+            style={{ minHeight: '46px' }}
+          >
+            Keep scoring
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="mono-btn-primary flex-1"
+            style={{ minHeight: '46px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+          >
+            End match
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoringStatusStrip({ label, value, lastAction }) {
+  if (!label && !lastAction) return null;
+
+  return (
+    <div
+      className="mono-card mb-4 flex items-center justify-between gap-3"
+      style={{ padding: '10px 12px', backgroundColor: '#f8fafc' }}
+      aria-live="polite"
+    >
+      {label ? (
+        <div>
+          <p className="text-[10px] uppercase tracking-widest" style={{ color: '#888' }}>{label}</p>
+          <p className="text-sm font-medium" style={{ color: '#111' }}>{value}</p>
+        </div>
+      ) : <span />}
+      {lastAction && (
+        <p className="text-xs text-right" style={{ color: '#555' }}>
+          Last: {lastAction}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CorrectionControls({ teamName, onMinus, onPlus }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 mt-2">
+      <button
+        type="button"
+        onClick={onMinus}
+        className="mono-btn"
+        style={{ minHeight: '44px', padding: '8px 10px' }}
+        aria-label={`Subtract one from ${teamName}`}
+      >
+        -1
+      </button>
+      <button
+        type="button"
+        onClick={onPlus}
+        className="mono-btn"
+        style={{ minHeight: '44px', padding: '8px 10px' }}
+        aria-label={`Add one to ${teamName}`}
+      >
+        +1
+      </button>
+    </div>
+  );
+}
+
+function ThumbActionBar({ canUndo, onUndo, onSwap, onEnd }) {
+  return (
+    <div className="grid grid-cols-3 gap-2 mt-4">
+      <button
+        type="button"
+        onClick={onUndo}
+        disabled={!canUndo}
+        className="mono-btn"
+        style={{ minHeight: '46px', padding: '10px', opacity: canUndo ? 1 : 0.42 }}
+      >
+        Undo
+      </button>
+      {onSwap ? (
+        <button
+          type="button"
+          onClick={onSwap}
+          className="mono-btn"
+          style={{ minHeight: '46px', padding: '10px' }}
+        >
+          Swap
+        </button>
+      ) : (
+        <span />
+      )}
+      <button
+        type="button"
+        onClick={onEnd}
+        className="mono-btn"
+        style={{ minHeight: '46px', padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+      >
+        End
+      </button>
+    </div>
+  );
+}
+
 function getWinnerName(score1, score2, team1Name, team2Name, tiedName = 'Tie') {
   if (score1 > score2) return team1Name;
   if (score2 > score1) return team2Name;
@@ -73,6 +195,9 @@ export default function MonoQuickMatch() {
   const [setupStep, setSetupStep] = useState(1); // 1: Format, 2: Rules (cricket only), 3: Teams
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [servingTeam, setServingTeam] = useState(1);
+  const [lastAction, setLastAction] = useState('');
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
@@ -229,10 +354,15 @@ export default function MonoQuickMatch() {
     if (typeof draft.vScore2 === 'number') setVScore2(draft.vScore2);
     if (typeof draft.gScore1 === 'number') setGScore1(draft.gScore1);
     if (typeof draft.gScore2 === 'number') setGScore2(draft.gScore2);
+    if (Array.isArray(draft.vScoreHistory)) setVScoreHistory(draft.vScoreHistory);
+    if (Array.isArray(draft.gScoreHistory)) setGScoreHistory(draft.gScoreHistory);
+    if (Array.isArray(draft.cricketHistory)) setCricketHistory(draft.cricketHistory);
     if (typeof draft.innings === 'number') setInnings(draft.innings);
     if (typeof draft.battingTeam === 'number') setBattingTeam(draft.battingTeam);
     if (typeof draft.freeHit === 'boolean') setFreeHit(draft.freeHit);
     if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
+    if (typeof draft.servingTeam === 'number') setServingTeam(draft.servingTeam);
+    if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
     timer.restore(getRestoredTimerElapsed(draft), false);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
@@ -255,15 +385,20 @@ export default function MonoQuickMatch() {
       vScore2,
       gScore1,
       gScore2,
+      vScoreHistory,
+      gScoreHistory,
+      cricketHistory,
       innings,
       battingTeam,
       freeHit,
       trialBallUsed,
+      servingTeam,
+      lastAction,
       timerElapsed: timer.elapsed,
       startedAt: startedAtRef.current,
       updatedAt: new Date().toISOString(),
     });
-  }, [battingTeam, currentSet, format, freeHit, gScore1, gScore2, innings, phase, quickMatchDraftKey, scores, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2]);
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
@@ -282,6 +417,7 @@ export default function MonoQuickMatch() {
   const timeLimit = isTimedMode ? format.timeLimit : null;
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
+  const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -386,11 +522,26 @@ export default function MonoQuickMatch() {
       sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
     };
 
+    setShowEndConfirm(false);
     setResult(nextResult);
     const saved = persistQuickMatch(nextResult);
     if (saved) clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
+  };
+
+  const getTeamLabel = (team) => (team === 1 ? team1Name : team2Name);
+
+  const requestEndMatch = () => setShowEndConfirm(true);
+
+  const confirmEndMatch = () => {
+    setShowEndConfirm(false);
+    endMatchManually();
+  };
+
+  const handleSideSwap = () => {
+    setSidesSwapped(prev => !prev);
+    setLastAction('Sides swapped');
   };
 
   const retryResultSync = () => {
@@ -443,6 +594,9 @@ export default function MonoQuickMatch() {
     setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
     setInnings(1);
     setBattingTeam(1);
+    setServingTeam(1);
+    setLastAction('');
+    setShowEndConfirm(false);
     timer.reset();
     startedAtRef.current = null;
 
@@ -480,7 +634,9 @@ export default function MonoQuickMatch() {
     if (freeHit) setFreeHit(false);
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
-    setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit }]);
+    const battingName = battingTeam === 1 ? team1Name : team2Name;
+    setLastAction(`${battingName} +${runs} run${runs === 1 ? '' : 's'}`);
+    setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit, innings, battingTeam }]);
 
     setScores(prev => {
       const team = { ...prev[key] };
@@ -492,7 +648,6 @@ export default function MonoQuickMatch() {
         if (innings === 1) {
           setInnings(2);
           setBattingTeam(battingTeam === 1 ? 2 : 1);
-          setCricketHistory([]);
         } else {
           finishCricketMatch({ ...prev, [key]: team });
         }
@@ -518,7 +673,9 @@ export default function MonoQuickMatch() {
     if (freeHit) setFreeHit(false);
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
-    setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit }]);
+    const battingName = battingTeam === 1 ? team1Name : team2Name;
+    setLastAction(`${battingName} wicket`);
+    setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit, innings, battingTeam }]);
 
     setScores(prev => {
       const team = { ...prev[key] };
@@ -531,7 +688,6 @@ export default function MonoQuickMatch() {
         if (innings === 1) {
           setInnings(2);
           setBattingTeam(battingTeam === 1 ? 2 : 1);
-          setCricketHistory([]);
         } else {
           finishCricketMatch({ ...prev, [key]: team });
         }
@@ -547,7 +703,9 @@ export default function MonoQuickMatch() {
     lastClickRef.current = now;
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
-    setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit }]);
+    const battingName = battingTeam === 1 ? team1Name : team2Name;
+    setLastAction(`${battingName} ${type === 'noBall' ? 'no ball' : 'wide'} +1`);
+    setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
     setScores(prev => ({
       ...prev,
       [key]: { ...prev[key], runs: prev[key].runs + 1 },
@@ -563,6 +721,9 @@ export default function MonoQuickMatch() {
     if (cricketHistory.length === 0) return;
     const last = cricketHistory[cricketHistory.length - 1];
     setCricketHistory(prev => prev.slice(0, -1));
+    setLastAction('Undid last cricket action');
+    if (typeof last.innings === 'number') setInnings(last.innings);
+    if (typeof last.battingTeam === 'number') setBattingTeam(last.battingTeam);
 
     // Restore free hit state from history entry
     setFreeHit(last.freeHit || false);
@@ -575,6 +736,7 @@ export default function MonoQuickMatch() {
       } else if (last.type === 'wicket') {
         team.wickets = Math.max(0, team.wickets - 1);
         team.balls = Math.max(0, team.balls - 1);
+        team.allOut = false;
       } else if (last.type === 'extra') {
         team.runs = Math.max(0, team.runs - 1);
       }
@@ -604,12 +766,59 @@ export default function MonoQuickMatch() {
             finalizeMatch(r);
   };
 
+  const completeSetIfNeeded = (candidateSets, setIndex) => {
+    if (!(format.type === 'best-of' && sportConfig?.config)) return candidateSets;
+    if (!candidateSets[setIndex]) return candidateSets;
+
+    const s1 = candidateSets[setIndex].score1;
+    const s2 = candidateSets[setIndex].score2;
+    const completionRule = getSetWinRule({ format, sportConfig, currentSet: setIndex });
+
+    if (!isSetComplete({ score1: s1, score2: s2 }, completionRule)) {
+      candidateSets[setIndex].completed = false;
+      return candidateSets;
+    }
+
+    candidateSets[setIndex].completed = true;
+    const resultScore = getBestOfResultScore(candidateSets);
+    const t1SetsWon = resultScore.setsWon1;
+    const t2SetsWon = resultScore.setsWon2;
+    const setsToWin = Math.ceil(format.sets / 2);
+
+    if (t1SetsWon >= setsToWin || t2SetsWon >= setsToWin) {
+      const winner = t1SetsWon > t2SetsWon ? team1Name : team2Name;
+      const r = {
+        id: Date.now(), sport,
+        team1: team1Name, team2: team2Name,
+        sets: candidateSets,
+        score1: resultScore.score1,
+        score2: resultScore.score2,
+        setsWon1: t1SetsWon,
+        setsWon2: t2SetsWon,
+        winner, format,
+        date: new Date().toISOString(),
+        ...makeTimerFields(),
+      };
+      finalizeMatch(r);
+      return candidateSets;
+    }
+
+    if (setIndex === currentSet && !candidateSets[setIndex + 1]) {
+      candidateSets.push({ score1: 0, score2: 0, completed: false });
+      setCurrentSet(setIndex + 1);
+    }
+
+    return candidateSets;
+  };
+
   // Volleyball: Add point
   const addPoint = (team) => {
     // Debounce rapid clicks
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    setServingTeam(team);
+    setLastAction(`${getTeamLabel(team)} +1 ${scoringUnit}`);
 
     setVScoreHistory(prev => [...prev, {
       team,
@@ -617,51 +826,14 @@ export default function MonoQuickMatch() {
       vScore2,
       sets: cloneSetsSnapshot(sets),
       currentSet,
+      servingTeam,
     }].slice(-100));
 
     // Best-of format (multi-set)
     if (format.type === 'best-of' && sportConfig?.config) {
       setSets(prevSets => {
         const newSets = applySetPoint(prevSets, currentSet, team);
-
-        // Check if current set is complete
-        const s1 = newSets[currentSet].score1;
-        const s2 = newSets[currentSet].score2;
-        const completionRule = getSetWinRule({ format, sportConfig, currentSet });
-
-        if (isSetComplete({ score1: s1, score2: s2 }, completionRule)) {
-          newSets[currentSet].completed = true;
-
-          // Count sets won
-          const resultScore = getBestOfResultScore(newSets);
-          const t1SetsWon = resultScore.setsWon1;
-          const t2SetsWon = resultScore.setsWon2;
-          const setsToWin = Math.ceil(format.sets / 2);
-
-          // Check if match complete
-          if (t1SetsWon >= setsToWin || t2SetsWon >= setsToWin) {
-            const winner = t1SetsWon > t2SetsWon ? team1Name : team2Name;
-            const r = {
-              id: Date.now(), sport,
-              team1: team1Name, team2: team2Name,
-              sets: newSets,
-              score1: resultScore.score1,
-              score2: resultScore.score2,
-              setsWon1: t1SetsWon,
-              setsWon2: t2SetsWon,
-              winner, format,
-              date: new Date().toISOString(),
-              ...makeTimerFields(),
-            };
-            finalizeMatch(r);
-          } else {
-            // Start next set
-            newSets.push({ score1: 0, score2: 0, completed: false });
-            setCurrentSet(prev => prev + 1);
-          }
-        }
-
-        return newSets;
+        return completeSetIfNeeded(newSets, currentSet);
       });
     } else {
       // Single set format
@@ -695,11 +867,13 @@ export default function MonoQuickMatch() {
     if (vScoreHistory.length === 0) return;
     const last = vScoreHistory[vScoreHistory.length - 1];
     setVScoreHistory(prev => prev.slice(0, -1));
+    setLastAction('Undid last point');
 
     if (Array.isArray(last.sets)) {
       setSets(last.sets);
       setCurrentSet(last.currentSet || 0);
     }
+    if (typeof last.servingTeam === 'number') setServingTeam(last.servingTeam);
 
     if (typeof last.vScore1 === 'number' && typeof last.vScore2 === 'number') {
       setVScore1(last.vScore1);
@@ -709,6 +883,74 @@ export default function MonoQuickMatch() {
 
     if (last.team === 1) setVScore1(prev => Math.max(0, prev - 1));
     else setVScore2(prev => Math.max(0, prev - 1));
+  };
+
+  const adjustSetScore = (team, delta) => {
+    const teamName = getTeamLabel(team);
+    const activeScore = format.type === 'best-of'
+      ? (team === 1 ? sets[currentSet]?.score1 || 0 : sets[currentSet]?.score2 || 0)
+      : (team === 1 ? vScore1 : vScore2);
+    if (delta < 0 && activeScore === 0) {
+      setLastAction(`${teamName} already at 0`);
+      return;
+    }
+
+    setLastAction(`${teamName} ${delta > 0 ? '+1' : '-1'} correction`);
+    setVScoreHistory(prev => [...prev, {
+      team,
+      vScore1,
+      vScore2,
+      sets: cloneSetsSnapshot(sets),
+      currentSet,
+      servingTeam,
+    }].slice(-100));
+
+    if (format.type === 'best-of') {
+      setSets(prevSets => {
+        const nextSets = cloneSetsSnapshot(prevSets);
+        const currentScores = nextSets[currentSet] || { score1: 0, score2: 0, completed: false };
+        const shouldCorrectPreviousSet = delta < 0
+          && currentSet > 0
+          && currentScores.score1 === 0
+          && currentScores.score2 === 0
+          && nextSets[currentSet - 1]?.completed;
+        const targetSet = shouldCorrectPreviousSet ? currentSet - 1 : currentSet;
+
+        if (!nextSets[targetSet]) nextSets[targetSet] = { score1: 0, score2: 0, completed: false };
+        const key = team === 1 ? 'score1' : 'score2';
+        nextSets[targetSet] = {
+          ...nextSets[targetSet],
+          [key]: Math.max(0, (nextSets[targetSet][key] || 0) + delta),
+          completed: false,
+        };
+
+        if (shouldCorrectPreviousSet) {
+          nextSets.splice(targetSet + 1);
+          setCurrentSet(targetSet);
+        }
+
+        return delta > 0 ? completeSetIfNeeded(nextSets, targetSet) : nextSets;
+      });
+      return;
+    }
+
+    const newS1 = team === 1 ? Math.max(0, vScore1 + delta) : vScore1;
+    const newS2 = team === 2 ? Math.max(0, vScore2 + delta) : vScore2;
+    setVScore1(newS1);
+    setVScore2(newS2);
+
+    if (delta > 0 && validateSingleSetScore(newS1, newS2, format.target)) {
+      const winner = newS1 > newS2 ? team1Name : team2Name;
+      const r = {
+        id: Date.now(), sport,
+        team1: team1Name, team2: team2Name,
+        score1: newS1, score2: newS2,
+        winner, format,
+        date: new Date().toISOString(),
+        ...makeTimerFields(),
+      };
+      finalizeMatch(r);
+    }
   };
 
   // Goals: Add score for a team
@@ -723,6 +965,7 @@ export default function MonoQuickMatch() {
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
+    setLastAction(`${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
 
     // Auto-end in points mode
     if (isPointsMode && format.target) {
@@ -751,6 +994,40 @@ export default function MonoQuickMatch() {
     if (last.team === 1) setGScore1(prev => Math.max(0, prev - last.value));
     else setGScore2(prev => Math.max(0, prev - last.value));
     setGScoreHistory(prev => prev.slice(0, -1));
+    setLastAction('Undid last score');
+  };
+
+  const adjustGoalScore = (team, delta) => {
+    const teamName = getTeamLabel(team);
+    const currentScore = team === 1 ? gScore1 : gScore2;
+    if (delta < 0 && currentScore === 0) {
+      setLastAction(`${teamName} already at 0`);
+      return;
+    }
+
+    const newS1 = team === 1 ? Math.max(0, gScore1 + delta) : gScore1;
+    const newS2 = team === 2 ? Math.max(0, gScore2 + delta) : gScore2;
+    setGScore1(newS1);
+    setGScore2(newS2);
+    setGScoreHistory(prev => [...prev, { team, value: delta }]);
+    setLastAction(`${teamName} ${delta > 0 ? '+1' : '-1'} correction`);
+
+    if (delta > 0 && isPointsMode && format.target && (newS1 >= format.target || newS2 >= format.target)) {
+      const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
+      let winner;
+      if (newS1 > newS2) winner = team1Name;
+      else if (newS2 > newS1) winner = team2Name;
+      else winner = drawAllowed ? 'Draw' : 'Tie';
+      const r = {
+        id: Date.now(), sport,
+        team1: team1Name, team2: team2Name,
+        score1: newS1, score2: newS2,
+        winner, format,
+        date: new Date().toISOString(),
+        ...makeTimerFields(),
+      };
+      finalizeMatch(r);
+    }
   };
 
   const endMatchGoals = () => {
@@ -1648,12 +1925,14 @@ export default function MonoQuickMatch() {
 
   const quickButtons = sportConfig?.config?.quickButtons;
   const hasQuickButtons = quickButtons && quickButtons.length > 0;
-  const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
 
   // Cricket scoring helpers
   const showOvers = !isCricket || format.trackOvers !== false;
   const formatPreset = isCricket && format?.preset ? getCricketFormat(format.preset) : null;
   const presetLabel = formatPreset?.name || '';
+  const endMatchDialog = showEndConfirm ? (
+    <EndMatchDialog onCancel={() => setShowEndConfirm(false)} onConfirm={confirmEndMatch} />
+  ) : null;
 
   if (phase === 'scoring') {
     if (isCricket) {
@@ -1685,23 +1964,26 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            {endMatchDialog}
             {saveWarning && (
               <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
                 {saveWarning}
               </div>
             )}
             {/* Top bar */}
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+              <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
                 End Match
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
                 {presetLabel && <span className="mono-badge">{presetLabel}</span>}
                 {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">Innings {innings}</span>
               </div>
             </div>
+
+            <ScoringStatusStrip label="Batting" value={currentName} lastAction={lastAction} />
 
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
@@ -1800,16 +2082,11 @@ export default function MonoQuickMatch() {
               {freeHit ? 'Run Out Only' : 'Wicket'}
             </button>
 
-            {/* Undo */}
-            {cricketHistory.length > 0 && (
-              <button
-                onClick={undoCricketAction}
-                className="mono-btn w-full mt-3"
-                style={{ padding: '10px', fontSize: '0.8125rem' }}
-              >
-                Undo last
-              </button>
-            )}
+            <ThumbActionBar
+              canUndo={cricketHistory.length > 0}
+              onUndo={undoCricketAction}
+              onEnd={requestEndMatch}
+            />
           </div>
         </div>
       );
@@ -1820,8 +2097,10 @@ export default function MonoQuickMatch() {
     const rightTeam = sidesSwapped ? 1 : 2;
     const leftName = sidesSwapped ? team2Name : team1Name;
     const rightName = sidesSwapped ? team1Name : team2Name;
-
-    const handleSwap = () => setSidesSwapped(prev => !prev);
+    const leftAccent = leftTeam === 1 ? '#0066ff' : '#16a34a';
+    const rightAccent = rightTeam === 1 ? '#0066ff' : '#16a34a';
+    const leftSoftBg = leftTeam === 1 ? '#f5f9ff' : '#f3fbf6';
+    const rightSoftBg = rightTeam === 1 ? '#f5f9ff' : '#f3fbf6';
 
     // Goals-based scoring
     if (isGoals) {
@@ -1831,23 +2110,24 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            {endMatchDialog}
             {saveWarning && (
               <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
                 {saveWarning}
               </div>
             )}
             {/* Top bar */}
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+              <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
                 End Match
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="text-sm font-mono" style={{ color: timerColor }}>
                   {isTimeUp ? "Time's up!" : timerDisplay}
                 </span>
-                <SwapButton onSwap={handleSwap} />
+                <SwapButton onSwap={handleSideSwap} />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">
                   {isPointsMode ? `First to ${format.target}` : 'Live'}
@@ -1855,40 +2135,68 @@ export default function MonoQuickMatch() {
               </div>
             </div>
 
+            <ScoringStatusStrip label="Scoring" value={`${leftName} vs ${rightName}`} lastAction={lastAction} />
+
             {/* Score panels */}
-            <div className="flex items-stretch gap-4 mb-6" style={{ minHeight: hasQuickButtons ? '180px' : '250px' }}>
+            <div className="flex items-start gap-4 mb-6">
               {/* Left team */}
-              <div
-                className={`flex-1 flex flex-col items-center justify-center mono-card ${!hasQuickButtons ? 'cursor-pointer' : ''}`}
-                onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
-                style={{ padding: '24px 16px', touchAction: 'manipulation' }}
-              >
-                <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
-                  {leftName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                  {leftScore}
-                </p>
-                {!hasQuickButtons && (
-                  <p className="text-xs mt-3" style={{ color: '#bbb' }}>Tap to score</p>
-                )}
+              <div className="flex-1">
+                <button
+                  type="button"
+                  className="w-full h-full flex flex-col items-center justify-center mono-card"
+                  onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
+                  disabled={hasQuickButtons}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: leftAccent, backgroundColor: leftSoftBg, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  aria-label={hasQuickButtons ? `${leftName} score` : `Add score for ${leftName}`}
+                >
+                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
+                    Left side
+                  </p>
+                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#555' }}>
+                    {leftName}
+                  </p>
+                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
+                    {leftScore}
+                  </p>
+                  {!hasQuickButtons && (
+                    <p className="text-xs mt-3" style={{ color: '#555' }}>Tap +1</p>
+                  )}
+                </button>
+                <CorrectionControls
+                  teamName={leftName}
+                  onMinus={() => adjustGoalScore(leftTeam, -1)}
+                  onPlus={() => adjustGoalScore(leftTeam, 1)}
+                />
               </div>
 
               {/* Right team */}
-              <div
-                className={`flex-1 flex flex-col items-center justify-center mono-card ${!hasQuickButtons ? 'cursor-pointer' : ''}`}
-                onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
-                style={{ padding: '24px 16px', touchAction: 'manipulation' }}
-              >
-                <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
-                  {rightName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                  {rightScore}
-                </p>
-                {!hasQuickButtons && (
-                  <p className="text-xs mt-3" style={{ color: '#bbb' }}>Tap to score</p>
-                )}
+              <div className="flex-1">
+                <button
+                  type="button"
+                  className="w-full h-full flex flex-col items-center justify-center mono-card"
+                  onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
+                  disabled={hasQuickButtons}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: rightAccent, backgroundColor: rightSoftBg, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  aria-label={hasQuickButtons ? `${rightName} score` : `Add score for ${rightName}`}
+                >
+                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
+                    Right side
+                  </p>
+                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#555' }}>
+                    {rightName}
+                  </p>
+                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
+                    {rightScore}
+                  </p>
+                  {!hasQuickButtons && (
+                    <p className="text-xs mt-3" style={{ color: '#555' }}>Tap +1</p>
+                  )}
+                </button>
+                <CorrectionControls
+                  teamName={rightName}
+                  onMinus={() => adjustGoalScore(rightTeam, -1)}
+                  onPlus={() => adjustGoalScore(rightTeam, 1)}
+                />
               </div>
             </div>
 
@@ -1922,16 +2230,12 @@ export default function MonoQuickMatch() {
               </div>
             )}
 
-            {/* Undo */}
-            {gScoreHistory.length > 0 && (
-              <button
-                onClick={undoGoal}
-                className="mono-btn w-full"
-                style={{ padding: '10px', fontSize: '0.8125rem' }}
-              >
-                Undo last
-              </button>
-            )}
+            <ThumbActionBar
+              canUndo={gScoreHistory.length > 0}
+              onUndo={undoGoal}
+              onSwap={handleSideSwap}
+              onEnd={requestEndMatch}
+            />
 
             <p className="text-xs text-center mt-4" style={{ color: '#bbb' }}>
               {!hasQuickButtons ? `Tap a team to add 1 ${scoringUnit}` : null}
@@ -1961,26 +2265,33 @@ export default function MonoQuickMatch() {
     return (
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto">
+          {endMatchDialog}
           {saveWarning && (
             <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
               {saveWarning}
             </div>
           )}
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={endMatchManually} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#dc2626' }}>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+            <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
               End Match
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
-              <SwapButton onSwap={() => setSidesSwapped(prev => !prev)} />
+              <SwapButton onSwap={handleSideSwap} />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
               <span className="mono-badge mono-badge-live">
                 {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
               </span>
             </div>
           </div>
+
+          <ScoringStatusStrip
+            label="Serving"
+            value={servingTeam === leftTeam ? leftName : rightName}
+            lastAction={lastAction}
+          />
 
           {/* Sets won (best-of only) */}
           {format.type === 'best-of' && (
@@ -2002,48 +2313,68 @@ export default function MonoQuickMatch() {
             </div>
           )}
 
-          <div className="flex items-stretch gap-4 mb-8" style={{ minHeight: '250px' }}>
+          <div className="flex items-start gap-4 mb-8">
             {/* Left team */}
-            <div
-              className="flex-1 flex flex-col items-center justify-center cursor-pointer mono-card"
-              onClick={() => addPoint(leftTeam)}
-              style={{ padding: '24px 16px', touchAction: 'manipulation' }}
-            >
-              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
-                {leftName}
-              </p>
-              <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                {leftSetScore}
-              </p>
-              <p className="text-xs mt-4" style={{ color: '#bbb' }}>Tap to score</p>
+            <div className="flex-1">
+              <button
+                type="button"
+                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-card"
+                onClick={() => addPoint(leftTeam)}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: leftAccent, backgroundColor: leftSoftBg, minHeight: '250px' }}
+                aria-label={`Add point for ${leftName}`}
+              >
+                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
+                  Left side
+                </p>
+                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#555' }}>
+                  {leftName}
+                </p>
+                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
+                  {leftSetScore}
+                </p>
+                <p className="text-xs mt-4" style={{ color: '#555' }}>Tap +1</p>
+              </button>
+              <CorrectionControls
+                teamName={leftName}
+                onMinus={() => adjustSetScore(leftTeam, -1)}
+                onPlus={() => adjustSetScore(leftTeam, 1)}
+              />
             </div>
 
             {/* Right team */}
-            <div
-              className="flex-1 flex flex-col items-center justify-center cursor-pointer mono-card"
-              onClick={() => addPoint(rightTeam)}
-              style={{ padding: '24px 16px', touchAction: 'manipulation' }}
-            >
-              <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
-                {rightName}
-              </p>
-              <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                {rightSetScore}
-              </p>
-              <p className="text-xs mt-4" style={{ color: '#bbb' }}>Tap to score</p>
+            <div className="flex-1">
+              <button
+                type="button"
+                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-card"
+                onClick={() => addPoint(rightTeam)}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: rightAccent, backgroundColor: rightSoftBg, minHeight: '250px' }}
+                aria-label={`Add point for ${rightName}`}
+              >
+                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
+                  Right side
+                </p>
+                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#555' }}>
+                  {rightName}
+                </p>
+                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
+                  {rightSetScore}
+                </p>
+                <p className="text-xs mt-4" style={{ color: '#555' }}>Tap +1</p>
+              </button>
+              <CorrectionControls
+                teamName={rightName}
+                onMinus={() => adjustSetScore(rightTeam, -1)}
+                onPlus={() => adjustSetScore(rightTeam, 1)}
+              />
             </div>
           </div>
 
-          {/* Undo */}
-          {vScoreHistory.length > 0 && (
-            <button
-              onClick={undoPoint}
-              className="mono-btn w-full mb-4"
-              style={{ padding: '10px', fontSize: '0.8125rem' }}
-            >
-              Undo last
-            </button>
-          )}
+          <ThumbActionBar
+            canUndo={vScoreHistory.length > 0}
+            onUndo={undoPoint}
+            onSwap={handleSideSwap}
+            onEnd={requestEndMatch}
+          />
 
           <p className="text-xs text-center" style={{ color: '#bbb' }}>
             {format.type === 'best-of'
@@ -2185,6 +2516,9 @@ export default function MonoQuickMatch() {
               setVScore2(0);
               setGScore1(0);
               setGScore2(0);
+              setServingTeam(1);
+              setLastAction('');
+              setShowEndConfirm(false);
               setGScoreHistory([]);
               setVScoreHistory([]);
               setSets([{ score1: 0, score2: 0, completed: false }]);
