@@ -15,15 +15,6 @@ on:
       - "bun.lock"
       - "vite.config.js"
   pull_request:
-    paths:
-      - ".github/workflows/android-build.yml"
-      - "capacitor.config.ts"
-      - "android/**"
-      - "src/**"
-      - "public/**"
-      - "package.json"
-      - "bun.lock"
-      - "vite.config.js"
 
 jobs:
   android-debug-build:
