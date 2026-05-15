@@ -17,20 +17,24 @@ const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(f => ({
 }));
 
 const LAYOUT_KEY = 'se_sport_layout';
+const DEFAULT_CATEGORY = 'Net Sports';
+const QUICK_ACTION_HELP = {
+  quick: 'Score one match now',
+  tournament: 'Schedule, standings, history',
+};
 
 export default function MonoSportHome() {
   const navigate = useNavigate();
+  const SPORT_CATEGORIES = getSportsByCategory();
+  const categoryKeys = Object.keys(SPORT_CATEGORIES);
   const [visible, setVisible] = useState(false);
   const [tournamentCounts, setTournamentCounts] = useState({});
-  const [activeTab, setActiveTab] = useState('Racquet Sports');
+  const [activeTab, setActiveTab] = useState(SPORT_CATEGORIES[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : categoryKeys[0]);
   const [selectedSportId, setSelectedSportId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [layout, setLayout] = useState(() => {
     return loadPreference(LAYOUT_KEY, 'tabs'); // 'tabs' or 'grid'
   });
-
-  const SPORT_CATEGORIES = getSportsByCategory();
-  const categoryKeys = Object.keys(SPORT_CATEGORIES);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -167,9 +171,10 @@ export default function MonoSportHome() {
                               : `/${entry.id}/tournament`
                           )}
                           className="mono-btn-primary flex-1"
-                          style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
+                          style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
                         >
-                          Tournament
+                          <span>Tournament</span>
+                          <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
                         </button>
                         <button
                           onClick={() => navigate(
@@ -178,9 +183,10 @@ export default function MonoSportHome() {
                               : `/${entry.id}/quick`
                           )}
                           className="mono-btn flex-1"
-                          style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
+                          style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
                         >
-                          Quick Match
+                          <span>Quick Match</span>
+                          <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
                         </button>
                       </div>
                     </div>
@@ -194,6 +200,46 @@ export default function MonoSportHome() {
         ) : (
 
         <div className="mb-8">
+          <section
+            className="mono-card mb-8"
+            aria-label="Volleyball fast start"
+            style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}
+          >
+            <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
+              <div className="flex items-start gap-4">
+                <div
+                  aria-hidden="true"
+                  style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dbe7ff' }}
+                >
+                  <SportIcon name="Volleyball" size={32} color="#0066ff" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
+                  <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Volleyball is ready first</h2>
+                  <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
+                    Start a single match immediately, or build a tournament with standings when you need a full event.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <button
+                  onClick={() => navigate('/volleyball/quick')}
+                  className="mono-btn-primary"
+                  style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}
+                >
+                  Start Volleyball Match
+                </button>
+                <button
+                  onClick={() => navigate('/volleyball/tournament')}
+                  className="mono-btn"
+                  style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}
+                >
+                  Create Volleyball Tournament
+                </button>
+              </div>
+            </div>
+          </section>
+
           <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
             Choose sport
           </h2>
@@ -202,7 +248,7 @@ export default function MonoSportHome() {
           {layout === 'tabs' && (
             <>
               {/* Tab Headers */}
-              <div className="flex gap-3 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }} role="tablist" aria-label="Sport categories">
+              <div className="flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Sport categories">
                 {categoryKeys.map(category => (
                   <button
                     key={category}
@@ -210,14 +256,14 @@ export default function MonoSportHome() {
                     role="tab"
                     aria-selected={activeTab === category}
                     aria-controls={`tabpanel-${category.replaceAll(/\s+/g, '-')}`}
-                    className={`text-xs px-4 py-2 whitespace-nowrap transition-all ${
+                    className={`text-xs px-4 transition-all ${
                       activeTab === category ? 'font-medium' : 'font-normal'
                     }`}
                     style={{
-                      color: activeTab === category ? '#0066ff' : '#888',
-                      borderBottom: activeTab === category ? '2px solid #0066ff' : '2px solid transparent',
-                      background: 'transparent',
-                      border: 'none',
+                      minHeight: 44,
+                      color: activeTab === category ? '#0066ff' : '#555',
+                      background: activeTab === category ? '#eef5ff' : '#fff',
+                      border: activeTab === category ? '1px solid #0066ff' : '1px solid #eee',
                       cursor: 'pointer',
                     }}
                   >
@@ -271,22 +317,24 @@ export default function MonoSportHome() {
                             </div>
 
                             <div className="flex gap-2 mt-auto">
-                              <button
-                                onClick={() => navigate(`/cricket/tournament/new?format=${cf.id}`)}
-                                className="mono-btn-primary flex-1"
-                                style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
-                              >
-                                Tournament
-                              </button>
-                              <button
-                                onClick={() => navigate(`/cricket/quick?format=${cf.id}`)}
-                                className="mono-btn flex-1"
-                                style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
-                              >
-                                Quick Match
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => navigate(`/cricket/tournament/new?format=${cf.id}`)}
+                              className="mono-btn-primary flex-1"
+                              style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
+                            >
+                              <span>Tournament</span>
+                              <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
+                            </button>
+                            <button
+                              onClick={() => navigate(`/cricket/quick?format=${cf.id}`)}
+                              className="mono-btn flex-1"
+                              style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
+                            >
+                              <span>Quick Match</span>
+                              <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
+                            </button>
                           </div>
+                        </div>
                         </div>
                       ))}
                     </div>
@@ -320,16 +368,18 @@ export default function MonoSportHome() {
                             <button
                               onClick={() => navigate(`/${sport.id}/tournament`)}
                               className="mono-btn-primary flex-1"
-                              style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
+                              style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
                             >
-                              Tournament
+                              <span>Tournament</span>
+                              <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
                             </button>
                             <button
                               onClick={() => navigate(`/${sport.id}/quick`)}
                               className="mono-btn flex-1"
-                              style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
+                              style={{ minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 }}
                             >
-                              Quick Match
+                              <span>Quick Match</span>
+                              <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
                             </button>
                           </div>
                         </div>
@@ -387,14 +437,14 @@ export default function MonoSportHome() {
                                 <button
                                   onClick={() => navigate(`/cricket/tournament/new?format=${cf.id}`)}
                                   className="mono-btn-primary"
-                                  style={{ padding: '6px 8px', fontSize: '0.6875rem' }}
+                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
                                 >
                                   Tournament
                                 </button>
                                 <button
                                   onClick={() => navigate(`/cricket/quick?format=${cf.id}`)}
                                   className="mono-btn"
-                                  style={{ padding: '6px 8px', fontSize: '0.6875rem' }}
+                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
                                 >
                                   Quick Match
                                 </button>
@@ -441,14 +491,14 @@ export default function MonoSportHome() {
                                 <button
                                   onClick={() => navigate(`/${sport.id}/tournament`)}
                                   className="mono-btn-primary"
-                                  style={{ padding: '6px 8px', fontSize: '0.6875rem' }}
+                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
                                 >
                                   Tournament
                                 </button>
                                 <button
                                   onClick={() => navigate(`/${sport.id}/quick`)}
                                   className="mono-btn"
-                                  style={{ padding: '6px 8px', fontSize: '0.6875rem' }}
+                                  style={{ minHeight: 44, padding: '8px', fontSize: '0.75rem' }}
                                 >
                                   Quick Match
                                 </button>
