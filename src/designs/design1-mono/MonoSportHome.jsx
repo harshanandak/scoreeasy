@@ -16,7 +16,7 @@ const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
 }));
 
 const LAYOUT_KEY = 'se_sport_layout';
-const DEFAULT_CATEGORY = 'Net Sports';
+const DEFAULT_CATEGORY = 'Cricket';
 const QUICK_ACTION_HELP = {
   quick: 'Score one match now',
   tournament: 'Schedule, standings, history',
@@ -149,28 +149,28 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-function VolleyballFastStart({ navigate }) {
+function CricketFastStart({ navigate }) {
   return (
-    <section className="mono-card mb-8" aria-label="Volleyball fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
+    <section className="mono-card mb-8" aria-label="Cricket fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
       <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
         <div className="flex items-start gap-4">
           <div aria-hidden="true" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dbe7ff' }}>
-            <SportIcon name="Volleyball" size={32} color="#0066ff" />
+            <SportIcon name="Cricket" size={32} color="#0066ff" />
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Volleyball is ready first</h2>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket is ready first</h2>
             <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
-              Start a single match immediately, or build a tournament with standings when you need a full event.
+              Start a T20 match immediately, or build a cricket tournament with standings when you need a full event.
             </p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <button onClick={() => navigate('/volleyball/quick')} className="mono-btn-primary" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}>
-            Start Volleyball Match
+          <button onClick={() => navigate('/cricket/quick?format=T20')} className="mono-btn-primary" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}>
+            Start Cricket Match
           </button>
-          <button onClick={() => navigate('/volleyball/tournament')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
-            Create Volleyball Tournament
+          <button onClick={() => navigate('/cricket/tournament/new?format=T20')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
+            Create Cricket Tournament
           </button>
         </div>
       </div>
@@ -178,7 +178,7 @@ function VolleyballFastStart({ navigate }) {
   );
 }
 
-VolleyballFastStart.propTypes = {
+CricketFastStart.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
@@ -491,7 +491,7 @@ GridLayout.propTypes = {
 function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
   return (
     <div className="mb-8">
-      <VolleyballFastStart navigate={navigate} />
+      <CricketFastStart navigate={navigate} />
 
       <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
         Choose sport
