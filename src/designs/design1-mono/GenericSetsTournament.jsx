@@ -5,6 +5,7 @@ import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import ConfirmActionPanel from './components/ConfirmActionPanel';
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -353,31 +354,12 @@ export default function GenericSetsTournament() {
                       : hasScore ? 'Edit Score' : 'Enter Score'}
                   </button>
                   {pendingClearMatchId === match.id && (
-                    <div
-                      className="mt-3 p-3"
-                      style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6 }}
-                      role="alert"
-                    >
-                      <p className="text-sm mb-2" style={{ color: '#991b1b' }}>
-                        Clear this saved score and reopen the match?
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => deleteScore(match.id)}
-                          className="mono-btn-primary flex-1"
-                          style={{ minHeight: 44, background: '#dc2626' }}
-                        >
-                          Clear score
-                        </button>
-                        <button
-                          onClick={() => setPendingClearMatchId(null)}
-                          className="mono-btn flex-1"
-                          style={{ minHeight: 44 }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
+                    <ConfirmActionPanel
+                      message="Clear this saved score and reopen the match?"
+                      confirmLabel="Clear score"
+                      onConfirm={() => deleteScore(match.id)}
+                      onCancel={() => setPendingClearMatchId(null)}
+                    />
                   )}
                 </div>
               );

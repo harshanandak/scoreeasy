@@ -6,6 +6,7 @@ import { getCricketFormat } from '../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
+import ConfirmActionPanel from './components/ConfirmActionPanel';
 
 export default function MonoTournamentList() {
   const navigate = useNavigate();
@@ -148,30 +149,16 @@ export default function MonoTournamentList() {
                   </button>
                   {pendingDeleteId === t.id ? (
                     <div
-                      className="flex flex-col gap-2"
+                      className="flex flex-col"
                       style={{ borderTop: '1px solid #fee2e2', padding: '12px 20px', background: '#fef2f2' }}
-                      role="alert"
                     >
-                      <p className="text-sm" style={{ color: '#991b1b' }}>
-                        Delete this tournament and its saved matches?
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
-                          className="mono-btn-primary flex-1"
-                          style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem', background: '#dc2626' }}
-                          aria-label={`Confirm delete ${t.name} tournament`}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
-                          className="mono-btn flex-1"
-                          style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                      <ConfirmActionPanel
+                        message="Delete this tournament and its saved matches?"
+                        confirmLabel="Delete"
+                        confirmAriaLabel={`Confirm delete ${t.name} tournament`}
+                        onConfirm={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
+                        onCancel={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                      />
                     </div>
                   ) : (
                     <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
