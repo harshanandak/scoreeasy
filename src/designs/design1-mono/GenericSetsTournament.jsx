@@ -5,7 +5,6 @@ import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
-import ConfirmActionPanel from './components/ConfirmActionPanel';
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -15,7 +14,6 @@ export default function GenericSetsTournament() {
   const [tournament, setTournament] = useState(null);
   const [tab, setTab] = useState('matches');
   const [visible, setVisible] = useState(false);
-  const [pendingClearMatchId, setPendingClearMatchId] = useState(null);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -143,7 +141,6 @@ export default function GenericSetsTournament() {
       return m;
     });
     setTournament({ ...tournament, matches: updatedMatches });
-    setPendingClearMatchId(null);
   };
 
   const deleteKnockoutScore = (matchId) => {
@@ -154,7 +151,6 @@ export default function GenericSetsTournament() {
       return m;
     });
     setTournament({ ...tournament, knockoutMatches: updatedKO });
-    setPendingClearMatchId(null);
   };
 
   return (
@@ -281,7 +277,7 @@ export default function GenericSetsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => setPendingClearMatchId(match.id)}
+                          onClick={() => deleteScore(match.id)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -353,14 +349,6 @@ export default function GenericSetsTournament() {
                       ? '▶ Resume Match'
                       : hasScore ? 'Edit Score' : 'Enter Score'}
                   </button>
-                  {pendingClearMatchId === match.id && (
-                    <ConfirmActionPanel
-                      message="Clear this saved score and reopen the match?"
-                      confirmLabel="Clear score"
-                      onConfirm={() => deleteScore(match.id)}
-                      onCancel={() => setPendingClearMatchId(null)}
-                    />
-                  )}
                 </div>
               );
             })}
