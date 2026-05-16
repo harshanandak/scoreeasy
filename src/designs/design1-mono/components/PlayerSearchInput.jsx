@@ -130,6 +130,7 @@ export default function PlayerSearchInput({
               className="w-full text-left bg-transparent border-none cursor-pointer flex items-center gap-2"
               style={{
                 padding: "8px 12px",
+                minHeight: 44,
                 borderBottom: "1px solid #f5f5f5",
               }}
               onMouseDown={(e) => e.preventDefault()}
@@ -157,7 +158,7 @@ export default function PlayerSearchInput({
             <button
               onClick={handleAddGuest}
               className="w-full text-left bg-transparent border-none cursor-pointer"
-              style={{ padding: "8px 12px", color: "#0066ff" }}
+              style={{ padding: "8px 12px", minHeight: 44, color: "#0066ff" }}
               onMouseDown={(e) => e.preventDefault()}
             >
               <span className="text-sm">+ Add "{query.trim()}" as guest</span>

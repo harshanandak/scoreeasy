@@ -183,6 +183,41 @@ function getRestoredTimerElapsed(draft) {
   return savedElapsed + Math.max(0, Math.floor((Date.now() - savedAt) / 1000));
 }
 
+function formatMinutes(seconds) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return 'No time limit';
+  const minutes = Math.round(seconds / 60);
+  return `${minutes} min`;
+}
+
+function getRuleSummary({ engine, format, formatMode, isCricket, isGoals, sportConfig, selectedCricketFormat }) {
+  if (isCricket) {
+    const formatName = selectedCricketFormat?.name || 'Cricket';
+    const limit = format.trackOvers === false
+      ? `${format.maxBalls || 'unlimited'} balls`
+      : `${format.overs || 'unlimited'} overs`;
+    const innings = (format.totalInnings || 2) === 4 ? '2 innings per side' : '1 innings per side';
+    return `${formatName} - ${limit} - ${format.players || 6} players - ${innings}`;
+  }
+
+  if (engine === 'sets') {
+    const winBy = format.customization?.winBy || sportConfig?.config?.winBy || 2;
+    if (format.type === 'best-of') {
+      return `Best of ${format.sets || 3} - ${format.points || sportConfig?.config?.pointsPerSet || 25} pts - win by ${winBy}`;
+    }
+    return `Single set - first to ${format.target || format.points || sportConfig?.config?.pointsPerSet || 25} - win by ${winBy}`;
+  }
+
+  if (isGoals) {
+    if (format.mode === 'timed') return `Timed match - ${formatMinutes(format.timeLimit)}`;
+    if (format.mode === 'points') {
+      return `First to ${format.target || sportConfig?.config?.winPoints || 5} ${sportConfig?.config?.scoringUnit || 'point'}s`;
+    }
+    return 'Free play - tap to score';
+  }
+
+  return formatMode === 'standard' ? 'Standard rules' : 'Custom rules';
+}
+
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,7 +234,11 @@ export default function MonoQuickMatch() {
 
   const [phase, setPhase] = useState('setup'); // setup | scoring | result
   const visible = true; // always visible; no fade-in needed for quick match
-  const [setupStep, setSetupStep] = useState(1); // 1: Format, 2: Rules (cricket only), 3: Teams
+  const [setupStep, setSetupStep] = useState(() => {
+    if (!isCricket || !preselectedFormat) return 2;
+    const preset = CRICKET_FORMATS.find(f => f.id === preselectedFormat);
+    return preset?.customizable ? 3 : 2;
+  }); // 1: Format, 2: Rules (when editing), 3: Teams
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -216,12 +255,11 @@ export default function MonoQuickMatch() {
   const initialFormatMode = isCricket && preselectedFormat
     ? (CRICKET_FORMATS.find(f => f.id === preselectedFormat)?.customizable ? 'custom' : 'standard')
     : 'standard';
-
   const [formatMode, setFormatMode] = useState(initialFormatMode);
   const [cricketPreset, setCricketPreset] = useState(initialPreset);
   const wizardTeams = Array.isArray(location.state?.teams) ? location.state.teams : null;
-  const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || '');
-  const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || '');
+  const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || 'Team A');
+  const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || 'Team B');
   const [saveWarning, setSaveWarning] = useState('');
 
   // Auth + Convex integration for match saving
@@ -241,13 +279,13 @@ export default function MonoQuickMatch() {
 
   const team1Results = useQuery(
     api.teams.search,
-    isAuthenticated && debouncedTeam1.length >= 2
+    isAuthenticated && showTeam1Suggestions && debouncedTeam1.length >= 2
       ? { sport, prefix: debouncedTeam1 }
       : 'skip'
   );
   const team2Results = useQuery(
     api.teams.search,
-    isAuthenticated && debouncedTeam2.length >= 2
+    isAuthenticated && showTeam2Suggestions && debouncedTeam2.length >= 2
       ? { sport, prefix: debouncedTeam2 }
       : 'skip'
   );
@@ -281,6 +319,7 @@ export default function MonoQuickMatch() {
   });
   const [format, setFormat] = useState(() => {
     if (isCricket) return buildCricketFormat(initialPreset);
+    if (initialFormatMode === 'standard') return applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
     return { type: 'single', target: 15, points: 25 };
   });
@@ -1145,6 +1184,24 @@ export default function MonoQuickMatch() {
   const selectedCricketFormat = isCricket
     ? CRICKET_FORMATS.find(f => f.id === cricketPreset)
     : null;
+  const ruleSummary = getRuleSummary({
+    engine,
+    format,
+    formatMode,
+    isCricket,
+    isGoals,
+    sportConfig,
+    selectedCricketFormat,
+  });
+  const teamNamesReady = Boolean(team1Name.trim() && team2Name.trim());
+  const isTeamSetupStep = setupStep === totalSteps;
+  const handleSetupBack = () => {
+    if (isTeamSetupStep) {
+      navigate(-1);
+      return;
+    }
+    setSetupStep(totalSteps);
+  };
 
   if (phase === 'setup') {
     return (
@@ -1158,13 +1215,10 @@ export default function MonoQuickMatch() {
           {/* Header */}
           <nav className="flex items-center gap-4 mb-6">
             <button
-              onClick={() => {
-                if (setupStep > 1) { setSetupStep(setupStep - 1); }
-                else { navigate(-1); }
-              }}
+              onClick={handleSetupBack}
               className="text-sm bg-transparent border-none cursor-pointer font-swiss"
               style={{ color: '#888' }}
-              aria-label={setupStep > 1 ? 'Go back to previous step' : 'Go back'}
+              aria-label={isTeamSetupStep ? 'Go back' : 'Return to match setup'}
             >
               <BackArrow />
             </button>
@@ -1173,25 +1227,27 @@ export default function MonoQuickMatch() {
                 {sportConfig?.icon || '\u{1F3D0}'} Quick Match
               </h1>
               <p className="text-xs mt-0.5" style={{ color: '#888' }}>
-                Step {setupStep} of {totalSteps} &middot; {currentStepLabel}
+                {isTeamSetupStep ? 'Setup match' : `Edit ${currentStepLabel.toLowerCase()}`}
               </p>
             </div>
           </nav>
 
           {/* Step progress bar */}
-          <div className="flex gap-1 mb-8">
-            {Array.from({ length: totalSteps }, (_, i) => (
-              <div
-                key={`step-bar-${i}`}
-                className="flex-1"
-                style={{
-                  height: '3px',
-                  background: i < setupStep ? '#0066ff' : '#eee',
-                  transition: 'background 0.2s ease',
-                }}
-              />
-            ))}
-          </div>
+          {!isTeamSetupStep && (
+            <div className="flex gap-1 mb-8">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div
+                  key={`step-bar-${i}`}
+                  className="flex-1"
+                  style={{
+                    height: '3px',
+                    background: i < setupStep ? '#0066ff' : '#eee',
+                    transition: 'background 0.2s ease',
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {/* ──────── STEP 1: FORMAT ──────── */}
           {setupStep === 1 && (
@@ -1758,26 +1814,21 @@ export default function MonoQuickMatch() {
                         {isCricket && selectedCricketFormat ? selectedCricketFormat.name : sportConfig?.name}
                       </p>
                       <p className="text-xs font-mono" style={{ color: '#888' }}>
-                        {isCricket ? (
-                          <>
-                            {format.overs ? `${format.overs} ov` : format.trackOvers === false ? `${format.maxBalls || '\u221E'} balls` : 'Unlimited'}
-                            {' \u00B7 '}
-                            {format.players || 6}p
-                            {' \u00B7 '}
-                            {(format.totalInnings || 2) === 4 ? '2 inn/side' : '1 inn/side'}
-                          </>
-                        ) : (
-                          formatMode === 'standard' ? 'Standard rules' : 'Custom rules'
-                        )}
+                        {ruleSummary}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setSetupStep(1)}
-                    className="text-xs bg-transparent border-none cursor-pointer"
-                    style={{ color: '#0066ff' }}
+                    className="text-xs bg-transparent cursor-pointer"
+                    style={{
+                      minHeight: 44,
+                      border: '1.5px solid #0066ff',
+                      color: '#0066ff',
+                      padding: '0 12px',
+                    }}
                   >
-                    Change
+                    Edit Rules
                   </button>
                 </div>
               </div>
@@ -1793,7 +1844,7 @@ export default function MonoQuickMatch() {
                   <input
                     type="text"
                     className="mono-input mb-1"
-                    placeholder="Team 1 name"
+                    placeholder="Team A"
                     value={team1Name}
                     onChange={e => { setTeam1Name(e.target.value); setShowTeam1Suggestions(e.target.value.length >= 2); }}
                     onFocus={() => setShowTeam1Suggestions(true)}
@@ -1829,8 +1880,15 @@ export default function MonoQuickMatch() {
                 <button
                   type="button"
                   onClick={() => setShowTeam1Roster(v => !v)}
-                  className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-3 block"
-                  style={{ color: '#0066ff', padding: 0 }}
+                  className="text-xs bg-transparent cursor-pointer font-swiss mb-3"
+                  style={{
+                    alignItems: 'center',
+                    border: '1.5px solid #dbeafe',
+                    color: '#0066ff',
+                    display: 'inline-flex',
+                    minHeight: 44,
+                    padding: '0 12px',
+                  }}
                 >
                   {showTeam1Roster ? '− Hide players' : '+ Add players'}
                   {team1Players.length > 0 && !showTeam1Roster && (
@@ -1853,7 +1911,7 @@ export default function MonoQuickMatch() {
                   <input
                     type="text"
                     className="mono-input mb-1"
-                    placeholder="Team 2 name"
+                    placeholder="Team B"
                     value={team2Name}
                     onChange={e => { setTeam2Name(e.target.value); setShowTeam2Suggestions(e.target.value.length >= 2); }}
                     onFocus={() => setShowTeam2Suggestions(true)}
@@ -1888,8 +1946,15 @@ export default function MonoQuickMatch() {
                 <button
                   type="button"
                   onClick={() => setShowTeam2Roster(v => !v)}
-                  className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-3 block"
-                  style={{ color: '#0066ff', padding: 0 }}
+                  className="text-xs bg-transparent cursor-pointer font-swiss mb-3"
+                  style={{
+                    alignItems: 'center',
+                    border: '1.5px solid #dbeafe',
+                    color: '#0066ff',
+                    display: 'inline-flex',
+                    minHeight: 44,
+                    padding: '0 12px',
+                  }}
                 >
                   {showTeam2Roster ? '− Hide players' : '+ Add players'}
                   {team2Players.length > 0 && !showTeam2Roster && (
@@ -1929,11 +1994,16 @@ export default function MonoQuickMatch() {
               <button
                 onClick={startMatch}
                 className="mono-btn-primary w-full"
-                style={{ padding: '12px', fontSize: '0.9375rem', opacity: team1Name.trim() && team2Name.trim() ? 1 : 0.4 }}
-                disabled={!team1Name.trim() || !team2Name.trim()}
+                style={{ minHeight: 52, padding: '12px', fontSize: '0.9375rem', opacity: teamNamesReady ? 1 : 0.4 }}
+                disabled={!teamNamesReady}
               >
                 Start Match
               </button>
+              {!teamNamesReady && (
+                <p className="text-xs text-center mt-3" style={{ color: '#dc2626' }}>
+                  Add both team names to start the match.
+                </p>
+              )}
             </>
           )}
         </div>
