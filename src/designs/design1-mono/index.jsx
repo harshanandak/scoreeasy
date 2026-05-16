@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, Suspense, lazy, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
@@ -117,12 +117,38 @@ function GlobalNavigation() {
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
   const showBottomNav = !isProtectedScoringPath(pathname);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const dialog = mobileMenuRef.current;
+    if (!dialog) return undefined;
+
+    if (open && !dialog.open) {
+      dialog.showModal();
+    } else if (!open && dialog.open) {
+      dialog.close();
+    }
+
+    const handleCancel = (event) => {
+      event.preventDefault();
+      setOpen(false);
+    };
+    const handleClose = () => setOpen(false);
+
+    dialog.addEventListener('cancel', handleCancel);
+    dialog.addEventListener('close', handleClose);
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+      dialog.removeEventListener('close', handleClose);
+    };
+  }, [open]);
 
   useEffect(() => {
     const body = globalThis.document?.body;
@@ -232,11 +258,10 @@ function GlobalNavigation() {
             onClick={() => setOpen(false)}
           />
           <dialog
+            ref={mobileMenuRef}
             id="global-mobile-menu"
             className="global-mobile-menu-sheet"
-            aria-modal="true"
             aria-label="Navigation menu"
-            open
           >
             <div className="global-mobile-menu-heading">
               <span>Menu</span>
