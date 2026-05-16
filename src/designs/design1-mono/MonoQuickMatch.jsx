@@ -226,6 +226,7 @@ function getResultOutcome(winner) {
 }
 
 function getShareStatusText(response) {
+  if (!response || typeof response.shared !== 'boolean') return 'Could not share result.';
   if (!response.shared) return 'Share is not available on this device.';
   if (response.method === 'clipboard') return 'Result copied.';
   return 'Share sheet opened.';
@@ -1182,6 +1183,7 @@ export default function MonoQuickMatch() {
 
   const resetMatchState = (nextPhase = 'setup') => {
     restoredDraftRef.current = false;
+    setSaveWarning('');
     setPhase(nextPhase);
     setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
     setVScore1(0);
@@ -1213,12 +1215,16 @@ export default function MonoQuickMatch() {
   const shareResult = async () => {
     if (!result) return;
     setShareStatus('Opening share...');
-    const response = await shareText({
-      title: 'Score Easy result',
-      text: buildResultShareText(result, isCricket),
-      dialogTitle: 'Share match result',
-    });
-    setShareStatus(getShareStatusText(response));
+    try {
+      const response = await shareText({
+        title: 'Score Easy result',
+        text: buildResultShareText(result, isCricket),
+        dialogTitle: 'Share match result',
+      });
+      setShareStatus(getShareStatusText(response));
+    } catch {
+      setShareStatus('Could not share result.');
+    }
   };
 
   // === SETUP PHASE ===

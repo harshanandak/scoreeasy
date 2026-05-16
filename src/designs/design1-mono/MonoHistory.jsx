@@ -51,6 +51,7 @@ function buildEntryShareText(entry) {
 }
 
 function getShareStatusText(response) {
+  if (!response || typeof response.shared !== 'boolean') return 'Could not share result.';
   if (!response.shared) return 'Share is not available on this device.';
   if (response.method === 'clipboard') return 'Result copied.';
   return 'Share sheet opened.';
@@ -270,12 +271,16 @@ export default function MonoHistory() {
   };
 
   const shareEntry = async (entry) => {
-    const response = await shareText({
-      title: 'Score Easy result',
-      text: buildEntryShareText(entry),
-      dialogTitle: 'Share match result',
-    });
-    setHistoryStatus(getShareStatusText(response));
+    try {
+      const response = await shareText({
+        title: 'Score Easy result',
+        text: buildEntryShareText(entry),
+        dialogTitle: 'Share match result',
+      });
+      setHistoryStatus(getShareStatusText(response));
+    } catch {
+      setHistoryStatus('Could not share result.');
+    }
   };
 
   const rematchEntry = (entry) => {
@@ -465,6 +470,7 @@ export default function MonoHistory() {
                     <button
                       onClick={() => {
                         deleteQuickMatch(entry.rawId);
+                        setSelectedEntry((current) => (current?.id === entry.id ? null : current));
                         setHistoryStatus('Quick match deleted.');
                       }}
                       className="bg-transparent border-none cursor-pointer text-sm"
