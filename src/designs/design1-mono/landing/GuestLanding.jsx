@@ -217,7 +217,7 @@ export default function GuestLanding() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: -20, right: 40, transform: 'rotate(-5deg)', opacity: t.iconDecoOpacity }}>
-                <SportIcon name="Volleyball" size={72} color={t.text} />
+                <SportIcon name="Football" size={72} color={t.text} />
               </div>
               <div style={{ position: 'absolute', top: 90, right: -10, transform: 'rotate(8deg)', opacity: t.iconDecoOpacity * 0.8 }}>
                 <SportIcon name="Tennis" size={60} color={t.text} />
