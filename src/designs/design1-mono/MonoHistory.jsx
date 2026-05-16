@@ -241,16 +241,20 @@ export default function MonoHistory() {
 
   const confirmClearMutableHistory = () => {
     setPendingClear({
-      quick: quickMatches,
-      legacy: loadHistory(),
       cleared: false,
     });
   };
 
   const clearMutableHistory = () => {
+    const snapshot = {
+      quick: quickMatches,
+      legacy: loadHistory(),
+      cleared: true,
+    };
+
     clearLegacyHistory();
     clearAllQuickMatches();
-    setPendingClear((snapshot) => snapshot ? { ...snapshot, cleared: true } : null);
+    setPendingClear(snapshot);
     setSelectedEntry(null);
     setHistoryStatus('Cleared quick and legacy history.');
   };
