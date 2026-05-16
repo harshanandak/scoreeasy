@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, Suspense, lazy, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
@@ -117,12 +117,38 @@ function GlobalNavigation() {
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
   const showBottomNav = !isProtectedScoringPath(pathname);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const dialog = mobileMenuRef.current;
+    if (!dialog) return undefined;
+
+    if (open && !dialog.open) {
+      dialog.showModal();
+    } else if (!open && dialog.open) {
+      dialog.close();
+    }
+
+    const handleCancel = (event) => {
+      event.preventDefault();
+      setOpen(false);
+    };
+    const handleClose = () => setOpen(false);
+
+    dialog.addEventListener('cancel', handleCancel);
+    dialog.addEventListener('close', handleClose);
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+      dialog.removeEventListener('close', handleClose);
+    };
+  }, [open]);
 
   useEffect(() => {
     const body = globalThis.document?.body;
@@ -224,20 +250,20 @@ function GlobalNavigation() {
         </button>
       </header>
       {open && (
-        <>
+        <dialog
+          ref={mobileMenuRef}
+          id="global-mobile-menu"
+          className="global-mobile-menu-sheet"
+          aria-label="Navigation menu"
+        >
           <button
             type="button"
             className="global-mobile-menu-backdrop"
             aria-label="Dismiss navigation menu"
+            tabIndex={-1}
             onClick={() => setOpen(false)}
           />
-          <dialog
-            id="global-mobile-menu"
-            className="global-mobile-menu-sheet"
-            aria-modal="true"
-            aria-label="Navigation menu"
-            open
-          >
+          <div className="global-mobile-menu-content">
             <div className="global-mobile-menu-heading">
               <span>Menu</span>
               <span>{currentItem?.label ?? 'Home'}</span>
@@ -263,8 +289,8 @@ function GlobalNavigation() {
                 </button>
               ))}
             </nav>
-          </dialog>
-        </>
+          </div>
+        </dialog>
       )}
       {showBottomNav && bottomNavItems.length > 0 && (
         <nav
@@ -340,6 +366,7 @@ function GlobalNavigation() {
         .global-mobile-menu-button,
         .global-mobile-menu-backdrop,
         .global-mobile-menu-sheet,
+        .global-mobile-menu-content,
         .global-bottom-nav {
           display: none;
         }
@@ -379,30 +406,42 @@ function GlobalNavigation() {
             background: #111;
           }
 
-          .global-mobile-menu-backdrop {
+          .global-mobile-menu-sheet {
             position: fixed;
             inset: 0;
             z-index: 240;
             display: block;
+            max-width: none;
+            margin: 0;
             border: 0;
-            background: rgba(17, 17, 17, 0.38);
+            background: transparent;
+            padding: 0;
+            width: auto;
           }
 
-          .global-mobile-menu-sheet {
-            position: fixed;
+          .global-mobile-menu-backdrop {
+            position: absolute;
+            inset: 0;
+            display: block;
+            border: 0;
+            background: rgba(17, 17, 17, 0.38);
+            cursor: pointer;
+          }
+
+          .global-mobile-menu-content {
+            position: absolute;
             right: 12px;
             bottom: calc(12px + env(safe-area-inset-bottom, 0px));
             left: 12px;
-            z-index: 241;
             display: block;
-            max-width: none;
-            margin: 0;
             border: 1.5px solid #111;
             background: #fff;
             color: #111;
-            padding: 0;
-            width: auto;
             box-shadow: 4px 4px 0 #111;
+          }
+
+          .global-mobile-menu-sheet::backdrop {
+            background: transparent;
           }
 
           .global-mobile-menu-heading {
