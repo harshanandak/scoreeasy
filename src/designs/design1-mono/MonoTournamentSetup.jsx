@@ -328,6 +328,8 @@ export default function MonoTournamentSetup() {
     ? seriesGames
     : (teamCount * (teamCount - 1)) / 2;
 
+  const isKnockoutSelection = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
+
   const finalStageLabel = (() => {
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
@@ -336,14 +338,15 @@ export default function MonoTournamentSetup() {
   })();
 
   const tournamentTypePreset = (() => {
+    if (!tournamentType) return null;
     if (tournamentType === 'series') return 'series';
-    if (winnerMode === 'knockouts') return 'group-knockout';
+    if (isKnockoutSelection) return 'group-knockout';
     return 'round-robin';
   })();
 
   const tournamentTypeReviewLabel = (() => {
     if (tournamentType === 'series') return `${seriesGames}-match series`;
-    if (winnerMode === 'knockouts') return `Group + playoffs`;
+    if (isKnockoutSelection) return `Group + playoffs`;
     return 'Round-robin';
   })();
 
@@ -525,7 +528,10 @@ export default function MonoTournamentSetup() {
                   {teamCountOptions.map(n => (
                     <button
                       key={n}
-                      onClick={() => setTeamCount(n)}
+                      onClick={() => {
+                        setTeamCount(n);
+                        if (n < 3) setWinnerMode('table-topper');
+                      }}
                       className={teamCount === n ? 'mono-btn-primary' : 'mono-btn'}
                       style={{ width: '44px', height: '44px', padding: 0, fontSize: '0.9375rem' }}
                     >
