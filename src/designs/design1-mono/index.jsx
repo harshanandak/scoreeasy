@@ -255,10 +255,14 @@ function GlobalNavigation() {
           id="global-mobile-menu"
           className="global-mobile-menu-sheet"
           aria-label="Navigation menu"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
-          }}
         >
+          <button
+            type="button"
+            className="global-mobile-menu-backdrop"
+            aria-label="Dismiss navigation menu"
+            onClick={() => setOpen(false)}
+          />
+          <div className="global-mobile-menu-content">
             <div className="global-mobile-menu-heading">
               <span>Menu</span>
               <span>{currentItem?.label ?? 'Home'}</span>
@@ -284,6 +288,7 @@ function GlobalNavigation() {
                 </button>
               ))}
             </nav>
+          </div>
         </dialog>
       )}
       {showBottomNav && bottomNavItems.length > 0 && (
@@ -358,7 +363,9 @@ function GlobalNavigation() {
         }
 
         .global-mobile-menu-button,
+        .global-mobile-menu-backdrop,
         .global-mobile-menu-sheet,
+        .global-mobile-menu-content,
         .global-bottom-nav {
           display: none;
         }
@@ -400,23 +407,40 @@ function GlobalNavigation() {
 
           .global-mobile-menu-sheet {
             position: fixed;
-            right: 12px;
-            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-            left: 12px;
-            z-index: 241;
+            inset: 0;
+            z-index: 240;
             display: block;
             max-width: none;
             margin: 0;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            width: auto;
+          }
+
+          .global-mobile-menu-backdrop {
+            position: absolute;
+            inset: 0;
+            display: block;
+            border: 0;
+            background: rgba(17, 17, 17, 0.38);
+            cursor: pointer;
+          }
+
+          .global-mobile-menu-content {
+            position: absolute;
+            right: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+            left: 12px;
+            display: block;
             border: 1.5px solid #111;
             background: #fff;
             color: #111;
-            padding: 0;
-            width: auto;
             box-shadow: 4px 4px 0 #111;
           }
 
           .global-mobile-menu-sheet::backdrop {
-            background: rgba(17, 17, 17, 0.38);
+            background: transparent;
           }
 
           .global-mobile-menu-heading {
