@@ -1,3 +1,10 @@
+import PropTypes from 'prop-types';
+
+const iconPropTypes = {
+  size: PropTypes.number,
+  color: PropTypes.string,
+};
+
 function VolleyballIcon({ size = 32, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -42,12 +49,55 @@ function TennisIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
+function PickleballIcon({ size = 32, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="13" cy="13" r="8" />
+      <path d="M18.5 18.5l7 7" />
+      <path d="M22 22l3-3" />
+      <circle cx="20.5" cy="8" r="2.5" />
+      <circle cx="10" cy="10" r="0.6" fill={color} stroke="none" />
+      <circle cx="13.5" cy="8" r="0.6" fill={color} stroke="none" />
+      <circle cx="16" cy="11.5" r="0.6" fill={color} stroke="none" />
+      <circle cx="12" cy="14" r="0.6" fill={color} stroke="none" />
+      <circle cx="15" cy="16" r="0.6" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+function SquashIcon({ size = 32, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="14" cy="10" rx="5.5" ry="8" transform="rotate(-28 14 10)" />
+      <path d="M17.5 16.5l6.5 9" />
+      <path d="M21.5 23.5l3.5-2.5" />
+      <path d="M10.5 5.5c2 2.5 4.5 6 6 9" />
+      <path d="M8.5 9.5c3 1 7 2 11 1.5" />
+      <circle cx="24" cy="7" r="2.4" />
+    </svg>
+  );
+}
+
 function FootballIcon({ size = 32, color = 'currentColor' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="16" cy="16" r="13.5" />
       <path d="M16 8.5l4.5 3.2-1.8 5.3h-5.5l-1.8-5.3z" />
       <path d="M16 8.5l0-6" /><path d="M20.5 11.7l5-2.5" /><path d="M18.7 17l3.5 4.5" /><path d="M13.2 17l-3.5 4.5" /><path d="M11.5 11.7l-5-2.5" />
+    </svg>
+  );
+}
+
+function FutsalIcon({ size = 32, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="5" width="24" height="18" rx="2" />
+      <path d="M4 14h24" />
+      <path d="M16 5v18" />
+      <circle cx="16" cy="14" r="3.5" />
+      <circle cx="23" cy="26" r="3" />
+      <path d="M20.8 24.2l4.4 3.6" />
+      <path d="M25.2 24.2l-4.4 3.6" />
     </svg>
   );
 }
@@ -61,6 +111,27 @@ function BasketballIcon({ size = 32, color = 'currentColor' }) {
     </svg>
   );
 }
+
+function KabaddiIcon({ size = 32, color = 'currentColor' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="7" r="3" />
+      <path d="M12 10l-2.5 7 4.5 4" />
+      <path d="M10.5 14h7" />
+      <path d="M17.5 14l3-3" />
+      <path d="M14 21l-1.5 6" />
+      <path d="M14 21l5 4" />
+      <path d="M22 7h5" />
+      <path d="M24.5 4.5v5" />
+      <path d="M23 20c2 0 3.5-1 4-3" />
+    </svg>
+  );
+}
+
+PickleballIcon.propTypes = iconPropTypes;
+SquashIcon.propTypes = iconPropTypes;
+FutsalIcon.propTypes = iconPropTypes;
+KabaddiIcon.propTypes = iconPropTypes;
 
 function BadmintonIcon({ size = 32, color = 'currentColor' }) {
   return (
@@ -176,8 +247,10 @@ function HandballIcon({ size = 32, color = 'currentColor' }) {
 
 export const ICON_MAP = {
   Volleyball: VolleyballIcon, Cricket: CricketIcon, Tennis: TennisIcon,
+  Pickleball: PickleballIcon, Squash: SquashIcon,
   Football: FootballIcon, Basketball: BasketballIcon, Badminton: BadmintonIcon,
-  Hockey: HockeyIcon, 'Table Tennis': TableTennisIcon, Golf: GolfIcon,
+  Hockey: HockeyIcon, Futsal: FutsalIcon, Kabaddi: KabaddiIcon,
+  'Table Tennis': TableTennisIcon, Golf: GolfIcon,
   Pool: PoolIcon, Chess: ChessIcon, Rugby: RugbyIcon,
   Frisbee: FrisbeeIcon, Handball: HandballIcon,
 };

@@ -129,16 +129,16 @@ export default function GuestLanding() {
           <div style={{ padding: '28px 16px 0' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: -4, right: 0, opacity: t.iconDecoOpacity, transform: 'rotate(-6deg)' }}>
-                <SportIcon name="Volleyball" size={44} color={t.text} />
+                <SportIcon name="Cricket" size={44} color={t.text} />
               </div>
               <p style={{ fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.15em', color: t.textMuted, marginBottom: 8 }}>
-                UNIVERSAL SCORE TRACKER
+                POPULAR GAME SCOREKEEPER
               </p>
               <h1 style={{ fontWeight: 900, fontSize: 'clamp(2.2rem, 11vw, 3rem)', lineHeight: 0.9, letterSpacing: '-0.04em', margin: '0 0 12px 0', color: t.text }}>
-                SCORE<br />ANY GAME.
+                START<br />A MATCH.
               </h1>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: t.textSoft, marginBottom: 16 }}>
-                14 sports. Tournaments. Live scoring. Free forever.
+                Start with cricket or football first, with volleyball and the rest of the catalog ready when needed.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Link to="/play" style={{
@@ -149,25 +149,31 @@ export default function GuestLanding() {
                 }}>
                   START SCORING
                 </Link>
-                {cloudAuthAvailable && (
-                  <Link to="/signup" style={{
-                    fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
-                    padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
-                    background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
-                    flex: 1, textAlign: 'center',
-                  }}>
-                    SIGN UP
-                  </Link>
-                )}
+                <Link to="/cricket/quick?format=T20" style={{
+                  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
+                  padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
+                  background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
+                  flex: 1, textAlign: 'center',
+                }}>
+                  QUICK CRICKET
+                </Link>
               </div>
+              {cloudAuthAvailable && (
+                <Link to="/signup" style={{
+                  display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
+                  color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
+                }}>
+                  Create account for sync and history
+                </Link>
+              )}
             </div>
 
             {/* Sport pill selector + dynamic scorecard mockup */}
             <div style={{ marginTop: 20, marginBottom: 24 }}>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10, overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                 {heroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
-                    flexShrink: 0, padding: '5px 10px', border: 'none', cursor: 'pointer',
+                    minHeight: 32, padding: '6px 10px', border: 'none', cursor: 'pointer',
                     fontFamily: MONO, fontSize: '0.5rem', fontWeight: 700, letterSpacing: '0.06em',
                     background: activeHeroSport === i ? t.text : t.surface,
                     color: activeHeroSport === i ? t.bg : t.textMuted,
@@ -211,7 +217,7 @@ export default function GuestLanding() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: -20, right: 40, transform: 'rotate(-5deg)', opacity: t.iconDecoOpacity }}>
-                <SportIcon name="Volleyball" size={72} color={t.text} />
+                <SportIcon name="Football" size={72} color={t.text} />
               </div>
               <div style={{ position: 'absolute', top: 90, right: -10, transform: 'rotate(8deg)', opacity: t.iconDecoOpacity * 0.8 }}>
                 <SportIcon name="Tennis" size={60} color={t.text} />
