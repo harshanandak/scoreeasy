@@ -13,6 +13,7 @@ export default function MonoTournamentList() {
   const sportConfig = getSportById(sport);
   const [tournaments, setTournaments] = useState([]);
   const [visible, setVisible] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -26,9 +27,9 @@ export default function MonoTournamentList() {
   };
 
   const deleteTournament = (id) => {
-    if (!confirm('Delete this tournament?')) return;
     deleteSportTournament(sportConfig.storageKey, id);
     setTournaments(prev => prev.filter(t => t.id !== id));
+    setPendingDeleteId(null);
   };
 
   if (!sportConfig) {
@@ -145,24 +146,53 @@ export default function MonoTournamentList() {
                       })()}
                     </p>
                   </button>
-                  <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
-                    <button
-                      onClick={() => openTournament(t.id)}
-                      className="mono-btn-primary flex-1"
-                      style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-                      aria-label={`Continue ${t.name} tournament`}
+                  {pendingDeleteId === t.id ? (
+                    <div
+                      className="flex flex-col gap-2"
+                      style={{ borderTop: '1px solid #fee2e2', padding: '12px 20px', background: '#fef2f2' }}
+                      role="alert"
                     >
-                      Continue
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
-                      className="mono-btn"
-                      style={{ minHeight: 44, padding: '10px 12px', color: '#dc2626', borderColor: '#fecaca' }}
-                      aria-label={`Delete ${t.name} tournament`}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                      <p className="text-sm" style={{ color: '#991b1b' }}>
+                        Delete this tournament and its saved matches?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
+                          className="mono-btn-primary flex-1"
+                          style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem', background: '#dc2626' }}
+                          aria-label={`Confirm delete ${t.name} tournament`}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                          className="mono-btn flex-1"
+                          style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
+                      <button
+                        onClick={() => openTournament(t.id)}
+                        className="mono-btn-primary flex-1"
+                        style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
+                        aria-label={`Continue ${t.name} tournament`}
+                      >
+                        Continue
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPendingDeleteId(t.id); }}
+                        className="mono-btn"
+                        style={{ minHeight: 44, padding: '10px 12px', color: '#dc2626', borderColor: '#fecaca' }}
+                        aria-label={`Delete ${t.name} tournament`}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

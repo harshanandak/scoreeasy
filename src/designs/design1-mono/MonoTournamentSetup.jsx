@@ -335,6 +335,45 @@ export default function MonoTournamentSetup() {
     return `Playoffs (Top ${teamsAdvancing}${suffix})`;
   })();
 
+  const tournamentTypePreset = (() => {
+    if (tournamentType === 'series') return 'series';
+    if (winnerMode === 'knockouts') return 'group-knockout';
+    return 'round-robin';
+  })();
+
+  const tournamentTypeReviewLabel = (() => {
+    if (tournamentType === 'series') return `${seriesGames}-match series`;
+    if (winnerMode === 'knockouts') return `Group + playoffs`;
+    return 'Round-robin';
+  })();
+
+  const tournamentTypeDescription = (() => {
+    if (tournamentTypePreset === 'group-knockout') {
+      return 'Group matches first, then playoffs decide the winner';
+    }
+    if (tournamentType === 'round-robin') return 'Multiple teams, everyone plays everyone';
+    return '2 teams compete in a series of matches';
+  })();
+
+  const teamNameById = (teamId) => teams.find(t => t.id === teamId)?.name || 'TBD';
+
+  const schedulePreview = (() => {
+    if (tournamentType === 'series') {
+      return Array.from({ length: Math.min(seriesGames, 4) }, (_, i) => ({
+        label: `Match ${i + 1}`,
+        team1Id: teams[0]?.id,
+        team2Id: teams[1]?.id,
+      }));
+    }
+    if (teamCount === 2) {
+      return [{ label: 'Match 1', team1Id: teams[0]?.id, team2Id: teams[1]?.id }];
+    }
+    return generateRoundRobinMatches(teams).slice(0, 4).map((match, i) => ({
+      ...match,
+      label: `Match ${i + 1}`,
+    }));
+  })();
+
   const formatReviewLabel = getFormatReviewLabel({ format, isCricket, sportConfig });
 
   if (!sportConfig) {
@@ -435,33 +474,45 @@ export default function MonoTournamentSetup() {
               <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                 Tournament type
               </span>
-              <div className="flex gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
                 <button
                   onClick={() => {
                     setTournamentType('round-robin');
+                    setWinnerMode('table-topper');
                     setTeamCount(4);
                   }}
-                  className={tournamentType === 'round-robin' ? 'mono-btn-primary' : 'mono-btn'}
-                  style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
+                  className={tournamentTypePreset === 'round-robin' ? 'mono-btn-primary' : 'mono-btn'}
+                  style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
+                  aria-pressed={tournamentTypePreset === 'round-robin'}
                 >
                   Round-robin
                 </button>
                 <button
                   onClick={() => {
+                    setTournamentType('round-robin');
+                    setWinnerMode('knockouts');
+                    setTeamCount(prev => Math.max(prev, 4));
+                  }}
+                  className={tournamentTypePreset === 'group-knockout' ? 'mono-btn-primary' : 'mono-btn'}
+                  style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
+                  aria-pressed={tournamentTypePreset === 'group-knockout'}
+                >
+                  Group + Playoffs
+                </button>
+                <button
+                  onClick={() => {
                     setTournamentType('series');
+                    setWinnerMode('table-topper');
                     setTeamCount(2);
                   }}
-                  className={tournamentType === 'series' ? 'mono-btn-primary' : 'mono-btn'}
-                  style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
+                  className={tournamentTypePreset === 'series' ? 'mono-btn-primary' : 'mono-btn'}
+                  style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
+                  aria-pressed={tournamentTypePreset === 'series'}
                 >
                   Series
                 </button>
               </div>
-              <p className="text-xs mt-2" style={{ color: '#bbb' }}>
-                {tournamentType === 'round-robin'
-                  ? 'Multiple teams, everyone plays everyone'
-                  : '2 teams compete in a series of matches'}
-              </p>
+              <p className="text-xs mt-2" style={{ color: '#bbb' }}>{tournamentTypeDescription}</p>
             </div>
 
             {/* Team Count (Round-robin only) */}
@@ -1425,7 +1476,7 @@ export default function MonoTournamentSetup() {
                 <div className="flex justify-between text-sm gap-4">
                   <span style={{ color: '#888' }}>Type</span>
                   <span className="font-mono text-right" style={{ color: '#111' }}>
-                    {tournamentType === 'series' ? `${seriesGames}-match series` : 'Round-robin'}
+                    {tournamentTypeReviewLabel}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm gap-4">
@@ -1448,6 +1499,29 @@ export default function MonoTournamentSetup() {
                     <span className="font-mono text-right" style={{ color: '#111' }}>{finalStageLabel}</span>
                   </div>
                 )}
+              </div>
+            </div>
+
+            <div className="mono-card mb-6" style={{ padding: '16px 20px', background: '#f8fafc' }}>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
+                  Schedule preview
+                </h3>
+                {matchCountPreview > schedulePreview.length && (
+                  <span className="text-xs font-mono" style={{ color: '#888' }}>
+                    First {schedulePreview.length} of {matchCountPreview}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                {schedulePreview.map(match => (
+                  <div key={`${match.label}-${match.team1Id}-${match.team2Id}`} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-mono text-xs" style={{ color: '#888' }}>{match.label}</span>
+                    <span className="text-right" style={{ color: '#111' }}>
+                      {teamNameById(match.team1Id)} vs {teamNameById(match.team2Id)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
