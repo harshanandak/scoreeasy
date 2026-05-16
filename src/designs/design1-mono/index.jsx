@@ -250,19 +250,15 @@ function GlobalNavigation() {
         </button>
       </header>
       {open && (
-        <>
-          <button
-            type="button"
-            className="global-mobile-menu-backdrop"
-            aria-label="Dismiss navigation menu"
-            onClick={() => setOpen(false)}
-          />
-          <dialog
-            ref={mobileMenuRef}
-            id="global-mobile-menu"
-            className="global-mobile-menu-sheet"
-            aria-label="Navigation menu"
-          >
+        <dialog
+          ref={mobileMenuRef}
+          id="global-mobile-menu"
+          className="global-mobile-menu-sheet"
+          aria-label="Navigation menu"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setOpen(false);
+          }}
+        >
             <div className="global-mobile-menu-heading">
               <span>Menu</span>
               <span>{currentItem?.label ?? 'Home'}</span>
@@ -288,8 +284,7 @@ function GlobalNavigation() {
                 </button>
               ))}
             </nav>
-          </dialog>
-        </>
+        </dialog>
       )}
       {showBottomNav && bottomNavItems.length > 0 && (
         <nav
@@ -363,7 +358,6 @@ function GlobalNavigation() {
         }
 
         .global-mobile-menu-button,
-        .global-mobile-menu-backdrop,
         .global-mobile-menu-sheet,
         .global-bottom-nav {
           display: none;
@@ -404,15 +398,6 @@ function GlobalNavigation() {
             background: #111;
           }
 
-          .global-mobile-menu-backdrop {
-            position: fixed;
-            inset: 0;
-            z-index: 240;
-            display: block;
-            border: 0;
-            background: rgba(17, 17, 17, 0.38);
-          }
-
           .global-mobile-menu-sheet {
             position: fixed;
             right: 12px;
@@ -428,6 +413,10 @@ function GlobalNavigation() {
             padding: 0;
             width: auto;
             box-shadow: 4px 4px 0 #111;
+          }
+
+          .global-mobile-menu-sheet::backdrop {
+            background: rgba(17, 17, 17, 0.38);
           }
 
           .global-mobile-menu-heading {
