@@ -24,6 +24,34 @@ const stickyActionStyle = {
   boxShadow: '0 -10px 20px rgba(250, 250, 250, 0.92)',
 };
 
+function getCricketReviewLabel(format) {
+  const presetName = format.preset
+    ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset)
+    : 'Custom';
+  const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
+  return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
+}
+
+function getSetsReviewLabel(format) {
+  const scoringLabel = format.scoringMode === 'side-out' ? ' - side-out' : '';
+  if (format.type === 'best-of') return `Best of ${format.sets} - ${format.points} pts${scoringLabel}`;
+  return `Single set - ${format.points} pts${scoringLabel}`;
+}
+
+function getGoalsReviewLabel(format) {
+  if (format.mode === 'free') return 'Free play';
+  if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;
+  return `First to ${format.target}`;
+}
+
+function getFormatReviewLabel({ format, isCricket, sportConfig }) {
+  if (!format) return 'Not set';
+  if (isCricket) return getCricketReviewLabel(format);
+  if (sportConfig?.engine === 'sets') return getSetsReviewLabel(format);
+  if (sportConfig?.engine === 'goals') return getGoalsReviewLabel(format);
+  return 'Custom';
+}
+
 // Standard squad sizes per sport (playing + subs)
 const SQUAD_LIMITS = {
   volleyball: { playing: 6, max: 14 },
@@ -307,25 +335,7 @@ export default function MonoTournamentSetup() {
     return `Playoffs (Top ${teamsAdvancing}${suffix})`;
   })();
 
-  const formatReviewLabel = (() => {
-    if (!format) return 'Not set';
-    if (isCricket) {
-      const presetName = format.preset ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset) : 'Custom';
-      const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
-      return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
-    }
-    if (sportConfig?.engine === 'sets') {
-      return format.type === 'best-of'
-        ? `Best of ${format.sets} - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`
-        : `Single set - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`;
-    }
-    if (sportConfig?.engine === 'goals') {
-      if (format.mode === 'free') return 'Free play';
-      if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;
-      return `First to ${format.target}`;
-    }
-    return 'Custom';
-  })();
+  const formatReviewLabel = getFormatReviewLabel({ format, isCricket, sportConfig });
 
   if (!sportConfig) {
     return (
