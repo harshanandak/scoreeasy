@@ -14,6 +14,7 @@ export default function GenericSetsTournament() {
   const [tournament, setTournament] = useState(null);
   const [tab, setTab] = useState('matches');
   const [visible, setVisible] = useState(false);
+  const [pendingClearMatchId, setPendingClearMatchId] = useState(null);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -141,6 +142,7 @@ export default function GenericSetsTournament() {
       return m;
     });
     setTournament({ ...tournament, matches: updatedMatches });
+    setPendingClearMatchId(null);
   };
 
   const deleteKnockoutScore = (matchId) => {
@@ -151,6 +153,7 @@ export default function GenericSetsTournament() {
       return m;
     });
     setTournament({ ...tournament, knockoutMatches: updatedKO });
+    setPendingClearMatchId(null);
   };
 
   return (
@@ -277,7 +280,7 @@ export default function GenericSetsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => deleteScore(match.id)}
+                          onClick={() => setPendingClearMatchId(match.id)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -349,6 +352,33 @@ export default function GenericSetsTournament() {
                       ? '▶ Resume Match'
                       : hasScore ? 'Edit Score' : 'Enter Score'}
                   </button>
+                  {pendingClearMatchId === match.id && (
+                    <div
+                      className="mt-3 p-3"
+                      style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6 }}
+                      role="alert"
+                    >
+                      <p className="text-sm mb-2" style={{ color: '#991b1b' }}>
+                        Clear this saved score and reopen the match?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => deleteScore(match.id)}
+                          className="mono-btn-primary flex-1"
+                          style={{ minHeight: 44, background: '#dc2626' }}
+                        >
+                          Clear score
+                        </button>
+                        <button
+                          onClick={() => setPendingClearMatchId(null)}
+                          className="mono-btn flex-1"
+                          style={{ minHeight: 44 }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
