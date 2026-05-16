@@ -8,6 +8,22 @@ import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaul
 
 const STEP_LABELS = ['Basics', 'Match rules', 'Teams', 'Review'];
 
+const mobileBackButtonStyle = {
+  color: '#0066ff',
+  minHeight: 44,
+  padding: '8px 10px',
+};
+
+const stickyActionStyle = {
+  position: 'sticky',
+  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)',
+  zIndex: 20,
+  minHeight: 52,
+  padding: '12px',
+  fontSize: '0.9375rem',
+  boxShadow: '0 -10px 20px rgba(250, 250, 250, 0.92)',
+};
+
 // Standard squad sizes per sport (playing + subs)
 const SQUAD_LIMITS = {
   volleyball: { playing: 6, max: 14 },
@@ -280,6 +296,37 @@ export default function MonoTournamentSetup() {
     return `First to ${f.target} ${sportConfig?.config?.scoringUnit || 'point'}s`;
   };
 
+  const matchCountPreview = tournamentType === 'series'
+    ? seriesGames
+    : (teamCount * (teamCount - 1)) / 2;
+
+  const finalStageLabel = (() => {
+    if (tournamentType !== 'round-robin' || teamCount < 3) return null;
+    if (winnerMode !== 'knockouts') return 'Standings';
+    const suffix = thirdPlaceMatch ? ' + 3rd place' : '';
+    return `Playoffs (Top ${teamsAdvancing}${suffix})`;
+  })();
+
+  const formatReviewLabel = (() => {
+    if (!format) return 'Not set';
+    if (isCricket) {
+      const presetName = format.preset ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset) : 'Custom';
+      const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
+      return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
+    }
+    if (sportConfig.engine === 'sets') {
+      return format.type === 'best-of'
+        ? `Best of ${format.sets} - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`
+        : `Single set - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`;
+    }
+    if (sportConfig.engine === 'goals') {
+      if (format.mode === 'free') return 'Free play';
+      if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;
+      return `First to ${format.target}`;
+    }
+    return 'Custom';
+  })();
+
   if (!sportConfig) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -320,7 +367,7 @@ export default function MonoTournamentSetup() {
         )}
 
         {/* Step indicator */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="grid grid-cols-4 gap-2 mb-8" aria-label="Tournament setup progress">
           {STEP_LABELS.map((label, i) => {
             const stepNum = i + 1;
             const isActive = stepNum === step;
@@ -329,7 +376,7 @@ export default function MonoTournamentSetup() {
             if (isActive) stepBg = '#0066ff';
             else if (isDone) stepBg = '#111';
             return (
-              <div key={label} className="flex items-center gap-2">
+              <div key={label} className="flex flex-col items-center gap-1 text-center">
                 <div
                   style={{
                     width: '24px', height: '24px', borderRadius: '50%',
@@ -342,14 +389,11 @@ export default function MonoTournamentSetup() {
                   {isDone ? '✓' : stepNum}
                 </div>
                 <span
-                  className="text-xs font-swiss hidden sm:inline"
-                  style={{ color: isActive ? '#111' : '#888' }}
+                  className="text-xs font-swiss"
+                  style={{ color: isActive ? '#111' : '#888', lineHeight: 1.15 }}
                 >
                   {label}
                 </span>
-                {i < 3 && (
-                  <div style={{ width: '16px', height: '1px', background: isDone ? '#111' : '#eee' }} />
-                )}
               </div>
             );
           })}
@@ -480,7 +524,7 @@ export default function MonoTournamentSetup() {
             <button
               onClick={() => goToStep(2)}
               className="mono-btn-primary w-full"
-              style={{ padding: '12px', fontSize: '0.9375rem', opacity: canAdvanceStep1 ? 1 : 0.4 }}
+              style={{ ...stickyActionStyle, opacity: canAdvanceStep1 ? 1 : 0.4 }}
               disabled={!canAdvanceStep1}
             >
               {preselectedFormat && isCricket ? 'Next: Review Format' : 'Next: Match Rules'}
@@ -500,7 +544,7 @@ export default function MonoTournamentSetup() {
               <button
                 onClick={() => setStep(1)}
                 className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                style={{ color: '#0066ff' }}
+                style={mobileBackButtonStyle}
               >
                 Back
               </button>
@@ -1281,7 +1325,7 @@ export default function MonoTournamentSetup() {
             <button
               onClick={() => goToStep(3)}
               className="mono-btn-primary w-full"
-              style={{ padding: '12px', fontSize: '0.9375rem' }}
+              style={stickyActionStyle}
             >
               Next: Name Teams
             </button>
@@ -1301,7 +1345,7 @@ export default function MonoTournamentSetup() {
                 <button
                   onClick={() => setStep(2)}
                   className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                  style={{ color: '#0066ff' }}
+                  style={mobileBackButtonStyle}
                 >
                   Back
                 </button>
@@ -1329,7 +1373,7 @@ export default function MonoTournamentSetup() {
             <button
               onClick={() => setStep(4)}
               className="mono-btn-primary w-full"
-              style={{ padding: '12px', fontSize: '0.9375rem' }}
+              style={stickyActionStyle}
             >
               Next: Review &amp; Start
             </button>
@@ -1341,24 +1385,73 @@ export default function MonoTournamentSetup() {
         {/* ──────────────────────────────────────────────── */}
         {step === 4 && (
           <div className="animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-xs uppercase tracking-widest font-normal block" style={{ color: '#888' }}>
+                  Review &amp; Start
+                </span>
+                <h2 className="text-lg font-semibold" style={{ color: '#111' }}>
+                  Check tournament details
+                </h2>
+              </div>
+              <button
+                onClick={() => setStep(3)}
+                className="text-xs bg-transparent border-none cursor-pointer font-swiss"
+                style={mobileBackButtonStyle}
+              >
+                Back
+              </button>
+            </div>
+
+            <div className="mono-card mb-6" style={{ padding: '16px 20px' }}>
+              <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
+                Summary
+              </h3>
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-sm gap-4">
+                  <span style={{ color: '#888' }}>Tournament</span>
+                  <span className="text-right" style={{ color: '#111' }}>{name}</span>
+                </div>
+                <div className="flex justify-between text-sm gap-4">
+                  <span style={{ color: '#888' }}>Type</span>
+                  <span className="font-mono text-right" style={{ color: '#111' }}>
+                    {tournamentType === 'series' ? `${seriesGames}-match series` : 'Round-robin'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm gap-4">
+                  <span style={{ color: '#888' }}>Format</span>
+                  <span className="font-mono text-right" style={{ color: '#111', maxWidth: '220px' }}>
+                    {formatReviewLabel}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm gap-4">
+                  <span style={{ color: '#888' }}>Teams</span>
+                  <span className="font-mono" style={{ color: '#111' }}>{teamCount}</span>
+                </div>
+                <div className="flex justify-between text-sm gap-4">
+                  <span style={{ color: '#888' }}>Matches</span>
+                  <span className="font-mono" style={{ color: '#111' }}>{matchCountPreview}</span>
+                </div>
+                {finalStageLabel && (
+                  <div className="flex justify-between text-sm gap-4">
+                    <span style={{ color: '#888' }}>Final stage</span>
+                    <span className="font-mono text-right" style={{ color: '#111' }}>{finalStageLabel}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Squad Roster Section */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-xs uppercase tracking-widest font-normal block" style={{ color: '#888' }}>
-                    Squad Roster (Optional)
+                    Optional roster
                   </span>
                   <span className="text-xs" style={{ color: '#bbb' }}>
                     Playing {squadLimit.playing} per match · squad up to {squadLimit.max}
                   </span>
                 </div>
-                <button
-                  onClick={() => setStep(3)}
-                  className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                  style={{ color: '#0066ff' }}
-                >
-                  Back
-                </button>
               </div>
 
               {/* Squad vs playing info */}
@@ -1506,71 +1599,10 @@ export default function MonoTournamentSetup() {
               ))}
             </div>
 
-            <hr className="mono-divider mb-8" />
-
-            {/* Summary */}
-            <div className="mono-card mb-8" style={{ padding: '16px 20px' }}>
-              <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                Summary
-              </h3>
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: '#888' }}>Tournament</span>
-                  <span style={{ color: '#111' }}>{name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: '#888' }}>Type</span>
-                  <span className="font-mono" style={{ color: '#111' }}>
-                    {tournamentType === 'series' ? `${seriesGames}-match series` : 'Round-robin'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: '#888' }}>Format</span>
-                  <span className="font-mono text-right" style={{ color: '#111', maxWidth: '200px' }}>
-                    {isCricket && (() => {
-                      const presetName = format.preset ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset) : 'Custom';
-                      const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
-                      return presetName + ' · ' + oversLabel + ' · ' + format.players + 'p';
-                    })()}
-                    {sportConfig.engine === 'sets' && (format.type === 'best-of'
-                      ? `Best of ${format.sets} · ${format.points} pts${format.scoringMode === 'side-out' ? ' · side-out' : ''}`
-                      : `Single set · ${format.points} pts${format.scoringMode === 'side-out' ? ' · side-out' : ''}`)}
-                    {sportConfig.engine === 'goals' && (() => {
-                      if (format.mode === 'free') return 'Free play';
-                      if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;
-                      return `First to ${format.target}`;
-                    })()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: '#888' }}>Teams</span>
-                  <span className="font-mono" style={{ color: '#111' }}>{teamCount}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: '#888' }}>Matches</span>
-                  <span className="font-mono" style={{ color: '#111' }}>
-                    {teamCount === 2 ? 1 : (teamCount * (teamCount - 1)) / 2}
-                  </span>
-                </div>
-                {tournamentType === 'round-robin' && teamCount >= 3 && (
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: '#888' }}>Final stage</span>
-                    <span className="font-mono" style={{ color: '#111' }}>
-                      {(() => {
-                        if (winnerMode !== 'knockouts') return 'Standings';
-                        const suffix = thirdPlaceMatch ? ' + 3rd place' : '';
-                        return `Playoffs (Top ${teamsAdvancing}${suffix})`;
-                      })()}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <button
               onClick={startTournament}
               className="mono-btn-primary w-full"
-              style={{ padding: '12px', fontSize: '0.9375rem' }}
+              style={stickyActionStyle}
             >
               Start Tournament
             </button>
