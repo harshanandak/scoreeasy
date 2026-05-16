@@ -399,7 +399,7 @@ export default function MonoHistory() {
                 type="button"
                 className="mono-btn-primary flex-1"
                 style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/volleyball/quick')}
+                onClick={() => navigate('/play')}
               >
                 Start Match
               </button>
@@ -407,7 +407,7 @@ export default function MonoHistory() {
                 type="button"
                 className="mono-btn flex-1"
                 style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/volleyball/tournament/new')}
+                onClick={() => navigate('/play')}
               >
                 Tournament
               </button>
