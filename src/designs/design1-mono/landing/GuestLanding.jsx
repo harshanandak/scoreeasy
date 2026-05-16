@@ -129,33 +129,33 @@ export default function GuestLanding() {
           <div style={{ padding: '28px 16px 0' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', top: -4, right: 0, opacity: t.iconDecoOpacity, transform: 'rotate(-6deg)' }}>
-                <SportIcon name="Volleyball" size={44} color={t.text} />
+                <SportIcon name="Cricket" size={44} color={t.text} />
               </div>
               <p style={{ fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.15em', color: t.textMuted, marginBottom: 8 }}>
-                VOLLEYBALL SCOREKEEPER
+                POPULAR GAME SCOREKEEPER
               </p>
               <h1 style={{ fontWeight: 900, fontSize: 'clamp(2.2rem, 11vw, 3rem)', lineHeight: 0.9, letterSpacing: '-0.04em', margin: '0 0 12px 0', color: t.text }}>
                 START<br />A MATCH.
               </h1>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: t.textSoft, marginBottom: 16 }}>
-                Score Volleyball now. No signup needed. Tournaments and 13 more sports are ready when you need them.
+                Start with cricket or football first, with volleyball and the rest of the catalog ready when needed.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Link to="/volleyball/quick" style={{
+                <Link to="/play" style={{
                   fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
                   padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: t.text, color: t.bg, border: `${t.borderWeight} solid ${t.text}`,
                   flex: 1, textAlign: 'center',
                 }}>
-                  START VOLLEYBALL
+                  START SCORING
                 </Link>
-                <Link to="/play" style={{
+                <Link to="/cricket/quick?format=T20" style={{
                   fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
                   padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
                   flex: 1, textAlign: 'center',
                 }}>
-                  CHOOSE SPORT
+                  QUICK CRICKET
                 </Link>
               </div>
               {cloudAuthAvailable && (

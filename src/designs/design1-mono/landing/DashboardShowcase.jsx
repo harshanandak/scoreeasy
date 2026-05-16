@@ -22,9 +22,9 @@ const t = {
 
 /* ─── Mock data ─── */
 const allSports = [
-  { id: 'volleyball', name: 'Volleyball', icon: 'Volleyball' },
   { id: 'cricket', name: 'Cricket', icon: 'Cricket' },
   { id: 'football', name: 'Football', icon: 'Football' },
+  { id: 'volleyball', name: 'Volleyball', icon: 'Volleyball' },
   { id: 'tennis', name: 'Tennis', icon: 'Tennis' },
   { id: 'basketball', name: 'Basketball', icon: 'Basketball' },
   { id: 'badminton', name: 'Badminton', icon: 'Badminton' },
@@ -212,7 +212,7 @@ function Tile({ sport, showButtons }) {
 
 /* Favorites determined by onboarding picks + play history + settings.
    In production this comes from Convex user profile. */
-const favoriteSportNames = ['Tennis', 'Cricket', 'Football'];
+const favoriteSportNames = ['Cricket', 'Football', 'Tennis'];
 const otherSportNames = allSports.filter(sp => !favoriteSportNames.includes(sp.name));
 
 /* Layered style — stacked paper depth, dark card with blue plate peeking beneath */
