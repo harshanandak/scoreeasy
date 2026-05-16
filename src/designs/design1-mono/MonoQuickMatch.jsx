@@ -1191,6 +1191,7 @@ export default function MonoQuickMatch() {
     setServingTeam(1);
     setLastAction('');
     setShowEndConfirm(false);
+    setSidesSwapped(false);
     setGScoreHistory([]);
     setVScoreHistory([]);
     setSets([{ score1: 0, score2: 0, completed: false }]);
