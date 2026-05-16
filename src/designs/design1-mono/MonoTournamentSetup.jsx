@@ -314,12 +314,12 @@ export default function MonoTournamentSetup() {
       const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
       return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
     }
-    if (sportConfig.engine === 'sets') {
+    if (sportConfig?.engine === 'sets') {
       return format.type === 'best-of'
         ? `Best of ${format.sets} - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`
         : `Single set - ${format.points} pts${format.scoringMode === 'side-out' ? ' - side-out' : ''}`;
     }
-    if (sportConfig.engine === 'goals') {
+    if (sportConfig?.engine === 'goals') {
       if (format.mode === 'free') return 'Free play';
       if (format.mode === 'timed') return `${Math.floor(format.timeLimit / 60)} min`;
       return `First to ${format.target}`;
