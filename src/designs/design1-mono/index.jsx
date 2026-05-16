@@ -260,6 +260,7 @@ function GlobalNavigation() {
             type="button"
             className="global-mobile-menu-backdrop"
             aria-label="Dismiss navigation menu"
+            tabIndex={-1}
             onClick={() => setOpen(false)}
           />
           <div className="global-mobile-menu-content">
