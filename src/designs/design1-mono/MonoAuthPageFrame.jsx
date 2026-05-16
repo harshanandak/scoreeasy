@@ -1,12 +1,15 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { DEFAULT_GUEST_SCORING_PATH, getAuthReturnToFromSearch } from "../../utils/authRedirect";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
 
 export default function MonoAuthPageFrame({ children, subtitle }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const guestTarget = getAuthReturnToFromSearch(location.search, DEFAULT_GUEST_SCORING_PATH);
 
   useEffect(() => {
     const frameId = requestAnimationFrame(() => setVisible(true));
@@ -40,7 +43,7 @@ export default function MonoAuthPageFrame({ children, subtitle }) {
 
         <div className="text-center mt-10 flex flex-col items-center gap-3">
           <button
-            onClick={() => navigate("/play")}
+            onClick={() => navigate(guestTarget)}
             className="mono-btn"
             style={{ padding: "10px 18px", fontSize: "0.8125rem", borderColor: "#0066ff", color: "#0066ff" }}
           >

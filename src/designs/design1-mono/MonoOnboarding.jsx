@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAuth } from "../../hooks/useAuth";
 import { getSportsByCategory } from "../../models/sportRegistry";
+import { getAuthReturnToFromSearch } from "../../utils/authRedirect";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
 
@@ -202,7 +203,7 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
     }
   }, []);
 
-  const canContinue = firstName.trim().length > 0 && lastName.trim().length > 0;
+  const canContinue = true;
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -228,7 +229,7 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
         style={{ color: "#888" }}
         htmlFor="onboard-first"
       >
-        First name
+        First name <span style={{ color: "#888", fontWeight: 400 }}>(optional)</span>
       </label>
       <input
         ref={firstRef}
@@ -247,7 +248,7 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
         style={{ color: "#888" }}
         htmlFor="onboard-last"
       >
-        Last name
+        Last name <span style={{ color: "#888", fontWeight: 400 }}>(optional)</span>
       </label>
       <input
         id="onboard-last"
@@ -685,8 +686,10 @@ StepGames.propTypes = {
 
 export default function MonoOnboarding() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isLoading, clerkUser } = useAuth();
   const completeOnboarding = useMutation(api.users.completeOnboarding);
+  const returnTo = getAuthReturnToFromSearch(location.search, "/");
 
   // --- Form state ---
   const [firstName, setFirstName] = useState("");
@@ -714,9 +717,9 @@ export default function MonoOnboarding() {
   // Auth guard
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate("/login");
+      navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate, returnTo]);
 
   // --- Field change handler ---
   const handleChange = useCallback((field, value) => {
@@ -780,17 +783,19 @@ export default function MonoOnboarding() {
     setError("");
 
     const normalizedUsername = username.toLowerCase().replaceAll(/[^a-z0-9_.]/g, "");
+    const resolvedFirstName = firstName.trim() || clerkUser?.firstName || normalizedUsername || "Player";
+    const resolvedLastName = lastName.trim() || clerkUser?.lastName || "";
 
     try {
       await completeOnboarding({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        firstName: resolvedFirstName,
+        lastName: resolvedLastName,
         username: normalizedUsername,
         role,
         favoriteGames: selectedGames,
         playStyle: playStyles,
       });
-      navigate("/");
+      navigate(returnTo);
     } catch (err) {
       const msg = err?.message || "";
       if (msg.includes("already taken")) {
@@ -800,7 +805,7 @@ export default function MonoOnboarding() {
         msg.includes("User not found")
       ) {
         setError("Session expired. Redirecting to sign in...");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`), 1500);
       } else {
         setError(msg || "Something went wrong. Please try again.");
       }
