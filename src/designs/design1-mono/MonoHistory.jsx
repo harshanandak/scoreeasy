@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import { loadData, loadSportTournaments, saveData } from '../../utils/storage';
+import { loadHistory } from '../../utils/universalStorage';
 import { getSportById, getSportsList } from '../../models/sportRegistry';
 import {
   getCompletedAt,
@@ -11,6 +12,7 @@ import {
 } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
+import { shareText } from '../../mobile/share';
 
 const QM_KEY = 'se_quickmatches';
 
@@ -41,6 +43,18 @@ function winnerLabel(winner) {
   if (normalized === 'Draw') return 'Draw';
   if (normalized === 'Tie') return 'Tied';
   return `${normalized} won`;
+}
+
+function buildEntryShareText(entry) {
+  const title = entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`;
+  return `${title} - ${entry.score} - ${winnerLabel(entry.winner)}`;
+}
+
+function getShareStatusText(response) {
+  if (!response || typeof response.shared !== 'boolean') return 'Could not share result.';
+  if (!response.shared) return 'Share is not available on this device.';
+  if (response.method === 'clipboard') return 'Result copied.';
+  return 'Share sheet opened.';
 }
 
 function resolveTeamName(teams, ref, fallback = 'Unknown') {
@@ -131,11 +145,14 @@ function buildTournamentEntries() {
 
 export default function MonoHistory() {
   const navigate = useNavigate();
-  const { history, clearAll: clearLegacyHistory } = useGameHistory();
+  const { history, clearAll: clearLegacyHistory, refresh: refreshLegacyHistory } = useGameHistory();
   const [visible, setVisible] = useState(false);
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [pendingClear, setPendingClear] = useState(null);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [historyStatus, setHistoryStatus] = useState('');
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -223,9 +240,56 @@ export default function MonoHistory() {
     saveData(QM_KEY, []);
   };
 
+  const confirmClearMutableHistory = () => {
+    setPendingClear({
+      cleared: false,
+    });
+  };
+
   const clearMutableHistory = () => {
+    const snapshot = {
+      quick: quickMatches,
+      legacy: loadHistory(),
+      cleared: true,
+    };
+
     clearLegacyHistory();
     clearAllQuickMatches();
+    setPendingClear(snapshot);
+    setSelectedEntry(null);
+    setHistoryStatus('Cleared quick and legacy history.');
+  };
+
+  const undoClearMutableHistory = () => {
+    if (!pendingClear) return;
+    setQuickMatches(pendingClear.quick);
+    saveData(QM_KEY, pendingClear.quick);
+    saveData('gs_history', pendingClear.legacy);
+    refreshLegacyHistory();
+    setPendingClear(null);
+    setHistoryStatus('History restored.');
+  };
+
+  const shareEntry = async (entry) => {
+    try {
+      const response = await shareText({
+        title: 'Score Easy result',
+        text: buildEntryShareText(entry),
+        dialogTitle: 'Share match result',
+      });
+      setHistoryStatus(getShareStatusText(response));
+    } catch {
+      setHistoryStatus('Could not share result.');
+    }
+  };
+
+  const rematchEntry = (entry) => {
+    if (!entry?.sport) return;
+    navigate(`/${entry.sport}/quick`, {
+      state: {
+        teams: [entry.team1, entry.team2],
+      },
+    });
   };
 
   return (
@@ -247,14 +311,63 @@ export default function MonoHistory() {
           </div>
           {clearableCount > 0 && (
             <button
-              onClick={clearMutableHistory}
-              className="bg-transparent border-none cursor-pointer font-swiss text-xs"
-              style={{ color: '#dc2626' }}
+              onClick={confirmClearMutableHistory}
+              className="bg-transparent cursor-pointer font-swiss text-xs"
+              style={{
+                border: '1.5px solid #dc2626',
+                color: '#dc2626',
+                minHeight: 40,
+                padding: '0 10px',
+              }}
             >
               Clear Quick + Legacy
             </button>
           )}
         </nav>
+
+        {historyStatus && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}>
+            {historyStatus}
+          </div>
+        )}
+
+        {pendingClear && !pendingClear.cleared && (
+          <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear quick and legacy history?</p>
+            <p className="text-xs mb-4" style={{ color: '#666' }}>
+              Tournament history will stay. You can undo this before leaving the screen.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="mono-btn flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => setPendingClear(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="mono-btn flex-1"
+                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                onClick={clearMutableHistory}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
+
+        {pendingClear?.cleared && (
+          <button
+            type="button"
+            className="mono-btn mb-4 w-full"
+            style={{ minHeight: 44, padding: '10px' }}
+            onClick={undoClearMutableHistory}
+          >
+            Undo clear
+          </button>
+        )}
 
         <div className="flex gap-2 mb-6" role="tablist" aria-label="History filters">
           {[
@@ -276,15 +389,41 @@ export default function MonoHistory() {
         </div>
 
         {filteredEntries.length === 0 ? (
-          <div className="flex items-center justify-center" style={{ minHeight: '45vh' }}>
-            <p className="text-sm" style={{ color: '#888' }}>No matches in this filter</p>
+          <div className="mono-card text-center" style={{ padding: '28px 18px' }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>No matches in this filter</p>
+            <p className="text-xs mb-5" style={{ color: '#666' }}>
+              Completed quick matches and tournaments will appear here.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="mono-btn-primary flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => navigate('/play')}
+              >
+                Start Match
+              </button>
+              <button
+                type="button"
+                className="mono-btn flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => navigate('/play')}
+              >
+                Tournament
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
             {filteredEntries.map((entry) => (
               <div key={entry.id} className="mono-card" style={{ padding: '14px 16px' }}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
+                  <button
+                    type="button"
+                    className="flex-1 bg-transparent border-none text-left cursor-pointer"
+                    style={{ padding: 0 }}
+                    onClick={() => setSelectedEntry(entry)}
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <SportIcon name={entry.sportName} size={18} color="#888" />
                       <span className="text-sm font-medium" style={{ color: '#111' }}>
@@ -325,13 +464,17 @@ export default function MonoHistory() {
                         {entry.source === 'quick' ? 'Quick' : 'Tournament'}
                       </span>
                     </div>
-                  </div>
+                  </button>
 
                   {entry.source === 'quick' && (
                     <button
-                      onClick={() => deleteQuickMatch(entry.rawId)}
+                      onClick={() => {
+                        deleteQuickMatch(entry.rawId);
+                        setSelectedEntry((current) => (current?.id === entry.id ? null : current));
+                        setHistoryStatus('Quick match deleted.');
+                      }}
                       className="bg-transparent border-none cursor-pointer text-sm"
-                      style={{ color: '#888', padding: '2px 6px' }}
+                      style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
                       title="Delete this match"
                       aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
                     >
@@ -341,6 +484,46 @@ export default function MonoHistory() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {selectedEntry && (
+          <div className="mono-card mt-6" style={{ padding: '16px' }}>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>Match details</p>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
+              {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
+            </h2>
+            <p className="text-sm font-mono mb-4" style={{ color: '#111' }}>
+              {selectedEntry.score} - {winnerLabel(selectedEntry.winner)}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {selectedEntry.source === 'quick' && (
+                <button
+                  type="button"
+                  className="mono-btn-primary"
+                  style={{ minHeight: 44, padding: '10px' }}
+                  onClick={() => rematchEntry(selectedEntry)}
+                >
+                  Rematch
+                </button>
+              )}
+              <button
+                type="button"
+                className="mono-btn"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => shareEntry(selectedEntry)}
+              >
+                Share
+              </button>
+              <button
+                type="button"
+                className="mono-btn"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => setSelectedEntry(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>

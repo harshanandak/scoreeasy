@@ -21,6 +21,10 @@ export default function MonoTournamentList() {
     requestAnimationFrame(() => setVisible(true));
   }, [sport, sportConfig]);
 
+  const openTournament = (id) => {
+    navigate(`/${sport}/tournament/${id}`);
+  };
+
   const deleteTournament = (id) => {
     if (!confirm('Delete this tournament?')) return;
     deleteSportTournament(sportConfig.storageKey, id);
@@ -70,10 +74,26 @@ export default function MonoTournamentList() {
 
         {/* List */}
         {tournaments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center" style={{ minHeight: '30vh' }}>
+          <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: '34vh' }}>
             <span className="text-4xl mb-4">{sportIcon}</span>
-            <p className="text-sm" style={{ color: '#888' }}>No tournaments yet</p>
-            <p className="text-xs mt-1" style={{ color: '#bbb' }}>Create one to get started</p>
+            <h2 className="text-base font-semibold mb-2" style={{ color: '#111' }}>No tournaments yet</h2>
+            <p className="text-sm mb-5" style={{ color: '#666', maxWidth: 320 }}>
+              Build a match list, track standings, and resume the next game from one place.
+            </p>
+            <button
+              onClick={() => navigate(`/${sport}/tournament/new`)}
+              className="mono-btn-primary w-full mb-2"
+              style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
+            >
+              Create Tournament
+            </button>
+            <button
+              onClick={() => navigate(`/${sport}/quick`)}
+              className="mono-btn w-full"
+              style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
+            >
+              Start Quick Match
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -89,7 +109,7 @@ export default function MonoTournamentList() {
                   <button
                     className="cursor-pointer w-full text-left bg-transparent border-none"
                     style={{ padding: '16px 20px', display: 'block' }}
-                    onClick={() => navigate(`/${sport}/tournament/${t.id}`)}
+                    onClick={() => openTournament(t.id)}
                     aria-label={`Open ${t.name} tournament, ${completedCount} of ${matchCount} matches completed`}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -125,11 +145,19 @@ export default function MonoTournamentList() {
                       })()}
                     </p>
                   </button>
-                  <div style={{ borderTop: '1px solid #eee', padding: '8px 20px' }}>
+                  <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
+                    <button
+                      onClick={() => openTournament(t.id)}
+                      className="mono-btn-primary flex-1"
+                      style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
+                      aria-label={`Continue ${t.name} tournament`}
+                    >
+                      Continue
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
-                      className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                      style={{ color: '#dc2626' }}
+                      className="mono-btn"
+                      style={{ minHeight: 44, padding: '10px 12px', color: '#dc2626', borderColor: '#fecaca' }}
                       aria-label={`Delete ${t.name} tournament`}
                     >
                       Delete

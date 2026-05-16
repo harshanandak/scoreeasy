@@ -15,6 +15,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { shareText } from '../../mobile/share';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -218,6 +219,32 @@ function getRuleSummary({ engine, format, formatMode, isCricket, isGoals, sportC
   return formatMode === 'standard' ? 'Standard rules' : 'Custom rules';
 }
 
+function getResultOutcome(winner) {
+  if (winner === 'Tie') return 'Match Tied';
+  if (winner === 'Draw') return 'Match Drawn';
+  return `${winner} won`;
+}
+
+function getShareStatusText(response) {
+  if (!response || typeof response.shared !== 'boolean') return 'Could not share result.';
+  if (!response.shared) return 'Share is not available on this device.';
+  if (response.method === 'clipboard') return 'Result copied.';
+  return 'Share sheet opened.';
+}
+
+function buildResultShareText(result, isCricket) {
+  if (!result) return '';
+  const outcome = getResultOutcome(result.winner);
+
+  if (isCricket && result.team1Score) {
+    const team1Score = `${result.team1Score.runs}/${result.team1Score.wickets} (${ballsToOvers(result.team1Score.balls)} ov)`;
+    const team2Score = `${result.team2Score.runs}/${result.team2Score.wickets} (${ballsToOvers(result.team2Score.balls)} ov)`;
+    return `${result.team1} ${team1Score} vs ${result.team2} ${team2Score} - ${outcome}`;
+  }
+
+  return `${result.team1} ${result.score1} - ${result.score2} ${result.team2} - ${outcome}`;
+}
+
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -363,6 +390,7 @@ export default function MonoQuickMatch() {
 
   // Result state
   const [result, setResult] = useState(null);
+  const [shareStatus, setShareStatus] = useState('');
 
   useEffect(() => {
     if (user?.role === 'referee') {
@@ -638,6 +666,7 @@ export default function MonoQuickMatch() {
   const startMatch = () => {
     if (!team1Name.trim() || !team2Name.trim()) return;
     setSaveWarning('');
+    setShareStatus('');
     setResult(null);
     resetSync();
     clearData(quickMatchDraftKey);
@@ -1152,19 +1181,50 @@ export default function MonoQuickMatch() {
     }
   };
 
-  const shareResult = () => {
+  const resetMatchState = (nextPhase = 'setup') => {
+    restoredDraftRef.current = false;
+    setSaveWarning('');
+    setPhase(nextPhase);
+    setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
+    setVScore1(0);
+    setVScore2(0);
+    setGScore1(0);
+    setGScore2(0);
+    setServingTeam(1);
+    setLastAction('');
+    setShowEndConfirm(false);
+    setSidesSwapped(false);
+    setGScoreHistory([]);
+    setVScoreHistory([]);
+    setSets([{ score1: 0, score2: 0, completed: false }]);
+    setCurrentSet(0);
+    setCricketHistory([]);
+    setFreeHit(false);
+    setTrialBallUsed(false);
+    setInnings(1);
+    setBattingTeam(1);
+    setResult(null);
+    setShareStatus('');
+    resetSync();
+    clearData(quickMatchDraftKey);
+    timer.reset();
+    startedAtRef.current = null;
+    if (nextPhase === 'scoring') scoringSportRef.current = sport;
+  };
+
+  const shareResult = async () => {
     if (!result) return;
-    let text;
-    const w = result.winner;
-    const outcome = w === 'Tie' ? 'Match Tied' : w === 'Draw' ? 'Match Drawn' : `${w} won`;
-    if (isCricket && result.team1Score) {
-      const t1 = `${result.team1Score.runs}/${result.team1Score.wickets} (${ballsToOvers(result.team1Score.balls)} ov)`;
-      const t2 = `${result.team2Score.runs}/${result.team2Score.wickets} (${ballsToOvers(result.team2Score.balls)} ov)`;
-      text = `${result.team1} ${t1} vs ${result.team2} ${t2} \u2014 ${outcome}`;
-    } else {
-      text = `${result.team1} ${result.score1} - ${result.score2} ${result.team2} \u2014 ${outcome}`;
+    setShareStatus('Opening share...');
+    try {
+      const response = await shareText({
+        title: 'Score Easy result',
+        text: buildResultShareText(result, isCricket),
+        dialogTitle: 'Share match result',
+      });
+      setShareStatus(getShareStatusText(response));
+    } catch {
+      setShareStatus('Could not share result.');
     }
-    navigator.clipboard?.writeText(text);
   };
 
   // === SETUP PHASE ===
@@ -2496,6 +2556,11 @@ export default function MonoQuickMatch() {
             {saveWarning}
           </div>
         )}
+        {result && !saveWarning && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#16a34a', color: '#166534' }}>
+            Match saved to History on this device.
+          </div>
+        )}
         {isAuthenticated && syncState !== 'idle' && (
           <div
             className="mono-card mb-4"
@@ -2552,6 +2617,12 @@ export default function MonoQuickMatch() {
           )}
         </div>
 
+        {shareStatus && (
+          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}>
+            {shareStatus}
+          </div>
+        )}
+
         {/* Scorecard */}
         <div className="mono-card mb-8" style={{ padding: '20px 24px' }}>
           {isCricket && result.team1Score ? (
@@ -2590,44 +2661,28 @@ export default function MonoQuickMatch() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
-          <button onClick={() => navigate('/')} className="mono-btn flex-1" style={{ padding: '12px' }}>
-            Home
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => resetMatchState('scoring')} className="mono-btn-primary" style={{ minHeight: 48, padding: '12px' }}>
+            Rematch
           </button>
-          <button onClick={shareResult} className="mono-btn flex-1" style={{ padding: '12px' }}>
-            Copy Result
+          <button onClick={shareResult} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+            Share
+          </button>
+          <button onClick={() => navigate('/history')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+            View History
+          </button>
+          <button onClick={() => navigate('/statistics')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+            See Stats
           </button>
           <button
-            onClick={() => {
-              restoredDraftRef.current = false;
-              setPhase('setup');
-              setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
-              setVScore1(0);
-              setVScore2(0);
-              setGScore1(0);
-              setGScore2(0);
-              setServingTeam(1);
-              setLastAction('');
-              setShowEndConfirm(false);
-              setGScoreHistory([]);
-              setVScoreHistory([]);
-              setSets([{ score1: 0, score2: 0, completed: false }]);
-              setCurrentSet(0);
-              setCricketHistory([]);
-              setFreeHit(false);
-              setTrialBallUsed(false);
-              setInnings(1);
-              setBattingTeam(1);
-              setResult(null);
-              resetSync();
-              clearData(quickMatchDraftKey);
-              timer.reset();
-              startedAtRef.current = null;
-            }}
-            className="mono-btn-primary flex-1"
-            style={{ padding: '12px' }}
+            onClick={() => resetMatchState('setup')}
+            className="mono-btn"
+            style={{ minHeight: 48, padding: '12px' }}
           >
             New Match
+          </button>
+          <button onClick={() => navigate('/')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+            Home
           </button>
         </div>
       </div>
