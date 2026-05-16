@@ -279,13 +279,13 @@ export default function MonoQuickMatch() {
 
   const team1Results = useQuery(
     api.teams.search,
-    isAuthenticated && debouncedTeam1.length >= 2
+    isAuthenticated && showTeam1Suggestions && debouncedTeam1.length >= 2
       ? { sport, prefix: debouncedTeam1 }
       : 'skip'
   );
   const team2Results = useQuery(
     api.teams.search,
-    isAuthenticated && debouncedTeam2.length >= 2
+    isAuthenticated && showTeam2Suggestions && debouncedTeam2.length >= 2
       ? { sport, prefix: debouncedTeam2 }
       : 'skip'
   );
