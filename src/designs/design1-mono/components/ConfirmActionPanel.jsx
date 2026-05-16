@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 export default function ConfirmActionPanel({
   message,
   confirmLabel,
@@ -34,3 +36,15 @@ export default function ConfirmActionPanel({
     </div>
   );
 }
+
+ConfirmActionPanel.propTypes = {
+  message: PropTypes.string.isRequired,
+  confirmLabel: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  confirmAriaLabel: PropTypes.string,
+};
+
+ConfirmActionPanel.defaultProps = {
+  confirmAriaLabel: undefined,
+};
