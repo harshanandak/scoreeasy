@@ -9,6 +9,104 @@ import SportIcon from './SportIcon';
 
 const QM_KEY = 'se_quickmatches';
 
+function getMatchDate(match) {
+  return new Date(match.completedAt || match.date || match.createdAt || 0);
+}
+
+function getQuickScore(match) {
+  if (typeof match.score1 === 'number' && typeof match.score2 === 'number') {
+    return { score1: match.score1, score2: match.score2 };
+  }
+
+  if (Array.isArray(match.sets) && match.sets.length > 0) {
+    return {
+      score1: match.setsWon1 ?? match.sets.filter((set) => set.score1 > set.score2).length,
+      score2: match.setsWon2 ?? match.sets.filter((set) => set.score2 > set.score1).length,
+    };
+  }
+
+  if (match.team1Score || match.team2Score) {
+    return {
+      score1: match.team1Score?.runs ?? 0,
+      score2: match.team2Score?.runs ?? 0,
+    };
+  }
+
+  return { score1: 0, score2: 0 };
+}
+
+function resolveWinner(match, score) {
+  const winnerText = String(match.winner || '').toLowerCase();
+  const team1 = String(match.team1 || '').toLowerCase();
+  const team2 = String(match.team2 || '').toLowerCase();
+
+  if (team1 && winnerText.includes(team1)) return match.team1;
+  if (team2 && winnerText.includes(team2)) return match.team2;
+  if (score.score1 > score.score2) return match.team1;
+  if (score.score2 > score.score1) return match.team2;
+  return 'Draw';
+}
+
+function buildQuickInsights(matches) {
+  const sorted = [...matches].sort((a, b) => getMatchDate(b) - getMatchDate(a));
+  const teamWins = {};
+  const sportCounts = {};
+  let closest = null;
+  let biggest = null;
+
+  sorted.forEach((match) => {
+    const score = getQuickScore(match);
+    const margin = Math.abs(score.score1 - score.score2);
+    const winner = resolveWinner(match, score);
+    const sport = match.sport || match.sportName || 'Quick';
+
+    sportCounts[sport] = (sportCounts[sport] || 0) + 1;
+    if (winner !== 'Draw') teamWins[winner] = (teamWins[winner] || 0) + 1;
+
+    const label = `${match.team1} vs ${match.team2}`;
+    if (!closest || margin < closest.margin) closest = { label, margin };
+    if (!biggest || margin > biggest.margin) biggest = { label, margin, winner };
+  });
+
+  const topTeam = Object.entries(teamWins).sort((a, b) => b[1] - a[1])[0];
+  const topSport = Object.entries(sportCounts).sort((a, b) => b[1] - a[1])[0];
+  const lastFive = sorted.slice(0, 5).map((match) => {
+    const score = getQuickScore(match);
+    return resolveWinner(match, score) === 'Draw' ? 'D' : 'W';
+  });
+  const latestWinner = sorted.length > 0 ? resolveWinner(sorted[0], getQuickScore(sorted[0])) : null;
+  const streakBreak = latestWinner && latestWinner !== 'Draw'
+    ? sorted.findIndex((match) => resolveWinner(match, getQuickScore(match)) !== latestWinner)
+    : 0;
+  const currentStreak = streakBreak === -1 ? sorted.length : streakBreak;
+
+  return {
+    topTeam: topTeam ? `${topTeam[0]} (${topTeam[1]}W)` : 'No winner yet',
+    form: lastFive.length > 0 ? lastFive.join(' ') : 'No form yet',
+    streak: currentStreak > 0 ? `${latestWinner} W${currentStreak === -1 ? sorted.length : currentStreak}` : 'No active streak',
+    closest: closest ? `${closest.label} (${closest.margin})` : 'No close games yet',
+    biggest: biggest ? `${biggest.winner} by ${biggest.margin}` : 'No big wins yet',
+    topSport: topSport ? `${topSport[0]} (${topSport[1]})` : 'No sport yet',
+  };
+}
+
+function recordTeamResult(teamMap, team1, team2, score1, score2) {
+  teamMap[team1].played++;
+  teamMap[team2].played++;
+  teamMap[team1].pointsFor += score1;
+  teamMap[team1].pointsAgainst += score2;
+  teamMap[team2].pointsFor += score2;
+  teamMap[team2].pointsAgainst += score1;
+
+  if (score1 > score2) {
+    teamMap[team1].won++;
+    teamMap[team2].lost++;
+  } else if (score2 > score1) {
+    teamMap[team2].won++;
+    teamMap[team1].lost++;
+  }
+}
+
 export default function MonoStatistics() {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
@@ -67,6 +165,7 @@ export default function MonoStatistics() {
   const allTeams = new Set();
   Object.values(sportsData).forEach(d => d.teams.forEach(t => allTeams.add(t)));
   const totalTeams = allTeams.size;
+  const quickInsights = buildQuickInsights(quickMatches);
 
   // Build tabs dynamically - only show sports with data
   const sportsWithData = Object.values(sportsData).filter(d => d.tournaments > 0);
@@ -119,6 +218,15 @@ export default function MonoStatistics() {
               <StatCard label="Teams" value={totalTeams} />
             </div>
 
+            <div className="grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+              <InsightCard label="Top team" value={quickInsights.topTeam} />
+              <InsightCard label="Last 5 form" value={quickInsights.form} />
+              <InsightCard label="Current streak" value={quickInsights.streak} />
+              <InsightCard label="Closest match" value={quickInsights.closest} />
+              <InsightCard label="Biggest win" value={quickInsights.biggest} />
+              <InsightCard label="Most played sport" value={quickInsights.topSport} />
+            </div>
+
             <hr className="mono-divider mb-6" />
 
             <div className="flex flex-col gap-3">
@@ -157,7 +265,12 @@ export default function MonoStatistics() {
 
               {/* Empty state if no data at all */}
               {sportsWithData.length === 0 && quickMatches.length === 0 && (
-                <EmptyState icon="📊" label="No game data yet. Start playing to see statistics!" />
+                <EmptyState
+                  icon="📊"
+                  label="No game data yet. Finish a quick match or tournament to unlock win rates, streaks, and form."
+                  primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
+                  secondaryAction={{ label: 'Create tournament', onClick: () => navigate('/volleyball/tournament/new') }}
+                />
               )}
             </div>
           </div>
@@ -257,16 +370,54 @@ StatCard.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
-function EmptyState({ icon, label }) {
+function InsightCard({ label, value }) {
+  return (
+    <div className="mono-card" style={{ padding: '14px 16px', minHeight: 82 }}>
+      <p className="text-xs uppercase mb-2" style={{ color: '#888', letterSpacing: '0.08em' }}>{label}</p>
+      <p className="text-sm font-semibold" style={{ color: '#111', lineHeight: 1.35 }}>{value}</p>
+    </div>
+  );
+}
+
+InsightCard.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+function EmptyState({ icon, label, primaryAction, secondaryAction }) {
   const isEmoji = icon && icon.length <= 2;
   return (
-    <div className="flex flex-col items-center justify-center" style={{ minHeight: '20vh' }}>
+    <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: '20vh' }}>
       {isEmoji ? (
         <span className="text-4xl mb-3">{icon}</span>
       ) : (
         <div className="mb-3"><SportIcon name={icon} size={36} color="#bbb" /></div>
       )}
-      <p className="text-sm" style={{ color: '#888' }}>{label}</p>
+      <p className="text-sm mb-4" style={{ color: '#888', maxWidth: 340 }}>{label}</p>
+      {(primaryAction || secondaryAction) && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {primaryAction && (
+            <button
+              type="button"
+              className="mono-btn-primary"
+              style={{ minHeight: 44, padding: '10px 16px' }}
+              onClick={primaryAction.onClick}
+            >
+              {primaryAction.label}
+            </button>
+          )}
+          {secondaryAction && (
+            <button
+              type="button"
+              className="mono-btn"
+              style={{ minHeight: 44, padding: '10px 16px' }}
+              onClick={secondaryAction.onClick}
+            >
+              {secondaryAction.label}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -274,6 +425,14 @@ function EmptyState({ icon, label }) {
 EmptyState.propTypes = {
   icon: PropTypes.string,
   label: PropTypes.string,
+  primaryAction: PropTypes.shape({
+    label: PropTypes.string,
+    onClick: PropTypes.func,
+  }),
+  secondaryAction: PropTypes.shape({
+    label: PropTypes.string,
+    onClick: PropTypes.func,
+  }),
 };
 
 function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // sportId intentionally omitted — unused param removed (S1854)
@@ -285,7 +444,14 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
     tournaments.forEach(t => {
       t.teams?.forEach(team => {
         if (!teamMap[team.name]) {
-          teamMap[team.name] = { name: team.name, played: 0, won: 0, lost: 0 };
+          teamMap[team.name] = {
+            name: team.name,
+            played: 0,
+            won: 0,
+            lost: 0,
+            pointsFor: 0,
+            pointsAgainst: 0,
+          };
         }
       });
 
@@ -307,8 +473,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           const s2 = typeof match.score2 === 'number'
             ? match.score2
             : (match.team2Score?.runs || 0);
-          if (s1 > s2) { teamMap[t1].won++; teamMap[t2].lost++; }
-          else if (s2 > s1) { teamMap[t2].won++; teamMap[t1].lost++; }
+          recordTeamResult(teamMap, t1, t2, s1, s2);
         } else {
           // Sets/Goals scoring
           if (!isTournamentMatchCompleted(match, engine, match.format || t.format)) return;
@@ -323,18 +488,22 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           if (Array.isArray(match.sets) && match.sets.length > 0) {
             const sets1 = match.setsWon1 ?? match.sets.filter((s) => s.score1 > s.score2).length;
             const sets2 = match.setsWon2 ?? match.sets.filter((s) => s.score2 > s.score1).length;
-            if (sets1 > sets2) { teamMap[t1].won++; teamMap[t2].lost++; }
-            else if (sets2 > sets1) { teamMap[t2].won++; teamMap[t1].lost++; }
-          } else if (match.score1 > match.score2) {
-            teamMap[t1].won++; teamMap[t2].lost++;
-          } else if (match.score2 > match.score1) {
-            teamMap[t2].won++; teamMap[t1].lost++;
+            recordTeamResult(teamMap, t1, t2, sets1, sets2);
+          } else if (typeof match.score1 === 'number' && typeof match.score2 === 'number') {
+            recordTeamResult(teamMap, t1, t2, match.score1, match.score2);
           }
         }
       });
     });
 
-    setData(Object.values(teamMap).sort((a, b) => b.won - a.won));
+    setData(Object.values(teamMap)
+      .map((row) => ({
+        ...row,
+        averageMargin: row.played > 0
+          ? ((row.pointsFor - row.pointsAgainst) / row.played).toFixed(1)
+          : '0.0',
+      }))
+      .sort((a, b) => b.won - a.won || b.pointsFor - a.pointsFor));
   }, [tournaments, engine]);
 
   if (data.length === 0) return <EmptyState icon={sportIcon} label={`No ${sportName.toLowerCase()} data yet`} />;
@@ -349,6 +518,9 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
             <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>P</th>
             <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>W</th>
             <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>L</th>
+            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>For</th>
+            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>Agst</th>
+            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>Avg</th>
             <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 16px' }}>Win%</th>
           </tr>
         </thead>
@@ -359,6 +531,9 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
               <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.played}</td>
               <td className="text-center font-mono" style={{ color: '#111', padding: '12px 8px' }}>{row.won}</td>
               <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.lost}</td>
+              <td className="text-center font-mono" style={{ color: '#111', padding: '12px 8px' }}>{row.pointsFor}</td>
+              <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.pointsAgainst}</td>
+              <td className="text-center font-mono" style={{ color: row.averageMargin >= 0 ? '#0066ff' : '#dc2626', padding: '12px 8px' }}>{row.averageMargin}</td>
               <td className="text-center font-mono" style={{ color: '#0066ff', padding: '12px 16px' }}>
                 {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
               </td>
