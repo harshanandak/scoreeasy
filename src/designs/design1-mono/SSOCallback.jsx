@@ -1,14 +1,24 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
-import { useRef } from "react";
+import { useEffect, useState } from "react";
 import { consumeAuthReturnTo } from "../../utils/authRedirect";
 import CloudAuthOnly from "./components/CloudAuthOnly";
 
 export default function SSOCallback() {
-  const redirectTargetRef = useRef(null);
-  if (redirectTargetRef.current === null) {
-    redirectTargetRef.current = consumeAuthReturnTo("/");
+  const [redirectTarget, setRedirectTarget] = useState(null);
+
+  useEffect(() => {
+    setRedirectTarget(consumeAuthReturnTo("/"));
+  }, []);
+
+  if (redirectTarget === null) {
+    return (
+      <CloudAuthOnly>
+        <p className="text-sm font-swiss" style={{ color: "#888" }}>
+          Finishing sign in...
+        </p>
+      </CloudAuthOnly>
+    );
   }
-  const redirectTarget = redirectTargetRef.current;
 
   return (
     <CloudAuthOnly>
