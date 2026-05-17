@@ -51,7 +51,24 @@ export default function MonoUserSearch() {
             <circle cx="7" cy="7" r="4.5" />
             <path d="M10.5 10.5L14 14" />
           </svg>
+          <label
+            htmlFor="user-search-input"
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: "hidden",
+              clip: "rect(0, 0, 0, 0)",
+              whiteSpace: "nowrap",
+              border: 0,
+            }}
+          >
+            Search users by username
+          </label>
           <input
+            id="user-search-input"
             type="text"
             className="mono-input w-full"
             placeholder="Search by @username..."
@@ -59,18 +76,32 @@ export default function MonoUserSearch() {
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
             autoComplete="off"
+            aria-describedby="user-search-help"
             style={{ paddingLeft: 24 }}
           />
         </div>
+        <p id="user-search-help" className="text-xs mb-4" style={{ color: "#888" }}>
+          Search cloud profiles when online, or start a guest match without signing in.
+        </p>
 
         {query.length >= 2 && debouncedQuery !== query && (
           <p className="text-xs mb-4" style={{ color: '#bbb' }}>Searching...</p>
         )}
 
         {debouncedQuery.length >= 2 && !canSearchCloud && (
-          <p className="text-xs mb-4" style={{ color: "#888" }}>
-            Cloud search unavailable offline
-          </p>
+          <div className="mb-4" style={{ border: "1px solid #eee", padding: 12, background: "#fff" }}>
+            <p className="text-xs mb-3" style={{ color: "#888" }}>
+              Cloud search unavailable offline.
+            </p>
+            <button
+              type="button"
+              className="mono-btn"
+              style={{ minHeight: 44, padding: "10px 14px", fontSize: "0.8125rem" }}
+              onClick={() => navigate("/volleyball/quick")}
+            >
+              Start guest match
+            </button>
+          </div>
         )}
 
         {results && results.length > 0 && (

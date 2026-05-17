@@ -102,8 +102,10 @@ function OnboardingGuard({ children }) {
   const location = useLocation();
   if (isLoading) return <LazyFallback />;
   const bypassed = GUARD_BYPASS_PREFIXES.some((p) => location.pathname.startsWith(p));
-  if (needsOnboarding && !bypassed) {
-    return <Navigate to="/onboarding" replace />;
+  const isScoring = isProtectedScoringPath(location.pathname);
+  if (needsOnboarding && !bypassed && !isScoring) {
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/onboarding?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
   return children;
 }

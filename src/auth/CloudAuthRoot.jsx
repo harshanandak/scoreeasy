@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { ClerkProvider, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { getStoredAuthReturnTo } from '../utils/authRedirect';
 import CloudAuthProvider from './CloudAuthProvider';
 
 function navigateInApp(to, replace = false) {
@@ -37,8 +38,8 @@ export default function CloudAuthRoot({ children, convexUrl, publishableKey }) {
       afterSignOutUrl="/"
       signInUrl="/login"
       signUpUrl="/signup"
-      signInForceRedirectUrl="/"
-      signUpForceRedirectUrl="/"
+      signInForceRedirectUrl={getStoredAuthReturnTo('/')}
+      signUpForceRedirectUrl={getStoredAuthReturnTo('/')}
       standardBrowser={!isNative}
       telemetry={false}
       routerPush={(to) => navigateInApp(to)}
