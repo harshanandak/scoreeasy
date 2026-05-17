@@ -240,7 +240,6 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
         value={firstName}
         onChange={(e) => onChange("firstName", e.target.value)}
         autoComplete="given-name"
-        required
       />
 
       <label
@@ -258,7 +257,6 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
         value={lastName}
         onChange={(e) => onChange("lastName", e.target.value)}
         autoComplete="family-name"
-        required
       />
 
       <button
