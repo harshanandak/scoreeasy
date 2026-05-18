@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { loadSportTournaments, deleteSportTournament } from '../../utils/storage';
+import { loadSportTournaments, deleteSportTournament, saveData } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 import { getCricketFormat } from '../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../utils/formatMigration';
@@ -15,6 +15,7 @@ export default function MonoTournamentList() {
   const [tournaments, setTournaments] = useState([]);
   const [visible, setVisible] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [deletedTournament, setDeletedTournament] = useState(null);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -28,9 +29,21 @@ export default function MonoTournamentList() {
   };
 
   const deleteTournament = (id) => {
+    const snapshot = loadSportTournaments(sportConfig.storageKey);
+    const tournament = snapshot.find(t => t.id === id);
     deleteSportTournament(sportConfig.storageKey, id);
     setTournaments(prev => prev.filter(t => t.id !== id));
     setPendingDeleteId(null);
+    if (tournament) {
+      setDeletedTournament({ tournament, snapshot });
+    }
+  };
+
+  const undoDeleteTournament = () => {
+    if (!deletedTournament) return;
+    saveData(sportConfig.storageKey, deletedTournament.snapshot);
+    setTournaments(deletedTournament.snapshot.filter(t => t.mode === 'tournament' || !t.mode));
+    setDeletedTournament(null);
   };
 
   if (!sportConfig) {
@@ -73,6 +86,22 @@ export default function MonoTournamentList() {
         >
           + New Tournament
         </button>
+
+        {deletedTournament && (
+          <div className="mono-card mb-4" style={{ padding: '12px 14px', borderColor: '#0066ff' }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
+              Deleted {deletedTournament.tournament.name}.
+            </p>
+            <button
+              type="button"
+              className="mono-btn w-full"
+              style={{ minHeight: 44, padding: '10px' }}
+              onClick={undoDeleteTournament}
+            >
+              Undo delete
+            </button>
+          </div>
+        )}
 
         {/* List */}
         {tournaments.length === 0 ? (

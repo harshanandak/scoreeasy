@@ -5,6 +5,7 @@ import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import ConfirmActionPanel from './components/ConfirmActionPanel';
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function GenericSetsTournament() {
   const [tournament, setTournament] = useState(null);
   const [tab, setTab] = useState('matches');
   const [visible, setVisible] = useState(false);
+  const [pendingScoreClear, setPendingScoreClear] = useState(null);
+  const [clearedScore, setClearedScore] = useState(null);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -100,7 +103,30 @@ export default function GenericSetsTournament() {
   if (!tournament) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Tournament not found</p>
+        <div className="mono-card text-center" style={{ padding: '24px', maxWidth: 360 }}>
+          <p className="text-base font-semibold mb-2" style={{ color: '#111' }}>Tournament not found</p>
+          <p className="text-sm mb-5" style={{ color: '#666' }}>
+            It may have been deleted or opened from an old link.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="mono-btn-primary flex-1"
+              style={{ minHeight: 44, padding: '10px' }}
+              onClick={() => navigate(`/${sport}/tournament`)}
+            >
+              Tournaments
+            </button>
+            <button
+              type="button"
+              className="mono-btn flex-1"
+              style={{ minHeight: 44, padding: '10px' }}
+              onClick={() => navigate(`/${sport}/tournament/new`)}
+            >
+              Create
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -133,14 +159,35 @@ export default function GenericSetsTournament() {
   if (hasKnockouts) tabs.push('knockout');
   tabs.push('teams');
 
-  const deleteScore = (matchId) => {
+  const requestDeleteScore = (match) => {
+    setClearedScore(null);
+    setPendingScoreClear({
+      matchId: match.id,
+      snapshot: match,
+      label: `${getTeamName(match.team1Id)} vs ${getTeamName(match.team2Id)}`,
+    });
+  };
+
+  const deleteScore = () => {
+    if (!pendingScoreClear) return;
     const updatedMatches = tournament.matches.map(m => {
-      if (m.id === matchId) {
+      if (m.id === pendingScoreClear.matchId) {
         return { ...m, sets: [], status: 'pending', winner: null };
       }
       return m;
     });
     setTournament({ ...tournament, matches: updatedMatches });
+    setClearedScore(pendingScoreClear);
+    setPendingScoreClear(null);
+  };
+
+  const undoDeleteScore = () => {
+    if (!clearedScore) return;
+    const updatedMatches = tournament.matches.map(m =>
+      m.id === clearedScore.matchId ? clearedScore.snapshot : m
+    );
+    setTournament({ ...tournament, matches: updatedMatches });
+    setClearedScore(null);
   };
 
   const deleteKnockoutScore = (matchId) => {
@@ -277,7 +324,7 @@ export default function GenericSetsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => deleteScore(match.id)}
+                          onClick={() => requestDeleteScore(match)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -286,6 +333,27 @@ export default function GenericSetsTournament() {
                       )}
                     </div>
                   </div>
+
+                  {pendingScoreClear?.matchId === match.id && (
+                    <ConfirmActionPanel
+                      message={`Clear the saved score for ${pendingScoreClear.label}?`}
+                      confirmLabel="Clear score"
+                      confirmAriaLabel={`Confirm clear score for ${pendingScoreClear.label}`}
+                      onConfirm={deleteScore}
+                      onCancel={() => setPendingScoreClear(null)}
+                    />
+                  )}
+
+                  {clearedScore?.matchId === match.id && (
+                    <button
+                      type="button"
+                      className="mono-btn mb-4 w-full"
+                      style={{ minHeight: 44, padding: '10px' }}
+                      onClick={undoDeleteScore}
+                    >
+                      Undo clear score
+                    </button>
+                  )}
 
                   {/* Teams and scores */}
                   <div className="grid grid-cols-3 gap-6 items-center mb-5">
