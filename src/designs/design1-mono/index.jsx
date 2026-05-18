@@ -140,14 +140,19 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
   if (!prompt) return null;
 
   return (
-    <div className="app-confirm-backdrop" role="presentation" onClick={onCancel}>
+    <div className="app-confirm-backdrop" role="presentation">
+      <button
+        type="button"
+        className="app-confirm-backdrop-button"
+        aria-label="Dismiss dialog"
+        onClick={onCancel}
+      />
       <section
         className="app-confirm-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-confirm-title"
         aria-describedby="app-confirm-message"
-        onClick={(event) => event.stopPropagation()}
       >
         <p id="app-confirm-eyebrow" className="app-confirm-eyebrow">
           Score Easy
@@ -466,7 +471,17 @@ function GlobalNavigation({ requestScoringExit }) {
           padding: 20px;
         }
 
+        .app-confirm-backdrop-button {
+          position: absolute;
+          inset: 0;
+          border: 0;
+          background: transparent;
+          cursor: pointer;
+        }
+
         .app-confirm-dialog {
+          position: relative;
+          z-index: 1;
           width: min(440px, 100%);
           border: 1.5px solid #111;
           background: #fff;
