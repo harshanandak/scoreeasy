@@ -115,6 +115,22 @@ describe('installNativeDeepLinkHandler', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('does not navigate when the launch URL resolves after cleanup', async () => {
+    enableNativeApp();
+    let resolveLaunchUrl;
+    mocks.getLaunchUrl.mockReturnValue(new Promise((resolve) => {
+      resolveLaunchUrl = resolve;
+    }));
+    const navigate = vi.fn();
+
+    const cleanup = installNativeDeepLinkHandler({ navigate });
+    cleanup();
+    resolveLaunchUrl({ url: 'https://scoreeasy.app/play' });
+    await Promise.resolve();
+
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('reports unsupported URLs without navigating', async () => {
     enableNativeApp();
     let handler;

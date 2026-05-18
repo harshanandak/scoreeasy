@@ -25,6 +25,7 @@ export function installNativeDeepLinkHandler({ beforeNavigate, navigate, onUnhan
   let listener;
 
   const handleUrl = async (url) => {
+    if (removed) return;
     if (typeof url !== 'string' || url.length === 0) return;
 
     const path = pathFromAppUrl(url);
@@ -38,6 +39,7 @@ export function installNativeDeepLinkHandler({ beforeNavigate, navigate, onUnhan
       if (shouldNavigate === false) return;
     }
 
+    if (removed) return;
     navigate(path, { replace: false });
   };
 
