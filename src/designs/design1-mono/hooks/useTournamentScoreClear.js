@@ -5,7 +5,7 @@ export function useTournamentScoreClear({
   getTeamName,
   setTournament,
   tournament,
-  tournamentId,
+  tournamentScopeKey,
 }) {
   const [pendingScoreClear, setPendingScoreClear] = useState(null);
   const [clearedScore, setClearedScore] = useState(null);
@@ -13,12 +13,12 @@ export function useTournamentScoreClear({
   useEffect(() => {
     setPendingScoreClear(null);
     setClearedScore(null);
-  }, [tournamentId]);
+  }, [tournamentScopeKey]);
 
   const requestScoreClear = (match) => {
     setClearedScore(null);
     setPendingScoreClear({
-      tournamentId,
+      tournamentScopeKey,
       matchId: match.id,
       snapshot: match,
       label: `${getTeamName(match.team1Id)} vs ${getTeamName(match.team2Id)}`,
@@ -26,7 +26,7 @@ export function useTournamentScoreClear({
   };
 
   const confirmScoreClear = () => {
-    if (!pendingScoreClear || pendingScoreClear.tournamentId !== tournamentId) return;
+    if (!pendingScoreClear || pendingScoreClear.tournamentScopeKey !== tournamentScopeKey) return;
     const updatedMatches = tournament.matches.map((match) =>
       match.id === pendingScoreClear.matchId ? clearMatchScore(match) : match
     );
@@ -36,7 +36,7 @@ export function useTournamentScoreClear({
   };
 
   const undoScoreClear = () => {
-    if (!clearedScore || clearedScore.tournamentId !== tournamentId) return;
+    if (!clearedScore || clearedScore.tournamentScopeKey !== tournamentScopeKey) return;
     const updatedMatches = tournament.matches.map((match) =>
       match.id === clearedScore.matchId ? clearedScore.snapshot : match
     );

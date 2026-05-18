@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import PropTypes from 'prop-types';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MonoTournamentList from './MonoTournamentList';
 import GenericGoalsTournament from './GenericGoalsTournament';
@@ -24,6 +25,46 @@ function baseTeams() {
   ];
 }
 
+function pendingMatch(overrides = {}) {
+  return {
+    id: 'match-1',
+    team1Id: 'team-a',
+    team2Id: 'team-b',
+    status: 'pending',
+    ...overrides,
+  };
+}
+
+function completedSetsMatch(overrides = {}) {
+  return pendingMatch({
+    status: 'completed',
+    winner: 'team-a',
+    sets: [{ score1: 25, score2: 20, completed: true }],
+    ...overrides,
+  });
+}
+
+function completedGoalsMatch(overrides = {}) {
+  return pendingMatch({
+    status: 'completed',
+    winner: 'team-a',
+    score1: 3,
+    score2: 1,
+    ...overrides,
+  });
+}
+
+function tournament(overrides = {}) {
+  return {
+    id: 'tour-1',
+    mode: 'tournament',
+    name: 'League Night',
+    teams: baseTeams(),
+    matches: [pendingMatch()],
+    ...overrides,
+  };
+}
+
 function renderRoute(initialEntry, routePath, element) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -43,6 +84,11 @@ function RouteJump({ label, to }) {
   );
 }
 
+RouteJump.propTypes = {
+  label: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+};
+
 describe('tournament destructive safety', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
@@ -57,15 +103,7 @@ describe('tournament destructive safety', () => {
   });
 
   it('restores a deleted tournament from the tournament list', async () => {
-    seedStorage(VOLLEYBALL_KEY, [
-      {
-        id: 'tour-1',
-        mode: 'tournament',
-        name: 'League Night',
-        teams: baseTeams(),
-        matches: [{ id: 'match-1', team1Id: 'team-a', team2Id: 'team-b', status: 'pending' }],
-      },
-    ]);
+    seedStorage(VOLLEYBALL_KEY, [tournament()]);
 
     renderRoute('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
 
@@ -86,15 +124,7 @@ describe('tournament destructive safety', () => {
   });
 
   it('drops tournament delete undo state when switching sports', async () => {
-    seedStorage(VOLLEYBALL_KEY, [
-      {
-        id: 'tour-1',
-        mode: 'tournament',
-        name: 'League Night',
-        teams: baseTeams(),
-        matches: [{ id: 'match-1', team1Id: 'team-a', team2Id: 'team-b', status: 'pending' }],
-      },
-    ]);
+    seedStorage(VOLLEYBALL_KEY, [tournament()]);
     seedStorage(FOOTBALL_KEY, []);
 
     render(
@@ -120,22 +150,11 @@ describe('tournament destructive safety', () => {
 
   it('confirms and undoes clearing a sets tournament score', async () => {
     seedStorage(VOLLEYBALL_KEY, [
-      {
-        id: 'tour-1',
+      tournament({
         name: 'Sets League',
-        teams: baseTeams(),
         format: { sets: 3 },
-        matches: [
-          {
-            id: 'match-1',
-            team1Id: 'team-a',
-            team2Id: 'team-b',
-            status: 'completed',
-            winner: 'team-a',
-            sets: [{ score1: 25, score2: 20, completed: true }],
-          },
-        ],
-      },
+        matches: [completedSetsMatch()],
+      }),
     ]);
 
     renderRoute('/volleyball/tournament/tour-1', '/:sport/tournament/:id', <GenericSetsTournament />);
@@ -162,29 +181,17 @@ describe('tournament destructive safety', () => {
 
   it('drops score-clear undo state when switching tournament ids', async () => {
     seedStorage(VOLLEYBALL_KEY, [
-      {
-        id: 'tour-1',
+      tournament({
         name: 'Sets League',
-        teams: baseTeams(),
         format: { sets: 3 },
-        matches: [
-          {
-            id: 'match-1',
-            team1Id: 'team-a',
-            team2Id: 'team-b',
-            status: 'completed',
-            winner: 'team-a',
-            sets: [{ score1: 25, score2: 20, completed: true }],
-          },
-        ],
-      },
-      {
+        matches: [completedSetsMatch()],
+      }),
+      tournament({
         id: 'tour-2',
         name: 'Second League',
-        teams: baseTeams(),
         format: { sets: 3 },
-        matches: [{ id: 'match-1', team1Id: 'team-a', team2Id: 'team-b', status: 'pending', sets: [] }],
-      },
+        matches: [pendingMatch({ sets: [] })],
+      }),
     ]);
 
     render(
@@ -210,22 +217,10 @@ describe('tournament destructive safety', () => {
 
   it('confirms and undoes clearing a goals tournament score', async () => {
     seedStorage(FOOTBALL_KEY, [
-      {
-        id: 'tour-1',
+      tournament({
         name: 'Goals League',
-        teams: baseTeams(),
-        matches: [
-          {
-            id: 'match-1',
-            team1Id: 'team-a',
-            team2Id: 'team-b',
-            status: 'completed',
-            winner: 'team-a',
-            score1: 3,
-            score2: 1,
-          },
-        ],
-      },
+        matches: [completedGoalsMatch()],
+      }),
     ]);
 
     renderRoute('/football/tournament/tour-1', '/:sport/tournament/:id', <GenericGoalsTournament />);

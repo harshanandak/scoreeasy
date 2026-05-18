@@ -109,7 +109,7 @@ export default function GenericSetsTournament() {
     getTeamName,
     setTournament,
     tournament,
-    tournamentId: id,
+    tournamentScopeKey: `${sport}:${id}`,
   });
 
   if (!sportConfig) {

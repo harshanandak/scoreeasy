@@ -85,7 +85,7 @@ export default function GenericGoalsTournament() {
     getTeamName,
     setTournament,
     tournament,
-    tournamentId: id,
+    tournamentScopeKey: `${sport}:${id}`,
   });
 
   if (!sportConfig) {
