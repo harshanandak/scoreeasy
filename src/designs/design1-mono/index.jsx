@@ -140,14 +140,14 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
   if (!prompt) return null;
 
   return (
-    <div className="app-confirm-backdrop" role="presentation" onMouseDown={onCancel}>
+    <div className="app-confirm-backdrop" role="presentation" onClick={onCancel}>
       <section
         className="app-confirm-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-confirm-title"
         aria-describedby="app-confirm-message"
-        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <p id="app-confirm-eyebrow" className="app-confirm-eyebrow">
           Score Easy
@@ -574,7 +574,6 @@ function GlobalNavigation({ requestScoringExit }) {
             border: 0;
             background: transparent;
             padding: 0;
-            width: auto;
           }
 
           .global-mobile-menu-backdrop {
@@ -778,6 +777,7 @@ export default function Design1Mono() {
     const isGameRoute = isProtectedScoringPath(location.pathname);
 
     if (!isGameRoute) {
+      allowNextProtectedPopRef.current = false;
       protectedRouteHistoryIndexRef.current = null;
       protectedGuardDepthRef.current = 0;
       protectedGuardRouteKeyRef.current = null;
@@ -819,7 +819,20 @@ export default function Design1Mono() {
             return;
           }
 
-          navigate('/play', { replace: true });
+          allowNextProtectedPopRef.current = true;
+          const replaceScoringEntry = () => {
+            globalThis.removeEventListener('popstate', replaceScoringEntry);
+            navigate('/play', { replace: true });
+          };
+
+          globalThis.addEventListener('popstate', replaceScoringEntry, { once: true });
+          globalThis.history.back();
+          globalThis.setTimeout(() => {
+            globalThis.removeEventListener('popstate', replaceScoringEntry);
+            if (isProtectedScoringPath(globalThis.location.pathname)) {
+              navigate('/play', { replace: true });
+            }
+          }, 300);
         },
       });
     };
