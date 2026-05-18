@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadPreference, savePreference } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
-import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
 
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
@@ -569,43 +568,10 @@ export default function MonoSportHome() {
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-7xl mx-auto">
-        <nav className="flex items-center justify-between mb-12" aria-label="Sport selection navigation">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#888' }} aria-label="Go back to home">
-              <BackArrow />
-            </button>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="font-mono" style={{ fontSize: '0.6875rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#111', lineHeight: 1.1 }}>
-                  SCORE EASY
-                </span>
-              </div>
-              <p className="text-xs mt-1" style={{ color: '#888' }}>All sports</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={switchLayout}
-              aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
-              style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', background: '#fff', color: '#888', cursor: 'pointer' }}
-              title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
-            >
-              {layout === 'grid' ? (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-              )}
-            </button>
-            <button onClick={() => navigate('/statistics')} className="mono-btn" style={{ fontSize: '0.9375rem', padding: '10px 18px', fontWeight: '500' }}>
-              Statistics
-            </button>
-          </div>
-        </nav>
-
-        <div className="mb-8">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="text"
-            className="mono-input"
+            className="mono-input flex-1"
             aria-label="Search sports"
             placeholder="Search sports..."
             value={searchQuery}
@@ -614,6 +580,20 @@ export default function MonoSportHome() {
               setSelectedSportId(null);
             }}
           />
+          <button
+            onClick={switchLayout}
+            className="mono-btn flex items-center justify-center gap-2"
+            aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
+            style={{ minHeight: 44, padding: '10px 16px', fontSize: '0.8125rem', fontWeight: 700 }}
+            title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
+          >
+            {layout === 'grid' ? (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+            )}
+            <span>{layout === 'grid' ? 'List' : 'Grid'}</span>
+          </button>
         </div>
 
         {trimmedSearch ? (
