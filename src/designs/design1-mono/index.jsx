@@ -759,6 +759,12 @@ export default function Design1Mono() {
   const protectedRouteHistoryIndexRef = useRef(null);
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
+  const nativeDeepLinkContextRef = useRef({
+    hash: '',
+    pathname: '/',
+    requestScoringExit: null,
+    search: '',
+  });
 
   const requestScoringExit = useCallback((options = {}) => {
     exitPromptRef.current?.onCancel?.();
@@ -789,19 +795,30 @@ export default function Design1Mono() {
     onConfirm?.();
   }, [exitPrompt]);
 
+  useEffect(() => {
+    nativeDeepLinkContextRef.current = {
+      hash: location.hash || '',
+      pathname: location.pathname,
+      requestScoringExit,
+      search: location.search,
+    };
+  }, [location.hash, location.pathname, location.search, requestScoringExit]);
+
   const confirmNativeDeepLinkNavigation = useCallback((targetPath) => {
-    if (!isProtectedScoringPath(location.pathname)) return Promise.resolve(true);
-    if (targetPath === `${location.pathname}${location.search}${location.hash || ''}`) {
+    const { hash, pathname, requestScoringExit: requestExit, search } = nativeDeepLinkContextRef.current;
+    if (!isProtectedScoringPath(pathname)) return Promise.resolve(true);
+    if (targetPath === `${pathname}${search}${hash}`) {
       return Promise.resolve(true);
     }
+    if (typeof requestExit !== 'function') return Promise.resolve(false);
 
     return new Promise((resolve) => {
-      requestScoringExit({
+      requestExit({
         onConfirm: () => resolve(true),
         onCancel: () => resolve(false),
       });
     });
-  }, [location.hash, location.pathname, location.search, requestScoringExit]);
+  }, []);
 
   useEffect(() => installNativeDeepLinkHandler({
     beforeNavigate: confirmNativeDeepLinkNavigation,

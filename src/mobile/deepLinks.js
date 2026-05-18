@@ -28,19 +28,23 @@ export function installNativeDeepLinkHandler({ beforeNavigate, navigate, onUnhan
     if (removed) return;
     if (typeof url !== 'string' || url.length === 0) return;
 
-    const path = pathFromAppUrl(url);
-    if (!path) {
-      if (typeof onUnhandled === 'function') onUnhandled(url);
-      return;
-    }
+    try {
+      const path = pathFromAppUrl(url);
+      if (!path) {
+        if (typeof onUnhandled === 'function') onUnhandled(url);
+        return;
+      }
 
-    if (typeof beforeNavigate === 'function') {
-      const shouldNavigate = await beforeNavigate(path);
-      if (shouldNavigate === false) return;
-    }
+      if (typeof beforeNavigate === 'function') {
+        const shouldNavigate = await beforeNavigate(path);
+        if (shouldNavigate === false) return;
+      }
 
-    if (removed) return;
-    navigate(path, { replace: false });
+      if (removed) return;
+      navigate(path, { replace: false });
+    } catch (error) {
+      console.warn('Failed to process native app URL', error);
+    }
   };
 
   App.getLaunchUrl()

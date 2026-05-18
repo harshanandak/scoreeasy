@@ -131,6 +131,28 @@ describe('installNativeDeepLinkHandler', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('handles deep-link guard failures without navigating', async () => {
+    enableNativeApp();
+    let handler;
+    mocks.addListener.mockImplementation((eventName, callback) => {
+      handler = callback;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const error = new Error('guard failed');
+    const beforeNavigate = vi.fn(() => Promise.reject(error));
+    const navigate = vi.fn();
+
+    installNativeDeepLinkHandler({ beforeNavigate, navigate });
+    await Promise.resolve();
+    handler({ url: 'https://scoreeasy.app/play' });
+    await Promise.resolve();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('Failed to process native app URL', error);
+    warn.mockRestore();
+  });
+
   it('reports unsupported URLs without navigating', async () => {
     enableNativeApp();
     let handler;
