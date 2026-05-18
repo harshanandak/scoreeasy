@@ -18,6 +18,17 @@ function readTournaments(key) {
   return raw ? JSON.parse(raw) : [];
 }
 
+function clickButton(name) {
+  fireEvent.click(screen.getByRole('button', { name }));
+}
+
+async function expectButtonRemovedAfterClick(clickName, removedName) {
+  clickButton(clickName);
+  await waitFor(() => {
+    expect(screen.queryByRole('button', { name: removedName })).not.toBeInTheDocument();
+  });
+}
+
 function baseTeams() {
   return [
     { id: 'team-a', name: 'Team A' },
@@ -150,11 +161,7 @@ describe('tournament destructive safety', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete League Night tournament' }));
     expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Switch sport' }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Undo delete' })).not.toBeInTheDocument();
-    });
+    await expectButtonRemovedAfterClick('Switch sport', 'Undo delete');
     expect(readTournaments(FOOTBALL_KEY)).toHaveLength(0);
   });
 
@@ -216,11 +223,7 @@ describe('tournament destructive safety', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm clear score for Team A vs Team B' }));
     expect(screen.getByRole('button', { name: 'Undo clear score' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Switch tournament' }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Undo clear score' })).not.toBeInTheDocument();
-    });
+    await expectButtonRemovedAfterClick('Switch tournament', 'Undo clear score');
     expect(screen.getByText('Second League')).toBeInTheDocument();
   });
 
