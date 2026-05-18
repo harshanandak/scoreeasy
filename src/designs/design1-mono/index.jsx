@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy, useRef, useState } from 'react';
+import { useCallback, useEffect, Suspense, lazy, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
@@ -84,7 +84,9 @@ function NotFoundRoute() {
 
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
-const SCORING_EXIT_CONFIRMATION = 'Leave this page? Your unsaved scoring progress may be lost.';
+const SCORING_EXIT_TITLE = 'Leave this page?';
+const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
+const SCORING_EXIT_CONFIRMATION = `${SCORING_EXIT_TITLE} ${SCORING_EXIT_MESSAGE}`;
 
 function isProtectedScoringPath(pathname = '') {
   const segments = pathname.split('/').filter(Boolean);
@@ -114,7 +116,84 @@ OnboardingGuard.propTypes = {
   children: PropTypes.node,
 };
 
-function GlobalNavigation() {
+function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
+  const confirmButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (!prompt) return undefined;
+
+    confirmButtonRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCancel();
+      }
+    };
+
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => {
+      globalThis.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onCancel, prompt]);
+
+  if (!prompt) return null;
+
+  return (
+    <div className="app-confirm-backdrop" role="presentation" onMouseDown={onCancel}>
+      <section
+        className="app-confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-confirm-title"
+        aria-describedby="app-confirm-message"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p id="app-confirm-eyebrow" className="app-confirm-eyebrow">
+          Score Easy
+        </p>
+        <h2 id="app-confirm-title" className="app-confirm-title">
+          {prompt.title || 'Leave this page?'}
+        </h2>
+        <p id="app-confirm-message" className="app-confirm-message">
+          {prompt.message}
+        </p>
+        <div className="app-confirm-actions">
+          <button
+            type="button"
+            className="app-confirm-secondary"
+            onClick={onCancel}
+          >
+            {prompt.cancelLabel || 'Stay here'}
+          </button>
+          <button
+            type="button"
+            ref={confirmButtonRef}
+            className="app-confirm-primary"
+            onClick={onConfirm}
+          >
+            {prompt.confirmLabel || 'Leave'}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+AppConfirmDialog.propTypes = {
+  prompt: PropTypes.shape({
+    title: PropTypes.string,
+    message: PropTypes.string.isRequired,
+    confirmLabel: PropTypes.string,
+    cancelLabel: PropTypes.string,
+    onConfirm: PropTypes.func,
+    onCancel: PropTypes.func,
+  }),
+  onCancel: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+};
+
+function GlobalNavigation({ requestScoringExit }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
@@ -165,8 +244,11 @@ function GlobalNavigation() {
 
   const go = (path) => {
     if (path !== pathname && isProtectedScoringPath(pathname)) {
-      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
-      if (!leave) return;
+      setOpen(false);
+      requestScoringExit({
+        onConfirm: () => navigate(path),
+      });
+      return;
     }
 
     navigate(path);
@@ -373,6 +455,77 @@ function GlobalNavigation() {
           display: none;
         }
 
+        .app-confirm-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 260;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(17, 17, 17, 0.58);
+          padding: 20px;
+        }
+
+        .app-confirm-dialog {
+          width: min(440px, 100%);
+          border: 1.5px solid #111;
+          background: #fff;
+          color: #111;
+          box-shadow: 6px 6px 0 #111;
+          padding: 24px;
+        }
+
+        .app-confirm-eyebrow {
+          color: #0066ff;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.6875rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          margin: 0 0 10px;
+          text-transform: uppercase;
+        }
+
+        .app-confirm-title {
+          color: #111;
+          font-size: 1.25rem;
+          font-weight: 800;
+          line-height: 1.2;
+          margin: 0 0 10px;
+        }
+
+        .app-confirm-message {
+          color: #555;
+          font-size: 0.9375rem;
+          line-height: 1.5;
+          margin: 0 0 24px;
+        }
+
+        .app-confirm-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+
+        .app-confirm-primary,
+        .app-confirm-secondary {
+          min-height: 44px;
+          border: 1.5px solid #111;
+          cursor: pointer;
+          font-size: 0.875rem;
+          font-weight: 700;
+          padding: 10px 16px;
+        }
+
+        .app-confirm-primary {
+          background: #0066ff;
+          color: #fff;
+        }
+
+        .app-confirm-secondary {
+          background: #fff;
+          color: #111;
+        }
+
         @media (max-width: 767px) {
           body.has-mobile-bottom-nav {
             padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
@@ -413,7 +566,10 @@ function GlobalNavigation() {
             inset: 0;
             z-index: 240;
             display: block;
+            width: 100vw;
+            height: 100vh;
             max-width: none;
+            max-height: none;
             margin: 0;
             border: 0;
             background: transparent;
@@ -542,6 +698,10 @@ function GlobalNavigation() {
   );
 }
 
+GlobalNavigation.propTypes = {
+  requestScoringExit: PropTypes.func.isRequired,
+};
+
 // Dispatcher component that routes to the correct tournament component based on engine
 function TournamentDispatcher() {
   const { sport } = useParams();
@@ -576,6 +736,30 @@ function TournamentDispatcher() {
 
 export default function Design1Mono() {
   const location = useLocation();
+  const [exitPrompt, setExitPrompt] = useState(null);
+  const allowNextProtectedPopRef = useRef(false);
+
+  const requestScoringExit = useCallback((options = {}) => {
+    setExitPrompt({
+      title: SCORING_EXIT_TITLE,
+      message: SCORING_EXIT_MESSAGE,
+      confirmLabel: 'Leave page',
+      cancelLabel: 'Stay here',
+      ...options,
+    });
+  }, []);
+
+  const cancelExitPrompt = useCallback(() => {
+    const onCancel = exitPrompt?.onCancel;
+    setExitPrompt(null);
+    onCancel?.();
+  }, [exitPrompt]);
+
+  const confirmExitPrompt = useCallback(() => {
+    const onConfirm = exitPrompt?.onConfirm;
+    setExitPrompt(null);
+    onConfirm?.();
+  }, [exitPrompt]);
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {
@@ -586,10 +770,18 @@ export default function Design1Mono() {
     globalThis.history.pushState({ gameProtection: true }, '');
 
     const handlePopState = () => {
-      const leave = globalThis.confirm(SCORING_EXIT_CONFIRMATION);
-      if (!leave) {
-        globalThis.history.pushState({ gameProtection: true }, '');
+      if (allowNextProtectedPopRef.current) {
+        allowNextProtectedPopRef.current = false;
+        return;
       }
+
+      globalThis.history.pushState({ gameProtection: true }, '');
+      requestScoringExit({
+        onConfirm: () => {
+          allowNextProtectedPopRef.current = true;
+          globalThis.history.go(-2);
+        },
+      });
     };
 
     const handleBeforeUnload = (e) => {
@@ -601,6 +793,12 @@ export default function Design1Mono() {
     globalThis.addEventListener('beforeunload', handleBeforeUnload);
     const cleanupNativeBackButton = installNativeBackButtonGuard({
       getPathname: () => globalThis.location.pathname,
+      confirmLeave: () => new Promise((resolve) => {
+        requestScoringExit({
+          onConfirm: () => resolve(true),
+          onCancel: () => resolve(false),
+        });
+      }),
     });
 
     return () => {
@@ -608,12 +806,12 @@ export default function Design1Mono() {
       globalThis.removeEventListener('beforeunload', handleBeforeUnload);
       cleanupNativeBackButton();
     };
-  }, [location.pathname]);
+  }, [location.pathname, requestScoringExit]);
 
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalNavigation />
+      <GlobalNavigation requestScoringExit={requestScoringExit} />
       <OfflineFallback />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
@@ -654,6 +852,11 @@ export default function Design1Mono() {
           </ErrorBoundary>
         </Suspense>
       </main>
+      <AppConfirmDialog
+        prompt={exitPrompt}
+        onCancel={cancelExitPrompt}
+        onConfirm={confirmExitPrompt}
+      />
     </div>
   );
 }

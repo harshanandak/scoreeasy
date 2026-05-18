@@ -20,7 +20,7 @@ export function installNativeBackButtonGuard({
   let isActive = true;
   let removeNativeListener = () => {};
 
-  App.addListener('backButton', ({ canGoBack }) => {
+  App.addListener('backButton', async ({ canGoBack }) => {
     const pathname = getPathname?.() || globalThis.location.pathname;
 
     if (canGoBack) {
@@ -28,7 +28,7 @@ export function installNativeBackButtonGuard({
       return;
     }
 
-    if (isProtectedScoringRoute(pathname) && !confirmLeave('Leave this page? Your unsaved scoring progress may be lost.')) {
+    if (isProtectedScoringRoute(pathname) && !(await confirmLeave('Leave this page? Your unsaved scoring progress may be lost.'))) {
       return;
     }
 
