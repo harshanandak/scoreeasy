@@ -8,6 +8,7 @@ import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
+import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import './mono.css';
 
@@ -758,6 +759,8 @@ export default function Design1Mono() {
   const protectedRouteHistoryIndexRef = useRef(null);
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
+
+  useEffect(() => installNativeDeepLinkHandler({ navigate }), [navigate]);
 
   const requestScoringExit = useCallback((options = {}) => {
     exitPromptRef.current?.onCancel?.();
