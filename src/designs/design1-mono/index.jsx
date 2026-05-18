@@ -812,6 +812,20 @@ export default function Design1Mono() {
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
     }
 
+    let fallbackTimeoutId = null;
+    let replaceScoringEntryOnPop = null;
+    const clearPendingFallbackNavigation = () => {
+      if (fallbackTimeoutId !== null) {
+        globalThis.clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
+      }
+
+      if (replaceScoringEntryOnPop) {
+        globalThis.removeEventListener('popstate', replaceScoringEntryOnPop);
+        replaceScoringEntryOnPop = null;
+      }
+    };
+
     const handlePopState = () => {
       if (allowNextProtectedPopRef.current) {
         allowNextProtectedPopRef.current = false;
@@ -836,16 +850,17 @@ export default function Design1Mono() {
             return;
           }
 
+          clearPendingFallbackNavigation();
           allowNextProtectedPopRef.current = true;
-          const replaceScoringEntry = () => {
-            globalThis.removeEventListener('popstate', replaceScoringEntry);
+          replaceScoringEntryOnPop = () => {
+            clearPendingFallbackNavigation();
             navigate('/play', { replace: true });
           };
 
-          globalThis.addEventListener('popstate', replaceScoringEntry, { once: true });
+          globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
           globalThis.history.back();
-          globalThis.setTimeout(() => {
-            globalThis.removeEventListener('popstate', replaceScoringEntry);
+          fallbackTimeoutId = globalThis.setTimeout(() => {
+            clearPendingFallbackNavigation();
             if (isProtectedScoringPath(globalThis.location.pathname)) {
               navigate('/play', { replace: true });
             }
@@ -874,6 +889,7 @@ export default function Design1Mono() {
     return () => {
       globalThis.removeEventListener('popstate', handlePopState);
       globalThis.removeEventListener('beforeunload', handleBeforeUnload);
+      clearPendingFallbackNavigation();
       cleanupNativeBackButton();
     };
   }, [location.pathname, location.search, navigate, requestScoringExit]);
