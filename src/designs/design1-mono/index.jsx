@@ -736,8 +736,10 @@ function TournamentDispatcher() {
 
 export default function Design1Mono() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [exitPrompt, setExitPrompt] = useState(null);
   const allowNextProtectedPopRef = useRef(false);
+  const protectedRouteHistoryIndexRef = useRef(null);
 
   const requestScoringExit = useCallback((options = {}) => {
     setExitPrompt({
@@ -767,7 +769,9 @@ export default function Design1Mono() {
 
     if (!isGameRoute) return;
 
-    globalThis.history.pushState({ gameProtection: true }, '');
+    const routeHistoryIndex = globalThis.history.state?.idx;
+    protectedRouteHistoryIndexRef.current = typeof routeHistoryIndex === 'number' ? routeHistoryIndex : null;
+    globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
 
     const handlePopState = () => {
       if (allowNextProtectedPopRef.current) {
@@ -775,11 +779,16 @@ export default function Design1Mono() {
         return;
       }
 
-      globalThis.history.pushState({ gameProtection: true }, '');
+      globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
       requestScoringExit({
         onConfirm: () => {
-          allowNextProtectedPopRef.current = true;
-          globalThis.history.go(-2);
+          if (protectedRouteHistoryIndexRef.current > 0) {
+            allowNextProtectedPopRef.current = true;
+            globalThis.history.go(-2);
+            return;
+          }
+
+          navigate('/play', { replace: true });
         },
       });
     };
@@ -806,7 +815,7 @@ export default function Design1Mono() {
       globalThis.removeEventListener('beforeunload', handleBeforeUnload);
       cleanupNativeBackButton();
     };
-  }, [location.pathname, requestScoringExit]);
+  }, [location.pathname, navigate, requestScoringExit]);
 
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
