@@ -41,7 +41,7 @@ describe('pathFromAppUrl', () => {
 
   it('ignores unsupported hosts and schemes', () => {
     expect(pathFromAppUrl('https://example.com/play')).toBeNull();
-    expect(pathFromAppUrl('http://scoreeasy.app/play')).toBeNull();
+    expect(pathFromAppUrl('scoreeasy://play')).toBeNull();
     expect(pathFromAppUrl('not-a-url')).toBeNull();
   });
 });
