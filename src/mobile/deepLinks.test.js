@@ -66,6 +66,19 @@ describe('installNativeDeepLinkHandler', () => {
     expect(navigate).toHaveBeenCalledWith('/history', { replace: false });
   });
 
+  it('ignores cold launches without a URL', async () => {
+    enableNativeApp();
+    mocks.getLaunchUrl.mockResolvedValue(null);
+    const navigate = vi.fn();
+    const onUnhandled = vi.fn();
+
+    installNativeDeepLinkHandler({ navigate, onUnhandled });
+    await Promise.resolve();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(onUnhandled).not.toHaveBeenCalled();
+  });
+
   it('navigates to runtime appUrlOpen events', async () => {
     enableNativeApp();
     let handler;
@@ -81,6 +94,25 @@ describe('installNativeDeepLinkHandler', () => {
 
     expect(mocks.addListener).toHaveBeenCalledWith('appUrlOpen', expect.any(Function));
     expect(navigate).toHaveBeenCalledWith('/play', { replace: false });
+  });
+
+  it('lets the app block navigation before opening a deep link', async () => {
+    enableNativeApp();
+    let handler;
+    mocks.addListener.mockImplementation((eventName, callback) => {
+      handler = callback;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+    const beforeNavigate = vi.fn(() => false);
+    const navigate = vi.fn();
+
+    installNativeDeepLinkHandler({ beforeNavigate, navigate });
+    await Promise.resolve();
+    handler({ url: 'https://scoreeasy.app/play' });
+    await Promise.resolve();
+
+    expect(beforeNavigate).toHaveBeenCalledWith('/play');
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('reports unsupported URLs without navigating', async () => {

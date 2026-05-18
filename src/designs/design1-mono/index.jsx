@@ -760,8 +760,6 @@ export default function Design1Mono() {
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
 
-  useEffect(() => installNativeDeepLinkHandler({ navigate }), [navigate]);
-
   const requestScoringExit = useCallback((options = {}) => {
     exitPromptRef.current?.onCancel?.();
 
@@ -790,6 +788,23 @@ export default function Design1Mono() {
     setExitPrompt(null);
     onConfirm?.();
   }, [exitPrompt]);
+
+  const confirmNativeDeepLinkNavigation = useCallback((targetPath) => {
+    if (!isProtectedScoringPath(location.pathname)) return true;
+    if (targetPath === `${location.pathname}${location.search}${location.hash || ''}`) return true;
+
+    return new Promise((resolve) => {
+      requestScoringExit({
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  }, [location.hash, location.pathname, location.search, requestScoringExit]);
+
+  useEffect(() => installNativeDeepLinkHandler({
+    beforeNavigate: confirmNativeDeepLinkNavigation,
+    navigate,
+  }), [confirmNativeDeepLinkNavigation, navigate]);
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {

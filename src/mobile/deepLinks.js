@@ -16,7 +16,7 @@ export function pathFromAppUrl(url) {
   }
 }
 
-export function installNativeDeepLinkHandler({ navigate, onUnhandled } = {}) {
+export function installNativeDeepLinkHandler({ beforeNavigate, navigate, onUnhandled } = {}) {
   if (!isNativeMobile() || !hasNativePlugin('App') || typeof navigate !== 'function') {
     return () => {};
   }
@@ -24,23 +24,34 @@ export function installNativeDeepLinkHandler({ navigate, onUnhandled } = {}) {
   let removed = false;
   let listener;
 
-  const handleUrl = (url) => {
+  const handleUrl = async (url) => {
+    if (typeof url !== 'string' || url.length === 0) return;
+
     const path = pathFromAppUrl(url);
     if (!path) {
       if (typeof onUnhandled === 'function') onUnhandled(url);
       return;
     }
 
+    if (typeof beforeNavigate === 'function') {
+      const shouldNavigate = await beforeNavigate(path);
+      if (shouldNavigate === false) return;
+    }
+
     navigate(path, { replace: false });
   };
 
   App.getLaunchUrl()
-    .then((launchUrl) => handleUrl(launchUrl?.url))
+    .then((launchUrl) => {
+      void handleUrl(launchUrl?.url);
+    })
     .catch((error) => {
       console.warn('Failed to read native launch URL', error);
     });
 
-  App.addListener('appUrlOpen', (event) => handleUrl(event?.url))
+  App.addListener('appUrlOpen', (event) => {
+    void handleUrl(event?.url);
+  })
     .then((registration) => {
       listener = registration;
       if (removed) listener?.remove?.();
