@@ -790,8 +790,10 @@ export default function Design1Mono() {
   }, [exitPrompt]);
 
   const confirmNativeDeepLinkNavigation = useCallback((targetPath) => {
-    if (!isProtectedScoringPath(location.pathname)) return true;
-    if (targetPath === `${location.pathname}${location.search}${location.hash || ''}`) return true;
+    if (!isProtectedScoringPath(location.pathname)) return Promise.resolve(true);
+    if (targetPath === `${location.pathname}${location.search}${location.hash || ''}`) {
+      return Promise.resolve(true);
+    }
 
     return new Promise((resolve) => {
       requestScoringExit({
