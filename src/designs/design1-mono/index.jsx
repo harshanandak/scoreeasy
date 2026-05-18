@@ -118,12 +118,12 @@ OnboardingGuard.propTypes = {
 };
 
 function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
-  const confirmButtonRef = useRef(null);
+  const cancelButtonRef = useRef(null);
 
   useEffect(() => {
     if (!prompt) return undefined;
 
-    confirmButtonRef.current?.focus();
+    cancelButtonRef.current?.focus();
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -167,6 +167,7 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
         <div className="app-confirm-actions">
           <button
             type="button"
+            ref={cancelButtonRef}
             className="app-confirm-secondary"
             onClick={onCancel}
           >
@@ -174,7 +175,6 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
           </button>
           <button
             type="button"
-            ref={confirmButtonRef}
             className="app-confirm-primary"
             onClick={onConfirm}
           >
