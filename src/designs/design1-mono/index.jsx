@@ -87,6 +87,7 @@ const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callbac
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
 const SCORING_EXIT_CONFIRMATION = `${SCORING_EXIT_TITLE} ${SCORING_EXIT_MESSAGE}`;
+const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
   const segments = pathname.split('/').filter(Boolean);
@@ -802,7 +803,7 @@ export default function Design1Mono() {
     const routeKey = `${location.pathname}${location.search}`;
     const routeHistoryIndex = globalThis.history.state?.idx;
     if (protectedRouteHistoryIndexRef.current === null && typeof routeHistoryIndex === 'number') {
-      protectedRouteHistoryIndexRef.current = routeHistoryIndex > 0 ? routeHistoryIndex - 1 : null;
+      protectedRouteHistoryIndexRef.current = routeHistoryIndex > 0 ? routeHistoryIndex - 1 : NO_PRIOR_ROUTE_INDEX;
     }
 
     if (protectedGuardRouteKeyRef.current !== routeKey) {
@@ -825,6 +826,7 @@ export default function Design1Mono() {
           const canReturnToPriorRoute =
             typeof currentRouteHistoryIndex === 'number' &&
             typeof baseRouteHistoryIndex === 'number' &&
+            baseRouteHistoryIndex !== NO_PRIOR_ROUTE_INDEX &&
             currentRouteHistoryIndex > baseRouteHistoryIndex;
 
           if (canReturnToPriorRoute) {
