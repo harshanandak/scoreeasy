@@ -5,8 +5,8 @@ import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
-import ConfirmActionPanel from './components/ConfirmActionPanel';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import TournamentScoreClearActions from './components/TournamentScoreClearActions';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 
 export default function GenericSetsTournament() {
@@ -92,25 +92,7 @@ export default function GenericSetsTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
-  const getTeamName = (teamId) => {
-    const team = tournament?.teams?.find(t => t.id === teamId);
-    return team?.name || 'Unknown';
-  };
-
-  const {
-    cancelScoreClear,
-    clearedScore,
-    confirmScoreClear,
-    pendingScoreClear,
-    requestScoreClear,
-    undoScoreClear,
-  } = useTournamentScoreClear({
-    clearMatchScore: (match) => ({ ...match, sets: [], status: 'pending', winner: null }),
-    getTeamName,
-    setTournament,
-    tournament,
-    tournamentScopeKey: `${sport}:${id}`,
-  });
+  const scoreClear = useTournamentScoreClear({ scoreKind: 'sets', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
 
   if (!sportConfig) {
     return (
@@ -127,6 +109,11 @@ export default function GenericSetsTournament() {
       </div>
     );
   }
+
+  const getTeamName = (teamId) => {
+    const team = tournament.teams.find(t => t.id === teamId);
+    return team?.name || 'Unknown';
+  };
 
   const completedMatches = tournament.matches.filter(m =>
     m.sets && m.sets.length > 0 && m.status === 'completed'
@@ -285,7 +272,7 @@ export default function GenericSetsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => requestScoreClear(match)}
+                          onClick={() => scoreClear.requestScoreClear(match)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -295,26 +282,7 @@ export default function GenericSetsTournament() {
                     </div>
                   </div>
 
-                  {pendingScoreClear?.matchId === match.id && (
-                    <ConfirmActionPanel
-                      message={`Clear the saved score for ${pendingScoreClear.label}?`}
-                      confirmLabel="Clear score"
-                      confirmAriaLabel={`Confirm clear score for ${pendingScoreClear.label}`}
-                      onConfirm={confirmScoreClear}
-                      onCancel={cancelScoreClear}
-                    />
-                  )}
-
-                  {clearedScore?.matchId === match.id && (
-                    <button
-                      type="button"
-                      className="mono-btn mb-4 w-full"
-                      style={{ minHeight: 44, padding: '10px' }}
-                      onClick={undoScoreClear}
-                    >
-                      Undo clear score
-                    </button>
-                  )}
+                  <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} />
 
                   {/* Teams and scores */}
                   <div className="grid grid-cols-3 gap-6 items-center mb-5">

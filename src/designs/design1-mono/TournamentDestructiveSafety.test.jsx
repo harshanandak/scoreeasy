@@ -75,6 +75,17 @@ function renderRoute(initialEntry, routePath, element) {
   );
 }
 
+function renderRouteWithJump({ element, initialEntry, label, routePath, to }) {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <RouteJump label={label} to={to} />
+      <Routes>
+        <Route path={routePath} element={element} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 function RouteJump({ label, to }) {
   const navigate = useNavigate();
   return (
@@ -127,14 +138,13 @@ describe('tournament destructive safety', () => {
     seedStorage(VOLLEYBALL_KEY, [tournament()]);
     seedStorage(FOOTBALL_KEY, []);
 
-    render(
-      <MemoryRouter initialEntries={['/volleyball/tournament']}>
-        <RouteJump label="Switch sport" to="/football/tournament" />
-        <Routes>
-          <Route path="/:sport/tournament" element={<MonoTournamentList />} />
-        </Routes>
-      </MemoryRouter>,
-    );
+    renderRouteWithJump({
+      element: <MonoTournamentList />,
+      initialEntry: '/volleyball/tournament',
+      label: 'Switch sport',
+      routePath: '/:sport/tournament',
+      to: '/football/tournament',
+    });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Delete League Night tournament' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete League Night tournament' }));
@@ -194,14 +204,13 @@ describe('tournament destructive safety', () => {
       }),
     ]);
 
-    render(
-      <MemoryRouter initialEntries={['/volleyball/tournament/tour-1']}>
-        <RouteJump label="Switch tournament" to="/volleyball/tournament/tour-2" />
-        <Routes>
-          <Route path="/:sport/tournament/:id" element={<GenericSetsTournament />} />
-        </Routes>
-      </MemoryRouter>,
-    );
+    renderRouteWithJump({
+      element: <GenericSetsTournament />,
+      initialEntry: '/volleyball/tournament/tour-1',
+      label: 'Switch tournament',
+      routePath: '/:sport/tournament/:id',
+      to: '/volleyball/tournament/tour-2',
+    });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Clear' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm clear score for Team A vs Team B' }));
