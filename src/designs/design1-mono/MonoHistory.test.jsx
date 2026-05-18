@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
@@ -24,6 +24,11 @@ function seedQuickMatch() {
   );
 }
 
+function readQuickMatches() {
+  const raw = globalThis.localStorage.getItem(QUICK_MATCHES_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
 function renderHistory() {
   return render(
     <MemoryRouter initialEntries={['/history']}>
@@ -35,10 +40,14 @@ function renderHistory() {
 describe('MonoHistory', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
-    globalThis.requestAnimationFrame = vi.fn((callback) => {
-      callback();
+    vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
+      callback(0);
       return 1;
-    });
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('shows an explicit match details affordance and opens details', async () => {
@@ -62,19 +71,19 @@ describe('MonoHistory', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Delete match Team A vs Team B' }));
 
     expect(screen.getByText('Delete this quick match?')).toBeInTheDocument();
-    expect(JSON.parse(globalThis.localStorage.getItem(QUICK_MATCHES_KEY))).toHaveLength(1);
+    expect(readQuickMatches()).toHaveLength(1);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => {
-      expect(JSON.parse(globalThis.localStorage.getItem(QUICK_MATCHES_KEY))).toHaveLength(0);
+      expect(readQuickMatches()).toHaveLength(0);
     });
     expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo delete' }));
 
     await waitFor(() => {
-      expect(JSON.parse(globalThis.localStorage.getItem(QUICK_MATCHES_KEY))).toHaveLength(1);
+      expect(readQuickMatches()).toHaveLength(1);
     });
     expect(screen.getByText('Quick match restored.')).toBeInTheDocument();
   });
