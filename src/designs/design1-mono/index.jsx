@@ -741,6 +741,8 @@ export default function Design1Mono() {
   const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
   const protectedRouteHistoryIndexRef = useRef(null);
+  const protectedGuardDepthRef = useRef(0);
+  const protectedGuardRouteKeyRef = useRef(null);
 
   const requestScoringExit = useCallback((options = {}) => {
     exitPromptRef.current?.onCancel?.();
@@ -775,11 +777,24 @@ export default function Design1Mono() {
   useEffect(() => {
     const isGameRoute = isProtectedScoringPath(location.pathname);
 
-    if (!isGameRoute) return;
+    if (!isGameRoute) {
+      protectedRouteHistoryIndexRef.current = null;
+      protectedGuardDepthRef.current = 0;
+      protectedGuardRouteKeyRef.current = null;
+      return undefined;
+    }
 
+    const routeKey = `${location.pathname}${location.search}`;
     const routeHistoryIndex = globalThis.history.state?.idx;
-    protectedRouteHistoryIndexRef.current = typeof routeHistoryIndex === 'number' ? routeHistoryIndex : null;
-    globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
+    if (protectedRouteHistoryIndexRef.current === null && typeof routeHistoryIndex === 'number') {
+      protectedRouteHistoryIndexRef.current = routeHistoryIndex > 0 ? routeHistoryIndex - 1 : null;
+    }
+
+    if (protectedGuardRouteKeyRef.current !== routeKey) {
+      protectedGuardRouteKeyRef.current = routeKey;
+      protectedGuardDepthRef.current += 1;
+      globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
+    }
 
     const handlePopState = () => {
       if (allowNextProtectedPopRef.current) {
@@ -790,9 +805,17 @@ export default function Design1Mono() {
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
       requestScoringExit({
         onConfirm: () => {
-          if (protectedRouteHistoryIndexRef.current > 0) {
+          const currentRouteHistoryIndex = globalThis.history.state?.idx;
+          const baseRouteHistoryIndex = protectedRouteHistoryIndexRef.current;
+          const canReturnToPriorRoute =
+            typeof currentRouteHistoryIndex === 'number' &&
+            typeof baseRouteHistoryIndex === 'number' &&
+            currentRouteHistoryIndex > baseRouteHistoryIndex;
+
+          if (canReturnToPriorRoute) {
+            const backDelta = currentRouteHistoryIndex - baseRouteHistoryIndex + protectedGuardDepthRef.current;
             allowNextProtectedPopRef.current = true;
-            globalThis.history.go(-2);
+            globalThis.history.go(-backDelta);
             return;
           }
 
@@ -823,7 +846,7 @@ export default function Design1Mono() {
       globalThis.removeEventListener('beforeunload', handleBeforeUnload);
       cleanupNativeBackButton();
     };
-  }, [location.pathname, navigate, requestScoringExit]);
+  }, [location.pathname, location.search, navigate, requestScoringExit]);
 
   return (
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
