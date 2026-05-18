@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MonoTournamentList from './MonoTournamentList';
 import GenericGoalsTournament from './GenericGoalsTournament';
 import GenericSetsTournament from './GenericSetsTournament';
@@ -31,6 +31,15 @@ function renderRoute(initialEntry, routePath, element) {
         <Route path={routePath} element={element} />
       </Routes>
     </MemoryRouter>,
+  );
+}
+
+function RouteJump({ label, to }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(to)}>
+      {label}
+    </button>
   );
 }
 
@@ -76,6 +85,39 @@ describe('tournament destructive safety', () => {
     expect(screen.getByText('League Night')).toBeInTheDocument();
   });
 
+  it('drops tournament delete undo state when switching sports', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      {
+        id: 'tour-1',
+        mode: 'tournament',
+        name: 'League Night',
+        teams: baseTeams(),
+        matches: [{ id: 'match-1', team1Id: 'team-a', team2Id: 'team-b', status: 'pending' }],
+      },
+    ]);
+    seedStorage(FOOTBALL_KEY, []);
+
+    render(
+      <MemoryRouter initialEntries={['/volleyball/tournament']}>
+        <RouteJump label="Switch sport" to="/football/tournament" />
+        <Routes>
+          <Route path="/:sport/tournament" element={<MonoTournamentList />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete League Night tournament' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm delete League Night tournament' }));
+    expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch sport' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Undo delete' })).not.toBeInTheDocument();
+    });
+    expect(readTournaments(FOOTBALL_KEY)).toHaveLength(0);
+  });
+
   it('confirms and undoes clearing a sets tournament score', async () => {
     seedStorage(VOLLEYBALL_KEY, [
       {
@@ -116,6 +158,54 @@ describe('tournament destructive safety', () => {
       expect(readTournaments(VOLLEYBALL_KEY)[0].matches[0].sets).toHaveLength(1);
     });
     expect(screen.getByText('25')).toBeInTheDocument();
+  });
+
+  it('drops score-clear undo state when switching tournament ids', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      {
+        id: 'tour-1',
+        name: 'Sets League',
+        teams: baseTeams(),
+        format: { sets: 3 },
+        matches: [
+          {
+            id: 'match-1',
+            team1Id: 'team-a',
+            team2Id: 'team-b',
+            status: 'completed',
+            winner: 'team-a',
+            sets: [{ score1: 25, score2: 20, completed: true }],
+          },
+        ],
+      },
+      {
+        id: 'tour-2',
+        name: 'Second League',
+        teams: baseTeams(),
+        format: { sets: 3 },
+        matches: [{ id: 'match-1', team1Id: 'team-a', team2Id: 'team-b', status: 'pending', sets: [] }],
+      },
+    ]);
+
+    render(
+      <MemoryRouter initialEntries={['/volleyball/tournament/tour-1']}>
+        <RouteJump label="Switch tournament" to="/volleyball/tournament/tour-2" />
+        <Routes>
+          <Route path="/:sport/tournament/:id" element={<GenericSetsTournament />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm clear score for Team A vs Team B' }));
+    expect(screen.getByRole('button', { name: 'Undo clear score' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch tournament' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Undo clear score' })).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Second League')).toBeInTheDocument();
   });
 
   it('confirms and undoes clearing a goals tournament score', async () => {

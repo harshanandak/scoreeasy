@@ -21,6 +21,7 @@ export default function MonoTournamentList() {
     if (!sportConfig) return;
     const loaded = loadSportTournaments(sportConfig.storageKey);
     setTournaments(loaded.filter(t => t.mode === 'tournament' || !t.mode));
+    setDeletedTournament(null);
     requestAnimationFrame(() => setVisible(true));
   }, [sport, sportConfig]);
 
@@ -35,13 +36,14 @@ export default function MonoTournamentList() {
     setTournaments(prev => prev.filter(t => t.id !== id));
     setPendingDeleteId(null);
     if (tournament) {
-      setDeletedTournament({ tournament, snapshot });
+      setDeletedTournament({ tournament, snapshot, storageKey: sportConfig.storageKey });
     }
   };
 
   const undoDeleteTournament = () => {
     if (!deletedTournament) return;
-    saveData(sportConfig.storageKey, deletedTournament.snapshot);
+    if (deletedTournament.storageKey !== sportConfig.storageKey) return;
+    saveData(deletedTournament.storageKey, deletedTournament.snapshot);
     setTournaments(deletedTournament.snapshot.filter(t => t.mode === 'tournament' || !t.mode));
     setDeletedTournament(null);
   };
