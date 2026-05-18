@@ -738,27 +738,35 @@ export default function Design1Mono() {
   const location = useLocation();
   const navigate = useNavigate();
   const [exitPrompt, setExitPrompt] = useState(null);
+  const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
   const protectedRouteHistoryIndexRef = useRef(null);
 
   const requestScoringExit = useCallback((options = {}) => {
-    setExitPrompt({
+    exitPromptRef.current?.onCancel?.();
+
+    const nextPrompt = {
       title: SCORING_EXIT_TITLE,
       message: SCORING_EXIT_MESSAGE,
       confirmLabel: 'Leave page',
       cancelLabel: 'Stay here',
       ...options,
-    });
+    };
+
+    exitPromptRef.current = nextPrompt;
+    setExitPrompt(nextPrompt);
   }, []);
 
   const cancelExitPrompt = useCallback(() => {
     const onCancel = exitPrompt?.onCancel;
+    exitPromptRef.current = null;
     setExitPrompt(null);
     onCancel?.();
   }, [exitPrompt]);
 
   const confirmExitPrompt = useCallback(() => {
     const onConfirm = exitPrompt?.onConfirm;
+    exitPromptRef.current = null;
     setExitPrompt(null);
     onConfirm?.();
   }, [exitPrompt]);
