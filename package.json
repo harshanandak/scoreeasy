@@ -57,7 +57,8 @@
     "picomatch": "4.0.4",
     "postcss": "8.5.14",
     "rollup": "4.60.3",
-    "vite": "6.4.2"
+    "vite": "6.4.2",
+    "ws": "8.20.1"
   },
   "scoreEasy": {
     "sentryEnvVar": "VITE_SENTRY_DSN"
