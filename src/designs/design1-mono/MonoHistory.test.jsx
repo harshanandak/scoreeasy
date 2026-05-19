@@ -182,6 +182,13 @@ describe('MonoHistory', () => {
     expect(screen.queryByText('Riders vs Kings')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'close' } });
+
+    expect(screen.getByText('Falcons vs Sharks')).toBeInTheDocument();
+    expect(screen.queryByText('Riders vs Kings')).not.toBeInTheDocument();
+    expect(screen.queryByText('City vs United')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     fireEvent.change(screen.getByLabelText('Sort by date'), { target: { value: 'oldest' } });
 
     const detailLinks = screen.getAllByText('View details');

@@ -69,19 +69,49 @@ function getEntrySearchText(entry) {
   ].filter(Boolean).join(' ').toLowerCase();
 }
 
-function getScoreMargin(score) {
-  const scoreText = String(score || '');
-  const sides = scoreText.split(/\s+(?:-|vs)\s+/i);
-  const scores = sides.length >= 2
-    ? sides.slice(0, 2).map((side) => Number(side.match(/\d+/)?.[0])).filter(Number.isFinite)
-    : scoreText.match(/\d+/g)?.map(Number) || [];
-  if (scores.length < 2) return null;
-  return Math.abs(scores[0] - scores[1]);
-}
-
 function isDrawLikeWinner(winner) {
   const normalized = normalizeNonTeamWinner(winner);
   return normalized === 'Draw' || normalized === 'Tie';
+}
+
+function getLeadingNumber(value) {
+  const text = String(value || '').trim();
+  let digits = '';
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (char >= '0' && char <= '9') {
+      digits += char;
+      continue;
+    }
+    if (digits) break;
+  }
+
+  return digits ? Number(digits) : null;
+}
+
+function splitScoreSides(score) {
+  const scoreText = String(score || '');
+  const lowerScore = scoreText.toLowerCase();
+  const vsIndex = lowerScore.indexOf(' vs ');
+  if (vsIndex >= 0) {
+    return [scoreText.slice(0, vsIndex), scoreText.slice(vsIndex + 4)];
+  }
+
+  const dashIndex = scoreText.indexOf(' - ');
+  if (dashIndex >= 0) {
+    return [scoreText.slice(0, dashIndex), scoreText.slice(dashIndex + 3)];
+  }
+
+  return [];
+}
+
+function getScoreMargin(score) {
+  const scores = splitScoreSides(score)
+    .map(getLeadingNumber)
+    .filter(Number.isFinite);
+  if (scores.length < 2) return null;
+  return Math.abs(scores[0] - scores[1]);
 }
 
 function matchesResultFilter(entry, resultFilter) {
@@ -90,7 +120,7 @@ function matchesResultFilter(entry, resultFilter) {
   if (resultFilter === RESULT_DECIDED) return Boolean(entry.winner) && !isDrawLikeWinner(entry.winner);
   if (resultFilter === RESULT_CLOSE) {
     const margin = getScoreMargin(entry.score);
-    return margin !== null && margin <= 2;
+    return !isDrawLikeWinner(entry.winner) && margin !== null && margin <= 2;
   }
   return true;
 }
