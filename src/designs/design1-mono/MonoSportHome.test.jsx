@@ -3,6 +3,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoSportHome from './MonoSportHome';
 
+let scrollSpy;
+let addedScrollIntoView = false;
+
 function LocationProbe() {
   const location = useLocation();
   return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
@@ -26,10 +29,22 @@ describe('MonoSportHome priority starts', () => {
       callback(0);
       return 1;
     }));
-    Element.prototype.scrollIntoView = vi.fn();
+    if (!Element.prototype.scrollIntoView) {
+      Object.defineProperty(Element.prototype, 'scrollIntoView', {
+        configurable: true,
+        value() {},
+      });
+      addedScrollIntoView = true;
+    }
+    scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    scrollSpy?.mockRestore();
+    if (addedScrollIntoView) {
+      delete Element.prototype.scrollIntoView;
+      addedScrollIntoView = false;
+    }
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });

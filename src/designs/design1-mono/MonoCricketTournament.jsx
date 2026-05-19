@@ -5,9 +5,9 @@ import { ballsToOvers, calculateCricketPointsTable, getCricketFormat } from '../
 import { getSportById } from '../../models/sportRegistry';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
-import { getTournamentTypeLabel, isPureKnockoutTournament, shouldShowKnockoutStage } from '../../utils/tournamentDisplay';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 
 // Get human-readable format label from format object
 function getFormatLabel(format) {
@@ -210,11 +210,18 @@ export default function MonoCricketTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
-  const isPureKnockout = isPureKnockoutTournament(tournament);
-
-  useEffect(() => {
-    if (isPureKnockout && tab === 'matches') setTab('knockout');
-  }, [isPureKnockout, tab]);
+  const knockoutDisplay = useTournamentKnockoutDisplay({
+    tournament,
+    tab,
+    setTab,
+    baseTabs: [
+      { id: 'matches', label: 'Matches' },
+      { id: 'table', label: 'Points Table' },
+    ],
+    knockoutTab: { id: 'knockout', label: 'Knockout' },
+    trailingTabs: [{ id: 'teams', label: 'Teams' }],
+    labelOptions: { type: tournament?.type, totalMatches: tournament?.matches?.length ?? 0 },
+  });
 
   if (!tournament) {
     return (
@@ -253,14 +260,13 @@ export default function MonoCricketTournament() {
     }));
   };
 
-  const hasKnockouts = tournament.winnerMode === 'knockouts';
-  const showKnockoutStage = shouldShowKnockoutStage({ isPureKnockout, hasKnockouts });
+  const { hasKnockouts, isPureKnockout, showKnockoutStage, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
   const metaLabel = [
     getFormatLabel(tournament.format),
     `${tournament.teams.length} teams`,
-    getTournamentTypeLabel({ isPureKnockout, hasKnockouts, type: tournament.type, totalMatches }),
+    tournamentTypeLabel,
   ].join(' · ');
 
   let badgeClass = 'mono-badge-live';
@@ -272,15 +278,6 @@ export default function MonoCricketTournament() {
     badgeClass = 'mono-badge-paused';
     badgeText = 'Knockout';
   }
-
-  const tabs = isPureKnockout
-    ? [{ id: 'knockout', label: 'Knockout' }]
-    : [
-      { id: 'matches', label: 'Matches' },
-      { id: 'table', label: 'Points Table' },
-    ];
-  if (hasKnockouts && !isPureKnockout) tabs.push({ id: 'knockout', label: 'Knockout' });
-  tabs.push({ id: 'teams', label: 'Teams' });
 
   return (
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>

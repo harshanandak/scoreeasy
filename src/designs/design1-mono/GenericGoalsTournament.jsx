@@ -4,10 +4,10 @@ import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
 import { calculateGoalsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
-import { getTournamentTypeLabel, isPureKnockoutTournament, shouldShowKnockoutStage } from '../../utils/tournamentDisplay';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
+import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 
 export default function GenericGoalsTournament() {
@@ -70,11 +70,7 @@ export default function GenericGoalsTournament() {
   }, [tournament?.knockoutMatches]);
 
   const scoreClear = useTournamentScoreClear({ scoreKind: 'goals', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
-  const isPureKnockout = isPureKnockoutTournament(tournament);
-
-  useEffect(() => {
-    if (isPureKnockout && tab === 'matches') setTab('knockout');
-  }, [isPureKnockout, tab]);
+  const knockoutDisplay = useTournamentKnockoutDisplay({ tournament, tab, setTab });
 
   if (!sportConfig) {
     return (
@@ -102,11 +98,9 @@ export default function GenericGoalsTournament() {
   ).length;
   const totalMatches = tournament.matches.length;
 
-  const hasKnockouts = tournament.winnerMode === 'knockouts';
-  const showKnockoutStage = shouldShowKnockoutStage({ isPureKnockout, hasKnockouts });
+  const { hasKnockouts, isPureKnockout, showKnockoutStage, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
-  const tournamentTypeLabel = getTournamentTypeLabel({ isPureKnockout, hasKnockouts });
 
   let badgeClass = 'mono-badge-live';
   let badgeText = 'Live';
@@ -117,10 +111,6 @@ export default function GenericGoalsTournament() {
     badgeClass = 'mono-badge-paused';
     badgeText = 'Knockout';
   }
-
-  const tabs = isPureKnockout ? ['knockout'] : ['matches', 'standings'];
-  if (hasKnockouts && !isPureKnockout) tabs.push('knockout');
-  tabs.push('teams');
 
   return (
     <div className={`min-h-screen mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
@@ -147,7 +137,7 @@ export default function GenericGoalsTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-            {sportConfig.name} · {tournament.teams.length} teams · {tournamentTypeLabel}
+          {sportConfig.name} · {tournament.teams.length} teams · {tournamentTypeLabel}
         </p>
 
         {/* Match progress segments */}
