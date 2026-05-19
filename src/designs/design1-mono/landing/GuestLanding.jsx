@@ -12,6 +12,10 @@ const heroSportPriority = new Map([
   ['Volleyball', 2],
 ]);
 
+function sportPlayPath(sport) {
+  return `/play?sport=${sport.toLowerCase()}`;
+}
+
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
@@ -72,8 +76,8 @@ export default function GuestLanding() {
   const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const heroActions = [
-    { label: activeStartLabel, tone: 'primary' },
-    { label: 'CHOOSE SPORT', tone: 'secondary' },
+    { label: activeStartLabel, tone: 'primary', to: sportPlayPath(activeCard.sport) },
+    { label: 'CHOOSE SPORT', tone: 'secondary', to: '/play' },
   ];
   const heroActionStyle = (action, mode) => {
     const compact = mode === 'compact';
@@ -137,7 +141,7 @@ export default function GuestLanding() {
             SCORE<br />EASY
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 24 }}>
-            {!mobile && ['Features', 'Proof', 'Sports', 'How'].map(link => (
+            {!mobile && ['Features', 'Experience', 'Sports', 'How'].map(link => (
               <a key={link} href={`#${link.toLowerCase()}`} className="nav-link" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.08em', transition: 'color 150ms ease' }}>{link}</a>
             ))}
             {cloudAuthAvailable && (
@@ -174,7 +178,7 @@ export default function GuestLanding() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 {heroActions.map((action) => (
-                  <Link key={action.label} to="/play" style={heroActionStyle(action, 'compact')}>
+                  <Link key={action.label} to={action.to} style={heroActionStyle(action, 'compact')}>
                     {action.label}
                   </Link>
                 ))}
@@ -268,7 +272,7 @@ export default function GuestLanding() {
               </p>
               <div style={{ display: 'flex', gap: 12 }}>
                 {heroActions.map((action) => (
-                  <Link key={action.label} to="/play" style={heroActionStyle(action, 'desktop')}>
+                  <Link key={action.label} to={action.to} style={heroActionStyle(action, 'desktop')}>
                     {action.label}
                   </Link>
                 ))}

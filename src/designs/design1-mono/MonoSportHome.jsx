@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadSportTournaments, loadPreference, savePreference } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
@@ -38,6 +38,11 @@ const cricketFormatShape = PropTypes.shape({
 
 function slugForCategory(category) {
   return category.replaceAll(/\s+/g, '-');
+}
+
+function getCategoryForSport(sportCategories, sportId) {
+  if (sportId === 'cricket') return 'Cricket';
+  return Object.entries(sportCategories).find(([, sports]) => sports.some(sport => sport.id === sportId))?.[0] ?? null;
 }
 
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto' }) {
@@ -533,12 +538,16 @@ BrowseSports.propTypes = {
 
 export default function MonoSportHome() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const sportCategories = getSportsByCategory();
   const categoryKeys = Object.keys(sportCategories);
+  const requestedSportId = searchParams.get('sport')?.toLowerCase() ?? null;
+  const requestedCategory = requestedSportId ? getCategoryForSport(sportCategories, requestedSportId) : null;
+  const initialCategory = requestedCategory ?? (sportCategories[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
   const [visible, setVisible] = useState(false);
   const [tournamentCounts, setTournamentCounts] = useState({});
-  const [activeTab, setActiveTab] = useState(sportCategories[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
-  const [selectedSportId, setSelectedSportId] = useState(null);
+  const [activeTab, setActiveTab] = useState(initialCategory);
+  const [selectedSportId, setSelectedSportId] = useState(requestedCategory && requestedSportId !== 'cricket' ? requestedSportId : null);
   const [searchQuery, setSearchQuery] = useState('');
   const [layout, setLayout] = useState(() => loadPreference(LAYOUT_KEY, 'tabs'));
 
@@ -552,6 +561,12 @@ export default function MonoSportHome() {
     });
     setTournamentCounts(counts);
   }, []);
+
+  useEffect(() => {
+    if (!requestedSportId || !requestedCategory) return;
+    setActiveTab(requestedCategory);
+    setSelectedSportId(requestedSportId === 'cricket' ? null : requestedSportId);
+  }, [requestedSportId, requestedCategory]);
 
   const getCounts = (id) => tournamentCounts[id] || 0;
 
