@@ -85,7 +85,16 @@ function NotFoundRoute() {
 }
 
 // Redirects authenticated users who haven't completed onboarding
-const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
+const GUARD_BYPASS_PREFIXES = [
+  '/onboarding',
+  '/login',
+  '/signup',
+  '/sso-callback',
+  '/showcase',
+  '/privacy',
+  '/terms',
+  '/contact',
+];
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
 const SCORING_EXIT_CONFIRMATION = `${SCORING_EXIT_TITLE} ${SCORING_EXIT_MESSAGE}`;
