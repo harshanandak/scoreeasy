@@ -15,6 +15,13 @@ import SportIcon from './SportIcon';
 import { shareText } from '../../mobile/share';
 
 const QM_KEY = 'se_quickmatches';
+const ANY_SPORT = 'all';
+const RESULT_ALL = 'all';
+const RESULT_DECIDED = 'decided';
+const RESULT_DRAW = 'draw';
+const RESULT_CLOSE = 'close';
+const SORT_NEWEST = 'newest';
+const SORT_OLDEST = 'oldest';
 
 function toTimestamp(value) {
   const parsed = Date.parse(value || '');
@@ -43,6 +50,49 @@ function winnerLabel(winner) {
   if (normalized === 'Draw') return 'Draw';
   if (normalized === 'Tie') return 'Tied';
   return `${normalized} won`;
+}
+
+function normalizeSearchValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function getEntrySearchText(entry) {
+  return [
+    entry.team1,
+    entry.team2,
+    entry.tournamentName,
+    entry.participants,
+    entry.sportName,
+    entry.score,
+    winnerLabel(entry.winner),
+    entry.source === 'quick' ? 'quick match' : 'tournament',
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function getScoreMargin(score) {
+  const scoreText = String(score || '');
+  const sides = scoreText.split(/\s+(?:-|vs)\s+/i);
+  const scores = sides.length >= 2
+    ? sides.slice(0, 2).map((side) => Number(side.match(/\d+/)?.[0])).filter(Number.isFinite)
+    : scoreText.match(/\d+/g)?.map(Number) || [];
+  if (scores.length < 2) return null;
+  return Math.abs(scores[0] - scores[1]);
+}
+
+function isDrawLikeWinner(winner) {
+  const normalized = normalizeNonTeamWinner(winner);
+  return normalized === 'Draw' || normalized === 'Tie';
+}
+
+function matchesResultFilter(entry, resultFilter) {
+  if (resultFilter === RESULT_ALL) return true;
+  if (resultFilter === RESULT_DRAW) return isDrawLikeWinner(entry.winner);
+  if (resultFilter === RESULT_DECIDED) return Boolean(entry.winner) && !isDrawLikeWinner(entry.winner);
+  if (resultFilter === RESULT_CLOSE) {
+    const margin = getScoreMargin(entry.score);
+    return margin !== null && margin <= 2;
+  }
+  return true;
 }
 
 function buildEntryShareText(entry) {
@@ -150,6 +200,10 @@ export default function MonoHistory() {
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sportFilter, setSportFilter] = useState(ANY_SPORT);
+  const [resultFilter, setResultFilter] = useState(RESULT_ALL);
+  const [sortOrder, setSortOrder] = useState(SORT_NEWEST);
   const [pendingClear, setPendingClear] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -221,14 +275,41 @@ export default function MonoHistory() {
   }, [quickEntries, tournamentEntries, legacyEntries]);
 
   const filteredEntries = useMemo(() => {
-    if (filter === 'all') return allEntries;
-    return allEntries.filter((entry) => entry.source === filter);
-  }, [allEntries, filter]);
+    const normalizedSearch = normalizeSearchValue(searchQuery);
+    return allEntries
+      .filter((entry) => filter === 'all' || entry.source === filter)
+      .filter((entry) => sportFilter === ANY_SPORT || entry.sportName === sportFilter)
+      .filter((entry) => matchesResultFilter(entry, resultFilter))
+      .filter((entry) => !normalizedSearch || getEntrySearchText(entry).includes(normalizedSearch))
+      .sort((a, b) => {
+        const diff = toTimestamp(b.date) - toTimestamp(a.date);
+        return sortOrder === SORT_NEWEST ? diff : -diff;
+      });
+  }, [allEntries, filter, resultFilter, searchQuery, sortOrder, sportFilter]);
+
+  const sportOptions = useMemo(() => {
+    return [...new Set(allEntries.map((entry) => entry.sportName).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
+  }, [allEntries]);
+
+  const hasActiveDiscoveryFilter = Boolean(normalizeSearchValue(searchQuery))
+    || sportFilter !== ANY_SPORT
+    || resultFilter !== RESULT_ALL
+    || sortOrder !== SORT_NEWEST
+    || filter !== 'all';
 
   const quickCount = quickEntries.length;
   const tournamentCount = tournamentEntries.length + legacyEntries.length;
   const totalCount = allEntries.length;
   const clearableCount = quickCount + legacyEntries.length;
+
+  const resetDiscoveryFilters = () => {
+    setFilter('all');
+    setSearchQuery('');
+    setSportFilter(ANY_SPORT);
+    setResultFilter(RESULT_ALL);
+    setSortOrder(SORT_NEWEST);
+  };
 
   const deleteQuickMatch = (id) => {
     const updated = quickMatches.filter((qm) => qm.id !== id);
@@ -458,18 +539,105 @@ export default function MonoHistory() {
           ))}
         </div>
 
+        <div className="mono-card mb-6" style={{ padding: '14px 16px' }}>
+          <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2" style={{ color: '#888' }}>
+            Find match
+          </label>
+          <input
+            id="history-search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="mono-input w-full mb-3"
+            style={{ minHeight: 44 }}
+            placeholder="Search team, sport, winner, tournament..."
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label className="text-xs" style={{ color: '#666' }}>
+              <span className="block mb-1">Sport</span>
+              <select
+                aria-label="Filter by sport"
+                value={sportFilter}
+                onChange={(event) => setSportFilter(event.target.value)}
+                className="mono-input w-full"
+                style={{ minHeight: 44, background: '#fff' }}
+              >
+                <option value={ANY_SPORT}>All sports</option>
+                {sportOptions.map((sportName) => (
+                  <option key={sportName} value={sportName}>{sportName}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-xs" style={{ color: '#666' }}>
+              <span className="block mb-1">Result</span>
+              <select
+                aria-label="Filter by result"
+                value={resultFilter}
+                onChange={(event) => setResultFilter(event.target.value)}
+                className="mono-input w-full"
+                style={{ minHeight: 44, background: '#fff' }}
+              >
+                <option value={RESULT_ALL}>All results</option>
+                <option value={RESULT_DECIDED}>Decided</option>
+                <option value={RESULT_DRAW}>Draws and ties</option>
+                <option value={RESULT_CLOSE}>Close games</option>
+              </select>
+            </label>
+
+            <label className="text-xs" style={{ color: '#666' }}>
+              <span className="block mb-1">Date</span>
+              <select
+                aria-label="Sort by date"
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+                className="mono-input w-full"
+                style={{ minHeight: 44, background: '#fff' }}
+              >
+                <option value={SORT_NEWEST}>Newest first</option>
+                <option value={SORT_OLDEST}>Oldest first</option>
+              </select>
+            </label>
+          </div>
+
+          {hasActiveDiscoveryFilter && filteredEntries.length > 0 && (
+            <button
+              type="button"
+              className="mono-btn w-full mt-3"
+              style={{ minHeight: 44, padding: '10px' }}
+              onClick={resetDiscoveryFilters}
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
         {filteredEntries.length === 0 ? (
           <div className="mono-card text-center" style={{ padding: '28px 18px' }}>
-            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>No matches in this filter</p>
-            <p className="text-xs mb-5" style={{ color: '#666' }}>
-              Completed quick matches and tournaments will appear here.
+            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
+              {totalCount === 0 ? 'No match history yet' : 'No matches found'}
             </p>
+            <p className="text-xs mb-5" style={{ color: '#666' }}>
+              {totalCount === 0
+                ? 'Completed quick matches and tournaments will appear here.'
+                : 'Try a different search, sport, result, or date filter.'}
+            </p>
+            {totalCount > 0 && (
+              <button
+                type="button"
+                className="mono-btn w-full mb-2"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={resetDiscoveryFilters}
+              >
+                Clear filters
+              </button>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
                 className="mono-btn-primary flex-1"
                 style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/play')}
+                onClick={() => navigate('/volleyball/quick')}
               >
                 Start Match
               </button>
@@ -477,7 +645,7 @@ export default function MonoHistory() {
                 type="button"
                 className="mono-btn flex-1"
                 style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/play')}
+                onClick={() => navigate('/volleyball/tournament/new')}
               >
                 Tournament
               </button>
