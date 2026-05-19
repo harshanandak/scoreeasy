@@ -4,6 +4,7 @@ import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
 import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
+import { getTournamentTypeLabel, isPureKnockoutTournament, shouldShowKnockoutStage } from '../../utils/tournamentDisplay';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
@@ -93,7 +94,7 @@ export default function GenericSetsTournament() {
   }, [tournament?.knockoutMatches]);
 
   const scoreClear = useTournamentScoreClear({ scoreKind: 'sets', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
-  const isPureKnockout = tournament?.type === 'knockout' || tournament?.knockoutConfig?.mode === 'single-elimination';
+  const isPureKnockout = isPureKnockoutTournament(tournament);
 
   useEffect(() => {
     if (isPureKnockout && tab === 'matches') setTab('knockout');
@@ -126,8 +127,10 @@ export default function GenericSetsTournament() {
   const totalMatches = tournament.matches.length;
 
   const hasKnockouts = tournament.winnerMode === 'knockouts';
+  const showKnockoutStage = shouldShowKnockoutStage({ isPureKnockout, hasKnockouts });
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
+  const tournamentTypeLabel = getTournamentTypeLabel({ isPureKnockout, hasKnockouts });
 
   let badgeClass = 'mono-badge-live';
   let badgeText = 'Live';
@@ -178,7 +181,7 @@ export default function GenericSetsTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-            {sportConfig.name} · {tournament.teams.length} teams · {isPureKnockout ? 'Single Elimination' : `Round Robin${hasKnockouts ? ' + Knockouts' : ''}`}
+            {sportConfig.name} · {tournament.teams.length} teams · {tournamentTypeLabel}
         </p>
 
         {/* Match progress segments */}
@@ -198,7 +201,7 @@ export default function GenericSetsTournament() {
             ))}
           </div>
           <span className="text-xs font-mono" style={{ color: '#888' }}>{completedMatches}/{totalMatches}</span>
-          {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+          {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
             <>
               <div style={{ width: 1, height: 10, background: '#ddd' }} />
               <div className="flex items-center gap-1">
@@ -356,7 +359,7 @@ export default function GenericSetsTournament() {
             })}
 
             {/* Knockout matches in schedule */}
-            {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+            {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -378,7 +381,7 @@ export default function GenericSetsTournament() {
             )}
 
             {/* Show placeholder knockout schedule before group stage completes */}
-            {hasKnockouts && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
+            {showKnockoutStage && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -465,7 +468,7 @@ export default function GenericSetsTournament() {
         )}
 
         {/* Knockout Tab */}
-        {tab === 'knockout' && hasKnockouts && (
+        {tab === 'knockout' && showKnockoutStage && (
           <div>
             {tournament.phase === 'group' && (
               <div className="mono-card p-5 mb-6 text-center">

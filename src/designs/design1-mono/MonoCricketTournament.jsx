@@ -5,6 +5,7 @@ import { ballsToOvers, calculateCricketPointsTable, getCricketFormat } from '../
 import { getSportById } from '../../models/sportRegistry';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
+import { getTournamentTypeLabel, isPureKnockoutTournament, shouldShowKnockoutStage } from '../../utils/tournamentDisplay';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 
@@ -209,7 +210,7 @@ export default function MonoCricketTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
-  const isPureKnockout = tournament?.type === 'knockout' || tournament?.knockoutConfig?.mode === 'single-elimination';
+  const isPureKnockout = isPureKnockoutTournament(tournament);
 
   useEffect(() => {
     if (isPureKnockout && tab === 'matches') setTab('knockout');
@@ -253,8 +254,14 @@ export default function MonoCricketTournament() {
   };
 
   const hasKnockouts = tournament.winnerMode === 'knockouts';
+  const showKnockoutStage = shouldShowKnockoutStage({ isPureKnockout, hasKnockouts });
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
+  const metaLabel = [
+    getFormatLabel(tournament.format),
+    `${tournament.teams.length} teams`,
+    getTournamentTypeLabel({ isPureKnockout, hasKnockouts, type: tournament.type, totalMatches }),
+  ].join(' · ');
 
   let badgeClass = 'mono-badge-live';
   let badgeText = 'Live';
@@ -300,7 +307,7 @@ export default function MonoCricketTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-          {getFormatLabel(tournament.format)} · {tournament.teams.length} teams · {isPureKnockout ? 'Single Elimination' : tournament.type === 'series' ? `${totalMatches}-match series` : `Round Robin${hasKnockouts ? ' + Knockouts' : ''}`}
+          {metaLabel}
         </p>
 
         {/* Match progress segments */}
@@ -320,7 +327,7 @@ export default function MonoCricketTournament() {
             ))}
           </div>
           <span className="text-xs font-mono" style={{ color: '#888' }}>{completedMatches}/{totalMatches}</span>
-          {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+          {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
             <>
               <div style={{ width: 1, height: 10, background: '#ddd' }} />
               <div className="flex items-center gap-1">
@@ -444,7 +451,7 @@ export default function MonoCricketTournament() {
             })}
 
             {/* Knockout matches in schedule */}
-            {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+            {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -466,7 +473,7 @@ export default function MonoCricketTournament() {
             )}
 
             {/* Show placeholder knockout schedule before group stage completes */}
-            {hasKnockouts && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
+            {showKnockoutStage && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -564,7 +571,7 @@ export default function MonoCricketTournament() {
         )}
 
         {/* Knockout Tab */}
-        {tab === 'knockout' && hasKnockouts && (
+        {tab === 'knockout' && showKnockoutStage && (
           <div>
             {tournament.phase === 'group' && (
               <div className="mono-card p-5 mb-6 text-center">

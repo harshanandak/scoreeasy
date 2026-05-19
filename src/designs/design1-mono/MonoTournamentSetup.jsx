@@ -5,6 +5,7 @@ import { generateKnockoutMatches, generateRoundRobinMatches } from '../../utils/
 import { getSportById } from '../../models/sportRegistry';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat } from '../../utils/cricketCalculations';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
+import { getTournamentMatchCountPreview } from '../../utils/tournamentDisplay';
 
 const STEP_LABELS = ['Basics', 'Match rules', 'Teams', 'Review'];
 
@@ -348,11 +349,14 @@ export default function MonoTournamentSetup() {
     return `First to ${f.target} ${sportConfig?.config?.scoringUnit || 'point'}s`;
   };
 
-  const matchCountPreview = (() => {
-    if (tournamentType === 'series') return seriesGames;
-    if (tournamentType === 'knockout') return teamCount === 2 ? 1 : (thirdPlaceMatch ? 4 : 3);
-    return (teamCount * (teamCount - 1)) / 2;
-  })();
+  const matchCountPreview = getTournamentMatchCountPreview({
+    tournamentType,
+    teamCount,
+    seriesGames,
+    winnerMode,
+    teamsAdvancing,
+    thirdPlaceMatch,
+  });
 
   const isKnockoutSelection = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
 
@@ -593,6 +597,11 @@ export default function MonoTournamentSetup() {
                           if (n === 2) setThirdPlaceMatch(false);
                         } else if (n < 3) {
                           setWinnerMode('table-topper');
+                          setTeamsAdvancing(2);
+                          setThirdPlaceMatch(false);
+                        } else if (n < 4 && teamsAdvancing === 4) {
+                          setTeamsAdvancing(2);
+                          setThirdPlaceMatch(false);
                         }
                       }}
                       className={teamCount === n ? 'mono-btn-primary' : 'mono-btn'}
