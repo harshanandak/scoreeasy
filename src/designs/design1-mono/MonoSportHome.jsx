@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadSportTournaments, loadPreference, savePreference } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
@@ -38,6 +38,11 @@ const cricketFormatShape = PropTypes.shape({
 
 function slugForCategory(category) {
   return category.replaceAll(/\s+/g, '-');
+}
+
+function getCategoryForSport(sportCategories, sportId) {
+  if (sportId === 'cricket') return 'Cricket';
+  return Object.entries(sportCategories).find(([, sports]) => sports.some(sport => sport.id === sportId))?.[0] ?? null;
 }
 
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto' }) {
@@ -148,9 +153,18 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-function CricketFastStart({ navigate }) {
+const priorityFastStartActions = [
+  { label: 'Start Cricket', path: '/cricket/quick?format=T20', className: 'mono-btn-primary' },
+  { label: 'Start Football', path: '/football/quick', className: 'mono-btn' },
+  { label: 'Start Volleyball', path: '/volleyball/quick', className: 'mono-btn' },
+];
+
+const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
+const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
+
+function PriorityFastStart({ navigate }) {
   return (
-    <section className="mono-card mb-8" aria-label="Cricket fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
+    <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
       <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
         <div className="flex items-start gap-4">
           <div aria-hidden="true" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dbe7ff' }}>
@@ -158,26 +172,30 @@ function CricketFastStart({ navigate }) {
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket is ready first</h2>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket, football, and volleyball are ready</h2>
             <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
-              Start a T20 match immediately, or build a cricket tournament with standings when you need a full event.
+              Start the most-played formats quickly, then use the sport cards below when you need another game.
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <button onClick={() => navigate('/cricket/quick?format=T20')} className="mono-btn-primary" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}>
-            Start Cricket Match
-          </button>
-          <button onClick={() => navigate('/cricket/tournament/new?format=T20')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
-            Create Cricket Tournament
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          {priorityFastStartActions.map((action) => (
+            <button
+              key={action.path}
+              onClick={() => navigate(action.path)}
+              className={action.className}
+              style={action.className === 'mono-btn-primary' ? priorityActionStyle : secondaryPriorityActionStyle}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-CricketFastStart.propTypes = {
+PriorityFastStart.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
@@ -490,7 +508,7 @@ GridLayout.propTypes = {
 function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
   return (
     <div className="mb-8">
-      <CricketFastStart navigate={navigate} />
+      <PriorityFastStart navigate={navigate} />
 
       <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
         Choose sport
@@ -520,12 +538,16 @@ BrowseSports.propTypes = {
 
 export default function MonoSportHome() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const sportCategories = getSportsByCategory();
   const categoryKeys = Object.keys(sportCategories);
+  const requestedSportId = searchParams.get('sport')?.toLowerCase() ?? null;
+  const requestedCategory = requestedSportId ? getCategoryForSport(sportCategories, requestedSportId) : null;
+  const initialCategory = requestedCategory ?? (sportCategories[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
   const [visible, setVisible] = useState(false);
   const [tournamentCounts, setTournamentCounts] = useState({});
-  const [activeTab, setActiveTab] = useState(sportCategories[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
-  const [selectedSportId, setSelectedSportId] = useState(null);
+  const [activeTab, setActiveTab] = useState(initialCategory);
+  const [selectedSportId, setSelectedSportId] = useState(requestedCategory && requestedSportId !== 'cricket' ? requestedSportId : null);
   const [searchQuery, setSearchQuery] = useState('');
   const [layout, setLayout] = useState(() => loadPreference(LAYOUT_KEY, 'tabs'));
 
@@ -539,6 +561,12 @@ export default function MonoSportHome() {
     });
     setTournamentCounts(counts);
   }, []);
+
+  useEffect(() => {
+    if (!requestedSportId || !requestedCategory) return;
+    setActiveTab(requestedCategory);
+    setSelectedSportId(requestedSportId === 'cricket' ? null : requestedSportId);
+  }, [requestedSportId, requestedCategory]);
 
   const getCounts = (id) => tournamentCounts[id] || 0;
 
@@ -568,12 +596,13 @@ export default function MonoSportHome() {
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mb-8 flex items-center gap-2">
           <input
             type="text"
             className="mono-input flex-1"
             aria-label="Search sports"
             placeholder="Search sports..."
+            style={{ minWidth: 0 }}
             value={searchQuery}
             onChange={event => {
               setSearchQuery(event.target.value);
@@ -582,9 +611,9 @@ export default function MonoSportHome() {
           />
           <button
             onClick={switchLayout}
-            className="mono-btn flex items-center justify-center gap-2"
+            className="mono-btn flex items-center justify-center"
             aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
-            style={{ minHeight: 44, padding: '10px 16px', fontSize: '0.8125rem', fontWeight: 700 }}
+            style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
             title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
           >
             {layout === 'grid' ? (
@@ -592,7 +621,6 @@ export default function MonoSportHome() {
             ) : (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
             )}
-            <span>{layout === 'grid' ? 'List' : 'Grid'}</span>
           </button>
         </div>
 
