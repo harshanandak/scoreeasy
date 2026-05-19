@@ -148,6 +148,15 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
+const priorityFastStartActions = [
+  { label: 'Start Cricket', path: '/cricket/quick?format=T20', className: 'mono-btn-primary' },
+  { label: 'Start Football', path: '/football/quick', className: 'mono-btn' },
+  { label: 'Start Volleyball', path: '/volleyball/quick', className: 'mono-btn' },
+];
+
+const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
+const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
+
 function PriorityFastStart({ navigate }) {
   return (
     <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
@@ -165,15 +174,16 @@ function PriorityFastStart({ navigate }) {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          <button onClick={() => navigate('/cricket/quick?format=T20')} className="mono-btn-primary" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}>
-            Start Cricket
-          </button>
-          <button onClick={() => navigate('/football/quick')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
-            Start Football
-          </button>
-          <button onClick={() => navigate('/volleyball/quick')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
-            Start Volleyball
-          </button>
+          {priorityFastStartActions.map((action) => (
+            <button
+              key={action.path}
+              onClick={() => navigate(action.path)}
+              className={action.className}
+              style={action.className === 'mono-btn-primary' ? priorityActionStyle : secondaryPriorityActionStyle}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
     </section>

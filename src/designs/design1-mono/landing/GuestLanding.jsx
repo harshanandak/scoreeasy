@@ -62,6 +62,28 @@ export default function GuestLanding() {
   });
   const activeCard = heroScoreCards[activeHeroSport];
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
+  const heroActions = [
+    { label: activeStartLabel, tone: 'primary' },
+    { label: 'CHOOSE SPORT', tone: 'secondary' },
+  ];
+  const heroActionStyle = (action, mode) => {
+    const compact = mode === 'compact';
+    const primary = action.tone === 'primary';
+    return {
+      fontFamily: MONO,
+      fontSize: compact ? 'clamp(0.5625rem, 2.5vw, 0.6875rem)' : '0.8125rem',
+      fontWeight: 700,
+      padding: compact ? '10px 16px' : '14px 28px',
+      letterSpacing: '0.05em',
+      textDecoration: 'none',
+      background: primary ? t.text : 'transparent',
+      color: primary ? t.bg : t.text,
+      border: `${t.borderWeight} solid ${primary || !compact ? t.text : t.border}`,
+      textAlign: 'center',
+      minWidth: 0,
+      whiteSpace: 'nowrap',
+    };
+  };
 
   const renderTag = (text, isHovered, tagColor) => {
     const accent = tagColor || t.blue;
@@ -142,22 +164,11 @@ export default function GuestLanding() {
                 Play instantly as a guest. Keep scoring when offline. Create an account only when you want sync.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                <Link to="/play" style={{
-                  fontFamily: MONO, fontSize: 'clamp(0.5625rem, 2.5vw, 0.6875rem)', fontWeight: 700,
-                  padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
-                  background: t.text, color: t.bg, border: `${t.borderWeight} solid ${t.text}`,
-                  textAlign: 'center', minWidth: 0, whiteSpace: 'nowrap',
-                }}>
-                  {activeStartLabel}
-                </Link>
-                <Link to="/play" style={{
-                  fontFamily: MONO, fontSize: 'clamp(0.5625rem, 2.5vw, 0.6875rem)', fontWeight: 700,
-                  padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
-                  background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
-                  textAlign: 'center', minWidth: 0, whiteSpace: 'nowrap',
-                }}>
-                  CHOOSE SPORT
-                </Link>
+                {heroActions.map((action) => (
+                  <Link key={action.label} to="/play" style={heroActionStyle(action, 'compact')}>
+                    {action.label}
+                  </Link>
+                ))}
               </div>
               {cloudAuthAvailable && (
                 <Link to="/signup" style={{
@@ -247,20 +258,11 @@ export default function GuestLanding() {
                 Built for web, Android, and iOS.
               </p>
               <div style={{ display: 'flex', gap: 12 }}>
-                <Link to="/play" style={{
-                  fontFamily: MONO, fontSize: '0.8125rem', fontWeight: 700,
-                  padding: '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-                  background: t.text, color: t.bg, border: `${t.borderWeight} solid ${t.text}`,
-                }}>
-                  {activeStartLabel}
-                </Link>
-                <Link to="/play" style={{
-                  fontFamily: MONO, fontSize: '0.8125rem', fontWeight: 700,
-                  padding: '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-                  background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.text}`,
-                }}>
-                  CHOOSE SPORT
-                </Link>
+                {heroActions.map((action) => (
+                  <Link key={action.label} to="/play" style={heroActionStyle(action, 'desktop')}>
+                    {action.label}
+                  </Link>
+                ))}
               </div>
             </div>
 
