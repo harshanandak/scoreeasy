@@ -8,6 +8,15 @@ import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
 import ConfirmActionPanel from './components/ConfirmActionPanel';
 
+function getTeamName(tournament, teamId) {
+  return tournament.teams?.find((team) => team.id === teamId)?.name || 'Team';
+}
+
+function getNextMatch(tournament, sportConfig) {
+  const allMatches = [...(tournament.matches || []), ...(tournament.knockoutMatches || [])];
+  return allMatches.find((match) => !isTournamentMatchCompleted(match, sportConfig.engine, match.format || tournament.format));
+}
+
 export default function MonoTournamentList() {
   const navigate = useNavigate();
   const { sport } = useParams();
@@ -86,7 +95,7 @@ export default function MonoTournamentList() {
           className="mono-btn-primary w-full mb-8"
           style={{ padding: '12px', fontSize: '0.9375rem' }}
         >
-          + New Tournament
+          New {sportLabel} Tournament
         </button>
 
         {deletedTournament && (
@@ -113,19 +122,41 @@ export default function MonoTournamentList() {
             <p className="text-sm mb-5" style={{ color: '#666', maxWidth: 320 }}>
               Build a match list, track standings, and resume the next game from one place.
             </p>
+            <div className="mono-card w-full mb-4 text-left" style={{ padding: '14px 16px', background: '#f8fafc' }}>
+              {['Name teams', 'Schedule is generated', 'Continue from this list'].map((label, index) => (
+                <div key={label} className="flex items-center gap-3 mb-2 last:mb-0">
+                  <span
+                    className="font-mono text-xs"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: index === 0 ? '#0066ff' : '#fff',
+                      color: index === 0 ? '#fff' : '#666',
+                      border: '1px solid #dbeafe',
+                    }}
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="text-sm" style={{ color: '#333' }}>{label}</span>
+                </div>
+              ))}
+            </div>
             <button
               onClick={() => navigate(`/${sport}/tournament/new`)}
               className="mono-btn-primary w-full mb-2"
               style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
             >
-              Create Tournament
+              Create {sportLabel} Tournament
             </button>
             <button
               onClick={() => navigate(`/${sport}/quick`)}
               className="mono-btn w-full"
               style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
             >
-              Start Quick Match
+              Score one quick match
             </button>
           </div>
         ) : (
@@ -136,6 +167,12 @@ export default function MonoTournamentList() {
               const completedCount = allMatches.filter((m) =>
                 isTournamentMatchCompleted(m, sportConfig.engine, m.format || t.format)
               ).length;
+              const progress = matchCount > 0 ? Math.round((completedCount / matchCount) * 100) : 0;
+              const nextMatch = getNextMatch(t, sportConfig);
+              const nextMatchLabel = nextMatch
+                ? `${getTeamName(t, nextMatch.team1Id)} vs ${getTeamName(t, nextMatch.team2Id)}`
+                : 'All matches complete';
+              const continueLabel = nextMatch ? 'Continue next match' : 'View results';
 
               return (
                 <div key={t.id} className="mono-card" style={{ padding: 0 }}>
@@ -177,6 +214,12 @@ export default function MonoTournamentList() {
                         return '';
                       })()}
                     </p>
+                    <div className="mt-3" aria-hidden="true" style={{ height: 6, background: '#f1f5f9' }}>
+                      <div style={{ width: `${progress}%`, height: '100%', background: '#0066ff' }} />
+                    </div>
+                    <p className="text-xs mt-2" style={{ color: nextMatch ? '#111' : '#15803d' }}>
+                      {nextMatch ? `Next: ${nextMatchLabel}` : nextMatchLabel}
+                    </p>
                   </button>
                   {pendingDeleteId === t.id ? (
                     <div
@@ -197,9 +240,9 @@ export default function MonoTournamentList() {
                         onClick={() => openTournament(t.id)}
                         className="mono-btn-primary flex-1"
                         style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-                        aria-label={`Continue ${t.name} tournament`}
+                        aria-label={`${continueLabel} - ${t.name}`}
                       >
-                        Continue
+                        {continueLabel}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setPendingDeleteId(t.id); }}
