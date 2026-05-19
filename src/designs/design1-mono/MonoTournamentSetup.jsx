@@ -9,9 +9,11 @@ import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaul
 const STEP_LABELS = ['Basics', 'Match rules', 'Teams', 'Review'];
 
 const mobileBackButtonStyle = {
-  color: '#0066ff',
+  color: '#111',
+  background: '#fff',
+  border: '1px solid #ddd',
   minHeight: 44,
-  padding: '8px 10px',
+  padding: '8px 12px',
 };
 
 const stickyActionStyle = {
@@ -22,6 +24,11 @@ const stickyActionStyle = {
   padding: '12px',
   fontSize: '0.9375rem',
   boxShadow: '0 -10px 20px rgba(250, 250, 250, 0.92)',
+};
+
+const reviewStartButtonStyle = {
+  ...stickyActionStyle,
+  marginBottom: 24,
 };
 
 function getCricketReviewLabel(format) {
@@ -114,6 +121,7 @@ export default function MonoTournamentSetup() {
   const [captains, setCaptains] = useState({}); // { teamIdx: playerName }
   const [showFormatGrid, setShowFormatGrid] = useState(false);
   const [showHouseRules, setShowHouseRules] = useState(false);
+  const [showRoster, setShowRoster] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
 
   const isCricket = sportConfig?.engine === 'custom-cricket';
@@ -1405,7 +1413,7 @@ export default function MonoTournamentSetup() {
         {step === 3 && (
           <div className="animate-fade-in">
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between gap-3 mb-4">
                 <span className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
                   Team names
                 </span>
@@ -1508,6 +1516,14 @@ export default function MonoTournamentSetup() {
               </div>
             </div>
 
+            <button
+              onClick={startTournament}
+              className="mono-btn-primary w-full"
+              style={reviewStartButtonStyle}
+            >
+              Start Tournament
+            </button>
+
             <div className="mono-card mb-6" style={{ padding: '16px 20px', background: '#f8fafc' }}>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h3 className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
@@ -1542,8 +1558,19 @@ export default function MonoTournamentSetup() {
                     Playing {squadLimit.playing} per match · squad up to {squadLimit.max}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  className="mono-btn"
+                  style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem', flexShrink: 0 }}
+                  onClick={() => setShowRoster((value) => !value)}
+                  aria-expanded={showRoster}
+                >
+                  {showRoster ? 'Hide roster' : 'Add roster'}
+                </button>
               </div>
 
+              {showRoster && (
+                <>
               {/* Squad vs playing info */}
               <div className="mb-4 p-3 mono-card" style={{ background: '#f8fafc' }}>
                 <p className="text-xs" style={{ color: '#555' }}>
@@ -1687,15 +1714,10 @@ export default function MonoTournamentSetup() {
                   )}
                 </div>
               ))}
+                </>
+              )}
             </div>
 
-            <button
-              onClick={startTournament}
-              className="mono-btn-primary w-full"
-              style={stickyActionStyle}
-            >
-              Start Tournament
-            </button>
           </div>
         )}
       </div>
