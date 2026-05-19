@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
+const OLDER_HISTORY_KEY = 'gs_history';
 
 function seedQuickMatch() {
   globalThis.localStorage.setItem(
@@ -19,6 +20,22 @@ function seedQuickMatch() {
         winner: 'Team A',
         elapsedSeconds: 645,
         completedAt: '2026-05-18T12:00:00.000Z',
+      },
+    ]),
+  );
+}
+
+function seedOlderHistoryMatch() {
+  globalThis.localStorage.setItem(
+    OLDER_HISTORY_KEY,
+    JSON.stringify([
+      {
+        id: 'older-match-1',
+        gameName: 'Sunday Court',
+        participants: ['North', 'South'],
+        finalScores: { North: 21, South: 18 },
+        winner: 'North',
+        completedAt: '2026-05-18T11:00:00.000Z',
       },
     ]),
   );
@@ -86,5 +103,27 @@ describe('MonoHistory', () => {
       expect(readQuickMatches()).toHaveLength(1);
     });
     expect(screen.getByText('Quick match restored.')).toBeInTheDocument();
+  });
+
+  it('uses user-facing local history language for clear-all recovery', async () => {
+    seedQuickMatch();
+    seedOlderHistoryMatch();
+
+    renderHistory();
+
+    expect(await screen.findByText('Sunday Court')).toBeInTheDocument();
+    expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
+
+    expect(screen.getByText('Clear local history?')).toBeInTheDocument();
+    expect(screen.queryByText(/legacy/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Local history cleared.')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: 'Undo clear' })).toBeInTheDocument();
   });
 });

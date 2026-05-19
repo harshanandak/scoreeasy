@@ -289,7 +289,7 @@ export default function MonoHistory() {
     setPendingClear(snapshot);
     setPendingDelete(null);
     setSelectedEntry(null);
-    setHistoryStatus('Cleared quick and legacy history.');
+    setHistoryStatus('Local history cleared.');
   };
 
   const undoClearMutableHistory = () => {
@@ -352,7 +352,7 @@ export default function MonoHistory() {
                 padding: '0 10px',
               }}
             >
-              Clear Quick + Legacy
+              Clear local history
             </button>
           )}
         </nav>
@@ -365,9 +365,9 @@ export default function MonoHistory() {
 
         {pendingClear && !pendingClear.cleared && (
           <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
-            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear quick and legacy history?</p>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear local history?</p>
             <p className="text-xs mb-4" style={{ color: '#666' }}>
-              Tournament history will stay. You can undo this before leaving the screen.
+              Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.
             </p>
             <div className="flex gap-2">
               <button
