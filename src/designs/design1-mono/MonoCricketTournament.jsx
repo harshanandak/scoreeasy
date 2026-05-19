@@ -260,7 +260,7 @@ export default function MonoCricketTournament() {
     }));
   };
 
-  const { hasKnockouts, isPureKnockout, showKnockoutStage, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const { hasKnockouts, isPureKnockout, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
   const metaLabel = [
@@ -324,7 +324,7 @@ export default function MonoCricketTournament() {
             ))}
           </div>
           <span className="text-xs font-mono" style={{ color: '#888' }}>{completedMatches}/{totalMatches}</span>
-          {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+          {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
             <>
               <div style={{ width: 1, height: 10, background: '#ddd' }} />
               <div className="flex items-center gap-1">
@@ -448,7 +448,7 @@ export default function MonoCricketTournament() {
             })}
 
             {/* Knockout matches in schedule */}
-            {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+            {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -470,7 +470,7 @@ export default function MonoCricketTournament() {
             )}
 
             {/* Show placeholder knockout schedule before group stage completes */}
-            {showKnockoutStage && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
+            {hasKnockouts && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -568,7 +568,7 @@ export default function MonoCricketTournament() {
         )}
 
         {/* Knockout Tab */}
-        {tab === 'knockout' && showKnockoutStage && (
+        {tab === 'knockout' && hasKnockouts && (
           <div>
             {tournament.phase === 'group' && (
               <div className="mono-card p-5 mb-6 text-center">

@@ -15,22 +15,25 @@ export default function useTournamentKnockoutDisplay({
   labelOptions = {},
 }) {
   const isPureKnockout = isPureKnockoutTournament(tournament);
-  const hasKnockouts = tournament?.winnerMode === 'knockouts';
+  const configuredKnockouts = tournament?.winnerMode === 'knockouts';
   const knockoutTabId = getTabId(knockoutTab);
+  const showKnockoutStage = shouldShowKnockoutStage({
+    isPureKnockout,
+    hasKnockouts: configuredKnockouts,
+  });
 
   useEffect(() => {
     if (isPureKnockout && tab === 'matches') setTab(knockoutTabId);
   }, [isPureKnockout, knockoutTabId, setTab, tab]);
 
   const tabs = isPureKnockout ? [knockoutTab] : [...baseTabs];
-  if (hasKnockouts && !isPureKnockout) tabs.push(knockoutTab);
+  if (configuredKnockouts && !isPureKnockout) tabs.push(knockoutTab);
   tabs.push(...trailingTabs);
 
   return {
-    hasKnockouts,
+    hasKnockouts: showKnockoutStage,
     isPureKnockout,
-    showKnockoutStage: shouldShowKnockoutStage({ isPureKnockout, hasKnockouts }),
     tabs,
-    tournamentTypeLabel: getTournamentTypeLabel({ isPureKnockout, hasKnockouts, ...labelOptions }),
+    tournamentTypeLabel: getTournamentTypeLabel({ isPureKnockout, hasKnockouts: configuredKnockouts, ...labelOptions }),
   };
 }

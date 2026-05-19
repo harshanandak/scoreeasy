@@ -122,7 +122,7 @@ export default function GenericSetsTournament() {
   ).length;
   const totalMatches = tournament.matches.length;
 
-  const { hasKnockouts, isPureKnockout, showKnockoutStage, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const { hasKnockouts, isPureKnockout, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
 
@@ -191,7 +191,7 @@ export default function GenericSetsTournament() {
             ))}
           </div>
           <span className="text-xs font-mono" style={{ color: '#888' }}>{completedMatches}/{totalMatches}</span>
-          {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+          {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
             <>
               <div style={{ width: 1, height: 10, background: '#ddd' }} />
               <div className="flex items-center gap-1">
@@ -349,7 +349,7 @@ export default function GenericSetsTournament() {
             })}
 
             {/* Knockout matches in schedule */}
-            {showKnockoutStage && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
+            {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -371,7 +371,7 @@ export default function GenericSetsTournament() {
             )}
 
             {/* Show placeholder knockout schedule before group stage completes */}
-            {showKnockoutStage && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
+            {hasKnockouts && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
               <>
                 <hr className="mono-divider" style={{ margin: '24px 0' }} />
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
@@ -458,7 +458,7 @@ export default function GenericSetsTournament() {
         )}
 
         {/* Knockout Tab */}
-        {tab === 'knockout' && showKnockoutStage && (
+        {tab === 'knockout' && hasKnockouts && (
           <div>
             {tournament.phase === 'group' && (
               <div className="mono-card p-5 mb-6 text-center">
