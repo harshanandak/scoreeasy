@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import SportIcon from './sportIcons';
-import { sports, features, steps, tickerItems, heroScoreCards } from './landingData';
+import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, proofStats, trustNotes } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
 
@@ -92,7 +92,7 @@ export default function GuestLanding() {
   );
 
   return (
-    <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}>
+    <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh', overflowX: 'hidden' }}>
 
       {/* ═══ NAV ═══ */}
       <nav aria-hidden="true" style={{ display: 'none' }}>
@@ -105,7 +105,7 @@ export default function GuestLanding() {
             SCORE<br />EASY
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 12 : 24 }}>
-            {!mobile && ['Features', 'Sports', 'How'].map(link => (
+            {!mobile && ['Features', 'Proof', 'Sports', 'How'].map(link => (
               <a key={link} href={`#${link.toLowerCase()}`} className="nav-link" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.08em', transition: 'color 150ms ease' }}>{link}</a>
             ))}
             {cloudAuthAvailable && (
@@ -138,22 +138,22 @@ export default function GuestLanding() {
                 START<br />A MATCH.
               </h1>
               <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: t.textSoft, marginBottom: 16 }}>
-                Start with cricket or football first, with volleyball and the rest of the catalog ready when needed.
+                Play instantly as a guest. Keep scoring when offline. Create an account only when you want sync.
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 <Link to="/play" style={{
-                  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
+                  fontFamily: MONO, fontSize: 'clamp(0.5625rem, 2.5vw, 0.6875rem)', fontWeight: 700,
                   padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: t.text, color: t.bg, border: `${t.borderWeight} solid ${t.text}`,
-                  flex: 1, textAlign: 'center',
+                  textAlign: 'center', minWidth: 0, whiteSpace: 'nowrap',
                 }}>
-                  START SCORING
+                  PLAY NOW
                 </Link>
                 <Link to="/cricket/quick?format=T20" style={{
-                  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700,
+                  fontFamily: MONO, fontSize: 'clamp(0.5625rem, 2.5vw, 0.6875rem)', fontWeight: 700,
                   padding: '10px 16px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.border}`,
-                  flex: 1, textAlign: 'center',
+                  textAlign: 'center', minWidth: 0, whiteSpace: 'nowrap',
                 }}>
                   QUICK CRICKET
                 </Link>
@@ -166,6 +166,14 @@ export default function GuestLanding() {
                   Create account for sync and history
                 </Link>
               )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, marginTop: 14 }}>
+                {proofStats.map((item) => (
+                  <div key={item.label} style={{ border: `1px solid ${t.border}`, padding: '8px 6px', background: t.surface, minWidth: 0 }}>
+                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: '0.875rem', color: t.text }}>{item.value}</strong>
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5rem', letterSpacing: '0.04em', color: t.textMuted, textTransform: 'uppercase', overflowWrap: 'anywhere' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Sport pill selector + dynamic scorecard mockup */}
@@ -234,7 +242,8 @@ export default function GuestLanding() {
               </h1>
               <p style={{ fontSize: '1.0625rem', lineHeight: 1.6, color: t.textSoft, marginBottom: 32 }}>
                 Tournaments. Quick matches. Live scoring.<br />
-                14 sports. Zero friction. Free forever.
+                Guest scoring. Local history. Optional sync.<br />
+                Built for web, Android, and iOS.
               </p>
               <div style={{ display: 'flex', gap: 12 }}>
                 <Link to="/play" style={{
@@ -242,15 +251,15 @@ export default function GuestLanding() {
                   padding: '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: t.text, color: t.bg, border: `${t.borderWeight} solid ${t.text}`,
                 }}>
-                  START SCORING
+                  PLAY NOW
                 </Link>
-                <Link to="/signup" style={{
+                <a href="#proof" style={{
                   fontFamily: MONO, fontSize: '0.8125rem', fontWeight: 700,
                   padding: '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
                   background: 'transparent', color: t.text, border: `${t.borderWeight} solid ${t.text}`,
                 }}>
-                  CREATE ACCOUNT
-                </Link>
+                  SEE PROOF
+                </a>
               </div>
             </div>
 
@@ -327,10 +336,38 @@ export default function GuestLanding() {
         </div>
       </div>
 
+      {/* ═══ TRUST PROOF ═══ */}
+      <section id="proof" style={{ padding: mobile ? '32px 0' : '56px 0', borderBottom: `${t.borderWeight} solid ${t.borderStrong}` }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
+          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>01 / APP PROOF</p>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '0.8fr 1.2fr', gap: mobile ? 18 : 28, alignItems: 'start' }}>
+            <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: 0, color: t.text }}>
+              BUILT TO SCORE<br />BEFORE SIGNUP.
+            </h2>
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 2, marginBottom: 14 }}>
+                {proofStats.map((item) => (
+                  <div key={item.label} style={{ border: `${t.borderWeight} solid ${t.borderStrong}`, padding: mobile ? 16 : 20, background: t.surface }}>
+                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: t.blue }}>{item.value}</strong>
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '8px 0', color: t.text }}>{item.label}</span>
+                    <p style={{ fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft, margin: 0 }}>{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+              <ul style={{ display: 'grid', gap: 8, padding: 0, margin: 0, listStyle: 'none' }}>
+                {trustNotes.map((note) => (
+                  <li key={note} style={{ fontSize: '0.875rem', color: t.textSoft, borderLeft: `3px solid ${t.blue}`, paddingLeft: 10 }}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ FEATURES ═══ */}
       <section id="features" style={{ padding: mobile ? '36px 0' : '80px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
-          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>01 / FEATURES</p>
+          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>02 / FEATURES</p>
           <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             EVERYTHING<br />YOU NEED.
           </h2>
@@ -385,12 +422,13 @@ export default function GuestLanding() {
       {/* ═══ SPORTS ═══ */}
       <section id="sports" style={{ padding: mobile ? '32px 0 40px' : '60px 0 80px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
-          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>02 / SPORTS</p>
+          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>03 / SPORTS</p>
           <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             14 SPORTS.<br />YOUR RULES.
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 2 : 4 }}>
             {sports.map((sp, i) => {
+              const detail = sportDetails[sp];
               const isHovered = hoveredSport === i;
               const sBg = t.sportBg || t.surface;
               const sHoverBg = t.sportHoverBg || t.blue;
@@ -420,9 +458,14 @@ export default function GuestLanding() {
                   <div style={{ marginBottom: mobile ? 6 : 10, display: 'flex', justifyContent: 'center' }}>
                     <SportIcon name={sp} size={mobile ? 28 : 40} color={isHovered ? sHoverIconColor : sIconColor} />
                   </div>
-                  <span style={{ fontFamily: MONO, fontSize: mobile ? '0.5rem' : '0.5625rem', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.5rem' : '0.5625rem', letterSpacing: '0.08em', fontWeight: 600 }}>
                     {sp.toUpperCase()}
                   </span>
+                  {detail && (
+                    <span style={{ display: 'block', marginTop: 6, fontSize: mobile ? '0.5625rem' : '0.6875rem', lineHeight: 1.35, color: isHovered ? sHoverColor : t.textMuted }}>
+                      {detail.duration}<br />{detail.players}<br />{detail.rules}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -433,7 +476,7 @@ export default function GuestLanding() {
       {/* ═══ THREE STEPS ═══ */}
       <section id="how" style={{ padding: mobile ? '36px 0' : '80px 0', borderTop: `${t.borderWeight} solid ${t.borderStrong}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
-          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>03 / HOW IT WORKS</p>
+          <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>04 / HOW IT WORKS</p>
           <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             THREE STEPS.
           </h2>
@@ -484,7 +527,7 @@ export default function GuestLanding() {
             background: t.blue, color: '#fff', border: `2px solid ${t.blue}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
           }}>
-            START SCORING
+            PLAY NOW
           </Link>
           {cloudAuthAvailable && (
             <Link to="/signup" style={{
@@ -506,7 +549,14 @@ export default function GuestLanding() {
         maxWidth: 1200, margin: '0 auto',
       }}>
         <span style={{ fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.75rem', fontWeight: 700, color: t.text }}>SCORE EASY</span>
-        <span style={{ fontFamily: MONO, fontSize: mobile ? '0.5625rem' : '0.6875rem', color: t.textMuted }}>&copy; 2025</span>
+        <div style={{ display: 'flex', gap: mobile ? 10 : 16, flexWrap: 'wrap', justifyContent: mobile ? 'flex-end' : 'center' }}>
+          {['Privacy', 'Terms', 'Contact'].map((label) => (
+            <Link key={label} to={`/${label.toLowerCase()}`} style={{ fontFamily: MONO, fontSize: mobile ? '0.5625rem' : '0.6875rem', color: t.textMuted, textDecoration: 'none' }}>
+              {label}
+            </Link>
+          ))}
+        </div>
+        <span style={{ fontFamily: MONO, fontSize: mobile ? '0.5625rem' : '0.6875rem', color: t.textMuted }}>&copy; 2026</span>
       </footer>
 
       {/* Keyframes + nav hover styles */}

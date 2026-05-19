@@ -32,6 +32,7 @@ const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
 const BrutalistColorShowcase = lazy(() => import('./landing-designs/BrutalistColorShowcase'));
 const DashboardShowcase = lazy(() => import('./landing/DashboardShowcase'));
+const LegalPage = lazy(() => import('./landing/LegalPage'));
 
 // Lazy-loaded auth pages (not needed for guests)
 const MonoLogin = lazy(() => import('./MonoLogin'));
@@ -942,6 +943,9 @@ export default function Design1Mono() {
             <OnboardingGuard>
               <Routes>
                 <Route path="" element={<MonoLanding />} />
+                <Route path="privacy" element={<LegalPage type="privacy" />} />
+                <Route path="terms" element={<LegalPage type="terms" />} />
+                <Route path="contact" element={<LegalPage type="contact" />} />
 
                 <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
                 <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
