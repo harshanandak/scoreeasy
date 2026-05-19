@@ -1,5 +1,5 @@
 export const sports = [
-  'Volleyball', 'Cricket', 'Tennis', 'Football', 'Basketball', 'Badminton',
+  'Cricket', 'Football', 'Volleyball', 'Tennis', 'Basketball', 'Badminton',
   'Hockey', 'Table Tennis', 'Golf', 'Pool', 'Chess', 'Rugby', 'Frisbee', 'Handball',
 ];
 
@@ -37,7 +37,7 @@ export const steps = [
 
 export const tickerItems = ['14 SPORTS', 'NO SIGNUP START', 'LOCAL HISTORY', 'TOURNAMENTS', 'LIVE SCORING', 'FREE TO PLAY'];
 
-export const proofStats = [
+export const experienceStats = [
   { label: 'sports ready', value: '14', detail: 'Quick match and tournament paths for common game formats.' },
   { label: 'guest start', value: '0', detail: 'No account required before the first score tap.' },
   { label: 'local first', value: 'ON', detail: 'History and scoring continue when cloud auth is unavailable.' },
@@ -51,10 +51,6 @@ export const trustNotes = [
 
 export const heroScoreCards = [
   {
-    sport: 'Volleyball', teamA: 'EAGLES', teamB: 'HAWKS',
-    scoreA: '25', scoreB: '23', footer: 'SET 3 OF 5 \u2014 DEUCE',
-  },
-  {
     sport: 'Cricket', teamA: 'INDIA', teamB: 'AUSTRALIA',
     scoreA: '186', scoreB: '142', suffixA: '/4', suffixB: '/10',
     footer: '32.4 OVERS \u2014 2ND INNINGS',
@@ -62,6 +58,10 @@ export const heroScoreCards = [
   {
     sport: 'Football', teamA: 'CITY', teamB: 'UNITED',
     scoreA: '2', scoreB: '1', footer: "73' \u2014 2ND HALF",
+  },
+  {
+    sport: 'Volleyball', teamA: 'EAGLES', teamB: 'HAWKS',
+    scoreA: '25', scoreB: '23', footer: 'SET 3 OF 5 \u2014 DEUCE',
   },
   {
     sport: 'Tennis', teamA: 'PLAYER 1', teamB: 'PLAYER 2',

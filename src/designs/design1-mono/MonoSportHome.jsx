@@ -148,9 +148,9 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-function CricketFastStart({ navigate }) {
+function PriorityFastStart({ navigate }) {
   return (
-    <section className="mono-card mb-8" aria-label="Cricket fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
+    <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
       <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
         <div className="flex items-start gap-4">
           <div aria-hidden="true" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dbe7ff' }}>
@@ -158,18 +158,21 @@ function CricketFastStart({ navigate }) {
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket is ready first</h2>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket and football are ready first</h2>
             <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
-              Start a T20 match immediately, or build a cricket tournament with standings when you need a full event.
+              Start the most-played formats quickly, then use the sport cards below when you need volleyball or another game.
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           <button onClick={() => navigate('/cricket/quick?format=T20')} className="mono-btn-primary" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' }}>
-            Start Cricket Match
+            Start Cricket
           </button>
-          <button onClick={() => navigate('/cricket/tournament/new?format=T20')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
-            Create Cricket Tournament
+          <button onClick={() => navigate('/football/quick')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
+            Start Football
+          </button>
+          <button onClick={() => navigate('/volleyball/quick')} className="mono-btn" style={{ minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', background: '#fff' }}>
+            Start Volleyball
           </button>
         </div>
       </div>
@@ -177,7 +180,7 @@ function CricketFastStart({ navigate }) {
   );
 }
 
-CricketFastStart.propTypes = {
+PriorityFastStart.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
@@ -490,7 +493,7 @@ GridLayout.propTypes = {
 function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
   return (
     <div className="mb-8">
-      <CricketFastStart navigate={navigate} />
+      <PriorityFastStart navigate={navigate} />
 
       <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
         Choose sport
@@ -568,12 +571,13 @@ export default function MonoSportHome() {
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mb-8 flex items-center gap-2">
           <input
             type="text"
             className="mono-input flex-1"
             aria-label="Search sports"
             placeholder="Search sports..."
+            style={{ minWidth: 0 }}
             value={searchQuery}
             onChange={event => {
               setSearchQuery(event.target.value);
@@ -582,9 +586,9 @@ export default function MonoSportHome() {
           />
           <button
             onClick={switchLayout}
-            className="mono-btn flex items-center justify-center gap-2"
+            className="mono-btn flex items-center justify-center"
             aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
-            style={{ minHeight: 44, padding: '10px 16px', fontSize: '0.8125rem', fontWeight: 700 }}
+            style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
             title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
           >
             {layout === 'grid' ? (
@@ -592,7 +596,6 @@ export default function MonoSportHome() {
             ) : (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
             )}
-            <span>{layout === 'grid' ? 'List' : 'Grid'}</span>
           </button>
         </div>
 
