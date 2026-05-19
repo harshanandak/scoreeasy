@@ -6,6 +6,12 @@ import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, exp
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
 
+const heroSportPriority = new Map([
+  ['Cricket', 0],
+  ['Football', 1],
+  ['Volleyball', 2],
+]);
+
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
@@ -18,6 +24,9 @@ export default function GuestLanding() {
   const tickerOffset = useRef(0);
   const tickerAnimId = useRef(null);
   const mobile = useIsMobile();
+  const orderedHeroScoreCards = [...heroScoreCards].sort((a, b) => (
+    (heroSportPriority.get(a.sport) ?? heroScoreCards.length) - (heroSportPriority.get(b.sport) ?? heroScoreCards.length)
+  ));
   const px = mobile ? 16 : 32;
 
   const interactionHandlers = (index, setter, current) => ({
@@ -60,7 +69,7 @@ export default function GuestLanding() {
     onMouseEnter: () => setActiveHeroSport(index),
     onClick: () => setActiveHeroSport(index),
   });
-  const activeCard = heroScoreCards[activeHeroSport];
+  const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const heroActions = [
     { label: activeStartLabel, tone: 'primary' },
@@ -191,7 +200,7 @@ export default function GuestLanding() {
             {/* Sport pill selector + dynamic scorecard mockup */}
             <div style={{ marginTop: 20, marginBottom: 24 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                {heroScoreCards.map((card, i) => (
+                {orderedHeroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
                     minHeight: 32, padding: '6px 10px', border: 'none', cursor: 'pointer',
                     fontFamily: MONO, fontSize: '0.5rem', fontWeight: 700, letterSpacing: '0.06em',
@@ -275,7 +284,7 @@ export default function GuestLanding() {
                 </div>
               ))}
               <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
-                {heroScoreCards.map((card, i) => (
+                {orderedHeroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
                     flex: 1, padding: '8px 4px', border: 'none', cursor: 'pointer',
                     fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.04em',
