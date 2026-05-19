@@ -8,6 +8,7 @@ import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
+import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import './mono.css';
 
@@ -758,6 +759,12 @@ export default function Design1Mono() {
   const protectedRouteHistoryIndexRef = useRef(null);
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
+  const nativeDeepLinkContextRef = useRef({
+    hash: '',
+    pathname: '/',
+    requestScoringExit: null,
+    search: '',
+  });
 
   const requestScoringExit = useCallback((options = {}) => {
     exitPromptRef.current?.onCancel?.();
@@ -787,6 +794,36 @@ export default function Design1Mono() {
     setExitPrompt(null);
     onConfirm?.();
   }, [exitPrompt]);
+
+  useEffect(() => {
+    nativeDeepLinkContextRef.current = {
+      hash: location.hash || '',
+      pathname: location.pathname,
+      requestScoringExit,
+      search: location.search,
+    };
+  }, [location.hash, location.pathname, location.search, requestScoringExit]);
+
+  const confirmNativeDeepLinkNavigation = useCallback((targetPath) => {
+    const { hash, pathname, requestScoringExit: requestExit, search } = nativeDeepLinkContextRef.current;
+    if (!isProtectedScoringPath(pathname)) return Promise.resolve(true);
+    if (targetPath === `${pathname}${search}${hash}`) {
+      return Promise.resolve(true);
+    }
+    if (typeof requestExit !== 'function') return Promise.resolve(false);
+
+    return new Promise((resolve) => {
+      requestExit({
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  }, []);
+
+  useEffect(() => installNativeDeepLinkHandler({
+    beforeNavigate: confirmNativeDeepLinkNavigation,
+    navigate,
+  }), [confirmNativeDeepLinkNavigation, navigate]);
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {

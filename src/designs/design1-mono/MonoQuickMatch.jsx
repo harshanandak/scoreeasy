@@ -16,6 +16,12 @@ import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
 import { shareText } from '../../mobile/share';
+import {
+  correctionImpact,
+  endMatchImpact,
+  scoreImpact,
+  warningImpact,
+} from '../../mobile/haptics';
 
 function saveQuickMatch(match) {
   const all = loadData('se_quickmatches', []);
@@ -602,6 +608,8 @@ export default function MonoQuickMatch() {
   };
 
   const finalizeMatch = (entry) => {
+    void endMatchImpact();
+
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, entry.id);
     const nextResult = {
       ...entry,
@@ -627,6 +635,7 @@ export default function MonoQuickMatch() {
   };
 
   const handleSideSwap = () => {
+    void correctionImpact();
     setSidesSwapped(prev => !prev);
     setLastAction('Sides swapped');
   };
@@ -720,6 +729,7 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    void scoreImpact();
 
     if (freeHit) setFreeHit(false);
 
@@ -759,6 +769,7 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    void scoreImpact();
 
     if (freeHit) setFreeHit(false);
 
@@ -791,6 +802,7 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    void scoreImpact();
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
@@ -809,6 +821,8 @@ export default function MonoQuickMatch() {
 
   const undoCricketAction = () => {
     if (cricketHistory.length === 0) return;
+    void correctionImpact();
+
     const last = cricketHistory[cricketHistory.length - 1];
     setCricketHistory(prev => prev.slice(0, -1));
     setLastAction('Undid last cricket action');
@@ -913,6 +927,8 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    void scoreImpact();
+
     if (tracksPointWinnerServe) setServingTeam(team);
     setLastAction(`${getTeamLabel(team)} +1 ${scoringUnit}`);
 
@@ -959,6 +975,8 @@ export default function MonoQuickMatch() {
 
   const undoPoint = () => {
     if (vScoreHistory.length === 0) return;
+    void correctionImpact();
+
     const last = vScoreHistory[vScoreHistory.length - 1];
     setVScoreHistory(prev => prev.slice(0, -1));
     setLastAction('Undid last point');
@@ -997,6 +1015,7 @@ export default function MonoQuickMatch() {
       return;
     }
 
+    void correctionImpact();
     setLastAction(`${teamName} ${delta > 0 ? '+1' : '-1'} correction`);
     setVScoreHistory(prev => [...prev, {
       team,
@@ -1068,6 +1087,7 @@ export default function MonoQuickMatch() {
   const finalizeGoalScore = (score1, score2) => {
     const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
     if (!drawAllowed && score1 === score2) {
+      void warningImpact();
       setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
       return;
     }
@@ -1088,6 +1108,7 @@ export default function MonoQuickMatch() {
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
+    void scoreImpact();
 
     const newS1 = team === 1 ? gScore1 + value : gScore1;
     const newS2 = team === 2 ? gScore2 + value : gScore2;
@@ -1107,6 +1128,8 @@ export default function MonoQuickMatch() {
 
   const undoGoal = () => {
     if (gScoreHistory.length === 0) return;
+    void correctionImpact();
+
     const last = gScoreHistory[gScoreHistory.length - 1];
     if (last.team === 1) setGScore1(prev => Math.max(0, prev - last.value));
     else setGScore2(prev => Math.max(0, prev - last.value));
@@ -1122,6 +1145,7 @@ export default function MonoQuickMatch() {
       return;
     }
 
+    void correctionImpact();
     const newS1 = team === 1 ? Math.max(0, gScore1 + delta) : gScore1;
     const newS2 = team === 2 ? Math.max(0, gScore2 + delta) : gScore2;
     setGScore1(newS1);
@@ -1137,6 +1161,7 @@ export default function MonoQuickMatch() {
   const endMatchGoals = () => {
     const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
     if (!drawAllowed && gScore1 === gScore2) {
+      void warningImpact();
       setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
       return;
     }
