@@ -5,6 +5,9 @@ import { calculateGoalsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import TournamentScoreClearActions from './components/TournamentScoreClearActions';
+import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 
 export default function GenericGoalsTournament() {
   const navigate = useNavigate();
@@ -65,6 +68,8 @@ export default function GenericGoalsTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
+  const scoreClear = useTournamentScoreClear({ scoreKind: 'goals', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
+
   if (!sportConfig) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -76,7 +81,7 @@ export default function GenericGoalsTournament() {
   if (!tournament) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Tournament not found</p>
+        <TournamentNotFoundActions navigate={navigate} sport={sport} />
       </div>
     );
   }
@@ -90,16 +95,6 @@ export default function GenericGoalsTournament() {
     (m.score1 !== null && m.score1 !== undefined) && m.status === 'completed'
   ).length;
   const totalMatches = tournament.matches.length;
-
-  const deleteScore = (matchId) => {
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === matchId) {
-        return { ...m, score1: null, score2: null, status: 'pending', winner: null };
-      }
-      return m;
-    });
-    setTournament({ ...tournament, matches: updatedMatches });
-  };
 
   const hasKnockouts = tournament.winnerMode === 'knockouts';
   const tournamentDone = isTournamentComplete(tournament);
@@ -235,7 +230,7 @@ export default function GenericGoalsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => deleteScore(match.id)}
+                          onClick={() => scoreClear.requestScoreClear(match)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -244,6 +239,8 @@ export default function GenericGoalsTournament() {
                       )}
                     </div>
                   </div>
+
+                  <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} />
 
                   {/* Teams and scores */}
                   <div className="grid grid-cols-3 gap-6 items-center mb-4">

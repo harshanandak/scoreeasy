@@ -5,6 +5,9 @@ import { calculateSetsStandings } from '../../utils/standingsCalculator';
 import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import TournamentScoreClearActions from './components/TournamentScoreClearActions';
+import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -89,6 +92,8 @@ export default function GenericSetsTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
+  const scoreClear = useTournamentScoreClear({ scoreKind: 'sets', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
+
   if (!sportConfig) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -100,7 +105,7 @@ export default function GenericSetsTournament() {
   if (!tournament) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Tournament not found</p>
+        <TournamentNotFoundActions navigate={navigate} sport={sport} />
       </div>
     );
   }
@@ -132,16 +137,6 @@ export default function GenericSetsTournament() {
   const tabs = ['matches', 'standings'];
   if (hasKnockouts) tabs.push('knockout');
   tabs.push('teams');
-
-  const deleteScore = (matchId) => {
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === matchId) {
-        return { ...m, sets: [], status: 'pending', winner: null };
-      }
-      return m;
-    });
-    setTournament({ ...tournament, matches: updatedMatches });
-  };
 
   const deleteKnockoutScore = (matchId) => {
     const updatedKO = tournament.knockoutMatches.map(m => {
@@ -277,7 +272,7 @@ export default function GenericSetsTournament() {
                       )}
                       {hasScore && (
                         <button
-                          onClick={() => deleteScore(match.id)}
+                          onClick={() => scoreClear.requestScoreClear(match)}
                           className="text-xs opacity-50 hover:opacity-100 transition-opacity"
                           style={{ color: '#dc2626' }}
                         >
@@ -286,6 +281,8 @@ export default function GenericSetsTournament() {
                       )}
                     </div>
                   </div>
+
+                  <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} />
 
                   {/* Teams and scores */}
                   <div className="grid grid-cols-3 gap-6 items-center mb-5">
