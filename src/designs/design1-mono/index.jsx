@@ -32,6 +32,7 @@ const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
 const BrutalistColorShowcase = lazy(() => import('./landing-designs/BrutalistColorShowcase'));
 const DashboardShowcase = lazy(() => import('./landing/DashboardShowcase'));
+const LegalPage = lazy(() => import('./landing/LegalPage'));
 
 // Lazy-loaded auth pages (not needed for guests)
 const MonoLogin = lazy(() => import('./MonoLogin'));
@@ -84,7 +85,16 @@ function NotFoundRoute() {
 }
 
 // Redirects authenticated users who haven't completed onboarding
-const GUARD_BYPASS_PREFIXES = ['/onboarding', '/login', '/signup', '/sso-callback', '/showcase'];
+const GUARD_BYPASS_PREFIXES = [
+  '/onboarding',
+  '/login',
+  '/signup',
+  '/sso-callback',
+  '/showcase',
+  '/privacy',
+  '/terms',
+  '/contact',
+];
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
 const SCORING_EXIT_CONFIRMATION = `${SCORING_EXIT_TITLE} ${SCORING_EXIT_MESSAGE}`;
@@ -942,6 +952,9 @@ export default function Design1Mono() {
             <OnboardingGuard>
               <Routes>
                 <Route path="" element={<MonoLanding />} />
+                <Route path="privacy" element={<LegalPage type="privacy" />} />
+                <Route path="terms" element={<LegalPage type="terms" />} />
+                <Route path="contact" element={<LegalPage type="contact" />} />
 
                 <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
                 <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
