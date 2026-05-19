@@ -74,4 +74,19 @@ describe('quick match result helpers', () => {
       rows: expect.any(Array),
     });
   });
+
+  it('derives set wins from completed sets when saved totals are missing', () => {
+    expect(getResultSetSummary({
+      team1: 'Falcons',
+      team2: 'Sharks',
+      sets: [
+        { score1: 25, score2: 21, completed: true },
+        { score1: 18, score2: 25, completed: true },
+        { score1: 7, score2: 4, completed: false },
+      ],
+    })).toMatchObject({
+      text: '1-1 sets',
+      rows: expect.any(Array),
+    });
+  });
 });

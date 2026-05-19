@@ -50,13 +50,14 @@ export function getResultSetRows(result) {
 export function getResultSetSummary(result) {
   const rows = getResultSetRows(result);
   if (rows.length === 0) return null;
+  const completedRows = rows.filter((row) => row.completed);
 
   const setsWon1 = Number.isFinite(result?.setsWon1)
     ? result.setsWon1
-    : rows.filter((row) => row.winner === result.team1).length;
+    : completedRows.filter((row) => row.winner === result.team1).length;
   const setsWon2 = Number.isFinite(result?.setsWon2)
     ? result.setsWon2
-    : rows.filter((row) => row.winner === result.team2).length;
+    : completedRows.filter((row) => row.winner === result.team2).length;
 
   return {
     rows,
