@@ -167,9 +167,9 @@ function PriorityFastStart({ navigate }) {
           </div>
           <div className="flex-1">
             <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket and football are ready first</h2>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket, football, and volleyball are ready</h2>
             <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
-              Start the most-played formats quickly, then use the sport cards below when you need volleyball or another game.
+              Start the most-played formats quickly, then use the sport cards below when you need another game.
             </p>
           </div>
         </div>
