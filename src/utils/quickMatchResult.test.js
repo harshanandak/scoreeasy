@@ -12,6 +12,7 @@ describe('quick match result helpers', () => {
     expect(getResultOutcome('Team A')).toBe('Team A won');
     expect(getResultOutcome('Draw')).toBe('Match Drawn');
     expect(getResultOutcome('Tie')).toBe('Match Tied');
+    expect(getResultOutcome()).toBe('Result recorded');
   });
 
   it('builds share text for set and cricket results', () => {

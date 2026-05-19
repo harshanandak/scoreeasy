@@ -1,6 +1,7 @@
 import { ballsToOvers } from './cricketCalculations';
 
 export function getResultOutcome(winner) {
+  if (!winner) return 'Result recorded';
   if (winner === 'Tie') return 'Match Tied';
   if (winner === 'Draw') return 'Match Drawn';
   return `${winner} won`;
