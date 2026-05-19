@@ -151,6 +151,7 @@ export default function MonoHistory() {
   const [tournamentEntries, setTournamentEntries] = useState([]);
   const [filter, setFilter] = useState('all');
   const [pendingClear, setPendingClear] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [historyStatus, setHistoryStatus] = useState('');
 
@@ -235,12 +236,42 @@ export default function MonoHistory() {
     saveData(QM_KEY, updated);
   };
 
+  const confirmDeleteQuickMatch = (entry) => {
+    setPendingClear(null);
+    setPendingDelete({
+      entry,
+      quickSnapshot: quickMatches,
+      deleted: false,
+    });
+    setHistoryStatus('');
+  };
+
+  const completeDeleteQuickMatch = () => {
+    if (!pendingDelete?.entry?.rawId) return;
+    deleteQuickMatch(pendingDelete.entry.rawId);
+    setSelectedEntry((current) => (current?.id === pendingDelete.entry.id ? null : current));
+    setPendingDelete({
+      ...pendingDelete,
+      deleted: true,
+    });
+    setHistoryStatus('Quick match deleted.');
+  };
+
+  const undoDeleteQuickMatch = () => {
+    if (!pendingDelete?.quickSnapshot) return;
+    setQuickMatches(pendingDelete.quickSnapshot);
+    saveData(QM_KEY, pendingDelete.quickSnapshot);
+    setPendingDelete(null);
+    setHistoryStatus('Quick match restored.');
+  };
+
   const clearAllQuickMatches = () => {
     setQuickMatches([]);
     saveData(QM_KEY, []);
   };
 
   const confirmClearMutableHistory = () => {
+    setPendingDelete(null);
     setPendingClear({
       cleared: false,
     });
@@ -256,6 +287,7 @@ export default function MonoHistory() {
     clearLegacyHistory();
     clearAllQuickMatches();
     setPendingClear(snapshot);
+    setPendingDelete(null);
     setSelectedEntry(null);
     setHistoryStatus('Cleared quick and legacy history.');
   };
@@ -369,6 +401,44 @@ export default function MonoHistory() {
           </button>
         )}
 
+        {pendingDelete && !pendingDelete.deleted && (
+          <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick match?</p>
+            <p className="text-xs mb-4" style={{ color: '#666' }}>
+              {pendingDelete.entry.team1} vs {pendingDelete.entry.team2} will be removed from History.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="mono-btn flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="mono-btn flex-1"
+                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                onClick={completeDeleteQuickMatch}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+
+        {pendingDelete?.deleted && (
+          <button
+            type="button"
+            className="mono-btn mb-4 w-full"
+            style={{ minHeight: 44, padding: '10px' }}
+            onClick={undoDeleteQuickMatch}
+          >
+            Undo delete
+          </button>
+        )}
+
         <div className="flex gap-2 mb-6" role="tablist" aria-label="History filters">
           {[
             { id: 'all', label: 'All', count: totalCount },
@@ -464,14 +534,15 @@ export default function MonoHistory() {
                         {entry.source === 'quick' ? 'Quick' : 'Tournament'}
                       </span>
                     </div>
+                    <span className="inline-block text-xs font-semibold mt-3" style={{ color: '#0066ff' }}>
+                      View details
+                    </span>
                   </button>
 
                   {entry.source === 'quick' && (
                     <button
                       onClick={() => {
-                        deleteQuickMatch(entry.rawId);
-                        setSelectedEntry((current) => (current?.id === entry.id ? null : current));
-                        setHistoryStatus('Quick match deleted.');
+                        confirmDeleteQuickMatch(entry);
                       }}
                       className="bg-transparent border-none cursor-pointer text-sm"
                       style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
