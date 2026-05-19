@@ -15,6 +15,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { buildResultShareText, getResultSetSummary, getShareStatusText } from '../../utils/quickMatchResult';
 import { shareText } from '../../mobile/share';
 import {
   correctionImpact,
@@ -223,32 +224,6 @@ function getRuleSummary({ engine, format, formatMode, isCricket, isGoals, sportC
   }
 
   return formatMode === 'standard' ? 'Standard rules' : 'Custom rules';
-}
-
-function getResultOutcome(winner) {
-  if (winner === 'Tie') return 'Match Tied';
-  if (winner === 'Draw') return 'Match Drawn';
-  return `${winner} won`;
-}
-
-function getShareStatusText(response) {
-  if (!response || typeof response.shared !== 'boolean') return 'Could not share result.';
-  if (!response.shared) return 'Share is not available on this device.';
-  if (response.method === 'clipboard') return 'Result copied.';
-  return 'Share sheet opened.';
-}
-
-function buildResultShareText(result, isCricket) {
-  if (!result) return '';
-  const outcome = getResultOutcome(result.winner);
-
-  if (isCricket && result.team1Score) {
-    const team1Score = `${result.team1Score.runs}/${result.team1Score.wickets} (${ballsToOvers(result.team1Score.balls)} ov)`;
-    const team2Score = `${result.team2Score.runs}/${result.team2Score.wickets} (${ballsToOvers(result.team2Score.balls)} ov)`;
-    return `${result.team1} ${team1Score} vs ${result.team2} ${team2Score} - ${outcome}`;
-  }
-
-  return `${result.team1} ${result.score1} - ${result.score2} ${result.team2} - ${outcome}`;
 }
 
 export default function MonoQuickMatch() {
@@ -1243,7 +1218,7 @@ export default function MonoQuickMatch() {
     try {
       const response = await shareText({
         title: 'Score Easy result',
-        text: buildResultShareText(result, isCricket),
+        text: buildResultShareText(result, { isCricket }),
         dialogTitle: 'Share match result',
       });
       setShareStatus(getShareStatusText(response));
@@ -2565,6 +2540,7 @@ export default function MonoQuickMatch() {
   const isDraw = result?.winner === 'Draw';
   const isTie = result?.winner === 'Tie';
   const isNoWinner = isDraw || isTie;
+  const resultSetSummary = getResultSetSummary(result);
 
   const formatElapsed = (secs) => {
     if (!secs) return null;
@@ -2685,8 +2661,41 @@ export default function MonoQuickMatch() {
           )}
         </div>
 
+        {resultSetSummary && (
+          <div className="mono-card mb-8" style={{ padding: '18px 20px' }}>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className="text-xs uppercase tracking-widest" style={{ color: '#888', margin: 0 }}>
+                Set breakdown
+              </p>
+              <span className="text-xs font-mono" style={{ color: '#111' }}>
+                {resultSetSummary.text}
+              </span>
+            </div>
+            <div className="flex flex-col gap-3">
+              {resultSetSummary.rows.map((row) => (
+                <div
+                  key={row.id}
+                  className="flex items-center justify-between gap-3"
+                  style={{ minHeight: 32 }}
+                >
+                  <span className="text-xs" style={{ color: '#666' }}>{row.label}</span>
+                  <span className="font-mono font-semibold" style={{ color: '#111' }}>
+                    {row.score1} - {row.score2}
+                  </span>
+                  <span className="text-xs text-right" style={{ color: '#666', minWidth: 88 }}>
+                    {row.winner || 'Level'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className="grid gap-2"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))' }}
+        >
           <button onClick={() => resetMatchState('scoring')} className="mono-btn-primary" style={{ minHeight: 48, padding: '12px' }}>
             Rematch
           </button>
