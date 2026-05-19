@@ -240,7 +240,7 @@ export default function MonoTournamentList() {
                         onClick={() => openTournament(t.id)}
                         className="mono-btn-primary flex-1"
                         style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-                        aria-label={`Continue ${t.name} tournament`}
+                        aria-label={`${continueLabel} - ${t.name}`}
                       >
                         {continueLabel}
                       </button>
