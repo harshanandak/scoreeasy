@@ -6,6 +6,7 @@ import { getSportById } from '../../models/sportRegistry';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 
 // Get human-readable format label from format object
 function getFormatLabel(format) {
@@ -208,10 +209,16 @@ export default function MonoCricketTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
+  const isPureKnockout = tournament?.type === 'knockout' || tournament?.knockoutConfig?.mode === 'single-elimination';
+
+  useEffect(() => {
+    if (isPureKnockout && tab === 'matches') setTab('knockout');
+  }, [isPureKnockout, tab]);
+
   if (!tournament) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Tournament not found</p>
+        <TournamentNotFoundActions navigate={navigate} sport={sport || 'cricket'} />
       </div>
     );
   }
@@ -259,11 +266,13 @@ export default function MonoCricketTournament() {
     badgeText = 'Knockout';
   }
 
-  const tabs = [
-    { id: 'matches', label: 'Matches' },
-    { id: 'table', label: 'Points Table' },
-  ];
-  if (hasKnockouts) tabs.push({ id: 'knockout', label: 'Knockout' });
+  const tabs = isPureKnockout
+    ? [{ id: 'knockout', label: 'Knockout' }]
+    : [
+      { id: 'matches', label: 'Matches' },
+      { id: 'table', label: 'Points Table' },
+    ];
+  if (hasKnockouts && !isPureKnockout) tabs.push({ id: 'knockout', label: 'Knockout' });
   tabs.push({ id: 'teams', label: 'Teams' });
 
   return (
@@ -291,7 +300,7 @@ export default function MonoCricketTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-          {getFormatLabel(tournament.format)} · {tournament.teams.length} teams · {tournament.type === 'series' ? `${totalMatches}-match series` : 'Round Robin'}{hasKnockouts ? ' + Knockouts' : ''}
+          {getFormatLabel(tournament.format)} · {tournament.teams.length} teams · {isPureKnockout ? 'Single Elimination' : tournament.type === 'series' ? `${totalMatches}-match series` : `Round Robin${hasKnockouts ? ' + Knockouts' : ''}`}
         </p>
 
         {/* Match progress segments */}

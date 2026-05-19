@@ -93,6 +93,11 @@ export default function GenericSetsTournament() {
   }, [tournament?.knockoutMatches]);
 
   const scoreClear = useTournamentScoreClear({ scoreKind: 'sets', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
+  const isPureKnockout = tournament?.type === 'knockout' || tournament?.knockoutConfig?.mode === 'single-elimination';
+
+  useEffect(() => {
+    if (isPureKnockout && tab === 'matches') setTab('knockout');
+  }, [isPureKnockout, tab]);
 
   if (!sportConfig) {
     return (
@@ -134,8 +139,8 @@ export default function GenericSetsTournament() {
     badgeText = 'Knockout';
   }
 
-  const tabs = ['matches', 'standings'];
-  if (hasKnockouts) tabs.push('knockout');
+  const tabs = isPureKnockout ? ['knockout'] : ['matches', 'standings'];
+  if (hasKnockouts && !isPureKnockout) tabs.push('knockout');
   tabs.push('teams');
 
   const deleteKnockoutScore = (matchId) => {
@@ -173,7 +178,7 @@ export default function GenericSetsTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-          {sportConfig.name} · {tournament.teams.length} teams · Round Robin{hasKnockouts ? ' + Knockouts' : ''}
+            {sportConfig.name} · {tournament.teams.length} teams · {isPureKnockout ? 'Single Elimination' : `Round Robin${hasKnockouts ? ' + Knockouts' : ''}`}
         </p>
 
         {/* Match progress segments */}

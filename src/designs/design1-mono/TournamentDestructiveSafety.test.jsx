@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MonoTournamentList from './MonoTournamentList';
 import GenericGoalsTournament from './GenericGoalsTournament';
 import GenericSetsTournament from './GenericSetsTournament';
+import MonoCricketTournament from './MonoCricketTournament';
+import MonoTournamentSetup from './MonoTournamentSetup';
 
 const VOLLEYBALL_KEY = 'se_volleyball';
 const FOOTBALL_KEY = 'se_football';
@@ -143,6 +145,49 @@ describe('tournament destructive safety', () => {
       expect(readTournaments(VOLLEYBALL_KEY)).toHaveLength(1);
     });
     expect(screen.getByText('League Night')).toBeInTheDocument();
+  });
+
+  it('creates a single-elimination tournament with a seeded bracket', async () => {
+    renderRoute('/volleyball/tournament/new', '/:sport/tournament/new', <MonoTournamentSetup />);
+
+    fireEvent.change(await screen.findByLabelText('Tournament name'), {
+      target: { value: 'Elimination Night' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Elimination' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Match Rules' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Name Teams' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review & Start' }));
+
+    expect(screen.getByText('Single elimination')).toBeInTheDocument();
+    expect(screen.getByText('Semi-final 1')).toBeInTheDocument();
+    expect(screen.getByText('Final')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Tournament' }));
+
+    await waitFor(() => {
+      const [saved] = readTournaments(VOLLEYBALL_KEY);
+      expect(saved).toMatchObject({
+        name: 'Elimination Night',
+        type: 'knockout',
+        phase: 'knockout',
+        winnerMode: 'knockouts',
+      });
+      expect(saved.matches).toHaveLength(0);
+      expect(saved.knockoutMatches).toHaveLength(3);
+      expect(saved.knockoutMatches[0]).toMatchObject({
+        label: 'Semi-final 1',
+        team1Id: expect.any(String),
+        team2Id: expect.any(String),
+      });
+    });
+  });
+
+  it('shows recovery actions when a cricket tournament link is stale', async () => {
+    renderRoute('/cricket/tournament/missing', '/:sport/tournament/:id', <MonoCricketTournament />);
+
+    expect(await screen.findByText('Tournament not found')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tournaments' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
   });
 
   it('drops tournament delete undo state when switching sports', async () => {
