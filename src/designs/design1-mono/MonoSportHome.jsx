@@ -154,15 +154,15 @@ SearchResults.propTypes = {
 };
 
 const priorityFastStartActions = [
-  { label: 'Start Cricket', path: '/cricket/quick?format=T20', className: 'mono-btn-primary' },
-  { label: 'Start Football', path: '/football/quick', className: 'mono-btn' },
-  { label: 'Start Volleyball', path: '/volleyball/quick', className: 'mono-btn' },
+  { label: 'Start Cricket', sportId: 'cricket', className: 'mono-btn-primary' },
+  { label: 'Start Football', sportId: 'football', className: 'mono-btn' },
+  { label: 'Start Volleyball', sportId: 'volleyball', className: 'mono-btn' },
 ];
 
 const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
 const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
 
-function PriorityFastStart({ navigate }) {
+function PriorityFastStart({ onStartSport }) {
   return (
     <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
       <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
@@ -181,8 +181,8 @@ function PriorityFastStart({ navigate }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {priorityFastStartActions.map((action) => (
             <button
-              key={action.path}
-              onClick={() => navigate(action.path)}
+              key={action.sportId}
+              onClick={() => onStartSport(action.sportId)}
               className={action.className}
               style={action.className === 'mono-btn-primary' ? priorityActionStyle : secondaryPriorityActionStyle}
             >
@@ -196,7 +196,7 @@ function PriorityFastStart({ navigate }) {
 }
 
 PriorityFastStart.propTypes = {
-  navigate: PropTypes.func.isRequired,
+  onStartSport: PropTypes.func.isRequired,
 };
 
 function CategoryTabs({ categoryKeys, activeTab, setActiveTab }) {
@@ -505,12 +505,12 @@ GridLayout.propTypes = {
   getCounts: PropTypes.func.isRequired,
 };
 
-function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
+function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts, onStartSport }) {
   return (
     <div className="mb-8">
-      <PriorityFastStart navigate={navigate} />
+      <PriorityFastStart onStartSport={onStartSport} />
 
-      <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
+      <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
         Choose sport
       </h2>
 
@@ -534,6 +534,7 @@ BrowseSports.propTypes = {
   setSelectedSportId: PropTypes.func.isRequired,
   navigate: PropTypes.func.isRequired,
   getCounts: PropTypes.func.isRequired,
+  onStartSport: PropTypes.func.isRequired,
 };
 
 export default function MonoSportHome() {
@@ -574,6 +575,19 @@ export default function MonoSportHome() {
     const newLayout = layout === 'tabs' ? 'grid' : 'tabs';
     setLayout(newLayout);
     savePreference(LAYOUT_KEY, newLayout);
+  };
+
+  const handlePriorityStart = (sportId) => {
+    const category = getCategoryForSport(sportCategories, sportId);
+    if (!category) return;
+
+    setSearchQuery('');
+    setActiveTab(category);
+    setSelectedSportId(sportId === 'cricket' ? null : sportId);
+    navigate(`/play?sport=${sportId}`);
+    requestAnimationFrame(() => {
+      document.getElementById('choose-sport')?.scrollIntoView?.({ block: 'start' });
+    });
   };
 
   const allSports = Object.values(sportCategories).flat().filter(sport => sport.id !== 'cricket');
@@ -638,6 +652,7 @@ export default function MonoSportHome() {
             setSelectedSportId={setSelectedSportId}
             navigate={navigate}
             getCounts={getCounts}
+            onStartSport={handlePriorityStart}
           />
         )}
       </div>

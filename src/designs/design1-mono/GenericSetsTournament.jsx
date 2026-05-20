@@ -7,6 +7,7 @@ import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, i
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
+import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 
 export default function GenericSetsTournament() {
@@ -93,6 +94,7 @@ export default function GenericSetsTournament() {
   }, [tournament?.knockoutMatches]);
 
   const scoreClear = useTournamentScoreClear({ scoreKind: 'sets', setTournament, teams: tournament?.teams, tournament, tournamentScopeKey: `${sport}:${id}` });
+  const knockoutDisplay = useTournamentKnockoutDisplay({ tournament, tab, setTab });
 
   if (!sportConfig) {
     return (
@@ -120,7 +122,7 @@ export default function GenericSetsTournament() {
   ).length;
   const totalMatches = tournament.matches.length;
 
-  const hasKnockouts = tournament.winnerMode === 'knockouts';
+  const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
 
@@ -133,10 +135,6 @@ export default function GenericSetsTournament() {
     badgeClass = 'mono-badge-paused';
     badgeText = 'Knockout';
   }
-
-  const tabs = ['matches', 'standings'];
-  if (hasKnockouts) tabs.push('knockout');
-  tabs.push('teams');
 
   const deleteKnockoutScore = (matchId) => {
     const updatedKO = tournament.knockoutMatches.map(m => {
@@ -173,7 +171,7 @@ export default function GenericSetsTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-          {sportConfig.name} · {tournament.teams.length} teams · Round Robin{hasKnockouts ? ' + Knockouts' : ''}
+          {sportConfig.name} · {tournament.teams.length} teams · {tournamentTypeLabel}
         </p>
 
         {/* Match progress segments */}

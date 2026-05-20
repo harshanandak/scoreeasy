@@ -6,6 +6,8 @@ import { getSportById } from '../../models/sportRegistry';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
+import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 
 // Get human-readable format label from format object
 function getFormatLabel(format) {
@@ -208,10 +210,23 @@ export default function MonoCricketTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
+  const knockoutDisplay = useTournamentKnockoutDisplay({
+    tournament,
+    tab,
+    setTab,
+    baseTabs: [
+      { id: 'matches', label: 'Matches' },
+      { id: 'table', label: 'Points Table' },
+    ],
+    knockoutTab: { id: 'knockout', label: 'Knockout' },
+    trailingTabs: [{ id: 'teams', label: 'Teams' }],
+    labelOptions: { type: tournament?.type, totalMatches: tournament?.matches?.length ?? 0 },
+  });
+
   if (!tournament) {
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Tournament not found</p>
+        <TournamentNotFoundActions navigate={navigate} sport={sport || 'cricket'} />
       </div>
     );
   }
@@ -245,9 +260,14 @@ export default function MonoCricketTournament() {
     }));
   };
 
-  const hasKnockouts = tournament.winnerMode === 'knockouts';
+  const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
+  const metaLabel = [
+    getFormatLabel(tournament.format),
+    `${tournament.teams.length} teams`,
+    tournamentTypeLabel,
+  ].join(' · ');
 
   let badgeClass = 'mono-badge-live';
   let badgeText = 'Live';
@@ -258,13 +278,6 @@ export default function MonoCricketTournament() {
     badgeClass = 'mono-badge-paused';
     badgeText = 'Knockout';
   }
-
-  const tabs = [
-    { id: 'matches', label: 'Matches' },
-    { id: 'table', label: 'Points Table' },
-  ];
-  if (hasKnockouts) tabs.push({ id: 'knockout', label: 'Knockout' });
-  tabs.push({ id: 'teams', label: 'Teams' });
 
   return (
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
@@ -291,7 +304,7 @@ export default function MonoCricketTournament() {
 
         {/* Meta */}
         <p className="text-xs mb-5" style={{ color: '#888' }}>
-          {getFormatLabel(tournament.format)} · {tournament.teams.length} teams · {tournament.type === 'series' ? `${totalMatches}-match series` : 'Round Robin'}{hasKnockouts ? ' + Knockouts' : ''}
+          {metaLabel}
         </p>
 
         {/* Match progress segments */}

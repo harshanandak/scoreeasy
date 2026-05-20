@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { saveSportTournament } from '../../utils/storage';
-import { generateRoundRobinMatches } from '../../utils/roundRobin';
+import { generateKnockoutMatches, generateRoundRobinMatches } from '../../utils/roundRobin';
 import { getSportById } from '../../models/sportRegistry';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat } from '../../utils/cricketCalculations';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
+import { getTournamentMatchCountPreview } from '../../utils/tournamentDisplay';
 
 const STEP_LABELS = ['Basics', 'Match rules', 'Teams', 'Review'];
 
@@ -254,6 +255,9 @@ export default function MonoTournamentSetup() {
 
   // Generate matches based on tournament type
   const generateMatches = () => {
+    if (tournamentType === 'knockout') {
+      return [];
+    }
     if (tournamentType === 'series') {
       return Array.from({ length: seriesGames }, (_, i) => ({
         id: `${Date.now()}-${i}`,
@@ -282,7 +286,25 @@ export default function MonoTournamentSetup() {
 
     const initializedMatches = initializeMatches(generateMatches());
 
-    const isKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
+    const isElimination = tournamentType === 'knockout';
+    const isGroupKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
+    const isKnockout = isElimination || isGroupKnockout;
+    const activeTeamsAdvancing = isElimination ? (teamCount === 2 ? 2 : 4) : teamsAdvancing;
+    const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
+    const knockoutConfig = isKnockout ? {
+      teamsAdvancing: activeTeamsAdvancing,
+      thirdPlaceMatch: activeTeamsAdvancing === 4 ? thirdPlaceMatch : false,
+      format: activeKnockoutFormat,
+      mode: isElimination ? 'single-elimination' : 'group-playoff',
+    } : null;
+    const seededStandings = teams.map((team, index) => ({
+      teamId: team.id,
+      team,
+      seed: index + 1,
+    }));
+    const initializedKnockoutMatches = isElimination
+      ? initializeMatches(generateKnockoutMatches(seededStandings, knockoutConfig))
+      : [];
 
     // Attach captain to each team object
     const teamsWithCaptains = teams.map((t, i) => captains[i] ? { ...t, captain: captains[i] } : t);
@@ -297,13 +319,9 @@ export default function MonoTournamentSetup() {
       createdAt: new Date().toISOString(),
       mode: 'tournament',
       winnerMode: isKnockout ? 'knockouts' : 'table-topper',
-      phase: 'group',
-      knockoutConfig: isKnockout ? {
-        teamsAdvancing,
-        thirdPlaceMatch: teamsAdvancing === 4 ? thirdPlaceMatch : false,
-        format: knockoutSameFormat ? format : (knockoutFormat || format),
-      } : null,
-      knockoutMatches: [],
+      phase: isElimination ? 'knockout' : 'group',
+      knockoutConfig,
+      knockoutMatches: initializedKnockoutMatches,
     };
 
     const ok = saveSportTournament(sportConfig.storageKey, tournament);
@@ -332,13 +350,21 @@ export default function MonoTournamentSetup() {
     return `First to ${f.target} ${sportConfig?.config?.scoringUnit || 'point'}s`;
   };
 
-  const matchCountPreview = tournamentType === 'series'
-    ? seriesGames
-    : (teamCount * (teamCount - 1)) / 2;
+  const matchCountPreview = getTournamentMatchCountPreview({
+    tournamentType,
+    teamCount,
+    seriesGames,
+    winnerMode,
+    teamsAdvancing,
+    thirdPlaceMatch,
+  });
 
   const isKnockoutSelection = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
 
   const finalStageLabel = (() => {
+    if (tournamentType === 'knockout') {
+      return `${teamCount}-team elimination${teamCount === 4 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
+    }
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
     const suffix = thirdPlaceMatch ? ' + 3rd place' : '';
@@ -347,18 +373,21 @@ export default function MonoTournamentSetup() {
 
   const tournamentTypePreset = (() => {
     if (!tournamentType) return null;
+    if (tournamentType === 'knockout') return 'knockout';
     if (tournamentType === 'series') return 'series';
     if (isKnockoutSelection) return 'group-knockout';
     return 'round-robin';
   })();
 
   const tournamentTypeReviewLabel = (() => {
+    if (tournamentType === 'knockout') return 'Single elimination';
     if (tournamentType === 'series') return `${seriesGames}-match series`;
     if (isKnockoutSelection) return `Group + playoffs`;
     return 'Round-robin';
   })();
 
   const tournamentTypeDescription = (() => {
+    if (tournamentType === 'knockout') return 'A short bracket: lose once and you are out';
     if (tournamentTypePreset === 'group-knockout') {
       return 'Group matches first, then playoffs decide the winner';
     }
@@ -369,6 +398,17 @@ export default function MonoTournamentSetup() {
   const teamNameById = (teamId) => teams.find(t => t.id === teamId)?.name || 'TBD';
 
   const schedulePreview = (() => {
+    if (tournamentType === 'knockout') {
+      const seededStandings = teams.map((team, index) => ({ teamId: team.id, team, seed: index + 1 }));
+      const config = {
+        teamsAdvancing: teamCount === 2 ? 2 : 4,
+        thirdPlaceMatch: teamCount === 4 ? thirdPlaceMatch : false,
+      };
+      return generateKnockoutMatches(seededStandings, config).map((match) => ({
+        ...match,
+        label: match.label,
+      }));
+    }
     if (tournamentType === 'series') {
       return Array.from({ length: Math.min(seriesGames, 4) }, (_, i) => ({
         label: `Match ${i + 1}`,
@@ -503,12 +543,28 @@ export default function MonoTournamentSetup() {
                     setTournamentType('round-robin');
                     setWinnerMode('knockouts');
                     setTeamCount(prev => Math.max(prev, 4));
+                    setTeamsAdvancing(4);
                   }}
                   className={tournamentTypePreset === 'group-knockout' ? 'mono-btn-primary' : 'mono-btn'}
                   style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
                   aria-pressed={tournamentTypePreset === 'group-knockout'}
                 >
                   Group + Playoffs
+                </button>
+                <button
+                  onClick={() => {
+                    setTournamentType('knockout');
+                    setWinnerMode('knockouts');
+                    setTeamCount(4);
+                    setTeamsAdvancing(4);
+                    setKnockoutSameFormat(true);
+                    setKnockoutFormat(null);
+                  }}
+                  className={tournamentTypePreset === 'knockout' ? 'mono-btn-primary' : 'mono-btn'}
+                  style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
+                  aria-pressed={tournamentTypePreset === 'knockout'}
+                >
+                  Elimination
                 </button>
                 <button
                   onClick={() => {
@@ -526,19 +582,30 @@ export default function MonoTournamentSetup() {
               <p className="text-xs mt-2" style={{ color: '#bbb' }}>{tournamentTypeDescription}</p>
             </div>
 
-            {/* Team Count (Round-robin only) */}
-            {tournamentType === 'round-robin' && (
+            {/* Team Count */}
+            {(tournamentType === 'round-robin' || tournamentType === 'knockout') && (
               <fieldset className="mb-8" style={{ border: 'none', padding: 0, margin: 0 }}>
                 <legend className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888', padding: 0 }}>
-                  Number of teams
+                  {tournamentType === 'knockout' ? 'Bracket size' : 'Number of teams'}
                 </legend>
                 <div className="flex gap-2">
-                  {teamCountOptions.map(n => (
+                  {(tournamentType === 'knockout' ? [2, 4] : teamCountOptions).map(n => (
                     <button
                       key={n}
                       onClick={() => {
                         setTeamCount(n);
-                        if (n < 3) setWinnerMode('table-topper');
+                        if (tournamentType === 'knockout') {
+                          setWinnerMode('knockouts');
+                          setTeamsAdvancing(n);
+                          if (n === 2) setThirdPlaceMatch(false);
+                        } else if (n < 3) {
+                          setWinnerMode('table-topper');
+                          setTeamsAdvancing(2);
+                          setThirdPlaceMatch(false);
+                        } else if (n < 4 && teamsAdvancing === 4) {
+                          setTeamsAdvancing(2);
+                          setThirdPlaceMatch(false);
+                        }
                       }}
                       className={teamCount === n ? 'mono-btn-primary' : 'mono-btn'}
                       style={{ width: '44px', height: '44px', padding: 0, fontSize: '0.9375rem' }}
@@ -548,10 +615,41 @@ export default function MonoTournamentSetup() {
                   ))}
                 </div>
                 <p className="text-xs mt-2" style={{ color: '#888' }}>
-                  Will generate {teamCount === 2 ? '1 match' : `${(teamCount * (teamCount - 1)) / 2} matches`}
-                  {teamCount >= 3 && ' (round-robin format)'}
+                  {tournamentType === 'knockout'
+                    ? `Will generate ${teamCount === 2 ? 'a final' : 'two semi-finals and a final'}`
+                    : (
+                      <>
+                        Will generate {teamCount === 2 ? '1 match' : `${(teamCount * (teamCount - 1)) / 2} matches`}
+                        {teamCount >= 3 && ' (round-robin format)'}
+                      </>
+                    )}
                 </p>
               </fieldset>
+            )}
+
+            {tournamentType === 'knockout' && teamCount === 4 && (
+              <label className="flex items-center gap-2 mb-8 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={thirdPlaceMatch}
+                  onChange={() => setThirdPlaceMatch(!thirdPlaceMatch)}
+                  className="sr-only"
+                />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: '18px', height: '18px', border: '1px solid #ddd',
+                    background: thirdPlaceMatch ? '#0066ff' : '#fff', color: '#fff',
+                    fontSize: '11px', flexShrink: 0,
+                  }}
+                >
+                  {thirdPlaceMatch && '✓'}
+                </span>
+                <span className="text-sm" style={{ color: '#444' }}>
+                  Include 3rd place match
+                </span>
+              </label>
             )}
 
             {/* Series Length (Series only) */}
