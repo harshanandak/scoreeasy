@@ -500,7 +500,34 @@ GridLayout.propTypes = {
   getCounts: PropTypes.func.isRequired,
 };
 
+function LayoutToggleIcon({ layout }) {
+  if (layout === 'grid') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+        <line x1="1" y1="4" x2="15" y2="4" />
+        <line x1="1" y1="8" x2="15" y2="8" />
+        <line x1="1" y1="12" x2="15" y2="12" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <rect x="1" y="1" width="6" height="6" rx="1" />
+      <rect x="9" y="1" width="6" height="6" rx="1" />
+      <rect x="1" y="9" width="6" height="6" rx="1" />
+      <rect x="9" y="9" width="6" height="6" rx="1" />
+    </svg>
+  );
+}
+
+LayoutToggleIcon.propTypes = {
+  layout: PropTypes.string.isRequired,
+};
+
 function SportChooserFrame({ children, layout, onSearchChange, onStartSport, searchQuery, switchLayout }) {
+  const targetLayout = layout === 'grid' ? 'list' : 'grid';
+
   return (
     <section className="mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
@@ -527,15 +554,11 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
           <button
             onClick={switchLayout}
             className="mono-btn flex items-center justify-center"
-            aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
+            aria-label={`Switch to ${targetLayout} layout`}
             style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
-            title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
+            title={`Switch to ${targetLayout}`}
           >
-            {layout === 'grid' ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-            )}
+            <LayoutToggleIcon layout={layout} />
           </button>
         </div>
       </div>

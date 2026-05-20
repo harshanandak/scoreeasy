@@ -22,6 +22,8 @@ function renderSportHome() {
   );
 }
 
+const getChooser = () => screen.getByRole('region', { name: 'Choose sport' });
+
 describe('MonoSportHome priority starts', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
@@ -74,10 +76,8 @@ describe('MonoSportHome priority starts', () => {
   it('keeps search and layout controls inside the choose sport section', () => {
     renderSportHome();
 
-    const chooser = screen.getByRole('region', { name: 'Choose sport' });
-
-    expect(within(chooser).getByLabelText('Search sports')).toBeInTheDocument();
-    expect(within(chooser).getByRole('button', { name: 'Switch to grid layout' })).toBeInTheDocument();
+    expect(within(getChooser()).getByLabelText('Search sports')).toBeInTheDocument();
+    expect(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' })).toBeInTheDocument();
     expect(screen.getAllByLabelText('Search sports')).toHaveLength(1);
   });
 
@@ -86,7 +86,7 @@ describe('MonoSportHome priority starts', () => {
 
     fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'tennis' } });
 
-    const chooser = screen.getByRole('region', { name: 'Choose sport' });
+    const chooser = getChooser();
     expect(within(chooser).getByLabelText('Search sports')).toHaveValue('tennis');
     expect(within(chooser).getByRole('heading', { name: 'Tennis' })).toBeInTheDocument();
   });
