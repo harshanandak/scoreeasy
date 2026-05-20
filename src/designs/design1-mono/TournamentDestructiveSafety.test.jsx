@@ -182,6 +182,37 @@ describe('tournament destructive safety', () => {
     });
   });
 
+  it('clears playoff rule overrides when switching to elimination', async () => {
+    renderRoute('/volleyball/tournament/new', '/:sport/tournament/new', <MonoTournamentSetup />);
+
+    fireEvent.change(await screen.findByLabelText('Tournament name'), {
+      target: { value: 'Clean Elimination' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Group + Playoffs' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Match Rules' }));
+    fireEvent.click(screen.getByLabelText('Use different rules for playoffs'));
+    fireEvent.click(screen.getByRole('button', { name: 'Single set' }));
+    fireEvent.click(screen.getByRole('button', { name: '10 pts' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Elimination' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Match Rules' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Name Teams' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review & Start' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Tournament' }));
+
+    await waitFor(() => {
+      const [saved] = readTournaments(VOLLEYBALL_KEY);
+      expect(saved).toMatchObject({
+        name: 'Clean Elimination',
+        type: 'knockout',
+        phase: 'knockout',
+      });
+      expect(saved.knockoutConfig.format).toEqual(saved.format);
+      expect(saved.knockoutConfig.format).not.toMatchObject({ type: 'single', points: 10 });
+    });
+  });
+
   it('shows recovery actions when a cricket tournament link is stale', async () => {
     renderRoute('/cricket/tournament/missing', '/:sport/tournament/:id', <MonoCricketTournament />);
 

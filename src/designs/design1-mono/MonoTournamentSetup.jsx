@@ -290,10 +290,11 @@ export default function MonoTournamentSetup() {
     const isGroupKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
     const isKnockout = isElimination || isGroupKnockout;
     const activeTeamsAdvancing = isElimination ? (teamCount === 2 ? 2 : 4) : teamsAdvancing;
+    const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
       thirdPlaceMatch: activeTeamsAdvancing === 4 ? thirdPlaceMatch : false,
-      format: knockoutSameFormat ? format : (knockoutFormat || format),
+      format: activeKnockoutFormat,
       mode: isElimination ? 'single-elimination' : 'group-playoff',
     } : null;
     const seededStandings = teams.map((team, index) => ({
@@ -556,6 +557,8 @@ export default function MonoTournamentSetup() {
                     setWinnerMode('knockouts');
                     setTeamCount(4);
                     setTeamsAdvancing(4);
+                    setKnockoutSameFormat(true);
+                    setKnockoutFormat(null);
                   }}
                   className={tournamentTypePreset === 'knockout' ? 'mono-btn-primary' : 'mono-btn'}
                   style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
