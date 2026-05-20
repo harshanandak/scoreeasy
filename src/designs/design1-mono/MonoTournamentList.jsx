@@ -99,7 +99,12 @@ export default function MonoTournamentList() {
         </button>
 
         {deletedTournament && (
-          <div className="mono-card mb-4" style={{ padding: '12px 14px', borderColor: '#0066ff' }}>
+          <div
+            className="mono-card mb-4"
+            role="status"
+            aria-live="polite"
+            style={{ padding: '12px 14px', borderColor: '#0066ff' }}
+          >
             <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
               Deleted {deletedTournament.tournament.name}.
             </p>

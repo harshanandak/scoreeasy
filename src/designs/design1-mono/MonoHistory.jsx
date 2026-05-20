@@ -469,7 +469,12 @@ export default function MonoHistory() {
         </nav>
 
         {historyStatus && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}>
+          <div
+            className="mono-card mb-4"
+            role="status"
+            aria-live="polite"
+            style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}
+          >
             {historyStatus}
           </div>
         )}
