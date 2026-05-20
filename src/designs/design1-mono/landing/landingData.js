@@ -51,6 +51,10 @@ export const trustNotes = [
 
 export const heroScoreCards = [
   {
+    sport: 'Volleyball', teamA: 'EAGLES', teamB: 'HAWKS',
+    scoreA: '25', scoreB: '23', footer: 'SET 3 OF 5 \u2014 DEUCE',
+  },
+  {
     sport: 'Cricket', teamA: 'INDIA', teamB: 'AUSTRALIA',
     scoreA: '186', scoreB: '142', suffixA: '/4', suffixB: '/10',
     footer: '32.4 OVERS \u2014 2ND INNINGS',
@@ -58,10 +62,6 @@ export const heroScoreCards = [
   {
     sport: 'Football', teamA: 'CITY', teamB: 'UNITED',
     scoreA: '2', scoreB: '1', footer: "73' \u2014 2ND HALF",
-  },
-  {
-    sport: 'Volleyball', teamA: 'EAGLES', teamB: 'HAWKS',
-    scoreA: '25', scoreB: '23', footer: 'SET 3 OF 5 \u2014 DEUCE',
   },
   {
     sport: 'Tennis', teamA: 'PLAYER 1', teamB: 'PLAYER 2',
