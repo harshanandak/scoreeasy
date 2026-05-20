@@ -188,7 +188,7 @@ export default function MonoGoalsLiveScore() {
 
   // Add point/goal
   const addScore = (team, value = 1) => {
-    if (!sportConfig || !tournament) return;
+    if (!sportConfig || !tournament || scoringPrompt.isInteractionLocked) return;
 
     // Check if time is up in timed mode
     const formatMode = effectiveFormat?.mode;
@@ -263,7 +263,7 @@ export default function MonoGoalsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const last = history[history.length - 1];
     setScore1(last.score1);
@@ -300,7 +300,7 @@ export default function MonoGoalsLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
-      if (scoringPrompt.pendingPrompt) return;
+      if (scoringPrompt.isInteractionLocked) return;
       // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -321,7 +321,7 @@ export default function MonoGoalsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.pendingPrompt]); // Dependencies for addScore/undo
+  }, [score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked]); // Dependencies for addScore/undo
 
   // Save match and return
   const saveMatch = () => {

@@ -196,7 +196,7 @@ export default function MonoCricketLiveScore() {
 
   // Add runs
   const addRuns = (runs) => {
-    if (!tournament || !format) return;
+    if (!tournament || !format || scoringPrompt.isInteractionLocked) return;
 
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
@@ -242,7 +242,7 @@ export default function MonoCricketLiveScore() {
 
   // Add wicket
   const addWicket = () => {
-    if (!tournament || !format) return;
+    if (!tournament || !format || scoringPrompt.isInteractionLocked) return;
 
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
@@ -279,7 +279,7 @@ export default function MonoCricketLiveScore() {
 
   // Add extra (wide/no-ball) — bug fix 9d: trigger free hit on no-ball
   const addExtra = (type) => {
-    if (!tournament || !format) return;
+    if (!tournament || !format || scoringPrompt.isInteractionLocked) return;
 
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
@@ -308,7 +308,7 @@ export default function MonoCricketLiveScore() {
 
   // Undo — restores freeHit state (bug fix 9k)
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const last = history[history.length - 1];
     setScores(last.scores);
@@ -407,7 +407,7 @@ export default function MonoCricketLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
-      if (scoringPrompt.pendingPrompt) return;
+      if (scoringPrompt.isInteractionLocked) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (isMatchComplete) return;
 
@@ -425,7 +425,7 @@ export default function MonoCricketLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, scoringPrompt.pendingPrompt]);
+  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, scoringPrompt.isInteractionLocked]);
 
   // Save match (complete)
   const saveMatch = (winnerOverride) => {

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { AppScoringConfirmDialog, AppScoringNotice, useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 const scoringComponents = [
   'MonoCricketLiveScore.jsx',
@@ -87,6 +87,59 @@ describe('app-owned scoring prompts', () => {
     fireEvent.click(screen.getByLabelText('Cancel prompt'));
     expect(onCancel).toHaveBeenCalledTimes(3);
     expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('keeps keyboard focus and scorer hotkeys inside the confirmation dialog', () => {
+    const onCancel = vi.fn();
+    const onConfirm = vi.fn();
+
+    render(
+      <AppScoringConfirmDialog
+        cancelLabel="Keep scoring"
+        confirmLabel="Discard"
+        message="Your unsaved scoring changes will be lost."
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        title="Discard changes?"
+      />,
+    );
+
+    const cancelButton = screen.getByRole('button', { name: 'Keep scoring' });
+    const confirmButton = screen.getByRole('button', { name: 'Discard' });
+
+    expect(document.activeElement).toBe(cancelButton);
+
+    fireEvent.keyDown(cancelButton, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(confirmButton);
+
+    const hotkeyListener = vi.fn();
+    globalThis.addEventListener('keydown', hotkeyListener);
+
+    fireEvent.keyDown(confirmButton, { key: 'q' });
+    expect(hotkeyListener).not.toHaveBeenCalled();
+
+    globalThis.removeEventListener('keydown', hotkeyListener);
+  });
+
+  it('locks scorer interaction while the post-save redirect is pending', () => {
+    vi.useFakeTimers();
+    const navigateAfterSave = vi.fn();
+    const { result } = renderHook(() => useAppScoringPrompt());
+
+    act(() => {
+      result.current.scheduleDraftRedirect(navigateAfterSave);
+    });
+
+    expect(result.current.isInteractionLocked).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(450);
+    });
+
+    expect(navigateAfterSave).toHaveBeenCalledTimes(1);
+    expect(result.current.isInteractionLocked).toBe(false);
+
+    vi.useRealTimers();
   });
 
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {

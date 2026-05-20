@@ -329,6 +329,8 @@ export default function MonoTennisLiveScore() {
 
   // Add point to team
   const addPoint = (team) => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -364,7 +366,7 @@ export default function MonoTennisLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const lastState = history[history.length - 1];
     setSets(lastState.sets);
@@ -386,13 +388,13 @@ export default function MonoTennisLiveScore() {
     const leftTeam = sidesSwapped ? 2 : 1;
     const rightTeam = sidesSwapped ? 1 : 2;
     const handleKeyPress = (event) => {
-      if (scoringPrompt.pendingPrompt) return;
+      if (scoringPrompt.isInteractionLocked) return;
       makeKeyHandler(addPoint, undo, leftTeam, rightTeam)(event);
     };
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.pendingPrompt]);
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.isInteractionLocked]);
 
   // Save draft
   const saveDraft = () => {

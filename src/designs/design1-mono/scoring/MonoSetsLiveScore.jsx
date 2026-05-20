@@ -216,7 +216,7 @@ export default function MonoSetsLiveScore() {
 
   // Add point
   const addPoint = (team) => {
-    if (!sportConfig || !tournament) return;
+    if (!sportConfig || !tournament || scoringPrompt.isInteractionLocked) return;
 
     // Debounce rapid clicks
     const now = Date.now();
@@ -305,7 +305,7 @@ export default function MonoSetsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const last = history[history.length - 1];
     setSets(last.sets);
@@ -402,7 +402,7 @@ export default function MonoSetsLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
-      if (scoringPrompt.pendingPrompt) return;
+      if (scoringPrompt.isInteractionLocked) return;
       // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -423,7 +423,7 @@ export default function MonoSetsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, servingTeam, scoringMode, effectiveFormat, scoringPrompt.pendingPrompt]); // Dependencies for addPoint/undo
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, servingTeam, scoringMode, effectiveFormat, scoringPrompt.isInteractionLocked]); // Dependencies for addPoint/undo
 
   // Cancel and return
   const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);

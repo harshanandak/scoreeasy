@@ -248,7 +248,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add runs
   const addRuns = (runs) => {
-    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
+    if (!format || matchComplete || scoringPrompt.isInteractionLocked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -280,7 +280,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add wicket
   const addWicket = () => {
-    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
+    if (!format || matchComplete || scoringPrompt.isInteractionLocked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -316,7 +316,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add extra
   const addExtra = (type) => {
-    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
+    if (!format || matchComplete || scoringPrompt.isInteractionLocked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -337,7 +337,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Declaration
   const handleDeclare = () => {
-    if (matchComplete) return;
+    if (matchComplete || scoringPrompt.isInteractionLocked) return;
     const inn = innings[currentInningsIndex];
     scoringPrompt.requestPrompt({
       cancelLabel: 'Keep batting',
@@ -363,6 +363,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Draw
   const handleDraw = () => {
+    if (scoringPrompt.isInteractionLocked) return;
     scoringPrompt.requestPrompt({
       cancelLabel: 'Keep scoring',
       confirmLabel: 'End as draw',
@@ -379,7 +380,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Undo
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
     const last = history[history.length - 1];
     setInnings(last.innings);
     setCurrentInningsIndex(last.currentInningsIndex);
@@ -512,7 +513,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
-      if (scoringPrompt.pendingPrompt) return;
+      if (scoringPrompt.isInteractionLocked) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const key = e.key.toLowerCase();
       if (['0', '1', '2', '3', '4', '6'].includes(key)) addRuns(Number.parseInt(key));
@@ -523,7 +524,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [innings, currentInningsIndex, history, format, matchComplete, followOnPrompt, scoringPrompt.pendingPrompt]);
+  }, [innings, currentInningsIndex, history, format, matchComplete, followOnPrompt, scoringPrompt.isInteractionLocked]);
 
   if (!match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
