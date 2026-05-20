@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
@@ -46,9 +46,15 @@ function readQuickMatches() {
   return raw ? JSON.parse(raw) : [];
 }
 
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="current-route">{`${location.pathname}${location.search}`}</div>;
+}
+
 function renderHistory() {
   return render(
     <MemoryRouter initialEntries={['/history']}>
+      <LocationProbe />
       <MonoHistory />
     </MemoryRouter>,
   );
@@ -210,5 +216,18 @@ describe('MonoHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
 
     expect(screen.getByText('Team A vs Team B')).toBeInTheDocument();
+  });
+
+  it('uses priority sport start actions when history is empty', async () => {
+    renderHistory();
+
+    expect(screen.getByText('No match history yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start Match' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
+
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/play?sport=cricket');
+    expect(screen.getByRole('button', { name: 'Start Football' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
   });
 });

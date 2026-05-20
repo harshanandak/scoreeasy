@@ -25,8 +25,15 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Team A');
     expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Team B');
     expect(screen.getByRole('heading', { name: 'Match rules' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start Match' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
     expect(screen.queryByText('Format Mode')).not.toBeInTheDocument();
+  });
+
+  it('uses the selected sport name in the setup start action', async () => {
+    renderQuickMatch('/football/quick');
+
+    expect(await screen.findByRole('button', { name: 'Start Football' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Start Match' })).not.toBeInTheDocument();
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {
@@ -45,7 +52,7 @@ describe('MonoQuickMatch setup clarity', () => {
   it('keeps the end-match confirmation inside the app with keyboard and focus recovery', async () => {
     renderQuickMatch();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Start Match' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Volleyball' }));
 
     const endMatchButton = await screen.findByRole('button', { name: 'End Match' });
     fireEvent.click(endMatchButton);

@@ -16,6 +16,8 @@ function sportPlayPath(sport) {
   return `/play?sport=${sport.toLowerCase()}`;
 }
 
+const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
+
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
@@ -75,6 +77,7 @@ export default function GuestLanding() {
   });
   const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
+  const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
   const heroActions = [
     { label: activeStartLabel, tone: 'primary', to: sportPlayPath(activeCard.sport) },
     { label: 'CHOOSE SPORT', tone: 'secondary', to: '/play' },
@@ -183,14 +186,12 @@ export default function GuestLanding() {
                   </Link>
                 ))}
               </div>
-              {cloudAuthAvailable && (
-                <Link to="/signup" style={{
-                  display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
-                  color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
-                }}>
-                  Create account for sync and history
-                </Link>
-              )}
+              <Link to={signupPath} style={{
+                display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
+                color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
+              }}>
+                Create account for sync and history
+              </Link>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, marginTop: 14 }}>
                 {experienceStats.map((item) => (
                   <div key={item.label} style={{ border: `1px solid ${t.border}`, padding: '8px 6px', background: t.surface, minWidth: 0 }}>
@@ -545,16 +546,14 @@ export default function GuestLanding() {
           }}>
             START A GAME
           </Link>
-          {cloudAuthAvailable && (
-            <Link to="/signup" style={{
-              fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
-              padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-              background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
-              width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
-            }}>
-              SIGN UP FREE
-            </Link>
-          )}
+          <Link to={signupPath} style={{
+            fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
+            padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
+            background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
+            width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
+          }}>
+            SIGN UP FREE
+          </Link>
         </div>
       </section>
 

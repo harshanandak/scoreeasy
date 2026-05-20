@@ -16,6 +16,7 @@ import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
 import { buildResultShareText, getResultSetSummary, getShareStatusText } from '../../utils/quickMatchResult';
+import { getSportStartLabel } from '../../utils/startActions';
 import { shareText } from '../../mobile/share';
 import {
   correctionImpact,
@@ -1305,6 +1306,7 @@ export default function MonoQuickMatch() {
   const isTeamSetupStep = setupStep === totalSteps;
   const showRosterSetup = showTeam1Roster || showTeam2Roster;
   const playerCount = team1Players.length + team2Players.length;
+  const startButtonLabel = getSportStartLabel(sportConfig);
   const toggleRosterSetup = () => {
     const nextState = !showRosterSetup;
     setShowTeam1Roster(nextState);
@@ -2112,7 +2114,7 @@ export default function MonoQuickMatch() {
                 style={{ minHeight: 52, padding: '12px', fontSize: '0.9375rem', opacity: teamNamesReady ? 1 : 0.4 }}
                 disabled={!teamNamesReady}
               >
-                Start Match
+                {startButtonLabel}
               </button>
               {!teamNamesReady && (
                 <p className="text-xs text-center mt-3" style={{ color: '#dc2626' }}>

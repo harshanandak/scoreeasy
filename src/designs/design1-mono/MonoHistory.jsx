@@ -4,6 +4,7 @@ import { useGameHistory } from '../../hooks/useGameHistory';
 import { loadData, loadSportTournaments, saveData } from '../../utils/storage';
 import { loadHistory } from '../../utils/universalStorage';
 import { getSportById, getSportsList } from '../../models/sportRegistry';
+import { getPriorityStartActions } from '../../utils/startActions';
 import {
   getCompletedAt,
   getTournamentMatches,
@@ -22,6 +23,8 @@ const RESULT_DRAW = 'draw';
 const RESULT_CLOSE = 'close';
 const SORT_NEWEST = 'newest';
 const SORT_OLDEST = 'oldest';
+const priorityStartButtonStyle = { minHeight: 44, padding: '10px' };
+const priorityStartSecondaryStyle = { ...priorityStartButtonStyle, background: '#fff' };
 
 function toTimestamp(value) {
   const parsed = Date.parse(value || '');
@@ -667,15 +670,20 @@ export default function MonoHistory() {
                 Clear filters
               </button>
             )}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="mono-btn-primary flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/volleyball/quick')}
-              >
-                Start Match
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {getPriorityStartActions().map((action) => (
+                <button
+                  key={action.sportId}
+                  type="button"
+                  className={action.primary ? 'mono-btn-primary' : 'mono-btn'}
+                  style={action.primary ? priorityStartButtonStyle : priorityStartSecondaryStyle}
+                  onClick={() => navigate(`/play?sport=${action.sportId}`)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-2">
               <button
                 type="button"
                 className="mono-btn flex-1"
