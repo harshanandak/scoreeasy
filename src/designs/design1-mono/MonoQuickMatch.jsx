@@ -49,6 +49,11 @@ function SwapButton({ onSwap }) {
 
 function EndMatchDialog({ onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
+  const onCancelRef = useRef(onCancel);
+
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
 
   useEffect(() => {
     cancelButtonRef.current?.focus();
@@ -56,7 +61,7 @@ function EndMatchDialog({ onCancel, onConfirm }) {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onCancel();
+        onCancelRef.current();
       }
     };
 
@@ -64,7 +69,7 @@ function EndMatchDialog({ onCancel, onConfirm }) {
     return () => {
       globalThis.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onCancel]);
+  }, []);
 
   const handleBackdropPointerDown = (event) => {
     if (event.target === event.currentTarget) {
