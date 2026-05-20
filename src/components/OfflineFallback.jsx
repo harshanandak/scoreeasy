@@ -5,6 +5,10 @@ import { getSportsList } from '../models/sportRegistry';
 
 const QUICK_KEY = 'se_quickmatches';
 
+function pluralize(count, singular, plural) {
+  return count === 1 ? singular : plural;
+}
+
 function readOfflineSnapshot() {
   const quick = loadData(QUICK_KEY, []);
   const tournamentCount = getSportsList().reduce((sum, sport) => {
@@ -59,7 +63,7 @@ export default function OfflineFallback() {
       </p>
       <p className="text-sm" style={{ color: '#444', marginBottom: '10px' }}>
         Scoring stays available locally. Cloud sync and sign-in will resume when the connection is back.
-        {' '}Saved on this device: {snapshot.quickCount} quick matches and {snapshot.tournamentCount} tournaments.
+        {' '}Saved on this device: {snapshot.quickCount} quick {pluralize(snapshot.quickCount, 'match', 'matches')} and {snapshot.tournamentCount} {pluralize(snapshot.tournamentCount, 'tournament', 'tournaments')}.
         {snapshot.lastQuick ? ` Latest quick match: ${snapshot.lastQuick.team1} vs ${snapshot.lastQuick.team2}.` : ''}
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

@@ -48,4 +48,22 @@ describe('OfflineFallback', () => {
     expect(screen.getByRole('link', { name: 'Start quick match' })).toHaveAttribute('href', '/volleyball/quick');
     expect(screen.getByRole('link', { name: 'View saved matches' })).toHaveAttribute('href', '/history');
   });
+
+  it('pluralizes saved counts for singular and plural values', () => {
+    setOnlineState(false);
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'match-1', team1: 'Team A', team2: 'Team B' },
+    ]));
+    globalThis.localStorage.setItem('se_volleyball', JSON.stringify([
+      { id: 'tournament-1' },
+    ]));
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText(/1 quick match and 1 tournament/i)).toBeInTheDocument();
+  });
 });
