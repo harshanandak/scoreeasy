@@ -13,6 +13,17 @@ function getMatchDate(match) {
   return new Date(match.completedAt || match.date || match.createdAt || 0);
 }
 
+function pluralize(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function formatSportName(value) {
+  if (!value) return 'Quick';
+  return String(value)
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function getQuickScore(match) {
   if (typeof match.score1 === 'number' && typeof match.score2 === 'number') {
     return { score1: match.score1, score2: match.score2 };
@@ -47,47 +58,138 @@ function resolveWinner(match, score) {
   return 'Draw';
 }
 
+function isDrawWinner(winner) {
+  return winner === 'Draw' || winner === 'Tie';
+}
+
+function getQuickMatchLabel(match) {
+  return `${match.team1 || 'Team A'} vs ${match.team2 || 'Team B'}`;
+}
+
+function getPairKey(team1, team2) {
+  return [team1 || 'Team A', team2 || 'Team B']
+    .sort((a, b) => String(a).localeCompare(String(b)))
+    .join(' vs ');
+}
+
+function ensureQuickTeam(teamMap, teamName) {
+  if (!teamMap[teamName]) {
+    teamMap[teamName] = {
+      name: teamName,
+      played: 0,
+      won: 0,
+      lost: 0,
+      drawn: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    };
+  }
+  return teamMap[teamName];
+}
+
+function buildQuickTeamRows(matches) {
+  const teamMap = {};
+
+  matches.forEach((match) => {
+    const team1 = match.team1 || 'Team A';
+    const team2 = match.team2 || 'Team B';
+    const score = getQuickScore(match);
+    const winner = resolveWinner(match, score);
+    const team1Row = ensureQuickTeam(teamMap, team1);
+    const team2Row = ensureQuickTeam(teamMap, team2);
+
+    team1Row.played++;
+    team2Row.played++;
+    team1Row.pointsFor += score.score1;
+    team1Row.pointsAgainst += score.score2;
+    team2Row.pointsFor += score.score2;
+    team2Row.pointsAgainst += score.score1;
+
+    if (isDrawWinner(winner)) {
+      team1Row.drawn++;
+      team2Row.drawn++;
+    } else if (winner === team1) {
+      team1Row.won++;
+      team2Row.lost++;
+    } else if (winner === team2) {
+      team2Row.won++;
+      team1Row.lost++;
+    }
+  });
+
+  return Object.values(teamMap)
+    .map((row) => ({
+      ...row,
+      margin: row.pointsFor - row.pointsAgainst,
+      winRate: row.played > 0 ? Math.round((row.won / row.played) * 100) : 0,
+    }))
+    .sort((a, b) => b.won - a.won || b.winRate - a.winRate || b.margin - a.margin || a.name.localeCompare(b.name));
+}
+
 function buildQuickInsights(matches) {
   const sorted = [...matches].sort((a, b) => getMatchDate(b) - getMatchDate(a));
-  const teamWins = {};
+  const teamRows = buildQuickTeamRows(sorted);
   const sportCounts = {};
+  const pairCounts = {};
   let closest = null;
   let biggest = null;
+  let draws = 0;
+  let totalMargin = 0;
 
   sorted.forEach((match) => {
     const score = getQuickScore(match);
     const margin = Math.abs(score.score1 - score.score2);
     const winner = resolveWinner(match, score);
-    const sport = match.sport || match.sportName || 'Quick';
+    const sport = formatSportName(match.sportName || match.sport || 'Quick');
+    const label = getQuickMatchLabel(match);
+    const pairKey = getPairKey(match.team1, match.team2);
 
     sportCounts[sport] = (sportCounts[sport] || 0) + 1;
-    if (winner !== 'Draw') teamWins[winner] = (teamWins[winner] || 0) + 1;
+    pairCounts[pairKey] = (pairCounts[pairKey] || 0) + 1;
+    if (isDrawWinner(winner)) draws++;
+    totalMargin += margin;
 
-    const label = `${match.team1} vs ${match.team2}`;
     if (!closest || margin < closest.margin) closest = { label, margin };
-    if (!biggest || margin > biggest.margin) biggest = { label, margin, winner };
+    if (!biggest || margin > biggest.margin) {
+      biggest = {
+        label,
+        margin,
+        winner,
+        loser: winner === match.team1 ? match.team2 : match.team1,
+      };
+    }
   });
 
-  const topTeam = Object.entries(teamWins).sort((a, b) => b[1] - a[1])[0];
+  const topTeam = teamRows.find((row) => row.won > 0);
   const topSport = Object.entries(sportCounts).sort((a, b) => b[1] - a[1])[0];
-  const lastFive = sorted.slice(0, 5).map((match) => {
-    const score = getQuickScore(match);
-    return resolveWinner(match, score) === 'Draw' ? 'D' : 'W';
-  });
+  const topPair = Object.entries(pairCounts).sort((a, b) => b[1] - a[1])[0];
+  const lastFive = sorted.slice(0, 5).map((match) => resolveWinner(match, getQuickScore(match)));
   const latestWinner = sorted.length > 0 ? resolveWinner(sorted[0], getQuickScore(sorted[0])) : null;
   const streakBreak = latestWinner && latestWinner !== 'Draw'
     ? sorted.findIndex((match) => resolveWinner(match, getQuickScore(match)) !== latestWinner)
     : 0;
   const currentStreak = streakBreak === -1 ? sorted.length : streakBreak;
+  const averageMargin = sorted.length > 0 ? (totalMargin / sorted.length).toFixed(1) : '0.0';
 
   return {
-    topTeam: topTeam ? `${topTeam[0]} (${topTeam[1]}W)` : 'No winner yet',
-    form: lastFive.length > 0 ? lastFive.join(' ') : 'No form yet',
-    streak: currentStreak > 0 ? `${latestWinner} W${currentStreak === -1 ? sorted.length : currentStreak}` : 'No active streak',
-    closest: closest ? `${closest.label} (${closest.margin})` : 'No close games yet',
-    biggest: biggest ? `${biggest.winner} by ${biggest.margin}` : 'No big wins yet',
-    topSport: topSport ? `${topSport[0]} (${topSport[1]})` : 'No sport yet',
+    topTeam: topTeam ? `${topTeam.name} ${topTeam.won}W / ${topTeam.winRate}%` : 'No winner yet',
+    form: lastFive.length > 0 ? lastFive.map((winner) => (isDrawWinner(winner) ? 'Draw' : winner)).join(' -> ') : 'No form yet',
+    streak: currentStreak > 0 ? `${latestWinner} W${currentStreak}` : 'No active streak',
+    closest: closest ? `${closest.label} ${closest.margin === 0 ? 'draw' : `by ${closest.margin}`}` : 'No close games yet',
+    biggest: biggest && biggest.margin > 0 ? `${biggest.winner} over ${biggest.loser} by ${biggest.margin}` : 'No big wins yet',
+    topSport: topSport ? `${topSport[0]} (${pluralize(topSport[1], 'match', 'matches')})` : 'No sport yet',
+    rivalry: topPair ? `${topPair[0]} (${pluralize(topPair[1], 'match', 'matches')})` : 'No head-to-head yet',
+    drawRate: sorted.length > 0 ? `${draws} of ${pluralize(sorted.length, 'match', 'matches')}` : 'No draws yet',
+    averageMargin: `${averageMargin} avg margin`,
   };
+}
+
+function formatQuickScore(match) {
+  const score = getQuickScore(match);
+  if (match.team1Score || match.team2Score) {
+    return `${match.team1Score?.runs ?? score.score1}/${match.team1Score?.wickets ?? 0} vs ${match.team2Score?.runs ?? score.score2}/${match.team2Score?.wickets ?? 0}`;
+  }
+  return `${score.score1}-${score.score2}`;
 }
 
 function recordTeamResult(teamMap, team1, team2, score1, score2) {
@@ -113,6 +215,9 @@ export default function MonoStatistics() {
   const [tab, setTab] = useState('overview');
   const [sportsData, setSportsData] = useState({});
   const [quickMatches, setQuickMatches] = useState([]);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [pendingClear, setPendingClear] = useState(null);
+  const [statsStatus, setStatsStatus] = useState('');
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -154,9 +259,64 @@ export default function MonoStatistics() {
     saveData(QM_KEY, updated);
   };
 
+  const requestDeleteQuickMatch = (match) => {
+    setPendingClear(null);
+    setPendingDelete({
+      match,
+      quickSnapshot: quickMatches,
+      deleted: false,
+    });
+    setStatsStatus('');
+  };
+
+  const completeDeleteQuickMatch = () => {
+    if (!pendingDelete?.match?.id) return;
+    deleteQuickMatch(pendingDelete.match.id);
+    setPendingDelete({
+      ...pendingDelete,
+      deleted: true,
+    });
+    setStatsStatus('Quick stat deleted.');
+  };
+
+  const undoDeleteQuickMatch = () => {
+    if (!pendingDelete?.quickSnapshot) return;
+    setQuickMatches(pendingDelete.quickSnapshot);
+    saveData(QM_KEY, pendingDelete.quickSnapshot);
+    setPendingDelete(null);
+    setStatsStatus('Quick stat restored.');
+  };
+
+  const requestClearAllQuickMatches = () => {
+    setPendingDelete(null);
+    setPendingClear({
+      quickSnapshot: quickMatches,
+      cleared: false,
+    });
+    setStatsStatus('');
+  };
+
   const clearAllQuickMatches = () => {
     setQuickMatches([]);
     saveData(QM_KEY, []);
+  };
+
+  const completeClearAllQuickMatches = () => {
+    if (!pendingClear?.quickSnapshot) return;
+    clearAllQuickMatches();
+    setPendingClear({
+      ...pendingClear,
+      cleared: true,
+    });
+    setStatsStatus('Quick stats cleared.');
+  };
+
+  const undoClearAllQuickMatches = () => {
+    if (!pendingClear?.quickSnapshot) return;
+    setQuickMatches(pendingClear.quickSnapshot);
+    saveData(QM_KEY, pendingClear.quickSnapshot);
+    setPendingClear(null);
+    setStatsStatus('Quick stats restored.');
   };
 
   // Calculate totals
@@ -164,15 +324,18 @@ export default function MonoStatistics() {
   const totalMatches = Object.values(sportsData).reduce((sum, d) => sum + d.matches, 0) + quickMatches.length;
   const allTeams = new Set();
   Object.values(sportsData).forEach(d => d.teams.forEach(t => allTeams.add(t)));
+  const quickTeamRows = buildQuickTeamRows(quickMatches);
+  quickTeamRows.forEach((row) => allTeams.add(row.name));
   const totalTeams = allTeams.size;
   const quickInsights = buildQuickInsights(quickMatches);
 
   // Build tabs dynamically - only show sports with data
   const sportsWithData = Object.values(sportsData).filter(d => d.tournaments > 0);
+  const hasQuickRecovery = pendingDelete?.deleted || pendingClear?.cleared;
   const tabs = [
     { id: 'overview', label: 'Overview' },
     ...sportsWithData.map(d => ({ id: d.sport.id, label: d.sport.name })),
-    ...(quickMatches.length > 0 ? [{ id: 'quick', label: 'Quick' }] : []),
+    ...(quickMatches.length > 0 || hasQuickRecovery ? [{ id: 'quick', label: 'Quick' }] : []),
   ];
 
   return (
@@ -222,9 +385,12 @@ export default function MonoStatistics() {
               <InsightCard label="Top team" value={quickInsights.topTeam} />
               <InsightCard label="Last 5 form" value={quickInsights.form} />
               <InsightCard label="Current streak" value={quickInsights.streak} />
+              <InsightCard label="Head-to-head" value={quickInsights.rivalry} />
               <InsightCard label="Closest match" value={quickInsights.closest} />
               <InsightCard label="Biggest win" value={quickInsights.biggest} />
               <InsightCard label="Most played sport" value={quickInsights.topSport} />
+              <InsightCard label="Draw rate" value={quickInsights.drawRate} />
+              <InsightCard label="Avg margin" value={quickInsights.averageMargin} />
             </div>
 
             <hr className="mono-divider mb-6" />
@@ -294,23 +460,136 @@ export default function MonoStatistics() {
         {/* Quick Matches */}
         {tab === 'quick' && (
           <div id="tabpanel-stats-quick" role="tabpanel" aria-label="Quick matches">
+            {statsStatus && (
+              <div
+                className="mono-card mb-4"
+                role="status"
+                aria-live="polite"
+                style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}
+              >
+                {statsStatus}
+              </div>
+            )}
+
+            {pendingDelete && !pendingDelete.deleted && (
+              <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick stat?</p>
+                <p className="text-xs mb-4" style={{ color: '#666' }}>
+                  {getQuickMatchLabel(pendingDelete.match)} will be removed from Statistics and History.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="mono-btn flex-1"
+                    style={{ minHeight: 44, padding: '10px' }}
+                    onClick={() => setPendingDelete(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="mono-btn-primary flex-1"
+                    style={{ minHeight: 44, padding: '10px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                    onClick={completeDeleteQuickMatch}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pendingDelete?.deleted && (
+              <button
+                type="button"
+                className="mono-btn mb-4 w-full"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={undoDeleteQuickMatch}
+              >
+                Undo delete
+              </button>
+            )}
+
+            {pendingClear && !pendingClear.cleared && (
+              <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+                <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear all quick stats?</p>
+                <p className="text-xs mb-4" style={{ color: '#666' }}>
+                  This removes quick matches from Statistics and History. You can undo before leaving this screen.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="mono-btn flex-1"
+                    style={{ minHeight: 44, padding: '10px' }}
+                    onClick={() => setPendingClear(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="mono-btn-primary flex-1"
+                    style={{ minHeight: 44, padding: '10px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                    onClick={completeClearAllQuickMatches}
+                  >
+                    Clear all
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {pendingClear?.cleared && (
+              <button
+                type="button"
+                className="mono-btn mb-4 w-full"
+                style={{ minHeight: 44, padding: '10px' }}
+                onClick={undoClearAllQuickMatches}
+              >
+                Undo clear
+              </button>
+            )}
+
             {quickMatches.length === 0 ? (
-              <EmptyState icon={'\u26A1'} label="No quick matches yet" />
+              <EmptyState
+                icon={'\u26A1'}
+                label="No quick matches yet. Score one match to unlock team form, streaks, and head-to-head stats."
+                primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
+                secondaryAction={{ label: 'View history', onClick: () => navigate('/history') }}
+              />
             ) : (
               <>
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <StatCard label="Quick matches" value={quickMatches.length} />
+                  <StatCard label="Quick teams" value={quickTeamRows.length} />
+                  <StatCard label="Draws" value={quickMatches.filter((match) => isDrawWinner(resolveWinner(match, getQuickScore(match)))).length} />
+                </div>
+
+                <div className="mono-card mb-6" style={{ padding: 0, overflow: 'hidden' }}>
+                  <div className="flex items-center justify-between gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid #eee' }}>
+                    <h2 className="text-sm font-semibold" style={{ color: '#111', margin: 0 }}>Quick team form</h2>
+                    <span className="text-xs" style={{ color: '#888' }}>Win rate and margin</span>
+                  </div>
+                  <QuickTeamTable rows={quickTeamRows} />
+                </div>
+
                 {quickMatches.length > 1 && (
                   <div className="flex justify-end mb-3">
                     <button
-                      onClick={clearAllQuickMatches}
-                      className="bg-transparent border-none cursor-pointer font-swiss text-xs"
-                      style={{ color: '#dc2626' }}
+                      type="button"
+                      onClick={requestClearAllQuickMatches}
+                      className="bg-transparent cursor-pointer font-swiss text-xs"
+                      style={{
+                        border: '1.5px solid #dc2626',
+                        color: '#dc2626',
+                        minHeight: 40,
+                        padding: '0 12px',
+                      }}
                     >
-                      Clear all
+                      Clear all quick stats
                     </button>
                   </div>
                 )}
+                <h2 className="text-sm font-semibold mb-3" style={{ color: '#111' }}>Recent quick matches</h2>
                 <div className="flex flex-col gap-2">
-          {quickMatches.map(qm => (
+                  {quickMatches.map(qm => (
                     <div key={qm.id} className="mono-card" style={{ padding: '12px 16px' }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
@@ -319,12 +598,7 @@ export default function MonoStatistics() {
                               {qm.team1} vs {qm.team2}
                             </span>
                             <span className="text-xs font-mono" style={{ color: '#888' }}>
-                              {qm.score1 !== undefined
-                                ? `${qm.score1}-${qm.score2}`
-                                : Array.isArray(qm.innings) && qm.innings.length > 0
-                                  ? `${qm.score1 ?? 0}-${qm.score2 ?? 0}`
-                                  : `${qm.team1Score?.runs}/${qm.team1Score?.wickets} vs ${qm.team2Score?.runs}/${qm.team2Score?.wickets}`
-                              }
+                              {formatQuickScore(qm)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1">
@@ -335,11 +609,12 @@ export default function MonoStatistics() {
                           </div>
                         </div>
                         <button
-                          onClick={() => deleteQuickMatch(qm.id)}
+                          type="button"
+                          onClick={() => requestDeleteQuickMatch(qm)}
                           className="bg-transparent border-none cursor-pointer text-sm"
-                          style={{ color: '#bbb', padding: '2px 6px' }}
+                          style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
                           title="Delete this match"
-                          aria-label={`Delete match ${qm.team1} vs ${qm.team2}`}
+                          aria-label={`Delete match ${qm.team1} vs ${qm.team2}, ${formatQuickScore(qm)}`}
                         >
                           &times;
                         </button>
@@ -382,6 +657,54 @@ function InsightCard({ label, value }) {
 InsightCard.propTypes = {
   label: PropTypes.string,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+function QuickTeamTable({ rows }) {
+  if (rows.length === 0) return null;
+
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+      <caption className="sr-only">Quick match team form</caption>
+      <thead>
+        <tr style={{ borderBottom: '1px solid #eee' }}>
+          <th scope="col" className="text-left font-normal" style={{ color: '#888', padding: '10px 12px' }}>Team</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>P</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>W</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>L</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>D</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>+/-</th>
+          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 12px' }}>Win%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
+            <td scope="row" className="font-medium" style={{ color: '#111', padding: '10px 12px' }}>{row.name}</td>
+            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.played}</td>
+            <td className="text-center font-mono" style={{ color: '#111', padding: '10px 6px' }}>{row.won}</td>
+            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.lost}</td>
+            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.drawn}</td>
+            <td className="text-center font-mono" style={{ color: row.margin >= 0 ? '#0066ff' : '#dc2626', padding: '10px 6px' }}>
+              {row.margin > 0 ? `+${row.margin}` : row.margin}
+            </td>
+            <td className="text-center font-mono" style={{ color: '#0066ff', padding: '10px 12px' }}>{row.winRate}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+QuickTeamTable.propTypes = {
+  rows: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string,
+    played: PropTypes.number,
+    won: PropTypes.number,
+    lost: PropTypes.number,
+    drawn: PropTypes.number,
+    margin: PropTypes.number,
+    winRate: PropTypes.number,
+  })),
 };
 
 function EmptyState({ icon, label, primaryAction, secondaryAction }) {
