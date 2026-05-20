@@ -142,6 +142,17 @@ describe('app-owned scoring prompts', () => {
     vi.useRealTimers();
   });
 
+  it('locks all sets scorer controls during delayed draft redirects', () => {
+    const setsComponentFile = 'MonoSetsLiveScore.jsx';
+    const source = readFileSync(new URL(setsComponentFile, import.meta.url), 'utf8');
+
+    expect(source).toContain('const isInteractionLocked = scoringPrompt.isInteractionLocked');
+    expect(source).toMatch(/const handleSwapSides = \(\) => \{\s+if \(isInteractionLocked\) return;/);
+    expect(source).toMatch(/const handleToggleScoringMode = \(\) => \{\s+if \(isInteractionLocked\) return;/);
+    expect(source).toContain('disabled={isInteractionLocked}');
+    expect(source).toContain('tabIndex={canScoreCurrentSet ? 0 : -1}');
+  });
+
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {
     for (const componentFile of scoringComponents) {
       const source = readFileSync(new URL(componentFile, import.meta.url), 'utf8');
