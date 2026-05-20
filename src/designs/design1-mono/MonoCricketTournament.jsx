@@ -260,7 +260,7 @@ export default function MonoCricketTournament() {
     }));
   };
 
-  const { hasKnockouts, isPureKnockout, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
   const metaLabel = [

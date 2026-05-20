@@ -98,7 +98,7 @@ export default function GenericGoalsTournament() {
   ).length;
   const totalMatches = tournament.matches.length;
 
-  const { hasKnockouts, isPureKnockout, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
 
