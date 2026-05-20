@@ -32,7 +32,7 @@ describe('GuestLanding bottom CTA', () => {
     renderLanding({ cloudAuthAvailable: false });
 
     expect(screen.getByRole('link', { name: 'START A GAME' })).toHaveAttribute('href', '/play');
-    expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', '/signup');
+    expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', 'https://scoreeasy.app/signup');
   });
 
   it('keeps the signup CTA visible with cloud auth enabled', () => {

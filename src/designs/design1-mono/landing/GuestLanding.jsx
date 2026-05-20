@@ -16,6 +16,8 @@ function sportPlayPath(sport) {
   return `/play?sport=${sport.toLowerCase()}`;
 }
 
+const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
+
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
@@ -75,6 +77,7 @@ export default function GuestLanding() {
   });
   const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
+  const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
   const heroActions = [
     { label: activeStartLabel, tone: 'primary', to: sportPlayPath(activeCard.sport) },
     { label: 'CHOOSE SPORT', tone: 'secondary', to: '/play' },
@@ -183,7 +186,7 @@ export default function GuestLanding() {
                   </Link>
                 ))}
               </div>
-              <Link to="/signup" style={{
+              <Link to={signupPath} style={{
                 display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
                 color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
               }}>
@@ -543,7 +546,7 @@ export default function GuestLanding() {
           }}>
             START A GAME
           </Link>
-          <Link to="/signup" style={{
+          <Link to={signupPath} style={{
             fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
             background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
