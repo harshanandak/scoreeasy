@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { loadData, loadSportTournaments } from '../utils/storage';
 import { getSportsList } from '../models/sportRegistry';
 
@@ -46,7 +47,7 @@ export default function OfflineFallback() {
       style={{
         margin: '8px auto 0',
         maxWidth: '640px',
-        padding: '10px 12px',
+        padding: '12px',
         borderColor: '#f59e0b',
         color: '#92400e',
       }}
@@ -56,10 +57,19 @@ export default function OfflineFallback() {
       <p className="text-xs uppercase tracking-widest" style={{ marginBottom: '4px' }}>
         Offline mode
       </p>
-      <p className="text-sm" style={{ color: '#444' }}>
-        Local data available: {snapshot.quickCount} quick matches and {snapshot.tournamentCount} tournaments.
+      <p className="text-sm" style={{ color: '#444', marginBottom: '10px' }}>
+        Scoring stays available locally. Cloud sync and sign-in will resume when the connection is back.
+        {' '}Saved on this device: {snapshot.quickCount} quick matches and {snapshot.tournamentCount} tournaments.
         {snapshot.lastQuick ? ` Latest quick match: ${snapshot.lastQuick.team1} vs ${snapshot.lastQuick.team2}.` : ''}
       </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <Link className="mono-btn-primary" style={{ minHeight: 40, padding: '8px 12px' }} to="/volleyball/quick">
+          Start quick match
+        </Link>
+        <Link className="mono-btn" style={{ minHeight: 40, padding: '8px 12px' }} to="/history">
+          View saved matches
+        </Link>
+      </div>
     </div>
   );
 }
