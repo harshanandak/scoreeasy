@@ -8,6 +8,7 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -57,6 +58,7 @@ export default function MonoGoalsLiveScore() {
   const { sport, id, matchId } = useParams();
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -71,6 +73,7 @@ export default function MonoGoalsLiveScore() {
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
+  const scoringPrompt = useAppScoringPrompt();
 
   // Timer for timed mode
   const timer = useTimer();
@@ -79,6 +82,7 @@ export default function MonoGoalsLiveScore() {
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
+  const autoFinishTimeoutRef = useRef(null);
   // Track current scores for history snapshots
   const score1Ref = useRef(score1);
   const score2Ref = useRef(score2);
@@ -152,7 +156,7 @@ export default function MonoGoalsLiveScore() {
 
   // Auto-end match when time expires in timed mode
   useEffect(() => {
-    if (!tournament || !sportConfig) return;
+    if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
 
@@ -161,7 +165,9 @@ export default function MonoGoalsLiveScore() {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
 
-      setTimeout(() => {
+      autoFinishTimeoutRef.current = setTimeout(() => {
+        if (scoringPrompt.isInteractionLocked) return;
+
         const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
           ...m,
           score1,
@@ -179,13 +185,23 @@ export default function MonoGoalsLiveScore() {
         setSaveWarning('');
         saveTournamentToConvex(updatedTournament);
         navigate(`/${sport}/tournament/${id}`);
+        autoFinishTimeoutRef.current = null;
       }, 300);
+
+      return () => {
+        if (autoFinishTimeoutRef.current) {
+          clearTimeout(autoFinishTimeoutRef.current);
+          autoFinishTimeoutRef.current = null;
+        }
+      };
     }
-  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate]);
+
+    return undefined;
+  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate, scoringPrompt.isInteractionLocked]);
 
   // Add point/goal
   const addScore = (team, value = 1) => {
-    if (!sportConfig || !tournament) return;
+    if (!sportConfig || !tournament || scoringPrompt.isInteractionLocked) return;
 
     // Check if time is up in timed mode
     const formatMode = effectiveFormat?.mode;
@@ -260,7 +276,7 @@ export default function MonoGoalsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const last = history[history.length - 1];
     setScore1(last.score1);
@@ -270,6 +286,8 @@ export default function MonoGoalsLiveScore() {
 
   // Save draft (in-progress match)
   const saveDraft = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -288,9 +306,13 @@ export default function MonoGoalsLiveScore() {
     }
     setSaveWarning('');
 
+    if (autoFinishTimeoutRef.current) {
+      clearTimeout(autoFinishTimeoutRef.current);
+      autoFinishTimeoutRef.current = null;
+    }
+    timer.pause();
     setHasChanges(false);
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport}/tournament/${id}`);
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Keyboard shortcuts (skip on touch-only devices)
@@ -298,6 +320,7 @@ export default function MonoGoalsLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
+      if (scoringPrompt.isInteractionLocked) return;
       // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -318,13 +341,15 @@ export default function MonoGoalsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [score1, score2, history, sportConfig, tournament, sidesSwapped]); // Dependencies for addScore/undo
+  }, [score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked]); // Dependencies for addScore/undo
 
   // Save match and return
   const saveMatch = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     // Check for draw if not allowed
     if (!sportConfig.config.drawAllowed && score1 === score2) {
-      alert(`Draws not allowed in ${sportConfig.name}`);
+      scoringPrompt.showWarning(`Draws are not allowed in ${sportConfig.name}.`);
       return;
     }
 
@@ -359,10 +384,8 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Cancel and return
-  const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
-    navigate(`/${sport}/tournament/${id}`);
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -406,6 +429,7 @@ export default function MonoGoalsLiveScore() {
             {saveWarning}
           </div>
         )}
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
@@ -478,8 +502,8 @@ export default function MonoGoalsLiveScore() {
                     key={`left-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(leftTeam, btn.value)}
                     className="mono-btn text-sm py-2"
-                    style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                    disabled={isTimeUp}
+                    style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                    disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                     aria-label={`Add ${btn.value} ${btn.value === 1 ? 'point' : 'points'} to ${leftName}`}
                   >
                     {btn.label}
@@ -489,8 +513,8 @@ export default function MonoGoalsLiveScore() {
                 <button
                   onClick={() => addScore(leftTeam, 1)}
                   className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                  disabled={isTimeUp}
+                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                   aria-label={`Add 1 point to ${leftName}`}
                 >
                   + 1
@@ -521,8 +545,8 @@ export default function MonoGoalsLiveScore() {
                     key={`right-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(rightTeam, btn.value)}
                     className="mono-btn text-sm py-2"
-                    style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                    disabled={isTimeUp}
+                    style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                    disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                     aria-label={`Add ${btn.value} ${btn.value === 1 ? 'point' : 'points'} to ${rightName}`}
                   >
                     {btn.label}
@@ -532,8 +556,8 @@ export default function MonoGoalsLiveScore() {
                 <button
                   onClick={() => addScore(rightTeam, 1)}
                   className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                  disabled={isTimeUp}
+                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                   aria-label={`Add 1 point to ${rightName}`}
                 >
                   + 1
@@ -558,15 +582,20 @@ export default function MonoGoalsLiveScore() {
 
         {/* Bottom bar */}
         <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
-          <button onClick={saveMatch} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+          <button
+            onClick={saveMatch}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn-primary w-full mb-3"
+            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+          >
             Save &amp; Return
           </button>
           <div className="flex gap-2">
             <button
               onClick={undo}
-              disabled={history.length === 0}
+              disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
@@ -574,7 +603,12 @@ export default function MonoGoalsLiveScore() {
               Cancel
             </button>
             {hasChanges && (
-              <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+              <button
+                onClick={saveDraft}
+                disabled={scoringPrompt.isInteractionLocked}
+                className="mono-btn flex-1"
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              >
                 Save Draft
               </button>
             )}

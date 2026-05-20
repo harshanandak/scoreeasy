@@ -7,6 +7,7 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -256,6 +257,7 @@ export default function MonoTennisLiveScore() {
   const lastClickRef = useRef(0);
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -269,6 +271,7 @@ export default function MonoTennisLiveScore() {
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
+  const scoringPrompt = useAppScoringPrompt();
 
   const saveTournamentToConvex = (updatedTournament) => {
     if (!isAuthenticated || !updatedTournament) return;
@@ -326,6 +329,8 @@ export default function MonoTennisLiveScore() {
 
   // Add point to team
   const addPoint = (team) => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -361,7 +366,7 @@ export default function MonoTennisLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
     const lastState = history[history.length - 1];
     setSets(lastState.sets);
@@ -382,14 +387,19 @@ export default function MonoTennisLiveScore() {
 
     const leftTeam = sidesSwapped ? 2 : 1;
     const rightTeam = sidesSwapped ? 1 : 2;
-    const handleKeyPress = makeKeyHandler(addPoint, undo, leftTeam, rightTeam);
+    const handleKeyPress = (event) => {
+      if (scoringPrompt.isInteractionLocked) return;
+      makeKeyHandler(addPoint, undo, leftTeam, rightTeam)(event);
+    };
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice]);
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.isInteractionLocked]);
 
   // Save draft
   const saveDraft = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       sets,
@@ -408,12 +418,14 @@ export default function MonoTennisLiveScore() {
       return;
     }
     setSaveWarning('');
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport}/tournament/${id}`);
+    setHasChanges(false);
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Save match and return
   const saveMatch = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     if (isMatchComplete) {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
@@ -454,13 +466,8 @@ export default function MonoTennisLiveScore() {
   };
 
   // Cancel and discard changes
-  const handleCancel = () => {
-    if (hasChanges) {
-      const confirmed = globalThis.confirm('You have unsaved changes. Discard them?');
-      if (!confirmed) return;
-    }
-    navigate(`/${sport}/tournament/${id}`);
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!tournament || !match) {
     return <div className="max-w-2xl mx-auto px-6 py-10">Match not found.</div>;
@@ -479,6 +486,14 @@ export default function MonoTennisLiveScore() {
   const rightGames = sidesSwapped ? currentSetData.games1 : currentSetData.games2;
   const leftTeam = sidesSwapped ? 2 : 1;
   const rightTeam = sidesSwapped ? 1 : 2;
+  const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked;
+  const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
+    ? 'Scoring is temporarily locked'
+    : 'Press Enter or click to add point';
+  const handleSwapSides = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+    setSidesSwapped(s => !s);
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
@@ -487,19 +502,22 @@ export default function MonoTennisLiveScore() {
           {saveWarning}
         </div>
       )}
+      {scoringPrompt.renderPrompt(confirmPendingPrompt)}
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={handleCancel}
+          disabled={scoringPrompt.isInteractionLocked}
           className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-          style={{ color: '#888' }}
+          style={{ color: '#888', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
         >
           ← Back
         </button>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => { setSidesSwapped(s => !s); }}
+            onClick={handleSwapSides}
+            disabled={scoringPrompt.isInteractionLocked}
             className="mono-btn"
             style={{
               padding: '6px 12px',
@@ -508,6 +526,7 @@ export default function MonoTennisLiveScore() {
               touchAction: 'manipulation',
               borderColor: sidesSwapped ? '#0066ff' : '#ddd',
               color: sidesSwapped ? '#0066ff' : '#111',
+              opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1,
             }}
             title="Swap sides"
           >
@@ -535,14 +554,14 @@ export default function MonoTennisLiveScore() {
         {/* Left Team */}
         <button
           type="button"
-          onClick={() => !currentSetData.completed && addPoint(leftTeam)}
-          aria-label={`${leftName}: ${leftScoreDisplay}. Press Enter or click to add point`}
-          disabled={currentSetData.completed}
+          onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
+          aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
+          disabled={!canScoreCurrentSet}
           className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
-            borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
-            opacity: currentSetData.completed ? 0.6 : 1,
+            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
           <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
@@ -563,14 +582,14 @@ export default function MonoTennisLiveScore() {
         {/* Right Team */}
         <button
           type="button"
-          onClick={() => !currentSetData.completed && addPoint(rightTeam)}
-          aria-label={`${rightName}: ${rightScoreDisplay}. Press Enter or click to add point`}
-          disabled={currentSetData.completed}
+          onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
+          aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
+          disabled={!canScoreCurrentSet}
           className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
-            borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
-            opacity: currentSetData.completed ? 0.6 : 1,
+            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
           <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
@@ -631,15 +650,20 @@ export default function MonoTennisLiveScore() {
 
       {/* Bottom bar */}
       <div>
-        <button onClick={saveMatch} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+        <button
+          onClick={saveMatch}
+          disabled={scoringPrompt.isInteractionLocked}
+          className="mono-btn-primary w-full mb-3"
+          style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+        >
           Save &amp; Return
         </button>
         <div className="flex gap-2">
           <button
             onClick={undo}
-            disabled={history.length === 0}
+            disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
             className="mono-btn flex-1"
-            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
           >
             Undo
           </button>
@@ -647,7 +671,12 @@ export default function MonoTennisLiveScore() {
             Cancel
           </button>
           {hasChanges && !isMatchComplete && (
-            <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+            <button
+              onClick={saveDraft}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
               Save Draft
             </button>
           )}

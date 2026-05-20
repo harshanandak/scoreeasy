@@ -7,6 +7,7 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -49,6 +50,7 @@ export default function MonoSetsLiveScore() {
   const { sport, id, matchId } = useParams();
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -62,6 +64,8 @@ export default function MonoSetsLiveScore() {
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
+  const scoringPrompt = useAppScoringPrompt();
+  const isInteractionLocked = scoringPrompt.isInteractionLocked;
   const [servingTeam, setServingTeam] = useState(1);
   const [scoringMode, setScoringMode] = useState('rally');
 
@@ -213,7 +217,7 @@ export default function MonoSetsLiveScore() {
 
   // Add point
   const addPoint = (team) => {
-    if (!sportConfig || !tournament) return;
+    if (!sportConfig || !tournament || isInteractionLocked) return;
 
     // Debounce rapid clicks
     const now = Date.now();
@@ -302,7 +306,7 @@ export default function MonoSetsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0) return;
+    if (history.length === 0 || isInteractionLocked) return;
 
     const last = history[history.length - 1];
     setSets(last.sets);
@@ -314,6 +318,8 @@ export default function MonoSetsLiveScore() {
 
   // Save draft (in-progress match)
   const saveDraft = () => {
+    if (isInteractionLocked) return;
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -336,12 +342,13 @@ export default function MonoSetsLiveScore() {
     setSaveWarning('');
 
     setHasChanges(false);
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport}/tournament/${id}`);
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Save match and return
   const saveMatch = () => {
+    if (isInteractionLocked) return;
+
     // Save all sets that have any score (including in-progress)
     const setsToSave = sets
       .filter(s => s.score1 > 0 || s.score2 > 0)
@@ -400,6 +407,7 @@ export default function MonoSetsLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
+      if (isInteractionLocked) return;
       // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -420,13 +428,11 @@ export default function MonoSetsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, servingTeam, scoringMode, effectiveFormat]); // Dependencies for addPoint/undo
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, servingTeam, scoringMode, effectiveFormat, isInteractionLocked]); // Dependencies for addPoint/undo
 
   // Cancel and return
-  const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
-    navigate(`/${sport}/tournament/${id}`);
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -466,6 +472,24 @@ export default function MonoSetsLiveScore() {
     targetPoints = effectiveFormat.points || pointsPerSet;
   }
   const isCurrentSetComplete = sets[currentSet]?.completed || false;
+  const canScoreCurrentSet = !isCurrentSetComplete && !isInteractionLocked;
+  const scoreCardAssistiveHint = isInteractionLocked
+    ? 'Scoring is temporarily locked'
+    : (isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point');
+  const scoreCardVisualHint = isInteractionLocked
+    ? 'Scoring locked'
+    : (isCurrentSetComplete ? 'Set complete' : 'Tap to score');
+  const handleSwapSides = () => {
+    if (isInteractionLocked) return;
+    setSidesSwapped(prev => !prev);
+  };
+  const handleToggleScoringMode = () => {
+    if (isInteractionLocked) return;
+    const next = scoringMode === 'side-out' ? 'rally' : 'side-out';
+    if (!availableScoringModes.includes(next)) return;
+    setScoringMode(next);
+    setServingTeam(1);
+  };
 
   return (
     <div className="min-h-screen px-6 py-10">
@@ -475,19 +499,22 @@ export default function MonoSetsLiveScore() {
             {saveWarning}
           </div>
         )}
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={handleCancel}
+            disabled={isInteractionLocked}
             className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-            style={{ color: '#888' }}
+            style={{ color: '#888', opacity: isInteractionLocked ? 0.45 : 1 }}
           >
             ← Back
           </button>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => { setSidesSwapped(prev => !prev); }}
+              onClick={handleSwapSides}
+              disabled={isInteractionLocked}
               className="mono-btn"
               style={{
                 padding: '6px 12px',
@@ -496,6 +523,7 @@ export default function MonoSetsLiveScore() {
                 touchAction: 'manipulation',
                 borderColor: sidesSwapped ? '#0066ff' : '#ddd',
                 color: sidesSwapped ? '#0066ff' : '#111',
+                opacity: isInteractionLocked ? 0.45 : 1,
               }}
               title="Swap sides"
             >
@@ -507,14 +535,10 @@ export default function MonoSetsLiveScore() {
             {canToggleScoringMode && (
               <button
                 type="button"
-                onClick={() => {
-                  const next = scoringMode === 'side-out' ? 'rally' : 'side-out';
-                  if (!availableScoringModes.includes(next)) return;
-                  setScoringMode(next);
-                  setServingTeam(1);
-                }}
+                onClick={handleToggleScoringMode}
+                disabled={isInteractionLocked}
                 className="mono-btn"
-                style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+                style={{ padding: '6px 10px', fontSize: '0.75rem', opacity: isInteractionLocked ? 0.45 : 1 }}
                 title="Toggle scoring model"
               >
                 {scoringMode === 'side-out' ? 'Side-out' : 'Rally'}
@@ -538,21 +562,21 @@ export default function MonoSetsLiveScore() {
           {/* Left team */}
           <div
             role="button"
-            tabIndex={isCurrentSetComplete ? -1 : 0}
+            tabIndex={canScoreCurrentSet ? 0 : -1}
             className="flex-1 flex flex-col items-center justify-center mono-card"
-            onClick={() => !isCurrentSetComplete && addPoint(leftTeam)}
+            onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
             onKeyDown={(e) => {
-              if (!isCurrentSetComplete && (e.key === 'Enter' || e.key === ' ')) {
+              if (canScoreCurrentSet && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 addPoint(leftTeam);
               }
             }}
-            aria-label={`${leftName}: ${leftScore} points. ${isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point'}`}
-            aria-disabled={isCurrentSetComplete}
+            aria-label={`${leftName}: ${leftScore} points. ${scoreCardAssistiveHint}`}
+            aria-disabled={!canScoreCurrentSet}
             style={{
               padding: '24px 16px',
-              cursor: isCurrentSetComplete ? 'default' : 'pointer',
-              opacity: isCurrentSetComplete ? 0.6 : 1,
+              cursor: canScoreCurrentSet ? 'pointer' : 'default',
+              opacity: canScoreCurrentSet ? 1 : 0.6,
               touchAction: 'manipulation',
             }}
           >
@@ -563,28 +587,28 @@ export default function MonoSetsLiveScore() {
               {leftScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
-              {isCurrentSetComplete ? 'Set complete' : 'Tap to score'}
+              {scoreCardVisualHint}
             </p>
           </div>
 
           {/* Right team */}
           <div
             role="button"
-            tabIndex={isCurrentSetComplete ? -1 : 0}
+            tabIndex={canScoreCurrentSet ? 0 : -1}
             className="flex-1 flex flex-col items-center justify-center mono-card"
-            onClick={() => !isCurrentSetComplete && addPoint(rightTeam)}
+            onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
             onKeyDown={(e) => {
-              if (!isCurrentSetComplete && (e.key === 'Enter' || e.key === ' ')) {
+              if (canScoreCurrentSet && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 addPoint(rightTeam);
               }
             }}
-            aria-label={`${rightName}: ${rightScore} points. ${isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point'}`}
-            aria-disabled={isCurrentSetComplete}
+            aria-label={`${rightName}: ${rightScore} points. ${scoreCardAssistiveHint}`}
+            aria-disabled={!canScoreCurrentSet}
             style={{
               padding: '24px 16px',
-              cursor: isCurrentSetComplete ? 'default' : 'pointer',
-              opacity: isCurrentSetComplete ? 0.6 : 1,
+              cursor: canScoreCurrentSet ? 'pointer' : 'default',
+              opacity: canScoreCurrentSet ? 1 : 0.6,
               touchAction: 'manipulation',
             }}
           >
@@ -595,7 +619,7 @@ export default function MonoSetsLiveScore() {
               {rightScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
-              {isCurrentSetComplete ? 'Set complete' : 'Tap to score'}
+              {scoreCardVisualHint}
             </p>
           </div>
         </div>
@@ -625,23 +649,38 @@ export default function MonoSetsLiveScore() {
 
         {/* Bottom bar */}
         <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
-          <button onClick={saveMatch} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+          <button
+            onClick={saveMatch}
+            disabled={isInteractionLocked}
+            className="mono-btn-primary w-full mb-3"
+            style={{ padding: '12px', fontSize: '0.875rem', opacity: isInteractionLocked ? 0.45 : 1 }}
+          >
             Save &amp; Return
           </button>
           <div className="flex gap-2">
             <button
               onClick={undo}
-              disabled={history.length === 0}
+              disabled={history.length === 0 || isInteractionLocked}
               className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
-            <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
+            <button
+              onClick={handleCancel}
+              disabled={isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: isInteractionLocked ? 0.45 : 1 }}
+            >
               Cancel
             </button>
             {hasChanges && (
-              <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+              <button
+                onClick={saveDraft}
+                disabled={isInteractionLocked}
+                className="mono-btn flex-1"
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: isInteractionLocked ? 0.45 : 1 }}
+              >
                 Save Draft
               </button>
             )}
