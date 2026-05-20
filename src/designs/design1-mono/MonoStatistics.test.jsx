@@ -124,7 +124,7 @@ describe('MonoStatistics', () => {
     await waitFor(() => {
       expect(readQuickMatches()).toHaveLength(4);
     });
-    expect(screen.getByText('Quick stat restored.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Quick stat restored.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear all quick stats' }));
     expect(screen.getByText('Clear all quick stats?')).toBeInTheDocument();
@@ -134,6 +134,7 @@ describe('MonoStatistics', () => {
     await waitFor(() => {
       expect(readQuickMatches()).toHaveLength(0);
     });
+    expect(screen.getByRole('tab', { name: 'Quick' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo clear' })).toBeInTheDocument();
   });
 });

@@ -331,10 +331,11 @@ export default function MonoStatistics() {
 
   // Build tabs dynamically - only show sports with data
   const sportsWithData = Object.values(sportsData).filter(d => d.tournaments > 0);
+  const hasQuickRecovery = pendingDelete?.deleted || pendingClear?.cleared;
   const tabs = [
     { id: 'overview', label: 'Overview' },
     ...sportsWithData.map(d => ({ id: d.sport.id, label: d.sport.name })),
-    ...(quickMatches.length > 0 ? [{ id: 'quick', label: 'Quick' }] : []),
+    ...(quickMatches.length > 0 || hasQuickRecovery ? [{ id: 'quick', label: 'Quick' }] : []),
   ];
 
   return (
@@ -460,7 +461,12 @@ export default function MonoStatistics() {
         {tab === 'quick' && (
           <div id="tabpanel-stats-quick" role="tabpanel" aria-label="Quick matches">
             {statsStatus && (
-              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}>
+              <div
+                className="mono-card mb-4"
+                role="status"
+                aria-live="polite"
+                style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}
+              >
                 {statsStatus}
               </div>
             )}
