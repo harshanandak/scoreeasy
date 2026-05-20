@@ -2,9 +2,14 @@ import { App } from '@capacitor/app';
 import { hasNativePlugin, isNativeMobile } from './platform';
 
 export function isProtectedScoringRoute(pathname) {
-  return pathname.includes('/game/')
-    || pathname.includes('/quick')
-    || (pathname.includes('/tournament/') && pathname.includes('/match/') && pathname.includes('/score'));
+  const segments = pathname.split('/').filter(Boolean);
+  return segments.includes('game')
+    || segments.includes('quick')
+    || segments.some((segment, index) => (
+      segment === 'tournament'
+      && segments[index + 2] === 'match'
+      && segments[index + 4] === 'score'
+    ));
 }
 
 export function installNativeBackButtonGuard({
@@ -23,12 +28,12 @@ export function installNativeBackButtonGuard({
   App.addListener('backButton', async ({ canGoBack }) => {
     const pathname = getPathname?.() || globalThis.location.pathname;
 
-    if (canGoBack) {
-      goBack();
+    if (isProtectedScoringRoute(pathname) && !(await confirmLeave('Leave this page? Your unsaved scoring progress may be lost.'))) {
       return;
     }
 
-    if (isProtectedScoringRoute(pathname) && !(await confirmLeave('Leave this page? Your unsaved scoring progress may be lost.'))) {
+    if (canGoBack) {
+      goBack();
       return;
     }
 
