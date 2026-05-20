@@ -526,7 +526,7 @@ LayoutToggleIcon.propTypes = {
 };
 
 function SportChooserFrame({ children, layout, onSearchChange, onStartSport, searchQuery, switchLayout }) {
-  const targetLayout = layout === 'grid' ? 'list' : 'grid';
+  const targetLayout = layout === 'grid' ? 'tabs' : 'grid';
 
   return (
     <section className="mb-8" aria-labelledby="choose-sport">

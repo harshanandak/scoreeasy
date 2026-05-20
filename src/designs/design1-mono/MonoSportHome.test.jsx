@@ -81,6 +81,14 @@ describe('MonoSportHome priority starts', () => {
     expect(screen.getAllByLabelText('Search sports')).toHaveLength(1);
   });
 
+  it('labels the layout toggle with the actual destination layout', () => {
+    renderSportHome();
+
+    fireEvent.click(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' }));
+
+    expect(within(getChooser()).getByRole('button', { name: 'Switch to tabs layout' })).toBeInTheDocument();
+  });
+
   it('keeps the unified choose sport controls visible while searching', () => {
     renderSportHome();
 
