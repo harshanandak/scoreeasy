@@ -473,6 +473,12 @@ export default function MonoSetsLiveScore() {
   }
   const isCurrentSetComplete = sets[currentSet]?.completed || false;
   const canScoreCurrentSet = !isCurrentSetComplete && !isInteractionLocked;
+  const scoreCardAssistiveHint = isInteractionLocked
+    ? 'Scoring is temporarily locked'
+    : (isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point');
+  const scoreCardVisualHint = isInteractionLocked
+    ? 'Scoring locked'
+    : (isCurrentSetComplete ? 'Set complete' : 'Tap to score');
   const handleSwapSides = () => {
     if (isInteractionLocked) return;
     setSidesSwapped(prev => !prev);
@@ -565,7 +571,7 @@ export default function MonoSetsLiveScore() {
                 addPoint(leftTeam);
               }
             }}
-            aria-label={`${leftName}: ${leftScore} points. ${isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point'}`}
+            aria-label={`${leftName}: ${leftScore} points. ${scoreCardAssistiveHint}`}
             aria-disabled={!canScoreCurrentSet}
             style={{
               padding: '24px 16px',
@@ -581,7 +587,7 @@ export default function MonoSetsLiveScore() {
               {leftScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
-              {isCurrentSetComplete ? 'Set complete' : 'Tap to score'}
+              {scoreCardVisualHint}
             </p>
           </div>
 
@@ -597,7 +603,7 @@ export default function MonoSetsLiveScore() {
                 addPoint(rightTeam);
               }
             }}
-            aria-label={`${rightName}: ${rightScore} points. ${isCurrentSetComplete ? 'Set complete' : 'Press Enter or click to add point'}`}
+            aria-label={`${rightName}: ${rightScore} points. ${scoreCardAssistiveHint}`}
             aria-disabled={!canScoreCurrentSet}
             style={{
               padding: '24px 16px',
@@ -613,7 +619,7 @@ export default function MonoSetsLiveScore() {
               {rightScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
-              {isCurrentSetComplete ? 'Set complete' : 'Tap to score'}
+              {scoreCardVisualHint}
             </p>
           </div>
         </div>

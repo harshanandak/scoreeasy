@@ -151,6 +151,21 @@ describe('app-owned scoring prompts', () => {
     expect(source).toMatch(/const handleToggleScoringMode = \(\) => \{\s+if \(isInteractionLocked\) return;/);
     expect(source).toContain('disabled={isInteractionLocked}');
     expect(source).toContain('tabIndex={canScoreCurrentSet ? 0 : -1}');
+    expect(source).toContain("isInteractionLocked\n    ? 'Scoring is temporarily locked'");
+    expect(source).toContain("isInteractionLocked\n    ? 'Scoring locked'");
+  });
+
+  it('locks completion actions while post-save redirects are pending', () => {
+    const sourceByComponent = Object.fromEntries(scoringComponents.map((componentFile) => [
+      componentFile,
+      readFileSync(new URL(componentFile, import.meta.url), 'utf8'),
+    ]));
+
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('if (!tournament || !match || scoringPrompt.isInteractionLocked) return;');
+    expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
   });
 
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {

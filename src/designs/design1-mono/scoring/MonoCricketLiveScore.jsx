@@ -376,6 +376,8 @@ export default function MonoCricketLiveScore() {
 
   // Save draft
   const saveDraft = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
@@ -429,7 +431,7 @@ export default function MonoCricketLiveScore() {
 
   // Save match (complete)
   const saveMatch = (winnerOverride) => {
-    if (!tournament || !match) return;
+    if (!tournament || !match || scoringPrompt.isInteractionLocked) return;
 
     if (scores.team1.balls > 0 || scores.team2.balls > 0) {
       triggerConfetti();
@@ -770,11 +772,11 @@ export default function MonoCricketLiveScore() {
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
-                  disabled={isInningsComplete}
+                  disabled={isInningsComplete || scoringPrompt.isInteractionLocked}
                   className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
                   style={{
                     width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0,
-                    opacity: isInningsComplete ? 0.5 : 1, touchAction: 'manipulation',
+                    opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation',
                   }}
                 >
                   {r}
@@ -783,19 +785,19 @@ export default function MonoCricketLiveScore() {
             </div>
 
             <div className="flex gap-2 justify-center mb-4">
-              <button onClick={() => addExtra('wide')} disabled={isInningsComplete} className="mono-btn"
-                style={{ padding: '10px 16px', fontSize: '0.8125rem', opacity: isInningsComplete ? 0.5 : 1, touchAction: 'manipulation' }}>
+              <button onClick={() => addExtra('wide')} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn"
+                style={{ padding: '10px 16px', fontSize: '0.8125rem', opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
                 Wide (+1)
               </button>
-              <button onClick={() => addExtra('noBall')} disabled={isInningsComplete} className="mono-btn"
-                style={{ padding: '10px 16px', fontSize: '0.8125rem', opacity: isInningsComplete ? 0.5 : 1, touchAction: 'manipulation' }}>
+              <button onClick={() => addExtra('noBall')} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn"
+                style={{ padding: '10px 16px', fontSize: '0.8125rem', opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
                 No Ball (+1)
               </button>
             </div>
 
-            <button onClick={addWicket} disabled={isInningsComplete} className="mono-btn w-full mb-4"
+            <button onClick={addWicket} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn w-full mb-4"
               style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#dc2626', color: '#dc2626',
-                opacity: isInningsComplete ? 0.5 : 1, touchAction: 'manipulation' }}>
+                opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
               {freeHit ? 'Run Out Only' : 'Wicket'}
             </button>
           </>
@@ -814,20 +816,30 @@ export default function MonoCricketLiveScore() {
 
         {/* Bottom bar */}
         <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
-          <button onClick={() => saveMatch()} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+          <button
+            onClick={() => saveMatch()}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn-primary w-full mb-3"
+            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+          >
             End Match
           </button>
           <div className="flex gap-2">
             <button
               onClick={undo}
-              disabled={history.length === 0}
+              disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
             {hasChanges && (
-              <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+              <button
+                onClick={saveDraft}
+                disabled={scoringPrompt.isInteractionLocked}
+                className="mono-btn flex-1"
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              >
                 Pause Match
               </button>
             )}

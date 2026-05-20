@@ -273,6 +273,8 @@ export default function MonoGoalsLiveScore() {
 
   // Save draft (in-progress match)
   const saveDraft = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -325,6 +327,8 @@ export default function MonoGoalsLiveScore() {
 
   // Save match and return
   const saveMatch = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     // Check for draw if not allowed
     if (!sportConfig.config.drawAllowed && score1 === score2) {
       scoringPrompt.showWarning(`Draws are not allowed in ${sportConfig.name}.`);
@@ -480,8 +484,8 @@ export default function MonoGoalsLiveScore() {
                     key={`left-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(leftTeam, btn.value)}
                     className="mono-btn text-sm py-2"
-                    style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                    disabled={isTimeUp}
+                    style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                    disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                     aria-label={`Add ${btn.value} ${btn.value === 1 ? 'point' : 'points'} to ${leftName}`}
                   >
                     {btn.label}
@@ -491,8 +495,8 @@ export default function MonoGoalsLiveScore() {
                 <button
                   onClick={() => addScore(leftTeam, 1)}
                   className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                  disabled={isTimeUp}
+                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                   aria-label={`Add 1 point to ${leftName}`}
                 >
                   + 1
@@ -523,8 +527,8 @@ export default function MonoGoalsLiveScore() {
                     key={`right-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(rightTeam, btn.value)}
                     className="mono-btn text-sm py-2"
-                    style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                    disabled={isTimeUp}
+                    style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                    disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                     aria-label={`Add ${btn.value} ${btn.value === 1 ? 'point' : 'points'} to ${rightName}`}
                   >
                     {btn.label}
@@ -534,8 +538,8 @@ export default function MonoGoalsLiveScore() {
                 <button
                   onClick={() => addScore(rightTeam, 1)}
                   className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp ? 0.4 : 1 }}
-                  disabled={isTimeUp}
+                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
+                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
                   aria-label={`Add 1 point to ${rightName}`}
                 >
                   + 1
@@ -560,15 +564,20 @@ export default function MonoGoalsLiveScore() {
 
         {/* Bottom bar */}
         <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
-          <button onClick={saveMatch} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+          <button
+            onClick={saveMatch}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn-primary w-full mb-3"
+            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+          >
             Save &amp; Return
           </button>
           <div className="flex gap-2">
             <button
               onClick={undo}
-              disabled={history.length === 0}
+              disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
@@ -576,7 +585,12 @@ export default function MonoGoalsLiveScore() {
               Cancel
             </button>
             {hasChanges && (
-              <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+              <button
+                onClick={saveDraft}
+                disabled={scoringPrompt.isInteractionLocked}
+                className="mono-btn flex-1"
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              >
                 Save Draft
               </button>
             )}

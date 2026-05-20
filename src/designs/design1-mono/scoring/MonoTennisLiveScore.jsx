@@ -398,6 +398,8 @@ export default function MonoTennisLiveScore() {
 
   // Save draft
   const saveDraft = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       sets,
@@ -422,6 +424,8 @@ export default function MonoTennisLiveScore() {
 
   // Save match and return
   const saveMatch = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+
     if (isMatchComplete) {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
@@ -635,15 +639,20 @@ export default function MonoTennisLiveScore() {
 
       {/* Bottom bar */}
       <div>
-        <button onClick={saveMatch} className="mono-btn-primary w-full mb-3" style={{ padding: '12px', fontSize: '0.875rem' }}>
+        <button
+          onClick={saveMatch}
+          disabled={scoringPrompt.isInteractionLocked}
+          className="mono-btn-primary w-full mb-3"
+          style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+        >
           Save &amp; Return
         </button>
         <div className="flex gap-2">
           <button
             onClick={undo}
-            disabled={history.length === 0}
+            disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
             className="mono-btn flex-1"
-            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}
+            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
           >
             Undo
           </button>
@@ -651,7 +660,12 @@ export default function MonoTennisLiveScore() {
             Cancel
           </button>
           {hasChanges && !isMatchComplete && (
-            <button onClick={saveDraft} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}>
+            <button
+              onClick={saveDraft}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
               Save Draft
             </button>
           )}
