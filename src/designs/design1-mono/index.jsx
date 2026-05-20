@@ -924,6 +924,10 @@ export default function Design1Mono() {
           onCancel: () => resolve(false),
         });
       }),
+      goBack: () => {
+        allowNextProtectedPopRef.current = true;
+        globalThis.history.back();
+      },
     });
 
     return () => {
