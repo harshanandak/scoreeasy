@@ -68,7 +68,7 @@ function NotFoundRoute() {
             type="button"
             className="mono-btn-primary flex-1"
             style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/play')}
+            onClick={() => navigate('/play', { replace: true })}
           >
             Play
           </button>
@@ -76,7 +76,7 @@ function NotFoundRoute() {
             type="button"
             className="mono-btn flex-1"
             style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { replace: true })}
           >
             Home
           </button>
@@ -980,9 +980,7 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
-                {SHOW_INTERNAL_ROUTES && (
-                  <Route path=":sport/quick/test/:matchId" element={<SportRouteGuard><MonoCricketTestLiveScore storageMode="quick" /></SportRouteGuard>} />
-                )}
+                <Route path=":sport/quick/test/:matchId" element={<SportRouteGuard><MonoCricketTestLiveScore storageMode="quick" /></SportRouteGuard>} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
 

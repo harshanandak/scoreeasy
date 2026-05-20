@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
@@ -50,9 +50,11 @@ describe('app route recovery', () => {
   it('shows a useful recovery screen for invalid sport quick routes', async () => {
     renderApp('/madeupsport/quick');
 
-    expect(await screen.findByText('This screen is not available')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Play' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'Home' }).length).toBeGreaterThan(0);
+    const heading = await screen.findByText('This screen is not available');
+    const recoveryPanel = heading.closest('.max-w-2xl');
+    expect(recoveryPanel).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Play' })).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
   });
 
   it('redirects legacy quick-match links into the default volleyball quick flow', async () => {
