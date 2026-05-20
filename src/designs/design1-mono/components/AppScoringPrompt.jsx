@@ -26,23 +26,58 @@ export function useAppScoringPrompt() {
 
   useEffect(() => clearDraftRedirect, [clearDraftRedirect]);
 
+  const closeNotice = useCallback(() => setNotice(null), []);
+  const closePrompt = useCallback(() => setPendingPrompt(null), []);
+
+  const requestDiscardPrompt = useCallback(() => {
+    setPendingPrompt({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      message: 'Your unsaved scoring changes will be lost.',
+      title: 'Discard changes?',
+      type: 'discard',
+    });
+  }, []);
+
+  const cancelOrNavigate = useCallback((hasChanges, navigateBack) => {
+    if (hasChanges) {
+      requestDiscardPrompt();
+      return;
+    }
+    navigateBack();
+  }, [requestDiscardPrompt]);
+
+  const confirmDiscard = useCallback((navigateBack) => {
+    if (pendingPrompt?.type !== 'discard') return;
+    closePrompt();
+    navigateBack();
+  }, [closePrompt, pendingPrompt]);
+
+  const renderPrompt = useCallback((onConfirmPrompt) => (
+    <AppScoringPromptHost
+      notice={notice}
+      onCancelPrompt={closePrompt}
+      onConfirmPrompt={onConfirmPrompt}
+      onDismissNotice={closeNotice}
+      pendingPrompt={pendingPrompt}
+    />
+  ), [closeNotice, closePrompt, notice, pendingPrompt]);
+
+  const requestPrompt = useCallback((prompt) => setPendingPrompt(prompt), []);
+  const showWarning = useCallback((message) => setNotice({ message, tone: 'warning' }), []);
+
   return {
-    closeNotice: () => setNotice(null),
-    closePrompt: () => setPendingPrompt(null),
+    cancelOrNavigate,
+    closeNotice,
+    closePrompt,
+    confirmDiscard,
     notice,
     pendingPrompt,
-    requestDiscardPrompt: () => {
-      setPendingPrompt({
-        cancelLabel: 'Keep scoring',
-        confirmLabel: 'Discard',
-        message: 'Your unsaved scoring changes will be lost.',
-        title: 'Discard changes?',
-        type: 'discard',
-      });
-    },
-    requestPrompt: setPendingPrompt,
+    renderPrompt,
+    requestDiscardPrompt,
+    requestPrompt,
     scheduleDraftRedirect,
-    showWarning: (message) => setNotice({ message, tone: 'warning' }),
+    showWarning,
   };
 }
 

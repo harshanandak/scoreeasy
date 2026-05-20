@@ -7,7 +7,7 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -257,6 +257,7 @@ export default function MonoTennisLiveScore() {
   const lastClickRef = useRef(0);
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -414,7 +415,7 @@ export default function MonoTennisLiveScore() {
     }
     setSaveWarning('');
     setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(() => navigate(`/${sport}/tournament/${id}`));
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Save match and return
@@ -459,20 +460,8 @@ export default function MonoTennisLiveScore() {
   };
 
   // Cancel and discard changes
-  const handleCancel = () => {
-    if (hasChanges) {
-      scoringPrompt.requestDiscardPrompt();
-      return;
-    }
-    navigate(`/${sport}/tournament/${id}`);
-  };
-
-  const confirmPendingPrompt = () => {
-    if (scoringPrompt.pendingPrompt?.type === 'discard') {
-      scoringPrompt.closePrompt();
-      navigate(`/${sport}/tournament/${id}`);
-    }
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!tournament || !match) {
     return <div className="max-w-2xl mx-auto px-6 py-10">Match not found.</div>;
@@ -499,13 +488,7 @@ export default function MonoTennisLiveScore() {
           {saveWarning}
         </div>
       )}
-      <AppScoringPromptHost
-        notice={scoringPrompt.notice}
-        onCancelPrompt={scoringPrompt.closePrompt}
-        onConfirmPrompt={confirmPendingPrompt}
-        onDismissNotice={scoringPrompt.closeNotice}
-        pendingPrompt={scoringPrompt.pendingPrompt}
-      />
+      {scoringPrompt.renderPrompt(confirmPendingPrompt)}
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <button

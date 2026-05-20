@@ -10,7 +10,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
-import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -486,11 +486,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const handleCancel = () => {
-    if (hasChanges) {
-      scoringPrompt.requestDiscardPrompt();
-      return;
-    }
-    navigateBack();
+    scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
   };
 
   const confirmPendingPrompt = () => {
@@ -507,9 +503,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       return;
     }
 
-    if (promptType === 'discard') {
-      navigateBack();
-    }
+    if (promptType === 'discard') navigateBack();
   };
 
   // Keyboard shortcuts
@@ -657,13 +651,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             {saveWarning}
           </div>
         )}
-        <AppScoringPromptHost
-          notice={scoringPrompt.notice}
-          onCancelPrompt={scoringPrompt.closePrompt}
-          onConfirmPrompt={confirmPendingPrompt}
-          onDismissNotice={scoringPrompt.closeNotice}
-          pendingPrompt={scoringPrompt.pendingPrompt}
-        />
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={handleCancel} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1" style={{ color: '#888' }}>

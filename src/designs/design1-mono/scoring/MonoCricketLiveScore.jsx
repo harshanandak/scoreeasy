@@ -9,7 +9,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -54,6 +54,7 @@ export default function MonoCricketLiveScore() {
   const sportConfig = getSportById(sport || 'cricket');
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport || 'cricket'}/tournament/${id}`);
 
   // Core state
   const [tournament, setTournament] = useState(null);
@@ -397,7 +398,7 @@ export default function MonoCricketLiveScore() {
     }
     setSaveWarning('');
     setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(() => navigate(`/${sport || 'cricket'}/tournament/${id}`));
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Keyboard shortcuts
@@ -467,20 +468,8 @@ export default function MonoCricketLiveScore() {
   };
 
   // Cancel
-  const handleCancel = () => {
-    if (hasChanges) {
-      scoringPrompt.requestDiscardPrompt();
-      return;
-    }
-    navigate(`/${sport || 'cricket'}/tournament/${id}`);
-  };
-
-  const confirmPendingPrompt = () => {
-    if (scoringPrompt.pendingPrompt?.type === 'discard') {
-      scoringPrompt.closePrompt();
-      navigate(`/${sport || 'cricket'}/tournament/${id}`);
-    }
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -678,13 +667,7 @@ export default function MonoCricketLiveScore() {
             {saveWarning}
           </div>
         )}
-        <AppScoringPromptHost
-          notice={scoringPrompt.notice}
-          onCancelPrompt={scoringPrompt.closePrompt}
-          onConfirmPrompt={confirmPendingPrompt}
-          onDismissNotice={scoringPrompt.closeNotice}
-          pendingPrompt={scoringPrompt.pendingPrompt}
-        />
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button

@@ -8,7 +8,7 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -58,6 +58,7 @@ export default function MonoGoalsLiveScore() {
   const { sport, id, matchId } = useParams();
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
+  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -291,7 +292,7 @@ export default function MonoGoalsLiveScore() {
     setSaveWarning('');
 
     setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(() => navigate(`/${sport}/tournament/${id}`));
+    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
 
   // Keyboard shortcuts (skip on touch-only devices)
@@ -361,20 +362,8 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Cancel and return
-  const handleCancel = () => {
-    if (hasChanges) {
-      scoringPrompt.requestDiscardPrompt();
-      return;
-    }
-    navigate(`/${sport}/tournament/${id}`);
-  };
-
-  const confirmPendingPrompt = () => {
-    if (scoringPrompt.pendingPrompt?.type === 'discard') {
-      scoringPrompt.closePrompt();
-      navigate(`/${sport}/tournament/${id}`);
-    }
-  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -418,13 +407,7 @@ export default function MonoGoalsLiveScore() {
             {saveWarning}
           </div>
         )}
-        <AppScoringPromptHost
-          notice={scoringPrompt.notice}
-          onCancelPrompt={scoringPrompt.closePrompt}
-          onConfirmPrompt={confirmPendingPrompt}
-          onDismissNotice={scoringPrompt.closeNotice}
-          pendingPrompt={scoringPrompt.pendingPrompt}
-        />
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button
