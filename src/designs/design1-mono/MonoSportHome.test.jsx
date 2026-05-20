@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoSportHome from './MonoSportHome';
 
@@ -69,5 +69,25 @@ describe('MonoSportHome priority starts', () => {
     expect(screen.getByRole('tab', { name: 'Net Sports' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { name: 'Volleyball' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Quick Match/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps search and layout controls inside the choose sport section', () => {
+    renderSportHome();
+
+    const chooser = screen.getByRole('region', { name: 'Choose sport' });
+
+    expect(within(chooser).getByLabelText('Search sports')).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Switch to grid layout' })).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Search sports')).toHaveLength(1);
+  });
+
+  it('keeps the unified choose sport controls visible while searching', () => {
+    renderSportHome();
+
+    fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'tennis' } });
+
+    const chooser = screen.getByRole('region', { name: 'Choose sport' });
+    expect(within(chooser).getByLabelText('Search sports')).toHaveValue('tennis');
+    expect(within(chooser).getByRole('heading', { name: 'Tennis' })).toBeInTheDocument();
   });
 });
