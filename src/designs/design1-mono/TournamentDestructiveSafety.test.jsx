@@ -137,6 +137,7 @@ describe('tournament destructive safety', () => {
     await waitFor(() => {
       expect(readTournaments(VOLLEYBALL_KEY)).toHaveLength(0);
     });
+    expect(screen.getByRole('status')).toHaveTextContent('Deleted League Night.');
     expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo delete' }));

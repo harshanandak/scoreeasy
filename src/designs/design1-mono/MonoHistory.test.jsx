@@ -102,7 +102,7 @@ describe('MonoHistory', () => {
     await waitFor(() => {
       expect(readQuickMatches()).toHaveLength(1);
     });
-    expect(screen.getByText('Quick match restored.')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Quick match restored.');
   });
 
   it('uses user-facing local history language for clear-all recovery', async () => {
@@ -122,7 +122,7 @@ describe('MonoHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Local history cleared.')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Local history cleared.');
     });
     expect(screen.getByRole('button', { name: 'Undo clear' })).toBeInTheDocument();
   });

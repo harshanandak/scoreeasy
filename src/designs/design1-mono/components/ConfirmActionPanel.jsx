@@ -5,7 +5,7 @@ export default function ConfirmActionPanel({
   confirmLabel,
   onConfirm,
   onCancel,
-  confirmAriaLabel,
+  confirmAriaLabel = undefined,
 }) {
   return (
     <div
@@ -43,8 +43,4 @@ ConfirmActionPanel.propTypes = {
   onConfirm: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   confirmAriaLabel: PropTypes.string,
-};
-
-ConfirmActionPanel.defaultProps = {
-  confirmAriaLabel: undefined,
 };
