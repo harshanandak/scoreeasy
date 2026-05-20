@@ -7,6 +7,7 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -62,6 +63,8 @@ export default function MonoSetsLiveScore() {
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
+  const [promptNotice, setPromptNotice] = useState(null);
+  const [pendingPrompt, setPendingPrompt] = useState(null);
   const [servingTeam, setServingTeam] = useState(1);
   const [scoringMode, setScoringMode] = useState('rally');
 
@@ -336,8 +339,8 @@ export default function MonoSetsLiveScore() {
     setSaveWarning('');
 
     setHasChanges(false);
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport}/tournament/${id}`);
+    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
+    globalThis.setTimeout(() => navigate(`/${sport}/tournament/${id}`), 450);
   };
 
   // Save match and return
@@ -424,8 +427,24 @@ export default function MonoSetsLiveScore() {
 
   // Cancel and return
   const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
+    if (hasChanges) {
+      setPendingPrompt({
+        cancelLabel: 'Keep scoring',
+        confirmLabel: 'Discard',
+        message: 'Your unsaved scoring changes will be lost.',
+        title: 'Discard changes?',
+        type: 'discard',
+      });
+      return;
+    }
     navigate(`/${sport}/tournament/${id}`);
+  };
+
+  const confirmPendingPrompt = () => {
+    if (pendingPrompt?.type === 'discard') {
+      setPendingPrompt(null);
+      navigate(`/${sport}/tournament/${id}`);
+    }
   };
 
   if (!sportConfig || !tournament || !match) {
@@ -474,6 +493,21 @@ export default function MonoSetsLiveScore() {
           <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
             {saveWarning}
           </div>
+        )}
+        <AppScoringNotice
+          message={promptNotice?.message}
+          tone={promptNotice?.tone}
+          onDismiss={() => setPromptNotice(null)}
+        />
+        {pendingPrompt && (
+          <AppScoringConfirmDialog
+            cancelLabel={pendingPrompt.cancelLabel}
+            confirmLabel={pendingPrompt.confirmLabel}
+            message={pendingPrompt.message}
+            onCancel={() => setPendingPrompt(null)}
+            onConfirm={confirmPendingPrompt}
+            title={pendingPrompt.title}
+          />
         )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">

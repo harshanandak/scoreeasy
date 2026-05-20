@@ -8,6 +8,7 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -71,6 +72,8 @@ export default function MonoGoalsLiveScore() {
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
+  const [promptNotice, setPromptNotice] = useState(null);
+  const [pendingPrompt, setPendingPrompt] = useState(null);
 
   // Timer for timed mode
   const timer = useTimer();
@@ -289,8 +292,8 @@ export default function MonoGoalsLiveScore() {
     setSaveWarning('');
 
     setHasChanges(false);
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport}/tournament/${id}`);
+    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
+    globalThis.setTimeout(() => navigate(`/${sport}/tournament/${id}`), 450);
   };
 
   // Keyboard shortcuts (skip on touch-only devices)
@@ -324,7 +327,7 @@ export default function MonoGoalsLiveScore() {
   const saveMatch = () => {
     // Check for draw if not allowed
     if (!sportConfig.config.drawAllowed && score1 === score2) {
-      alert(`Draws not allowed in ${sportConfig.name}`);
+      setPromptNotice({ message: `Draws are not allowed in ${sportConfig.name}.`, tone: 'warning' });
       return;
     }
 
@@ -360,8 +363,24 @@ export default function MonoGoalsLiveScore() {
 
   // Cancel and return
   const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
+    if (hasChanges) {
+      setPendingPrompt({
+        cancelLabel: 'Keep scoring',
+        confirmLabel: 'Discard',
+        message: 'Your unsaved scoring changes will be lost.',
+        title: 'Discard changes?',
+        type: 'discard',
+      });
+      return;
+    }
     navigate(`/${sport}/tournament/${id}`);
+  };
+
+  const confirmPendingPrompt = () => {
+    if (pendingPrompt?.type === 'discard') {
+      setPendingPrompt(null);
+      navigate(`/${sport}/tournament/${id}`);
+    }
   };
 
   if (!sportConfig || !tournament || !match) {
@@ -405,6 +424,21 @@ export default function MonoGoalsLiveScore() {
           <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
             {saveWarning}
           </div>
+        )}
+        <AppScoringNotice
+          message={promptNotice?.message}
+          tone={promptNotice?.tone}
+          onDismiss={() => setPromptNotice(null)}
+        />
+        {pendingPrompt && (
+          <AppScoringConfirmDialog
+            cancelLabel={pendingPrompt.cancelLabel}
+            confirmLabel={pendingPrompt.confirmLabel}
+            message={pendingPrompt.message}
+            onCancel={() => setPendingPrompt(null)}
+            onConfirm={confirmPendingPrompt}
+            title={pendingPrompt.title}
+          />
         )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">

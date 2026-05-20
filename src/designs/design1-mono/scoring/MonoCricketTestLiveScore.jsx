@@ -10,6 +10,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
+import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -48,6 +49,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
+  const [promptNotice, setPromptNotice] = useState(null);
+  const [pendingPrompt, setPendingPrompt] = useState(null);
 
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
@@ -337,9 +340,16 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const handleDeclare = () => {
     if (matchComplete) return;
     const inn = innings[currentInningsIndex];
-    const confirmMsg = `Declare at ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)?`;
-    if (!globalThis.confirm(confirmMsg)) return;
+    setPendingPrompt({
+      cancelLabel: 'Keep batting',
+      confirmLabel: 'Declare',
+      message: `Declare at ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)?`,
+      title: 'Declare innings?',
+      type: 'declare',
+    });
+  };
 
+  const confirmDeclare = () => {
     saveSnapshot();
 
     setInnings(prev => {
@@ -354,7 +364,16 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Draw
   const handleDraw = () => {
-    if (!globalThis.confirm('End match as a Draw? No winner will be declared.')) return;
+    setPendingPrompt({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'End as draw',
+      message: 'No winner will be declared for this match.',
+      title: 'End match as a draw?',
+      type: 'draw',
+    });
+  };
+
+  const confirmDraw = () => {
     setMatchResult({ winner: 'draw', desc: 'Match Drawn' });
     setMatchComplete(true);
   };
@@ -399,8 +418,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     setSaveWarning('');
     setHasChanges(false);
-    alert('Draft saved!');
-    navigateBack();
+    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
+    globalThis.setTimeout(() => navigateBack(), 450);
   };
 
   // Save completed match
@@ -469,8 +488,36 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
+    if (hasChanges) {
+      setPendingPrompt({
+        cancelLabel: 'Keep scoring',
+        confirmLabel: 'Discard',
+        message: 'Your unsaved scoring changes will be lost.',
+        title: 'Discard changes?',
+        type: 'discard',
+      });
+      return;
+    }
     navigateBack();
+  };
+
+  const confirmPendingPrompt = () => {
+    const promptType = pendingPrompt?.type;
+    setPendingPrompt(null);
+
+    if (promptType === 'declare') {
+      confirmDeclare();
+      return;
+    }
+
+    if (promptType === 'draw') {
+      confirmDraw();
+      return;
+    }
+
+    if (promptType === 'discard') {
+      navigateBack();
+    }
   };
 
   // Keyboard shortcuts
@@ -616,6 +663,21 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
             {saveWarning}
           </div>
+        )}
+        <AppScoringNotice
+          message={promptNotice?.message}
+          tone={promptNotice?.tone}
+          onDismiss={() => setPromptNotice(null)}
+        />
+        {pendingPrompt && (
+          <AppScoringConfirmDialog
+            cancelLabel={pendingPrompt.cancelLabel}
+            confirmLabel={pendingPrompt.confirmLabel}
+            message={pendingPrompt.message}
+            onCancel={() => setPendingPrompt(null)}
+            onConfirm={confirmPendingPrompt}
+            title={pendingPrompt.title}
+          />
         )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">

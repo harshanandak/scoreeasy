@@ -9,6 +9,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -84,6 +85,8 @@ export default function MonoCricketLiveScore() {
   // States: 'inactive' → 'prompt' → 'team1_batting' → 'team2_batting' → 'result' → ('prompt')
   const [superOver, setSuperOver] = useState({ team1: { runs: 0, balls: 0, wickets: 0 }, team2: { runs: 0, balls: 0, wickets: 0 } });
   const [saveWarning, setSaveWarning] = useState('');
+  const [promptNotice, setPromptNotice] = useState(null);
+  const [pendingPrompt, setPendingPrompt] = useState(null);
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
@@ -395,8 +398,8 @@ export default function MonoCricketLiveScore() {
     }
     setSaveWarning('');
     setHasChanges(false);
-    alert('Draft saved! You can resume this match later.');
-    navigate(`/${sport || 'cricket'}/tournament/${id}`);
+    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
+    globalThis.setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 450);
   };
 
   // Keyboard shortcuts
@@ -466,8 +469,24 @@ export default function MonoCricketLiveScore() {
 
   // Cancel
   const handleCancel = () => {
-    if (hasChanges && !globalThis.confirm('Discard unsaved changes?')) return;
+    if (hasChanges) {
+      setPendingPrompt({
+        cancelLabel: 'Keep scoring',
+        confirmLabel: 'Discard',
+        message: 'Your unsaved scoring changes will be lost.',
+        title: 'Discard changes?',
+        type: 'discard',
+      });
+      return;
+    }
     navigate(`/${sport || 'cricket'}/tournament/${id}`);
+  };
+
+  const confirmPendingPrompt = () => {
+    if (pendingPrompt?.type === 'discard') {
+      setPendingPrompt(null);
+      navigate(`/${sport || 'cricket'}/tournament/${id}`);
+    }
   };
 
   if (!tournament || !match || !format) {
@@ -665,6 +684,21 @@ export default function MonoCricketLiveScore() {
           <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
             {saveWarning}
           </div>
+        )}
+        <AppScoringNotice
+          message={promptNotice?.message}
+          tone={promptNotice?.tone}
+          onDismiss={() => setPromptNotice(null)}
+        />
+        {pendingPrompt && (
+          <AppScoringConfirmDialog
+            cancelLabel={pendingPrompt.cancelLabel}
+            confirmLabel={pendingPrompt.confirmLabel}
+            message={pendingPrompt.message}
+            onCancel={() => setPendingPrompt(null)}
+            onConfirm={confirmPendingPrompt}
+            title={pendingPrompt.title}
+          />
         )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
