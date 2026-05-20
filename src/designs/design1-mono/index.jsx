@@ -97,7 +97,6 @@ const GUARD_BYPASS_PREFIXES = [
 ];
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
-const SCORING_EXIT_CONFIRMATION = `${SCORING_EXIT_TITLE} ${SCORING_EXIT_MESSAGE}`;
 const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
@@ -916,13 +915,7 @@ export default function Design1Mono() {
       });
     };
 
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-
     globalThis.addEventListener('popstate', handlePopState);
-    globalThis.addEventListener('beforeunload', handleBeforeUnload);
     const cleanupNativeBackButton = installNativeBackButtonGuard({
       getPathname: () => globalThis.location.pathname,
       confirmLeave: () => new Promise((resolve) => {
@@ -935,7 +928,6 @@ export default function Design1Mono() {
 
     return () => {
       globalThis.removeEventListener('popstate', handlePopState);
-      globalThis.removeEventListener('beforeunload', handleBeforeUnload);
       clearPendingFallbackNavigation();
       cleanupNativeBackButton();
     };
