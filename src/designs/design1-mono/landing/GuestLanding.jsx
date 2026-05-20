@@ -183,14 +183,12 @@ export default function GuestLanding() {
                   </Link>
                 ))}
               </div>
-              {cloudAuthAvailable && (
-                <Link to="/signup" style={{
-                  display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
-                  color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
-                }}>
-                  Create account for sync and history
-                </Link>
-              )}
+              <Link to="/signup" style={{
+                display: 'inline-block', marginTop: 12, fontFamily: MONO, fontSize: '0.625rem',
+                color: t.textMuted, textDecoration: 'none', letterSpacing: '0.06em',
+              }}>
+                Create account for sync and history
+              </Link>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, marginTop: 14 }}>
                 {experienceStats.map((item) => (
                   <div key={item.label} style={{ border: `1px solid ${t.border}`, padding: '8px 6px', background: t.surface, minWidth: 0 }}>

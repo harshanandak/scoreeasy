@@ -34,4 +34,11 @@ describe('GuestLanding bottom CTA', () => {
     expect(screen.getByRole('link', { name: 'START A GAME' })).toHaveAttribute('href', '/play');
     expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', '/signup');
   });
+
+  it('keeps the signup CTA visible with cloud auth enabled', () => {
+    renderLanding({ cloudAuthAvailable: true });
+
+    expect(screen.getByRole('link', { name: 'START A GAME' })).toHaveAttribute('href', '/play');
+    expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', '/signup');
+  });
 });
