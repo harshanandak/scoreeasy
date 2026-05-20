@@ -1,5 +1,50 @@
 import PropTypes from 'prop-types';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+const DEFAULT_DRAFT_SAVED_MESSAGE = 'Draft saved. You can resume this match later.';
+
+export function useAppScoringPrompt() {
+  const [notice, setNotice] = useState(null);
+  const [pendingPrompt, setPendingPrompt] = useState(null);
+  const draftRedirectTimeoutRef = useRef(null);
+
+  const clearDraftRedirect = useCallback(() => {
+    if (draftRedirectTimeoutRef.current) {
+      globalThis.clearTimeout(draftRedirectTimeoutRef.current);
+      draftRedirectTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleDraftRedirect = useCallback((navigateAfterSave, message = DEFAULT_DRAFT_SAVED_MESSAGE) => {
+    clearDraftRedirect();
+    setNotice({ message, tone: 'success' });
+    draftRedirectTimeoutRef.current = globalThis.setTimeout(() => {
+      draftRedirectTimeoutRef.current = null;
+      navigateAfterSave();
+    }, 450);
+  }, [clearDraftRedirect]);
+
+  useEffect(() => clearDraftRedirect, [clearDraftRedirect]);
+
+  return {
+    closeNotice: () => setNotice(null),
+    closePrompt: () => setPendingPrompt(null),
+    notice,
+    pendingPrompt,
+    requestDiscardPrompt: () => {
+      setPendingPrompt({
+        cancelLabel: 'Keep scoring',
+        confirmLabel: 'Discard',
+        message: 'Your unsaved scoring changes will be lost.',
+        title: 'Discard changes?',
+        type: 'discard',
+      });
+    },
+    requestPrompt: setPendingPrompt,
+    scheduleDraftRedirect,
+    showWarning: (message) => setNotice({ message, tone: 'warning' }),
+  };
+}
 
 export function AppScoringNotice({ message, tone = 'success', onDismiss = null }) {
   if (!message) return null;
@@ -36,11 +81,19 @@ export function AppScoringConfirmDialog({
   title,
 }) {
   const cancelButtonRef = useRef(null);
+  const wasOpenRef = useRef(false);
+  const isOpen = Boolean(title && message);
 
   useEffect(() => {
-    if (!title || !message) return undefined;
+    if (!isOpen) {
+      wasOpenRef.current = false;
+      return undefined;
+    }
 
-    cancelButtonRef.current?.focus();
+    if (!wasOpenRef.current) {
+      cancelButtonRef.current?.focus();
+      wasOpenRef.current = true;
+    }
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -53,13 +106,13 @@ export function AppScoringConfirmDialog({
     return () => {
       globalThis.removeEventListener('keydown', handleKeyDown);
     };
-  }, [message, onCancel, title]);
+  }, [isOpen, onCancel]);
 
-  if (!title || !message) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="app-confirm-backdrop" role="presentation">
-      <button type="button" className="app-confirm-backdrop-button" aria-label="Cancel prompt" onClick={onCancel} />
+      <button type="button" className="app-confirm-backdrop-button" aria-label="Cancel prompt" onClick={onCancel} tabIndex={-1} />
       <section
         className="app-confirm-dialog"
         role="dialog"
@@ -83,6 +136,34 @@ export function AppScoringConfirmDialog({
   );
 }
 
+export function AppScoringPromptHost({
+  notice,
+  onCancelPrompt,
+  onConfirmPrompt,
+  onDismissNotice,
+  pendingPrompt,
+}) {
+  return (
+    <>
+      <AppScoringNotice
+        message={notice?.message}
+        tone={notice?.tone}
+        onDismiss={onDismissNotice}
+      />
+      {pendingPrompt && (
+        <AppScoringConfirmDialog
+          cancelLabel={pendingPrompt.cancelLabel}
+          confirmLabel={pendingPrompt.confirmLabel}
+          message={pendingPrompt.message}
+          onCancel={onCancelPrompt}
+          onConfirm={onConfirmPrompt}
+          title={pendingPrompt.title}
+        />
+      )}
+    </>
+  );
+}
+
 AppScoringNotice.propTypes = {
   message: PropTypes.string,
   tone: PropTypes.oneOf(['success', 'warning']),
@@ -96,4 +177,21 @@ AppScoringConfirmDialog.propTypes = {
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
+};
+
+AppScoringPromptHost.propTypes = {
+  notice: PropTypes.shape({
+    message: PropTypes.string,
+    tone: PropTypes.oneOf(['success', 'warning']),
+  }),
+  onCancelPrompt: PropTypes.func.isRequired,
+  onConfirmPrompt: PropTypes.func.isRequired,
+  onDismissNotice: PropTypes.func.isRequired,
+  pendingPrompt: PropTypes.shape({
+    cancelLabel: PropTypes.string,
+    confirmLabel: PropTypes.string.isRequired,
+    message: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    type: PropTypes.string,
+  }),
 };

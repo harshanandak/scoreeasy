@@ -10,7 +10,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
-import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
+import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -49,8 +49,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
-  const [promptNotice, setPromptNotice] = useState(null);
-  const [pendingPrompt, setPendingPrompt] = useState(null);
+  const scoringPrompt = useAppScoringPrompt();
 
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
@@ -249,7 +248,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add runs
   const addRuns = (runs) => {
-    if (!format || matchComplete) return;
+    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -281,7 +280,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add wicket
   const addWicket = () => {
-    if (!format || matchComplete) return;
+    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -317,7 +316,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Add extra
   const addExtra = (type) => {
-    if (!format || matchComplete) return;
+    if (!format || matchComplete || scoringPrompt.pendingPrompt) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -340,7 +339,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const handleDeclare = () => {
     if (matchComplete) return;
     const inn = innings[currentInningsIndex];
-    setPendingPrompt({
+    scoringPrompt.requestPrompt({
       cancelLabel: 'Keep batting',
       confirmLabel: 'Declare',
       message: `Declare at ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)?`,
@@ -364,7 +363,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Draw
   const handleDraw = () => {
-    setPendingPrompt({
+    scoringPrompt.requestPrompt({
       cancelLabel: 'Keep scoring',
       confirmLabel: 'End as draw',
       message: 'No winner will be declared for this match.',
@@ -418,8 +417,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     setSaveWarning('');
     setHasChanges(false);
-    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
-    globalThis.setTimeout(() => navigateBack(), 450);
+    scoringPrompt.scheduleDraftRedirect(() => navigateBack());
   };
 
   // Save completed match
@@ -489,21 +487,15 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   const handleCancel = () => {
     if (hasChanges) {
-      setPendingPrompt({
-        cancelLabel: 'Keep scoring',
-        confirmLabel: 'Discard',
-        message: 'Your unsaved scoring changes will be lost.',
-        title: 'Discard changes?',
-        type: 'discard',
-      });
+      scoringPrompt.requestDiscardPrompt();
       return;
     }
     navigateBack();
   };
 
   const confirmPendingPrompt = () => {
-    const promptType = pendingPrompt?.type;
-    setPendingPrompt(null);
+    const promptType = scoringPrompt.pendingPrompt?.type;
+    scoringPrompt.closePrompt();
 
     if (promptType === 'declare') {
       confirmDeclare();
@@ -526,6 +518,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
+      if (scoringPrompt.pendingPrompt) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const key = e.key.toLowerCase();
       if (['0', '1', '2', '3', '4', '6'].includes(key)) addRuns(Number.parseInt(key));
@@ -536,7 +529,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [innings, currentInningsIndex, history, format, matchComplete, followOnPrompt]);
+  }, [innings, currentInningsIndex, history, format, matchComplete, followOnPrompt, scoringPrompt.pendingPrompt]);
 
   if (!match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -664,21 +657,13 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             {saveWarning}
           </div>
         )}
-        <AppScoringNotice
-          message={promptNotice?.message}
-          tone={promptNotice?.tone}
-          onDismiss={() => setPromptNotice(null)}
+        <AppScoringPromptHost
+          notice={scoringPrompt.notice}
+          onCancelPrompt={scoringPrompt.closePrompt}
+          onConfirmPrompt={confirmPendingPrompt}
+          onDismissNotice={scoringPrompt.closeNotice}
+          pendingPrompt={scoringPrompt.pendingPrompt}
         />
-        {pendingPrompt && (
-          <AppScoringConfirmDialog
-            cancelLabel={pendingPrompt.cancelLabel}
-            confirmLabel={pendingPrompt.confirmLabel}
-            message={pendingPrompt.message}
-            onCancel={() => setPendingPrompt(null)}
-            onConfirm={confirmPendingPrompt}
-            title={pendingPrompt.title}
-          />
-        )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={handleCancel} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1" style={{ color: '#888' }}>

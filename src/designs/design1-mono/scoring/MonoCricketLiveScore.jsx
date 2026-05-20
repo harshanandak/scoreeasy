@@ -9,7 +9,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
+import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -85,8 +85,7 @@ export default function MonoCricketLiveScore() {
   // States: 'inactive' → 'prompt' → 'team1_batting' → 'team2_batting' → 'result' → ('prompt')
   const [superOver, setSuperOver] = useState({ team1: { runs: 0, balls: 0, wickets: 0 }, team2: { runs: 0, balls: 0, wickets: 0 } });
   const [saveWarning, setSaveWarning] = useState('');
-  const [promptNotice, setPromptNotice] = useState(null);
-  const [pendingPrompt, setPendingPrompt] = useState(null);
+  const scoringPrompt = useAppScoringPrompt();
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
@@ -398,8 +397,7 @@ export default function MonoCricketLiveScore() {
     }
     setSaveWarning('');
     setHasChanges(false);
-    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
-    globalThis.setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 450);
+    scoringPrompt.scheduleDraftRedirect(() => navigate(`/${sport || 'cricket'}/tournament/${id}`));
   };
 
   // Keyboard shortcuts
@@ -408,6 +406,7 @@ export default function MonoCricketLiveScore() {
     if (isTouchDevice) return;
 
     const handleKeyPress = (e) => {
+      if (scoringPrompt.pendingPrompt) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (isMatchComplete) return;
 
@@ -425,7 +424,7 @@ export default function MonoCricketLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete]);
+  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, scoringPrompt.pendingPrompt]);
 
   // Save match (complete)
   const saveMatch = (winnerOverride) => {
@@ -470,21 +469,15 @@ export default function MonoCricketLiveScore() {
   // Cancel
   const handleCancel = () => {
     if (hasChanges) {
-      setPendingPrompt({
-        cancelLabel: 'Keep scoring',
-        confirmLabel: 'Discard',
-        message: 'Your unsaved scoring changes will be lost.',
-        title: 'Discard changes?',
-        type: 'discard',
-      });
+      scoringPrompt.requestDiscardPrompt();
       return;
     }
     navigate(`/${sport || 'cricket'}/tournament/${id}`);
   };
 
   const confirmPendingPrompt = () => {
-    if (pendingPrompt?.type === 'discard') {
-      setPendingPrompt(null);
+    if (scoringPrompt.pendingPrompt?.type === 'discard') {
+      scoringPrompt.closePrompt();
       navigate(`/${sport || 'cricket'}/tournament/${id}`);
     }
   };
@@ -685,21 +678,13 @@ export default function MonoCricketLiveScore() {
             {saveWarning}
           </div>
         )}
-        <AppScoringNotice
-          message={promptNotice?.message}
-          tone={promptNotice?.tone}
-          onDismiss={() => setPromptNotice(null)}
+        <AppScoringPromptHost
+          notice={scoringPrompt.notice}
+          onCancelPrompt={scoringPrompt.closePrompt}
+          onConfirmPrompt={confirmPendingPrompt}
+          onDismissNotice={scoringPrompt.closeNotice}
+          pendingPrompt={scoringPrompt.pendingPrompt}
         />
-        {pendingPrompt && (
-          <AppScoringConfirmDialog
-            cancelLabel={pendingPrompt.cancelLabel}
-            confirmLabel={pendingPrompt.confirmLabel}
-            message={pendingPrompt.message}
-            onCancel={() => setPendingPrompt(null)}
-            onConfirm={confirmPendingPrompt}
-            title={pendingPrompt.title}
-          />
-        )}
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
           <button

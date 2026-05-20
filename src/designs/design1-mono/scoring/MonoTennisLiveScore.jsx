@@ -7,7 +7,7 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { AppScoringConfirmDialog, AppScoringNotice } from '../components/AppScoringPrompt';
+import { AppScoringPromptHost, useAppScoringPrompt } from '../components/AppScoringPrompt';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -270,8 +270,7 @@ export default function MonoTennisLiveScore() {
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
-  const [promptNotice, setPromptNotice] = useState(null);
-  const [pendingPrompt, setPendingPrompt] = useState(null);
+  const scoringPrompt = useAppScoringPrompt();
 
   const saveTournamentToConvex = (updatedTournament) => {
     if (!isAuthenticated || !updatedTournament) return;
@@ -385,11 +384,14 @@ export default function MonoTennisLiveScore() {
 
     const leftTeam = sidesSwapped ? 2 : 1;
     const rightTeam = sidesSwapped ? 1 : 2;
-    const handleKeyPress = makeKeyHandler(addPoint, undo, leftTeam, rightTeam);
+    const handleKeyPress = (event) => {
+      if (scoringPrompt.pendingPrompt) return;
+      makeKeyHandler(addPoint, undo, leftTeam, rightTeam)(event);
+    };
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice]);
+  }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.pendingPrompt]);
 
   // Save draft
   const saveDraft = () => {
@@ -411,8 +413,8 @@ export default function MonoTennisLiveScore() {
       return;
     }
     setSaveWarning('');
-    setPromptNotice({ message: 'Draft saved. You can resume this match later.', tone: 'success' });
-    globalThis.setTimeout(() => navigate(`/${sport}/tournament/${id}`), 450);
+    setHasChanges(false);
+    scoringPrompt.scheduleDraftRedirect(() => navigate(`/${sport}/tournament/${id}`));
   };
 
   // Save match and return
@@ -459,21 +461,15 @@ export default function MonoTennisLiveScore() {
   // Cancel and discard changes
   const handleCancel = () => {
     if (hasChanges) {
-      setPendingPrompt({
-        cancelLabel: 'Keep scoring',
-        confirmLabel: 'Discard',
-        message: 'Your unsaved scoring changes will be lost.',
-        title: 'Discard changes?',
-        type: 'discard',
-      });
+      scoringPrompt.requestDiscardPrompt();
       return;
     }
     navigate(`/${sport}/tournament/${id}`);
   };
 
   const confirmPendingPrompt = () => {
-    if (pendingPrompt?.type === 'discard') {
-      setPendingPrompt(null);
+    if (scoringPrompt.pendingPrompt?.type === 'discard') {
+      scoringPrompt.closePrompt();
       navigate(`/${sport}/tournament/${id}`);
     }
   };
@@ -503,21 +499,13 @@ export default function MonoTennisLiveScore() {
           {saveWarning}
         </div>
       )}
-      <AppScoringNotice
-        message={promptNotice?.message}
-        tone={promptNotice?.tone}
-        onDismiss={() => setPromptNotice(null)}
+      <AppScoringPromptHost
+        notice={scoringPrompt.notice}
+        onCancelPrompt={scoringPrompt.closePrompt}
+        onConfirmPrompt={confirmPendingPrompt}
+        onDismissNotice={scoringPrompt.closeNotice}
+        pendingPrompt={scoringPrompt.pendingPrompt}
       />
-      {pendingPrompt && (
-        <AppScoringConfirmDialog
-          cancelLabel={pendingPrompt.cancelLabel}
-          confirmLabel={pendingPrompt.confirmLabel}
-          message={pendingPrompt.message}
-          onCancel={() => setPendingPrompt(null)}
-          onConfirm={confirmPendingPrompt}
-          title={pendingPrompt.title}
-        />
-      )}
       {/* Top bar */}
       <div className="flex items-center justify-between mb-8">
         <button

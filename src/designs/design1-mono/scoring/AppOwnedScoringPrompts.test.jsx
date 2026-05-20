@@ -52,6 +52,43 @@ describe('app-owned scoring prompts', () => {
     expect(onCancel).not.toHaveBeenCalled();
   });
 
+  it('cancels confirmation dialogs from the safe action, escape key, and backdrop', () => {
+    const onCancel = vi.fn();
+    const onConfirm = vi.fn();
+
+    const { rerender } = render(
+      <AppScoringConfirmDialog
+        cancelLabel="Keep scoring"
+        confirmLabel="Discard"
+        message="Your unsaved scoring changes will be lost."
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        title="Discard changes?"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep scoring' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    rerender(
+      <AppScoringConfirmDialog
+        cancelLabel="Keep scoring"
+        confirmLabel="Discard"
+        message="Your unsaved scoring changes will be lost."
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+        title="Discard changes?"
+      />,
+    );
+    fireEvent.keyDown(globalThis, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByLabelText('Cancel prompt'));
+    expect(onCancel).toHaveBeenCalledTimes(3);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {
     for (const componentFile of scoringComponents) {
       const source = readFileSync(new URL(componentFile, import.meta.url), 'utf8');
