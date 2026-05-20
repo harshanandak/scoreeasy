@@ -1255,6 +1255,13 @@ export default function MonoQuickMatch() {
   });
   const teamNamesReady = Boolean(team1Name.trim() && team2Name.trim());
   const isTeamSetupStep = setupStep === totalSteps;
+  const showRosterSetup = showTeam1Roster || showTeam2Roster;
+  const playerCount = team1Players.length + team2Players.length;
+  const toggleRosterSetup = () => {
+    const nextState = !showRosterSetup;
+    setShowTeam1Roster(nextState);
+    setShowTeam2Roster(nextState);
+  };
   const handleSetupBack = () => {
     if (isTeamSetupStep) {
       navigate(-1);
@@ -1865,15 +1872,18 @@ export default function MonoQuickMatch() {
           {setupStep === totalSteps && (
             <>
               {/* Format summary */}
-              <div className="mono-card mb-6" style={{ padding: '12px 16px', background: '#f8f9fa' }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+              <section className="mono-card mb-6" style={{ padding: '16px', background: '#f8f9fa' }} aria-labelledby="quick-match-rules-heading">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
                     <span className="text-2xl">{sportConfig?.icon || '\u{1F3D0}'}</span>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: '#111' }}>
+                      <h2 id="quick-match-rules-heading" className="text-sm font-semibold" style={{ color: '#111' }}>
+                        Match rules
+                      </h2>
+                      <p className="text-sm mt-1" style={{ color: '#333' }}>
                         {isCricket && selectedCricketFormat ? selectedCricketFormat.name : sportConfig?.name}
                       </p>
-                      <p className="text-xs font-mono" style={{ color: '#888' }}>
+                      <p className="text-xs font-mono mt-1" style={{ color: '#888' }}>
                         {ruleSummary}
                       </p>
                     </div>
@@ -1891,17 +1901,21 @@ export default function MonoQuickMatch() {
                     Edit Rules
                   </button>
                 </div>
-              </div>
+              </section>
 
               {/* Team names */}
-              <div className="mb-8">
-                <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
-                  Team Names
-                </label>
+              <fieldset className="mb-8 border-0 p-0">
+                <legend className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
+                  Teams
+                </legend>
 
                 {/* Team 1 */}
-                <div ref={team1Ref} className="relative">
+                <div ref={team1Ref} className="relative mb-5">
+                  <label htmlFor="quick-team-1" className="text-xs font-semibold mb-2 block" style={{ color: '#555' }}>
+                    Team A name
+                  </label>
                   <input
+                    id="quick-team-1"
                     type="text"
                     className="mono-input mb-1"
                     placeholder="Team A"
@@ -1937,38 +1951,14 @@ export default function MonoQuickMatch() {
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowTeam1Roster(v => !v)}
-                  className="text-xs bg-transparent cursor-pointer font-swiss mb-3"
-                  style={{
-                    alignItems: 'center',
-                    border: '1.5px solid #dbeafe',
-                    color: '#0066ff',
-                    display: 'inline-flex',
-                    minHeight: 44,
-                    padding: '0 12px',
-                  }}
-                >
-                  {showTeam1Roster ? '− Hide players' : '+ Add players'}
-                  {team1Players.length > 0 && !showTeam1Roster && (
-                    <span style={{ color: '#888', marginLeft: 4 }}>({team1Players.length})</span>
-                  )}
-                </button>
-                {showTeam1Roster && (
-                  <div className="mb-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
-                    <PlayerSearchInput
-                      players={team1Players}
-                      onAdd={p => setTeam1Players(prev => [...prev, p])}
-                      onRemove={i => setTeam1Players(prev => prev.filter((_, idx) => idx !== i))}
-                      placeholder="Search @username or type name"
-                    />
-                  </div>
-                )}
 
                 {/* Team 2 */}
                 <div ref={team2Ref} className="relative">
+                  <label htmlFor="quick-team-2" className="text-xs font-semibold mb-2 block" style={{ color: '#555' }}>
+                    Team B name
+                  </label>
                   <input
+                    id="quick-team-2"
                     type="text"
                     className="mono-input mb-1"
                     placeholder="Team B"
@@ -2005,8 +1995,8 @@ export default function MonoQuickMatch() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowTeam2Roster(v => !v)}
-                  className="text-xs bg-transparent cursor-pointer font-swiss mb-3"
+                  onClick={toggleRosterSetup}
+                  className="text-xs bg-transparent cursor-pointer font-swiss mt-4 mb-3"
                   style={{
                     alignItems: 'center',
                     border: '1.5px solid #dbeafe',
@@ -2016,22 +2006,39 @@ export default function MonoQuickMatch() {
                     padding: '0 12px',
                   }}
                 >
-                  {showTeam2Roster ? '− Hide players' : '+ Add players'}
-                  {team2Players.length > 0 && !showTeam2Roster && (
-                    <span style={{ color: '#888', marginLeft: 4 }}>({team2Players.length})</span>
+                  {showRosterSetup ? 'Hide players' : 'Add players'}
+                  {playerCount > 0 && !showRosterSetup && (
+                    <span style={{ color: '#888', marginLeft: 4 }}>({playerCount})</span>
                   )}
                 </button>
-                {showTeam2Roster && (
-                  <div className="mb-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
-                    <PlayerSearchInput
-                      players={team2Players}
-                      onAdd={p => setTeam2Players(prev => [...prev, p])}
-                      onRemove={i => setTeam2Players(prev => prev.filter((_, idx) => idx !== i))}
-                      placeholder="Search @username or type name"
-                    />
+
+                {showRosterSetup && (
+                  <div className="mb-4 grid gap-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
+                    <div>
+                      <h3 className="text-xs font-semibold mb-2" style={{ color: '#555' }}>
+                        Team A players
+                      </h3>
+                      <PlayerSearchInput
+                        players={team1Players}
+                        onAdd={p => setTeam1Players(prev => [...prev, p])}
+                        onRemove={i => setTeam1Players(prev => prev.filter((_, idx) => idx !== i))}
+                        placeholder="Search @username or type name"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-semibold mb-2" style={{ color: '#555' }}>
+                        Team B players
+                      </h3>
+                      <PlayerSearchInput
+                        players={team2Players}
+                        onAdd={p => setTeam2Players(prev => [...prev, p])}
+                        onRemove={i => setTeam2Players(prev => prev.filter((_, idx) => idx !== i))}
+                        placeholder="Search @username or type name"
+                      />
+                    </div>
                   </div>
                 )}
-              </div>
+              </fieldset>
 
               {/* Referee checkbox */}
               {showRefereeOption && (
