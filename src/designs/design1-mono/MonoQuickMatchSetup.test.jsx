@@ -37,8 +37,8 @@ describe('MonoQuickMatch setup clarity', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add players' }));
 
-    expect(screen.getByText('Team A players')).toBeInTheDocument();
-    expect(screen.getByText('Team B players')).toBeInTheDocument();
-    expect(screen.getAllByPlaceholderText('Search @username or type name')).toHaveLength(2);
+    expect(await screen.findByText('Team A players')).toBeInTheDocument();
+    expect(await screen.findByText('Team B players')).toBeInTheDocument();
+    expect(await screen.findAllByPlaceholderText('Search @username or type name')).toHaveLength(2);
   });
 });
