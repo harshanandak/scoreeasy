@@ -545,16 +545,14 @@ export default function GuestLanding() {
           }}>
             START A GAME
           </Link>
-          {cloudAuthAvailable && (
-            <Link to="/signup" style={{
-              fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
-              padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-              background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
-              width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
-            }}>
-              SIGN UP FREE
-            </Link>
-          )}
+          <Link to="/signup" style={{
+            fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
+            padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
+            background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
+            width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
+          }}>
+            SIGN UP FREE
+          </Link>
         </div>
       </section>
 
