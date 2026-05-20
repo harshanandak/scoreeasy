@@ -486,6 +486,14 @@ export default function MonoTennisLiveScore() {
   const rightGames = sidesSwapped ? currentSetData.games1 : currentSetData.games2;
   const leftTeam = sidesSwapped ? 2 : 1;
   const rightTeam = sidesSwapped ? 1 : 2;
+  const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked;
+  const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
+    ? 'Scoring is temporarily locked'
+    : 'Press Enter or click to add point';
+  const handleSwapSides = () => {
+    if (scoringPrompt.isInteractionLocked) return;
+    setSidesSwapped(s => !s);
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
@@ -499,15 +507,17 @@ export default function MonoTennisLiveScore() {
       <div className="flex items-center justify-between mb-8">
         <button
           onClick={handleCancel}
+          disabled={scoringPrompt.isInteractionLocked}
           className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-          style={{ color: '#888' }}
+          style={{ color: '#888', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
         >
           ← Back
         </button>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => { setSidesSwapped(s => !s); }}
+            onClick={handleSwapSides}
+            disabled={scoringPrompt.isInteractionLocked}
             className="mono-btn"
             style={{
               padding: '6px 12px',
@@ -516,6 +526,7 @@ export default function MonoTennisLiveScore() {
               touchAction: 'manipulation',
               borderColor: sidesSwapped ? '#0066ff' : '#ddd',
               color: sidesSwapped ? '#0066ff' : '#111',
+              opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1,
             }}
             title="Swap sides"
           >
@@ -543,14 +554,14 @@ export default function MonoTennisLiveScore() {
         {/* Left Team */}
         <button
           type="button"
-          onClick={() => !currentSetData.completed && addPoint(leftTeam)}
-          aria-label={`${leftName}: ${leftScoreDisplay}. Press Enter or click to add point`}
-          disabled={currentSetData.completed}
+          onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
+          aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
+          disabled={!canScoreCurrentSet}
           className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
-            borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
-            opacity: currentSetData.completed ? 0.6 : 1,
+            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
           <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
@@ -571,14 +582,14 @@ export default function MonoTennisLiveScore() {
         {/* Right Team */}
         <button
           type="button"
-          onClick={() => !currentSetData.completed && addPoint(rightTeam)}
-          aria-label={`${rightName}: ${rightScoreDisplay}. Press Enter or click to add point`}
-          disabled={currentSetData.completed}
+          onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
+          aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
+          disabled={!canScoreCurrentSet}
           className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
           style={{
             touchAction: 'manipulation',
-            borderColor: currentSetData.completed ? '#ddd' : '#0066ff',
-            opacity: currentSetData.completed ? 0.6 : 1,
+            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
           <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
