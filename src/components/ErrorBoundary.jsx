@@ -30,8 +30,16 @@ class ErrorBoundary extends React.Component {
     globalThis.location.reload();
   };
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   handleHome = () => {
     globalThis.location.assign('/');
+  };
+
+  handlePlay = () => {
+    globalThis.location.assign('/play');
   };
 
   render() {
@@ -63,11 +71,27 @@ class ErrorBoundary extends React.Component {
               {this.state.error.message}
             </pre>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               className="mono-btn-primary flex-1"
-              style={{ padding: '10px 12px', fontSize: '0.8125rem' }}
+              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
+              onClick={this.handleRetry}
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              className="mono-btn flex-1"
+              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
+              onClick={this.handlePlay}
+            >
+              Play
+            </button>
+            <button
+              type="button"
+              className="mono-btn flex-1"
+              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
               onClick={this.handleReload}
             >
               Reload
@@ -75,7 +99,7 @@ class ErrorBoundary extends React.Component {
             <button
               type="button"
               className="mono-btn flex-1"
-              style={{ padding: '10px 12px', fontSize: '0.8125rem' }}
+              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
               onClick={this.handleHome}
             >
               Home
