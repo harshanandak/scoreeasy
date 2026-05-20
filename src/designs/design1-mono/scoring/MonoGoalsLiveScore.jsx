@@ -82,6 +82,7 @@ export default function MonoGoalsLiveScore() {
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
+  const autoFinishTimeoutRef = useRef(null);
   // Track current scores for history snapshots
   const score1Ref = useRef(score1);
   const score2Ref = useRef(score2);
@@ -155,7 +156,7 @@ export default function MonoGoalsLiveScore() {
 
   // Auto-end match when time expires in timed mode
   useEffect(() => {
-    if (!tournament || !sportConfig) return;
+    if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
 
@@ -164,7 +165,9 @@ export default function MonoGoalsLiveScore() {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
 
-      setTimeout(() => {
+      autoFinishTimeoutRef.current = setTimeout(() => {
+        if (scoringPrompt.isInteractionLocked) return;
+
         const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
           ...m,
           score1,
@@ -182,9 +185,19 @@ export default function MonoGoalsLiveScore() {
         setSaveWarning('');
         saveTournamentToConvex(updatedTournament);
         navigate(`/${sport}/tournament/${id}`);
+        autoFinishTimeoutRef.current = null;
       }, 300);
+
+      return () => {
+        if (autoFinishTimeoutRef.current) {
+          clearTimeout(autoFinishTimeoutRef.current);
+          autoFinishTimeoutRef.current = null;
+        }
+      };
     }
-  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate]);
+
+    return undefined;
+  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate, scoringPrompt.isInteractionLocked]);
 
   // Add point/goal
   const addScore = (team, value = 1) => {
@@ -293,6 +306,11 @@ export default function MonoGoalsLiveScore() {
     }
     setSaveWarning('');
 
+    if (autoFinishTimeoutRef.current) {
+      clearTimeout(autoFinishTimeoutRef.current);
+      autoFinishTimeoutRef.current = null;
+    }
+    timer.pause();
     setHasChanges(false);
     scoringPrompt.scheduleDraftRedirect(navigateToTournament);
   };
