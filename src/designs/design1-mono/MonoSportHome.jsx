@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadSportTournaments, loadPreference, savePreference } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
+import { getPriorityStartActions } from '../../utils/startActions';
 import SportIcon from './SportIcon';
 
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
@@ -153,12 +154,6 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-const priorityFastStartActions = [
-  { label: 'Start Cricket', sportId: 'cricket', className: 'mono-btn-primary' },
-  { label: 'Start Football', sportId: 'football', className: 'mono-btn' },
-  { label: 'Start Volleyball', sportId: 'volleyball', className: 'mono-btn' },
-];
-
 const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
 const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
 
@@ -179,12 +174,12 @@ function PriorityFastStart({ onStartSport }) {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-          {priorityFastStartActions.map((action) => (
+          {getPriorityStartActions().map((action) => (
             <button
               key={action.sportId}
               onClick={() => onStartSport(action.sportId)}
-              className={action.className}
-              style={action.className === 'mono-btn-primary' ? priorityActionStyle : secondaryPriorityActionStyle}
+              className={action.primary ? 'mono-btn-primary' : 'mono-btn'}
+              style={action.primary ? priorityActionStyle : secondaryPriorityActionStyle}
             >
               {action.label}
             </button>
