@@ -48,46 +48,72 @@ function SwapButton({ onSwap }) {
 }
 
 function EndMatchDialog({ onCancel, onConfirm }) {
-  const dialogRef = useRef(null);
+  const cancelButtonRef = useRef(null);
+  const onCancelRef = useRef(onCancel);
 
   useEffect(() => {
-    dialogRef.current?.focus();
+    onCancelRef.current = onCancel;
+  }, [onCancel]);
+
+  useEffect(() => {
+    cancelButtonRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCancelRef.current();
+      }
+    };
+
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => {
+      globalThis.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
+
+  const handleBackdropPointerDown = (event) => {
+    if (event.target === event.currentTarget) {
+      onCancel();
+    }
+  };
 
   return (
     <div
-      ref={dialogRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ backgroundColor: 'rgba(17, 17, 17, 0.42)', padding: '16px' }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="end-match-title"
-      tabIndex={-1}
+      className="app-confirm-backdrop"
+      role="presentation"
+      onMouseDown={handleBackdropPointerDown}
+      onTouchStart={handleBackdropPointerDown}
     >
-      <div className="mono-card w-full max-w-sm" style={{ padding: '18px' }}>
-        <h2 id="end-match-title" className="text-lg font-bold mb-2">End match?</h2>
-        <p className="text-sm mb-5" style={{ color: '#555' }}>
+      <section
+        className="app-confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="end-match-title"
+        aria-describedby="end-match-message"
+      >
+        <p className="app-confirm-eyebrow">Match control</p>
+        <h2 id="end-match-title" className="app-confirm-title">End match?</h2>
+        <p id="end-match-message" className="app-confirm-message">
           This will finish the current match and save the result.
         </p>
-        <div className="flex gap-3">
+        <div className="app-confirm-actions">
           <button
             type="button"
+            ref={cancelButtonRef}
             onClick={onCancel}
-            className="mono-btn flex-1"
-            style={{ minHeight: '46px' }}
+            className="app-confirm-secondary"
           >
             Keep scoring
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="mono-btn-primary flex-1"
-            style={{ minHeight: '46px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+            className="app-confirm-primary"
           >
             End match
           </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -250,6 +276,7 @@ export default function MonoQuickMatch() {
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const endMatchTriggerRef = useRef(null);
   const [servingTeam, setServingTeam] = useState(1);
   const [lastAction, setLastAction] = useState('');
 
@@ -602,10 +629,31 @@ export default function MonoQuickMatch() {
 
   const getTeamLabel = (team) => (team === 1 ? team1Name : team2Name);
 
-  const requestEndMatch = () => setShowEndConfirm(true);
+  const restoreEndMatchTriggerFocus = () => {
+    const trigger = endMatchTriggerRef.current;
+    endMatchTriggerRef.current = null;
+    if (!trigger || typeof trigger.focus !== 'function') return;
+
+    if (typeof globalThis.requestAnimationFrame === 'function') {
+      globalThis.requestAnimationFrame(() => trigger.focus());
+    } else {
+      trigger.focus();
+    }
+  };
+
+  const requestEndMatch = (event) => {
+    endMatchTriggerRef.current = event?.currentTarget || null;
+    setShowEndConfirm(true);
+  };
+
+  const cancelEndMatch = () => {
+    setShowEndConfirm(false);
+    restoreEndMatchTriggerFocus();
+  };
 
   const confirmEndMatch = () => {
     setShowEndConfirm(false);
+    endMatchTriggerRef.current = null;
     endMatchManually();
   };
 
@@ -2092,7 +2140,7 @@ export default function MonoQuickMatch() {
   const formatPreset = isCricket && format?.preset ? getCricketFormat(format.preset) : null;
   const presetLabel = formatPreset?.name || '';
   const endMatchDialog = showEndConfirm ? (
-    <EndMatchDialog onCancel={() => setShowEndConfirm(false)} onConfirm={confirmEndMatch} />
+    <EndMatchDialog onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
   ) : null;
 
   if (phase === 'scoring') {
