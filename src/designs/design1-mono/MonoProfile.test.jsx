@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext } from '../../auth/AuthContext';
 import MonoProfile from './MonoProfile';
 
@@ -49,6 +49,10 @@ describe('MonoProfile recovery actions', () => {
       callback(0);
       return 1;
     }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('lets unauthenticated users sign in or keep scoring as a guest', () => {
