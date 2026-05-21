@@ -11,6 +11,11 @@ Status meanings:
 - Needs decision: product/design choice required before implementation.
 - Needs verification: finding needs a fresh device/build check before work starts.
 
+Current reconciliation:
+- This file is the original May 15 audit snapshot. Its row statuses are historical and were not kept current while PRs #7-#48 merged.
+- Current status is tracked in [2026-05-21-ux-inventory-reconciliation.md](./2026-05-21-ux-inventory-reconciliation.md).
+- As of PR #48 on `master`, the original P0/P1 implementation blockers are reconciled as resolved by merged PRs or moved to verification/product-decision buckets.
+
 ## Core Direction
 
 The app should behave like a fast phone scoring utility:
