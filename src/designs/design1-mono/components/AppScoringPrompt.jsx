@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { handleAppConfirmKeyDown } from './appConfirmUtils';
 
 const DEFAULT_DRAFT_SAVED_MESSAGE = 'Draft saved. You can resume this match later.';
-const SCORING_SHORTCUT_KEYS = new Set(['0', '1', '2', '3', '4', '5', '6', 'e', 'p', 'q', 'u', 'w']);
 
 export function useAppScoringPrompt() {
   const [notice, setNotice] = useState(null);
@@ -39,6 +39,7 @@ export function useAppScoringPrompt() {
       cancelLabel: 'Keep scoring',
       confirmLabel: 'Discard',
       message: 'Your unsaved scoring changes will be lost.',
+      tone: 'danger',
       title: 'Discard changes?',
       type: 'discard',
     });
@@ -94,18 +95,15 @@ export function AppScoringNotice({ message, tone = 'success', onDismiss = null }
   return (
     <div
       role={isWarning ? 'alert' : 'status'}
-      className="mono-card mb-4 flex items-center justify-between gap-3"
-      style={{
-        padding: '12px 14px',
-        background: isWarning ? '#fff7ed' : '#f0fdf4',
-        borderColor: isWarning ? '#fed7aa' : '#bbf7d0',
-      }}
+      aria-live={isWarning ? 'assertive' : 'polite'}
+      className={`app-scoring-notice ${isWarning ? 'app-scoring-notice-warning' : 'app-scoring-notice-success'}`}
     >
-      <p className="text-sm" style={{ color: isWarning ? '#9a3412' : '#166534' }}>
-        {message}
-      </p>
+      <div className="app-scoring-notice-copy">
+        <span className="app-scoring-notice-label">{isWarning ? 'Needs attention' : 'Saved locally'}</span>
+        <p className="app-scoring-notice-message">{message}</p>
+      </div>
       {onDismiss && (
-        <button type="button" onClick={onDismiss} className="mono-btn" style={{ padding: '6px 10px', minHeight: 34 }}>
+        <button type="button" onClick={onDismiss} className="app-scoring-notice-action">
           OK
         </button>
       )}
@@ -119,6 +117,7 @@ export function AppScoringConfirmDialog({
   message,
   onCancel,
   onConfirm,
+  tone = 'primary',
   title,
 }) {
   const cancelButtonRef = useRef(null);
@@ -137,39 +136,7 @@ export function AppScoringConfirmDialog({
       wasOpenRef.current = true;
     }
 
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancel();
-        return;
-      }
-
-      if (event.key === 'Tab') {
-        const focusable = dialogRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        const controls = [...(focusable || [])].filter((control) => !control.disabled);
-        if (controls.length === 0) return;
-
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-          return;
-        }
-
-        if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-          return;
-        }
-      }
-
-      if (SCORING_SHORTCUT_KEYS.has(event.key.toLowerCase())) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
+    const handleKeyDown = (event) => handleAppConfirmKeyDown(event, dialogRef.current, onCancel);
 
     globalThis.addEventListener('keydown', handleKeyDown, true);
     return () => {
@@ -197,7 +164,7 @@ export function AppScoringConfirmDialog({
           <button type="button" ref={cancelButtonRef} onClick={onCancel} className="app-confirm-secondary">
             {cancelLabel}
           </button>
-          <button type="button" onClick={onConfirm} className="app-confirm-primary">
+          <button type="button" onClick={onConfirm} className={`app-confirm-primary${tone === 'danger' ? ' app-confirm-danger' : ''}`}>
             {confirmLabel}
           </button>
         </div>
@@ -227,6 +194,7 @@ export function AppScoringPromptHost({
           message={pendingPrompt.message}
           onCancel={onCancelPrompt}
           onConfirm={onConfirmPrompt}
+          tone={pendingPrompt.tone}
           title={pendingPrompt.title}
         />
       )}
@@ -246,6 +214,7 @@ AppScoringConfirmDialog.propTypes = {
   message: PropTypes.string.isRequired,
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
+  tone: PropTypes.oneOf(['primary', 'danger']),
   title: PropTypes.string.isRequired,
 };
 
@@ -261,6 +230,7 @@ AppScoringPromptHost.propTypes = {
     cancelLabel: PropTypes.string,
     confirmLabel: PropTypes.string.isRequired,
     message: PropTypes.string.isRequired,
+    tone: PropTypes.oneOf(['primary', 'danger']),
     title: PropTypes.string.isRequired,
     type: PropTypes.string,
   }),

@@ -23,6 +23,7 @@ describe('app-owned scoring prompts', () => {
     );
 
     expect(screen.getByRole('status')).toHaveTextContent('Draft saved');
+    expect(screen.getByText('Saved locally')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
 
@@ -40,11 +41,13 @@ describe('app-owned scoring prompts', () => {
         message="Your unsaved scoring changes will be lost."
         onCancel={onCancel}
         onConfirm={onConfirm}
+        tone="danger"
         title="Discard changes?"
       />,
     );
 
     expect(screen.getByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Discard' })).toHaveClass('app-confirm-danger');
 
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
 
@@ -119,6 +122,62 @@ describe('app-owned scoring prompts', () => {
     expect(hotkeyListener).not.toHaveBeenCalled();
 
     globalThis.removeEventListener('keydown', hotkeyListener);
+
+    const modifiedShortcutListener = vi.fn();
+    globalThis.addEventListener('keydown', modifiedShortcutListener);
+
+    fireEvent.keyDown(confirmButton, { key: 'w', ctrlKey: true });
+    expect(modifiedShortcutListener).toHaveBeenCalledTimes(1);
+
+    globalThis.removeEventListener('keydown', modifiedShortcutListener);
+  });
+
+  it('only lets the topmost app confirmation dialog handle escape', () => {
+    const lowerCancel = vi.fn();
+    const topCancel = vi.fn();
+
+    render(
+      <>
+        <AppScoringConfirmDialog
+          confirmLabel="Discard"
+          message="Lower dialog"
+          onCancel={lowerCancel}
+          onConfirm={vi.fn()}
+          title="Lower confirm"
+        />
+        <AppScoringConfirmDialog
+          confirmLabel="Leave"
+          message="Top dialog"
+          onCancel={topCancel}
+          onConfirm={vi.fn()}
+          title="Top confirm"
+        />
+      </>,
+    );
+
+    fireEvent.keyDown(globalThis, { key: 'Escape' });
+
+    expect(topCancel).toHaveBeenCalledTimes(1);
+    expect(lowerCancel).not.toHaveBeenCalled();
+  });
+
+  it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
+    const source = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
+    const confirmUtils = readFileSync(`${import.meta.dirname}/../components/appConfirmUtils.js`, 'utf8');
+
+    expect(source).toContain('handleAppConfirmKeyDown');
+    expect(source).toContain("addEventListener('keydown', handleKeyDown, true)");
+    expect(confirmUtils).toContain('APP_CONFIRM_BLOCKED_KEYS');
+    expect(confirmUtils).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
+    expect(confirmUtils).toContain('isTopmostAppConfirmDialog');
+    expect(confirmUtils).toContain('stopImmediatePropagation');
+    expect(confirmUtils).toContain('!hasBrowserModifier');
+    expect(source).toContain('tabIndex={-1}');
+    expect(source).toContain("tone: 'danger'");
+    expect(source).toContain('.app-confirm-danger');
+    expect(source).toContain('.app-scoring-notice');
+    expect(source).toContain('@media (max-width: 767px)');
+    expect(source).toContain('env(safe-area-inset-bottom, 0px)');
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {
@@ -140,6 +199,21 @@ describe('app-owned scoring prompts', () => {
     expect(result.current.isInteractionLocked).toBe(false);
 
     vi.useRealTimers();
+  });
+
+  it('marks discard prompts as destructive app actions', () => {
+    const { result } = renderHook(() => useAppScoringPrompt());
+
+    act(() => {
+      result.current.requestDiscardPrompt();
+    });
+
+    expect(result.current.pendingPrompt).toMatchObject({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      tone: 'danger',
+      title: 'Discard changes?',
+    });
   });
 
   it('locks all sets scorer controls during delayed draft redirects', () => {
