@@ -122,15 +122,24 @@ describe('app-owned scoring prompts', () => {
     expect(hotkeyListener).not.toHaveBeenCalled();
 
     globalThis.removeEventListener('keydown', hotkeyListener);
+
+    const modifiedShortcutListener = vi.fn();
+    globalThis.addEventListener('keydown', modifiedShortcutListener);
+
+    fireEvent.keyDown(confirmButton, { key: 'w', ctrlKey: true });
+    expect(modifiedShortcutListener).toHaveBeenCalledTimes(1);
+
+    globalThis.removeEventListener('keydown', modifiedShortcutListener);
   });
 
   it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
-    const source = readFileSync('src/designs/design1-mono/index.jsx', 'utf8');
-    const confirmUtils = readFileSync('src/designs/design1-mono/components/appConfirmUtils.js', 'utf8');
+    const source = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
+    const confirmUtils = readFileSync(`${import.meta.dirname}/../components/appConfirmUtils.js`, 'utf8');
 
     expect(source).toContain('handleAppConfirmKeyDown');
     expect(confirmUtils).toContain('APP_CONFIRM_BLOCKED_KEYS');
     expect(confirmUtils).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
+    expect(confirmUtils).toContain('!hasBrowserModifier');
     expect(source).toContain('tabIndex={-1}');
     expect(source).toContain("tone: 'danger'");
     expect(source).toContain('.app-confirm-danger');

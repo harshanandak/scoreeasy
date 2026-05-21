@@ -30,7 +30,8 @@ export function handleAppConfirmKeyDown(event, dialogElement, onCancel) {
     }
   }
 
-  if (APP_CONFIRM_BLOCKED_KEYS.has(event.key.toLowerCase())) {
+  const hasBrowserModifier = event.altKey || event.ctrlKey || event.metaKey;
+  if (!hasBrowserModifier && APP_CONFIRM_BLOCKED_KEYS.has(event.key.toLowerCase())) {
     event.preventDefault();
     event.stopPropagation();
   }
