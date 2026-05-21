@@ -500,21 +500,88 @@ GridLayout.propTypes = {
   getCounts: PropTypes.func.isRequired,
 };
 
-function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts, onStartSport }) {
+function LayoutToggleIcon({ layout }) {
+  if (layout === 'grid') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+        <line x1="1" y1="4" x2="15" y2="4" />
+        <line x1="1" y1="8" x2="15" y2="8" />
+        <line x1="1" y1="12" x2="15" y2="12" />
+      </svg>
+    );
+  }
+
   return (
-    <div className="mb-8">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <rect x="1" y="1" width="6" height="6" rx="1" />
+      <rect x="9" y="1" width="6" height="6" rx="1" />
+      <rect x="1" y="9" width="6" height="6" rx="1" />
+      <rect x="9" y="9" width="6" height="6" rx="1" />
+    </svg>
+  );
+}
+
+LayoutToggleIcon.propTypes = {
+  layout: PropTypes.string.isRequired,
+};
+
+function SportChooserFrame({ children, layout, onSearchChange, onStartSport, searchQuery, switchLayout }) {
+  const targetLayout = layout === 'grid' ? 'tabs' : 'grid';
+
+  return (
+    <section className="mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
 
-      <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
-        Choose sport
-      </h2>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: '#888' }}>
+            Choose sport
+          </h2>
+          <p className="text-sm" style={{ color: '#666' }}>
+            Search, switch layout, or pick a category below.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 sm:min-w-[360px]">
+          <input
+            type="text"
+            className="mono-input flex-1"
+            aria-label="Search sports"
+            placeholder="Search sports..."
+            style={{ minWidth: 0 }}
+            value={searchQuery}
+            onChange={onSearchChange}
+          />
+          <button
+            onClick={switchLayout}
+            className="mono-btn flex items-center justify-center"
+            aria-label={`Switch to ${targetLayout} layout`}
+            style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
+            title={`Switch to ${targetLayout}`}
+          >
+            <LayoutToggleIcon layout={layout} />
+          </button>
+        </div>
+      </div>
 
-      {layout === 'tabs' ? (
-        <TabsLayout activeTab={activeTab} activeSports={activeSports} categoryKeys={categoryKeys} setActiveTab={setActiveTab} navigate={navigate} getCounts={getCounts} />
-      ) : (
-        <GridLayout sportCategories={sportCategories} selectedSportId={selectedSportId} setSelectedSportId={setSelectedSportId} navigate={navigate} getCounts={getCounts} />
-      )}
-    </div>
+      {children}
+    </section>
+  );
+}
+
+SportChooserFrame.propTypes = {
+  children: PropTypes.node.isRequired,
+  layout: PropTypes.string.isRequired,
+  onSearchChange: PropTypes.func.isRequired,
+  onStartSport: PropTypes.func.isRequired,
+  searchQuery: PropTypes.string.isRequired,
+  switchLayout: PropTypes.func.isRequired,
+};
+
+function BrowseSports({ layout, activeTab, activeSports, categoryKeys, setActiveTab, sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
+  return layout === 'tabs' ? (
+    <TabsLayout activeTab={activeTab} activeSports={activeSports} categoryKeys={categoryKeys} setActiveTab={setActiveTab} navigate={navigate} getCounts={getCounts} />
+  ) : (
+    <GridLayout sportCategories={sportCategories} selectedSportId={selectedSportId} setSelectedSportId={setSelectedSportId} navigate={navigate} getCounts={getCounts} />
   );
 }
 
@@ -529,7 +596,6 @@ BrowseSports.propTypes = {
   setSelectedSportId: PropTypes.func.isRequired,
   navigate: PropTypes.func.isRequired,
   getCounts: PropTypes.func.isRequired,
-  onStartSport: PropTypes.func.isRequired,
 };
 
 export default function MonoSportHome() {
@@ -584,6 +650,10 @@ export default function MonoSportHome() {
       document.getElementById('choose-sport')?.scrollIntoView?.({ block: 'start' });
     });
   };
+  const handleSearchChange = event => {
+    setSearchQuery(event.target.value);
+    setSelectedSportId(null);
+  };
 
   const allSports = Object.values(sportCategories).flat().filter(sport => sport.id !== 'cricket');
   const allEntries = [
@@ -605,51 +675,30 @@ export default function MonoSportHome() {
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex items-center gap-2">
-          <input
-            type="text"
-            className="mono-input flex-1"
-            aria-label="Search sports"
-            placeholder="Search sports..."
-            style={{ minWidth: 0 }}
-            value={searchQuery}
-            onChange={event => {
-              setSearchQuery(event.target.value);
-              setSelectedSportId(null);
-            }}
-          />
-          <button
-            onClick={switchLayout}
-            className="mono-btn flex items-center justify-center"
-            aria-label={layout === 'grid' ? 'Switch to list layout' : 'Switch to grid layout'}
-            style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
-            title={layout === 'grid' ? 'Switch to list' : 'Switch to grid'}
-          >
-            {layout === 'grid' ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><line x1="1" y1="4" x2="15" y2="4"/><line x1="1" y1="8" x2="15" y2="8"/><line x1="1" y1="12" x2="15" y2="12"/></svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-            )}
-          </button>
-        </div>
-
-        {trimmedSearch ? (
-          <SearchResults filteredSports={filteredSports} navigate={navigate} />
-        ) : (
-          <BrowseSports
-            layout={layout}
-            activeTab={activeTab}
-            activeSports={activeSports}
-            categoryKeys={categoryKeys}
-            setActiveTab={setActiveTab}
-            sportCategories={sportCategories}
-            selectedSportId={selectedSportId}
-            setSelectedSportId={setSelectedSportId}
-            navigate={navigate}
-            getCounts={getCounts}
-            onStartSport={handlePriorityStart}
-          />
-        )}
+        <SportChooserFrame
+          layout={layout}
+          onSearchChange={handleSearchChange}
+          onStartSport={handlePriorityStart}
+          searchQuery={searchQuery}
+          switchLayout={switchLayout}
+        >
+          {trimmedSearch ? (
+            <SearchResults filteredSports={filteredSports} navigate={navigate} />
+          ) : (
+            <BrowseSports
+              layout={layout}
+              activeTab={activeTab}
+              activeSports={activeSports}
+              categoryKeys={categoryKeys}
+              setActiveTab={setActiveTab}
+              sportCategories={sportCategories}
+              selectedSportId={selectedSportId}
+              setSelectedSportId={setSelectedSportId}
+              navigate={navigate}
+              getCounts={getCounts}
+            />
+          )}
+        </SportChooserFrame>
       </div>
     </div>
   );
