@@ -10,6 +10,7 @@ import OfflineFallback from '../../components/OfflineFallback';
 import { installNativeBackButtonGuard } from '../../mobile/backButton';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
+import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
 import './mono.css';
 
 // Lazy-loaded primary app routes (not needed for the initial landing view)
@@ -120,8 +121,6 @@ const GUARD_BYPASS_PREFIXES = [
 ];
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
-const APP_CONFIRM_BLOCKED_KEYS = new Set(['0', '1', '2', '3', '4', '5', '6', 'e', 'p', 'q', 'u', 'w']);
-const APP_CONFIRM_FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
@@ -161,39 +160,7 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
 
     cancelButtonRef.current?.focus();
 
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancel();
-        return;
-      }
-
-      if (event.key === 'Tab') {
-        const focusable = dialogRef.current?.querySelectorAll(APP_CONFIRM_FOCUSABLE_SELECTOR);
-        const controls = [...(focusable || [])].filter((control) => !control.disabled);
-        if (controls.length === 0) return;
-
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-          return;
-        }
-
-        if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-          return;
-        }
-      }
-
-      if (APP_CONFIRM_BLOCKED_KEYS.has(event.key.toLowerCase())) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
+    const handleKeyDown = (event) => handleAppConfirmKeyDown(event, dialogRef.current, onCancel);
 
     globalThis.addEventListener('keydown', handleKeyDown, true);
     return () => {

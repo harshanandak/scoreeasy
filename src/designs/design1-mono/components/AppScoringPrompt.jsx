@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { handleAppConfirmKeyDown } from './appConfirmUtils';
 
 const DEFAULT_DRAFT_SAVED_MESSAGE = 'Draft saved. You can resume this match later.';
-const SCORING_SHORTCUT_KEYS = new Set(['0', '1', '2', '3', '4', '5', '6', 'e', 'p', 'q', 'u', 'w']);
 
 export function useAppScoringPrompt() {
   const [notice, setNotice] = useState(null);
@@ -136,39 +136,7 @@ export function AppScoringConfirmDialog({
       wasOpenRef.current = true;
     }
 
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        onCancel();
-        return;
-      }
-
-      if (event.key === 'Tab') {
-        const focusable = dialogRef.current?.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        const controls = [...(focusable || [])].filter((control) => !control.disabled);
-        if (controls.length === 0) return;
-
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-          return;
-        }
-
-        if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-          return;
-        }
-      }
-
-      if (SCORING_SHORTCUT_KEYS.has(event.key.toLowerCase())) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
+    const handleKeyDown = (event) => handleAppConfirmKeyDown(event, dialogRef.current, onCancel);
 
     globalThis.addEventListener('keydown', handleKeyDown, true);
     return () => {

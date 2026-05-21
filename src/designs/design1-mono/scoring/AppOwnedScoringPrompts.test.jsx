@@ -126,9 +126,11 @@ describe('app-owned scoring prompts', () => {
 
   it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
     const source = readFileSync('src/designs/design1-mono/index.jsx', 'utf8');
+    const confirmUtils = readFileSync('src/designs/design1-mono/components/appConfirmUtils.js', 'utf8');
 
-    expect(source).toContain('APP_CONFIRM_BLOCKED_KEYS');
-    expect(source).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
+    expect(source).toContain('handleAppConfirmKeyDown');
+    expect(confirmUtils).toContain('APP_CONFIRM_BLOCKED_KEYS');
+    expect(confirmUtils).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
     expect(source).toContain('tabIndex={-1}');
     expect(source).toContain("tone: 'danger'");
     expect(source).toContain('.app-confirm-danger');
