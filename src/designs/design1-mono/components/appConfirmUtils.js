@@ -2,10 +2,24 @@ export const APP_CONFIRM_BLOCKED_KEYS = new Set(['0', '1', '2', '3', '4', '5', '
 
 export const APP_CONFIRM_FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+export function isTopmostAppConfirmDialog(dialogElement) {
+  if (!dialogElement?.isConnected) return false;
+
+  const dialogs = [...document.querySelectorAll('.app-confirm-dialog')];
+  return dialogs[dialogs.length - 1] === dialogElement;
+}
+
+function consumeAppConfirmKey(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation?.();
+}
+
 export function handleAppConfirmKeyDown(event, dialogElement, onCancel) {
+  if (!isTopmostAppConfirmDialog(dialogElement)) return;
+
   if (event.key === 'Escape') {
-    event.preventDefault();
-    event.stopPropagation();
+    consumeAppConfirmKey(event);
     onCancel();
     return;
   }
@@ -32,7 +46,6 @@ export function handleAppConfirmKeyDown(event, dialogElement, onCancel) {
 
   const hasBrowserModifier = event.altKey || event.ctrlKey || event.metaKey;
   if (!hasBrowserModifier && APP_CONFIRM_BLOCKED_KEYS.has(event.key.toLowerCase())) {
-    event.preventDefault();
-    event.stopPropagation();
+    consumeAppConfirmKey(event);
   }
 }

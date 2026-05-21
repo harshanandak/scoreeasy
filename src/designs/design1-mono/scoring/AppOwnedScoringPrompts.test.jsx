@@ -132,6 +132,35 @@ describe('app-owned scoring prompts', () => {
     globalThis.removeEventListener('keydown', modifiedShortcutListener);
   });
 
+  it('only lets the topmost app confirmation dialog handle escape', () => {
+    const lowerCancel = vi.fn();
+    const topCancel = vi.fn();
+
+    render(
+      <>
+        <AppScoringConfirmDialog
+          confirmLabel="Discard"
+          message="Lower dialog"
+          onCancel={lowerCancel}
+          onConfirm={vi.fn()}
+          title="Lower confirm"
+        />
+        <AppScoringConfirmDialog
+          confirmLabel="Leave"
+          message="Top dialog"
+          onCancel={topCancel}
+          onConfirm={vi.fn()}
+          title="Top confirm"
+        />
+      </>,
+    );
+
+    fireEvent.keyDown(globalThis, { key: 'Escape' });
+
+    expect(topCancel).toHaveBeenCalledTimes(1);
+    expect(lowerCancel).not.toHaveBeenCalled();
+  });
+
   it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
     const source = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
     const confirmUtils = readFileSync(`${import.meta.dirname}/../components/appConfirmUtils.js`, 'utf8');
@@ -140,6 +169,8 @@ describe('app-owned scoring prompts', () => {
     expect(source).not.toContain("addEventListener('keydown', handleKeyDown, true)");
     expect(confirmUtils).toContain('APP_CONFIRM_BLOCKED_KEYS');
     expect(confirmUtils).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
+    expect(confirmUtils).toContain('isTopmostAppConfirmDialog');
+    expect(confirmUtils).toContain('stopImmediatePropagation');
     expect(confirmUtils).toContain('!hasBrowserModifier');
     expect(source).toContain('tabIndex={-1}');
     expect(source).toContain("tone: 'danger'");
