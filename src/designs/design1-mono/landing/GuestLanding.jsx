@@ -101,6 +101,11 @@ export default function GuestLanding() {
     { label: activeStartLabel, tone: 'primary', to: sportPlayPath(activeCard.sport) },
     { label: 'CHOOSE SPORT', tone: 'secondary', to: '/play' },
   ];
+  const stepActions = [
+    { label: 'CHOOSE SPORT', to: '/play' },
+    { label: `SET UP ${activeCard.sport.toUpperCase()}`, to: sportPlayPath(activeCard.sport) },
+    { label: 'START SCORING', to: sportPlayPath(activeCard.sport) },
+  ];
   const heroActionStyle = (action, mode) => {
     const compact = mode === 'compact';
     const primary = action.tone === 'primary';
@@ -123,6 +128,26 @@ export default function GuestLanding() {
       boxSizing: 'border-box',
       whiteSpace: 'nowrap',
     };
+  };
+  const stepActionStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: MOBILE_TAP_TARGET,
+    padding: '10px 14px',
+    marginTop: mobile ? 16 : 20,
+    border: `${t.borderWeight} solid ${t.blue}`,
+    background: t.blue,
+    color: '#fff',
+    fontFamily: MONO,
+    fontSize: '0.6875rem',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    lineHeight: 1.1,
+    textDecoration: 'none',
+    textAlign: 'center',
+    boxSizing: 'border-box',
+    width: mobile ? '100%' : 'auto',
   };
 
   const renderTag = (text, isHovered, tagColor) => {
@@ -383,21 +408,40 @@ export default function GuestLanding() {
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>01 / APP EXPERIENCE</p>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '0.8fr 1.2fr', gap: mobile ? 18 : 28, alignItems: 'start' }}>
             <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: 0, color: t.text }}>
-              BUILT TO SCORE<br />BEFORE SIGNUP.
+              START FIRST.<br />SAVE LATER.
             </h2>
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 2, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 2, marginBottom: mobile ? 16 : 14 }}>
                 {experienceStats.map((item) => (
-                  <div key={item.label} style={{ border: `${t.borderWeight} solid ${t.borderStrong}`, padding: mobile ? 16 : 20, background: t.surface }}>
+                  <div key={item.label} style={{
+                    border: `${t.borderWeight} solid ${t.borderStrong}`,
+                    borderLeft: mobile ? `6px solid ${t.blue}` : `${t.borderWeight} solid ${t.borderStrong}`,
+                    padding: mobile ? '16px 18px' : 20,
+                    background: t.surface,
+                    minHeight: mobile ? 104 : 0,
+                    boxShadow: t.cardShadow,
+                  }}>
                     <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: t.blue }}>{item.value}</strong>
                     <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '8px 0', color: t.text }}>{item.label}</span>
                     <p style={{ fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft, margin: 0 }}>{item.detail}</p>
                   </div>
                 ))}
               </div>
-              <ul style={{ display: 'grid', gap: 8, padding: 0, margin: 0, listStyle: 'none' }}>
-                {trustNotes.map((note) => (
-                  <li key={note} style={{ fontSize: '0.875rem', color: t.textSoft, borderLeft: `3px solid ${t.blue}`, paddingLeft: 10 }}>{note}</li>
+              <ul style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 2, padding: 0, margin: 0, listStyle: 'none' }}>
+                {trustNotes.map((note, i) => (
+                  <li key={note} style={{
+                    border: `1px solid ${t.border}`,
+                    background: t.bg,
+                    padding: mobile ? '12px 14px' : '14px 16px',
+                    color: t.textSoft,
+                    fontSize: mobile ? '0.8125rem' : '0.875rem',
+                    lineHeight: 1.45,
+                  }}>
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', color: t.blue, marginBottom: 6 }}>
+                      APP 0{i + 1}
+                    </span>
+                    {note}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -543,6 +587,7 @@ export default function GuestLanding() {
               const restOpacity = t.iconDecoOpacity * 1.8;
               const hoverOpacity = t.stepIconOpacityHover || 0.45;
               const iconColor = isHovered && t.stepIconColorHover ? t.stepIconColorHover : t.text;
+              const action = stepActions[i];
               return (
                 <div
                   key={step.num}
@@ -563,6 +608,9 @@ export default function GuestLanding() {
                   <span style={{ fontFamily: MONO, fontSize: mobile ? t.stepNumSizeMobile : t.stepNumSize, fontWeight: 900, color: t.blue, lineHeight: 1, display: 'block' }}>{step.num}</span>
                   <h3 style={{ fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.875rem', fontWeight: 700, letterSpacing: '0.06em', margin: mobile ? '12px 0 6px 0' : '16px 0 8px 0', color: t.text }}>{step.title}</h3>
                   <p style={{ fontSize: mobile ? '0.8125rem' : '0.875rem', lineHeight: 1.5, color: t.textSoft, margin: 0 }}>{step.desc}</p>
+                  <Link to={action.to} style={stepActionStyle}>
+                    {action.label}
+                  </Link>
                 </div>
               );
             })}

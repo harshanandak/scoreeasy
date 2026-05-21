@@ -38,15 +38,15 @@ export const steps = [
 export const tickerItems = ['14 SPORTS', 'NO SIGNUP START', 'LOCAL HISTORY', 'TOURNAMENTS', 'LIVE SCORING', 'FREE TO PLAY'];
 
 export const experienceStats = [
-  { label: 'sports ready', value: '14', detail: 'Quick match and tournament paths for common game formats.' },
-  { label: 'guest start', value: '0', detail: 'No account required before the first score tap.' },
+  { label: 'sports ready', value: '14', detail: 'Cricket, football, volleyball, and common court games start from one picker.' },
+  { label: 'guest mode', value: 'NOW', detail: 'No account required before the first score tap.' },
   { label: 'local first', value: 'ON', detail: 'History and scoring continue when cloud auth is unavailable.' },
 ];
 
 export const trustNotes = [
-  'Interactive scoring preview uses real app sport states.',
+  'Sport choices route into the same play setup used by the app.',
   'Guest, offline, and sync paths are separated so scoring is never blocked by login.',
-  'Mobile and Capacitor builds are checked before release PRs merge.',
+  'Android, iOS, and web checks run before release PRs merge.',
 ];
 
 export const heroScoreCards = [
