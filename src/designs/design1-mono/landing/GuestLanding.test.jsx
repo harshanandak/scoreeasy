@@ -79,4 +79,28 @@ describe('GuestLanding bottom CTA', () => {
     expect(screen.getByRole('link', { name: 'CHOOSE SPORT' })).toHaveStyle({ minHeight: '44px' });
     expect(screen.getByRole('button', { name: 'CRICKET' })).toHaveStyle({ minHeight: '44px' });
   });
+
+  it('turns landing sport cards into mobile-friendly start links', () => {
+    globalThis.innerWidth = 390;
+    globalThis.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    renderLanding({ cloudAuthAvailable: true });
+
+    const cricketCard = screen.getByRole('link', { name: 'Start Cricket from sports' });
+    expect(cricketCard).toHaveAttribute('href', '/play?sport=cricket');
+    expect(cricketCard).toHaveStyle({ minHeight: '132px' });
+    expect(screen.getByRole('link', { name: 'Start Football from sports' })).toHaveAttribute('href', '/play?sport=football');
+    expect(screen.getByRole('link', { name: 'Start Volleyball from sports' })).toHaveAttribute('href', '/play?sport=volleyball');
+    expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=tabletennis');
+    expect(screen.getByRole('link', { name: 'Start Kabaddi from sports' })).toHaveAttribute('href', '/play?sport=kabaddi');
+  });
 });
