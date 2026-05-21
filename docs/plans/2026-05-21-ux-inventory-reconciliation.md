@@ -1,16 +1,16 @@
 # UX Inventory Reconciliation
 
 Date: 2026-05-21
-Base: `master` at `765f0c879fe0bc94e740711afc667809ad2d8b06`
+Base: repository default branch `master` at `765f0c879fe0bc94e740711afc667809ad2d8b06`
 
 This reconciles the original May 15 UX inventory against current `master` after PR #48. The original inventory remains a historical audit snapshot; this file is the current status source.
 
 ## Verified Current State
 
-- Open GitHub PRs: 0.
+- Open GitHub PRs before this reconciliation PR: 0. Current open reconciliation PR: #49.
 - Open GitHub issues: 0.
 - PRs #1-#48 are merged.
-- Latest `master` checks for PR #48 are green: CI, Android Build Check, iOS Build Check, and CodeRabbit Review After Checks.
+- Latest `master` checks for PR #48 are green: Build Android APK and AAB, verify, Build iOS Simulator App, SonarCloud Code Analysis, and Vercel Preview Comments.
 - Local `master` matches `origin/master` at `765f0c879fe0bc94e740711afc667809ad2d8b06`.
 
 ## Resolved UX Work
