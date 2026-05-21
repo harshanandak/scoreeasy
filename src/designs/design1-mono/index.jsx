@@ -162,9 +162,9 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
 
     const handleKeyDown = (event) => handleAppConfirmKeyDown(event, dialogRef.current, onCancel);
 
-    globalThis.addEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      globalThis.removeEventListener('keydown', handleKeyDown);
+      globalThis.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [onCancel, prompt]);
 

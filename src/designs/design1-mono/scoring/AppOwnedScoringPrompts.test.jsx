@@ -166,7 +166,7 @@ describe('app-owned scoring prompts', () => {
     const confirmUtils = readFileSync(`${import.meta.dirname}/../components/appConfirmUtils.js`, 'utf8');
 
     expect(source).toContain('handleAppConfirmKeyDown');
-    expect(source).not.toContain("addEventListener('keydown', handleKeyDown, true)");
+    expect(source).toContain("addEventListener('keydown', handleKeyDown, true)");
     expect(confirmUtils).toContain('APP_CONFIRM_BLOCKED_KEYS');
     expect(confirmUtils).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
     expect(confirmUtils).toContain('isTopmostAppConfirmDialog');
