@@ -72,6 +72,15 @@ describe('app onboarding guard', () => {
     expect(screen.getByRole('button', { name: 'Finish profile' })).toBeInTheDocument();
   });
 
+  it('keeps deferred app routes usable when they include a trailing slash', async () => {
+    renderApp('/history/');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/history/');
+    });
+    expect(screen.getByText('Profile setup can wait')).toBeInTheDocument();
+  });
+
   it('preserves the active app route when users choose to finish profile setup', async () => {
     renderApp('/history?filter=quick');
 

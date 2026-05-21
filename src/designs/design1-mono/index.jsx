@@ -155,10 +155,17 @@ function getReturnTo(location) {
   return `${location.pathname}${location.search}${location.hash}`;
 }
 
+function normalizePathname(pathname = '') {
+  if (!pathname) return '/';
+  const normalized = pathname.replace(/\/+$/, '');
+  return normalized || '/';
+}
+
 function shouldDeferOnboardingForPath(pathname = '') {
-  return ONBOARDING_DEFER_PATHS.has(pathname) ||
-    isProtectedScoringPath(pathname) ||
-    isSportAppPath(pathname);
+  const normalizedPathname = normalizePathname(pathname);
+  return ONBOARDING_DEFER_PATHS.has(normalizedPathname) ||
+    isProtectedScoringPath(normalizedPathname) ||
+    isSportAppPath(normalizedPathname);
 }
 
 function OnboardingGuard({ children }) {
