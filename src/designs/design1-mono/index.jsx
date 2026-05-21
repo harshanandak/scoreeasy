@@ -42,6 +42,8 @@ const MonoOnboarding = lazy(() => import('./MonoOnboarding'));
 const MonoProfile = lazy(() => import('./MonoProfile'));
 const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
 
+const SHOW_INTERNAL_ROUTES = import.meta.env.DEV || import.meta.env.VITE_SHOW_INTERNAL_ROUTES === 'true';
+
 function LazyFallback() {
   return <AppLoading compact />;
 }
@@ -66,7 +68,7 @@ function NotFoundRoute() {
             type="button"
             className="mono-btn-primary flex-1"
             style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/play')}
+            onClick={() => navigate('/play', { replace: true })}
           >
             Play
           </button>
@@ -74,13 +76,34 @@ function NotFoundRoute() {
             type="button"
             className="mono-btn flex-1"
             style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { replace: true })}
           >
             Home
           </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function SportRouteGuard({ children }) {
+  const { sport } = useParams();
+  if (!getSportById(sport)) return <NotFoundRoute />;
+  return children;
+}
+
+SportRouteGuard.propTypes = {
+  children: PropTypes.node,
+};
+
+function CricketQuickTestScorerRoute() {
+  const { sport } = useParams();
+  if (sport !== 'cricket') return <NotFoundRoute />;
+
+  return (
+    <SportRouteGuard>
+      <MonoCricketTestLiveScore storageMode="quick" />
+    </SportRouteGuard>
   );
 }
 
@@ -972,20 +995,28 @@ export default function Design1Mono() {
                 <Route path="users/search" element={<CloudAuthOnly><MonoUserSearch /></CloudAuthOnly>} />
 
                 <Route path="play" element={<MonoSportHome />} />
+                <Route path="dashboard" element={<Navigate to="/" replace />} />
+                <Route path="quick-match" element={<Navigate to="/volleyball/quick" replace />} />
+                <Route path="tournament" element={<Navigate to="/volleyball/tournament" replace />} />
+                <Route path="stats" element={<Navigate to="/statistics" replace />} />
 
-                <Route path=":sport/tournament" element={<MonoTournamentList />} />
-                <Route path=":sport/tournament/new" element={<MonoTournamentSetup />} />
-                <Route path=":sport/tournament/:id" element={<TournamentDispatcher />} />
-                <Route path=":sport/tournament/:id/match/:matchId/score" element={<MonoTournamentLiveScore />} />
-                <Route path=":sport/quick" element={<MonoQuickMatch />} />
-                <Route path=":sport/quick/test/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} />
+                <Route path=":sport/tournament" element={<SportRouteGuard><MonoTournamentList /></SportRouteGuard>} />
+                <Route path=":sport/tournament/new" element={<SportRouteGuard><MonoTournamentSetup /></SportRouteGuard>} />
+                <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
+                <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
+                <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
+                <Route path=":sport/quick/test/:matchId" element={<CricketQuickTestScorerRoute />} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
 
-                <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
-                <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
-                <Route path="showcase/brutalist-colors" element={<BrutalistColorShowcase />} />
-                <Route path="showcase/dashboard-variants" element={<DashboardShowcase />} />
+                {SHOW_INTERNAL_ROUTES && (
+                  <>
+                    <Route path="showcase/match-card" element={<MonoMatchCardShowcase />} />
+                    <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
+                    <Route path="showcase/brutalist-colors" element={<BrutalistColorShowcase />} />
+                    <Route path="showcase/dashboard-variants" element={<DashboardShowcase />} />
+                  </>
+                )}
 
                 <Route path="history" element={<MonoHistory />} />
                 <Route path="*" element={<NotFoundRoute />} />
