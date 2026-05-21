@@ -1,0 +1,86 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import OfflineFallback from './OfflineFallback';
+
+function setOnlineState(isOnline) {
+  Object.defineProperty(globalThis.navigator, 'onLine', {
+    configurable: true,
+    value: isOnline,
+  });
+}
+
+describe('OfflineFallback', () => {
+  beforeEach(() => {
+    globalThis.localStorage.clear();
+  });
+
+  afterEach(() => {
+    setOnlineState(true);
+  });
+
+  it('stays hidden while online', () => {
+    setOnlineState(true);
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText('Offline mode')).not.toBeInTheDocument();
+  });
+
+  it('explains local scoring and exposes offline-safe actions', () => {
+    setOnlineState(false);
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'match-1', team1: 'Team A', team2: 'Team B' },
+    ]));
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Offline mode')).toBeInTheDocument();
+    expect(screen.getByText(/Scoring stays available locally/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start quick match' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View saved matches' })).toBeInTheDocument();
+  });
+
+  it('routes offline actions through the supplied navigation guard', () => {
+    const onNavigate = vi.fn();
+    setOnlineState(false);
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback onNavigate={onNavigate} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start quick match' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View saved matches' }));
+
+    expect(onNavigate).toHaveBeenNthCalledWith(1, '/volleyball/quick');
+    expect(onNavigate).toHaveBeenNthCalledWith(2, '/history');
+  });
+
+  it('pluralizes saved counts for singular and plural values', () => {
+    setOnlineState(false);
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'match-1', team1: 'Team A', team2: 'Team B' },
+    ]));
+    globalThis.localStorage.setItem('se_volleyball', JSON.stringify([
+      { id: 'tournament-1' },
+    ]));
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText(/1 quick match and 1 tournament/i)).toBeInTheDocument();
+  });
+});
