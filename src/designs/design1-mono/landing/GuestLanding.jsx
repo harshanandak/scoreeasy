@@ -13,7 +13,7 @@ const heroSportPriority = new Map([
 ]);
 
 function sportPlayPath(sport) {
-  return `/play?sport=${sport.toLowerCase()}`;
+  return `/play?sport=${encodeURIComponent(sport.toLowerCase())}`;
 }
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
@@ -449,7 +449,7 @@ export default function GuestLanding() {
           <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             14 SPORTS.<br />YOUR RULES.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 2 : 4 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: mobile ? 8 : 4 }}>
             {sports.map((sp, i) => {
               const detail = sportDetails[sp];
               const isHovered = hoveredSport === i;
@@ -459,37 +459,49 @@ export default function GuestLanding() {
               const sIconColor = t.sportIconColor || t.text;
               const sHoverIconColor = t.sportHoverIconColor || '#fff';
               const sTextColor = t.sportTextColor || t.text;
-              const sBorderStyle = t.sportBorderStyle || 'dashed';
+              const sBorderStyle = mobile ? 'solid' : (t.sportBorderStyle || 'dashed');
               const sBorderColor = t.sportBorderColor || '#d0d0d0';
+              const sportCardHandlers = {
+                ...interactionHandlers(i, setHoveredSport, hoveredSport),
+                onFocus: () => setHoveredSport(i),
+                onBlur: () => setHoveredSport(null),
+              };
               return (
-                <div
+                <Link
                   key={sp}
+                  to={sportPlayPath(sp)}
+                  aria-label={`Start ${sp} from sports`}
                   style={{
+                    display: 'block',
                     position: 'relative',
                     border: `1.5px ${sBorderStyle} ${isHovered ? sHoverBg : sBorderColor}`,
-                    padding: mobile ? '14px 8px' : '20px 14px', textAlign: 'center', cursor: 'default',
+                    padding: mobile ? '16px 10px' : '20px 14px',
+                    minHeight: mobile ? 132 : 0,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    textDecoration: 'none',
                     transition: `all ${t.transitionSpeed} ease`,
                     background: isHovered ? sHoverBg : sBg,
                     color: isHovered ? sHoverColor : sTextColor,
                   }}
-                  {...interactionHandlers(i, setHoveredSport, hoveredSport)}
+                  {...sportCardHandlers}
                 >
                   <Cross top={2} left={4} />
                   <Cross top={2} right={4} />
                   <Cross bottom={2} left={4} />
                   <Cross bottom={2} right={4} />
                   <div style={{ marginBottom: mobile ? 6 : 10, display: 'flex', justifyContent: 'center' }}>
-                    <SportIcon name={sp} size={mobile ? 28 : 40} color={isHovered ? sHoverIconColor : sIconColor} />
+                    <SportIcon name={sp} size={mobile ? 32 : 40} color={isHovered ? sHoverIconColor : sIconColor} />
                   </div>
-                  <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.5rem' : '0.5625rem', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.5625rem', letterSpacing: '0.06em', lineHeight: 1.2, fontWeight: 700 }}>
                     {sp.toUpperCase()}
                   </span>
                   {detail && (
-                    <span style={{ display: 'block', marginTop: 6, fontSize: mobile ? '0.5625rem' : '0.6875rem', lineHeight: 1.35, color: isHovered ? sHoverColor : t.textMuted }}>
+                    <span style={{ display: 'block', marginTop: 8, fontSize: mobile ? '0.6875rem' : '0.6875rem', lineHeight: 1.35, color: isHovered ? sHoverColor : (mobile ? t.textSoft : t.textMuted) }}>
                       {detail.duration}<br />{detail.players}<br />{detail.rules}
                     </span>
                   )}
-                </div>
+                </Link>
               );
             })}
           </div>
