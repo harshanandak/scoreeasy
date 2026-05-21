@@ -119,6 +119,16 @@ const GUARD_BYPASS_PREFIXES = [
   '/terms',
   '/contact',
 ];
+const ONBOARDING_DEFER_PATHS = new Set([
+  '/',
+  '/dashboard',
+  '/history',
+  '/play',
+  '/quick-match',
+  '/statistics',
+  '/stats',
+  '/tournament',
+]);
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
 const NO_PRIOR_ROUTE_INDEX = -1;
@@ -134,14 +144,31 @@ function isProtectedScoringPath(pathname = '') {
     ));
 }
 
+function isSportAppPath(pathname = '') {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length < 2) return false;
+  if (!getSportById(segments[0])) return false;
+  return segments[1] === 'quick' || segments[1] === 'tournament';
+}
+
+function getReturnTo(location) {
+  return `${location.pathname}${location.search}${location.hash}`;
+}
+
+function shouldDeferOnboardingForPath(pathname = '') {
+  return ONBOARDING_DEFER_PATHS.has(pathname) ||
+    isProtectedScoringPath(pathname) ||
+    isSportAppPath(pathname);
+}
+
 function OnboardingGuard({ children }) {
   const { needsOnboarding, isLoading } = useAuth();
   const location = useLocation();
   if (isLoading) return <LazyFallback />;
   const bypassed = GUARD_BYPASS_PREFIXES.some((p) => location.pathname.startsWith(p));
-  const isScoring = isProtectedScoringPath(location.pathname);
-  if (needsOnboarding && !bypassed && !isScoring) {
-    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+  const shouldDefer = shouldDeferOnboardingForPath(location.pathname);
+  if (needsOnboarding && !bypassed && !shouldDefer) {
+    const returnTo = getReturnTo(location);
     return <Navigate to={`/onboarding?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
   return children;
@@ -150,6 +177,58 @@ function OnboardingGuard({ children }) {
 OnboardingGuard.propTypes = {
   children: PropTypes.node,
 };
+
+function OnboardingReminder() {
+  const { cloudAuthAvailable, isLoading, needsOnboarding } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  if (
+    isLoading ||
+    !cloudAuthAvailable ||
+    !needsOnboarding ||
+    isProtectedScoringPath(location.pathname) ||
+    !shouldDeferOnboardingForPath(location.pathname)
+  ) {
+    return null;
+  }
+
+  const returnTo = getReturnTo(location);
+
+  return (
+    <div
+      className="mono-card"
+      role="status"
+      aria-live="polite"
+      style={{
+        margin: '8px auto 0',
+        maxWidth: '640px',
+        padding: '12px',
+        borderColor: '#0066ff',
+        color: '#111',
+      }}
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest" style={{ color: '#0066ff', marginBottom: 4 }}>
+            Profile setup can wait
+          </p>
+          <p className="text-sm" style={{ color: '#444', margin: 0 }}>
+            Keep scoring now. Finish your profile when you want sync, search, and account tools.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="mono-btn-primary"
+          style={{ minHeight: 44, padding: '10px 12px', whiteSpace: 'nowrap' }}
+          onClick={() => navigate(`/onboarding?returnTo=${encodeURIComponent(returnTo)}`)}
+        >
+          Finish profile
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
@@ -1073,6 +1152,7 @@ export default function Design1Mono() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
+      <OnboardingReminder />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
