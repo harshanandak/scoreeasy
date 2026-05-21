@@ -18,23 +18,27 @@ function expectReadyStartLink(label, href) {
   expect(screen.getAllByRole('link', { name: label }).at(-1)).toHaveAttribute('href', href);
 }
 
+function setViewport(width, mobile = false) {
+  globalThis.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: mobile && query.includes('max-width'),
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+  Object.defineProperty(globalThis, 'innerWidth', {
+    configurable: true,
+    writable: true,
+    value: width,
+  });
+}
+
 describe('GuestLanding bottom CTA', () => {
   beforeEach(() => {
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      writable: true,
-      value: 1024,
-    });
+    setViewport(1024);
   });
 
   it('keeps the signup CTA visible on preview/local auth builds', () => {
@@ -61,37 +65,17 @@ describe('GuestLanding bottom CTA', () => {
   });
 
   it('keeps mobile hero controls at touch target size', () => {
-    window.innerWidth = 390;
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
-      matches: query.includes('max-width'),
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    setViewport(390, true);
 
     renderLanding({ cloudAuthAvailable: true });
 
     expect(screen.getAllByRole('link', { name: 'START CRICKET' }).at(0)).toHaveStyle({ minHeight: '44px' });
-    expect(screen.getByRole('link', { name: 'CHOOSE SPORT' })).toHaveStyle({ minHeight: '44px' });
+    expect(screen.getAllByRole('link', { name: 'CHOOSE SPORT' }).at(0)).toHaveStyle({ minHeight: '44px' });
     expect(screen.getByRole('button', { name: 'CRICKET' })).toHaveStyle({ minHeight: '44px' });
   });
 
   it('turns landing sport cards into mobile-friendly start links', () => {
-    globalThis.innerWidth = 390;
-    globalThis.matchMedia = vi.fn().mockImplementation((query) => ({
-      matches: query.includes('max-width'),
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
+    setViewport(390, true);
 
     renderLanding({ cloudAuthAvailable: true });
 
@@ -102,5 +86,18 @@ describe('GuestLanding bottom CTA', () => {
     expect(screen.getByRole('link', { name: 'Start Volleyball from sports' })).toHaveAttribute('href', '/play?sport=volleyball');
     expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=tabletennis');
     expect(screen.getByRole('link', { name: 'Start Kabaddi from sports' })).toHaveAttribute('href', '/play?sport=kabaddi');
+  });
+
+  it('turns the three-step section into active sport actions', () => {
+    renderLanding({ cloudAuthAvailable: true });
+
+    expect(screen.getAllByRole('link', { name: 'CHOOSE SPORT' }).at(-1)).toHaveAttribute('href', '/play');
+    expect(screen.getByRole('link', { name: 'SET UP CRICKET' })).toHaveAttribute('href', '/play?sport=cricket');
+    expect(screen.getByRole('link', { name: 'START SCORING' })).toHaveAttribute('href', '/play?sport=cricket');
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'VOLLEYBALL' }));
+
+    expect(screen.getByRole('link', { name: 'SET UP VOLLEYBALL' })).toHaveAttribute('href', '/play?sport=volleyball');
+    expect(screen.getByRole('link', { name: 'START SCORING' })).toHaveAttribute('href', '/play?sport=volleyball');
   });
 });
