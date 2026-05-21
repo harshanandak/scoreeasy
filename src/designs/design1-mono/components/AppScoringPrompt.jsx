@@ -39,6 +39,7 @@ export function useAppScoringPrompt() {
       cancelLabel: 'Keep scoring',
       confirmLabel: 'Discard',
       message: 'Your unsaved scoring changes will be lost.',
+      tone: 'danger',
       title: 'Discard changes?',
       type: 'discard',
     });
@@ -94,18 +95,15 @@ export function AppScoringNotice({ message, tone = 'success', onDismiss = null }
   return (
     <div
       role={isWarning ? 'alert' : 'status'}
-      className="mono-card mb-4 flex items-center justify-between gap-3"
-      style={{
-        padding: '12px 14px',
-        background: isWarning ? '#fff7ed' : '#f0fdf4',
-        borderColor: isWarning ? '#fed7aa' : '#bbf7d0',
-      }}
+      aria-live={isWarning ? 'assertive' : 'polite'}
+      className={`app-scoring-notice ${isWarning ? 'app-scoring-notice-warning' : 'app-scoring-notice-success'}`}
     >
-      <p className="text-sm" style={{ color: isWarning ? '#9a3412' : '#166534' }}>
-        {message}
-      </p>
+      <div className="app-scoring-notice-copy">
+        <span className="app-scoring-notice-label">{isWarning ? 'Needs attention' : 'Saved locally'}</span>
+        <p className="app-scoring-notice-message">{message}</p>
+      </div>
       {onDismiss && (
-        <button type="button" onClick={onDismiss} className="mono-btn" style={{ padding: '6px 10px', minHeight: 34 }}>
+        <button type="button" onClick={onDismiss} className="app-scoring-notice-action">
           OK
         </button>
       )}
@@ -119,6 +117,7 @@ export function AppScoringConfirmDialog({
   message,
   onCancel,
   onConfirm,
+  tone = 'primary',
   title,
 }) {
   const cancelButtonRef = useRef(null);
@@ -197,7 +196,7 @@ export function AppScoringConfirmDialog({
           <button type="button" ref={cancelButtonRef} onClick={onCancel} className="app-confirm-secondary">
             {cancelLabel}
           </button>
-          <button type="button" onClick={onConfirm} className="app-confirm-primary">
+          <button type="button" onClick={onConfirm} className={`app-confirm-primary${tone === 'danger' ? ' app-confirm-danger' : ''}`}>
             {confirmLabel}
           </button>
         </div>
@@ -227,6 +226,7 @@ export function AppScoringPromptHost({
           message={pendingPrompt.message}
           onCancel={onCancelPrompt}
           onConfirm={onConfirmPrompt}
+          tone={pendingPrompt.tone}
           title={pendingPrompt.title}
         />
       )}
@@ -246,6 +246,7 @@ AppScoringConfirmDialog.propTypes = {
   message: PropTypes.string.isRequired,
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
+  tone: PropTypes.oneOf(['primary', 'danger']),
   title: PropTypes.string.isRequired,
 };
 
@@ -261,6 +262,7 @@ AppScoringPromptHost.propTypes = {
     cancelLabel: PropTypes.string,
     confirmLabel: PropTypes.string.isRequired,
     message: PropTypes.string.isRequired,
+    tone: PropTypes.oneOf(['primary', 'danger']),
     title: PropTypes.string.isRequired,
     type: PropTypes.string,
   }),

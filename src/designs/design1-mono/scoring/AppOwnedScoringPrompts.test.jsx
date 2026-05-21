@@ -23,6 +23,7 @@ describe('app-owned scoring prompts', () => {
     );
 
     expect(screen.getByRole('status')).toHaveTextContent('Draft saved');
+    expect(screen.getByText('Saved locally')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'OK' }));
 
@@ -40,11 +41,13 @@ describe('app-owned scoring prompts', () => {
         message="Your unsaved scoring changes will be lost."
         onCancel={onCancel}
         onConfirm={onConfirm}
+        tone="danger"
         title="Discard changes?"
       />,
     );
 
     expect(screen.getByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Discard' })).toHaveClass('app-confirm-danger');
 
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
 
@@ -121,6 +124,19 @@ describe('app-owned scoring prompts', () => {
     globalThis.removeEventListener('keydown', hotkeyListener);
   });
 
+  it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
+    const source = readFileSync('src/designs/design1-mono/index.jsx', 'utf8');
+
+    expect(source).toContain('APP_CONFIRM_BLOCKED_KEYS');
+    expect(source).toContain('APP_CONFIRM_FOCUSABLE_SELECTOR');
+    expect(source).toContain('tabIndex={-1}');
+    expect(source).toContain("tone: 'danger'");
+    expect(source).toContain('.app-confirm-danger');
+    expect(source).toContain('.app-scoring-notice');
+    expect(source).toContain('@media (max-width: 767px)');
+    expect(source).toContain('env(safe-area-inset-bottom, 0px)');
+  });
+
   it('locks scorer interaction while the post-save redirect is pending', () => {
     vi.useFakeTimers();
     const navigateAfterSave = vi.fn();
@@ -140,6 +156,21 @@ describe('app-owned scoring prompts', () => {
     expect(result.current.isInteractionLocked).toBe(false);
 
     vi.useRealTimers();
+  });
+
+  it('marks discard prompts as destructive app actions', () => {
+    const { result } = renderHook(() => useAppScoringPrompt());
+
+    act(() => {
+      result.current.requestDiscardPrompt();
+    });
+
+    expect(result.current.pendingPrompt).toMatchObject({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      tone: 'danger',
+      title: 'Discard changes?',
+    });
   });
 
   it('locks all sets scorer controls during delayed draft redirects', () => {

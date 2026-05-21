@@ -120,6 +120,8 @@ const GUARD_BYPASS_PREFIXES = [
 ];
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
+const APP_CONFIRM_BLOCKED_KEYS = new Set(['0', '1', '2', '3', '4', '5', '6', 'e', 'p', 'q', 'u', 'w']);
+const APP_CONFIRM_FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
@@ -152,6 +154,7 @@ OnboardingGuard.propTypes = {
 
 function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
+  const dialogRef = useRef(null);
 
   useEffect(() => {
     if (!prompt) return undefined;
@@ -161,13 +164,40 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopPropagation();
         onCancel();
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        const focusable = dialogRef.current?.querySelectorAll(APP_CONFIRM_FOCUSABLE_SELECTOR);
+        const controls = [...(focusable || [])].filter((control) => !control.disabled);
+        if (controls.length === 0) return;
+
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+          return;
+        }
+
+        if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+          return;
+        }
+      }
+
+      if (APP_CONFIRM_BLOCKED_KEYS.has(event.key.toLowerCase())) {
+        event.preventDefault();
+        event.stopPropagation();
       }
     };
 
-    globalThis.addEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      globalThis.removeEventListener('keydown', handleKeyDown);
+      globalThis.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [onCancel, prompt]);
 
@@ -180,9 +210,11 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
         className="app-confirm-backdrop-button"
         aria-label="Dismiss dialog"
         onClick={onCancel}
+        tabIndex={-1}
       />
       <section
         className="app-confirm-dialog"
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="app-confirm-title"
@@ -208,7 +240,7 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
           </button>
           <button
             type="button"
-            className="app-confirm-primary"
+            className={`app-confirm-primary${prompt.tone === 'danger' ? ' app-confirm-danger' : ''}`}
             onClick={onConfirm}
           >
             {prompt.confirmLabel || 'Leave'}
@@ -227,6 +259,7 @@ AppConfirmDialog.propTypes = {
     cancelLabel: PropTypes.string,
     onConfirm: PropTypes.func,
     onCancel: PropTypes.func,
+    tone: PropTypes.oneOf(['primary', 'danger']),
   }),
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
@@ -501,8 +534,9 @@ function GlobalNavigation({ requestScoringExit }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(17, 17, 17, 0.58);
-          padding: 20px;
+          background: rgba(17, 17, 17, 0.62);
+          padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+          backdrop-filter: blur(2px);
         }
 
         .app-confirm-backdrop-button {
@@ -516,12 +550,14 @@ function GlobalNavigation({ requestScoringExit }) {
         .app-confirm-dialog {
           position: relative;
           z-index: 1;
-          width: min(440px, 100%);
+          width: min(480px, 100%);
+          max-height: min(720px, calc(100vh - 40px));
+          overflow: auto;
           border: 1.5px solid #111;
           background: #fff;
           color: #111;
-          box-shadow: 6px 6px 0 #111;
-          padding: 24px;
+          box-shadow: 8px 8px 0 #111;
+          padding: 26px;
         }
 
         .app-confirm-eyebrow {
@@ -552,21 +588,27 @@ function GlobalNavigation({ requestScoringExit }) {
         .app-confirm-actions {
           display: flex;
           justify-content: flex-end;
-          gap: 10px;
+          gap: 12px;
         }
 
         .app-confirm-primary,
         .app-confirm-secondary {
-          min-height: 44px;
+          min-height: 48px;
           border: 1.5px solid #111;
           cursor: pointer;
           font-size: 0.875rem;
           font-weight: 700;
-          padding: 10px 16px;
+          padding: 12px 18px;
+          touch-action: manipulation;
         }
 
         .app-confirm-primary {
           background: #0066ff;
+          color: #fff;
+        }
+
+        .app-confirm-danger {
+          background: #111;
           color: #fff;
         }
 
@@ -575,9 +617,97 @@ function GlobalNavigation({ requestScoringExit }) {
           color: #111;
         }
 
+        .app-scoring-notice {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          margin-bottom: 16px;
+          border: 1.5px solid #111;
+          background: #fff;
+          box-shadow: 4px 4px 0 #111;
+          padding: 14px 16px;
+        }
+
+        .app-scoring-notice-warning {
+          border-left: 6px solid #d97706;
+        }
+
+        .app-scoring-notice-success {
+          border-left: 6px solid #16a34a;
+        }
+
+        .app-scoring-notice-copy {
+          min-width: 0;
+        }
+
+        .app-scoring-notice-label {
+          display: block;
+          color: #0066ff;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-size: 0.625rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+        }
+
+        .app-scoring-notice-message {
+          color: #333;
+          font-size: 0.875rem;
+          line-height: 1.45;
+          margin: 0;
+        }
+
+        .app-scoring-notice-action {
+          min-height: 44px;
+          border: 1.5px solid #111;
+          background: #111;
+          color: #fff;
+          cursor: pointer;
+          font-size: 0.8125rem;
+          font-weight: 800;
+          padding: 10px 14px;
+          touch-action: manipulation;
+        }
+
         @media (max-width: 767px) {
           body.has-mobile-bottom-nav {
             padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+          }
+
+          .app-confirm-backdrop {
+            align-items: flex-end;
+            padding: 16px 16px max(16px, env(safe-area-inset-bottom, 0px));
+          }
+
+          .app-confirm-dialog {
+            width: 100%;
+            max-height: min(88vh, 680px);
+            padding: 20px;
+            box-shadow: 5px 5px 0 #111;
+          }
+
+          .app-confirm-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+          }
+
+          .app-confirm-primary,
+          .app-confirm-secondary {
+            width: 100%;
+            min-height: 50px;
+          }
+
+          .app-scoring-notice {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+          }
+
+          .app-scoring-notice-action {
+            width: 100%;
           }
 
           .global-nav {
@@ -806,6 +936,7 @@ export default function Design1Mono() {
       message: SCORING_EXIT_MESSAGE,
       confirmLabel: 'Leave page',
       cancelLabel: 'Stay here',
+      tone: 'danger',
       ...options,
     };
 
