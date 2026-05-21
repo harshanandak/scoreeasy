@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   hasNativePlugin: vi.fn(),
@@ -42,6 +42,10 @@ beforeEach(() => {
   mocks.notification.mockResolvedValue(undefined);
 });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 function enableNativeHaptics() {
   mocks.hasNativePlugin.mockReturnValue(true);
   mocks.isNativeMobile.mockReturnValue(true);
@@ -54,12 +58,37 @@ describe('haptics', () => {
     expect(mocks.impact).not.toHaveBeenCalled();
   });
 
+  it('uses browser vibration for scoring taps when native haptics are unavailable', async () => {
+    const vibrate = vi.fn(() => true);
+    vi.stubGlobal('navigator', { vibrate });
+
+    await expect(scoreImpact()).resolves.toBe(true);
+
+    expect(mocks.impact).not.toHaveBeenCalled();
+    expect(vibrate).toHaveBeenCalledWith(50);
+  });
+
+  it('uses distinct vibration patterns for completion and warning feedback', async () => {
+    const vibrate = vi.fn(() => true);
+    vi.stubGlobal('navigator', { vibrate });
+
+    await expect(endMatchImpact()).resolves.toBe(true);
+    await expect(warningImpact()).resolves.toBe(true);
+
+    expect(vibrate).toHaveBeenNthCalledWith(1, [100, 100, 100, 100, 100]);
+    expect(vibrate).toHaveBeenNthCalledWith(2, [80, 80, 80]);
+  });
+
   it('does not call native haptics when the plugin is unavailable', async () => {
     mocks.isNativeMobile.mockReturnValue(true);
 
-    await expect(scoreImpact()).resolves.toBe(false);
+    const vibrate = vi.fn(() => true);
+    vi.stubGlobal('navigator', { vibrate });
+
+    await expect(scoreImpact()).resolves.toBe(true);
 
     expect(mocks.impact).not.toHaveBeenCalled();
+    expect(vibrate).toHaveBeenCalledWith(50);
   });
 
   it('uses light impact feedback for scoring taps', async () => {
@@ -99,5 +128,16 @@ describe('haptics', () => {
     mocks.impact.mockRejectedValue(new Error('bridge failed'));
 
     await expect(scoreImpact()).resolves.toBe(false);
+  });
+
+  it('falls back to vibration when the native bridge rejects', async () => {
+    enableNativeHaptics();
+    mocks.impact.mockRejectedValue(new Error('bridge failed'));
+    const vibrate = vi.fn(() => true);
+    vi.stubGlobal('navigator', { vibrate });
+
+    await expect(scoreImpact()).resolves.toBe(true);
+
+    expect(vibrate).toHaveBeenCalledWith(50);
   });
 });
