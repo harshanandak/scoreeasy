@@ -81,8 +81,8 @@ describe('GuestLanding bottom CTA', () => {
   });
 
   it('turns landing sport cards into mobile-friendly start links', () => {
-    window.innerWidth = 390;
-    window.matchMedia = vi.fn().mockImplementation((query) => ({
+    globalThis.innerWidth = 390;
+    globalThis.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: query.includes('max-width'),
       media: query,
       onchange: null,

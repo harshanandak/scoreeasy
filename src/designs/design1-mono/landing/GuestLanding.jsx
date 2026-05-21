@@ -466,6 +466,8 @@ export default function GuestLanding() {
                 onFocus: () => setHoveredSport(i),
                 onBlur: () => setHoveredSport(null),
               };
+              let detailColor = mobile ? t.textSoft : t.textMuted;
+              if (isHovered) detailColor = sHoverColor;
               return (
                 <Link
                   key={sp}
@@ -497,7 +499,7 @@ export default function GuestLanding() {
                     {sp.toUpperCase()}
                   </span>
                   {detail && (
-                    <span style={{ display: 'block', marginTop: 8, fontSize: mobile ? '0.6875rem' : '0.6875rem', lineHeight: 1.35, color: isHovered ? sHoverColor : (mobile ? t.textSoft : t.textMuted) }}>
+                    <span style={{ display: 'block', marginTop: 8, fontSize: '0.6875rem', lineHeight: 1.35, color: detailColor }}>
                       {detail.duration}<br />{detail.players}<br />{detail.rules}
                     </span>
                   )}
