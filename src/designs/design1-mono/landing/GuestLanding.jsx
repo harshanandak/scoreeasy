@@ -538,13 +538,13 @@ export default function GuestLanding() {
           READY?
         </h2>
         <div style={{ display: 'flex', gap: mobile ? 10 : 16, justifyContent: 'center', flexDirection: mobile ? 'column' : 'row', alignItems: 'center' }}>
-          <Link to="/play" style={{
+          <Link to={sportPlayPath(activeCard.sport)} style={{
             fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
             background: t.blue, color: '#fff', border: `2px solid ${t.blue}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
           }}>
-            START A GAME
+            {activeStartLabel}
           </Link>
           <Link to={signupPath} style={{
             fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
