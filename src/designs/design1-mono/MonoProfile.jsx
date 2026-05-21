@@ -1,7 +1,9 @@
+import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { DEFAULT_GUEST_SCORING_PATH } from "../../utils/authRedirect";
 import { useAuth } from "../../hooks/useAuth";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
@@ -9,9 +11,9 @@ import SportIcon from "./SportIcon";
 function getRoleLabel(stats) {
   const played = stats?.totalMatches > 0;
   const scored = stats?.gamesOperated > 0;
-  if (played && scored) return "Player & Scorer · ";
-  if (scored) return "Scorer · ";
-  if (played) return "Player · ";
+  if (played && scored) return "Player & Scorer - ";
+  if (scored) return "Scorer - ";
+  if (played) return "Player - ";
   return "";
 }
 
@@ -37,6 +39,70 @@ function LoadingState({ onBack }) {
   );
 }
 
+function RecoveryActions({ cloudAuthAvailable, message, onBack, onNavigate, title }) {
+  return (
+    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
+      <div className="max-w-2xl mx-auto">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
+          style={{ color: "#888" }}
+        >
+          <BackArrow /> Back
+        </button>
+
+        <section className="mono-card" style={{ padding: "20px", borderColor: "#111" }}>
+          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#888" }}>
+            Profile
+          </p>
+          <h1 className="text-xl font-bold mb-3" style={{ color: "#111" }}>
+            {title}
+          </h1>
+          <p className="text-sm mb-5" style={{ color: "#666" }}>
+            {message}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {cloudAuthAvailable && (
+              <button
+                type="button"
+                className="mono-btn-primary"
+                style={{ minHeight: 44, padding: "10px 14px" }}
+                onClick={() => onNavigate("/login?returnTo=%2Fprofile")}
+              >
+                Sign in to sync profile
+              </button>
+            )}
+            <button
+              type="button"
+              className={cloudAuthAvailable ? "mono-btn" : "mono-btn-primary"}
+              style={{ minHeight: 44, padding: "10px 14px" }}
+              onClick={() => onNavigate(DEFAULT_GUEST_SCORING_PATH)}
+            >
+              Start guest match
+            </button>
+            <button
+              type="button"
+              className="mono-btn"
+              style={{ minHeight: 44, padding: "10px 14px" }}
+              onClick={() => onNavigate("/users/search")}
+            >
+              Find players
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+RecoveryActions.propTypes = {
+  cloudAuthAvailable: PropTypes.bool.isRequired,
+  message: PropTypes.string.isRequired,
+  onBack: PropTypes.func.isRequired,
+  onNavigate: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+};
 export default function MonoProfile() {
   const navigate = useNavigate();
   const { username: paramUsername } = useParams();
@@ -45,6 +111,7 @@ export default function MonoProfile() {
     isAuthenticated,
     isLoading: authLoading,
     isUserReady,
+    cloudAuthAvailable,
   } = useAuth();
   const [visible, setVisible] = useState(false);
 
@@ -75,18 +142,13 @@ export default function MonoProfile() {
 
   if (!paramUsername && !displayUser && !isAuthenticated) {
     return (
-      <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate("/")}
-            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
-            style={{ color: "#888" }}
-          >
-            <BackArrow /> Back
-          </button>
-          <p style={{ color: "#888" }}>Sign in to view your profile.</p>
-        </div>
-      </div>
+      <RecoveryActions
+        cloudAuthAvailable={cloudAuthAvailable}
+        message="You can sign in to sync your profile, or keep scoring locally as a guest."
+        onBack={() => navigate("/")}
+        onNavigate={navigate}
+        title="Save your profile when you're ready"
+      />
     );
   }
 
@@ -96,18 +158,13 @@ export default function MonoProfile() {
 
   if (paramUsername && profileUser === null) {
     return (
-      <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
-            style={{ color: "#888" }}
-          >
-            <BackArrow /> Back
-          </button>
-          <p style={{ color: "#888" }}>User @{paramUsername} not found.</p>
-        </div>
-      </div>
+      <RecoveryActions
+        cloudAuthAvailable={cloudAuthAvailable}
+        message={`User @${paramUsername} not found.`}
+        onBack={() => navigate(-1)}
+        onNavigate={navigate}
+        title="Profile not found"
+      />
     );
   }
 
@@ -189,19 +246,19 @@ export default function MonoProfile() {
           <div className={getStatsGridClass(stats)}>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.totalMatches ?? "—"}
+                {stats?.totalMatches ?? "-"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Matches</p>
             </div>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.wins ?? "—"}
+                {stats?.wins ?? "-"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Wins</p>
             </div>
             <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.winRate == null ? "—" : `${stats.winRate}%`}
+                {stats?.winRate == null ? "-" : `${stats.winRate}%`}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Win Rate</p>
             </div>

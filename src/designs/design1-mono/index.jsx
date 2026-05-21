@@ -827,6 +827,17 @@ export default function Design1Mono() {
     onConfirm?.();
   }, [exitPrompt]);
 
+  const navigateFromOfflineFallback = useCallback((path) => {
+    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+      requestScoringExit({
+        onConfirm: () => navigate(path),
+      });
+      return;
+    }
+
+    navigate(path);
+  }, [location.pathname, navigate, requestScoringExit]);
+
   useEffect(() => {
     nativeDeepLinkContextRef.current = {
       hash: location.hash || '',
@@ -895,6 +906,39 @@ export default function Design1Mono() {
       }
     };
 
+    const leaveProtectedRouteAfterConfirm = () => {
+      const currentRouteHistoryIndex = globalThis.history.state?.idx;
+      const baseRouteHistoryIndex = protectedRouteHistoryIndexRef.current;
+      const canReturnToPriorRoute =
+        typeof currentRouteHistoryIndex === 'number' &&
+        typeof baseRouteHistoryIndex === 'number' &&
+        baseRouteHistoryIndex !== NO_PRIOR_ROUTE_INDEX &&
+        currentRouteHistoryIndex > baseRouteHistoryIndex;
+
+      if (canReturnToPriorRoute) {
+        const backDelta = currentRouteHistoryIndex - baseRouteHistoryIndex + protectedGuardDepthRef.current;
+        allowNextProtectedPopRef.current = true;
+        globalThis.history.go(-backDelta);
+        return;
+      }
+
+      clearPendingFallbackNavigation();
+      allowNextProtectedPopRef.current = true;
+      replaceScoringEntryOnPop = () => {
+        clearPendingFallbackNavigation();
+        navigate('/play', { replace: true });
+      };
+
+      globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
+      globalThis.history.back();
+      fallbackTimeoutId = globalThis.setTimeout(() => {
+        clearPendingFallbackNavigation();
+        if (isProtectedScoringPath(globalThis.location.pathname)) {
+          navigate('/play', { replace: true });
+        }
+      }, 300);
+    };
+
     const handlePopState = () => {
       if (allowNextProtectedPopRef.current) {
         allowNextProtectedPopRef.current = false;
@@ -903,38 +947,7 @@ export default function Design1Mono() {
 
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
       requestScoringExit({
-        onConfirm: () => {
-          const currentRouteHistoryIndex = globalThis.history.state?.idx;
-          const baseRouteHistoryIndex = protectedRouteHistoryIndexRef.current;
-          const canReturnToPriorRoute =
-            typeof currentRouteHistoryIndex === 'number' &&
-            typeof baseRouteHistoryIndex === 'number' &&
-            baseRouteHistoryIndex !== NO_PRIOR_ROUTE_INDEX &&
-            currentRouteHistoryIndex > baseRouteHistoryIndex;
-
-          if (canReturnToPriorRoute) {
-            const backDelta = currentRouteHistoryIndex - baseRouteHistoryIndex + protectedGuardDepthRef.current;
-            allowNextProtectedPopRef.current = true;
-            globalThis.history.go(-backDelta);
-            return;
-          }
-
-          clearPendingFallbackNavigation();
-          allowNextProtectedPopRef.current = true;
-          replaceScoringEntryOnPop = () => {
-            clearPendingFallbackNavigation();
-            navigate('/play', { replace: true });
-          };
-
-          globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
-          globalThis.history.back();
-          fallbackTimeoutId = globalThis.setTimeout(() => {
-            clearPendingFallbackNavigation();
-            if (isProtectedScoringPath(globalThis.location.pathname)) {
-              navigate('/play', { replace: true });
-            }
-          }, 300);
-        },
+        onConfirm: leaveProtectedRouteAfterConfirm,
       });
     };
 
@@ -947,6 +960,7 @@ export default function Design1Mono() {
           onCancel: () => resolve(false),
         });
       }),
+      goBack: leaveProtectedRouteAfterConfirm,
     });
 
     return () => {
@@ -960,7 +974,7 @@ export default function Design1Mono() {
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} />
-      <OfflineFallback />
+      <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">

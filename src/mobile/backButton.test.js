@@ -72,6 +72,11 @@ describe('isProtectedScoringRoute', () => {
     expect(isProtectedScoringRoute('/play')).toBe(false);
     expect(isProtectedScoringRoute('/history')).toBe(false);
   });
+
+  it('does not match scoring-like route substrings', () => {
+    expect(isProtectedScoringRoute('/guides/quickstart')).toBe(false);
+    expect(isProtectedScoringRoute('/volleyball/tournament/123/match/abc/scoreboard')).toBe(false);
+  });
 });
 
 describe('installNativeBackButtonGuard', () => {
@@ -95,13 +100,13 @@ describe('installNativeBackButtonGuard', () => {
     expect(remove).toHaveBeenCalledTimes(1);
   });
 
-  it('lets browser popstate guard protected routes during native history navigation', async () => {
+  it('guards protected routes before native history navigation', async () => {
     const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler();
 
-    backButtonHandler({ canGoBack: true });
+    await backButtonHandler({ canGoBack: true });
 
-    expect(confirmLeave).not.toHaveBeenCalled();
-    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });
 
@@ -110,7 +115,19 @@ describe('installNativeBackButtonGuard', () => {
       confirmResult: true,
     });
 
-    backButtonHandler({ canGoBack: true });
+    await backButtonHandler({ canGoBack: true });
+
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(exitApp).not.toHaveBeenCalled();
+  });
+
+  it('navigates back immediately from unprotected routes', async () => {
+    const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler({
+      pathname: '/history',
+    });
+
+    await backButtonHandler({ canGoBack: true });
 
     expect(confirmLeave).not.toHaveBeenCalled();
     expect(goBack).toHaveBeenCalledTimes(1);
@@ -120,7 +137,7 @@ describe('installNativeBackButtonGuard', () => {
   it('guards protected routes before exiting the native app', async () => {
     const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler();
 
-    backButtonHandler({ canGoBack: false });
+    await backButtonHandler({ canGoBack: false });
 
     expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
     expect(goBack).not.toHaveBeenCalled();
