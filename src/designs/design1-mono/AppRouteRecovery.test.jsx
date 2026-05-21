@@ -73,4 +73,10 @@ describe('app route recovery', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
     });
   });
+
+  it('keeps quick test scoring restricted to cricket routes', async () => {
+    renderApp('/tennis/quick/test/123');
+
+    expect(await screen.findByText('This screen is not available')).toBeInTheDocument();
+  });
 });

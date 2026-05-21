@@ -96,6 +96,17 @@ SportRouteGuard.propTypes = {
   children: PropTypes.node,
 };
 
+function CricketQuickTestScorerRoute() {
+  const { sport } = useParams();
+  if (sport !== 'cricket') return <NotFoundRoute />;
+
+  return (
+    <SportRouteGuard>
+      <MonoCricketTestLiveScore storageMode="quick" />
+    </SportRouteGuard>
+  );
+}
+
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = [
   '/onboarding',
@@ -980,7 +991,7 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
-                <Route path=":sport/quick/test/:matchId" element={<SportRouteGuard><MonoCricketTestLiveScore storageMode="quick" /></SportRouteGuard>} />
+                <Route path=":sport/quick/test/:matchId" element={<CricketQuickTestScorerRoute />} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
 
