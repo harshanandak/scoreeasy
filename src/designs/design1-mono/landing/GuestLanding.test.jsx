@@ -100,6 +100,7 @@ describe('GuestLanding bottom CTA', () => {
     expect(cricketCard).toHaveStyle({ minHeight: '132px' });
     expect(screen.getByRole('link', { name: 'Start Football from sports' })).toHaveAttribute('href', '/play?sport=football');
     expect(screen.getByRole('link', { name: 'Start Volleyball from sports' })).toHaveAttribute('href', '/play?sport=volleyball');
-    expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=table%20tennis');
+    expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=tabletennis');
+    expect(screen.getByRole('link', { name: 'Start Kabaddi from sports' })).toHaveAttribute('href', '/play?sport=kabaddi');
   });
 });

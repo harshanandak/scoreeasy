@@ -12,8 +12,26 @@ const heroSportPriority = new Map([
   ['Volleyball', 2],
 ]);
 
+const sportIdByName = new Map([
+  ['Badminton', 'badminton'],
+  ['Basketball', 'basketball'],
+  ['Cricket', 'cricket'],
+  ['Football', 'football'],
+  ['Futsal', 'futsal'],
+  ['Handball', 'handball'],
+  ['Hockey', 'hockey'],
+  ['Kabaddi', 'kabaddi'],
+  ['Pickleball', 'pickleball'],
+  ['Rugby', 'rugby'],
+  ['Squash', 'squash'],
+  ['Table Tennis', 'tabletennis'],
+  ['Tennis', 'tennis'],
+  ['Volleyball', 'volleyball'],
+]);
+
 function sportPlayPath(sport) {
-  return `/play?sport=${encodeURIComponent(sport.toLowerCase())}`;
+  const sportId = sportIdByName.get(sport);
+  return sportId ? `/play?sport=${sportId}` : '/play';
 }
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';

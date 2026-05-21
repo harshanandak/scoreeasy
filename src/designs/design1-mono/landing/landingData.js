@@ -1,6 +1,6 @@
 export const sports = [
   'Cricket', 'Football', 'Volleyball', 'Tennis', 'Basketball', 'Badminton',
-  'Hockey', 'Table Tennis', 'Golf', 'Pool', 'Chess', 'Rugby', 'Frisbee', 'Handball',
+  'Hockey', 'Table Tennis', 'Pickleball', 'Squash', 'Rugby', 'Handball', 'Futsal', 'Kabaddi',
 ];
 
 export const sportDetails = {
@@ -12,12 +12,12 @@ export const sportDetails = {
   Badminton: { duration: 'best of 3', players: '1v1 / 2v2', rules: 'rally points' },
   Hockey: { duration: 'periods', players: '2 teams', rules: 'goals + clock' },
   'Table Tennis': { duration: 'best of 5', players: '1v1 / 2v2', rules: '11-point games' },
-  Golf: { duration: '9/18 holes', players: 'groups', rules: 'strokes + par' },
-  Pool: { duration: 'racks', players: '1v1', rules: 'frames + wins' },
-  Chess: { duration: 'timed', players: '1v1', rules: 'result + clock' },
+  Pickleball: { duration: 'best of 3', players: '1v1 / 2v2', rules: 'rally or side-out' },
+  Squash: { duration: 'best of 3/5', players: '1v1', rules: 'PAR scoring' },
   Rugby: { duration: 'halves', players: '2 teams', rules: 'tries + kicks' },
-  Frisbee: { duration: 'points', players: '2 teams', rules: 'goal targets' },
   Handball: { duration: 'halves', players: '2 teams', rules: 'goals + time' },
+  Futsal: { duration: 'indoor halves', players: '5v5', rules: 'goals + clock' },
+  Kabaddi: { duration: 'raids', players: '7v7', rules: 'raids + tackles' },
 };
 
 export const features = [
