@@ -17,6 +17,7 @@ function sportPlayPath(sport) {
 }
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
+const MOBILE_TAP_TARGET = 44;
 
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
@@ -89,7 +90,7 @@ export default function GuestLanding() {
       fontFamily: MONO,
       fontSize: compact ? 'clamp(0.5625rem, 2.5vw, 0.6875rem)' : '0.8125rem',
       fontWeight: 700,
-      padding: compact ? '10px 16px' : '14px 28px',
+      padding: compact ? '12px 14px' : '14px 28px',
       letterSpacing: '0.05em',
       textDecoration: 'none',
       background: primary ? t.text : 'transparent',
@@ -97,6 +98,11 @@ export default function GuestLanding() {
       border: `${t.borderWeight} solid ${primary || !compact ? t.text : t.border}`,
       textAlign: 'center',
       minWidth: 0,
+      minHeight: compact ? MOBILE_TAP_TARGET : 48,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
       whiteSpace: 'nowrap',
     };
   };
@@ -176,7 +182,7 @@ export default function GuestLanding() {
               <h1 style={{ fontWeight: 900, fontSize: 'clamp(2.2rem, 11vw, 3rem)', lineHeight: 0.9, letterSpacing: '-0.04em', margin: '0 0 12px 0', color: t.text }}>
                 START<br />A MATCH.
               </h1>
-              <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: t.textSoft, marginBottom: 16 }}>
+              <p style={{ fontSize: '0.9375rem', lineHeight: 1.45, color: t.textSoft, marginBottom: 16, maxWidth: 320 }}>
                 Play instantly as a guest. Keep scoring when offline. Create an account only when you want sync.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
@@ -207,8 +213,8 @@ export default function GuestLanding() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                 {orderedHeroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
-                    minHeight: 32, padding: '6px 10px', border: 'none', cursor: 'pointer',
-                    fontFamily: MONO, fontSize: '0.5rem', fontWeight: 700, letterSpacing: '0.06em',
+                    minHeight: MOBILE_TAP_TARGET, padding: '8px 12px', border: 'none', cursor: 'pointer',
+                    fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.06em',
                     background: activeHeroSport === i ? t.text : t.surface,
                     color: activeHeroSport === i ? t.bg : t.textMuted,
                     transition: 'all 200ms ease',
@@ -543,6 +549,7 @@ export default function GuestLanding() {
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
             background: t.blue, color: '#fff', border: `2px solid ${t.blue}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
+            minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
           }}>
             {activeStartLabel}
           </Link>
@@ -551,6 +558,7 @@ export default function GuestLanding() {
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
             background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
+            minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
           }}>
             SIGN UP FREE
           </Link>

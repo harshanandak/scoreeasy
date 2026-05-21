@@ -48,8 +48,8 @@ function getCategoryForSport(sportCategories, sportId) {
 
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto' }) {
   const buttonStyle = compact
-    ? { minHeight: 54, padding: '8px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }
-    : { minHeight: 54, fontSize: '0.8125rem', padding: '9px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 };
+    ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }
+    : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 };
   const flexClass = stacked ? '' : ' flex-1';
 
   return (
@@ -173,7 +173,7 @@ function PriorityFastStart({ onStartSport }) {
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+        <div className="mono-priority-actions grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {getPriorityStartActions().map((action) => (
             <button
               key={action.sportId}
@@ -196,7 +196,7 @@ PriorityFastStart.propTypes = {
 
 function CategoryTabs({ categoryKeys, activeTab, setActiveTab }) {
   return (
-    <div className="flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Sport categories">
+    <div className="mono-category-tabs flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Sport categories">
       {categoryKeys.map(category => {
         const categorySlug = slugForCategory(category);
         return (
@@ -207,9 +207,9 @@ function CategoryTabs({ categoryKeys, activeTab, setActiveTab }) {
             role="tab"
             aria-selected={activeTab === category}
             aria-controls={`tabpanel-${categorySlug}`}
-            className={`text-xs px-4 transition-all ${activeTab === category ? 'font-medium' : 'font-normal'}`}
+            className={`mono-category-tab text-xs px-4 transition-all ${activeTab === category ? 'font-medium' : 'font-normal'}`}
             style={{
-              minHeight: 44,
+              minHeight: 48,
               color: activeTab === category ? '#0066ff' : '#555',
               background: activeTab === category ? '#eef5ff' : '#fff',
               border: activeTab === category ? '1px solid #0066ff' : '1px solid #eee',
@@ -541,7 +541,7 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
             Search, switch layout, or pick a category below.
           </p>
         </div>
-        <div className="flex items-center gap-2 sm:min-w-[360px]">
+        <div className="mono-sport-tools flex items-center gap-2 sm:min-w-[360px]">
           <input
             type="text"
             className="mono-input flex-1"
@@ -555,7 +555,7 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
             onClick={switchLayout}
             className="mono-btn flex items-center justify-center"
             aria-label={`Switch to ${targetLayout} layout`}
-            style={{ width: 48, minWidth: 48, minHeight: 44, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
+            style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
             title={`Switch to ${targetLayout}`}
           >
             <LayoutToggleIcon layout={layout} />

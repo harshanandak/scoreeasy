@@ -98,4 +98,14 @@ describe('MonoSportHome priority starts', () => {
     expect(within(chooser).getByLabelText('Search sports')).toHaveValue('tennis');
     expect(within(chooser).getByRole('heading', { name: 'Tennis' })).toBeInTheDocument();
   });
+
+  it('keeps chooser controls sized and classed for mobile polish', () => {
+    renderSportHome();
+
+    expect(screen.getByRole('tablist', { name: 'Sport categories' })).toHaveClass('mono-category-tabs');
+    expect(screen.getByRole('tab', { name: 'Cricket' })).toHaveClass('mono-category-tab');
+    expect(screen.getByRole('tab', { name: 'Cricket' })).toHaveStyle({ minHeight: '48px' });
+    expect(screen.getByLabelText('Search sports')).toHaveClass('mono-input');
+    expect(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' })).toHaveStyle({ minHeight: '48px' });
+  });
 });

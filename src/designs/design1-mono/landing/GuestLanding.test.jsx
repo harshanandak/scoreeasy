@@ -30,6 +30,11 @@ describe('GuestLanding bottom CTA', () => {
       removeListener: vi.fn(),
       dispatchEvent: vi.fn(),
     }));
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 1024,
+    });
   });
 
   it('keeps the signup CTA visible on preview/local auth builds', () => {
@@ -53,5 +58,25 @@ describe('GuestLanding bottom CTA', () => {
 
     expectReadyStartLink('START VOLLEYBALL', '/play?sport=volleyball');
     expect(screen.queryByRole('link', { name: 'START A GAME' })).not.toBeInTheDocument();
+  });
+
+  it('keeps mobile hero controls at touch target size', () => {
+    window.innerWidth = 390;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    renderLanding({ cloudAuthAvailable: true });
+
+    expect(screen.getAllByRole('link', { name: 'START CRICKET' }).at(0)).toHaveStyle({ minHeight: '44px' });
+    expect(screen.getByRole('link', { name: 'CHOOSE SPORT' })).toHaveStyle({ minHeight: '44px' });
+    expect(screen.getByRole('button', { name: 'CRICKET' })).toHaveStyle({ minHeight: '44px' });
   });
 });
