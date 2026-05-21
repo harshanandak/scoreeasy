@@ -804,6 +804,17 @@ export default function Design1Mono() {
     onConfirm?.();
   }, [exitPrompt]);
 
+  const navigateFromOfflineFallback = useCallback((path) => {
+    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+      requestScoringExit({
+        onConfirm: () => navigate(path),
+      });
+      return;
+    }
+
+    navigate(path);
+  }, [location.pathname, navigate, requestScoringExit]);
+
   useEffect(() => {
     nativeDeepLinkContextRef.current = {
       hash: location.hash || '',
@@ -940,7 +951,7 @@ export default function Design1Mono() {
     <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} />
-      <OfflineFallback />
+      <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">

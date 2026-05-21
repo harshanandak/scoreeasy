@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { loadData, loadSportTournaments } from '../utils/storage';
 import { getSportsList } from '../models/sportRegistry';
 
@@ -23,9 +24,19 @@ function readOfflineSnapshot() {
   };
 }
 
-export default function OfflineFallback() {
+export default function OfflineFallback({ onNavigate = null }) {
+  const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(globalThis.navigator.onLine);
   const [snapshot, setSnapshot] = useState(() => readOfflineSnapshot());
+
+  const handleNavigate = (path) => {
+    if (onNavigate) {
+      onNavigate(path);
+      return;
+    }
+
+    navigate(path);
+  };
 
   useEffect(() => {
     const refresh = () => {
@@ -67,13 +78,17 @@ export default function OfflineFallback() {
         {snapshot.lastQuick ? ` Latest quick match: ${snapshot.lastQuick.team1} vs ${snapshot.lastQuick.team2}.` : ''}
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        <Link className="mono-btn-primary" style={{ minHeight: 40, padding: '8px 12px' }} to="/volleyball/quick">
+        <button type="button" className="mono-btn-primary" style={{ minHeight: 40, padding: '8px 12px' }} onClick={() => handleNavigate('/volleyball/quick')}>
           Start quick match
-        </Link>
-        <Link className="mono-btn" style={{ minHeight: 40, padding: '8px 12px' }} to="/history">
+        </button>
+        <button type="button" className="mono-btn" style={{ minHeight: 40, padding: '8px 12px' }} onClick={() => handleNavigate('/history')}>
           View saved matches
-        </Link>
+        </button>
       </div>
     </div>
   );
 }
+
+OfflineFallback.propTypes = {
+  onNavigate: PropTypes.func,
+};

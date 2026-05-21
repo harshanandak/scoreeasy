@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import OfflineFallback from './OfflineFallback';
 
 function setOnlineState(isOnline) {
@@ -45,8 +45,25 @@ describe('OfflineFallback', () => {
 
     expect(screen.getByText('Offline mode')).toBeInTheDocument();
     expect(screen.getByText(/Scoring stays available locally/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Start quick match' })).toHaveAttribute('href', '/volleyball/quick');
-    expect(screen.getByRole('link', { name: 'View saved matches' })).toHaveAttribute('href', '/history');
+    expect(screen.getByRole('button', { name: 'Start quick match' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View saved matches' })).toBeInTheDocument();
+  });
+
+  it('routes offline actions through the supplied navigation guard', () => {
+    const onNavigate = vi.fn();
+    setOnlineState(false);
+
+    render(
+      <MemoryRouter>
+        <OfflineFallback onNavigate={onNavigate} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start quick match' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View saved matches' }));
+
+    expect(onNavigate).toHaveBeenNthCalledWith(1, '/volleyball/quick');
+    expect(onNavigate).toHaveBeenNthCalledWith(2, '/history');
   });
 
   it('pluralizes saved counts for singular and plural values', () => {
