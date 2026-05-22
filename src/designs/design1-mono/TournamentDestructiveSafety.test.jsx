@@ -181,6 +181,28 @@ describe('tournament destructive safety', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/volleyball/tournament/tour-1/match/match-2/score');
   });
 
+  it('uses saved team names or team objects in the next-match label', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        teams: [{ id: 'team-b', name: 'Bravo' }],
+        matches: [
+          pendingMatch({
+            id: 'match-2',
+            team1Id: undefined,
+            team2Id: undefined,
+            team1: 'Alpha',
+            team2: { id: 'team-b', name: 'Bravo' },
+            sets: [],
+          }),
+        ],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    expect(await screen.findByText('Next: Alpha vs Bravo')).toBeInTheDocument();
+  });
+
   it('opens tournament results when every tournament match is complete', async () => {
     seedStorage(VOLLEYBALL_KEY, [
       tournament({

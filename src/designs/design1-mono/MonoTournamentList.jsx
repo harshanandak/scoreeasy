@@ -12,6 +12,16 @@ function getTeamName(tournament, teamId) {
   return tournament.teams?.find((team) => team.id === teamId)?.name || 'Team';
 }
 
+function getMatchTeamName(tournament, teamRef) {
+  if (teamRef === null || teamRef === undefined) return 'Team';
+  if (typeof teamRef === 'object') {
+    if (teamRef.name) return teamRef.name;
+    if (teamRef.id) return getTeamName(tournament, teamRef.id);
+    return 'Team';
+  }
+  return tournament.teams?.find((team) => team.id === teamRef)?.name || String(teamRef);
+}
+
 function hasMatchTeams(match) {
   const team1 = match.team1Id ?? match.team1;
   const team2 = match.team2Id ?? match.team2;
@@ -189,12 +199,18 @@ export default function MonoTournamentList() {
               const progress = matchCount > 0 ? Math.round((completedCount / matchCount) * 100) : 0;
               const openMatches = getOpenMatches(t, sportConfig);
               const nextMatch = getNextScorableMatch(t, sportConfig);
-              const nextMatchLabel = nextMatch
-                ? `${getTeamName(t, nextMatch.team1Id ?? nextMatch.team1)} vs ${getTeamName(t, nextMatch.team2Id ?? nextMatch.team2)}`
-                : openMatches.length > 0 ? 'Bracket waiting for teams' : 'All matches complete';
-              const continueLabel = nextMatch
-                ? 'Score next match'
-                : openMatches.length > 0 ? 'View bracket' : 'View results';
+              let nextMatchLabel = 'All matches complete';
+              if (nextMatch) {
+                nextMatchLabel = `${getMatchTeamName(t, nextMatch.team1Id ?? nextMatch.team1)} vs ${getMatchTeamName(t, nextMatch.team2Id ?? nextMatch.team2)}`;
+              } else if (openMatches.length > 0) {
+                nextMatchLabel = 'Bracket waiting for teams';
+              }
+              let continueLabel = 'View results';
+              if (nextMatch) {
+                continueLabel = 'Score next match';
+              } else if (openMatches.length > 0) {
+                continueLabel = 'View bracket';
+              }
 
               return (
                 <div key={t.id} className="mono-card" style={{ padding: 0 }}>
