@@ -19,6 +19,7 @@ import { buildResultShareText, getResultSetSummary, getShareStatusText } from '.
 import { getSportStartLabel } from '../../utils/startActions';
 import { shareText } from '../../mobile/share';
 import { CRICKET_RUN_VALUES } from '../../utils/cricketRunControls';
+import { buildTennisQuickDraft, getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
 import {
   correctionImpact,
   endMatchImpact,
@@ -263,6 +264,7 @@ export default function MonoQuickMatch() {
   const sportConfig = getSportById(sport);
   const engine = sportConfig?.engine || 'goals';
   const isCricket = engine === 'custom-cricket';
+  const isTennis = sport === 'tennis';
   const isGoals = engine === 'goals';
 
   const timer = useTimer();
@@ -743,6 +745,26 @@ export default function MonoQuickMatch() {
       };
       if (!persistQuickMatch(match)) return;
       navigate(`/${sport}/quick/test/${matchId}`);
+      return;
+    }
+
+    if (isTennis) {
+      const matchId = Date.now();
+      const nowIso = new Date().toISOString();
+      const draft = buildTennisQuickDraft({
+        matchId,
+        sport,
+        team1Name: team1Name.trim(),
+        team2Name: team2Name.trim(),
+        format,
+        sets: null,
+        nowIso,
+      });
+      if (!saveData(getTennisQuickDraftKey(matchId), draft)) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return;
+      }
+      navigate(`/${sport}/quick/live/${matchId}`);
       return;
     }
 

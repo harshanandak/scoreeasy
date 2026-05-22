@@ -27,6 +27,7 @@ const MonoStatistics = lazy(() => import('./MonoStatistics'));
 const MonoTournamentSetup = lazy(() => import('./MonoTournamentSetup'));
 const MonoQuickMatch = lazy(() => import('./MonoQuickMatch'));
 const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiveScore'));
+const MonoTennisLiveScore = lazy(() => import('./scoring/MonoTennisLiveScore'));
 
 // Lazy-loaded showcase components (rarely visited)
 const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
@@ -104,6 +105,17 @@ function CricketQuickTestScorerRoute() {
   return (
     <SportRouteGuard>
       <MonoCricketTestLiveScore storageMode="quick" />
+    </SportRouteGuard>
+  );
+}
+
+function TennisQuickScorerRoute() {
+  const { sport } = useParams();
+  if (sport !== 'tennis') return <NotFoundRoute />;
+
+  return (
+    <SportRouteGuard>
+      <MonoTennisLiveScore storageMode="quick" />
     </SportRouteGuard>
   );
 }
@@ -1192,6 +1204,7 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
                 <Route path=":sport/quick/test/:matchId" element={<CricketQuickTestScorerRoute />} />
+                <Route path=":sport/quick/live/:matchId" element={<TennisQuickScorerRoute />} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
 

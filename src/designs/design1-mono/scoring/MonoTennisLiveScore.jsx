@@ -3,11 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
-import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
+import { clearData, loadData, loadSportTournaments, saveData, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import {
+  buildTennisQuickHistoryEntry,
+  getTennisQuickDraftKey,
+} from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+
+const QUICK_MATCHES_KEY = 'se_quickmatches';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -251,13 +257,15 @@ const makeKeyHandler = (addPoint, undo, leftTeam, rightTeam) => (e) => {
   }
 };
 
-export default function MonoTennisLiveScore() {
+export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
+  const isQuickMatch = storageMode === 'quick';
+  const quickDraftKey = isQuickMatch ? getTennisQuickDraftKey(matchId) : null;
   const lastClickRef = useRef(0);
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
-  const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
+  const navigateBack = () => navigate(isQuickMatch ? `/${sport}/quick` : `/${sport}/tournament/${id}`);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -290,10 +298,29 @@ export default function MonoTennisLiveScore() {
     }
   };
 
-  // Load tournament and match data
+  // Load tournament/quick match data
   useEffect(() => {
     const config = getSportById(sport);
     if (!config) return;
+
+    if (isQuickMatch) {
+      const draft = loadData(getTennisQuickDraftKey(matchId), null);
+      if (!draft) return;
+      setSportConfig(config);
+      setTournament(null);
+      setMatch(draft);
+      const draftSets = Array.isArray(draft.draftState?.sets) ? draft.draftState.sets : draft.sets;
+      if (Array.isArray(draftSets)) {
+        setSets(draftSets);
+        const lastSetIndex = draftSets.findIndex(s => !s.completed);
+        setCurrentSet(lastSetIndex >= 0 ? lastSetIndex : draftSets.length - 1);
+      } else {
+        setSets(buildInitialSets(draft.format?.sets || config.config?.sets || 3));
+        setCurrentSet(0);
+      }
+      setHistory(draft.draftState?.history || []);
+      return;
+    }
 
     const tournaments = loadSportTournaments(config.storageKey);
     const found = tournaments.find(t => t.id === Number(id));
@@ -307,13 +334,13 @@ export default function MonoTennisLiveScore() {
     setTournament(found);
     setMatch(foundMatch);
     applyLoadedMatch(foundMatch, found, setSets, setCurrentSet, setHistory);
-  }, [sport, id, matchId]);
+  }, [sport, id, matchId, isQuickMatch]);
 
   // Get team names
   const team1 = tournament?.teams?.find(t => t.id === match?.team1Id);
   const team2 = tournament?.teams?.find(t => t.id === match?.team2Id);
-  const team1Name = team1?.name || 'Team 1';
-  const team2Name = team2?.name || 'Team 2';
+  const team1Name = isQuickMatch ? (match?.team1Name || match?.team1 || 'Team 1') : (team1?.name || 'Team 1');
+  const team2Name = isQuickMatch ? (match?.team2Name || match?.team2 || 'Team 2') : (team2?.name || 'Team 2');
 
   // Side swap helpers
   const leftName = sidesSwapped ? team2Name : team1Name;
@@ -400,6 +427,28 @@ export default function MonoTennisLiveScore() {
   const saveDraft = () => {
     if (scoringPrompt.isInteractionLocked) return;
 
+    if (isQuickMatch) {
+      const ok = saveData(quickDraftKey, {
+        ...match,
+        sets,
+        status: 'in-progress',
+        draftState: {
+          currentSet,
+          sets,
+          history,
+          savedAt: new Date().toISOString(),
+        },
+      });
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return;
+      }
+      setSaveWarning('');
+      setHasChanges(false);
+      scoringPrompt.scheduleDraftRedirect(navigateBack);
+      return;
+    }
+
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       sets,
@@ -419,7 +468,49 @@ export default function MonoTennisLiveScore() {
     }
     setSaveWarning('');
     setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
+    scoringPrompt.scheduleDraftRedirect(navigateBack);
+  };
+
+  const saveQuickMatch = () => {
+    const completedAt = new Date().toISOString();
+    const entry = buildTennisQuickHistoryEntry({
+      match,
+      sets,
+      isComplete: isMatchComplete,
+      completedAt,
+    });
+
+    if (!isMatchComplete) {
+      const ok = saveData(quickDraftKey, {
+        ...entry,
+        sets,
+        draftState: {
+          currentSet,
+          sets,
+          history,
+          savedAt: completedAt,
+        },
+      });
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return;
+      }
+      setSaveWarning('');
+      scoringPrompt.scheduleDraftRedirect(navigateBack);
+      return;
+    }
+
+    const quickMatches = loadData(QUICK_MATCHES_KEY, []);
+    const withoutCurrent = quickMatches.filter((item) => String(item.id) !== String(match.id));
+    const ok = saveData(QUICK_MATCHES_KEY, [...withoutCurrent, entry]);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return;
+    }
+
+    clearData(quickDraftKey);
+    setSaveWarning('');
+    navigate('/history');
   };
 
   // Save match and return
@@ -429,6 +520,11 @@ export default function MonoTennisLiveScore() {
     if (isMatchComplete) {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
+    }
+
+    if (isQuickMatch) {
+      saveQuickMatch();
+      return;
     }
 
     // S6660: flatten else-if instead of else { if }
@@ -466,10 +562,10 @@ export default function MonoTennisLiveScore() {
   };
 
   // Cancel and discard changes
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateBack);
 
-  if (!tournament || !match) {
+  if ((!isQuickMatch && !tournament) || !match) {
     return <div className="max-w-2xl mx-auto px-6 py-10">Match not found.</div>;
   }
 
