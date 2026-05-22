@@ -211,6 +211,8 @@ export default function MonoTournamentList() {
               } else if (openMatches.length > 0) {
                 continueLabel = 'View bracket';
               }
+              const isWaitingForTeams = !nextMatch && openMatches.length > 0;
+              const statusColor = nextMatch ? '#111' : isWaitingForTeams ? '#92400e' : '#15803d';
 
               return (
                 <div key={t.id} className="mono-card" style={{ padding: 0 }}>
@@ -255,7 +257,7 @@ export default function MonoTournamentList() {
                     <div className="mt-3" aria-hidden="true" style={{ height: 6, background: '#f1f5f9' }}>
                       <div style={{ width: `${progress}%`, height: '100%', background: '#0066ff' }} />
                     </div>
-                    <p className="text-xs mt-2" style={{ color: nextMatch ? '#111' : '#15803d' }}>
+                    <p className="text-xs mt-2" style={{ color: statusColor }}>
                       {nextMatch ? `Next: ${nextMatchLabel}` : nextMatchLabel}
                     </p>
                   </button>

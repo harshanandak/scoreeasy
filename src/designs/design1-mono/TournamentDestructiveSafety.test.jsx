@@ -217,6 +217,29 @@ describe('tournament destructive safety', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/volleyball/tournament/tour-1');
   });
 
+  it('shows waiting brackets as incomplete instead of complete', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        matches: [],
+        knockoutMatches: [
+          pendingMatch({
+            id: 'final',
+            label: 'Final',
+            team1Id: undefined,
+            team2Id: undefined,
+            sets: [],
+          }),
+        ],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    const waitingLabel = await screen.findByText('Bracket waiting for teams');
+    expect(waitingLabel).toHaveStyle({ color: '#92400e' });
+    expect(screen.getByRole('button', { name: 'View bracket - League Night' })).toBeInTheDocument();
+  });
+
   it('creates a single-elimination tournament with a seeded bracket', async () => {
     renderRoute('/volleyball/tournament/new', '/:sport/tournament/new', <MonoTournamentSetup />);
 
