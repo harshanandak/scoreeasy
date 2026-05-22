@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
@@ -13,12 +13,17 @@ function renderQuickMatch(initialEntry = '/volleyball/quick') {
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/:sport/quick" element={<MonoQuickMatch />} />
+        <Route path="/:sport/quick/live/:matchId" element={<p>Real tennis scorer</p>} />
       </Routes>
     </MemoryRouter>,
   );
 }
 
 describe('MonoQuickMatch setup clarity', () => {
+  beforeEach(() => {
+    globalThis.localStorage.clear();
+  });
+
   it('opens volleyball quick match on labeled teams with an immediate start path', async () => {
     renderQuickMatch();
 
@@ -34,6 +39,27 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start Football' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Start Match' })).not.toBeInTheDocument();
+  });
+
+  it('starts tennis quick matches in the real tennis scorer without creating completed history', async () => {
+    renderQuickMatch('/tennis/quick');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Tennis' }));
+
+    expect(await screen.findByText('Real tennis scorer')).toBeInTheDocument();
+    expect(JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]')).toHaveLength(0);
+    let draftKey = null;
+    for (let index = 0; index < globalThis.localStorage.length; index += 1) {
+      const key = globalThis.localStorage.key(index);
+      if (key?.startsWith('se_tennis_quick_draft_')) draftKey = key;
+    }
+    expect(draftKey).toBeTruthy();
+    expect(JSON.parse(globalThis.localStorage.getItem(draftKey))).toMatchObject({
+      sport: 'tennis',
+      team1: 'Team A',
+      team2: 'Team B',
+      status: 'in-progress',
+    });
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {
