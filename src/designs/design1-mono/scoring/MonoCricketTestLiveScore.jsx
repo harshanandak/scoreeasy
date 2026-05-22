@@ -10,6 +10,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
+import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
@@ -520,7 +521,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       if (scoringPrompt.isInteractionLocked) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const key = e.key.toLowerCase();
-      if (['0', '1', '2', '3', '4', '6'].includes(key)) addRuns(Number.parseInt(key));
+      if (isCricketRunKey(key)) addRuns(Number.parseInt(key, 10));
       else if (key === 'w') addWicket();
       else if (key === 'e') addExtra('wide');
       else if (key === 'u') undo();
@@ -734,7 +735,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         {!isInningsOver && (
           <>
             <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {[0, 1, 2, 3, 4, 6].map(r => (
+              {CRICKET_RUN_VALUES.map(r => (
                 <button key={r} onClick={() => addRuns(r)}
                   disabled={scoringPrompt.isInteractionLocked}
                   className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
