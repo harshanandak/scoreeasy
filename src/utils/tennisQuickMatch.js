@@ -24,8 +24,15 @@ export function countTennisQuickSetsWon(sets) {
   return mapTennisSetsForQuickHistory(sets)
     .filter((set) => set.completed)
     .reduce((totals, set) => {
-      if (set.score1 > set.score2) totals.setsWon1 += 1;
-      if (set.score2 > set.score1) totals.setsWon2 += 1;
+      const team1Won = set.isTiebreak
+        ? set.tiebreakPoints1 > set.tiebreakPoints2
+        : set.score1 > set.score2;
+      const team2Won = set.isTiebreak
+        ? set.tiebreakPoints2 > set.tiebreakPoints1
+        : set.score2 > set.score1;
+
+      if (team1Won) totals.setsWon1 += 1;
+      if (team2Won) totals.setsWon2 += 1;
       return totals;
     }, { setsWon1: 0, setsWon2: 0 });
 }

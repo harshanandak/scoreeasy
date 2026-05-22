@@ -13,6 +13,10 @@ const sampleSets = [
   { games1: 6, games2: 3, completed: true, isTiebreak: false },
 ];
 
+const reversedTiebreakSets = [
+  { games1: 7, games2: 6, completed: true, isTiebreak: true, tiebreakPoints1: 5, tiebreakPoints2: 7 },
+];
+
 describe('tennisQuickMatch', () => {
   it('uses an isolated draft key for in-progress quick tennis', () => {
     expect(getTennisQuickDraftKey('123')).toBe('se_tennis_quick_draft_123');
@@ -57,6 +61,21 @@ describe('tennisQuickMatch', () => {
       setsWon1: 2,
       setsWon2: 1,
       winner: 'Aces',
+      status: 'completed',
+    });
+  });
+
+  it('uses tiebreak points to decide completed tiebreak sets', () => {
+    expect(countTennisQuickSetsWon(reversedTiebreakSets)).toEqual({ setsWon1: 0, setsWon2: 1 });
+    expect(buildTennisQuickHistoryEntry({
+      match: { id: 456, sport: 'tennis', team1: 'Aces', team2: 'Baseline' },
+      sets: reversedTiebreakSets,
+      isComplete: true,
+      completedAt: '2026-05-22T00:10:00.000Z',
+    })).toMatchObject({
+      score1: 0,
+      score2: 1,
+      winner: 'Baseline',
       status: 'completed',
     });
   });
