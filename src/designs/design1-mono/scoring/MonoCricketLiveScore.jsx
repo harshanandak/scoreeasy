@@ -9,6 +9,7 @@ import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import BackArrow from '../components/BackArrow';
 
@@ -414,8 +415,8 @@ export default function MonoCricketLiveScore() {
       if (isMatchComplete) return;
 
       const key = e.key.toLowerCase();
-      if (['0', '1', '2', '3', '4', '6'].includes(key)) {
-        addRuns(Number.parseInt(key));
+      if (isCricketRunKey(key)) {
+        addRuns(Number.parseInt(key, 10));
       } else if (key === 'w') {
         addWicket();
       } else if (key === 'e') {
@@ -588,7 +589,7 @@ export default function MonoCricketLiveScore() {
           {!soDone && (
             <>
               <div className="flex flex-wrap gap-2 justify-center mb-4">
-                {[0, 1, 2, 3, 4, 6].map(r => (
+                {CRICKET_RUN_VALUES.map(r => (
                   <button key={r} onClick={() => addSuperOverRuns(r)}
                     className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
                     style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation' }}>
@@ -768,7 +769,7 @@ export default function MonoCricketLiveScore() {
         {!isMatchComplete && (
           <>
             <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {[0, 1, 2, 3, 4, 6].map(r => (
+              {CRICKET_RUN_VALUES.map(r => (
                 <button
                   key={r}
                   onClick={() => addRuns(r)}

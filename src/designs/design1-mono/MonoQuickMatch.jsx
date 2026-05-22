@@ -18,6 +18,7 @@ import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } fro
 import { buildResultShareText, getResultSetSummary, getShareStatusText } from '../../utils/quickMatchResult';
 import { getSportStartLabel } from '../../utils/startActions';
 import { shareText } from '../../mobile/share';
+import { CRICKET_RUN_VALUES } from '../../utils/cricketRunControls';
 import {
   correctionImpact,
   endMatchImpact,
@@ -2264,7 +2265,7 @@ export default function MonoQuickMatch() {
 
             {/* Run buttons */}
             <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {[0, 1, 2, 3, 4, 5, 6].map(r => (
+              {CRICKET_RUN_VALUES.map(r => (
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
