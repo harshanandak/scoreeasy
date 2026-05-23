@@ -5,7 +5,7 @@ import SportIcon from './sportIcons';
 import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, experienceStats, trustNotes } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
-import { getSportAccent, prioritySports, sportsTokens } from '../theme/sportsTokens';
+import { getReadableTextColor, getSportAccent, prioritySports, sportsTokens } from '../theme/sportsTokens';
 
 const heroSportPriority = new Map([
   ['Cricket', 0],
@@ -98,6 +98,7 @@ export default function GuestLanding() {
   const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeSportId = sportIdByName.get(activeCard.sport);
   const activeAccent = getSportAccent(activeSportId);
+  const activeAccentText = getReadableTextColor(activeAccent.primary);
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
   const heroActions = [
@@ -120,7 +121,7 @@ export default function GuestLanding() {
       letterSpacing: '0.05em',
       textDecoration: 'none',
       background: primary ? activeAccent.primary : 'transparent',
-      color: primary ? t.bg : t.text,
+      color: primary ? activeAccentText : t.text,
       border: `${t.borderWeight} solid ${primary ? activeAccent.primary : (!compact ? t.text : t.border)}`,
       textAlign: 'center',
       minWidth: 0,
@@ -141,7 +142,7 @@ export default function GuestLanding() {
     marginTop: mobile ? 16 : 20,
     border: `${t.borderWeight} solid ${activeAccent.primary}`,
     background: activeAccent.primary,
-    color: '#fff',
+    color: activeAccentText,
     fontFamily: MONO,
     fontSize: '0.6875rem',
     fontWeight: 700,
@@ -638,7 +639,7 @@ export default function GuestLanding() {
           <Link to={sportPlayPath(activeCard.sport)} style={{
             fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-            background: activeAccent.primary, color: '#fff', border: `2px solid ${activeAccent.primary}`,
+            background: activeAccent.primary, color: activeAccentText, border: `2px solid ${activeAccent.primary}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
             minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
           }}>

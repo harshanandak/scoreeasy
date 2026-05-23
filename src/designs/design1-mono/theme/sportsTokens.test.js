@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import finalTheme, { MONO, SWISS } from '../landing/landingTheme';
 import {
   fontStacks,
+  getReadableTextColor,
   getSportAccent,
   landingTokenBridge,
   prioritySports,
@@ -50,5 +51,11 @@ describe('sports design tokens', () => {
       primary: sportsTokens.color.action,
       soft: sportsTokens.color.actionSoft,
     });
+  });
+
+  it('chooses readable text for bright sport accent backgrounds', () => {
+    expect(getReadableTextColor(sportAccents.cricket.primary)).toBe(sportsTokens.color.inverse);
+    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.volleyball.primary)).toBe(sportsTokens.color.inkStrong);
   });
 });

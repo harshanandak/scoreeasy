@@ -5,7 +5,7 @@ import { loadSportTournaments, loadPreference, savePreference } from '../../util
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
 import { getPriorityStartActions } from '../../utils/startActions';
-import { getSportAccent, prioritySports, sportAccents, sportsTokens } from './theme/sportsTokens';
+import { getReadableTextColor, getSportAccent, prioritySports, sportAccents, sportsTokens } from './theme/sportsTokens';
 import SportIcon from './SportIcon';
 
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
@@ -57,6 +57,7 @@ function getOrderedCategories(sportCategories) {
 }
 
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto', accent = sportsTokens.color.action }) {
+  const primaryTextColor = getReadableTextColor(accent);
   const buttonStyle = compact
     ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderColor: accent }
     : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, borderColor: accent };
@@ -64,7 +65,7 @@ function ActionButtons({ onTournament, onQuick, compact = false, stacked = false
 
   return (
     <div className={className}>
-      <button onClick={onTournament} className={`mono-btn-primary${flexClass}`} style={{ ...buttonStyle, background: accent, borderColor: accent }}>
+      <button onClick={onTournament} className={`mono-btn-primary${flexClass}`} style={{ ...buttonStyle, background: accent, borderColor: accent, color: primaryTextColor }}>
         <span>Tournament</span>
         <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
       </button>
@@ -200,27 +201,32 @@ function PriorityFastStart({ onStartSport }) {
         </div>
         <div className="mono-priority-actions grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {getPriorityStartActions().map((action) => (
-            <button
-              key={action.sportId}
-              onClick={() => onStartSport(action.sportId)}
-              aria-label={action.label}
-              className="mono-btn"
-              style={{
-                ...(action.primary ? priorityActionStyle : secondaryPriorityActionStyle),
-                minHeight: 64,
-                background: action.primary ? getSportAccent(action.sportId).primary : getSportAccent(action.sportId).soft,
-                borderColor: getSportAccent(action.sportId).primary,
-                color: action.primary ? sportsTokens.color.inverse : sportsTokens.color.inkStrong,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 3,
-              }}
-            >
-              <span>{action.label}</span>
-              <span style={{ fontSize: '0.625rem', fontWeight: 600, opacity: action.primary ? 0.9 : 0.7 }}>
-                Choose format next
-              </span>
-            </button>
+            (() => {
+              const actionAccent = getSportAccent(action.sportId);
+              return (
+                <button
+                  key={action.sportId}
+                  onClick={() => onStartSport(action.sportId)}
+                  aria-label={action.label}
+                  className="mono-btn"
+                  style={{
+                    ...(action.primary ? priorityActionStyle : secondaryPriorityActionStyle),
+                    minHeight: 64,
+                    background: action.primary ? actionAccent.primary : actionAccent.soft,
+                    borderColor: actionAccent.primary,
+                    color: action.primary ? getReadableTextColor(actionAccent.primary) : sportsTokens.color.inkStrong,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
+                >
+                  <span>{action.label}</span>
+                  <span style={{ fontSize: '0.625rem', fontWeight: 600, opacity: action.primary ? 0.9 : 0.7 }}>
+                    Choose format next
+                  </span>
+                </button>
+              );
+            })()
           ))}
         </div>
       </div>

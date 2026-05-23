@@ -135,6 +135,19 @@ export function getSportAccent(sportId) {
   };
 }
 
+export function getReadableTextColor(hexColor) {
+  const clean = String(hexColor || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(clean)) return sportsTokens.color.inverse;
+
+  const [red, green, blue] = [0, 2, 4].map((index) => {
+    const channel = Number.parseInt(clean.slice(index, index + 2), 16) / 255;
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+  return luminance > 0.28 ? sportsTokens.color.inkStrong : sportsTokens.color.inverse;
+}
+
 export const sportsCssVariables = {
   '--se-font-mono': fontStacks.mono,
   '--se-font-sans': fontStacks.sans,
