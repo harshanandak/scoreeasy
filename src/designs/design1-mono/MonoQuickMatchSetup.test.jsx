@@ -25,6 +25,7 @@ function renderQuickMatchWithSwitcher(initialEntry = '/volleyball/quick') {
     <MemoryRouter initialEntries={[initialEntry]}>
       <Link to="/cricket/quick">Switch to cricket</Link>
       <Link to="/cricket/quick?format=gully">Switch to gully cricket</Link>
+      <Link to="/volleyball/quick">Switch to volleyball</Link>
       <Routes>
         <Route path="/:sport/quick" element={<MonoQuickMatch />} />
       </Routes>
@@ -111,7 +112,19 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start Cricket' })).toBeEnabled();
     expect(screen.getByText('Gully Cricket')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Next:/i })).not.toBeInTheDocument();
+  });
+
+  it('resets non-cricket rules after leaving a cricket query preset', async () => {
+    renderQuickMatchWithSwitcher('/cricket/quick?format=gully');
+
+    expect(await screen.findByRole('button', { name: 'Start Cricket' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Switch to volleyball' }));
+
+    expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
+    expect(screen.getByText('Best of 3 - 25 pts - win by 2')).toBeInTheDocument();
+    expect(screen.queryByText('Gully Cricket')).not.toBeInTheDocument();
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {

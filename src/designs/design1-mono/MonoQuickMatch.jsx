@@ -511,6 +511,19 @@ export default function MonoQuickMatch() {
     setSetupStep(preset?.customizable ? 3 : 2);
   }, [isCricket, preselectedFormat, sport]);
 
+  // Reset defaults when leaving cricket on the same mounted quick-match route.
+  useEffect(() => {
+    if (restoredDraftRef.current) return;
+    if (isCricket || !sport) return;
+
+    setFormatMode('standard');
+    setSetupStep(2);
+    const defaults = getSportDefaults(sport);
+    if (defaults && Object.keys(defaults).length > 0) {
+      setFormat(applyStandardDefaults(sport, {}));
+    }
+  }, [isCricket, sport]);
+
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
     if (restoredDraftRef.current) return;
