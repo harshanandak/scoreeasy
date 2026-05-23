@@ -30,6 +30,23 @@ function renderFrame(initialEntry = '/login') {
   );
 }
 
+function renderFrameWithoutHelperText(initialEntry = '/login') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route
+          path="/login"
+          element={(
+            <MonoAuthPageFrame subtitle="Sign in to continue">
+              <div>Auth widget</div>
+            </MonoAuthPageFrame>
+          )}
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe('MonoAuthPageFrame', () => {
   beforeEach(() => {
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
@@ -51,5 +68,13 @@ describe('MonoAuthPageFrame', () => {
 
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
     expect(screen.getByText('Guest scoring')).toBeInTheDocument();
+  });
+
+  it('keeps helper text optional', () => {
+    renderFrameWithoutHelperText();
+
+    expect(screen.getByText('Sign in to continue')).toBeInTheDocument();
+    expect(screen.queryByText(/recovery/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue as guest' })).toBeInTheDocument();
   });
 });

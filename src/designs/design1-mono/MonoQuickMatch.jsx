@@ -498,14 +498,26 @@ export default function MonoQuickMatch() {
     });
   }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
+  // Apply cricket defaults when the quick-match sport route changes.
+  useEffect(() => {
+    if (restoredDraftRef.current) return;
+    if (!isCricket || !sport) return;
+
+    const preset = CRICKET_FORMATS.find(f => f.id === preselectedFormat);
+    const nextPreset = preset?.id || 'T20';
+    setCricketPreset(nextPreset);
+    setFormatMode(preset?.customizable ? 'custom' : 'standard');
+    setFormat(buildCricketFormat(nextPreset));
+  }, [isCricket, preselectedFormat, sport]);
+
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
     if (restoredDraftRef.current) return;
-    if (!isCricket && formatMode === 'standard' && sport) {
-      const defaults = getSportDefaults(sport);
-      if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(applyStandardDefaults(sport, {}));
-      }
+    if (isCricket || formatMode !== 'standard' || !sport) return;
+
+    const defaults = getSportDefaults(sport);
+    if (defaults && Object.keys(defaults).length > 0) {
+      setFormat(applyStandardDefaults(sport, {}));
     }
   }, [formatMode, isCricket, sport]);
 

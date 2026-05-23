@@ -11,6 +11,7 @@ describe('native app link configuration', () => {
 
     expect(entitlements).toContain('com.apple.developer.associated-domains');
     expect(entitlements).toContain('applinks:scoreeasy.app');
-    expect(project).toContain('CODE_SIGN_ENTITLEMENTS = App/App.entitlements;');
+    const entitlementLinks = project.match(/CODE_SIGN_ENTITLEMENTS = App\/App\.entitlements;/g) ?? [];
+    expect(entitlementLinks).toHaveLength(2);
   });
 });
