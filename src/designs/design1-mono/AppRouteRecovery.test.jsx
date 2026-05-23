@@ -79,4 +79,12 @@ describe('app route recovery', () => {
 
     expect(await screen.findByText('This screen is not available')).toBeInTheDocument();
   });
+
+  it('redirects legacy cricket Test Match quick links to product route language', async () => {
+    renderApp('/cricket/quick/test/123');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/123');
+    });
+  });
 });

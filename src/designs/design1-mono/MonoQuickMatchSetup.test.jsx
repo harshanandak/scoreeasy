@@ -13,6 +13,7 @@ function renderQuickMatch(initialEntry = '/volleyball/quick') {
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/:sport/quick" element={<MonoQuickMatch />} />
+        <Route path="/:sport/quick/test-match/:matchId" element={<p>Cricket Test Match scorer</p>} />
         <Route path="/:sport/quick/live/:matchId" element={<p>Real tennis scorer</p>} />
       </Routes>
     </MemoryRouter>,
@@ -60,6 +61,21 @@ describe('MonoQuickMatch setup clarity', () => {
       team2: 'Team B',
       status: 'in-progress',
     });
+  });
+
+  it('starts cricket Test Match quick matches on the product scorer route', async () => {
+    renderQuickMatch({ pathname: '/cricket/quick', search: '?format=test' });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Cricket' }));
+
+    expect(await screen.findByText('Cricket Test Match scorer')).toBeInTheDocument();
+    expect(JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]')).toEqual([
+      expect.objectContaining({
+        sport: 'cricket',
+        status: 'in-progress',
+        format: expect.objectContaining({ id: 'test', totalInnings: 4 }),
+      }),
+    ]);
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {

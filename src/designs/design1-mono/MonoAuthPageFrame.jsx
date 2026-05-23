@@ -5,7 +5,7 @@ import { DEFAULT_GUEST_SCORING_PATH, getAuthReturnToFromSearch } from "../../uti
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
 
-export default function MonoAuthPageFrame({ children, subtitle }) {
+export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [visible, setVisible] = useState(false);
@@ -41,7 +41,13 @@ export default function MonoAuthPageFrame({ children, subtitle }) {
           {children}
         </div>
 
-        <div className="text-center mt-10 flex flex-col items-center gap-3">
+        {helperText && (
+          <p className="text-xs font-swiss text-center mt-4" style={{ color: "#666", lineHeight: 1.5 }}>
+            {helperText}
+          </p>
+        )}
+
+        <div className="text-center mt-8 flex flex-col items-center gap-3">
           <button
             onClick={() => navigate(guestTarget)}
             className="mono-btn"
@@ -64,5 +70,6 @@ export default function MonoAuthPageFrame({ children, subtitle }) {
 
 MonoAuthPageFrame.propTypes = {
   children: PropTypes.node,
+  helperText: PropTypes.string,
   subtitle: PropTypes.string.isRequired,
 };
