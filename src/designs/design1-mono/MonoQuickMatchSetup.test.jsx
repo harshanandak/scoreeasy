@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
 
 vi.mock('convex/react', () => ({
@@ -13,7 +13,21 @@ function renderQuickMatch(initialEntry = '/volleyball/quick') {
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/:sport/quick" element={<MonoQuickMatch />} />
+        <Route path="/:sport/quick/test-match/:matchId" element={<p>Cricket Test Match scorer</p>} />
         <Route path="/:sport/quick/live/:matchId" element={<p>Real tennis scorer</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+function renderQuickMatchWithSwitcher(initialEntry = '/volleyball/quick') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Link to="/cricket/quick">Switch to cricket</Link>
+      <Link to="/cricket/quick?format=gully">Switch to gully cricket</Link>
+      <Link to="/volleyball/quick">Switch to volleyball</Link>
+      <Routes>
+        <Route path="/:sport/quick" element={<MonoQuickMatch />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -60,6 +74,57 @@ describe('MonoQuickMatch setup clarity', () => {
       team2: 'Team B',
       status: 'in-progress',
     });
+  });
+
+  it('starts cricket Test Match quick matches on the product scorer route', async () => {
+    renderQuickMatch({ pathname: '/cricket/quick', search: '?format=test' });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Start Cricket' }));
+
+    expect(await screen.findByText('Cricket Test Match scorer')).toBeInTheDocument();
+    expect(JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]')).toEqual([
+      expect.objectContaining({
+        sport: 'cricket',
+        status: 'in-progress',
+        format: expect.objectContaining({ id: 'test', totalInnings: 4 }),
+      }),
+    ]);
+  });
+
+  it('resets cricket rules when switching into cricket on the same quick route', async () => {
+    renderQuickMatchWithSwitcher('/volleyball/quick');
+
+    expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Switch to cricket' }));
+
+    expect(await screen.findByRole('button', { name: 'Start Cricket' })).toBeEnabled();
+    expect(screen.getByText('T20')).toBeInTheDocument();
+    expect(screen.getByText('T20 - 20 overs - 11 players - 1 innings per side')).toBeInTheDocument();
+  });
+
+  it('opens cricket query presets on the matching setup step after route switches', async () => {
+    renderQuickMatchWithSwitcher('/volleyball/quick');
+
+    expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Switch to gully cricket' }));
+
+    expect(await screen.findByRole('button', { name: 'Start Cricket' })).toBeEnabled();
+    expect(screen.getByText('Gully Cricket')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Next:/i })).not.toBeInTheDocument();
+  });
+
+  it('resets non-cricket rules after leaving a cricket query preset', async () => {
+    renderQuickMatchWithSwitcher('/cricket/quick?format=gully');
+
+    expect(await screen.findByRole('button', { name: 'Start Cricket' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Switch to volleyball' }));
+
+    expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
+    expect(screen.getByText('Best of 3 - 25 pts - win by 2')).toBeInTheDocument();
+    expect(screen.queryByText('Gully Cricket')).not.toBeInTheDocument();
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {

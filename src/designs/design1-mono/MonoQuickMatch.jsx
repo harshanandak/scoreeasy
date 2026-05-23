@@ -498,16 +498,42 @@ export default function MonoQuickMatch() {
     });
   }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
+  // Apply cricket defaults when the quick-match sport route changes.
+  useEffect(() => {
+    if (restoredDraftRef.current) return;
+    if (!isCricket || !sport) return;
+
+    const preset = CRICKET_FORMATS.find(f => f.id === preselectedFormat);
+    const nextPreset = preset?.id || 'T20';
+    setCricketPreset(nextPreset);
+    setFormatMode(preset?.customizable ? 'custom' : 'standard');
+    setFormat(buildCricketFormat(nextPreset));
+    setSetupStep(preset?.customizable ? 3 : 2);
+  }, [isCricket, preselectedFormat, sport]);
+
+  // Reset defaults when leaving cricket on the same mounted quick-match route.
+  useEffect(() => {
+    if (restoredDraftRef.current) return;
+    if (isCricket || !sport) return;
+
+    setFormatMode('standard');
+    setSetupStep(2);
+    const defaults = getSportDefaults(sport);
+    if (defaults && Object.keys(defaults).length > 0) {
+      setFormat(applyStandardDefaults(sport, {}));
+    }
+  }, [isCricket, sport]);
+
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
     if (restoredDraftRef.current) return;
-    if (formatMode === 'standard' && sport) {
-      const defaults = getSportDefaults(sport);
-      if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(applyStandardDefaults(sport, {}));
-      }
+    if (isCricket || formatMode !== 'standard' || !sport) return;
+
+    const defaults = getSportDefaults(sport);
+    if (defaults && Object.keys(defaults).length > 0) {
+      setFormat(applyStandardDefaults(sport, {}));
     }
-  }, [formatMode, sport]);
+  }, [formatMode, isCricket, sport]);
 
   // Goals mode helpers
   const isTimedMode = isGoals && format.mode === 'timed';
@@ -744,7 +770,7 @@ export default function MonoQuickMatch() {
         createdAt: nowIso,
       };
       if (!persistQuickMatch(match)) return;
-      navigate(`/${sport}/quick/test/${matchId}`);
+      navigate(`/${sport}/quick/test-match/${matchId}`);
       return;
     }
 
@@ -2311,7 +2337,7 @@ export default function MonoQuickMatch() {
             <button
               onClick={addWicket}
               className="mono-btn w-full"
-              style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#dc2626', color: '#dc2626', touchAction: 'manipulation' }}
+              style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation' }}
             >
               {freeHit ? 'Run Out Only' : 'Wicket'}
             </button>

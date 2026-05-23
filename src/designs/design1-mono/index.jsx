@@ -109,6 +109,12 @@ function CricketQuickTestScorerRoute() {
   );
 }
 
+function LegacyCricketQuickTestRoute() {
+  const { matchId, sport } = useParams();
+  if (sport !== 'cricket') return <NotFoundRoute />;
+  return <Navigate to={`/${sport}/quick/test-match/${matchId}`} replace />;
+}
+
 function TennisQuickScorerRoute() {
   const { sport } = useParams();
   if (sport !== 'tennis') return <NotFoundRoute />;
@@ -1203,7 +1209,8 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
-                <Route path=":sport/quick/test/:matchId" element={<CricketQuickTestScorerRoute />} />
+                <Route path=":sport/quick/test/:matchId" element={<LegacyCricketQuickTestRoute />} />
+                <Route path=":sport/quick/test-match/:matchId" element={<CricketQuickTestScorerRoute />} />
                 <Route path=":sport/quick/live/:matchId" element={<TennisQuickScorerRoute />} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
