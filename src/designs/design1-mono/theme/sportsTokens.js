@@ -126,11 +126,21 @@ export const sportsTokens = {
   },
 };
 
+export function getSportAccent(sportId) {
+  return sportAccents[sportId] ?? {
+    name: 'Sport',
+    primary: sportsTokens.color.action,
+    soft: sportsTokens.color.actionSoft,
+    field: sportsTokens.color.court,
+  };
+}
+
 export const sportsCssVariables = {
   '--se-font-mono': fontStacks.mono,
   '--se-font-sans': fontStacks.sans,
   '--se-color-action': sportsTokens.color.action,
   '--se-color-action-soft': sportsTokens.color.actionSoft,
+  '--se-color-action-strong': sportsTokens.color.actionStrong,
   '--se-color-canvas': sportsTokens.color.canvas,
   '--se-color-surface': sportsTokens.color.surface,
   '--se-color-ink': sportsTokens.color.ink,
@@ -140,6 +150,7 @@ export const sportsCssVariables = {
   '--se-color-ink-faint': sportsTokens.color.inkFaint,
   '--se-color-line': sportsTokens.color.line,
   '--se-color-line-strong': sportsTokens.color.lineStrong,
+  '--se-color-inverse': sportsTokens.color.inverse,
   '--se-border-standard': sportsTokens.border.standard,
   '--se-shadow-card': sportsTokens.shadow.card,
   '--se-shadow-hard': sportsTokens.shadow.hard,

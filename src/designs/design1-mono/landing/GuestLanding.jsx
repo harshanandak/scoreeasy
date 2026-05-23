@@ -5,6 +5,7 @@ import SportIcon from './sportIcons';
 import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, experienceStats, trustNotes } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
+import { getSportAccent, prioritySports, sportsTokens } from '../theme/sportsTokens';
 
 const heroSportPriority = new Map([
   ['Cricket', 0],
@@ -95,6 +96,8 @@ export default function GuestLanding() {
     onClick: () => setActiveHeroSport(index),
   });
   const activeCard = orderedHeroScoreCards[activeHeroSport];
+  const activeSportId = sportIdByName.get(activeCard.sport);
+  const activeAccent = getSportAccent(activeSportId);
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
   const heroActions = [
@@ -116,9 +119,9 @@ export default function GuestLanding() {
       padding: compact ? '12px 14px' : '14px 28px',
       letterSpacing: '0.05em',
       textDecoration: 'none',
-      background: primary ? t.text : 'transparent',
+      background: primary ? activeAccent.primary : 'transparent',
       color: primary ? t.bg : t.text,
-      border: `${t.borderWeight} solid ${primary || !compact ? t.text : t.border}`,
+      border: `${t.borderWeight} solid ${primary ? activeAccent.primary : (!compact ? t.text : t.border)}`,
       textAlign: 'center',
       minWidth: 0,
       minHeight: compact ? MOBILE_TAP_TARGET : 48,
@@ -136,8 +139,8 @@ export default function GuestLanding() {
     minHeight: MOBILE_TAP_TARGET,
     padding: '10px 14px',
     marginTop: mobile ? 16 : 20,
-    border: `${t.borderWeight} solid ${t.blue}`,
-    background: t.blue,
+    border: `${t.borderWeight} solid ${activeAccent.primary}`,
+    background: activeAccent.primary,
     color: '#fff',
     fontFamily: MONO,
     fontSize: '0.6875rem',
@@ -220,7 +223,7 @@ export default function GuestLanding() {
                 <SportIcon name="Cricket" size={44} color={t.text} />
               </div>
               <p style={{ fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.15em', color: t.textMuted, marginBottom: 8 }}>
-                POPULAR GAME SCOREKEEPER
+                {activeCard.sport.toUpperCase()} SCOREKEEPER
               </p>
               <h1 style={{ fontWeight: 900, fontSize: 'clamp(2.2rem, 11vw, 3rem)', lineHeight: 0.9, letterSpacing: '-0.04em', margin: '0 0 12px 0', color: t.text }}>
                 START<br />A MATCH.
@@ -261,29 +264,29 @@ export default function GuestLanding() {
                     background: activeHeroSport === i ? t.text : t.surface,
                     color: activeHeroSport === i ? t.bg : t.textMuted,
                     transition: 'all 200ms ease',
-                    borderBottom: activeHeroSport === i ? `2px solid ${t.blue}` : `2px solid transparent`,
+                    borderBottom: activeHeroSport === i ? `2px solid ${getSportAccent(sportIdByName.get(card.sport)).primary}` : `2px solid transparent`,
                   }}>
                     {card.sport.toUpperCase()}
                   </button>
                 ))}
               </div>
-              <div style={{ border: `${t.borderWeight} solid ${t.borderStrong}`, padding: 14, background: t.surface, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ border: `${t.borderWeight} solid ${activeAccent.primary}`, padding: 14, background: t.surface, position: 'relative', overflow: 'hidden', boxShadow: `0 10px 24px ${activeAccent.primary}18` }}>
                 <div key={activeCard.sport} style={{ animation: 'card-fade 300ms ease' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.blue, fontWeight: 700 }}>&#9679; LIVE</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: activeAccent.primary, fontWeight: 700 }}>&#9679; LIVE</span>
                     <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
                     <div style={{ textAlign: 'center' }}>
                       <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 600, letterSpacing: '0.08em', display: 'block', color: t.textMuted }}>{activeCard.teamA}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: t.blue }}>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
                         {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '0.75rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixA}</span>}
                       </span>
                     </div>
                     <span style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textFaint }}>VS</span>
                     <div style={{ textAlign: 'center' }}>
                       <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 600, letterSpacing: '0.08em', display: 'block', color: t.textMuted }}>{activeCard.teamB}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: t.blue }}>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
                         {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '0.75rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixB}</span>}
                       </span>
                     </div>
@@ -345,29 +348,29 @@ export default function GuestLanding() {
                     background: activeHeroSport === i ? t.text : t.surface,
                     color: activeHeroSport === i ? t.bg : t.textMuted,
                     transition: 'all 200ms ease',
-                    borderBottom: activeHeroSport === i ? `2px solid ${t.blue}` : `2px solid ${t.border}`,
+                    borderBottom: activeHeroSport === i ? `2px solid ${getSportAccent(sportIdByName.get(card.sport)).primary}` : `2px solid ${t.border}`,
                   }}>
                     {card.sport.toUpperCase()}
                   </button>
                 ))}
               </div>
-              <div style={{ border: `${t.borderWeight} solid ${t.borderStrong}`, padding: 24, background: t.surface, boxShadow: t.cardShadow, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ border: `${t.borderWeight} solid ${activeAccent.primary}`, padding: 24, background: `linear-gradient(180deg, ${activeAccent.soft}, ${t.surface} 42%)`, boxShadow: `0 18px 40px ${activeAccent.primary}1f`, position: 'relative', overflow: 'hidden' }}>
                 <div key={activeCard.sport} style={{ animation: 'card-fade 300ms ease' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.blue, fontWeight: 700 }}>&#9679; LIVE</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: activeAccent.primary, fontWeight: 700 }}>&#9679; LIVE</span>
                     <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', color: t.textMuted }}>{activeCard.teamA}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: t.blue }}>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
                         {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '1.25rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixA}</span>}
                       </span>
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textFaint }}>VS</div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', color: t.textMuted }}>{activeCard.teamB}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: t.blue }}>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
                         {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '1.25rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixB}</span>}
                       </span>
                     </div>
@@ -415,13 +418,13 @@ export default function GuestLanding() {
                 {experienceStats.map((item) => (
                   <div key={item.label} style={{
                     border: `${t.borderWeight} solid ${t.borderStrong}`,
-                    borderLeft: mobile ? `6px solid ${t.blue}` : `${t.borderWeight} solid ${t.borderStrong}`,
+                    borderLeft: mobile ? `6px solid ${sportsTokens.color.action}` : `${t.borderWeight} solid ${t.borderStrong}`,
                     padding: mobile ? '16px 18px' : 20,
                     background: t.surface,
                     minHeight: mobile ? 104 : 0,
                     boxShadow: t.cardShadow,
                   }}>
-                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: t.blue }}>{item.value}</strong>
+                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: sportsTokens.color.action }}>{item.value}</strong>
                     <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '8px 0', color: t.text }}>{item.label}</span>
                     <p style={{ fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft, margin: 0 }}>{item.detail}</p>
                   </div>
@@ -437,7 +440,7 @@ export default function GuestLanding() {
                     fontSize: mobile ? '0.8125rem' : '0.875rem',
                     lineHeight: 1.45,
                   }}>
-                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', color: t.blue, marginBottom: 6 }}>
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', color: sportsTokens.color.action, marginBottom: 6 }}>
                       APP 0{i + 1}
                     </span>
                     {note}
@@ -523,6 +526,9 @@ export default function GuestLanding() {
               const sTextColor = t.sportTextColor || t.text;
               const sBorderStyle = mobile ? 'solid' : (t.sportBorderStyle || 'dashed');
               const sBorderColor = t.sportBorderColor || '#d0d0d0';
+              const sportId = sportIdByName.get(sp);
+              const sportAccent = getSportAccent(sportId);
+              const isPriority = prioritySports.includes(sportId);
               const sportCardHandlers = {
                 ...interactionHandlers(i, setHoveredSport, hoveredSport),
                 onFocus: () => setHoveredSport(i),
@@ -538,14 +544,14 @@ export default function GuestLanding() {
                   style={{
                     display: 'block',
                     position: 'relative',
-                    border: `1.5px ${sBorderStyle} ${isHovered ? sHoverBg : sBorderColor}`,
+                    border: `1.5px ${sBorderStyle} ${isHovered ? sportAccent.primary : (isPriority ? `${sportAccent.primary}66` : sBorderColor)}`,
                     padding: mobile ? '16px 10px' : '20px 14px',
                     minHeight: mobile ? 132 : 0,
                     textAlign: 'center',
                     cursor: 'pointer',
                     textDecoration: 'none',
                     transition: `all ${t.transitionSpeed} ease`,
-                    background: isHovered ? sHoverBg : sBg,
+                    background: isHovered ? sportAccent.primary : (isPriority ? sportAccent.soft : sBg),
                     color: isHovered ? sHoverColor : sTextColor,
                   }}
                   {...sportCardHandlers}
@@ -555,8 +561,13 @@ export default function GuestLanding() {
                   <Cross bottom={2} left={4} />
                   <Cross bottom={2} right={4} />
                   <div style={{ marginBottom: mobile ? 6 : 10, display: 'flex', justifyContent: 'center' }}>
-                    <SportIcon name={sp} size={mobile ? 32 : 40} color={isHovered ? sHoverIconColor : sIconColor} />
+                    <SportIcon name={sp} size={mobile ? 32 : 40} color={isHovered ? sHoverIconColor : (isPriority ? sportAccent.primary : sIconColor)} />
                   </div>
+                  {isPriority && (
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5rem', letterSpacing: '0.08em', color: isHovered ? sHoverColor : sportAccent.primary, marginBottom: 5 }}>
+                      POPULAR START
+                    </span>
+                  )}
                   <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.5625rem', letterSpacing: '0.06em', lineHeight: 1.2, fontWeight: 700 }}>
                     {sp.toUpperCase()}
                   </span>
@@ -605,7 +616,7 @@ export default function GuestLanding() {
                   }}>
                     <SportIcon name={step.icon} size={mobile ? 44 : 64} color={iconColor} />
                   </div>
-                  <span style={{ fontFamily: MONO, fontSize: mobile ? t.stepNumSizeMobile : t.stepNumSize, fontWeight: 900, color: t.blue, lineHeight: 1, display: 'block' }}>{step.num}</span>
+                  <span style={{ fontFamily: MONO, fontSize: mobile ? t.stepNumSizeMobile : t.stepNumSize, fontWeight: 900, color: activeAccent.primary, lineHeight: 1, display: 'block' }}>{step.num}</span>
                   <h3 style={{ fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.875rem', fontWeight: 700, letterSpacing: '0.06em', margin: mobile ? '12px 0 6px 0' : '16px 0 8px 0', color: t.text }}>{step.title}</h3>
                   <p style={{ fontSize: mobile ? '0.8125rem' : '0.875rem', lineHeight: 1.5, color: t.textSoft, margin: 0 }}>{step.desc}</p>
                   <Link to={action.to} style={stepActionStyle}>
@@ -627,7 +638,7 @@ export default function GuestLanding() {
           <Link to={sportPlayPath(activeCard.sport)} style={{
             fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
             padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-            background: t.blue, color: '#fff', border: `2px solid ${t.blue}`,
+            background: activeAccent.primary, color: '#fff', border: `2px solid ${activeAccent.primary}`,
             width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
             minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
           }}>

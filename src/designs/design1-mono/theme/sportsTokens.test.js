@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import finalTheme, { MONO, SWISS } from '../landing/landingTheme';
 import {
   fontStacks,
+  getSportAccent,
   landingTokenBridge,
   prioritySports,
   sportAccents,
@@ -35,8 +36,19 @@ describe('sports design tokens', () => {
 
   it('exposes app-wide css variable names for non-react surfaces', () => {
     expect(sportsCssVariables['--se-color-action']).toBe(sportsTokens.color.action);
+    expect(sportsCssVariables['--se-color-action-strong']).toBe(sportsTokens.color.actionStrong);
     expect(sportsCssVariables['--se-color-canvas']).toBe(sportsTokens.color.canvas);
+    expect(sportsCssVariables['--se-color-inverse']).toBe(sportsTokens.color.inverse);
     expect(sportsCssVariables['--se-font-mono']).toBe(fontStacks.mono);
     expect(sportsCssVariables['--se-motion-standard']).toBe(sportsTokens.motion.standard);
+  });
+
+  it('returns named sport accents and a stable fallback accent', () => {
+    expect(getSportAccent('football')).toBe(sportAccents.football);
+    expect(getSportAccent('unknown')).toMatchObject({
+      name: 'Sport',
+      primary: sportsTokens.color.action,
+      soft: sportsTokens.color.actionSoft,
+    });
   });
 });

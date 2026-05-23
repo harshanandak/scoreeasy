@@ -108,4 +108,22 @@ describe('MonoSportHome priority starts', () => {
     expect(screen.getByLabelText('Search sports')).toHaveClass('mono-input');
     expect(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' })).toHaveStyle({ minHeight: '48px' });
   });
+
+  it('orders play categories around the priority games', () => {
+    renderSportHome();
+
+    const tabs = within(screen.getByRole('tablist', { name: 'Sport categories' })).getAllByRole('tab');
+
+    expect(tabs.slice(0, 3).map(tab => tab.textContent)).toEqual(['Cricket', 'Team Sports', 'Net Sports']);
+  });
+
+  it('presents priority starts as format-selection entry points', () => {
+    renderSportHome();
+
+    const chooser = getChooser();
+
+    expect(within(chooser).getByRole('button', { name: 'Start Cricket' })).toHaveTextContent('Choose format next');
+    expect(within(chooser).getByRole('button', { name: 'Start Football' })).toHaveTextContent('Choose format next');
+    expect(within(chooser).getByRole('button', { name: 'Start Volleyball' })).toHaveTextContent('Choose format next');
+  });
 });

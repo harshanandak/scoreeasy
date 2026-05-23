@@ -7,6 +7,7 @@
   --se-font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --se-color-action: #0066ff;
   --se-color-action-soft: #eaf2ff;
+  --se-color-action-strong: #004fd6;
   --se-color-canvas: #fbfcf8;
   --se-color-surface: #ffffff;
   --se-color-ink: #1a1a1a;
@@ -16,6 +17,7 @@
   --se-color-ink-faint: #b8b8b8;
   --se-color-line: #deded6;
   --se-color-line-strong: #1a1a1a;
+  --se-color-inverse: #ffffff;
   --se-border-standard: 1.5px;
   --se-shadow-card: 0 1px 3px rgba(17, 24, 39, 0.06);
   --se-shadow-hard: 5px 5px 0 #1a1a1a;
