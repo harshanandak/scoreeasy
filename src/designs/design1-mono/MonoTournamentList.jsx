@@ -12,9 +12,29 @@ function getTeamName(tournament, teamId) {
   return tournament.teams?.find((team) => team.id === teamId)?.name || 'Team';
 }
 
-function getNextMatch(tournament, sportConfig) {
+function getMatchTeamName(tournament, teamRef) {
+  if (teamRef === null || teamRef === undefined) return 'Team';
+  if (typeof teamRef === 'object') {
+    if (teamRef.name) return teamRef.name;
+    if (teamRef.id) return getTeamName(tournament, teamRef.id);
+    return 'Team';
+  }
+  return tournament.teams?.find((team) => team.id === teamRef)?.name || String(teamRef);
+}
+
+function hasMatchTeams(match) {
+  const team1 = match.team1Id ?? match.team1;
+  const team2 = match.team2Id ?? match.team2;
+  return team1 !== null && team1 !== undefined && team2 !== null && team2 !== undefined;
+}
+
+function getOpenMatches(tournament, sportConfig) {
   const allMatches = [...(tournament.matches || []), ...(tournament.knockoutMatches || [])];
-  return allMatches.find((match) => !isTournamentMatchCompleted(match, sportConfig.engine, match.format || tournament.format));
+  return allMatches.filter((match) => !isTournamentMatchCompleted(match, sportConfig.engine, match.format || tournament.format));
+}
+
+function getNextScorableMatch(tournament, sportConfig) {
+  return getOpenMatches(tournament, sportConfig).find(hasMatchTeams);
 }
 
 export default function MonoTournamentList() {
@@ -36,6 +56,10 @@ export default function MonoTournamentList() {
 
   const openTournament = (id) => {
     navigate(`/${sport}/tournament/${id}`);
+  };
+
+  const scoreTournamentMatch = (tournamentId, matchId) => {
+    navigate(`/${sport}/tournament/${tournamentId}/match/${matchId}/score`);
   };
 
   const deleteTournament = (id) => {
@@ -173,11 +197,22 @@ export default function MonoTournamentList() {
                 isTournamentMatchCompleted(m, sportConfig.engine, m.format || t.format)
               ).length;
               const progress = matchCount > 0 ? Math.round((completedCount / matchCount) * 100) : 0;
-              const nextMatch = getNextMatch(t, sportConfig);
-              const nextMatchLabel = nextMatch
-                ? `${getTeamName(t, nextMatch.team1Id)} vs ${getTeamName(t, nextMatch.team2Id)}`
-                : 'All matches complete';
-              const continueLabel = nextMatch ? 'Continue next match' : 'View results';
+              const openMatches = getOpenMatches(t, sportConfig);
+              const nextMatch = getNextScorableMatch(t, sportConfig);
+              let nextMatchLabel = 'All matches complete';
+              if (nextMatch) {
+                nextMatchLabel = `${getMatchTeamName(t, nextMatch.team1Id ?? nextMatch.team1)} vs ${getMatchTeamName(t, nextMatch.team2Id ?? nextMatch.team2)}`;
+              } else if (openMatches.length > 0) {
+                nextMatchLabel = 'Bracket waiting for teams';
+              }
+              let continueLabel = 'View results';
+              if (nextMatch) {
+                continueLabel = 'Score next match';
+              } else if (openMatches.length > 0) {
+                continueLabel = 'View bracket';
+              }
+              const isWaitingForTeams = !nextMatch && openMatches.length > 0;
+              const statusColor = nextMatch ? '#111' : isWaitingForTeams ? '#92400e' : '#15803d';
 
               return (
                 <div key={t.id} className="mono-card" style={{ padding: 0 }}>
@@ -222,7 +257,7 @@ export default function MonoTournamentList() {
                     <div className="mt-3" aria-hidden="true" style={{ height: 6, background: '#f1f5f9' }}>
                       <div style={{ width: `${progress}%`, height: '100%', background: '#0066ff' }} />
                     </div>
-                    <p className="text-xs mt-2" style={{ color: nextMatch ? '#111' : '#15803d' }}>
+                    <p className="text-xs mt-2" style={{ color: statusColor }}>
                       {nextMatch ? `Next: ${nextMatchLabel}` : nextMatchLabel}
                     </p>
                   </button>
@@ -242,7 +277,13 @@ export default function MonoTournamentList() {
                   ) : (
                     <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
                       <button
-                        onClick={() => openTournament(t.id)}
+                        onClick={() => {
+                          if (nextMatch) {
+                            scoreTournamentMatch(t.id, nextMatch.id);
+                            return;
+                          }
+                          openTournament(t.id);
+                        }}
                         className="mono-btn-primary flex-1"
                         style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
                         aria-label={`${continueLabel} - ${t.name}`}

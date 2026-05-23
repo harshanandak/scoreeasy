@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PropTypes from 'prop-types';
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MonoTournamentList from './MonoTournamentList';
 import GenericGoalsTournament from './GenericGoalsTournament';
 import GenericSetsTournament from './GenericSetsTournament';
@@ -88,6 +88,17 @@ function renderRoute(initialEntry, routePath, element) {
   );
 }
 
+function renderRouteWithLocation(initialEntry, routePath, element) {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <LocationProbe />
+      <Routes>
+        <Route path={routePath} element={element} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 function renderRouteWithJump({ element, initialEntry, label, routePath, to }) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -97,6 +108,11 @@ function renderRouteWithJump({ element, initialEntry, label, routePath, to }) {
       </Routes>
     </MemoryRouter>,
   );
+}
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname}</output>;
 }
 
 function RouteJump({ label, to }) {
@@ -146,6 +162,82 @@ describe('tournament destructive safety', () => {
       expect(readTournaments(VOLLEYBALL_KEY)).toHaveLength(1);
     });
     expect(screen.getByText('League Night')).toBeInTheDocument();
+  });
+
+  it('scores the next ready tournament match directly from the tournament list', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        matches: [
+          completedSetsMatch({ id: 'match-1' }),
+          pendingMatch({ id: 'match-2', sets: [] }),
+        ],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Score next match - League Night' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/volleyball/tournament/tour-1/match/match-2/score');
+  });
+
+  it('uses saved team names or team objects in the next-match label', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        teams: [{ id: 'team-b', name: 'Bravo' }],
+        matches: [
+          pendingMatch({
+            id: 'match-2',
+            team1Id: undefined,
+            team2Id: undefined,
+            team1: 'Alpha',
+            team2: { id: 'team-b', name: 'Bravo' },
+            sets: [],
+          }),
+        ],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    expect(await screen.findByText('Next: Alpha vs Bravo')).toBeInTheDocument();
+  });
+
+  it('opens tournament results when every tournament match is complete', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        matches: [completedSetsMatch({ id: 'match-1' })],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'View results - League Night' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/volleyball/tournament/tour-1');
+  });
+
+  it('shows waiting brackets as incomplete instead of complete', async () => {
+    seedStorage(VOLLEYBALL_KEY, [
+      tournament({
+        matches: [],
+        knockoutMatches: [
+          pendingMatch({
+            id: 'final',
+            label: 'Final',
+            team1Id: undefined,
+            team2Id: undefined,
+            sets: [],
+          }),
+        ],
+      }),
+    ]);
+
+    renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
+
+    const waitingLabel = await screen.findByText('Bracket waiting for teams');
+    expect(waitingLabel).toHaveStyle({ color: '#92400e' });
+    expect(screen.getByRole('button', { name: 'View bracket - League Night' })).toBeInTheDocument();
   });
 
   it('creates a single-elimination tournament with a seeded bracket', async () => {
