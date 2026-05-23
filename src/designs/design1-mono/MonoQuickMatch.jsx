@@ -508,6 +508,7 @@ export default function MonoQuickMatch() {
     setCricketPreset(nextPreset);
     setFormatMode(preset?.customizable ? 'custom' : 'standard');
     setFormat(buildCricketFormat(nextPreset));
+    setSetupStep(preset?.customizable ? 3 : 2);
   }, [isCricket, preselectedFormat, sport]);
 
   // Apply standard defaults when format mode is 'standard'
