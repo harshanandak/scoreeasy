@@ -50,6 +50,7 @@ describe('setupNativeChrome', () => {
 
     expect(mocks.setStyle).toHaveBeenCalledWith({ style: 'LIGHT' });
     expect(mocks.setBackgroundColor).toHaveBeenCalledWith({ color: '#fafafa' });
+    expect(mocks.hide).toHaveBeenCalledTimes(1);
   });
 
   it('skips native chrome setup outside the native app shell', async () => {
