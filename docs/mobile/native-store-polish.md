@@ -2,6 +2,8 @@
 
 Use this checklist when reviewing the Android and iOS app shells for store-readiness.
 
+For release or PR merge evidence, use the full device evidence flow in `docs/mobile/native-device-verification-runbook.md`.
+
 ## Local Build Checks
 
 ```powershell

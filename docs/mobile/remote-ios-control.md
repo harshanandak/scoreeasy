@@ -1,5 +1,7 @@
 # Remote Mobile Control
 
+Use this with `docs/mobile/native-device-verification-runbook.md` when a PR needs iOS simulator/device evidence from a Mac.
+
 ## First Step: GitHub-Hosted Runners
 
 This repo includes build workflows that can be triggered from Windows through the GitHub CLI:

@@ -1,5 +1,7 @@
 # Mobile Test Setup
 
+This file covers build/test setup. Use `docs/mobile/native-device-verification-runbook.md` for the Android/iOS installed-app smoke matrix and PR evidence template.
+
 ## Web
 
 Runs locally on Windows and in CI:
