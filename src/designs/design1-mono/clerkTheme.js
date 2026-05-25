@@ -1,14 +1,22 @@
 // Clerk appearance config themed to match the Mono design system
+const ACTION = "oklch(0.6230 0.1688 149.1777)";
+const ACTION_HOVER = "oklch(0.4104 0.1066 149.9393)";
+const ACTION_SOFT = "oklch(0.9231 0.0773 156.7494)";
+const SURFACE = "oklch(0.9855 0.0026 145.5558)";
+const CANVAS = "oklch(0.9782 0.0039 145.5458)";
+const INK = "oklch(0 0 0)";
+const MUTED = "oklch(0.5103 0 0)";
+
 export const monoClerkAppearance = {
   variables: {
-    colorPrimary: "#0066ff",
+    colorPrimary: ACTION,
     colorDanger: "#dc2626",
-    colorText: "#111111",
-    colorTextSecondary: "#888888",
-    colorBackground: "#ffffff",
-    colorInputBackground: "#ffffff",
-    colorInputText: "#111111",
-    borderRadius: "0px",
+    colorText: INK,
+    colorTextSecondary: MUTED,
+    colorBackground: SURFACE,
+    colorInputBackground: SURFACE,
+    colorInputText: INK,
+    borderRadius: "4px",
     fontFamily: "Inter, system-ui, sans-serif",
     fontSize: "14px",
   },
@@ -17,9 +25,9 @@ export const monoClerkAppearance = {
       width: "100%",
     },
     card: {
-      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-      border: "1px solid #eeeeee",
-      borderRadius: "0",
+      boxShadow: "none",
+      border: "0",
+      borderRadius: "8px",
       padding: "32px",
     },
     headerTitle: {
@@ -29,23 +37,24 @@ export const monoClerkAppearance = {
       display: "none",
     },
     formButtonPrimary: {
-      backgroundColor: "#0066ff",
-      borderRadius: "0",
+      backgroundColor: ACTION,
+      borderRadius: "4px",
       fontWeight: "500",
       textTransform: "none",
       fontSize: "14px",
       padding: "12px 16px",
       "&:hover": {
-        backgroundColor: "#0052cc",
+        backgroundColor: ACTION_HOVER,
       },
     },
     formFieldInput: {
-      borderRadius: "0",
-      borderColor: "#dddddd",
+      borderRadius: "4px",
+      borderColor: INK,
       padding: "10px 12px",
+      backgroundColor: CANVAS,
       "&:focus": {
-        borderColor: "#0066ff",
-        boxShadow: "none",
+        borderColor: ACTION,
+        boxShadow: `0 0 0 3px ${ACTION_SOFT}`,
       },
     },
     formFieldLabel: {
@@ -53,29 +62,29 @@ export const monoClerkAppearance = {
       fontWeight: "400",
       textTransform: "uppercase",
       letterSpacing: "0.08em",
-      color: "#888888",
+      color: MUTED,
     },
     socialButtonsBlockButton: {
-      borderRadius: "0",
-      border: "1px solid #dddddd",
+      borderRadius: "4px",
+      border: `1px solid ${INK}`,
       padding: "12px 16px",
       fontSize: "14px",
       "&:hover": {
-        backgroundColor: "#f5f5f5",
+        backgroundColor: CANVAS,
       },
     },
     dividerLine: {
       backgroundColor: "#eeeeee",
     },
     dividerText: {
-      color: "#888888",
+      color: MUTED,
       fontSize: "12px",
       textTransform: "lowercase",
     },
     footerActionLink: {
-      color: "#0066ff",
+      color: ACTION,
       "&:hover": {
-        color: "#0052cc",
+        color: ACTION_HOVER,
       },
     },
     footer: {
@@ -84,10 +93,10 @@ export const monoClerkAppearance = {
       },
     },
     identityPreview: {
-      borderRadius: "0",
+      borderRadius: "4px",
     },
     badge: {
-      borderRadius: "0",
+      borderRadius: "4px",
     },
   },
 };

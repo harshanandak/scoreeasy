@@ -5,24 +5,149 @@
 
 /* --- Cards --- */
 .mono-card {
+  box-sizing: border-box;
+  max-width: 100%;
   background: var(--se-color-surface);
   border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
   box-shadow: var(--se-shadow-card);
   transition: box-shadow var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-card:hover {
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+.mono-panel {
+  box-sizing: border-box;
+  max-width: 100%;
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+  box-shadow: var(--se-shadow-card);
+}
+
+.mono-soft-card {
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+}
+
+.mono-history-section {
+  padding: 14px 0 18px;
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 32%, var(--se-color-surface));
+  border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 32%, var(--se-color-surface));
+}
+
+.mono-history-row {
+  border-width: 0 0 1px 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.mono-history-row:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 20%, var(--se-color-surface));
+  box-shadow: none;
+}
+
+.mono-history-detail {
+  box-shadow: none;
+}
+
+.mono-stat-card {
+  box-shadow: none;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-stat-card:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 18%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 54%, var(--se-color-line));
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-stat-panel {
+  box-shadow: none;
+}
+
+.mono-status-card {
+  border-color: var(--se-color-action);
+  color: var(--se-color-action-strong);
+  background: color-mix(in oklch, var(--se-color-action-soft) 42%, var(--se-color-surface));
+}
+
+.mono-danger-card {
+  border-color: var(--se-color-danger, #dc2626);
+  background: color-mix(in oklch, #fee2e2 52%, var(--se-color-surface));
+}
+
+.mono-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.mono-tab {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-button);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink-muted);
+  box-shadow: var(--shadow-2xs);
+  font-family: var(--se-font-sans);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-tab:hover {
+  background: var(--se-color-action-soft);
+  color: var(--se-color-ink-strong);
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
+.mono-tab-active {
+  background: var(--se-color-action);
+  border-color: var(--se-color-action);
+  color: var(--se-color-inverse);
+}
+
+.mono-tab-active:hover {
+  background: var(--se-color-action);
+  color: var(--se-color-inverse);
+}
+
+.mono-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-button);
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
+  cursor: pointer;
+  transition: background var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-icon-button:hover {
+  background: var(--se-color-action-soft);
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
 }
 
 /* --- Inputs --- */
 .mono-input {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--se-color-line);
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-button);
+  box-shadow: var(--shadow-2xs);
   outline: none;
-  padding: 8px 0;
+  padding: 8px 12px;
   min-height: 44px;
   font-size: 1rem;
   font-family: var(--se-font-sans);
@@ -36,57 +161,83 @@
 
 .mono-input:focus,
 .mono-input:focus-visible {
-  border-bottom-color: var(--se-color-action);
-  outline: 2px solid rgba(0, 102, 255, 0.18);
-  outline-offset: 4px;
-  box-shadow: 0 4px 0 rgba(0, 102, 255, 0.08);
+  border-color: var(--se-color-action);
+  outline: 2px solid rgba(47, 125, 50, 0.2);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-xs);
 }
 
 /* --- Buttons --- */
 .mono-btn {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   padding: 8px 20px;
   border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-button);
   background: transparent;
   color: var(--se-color-ink);
+  box-shadow: var(--shadow-2xs);
   font-size: 0.875rem;
   font-family: var(--se-font-sans);
   cursor: pointer;
-  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-btn:hover {
   background: var(--se-color-action-soft);
+  box-shadow: var(--shadow-xs);
 }
 
 .mono-btn:active {
   transform: translateY(1px);
+  box-shadow: var(--shadow-2xs);
 }
 
 .mono-btn-primary {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   padding: 8px 24px;
   border: 1px solid var(--se-color-action);
+  border-radius: var(--se-radius-button);
   background: var(--se-color-action);
   color: var(--se-color-inverse);
+  box-shadow: var(--shadow-2xs);
   font-size: 0.875rem;
   font-family: var(--se-font-sans);
   cursor: pointer;
-  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-btn-primary:hover {
-  background: var(--se-color-action-strong, #004fd6);
-  border-color: var(--se-color-action-strong, #004fd6);
+  background: var(--se-color-action-strong, #215b25);
+  border-color: var(--se-color-action-strong, #215b25);
+  box-shadow: var(--shadow-xs);
 }
 
 .mono-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-action-primary {
+  background: var(--mono-action-accent, var(--se-color-action));
+  border-color: var(--mono-action-accent, var(--se-color-action));
+  color: var(--mono-action-text, var(--se-color-inverse));
+}
+
+.mono-action-primary:hover {
+  background: color-mix(in oklch, var(--mono-action-accent, var(--se-color-action)) 88%, black);
+  border-color: color-mix(in oklch, var(--mono-action-accent, var(--se-color-action)) 88%, black);
+  transform: translate(-1px, -1px);
+}
+
+.mono-action-primary:active {
   transform: translateY(1px);
 }
 
@@ -104,25 +255,25 @@
   padding: 2px 10px;
   font-size: 0.6875rem;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  border-radius: 999px;
+  border-radius: 2px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;
 }
 
 .mono-badge-live {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--se-color-action-soft);
+  color: var(--se-color-action);
 }
 
 .mono-badge-paused {
-  background: #fff3e0;
-  color: #e65100;
+  background: #f3eadf;
+  color: #8a6242;
 }
 
 .mono-badge-final {
-  background: #e3f2fd;
-  color: #0066ff;
+  background: var(--se-color-action-soft);
+  color: var(--se-color-action);
 }
 
 /* --- Page fade transition --- */
@@ -157,47 +308,53 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
+  border-radius: var(--se-radius-button);
+  border: 1px solid var(--se-color-line);
   background: transparent;
-  color: #111;
+  box-shadow: var(--shadow-2xs);
+  color: var(--se-color-ink);
   font-size: 1.125rem;
   cursor: pointer;
-  transition: background 200ms ease, border-color 200ms ease;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  font-family: var(--se-font-sans);
   padding: 0;
   line-height: 1;
 }
 
 .mono-score-btn:hover {
-  border-color: #0066ff;
-  color: #0066ff;
+  border-color: var(--se-color-action);
+  color: var(--se-color-action);
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
 }
 
 .mono-score-btn:active {
-  background: #f0f4ff;
+  background: var(--se-color-action-soft);
 }
 
 /* --- Game type card in setup --- */
 .mono-type-card {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 16px 12px;
-  border: 1px solid #ddd;
-  background: #ffffff;
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--radius);
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
   cursor: pointer;
   transition: border-color 200ms ease;
   gap: 6px;
 }
 
 .mono-type-card:hover {
-  border-color: #999;
+  border-color: var(--se-color-ink-muted);
 }
 
 .mono-type-card.selected {
-  border-color: #0066ff;
+  border-color: var(--se-color-action);
 }
 
 .mono-type-card .mono-type-icon {
@@ -206,12 +363,12 @@
 
 .mono-type-card .mono-type-name {
   font-size: 0.75rem;
-  color: #888;
+  color: var(--se-color-ink-muted);
   text-align: center;
 }
 
 .mono-type-card.selected .mono-type-name {
-  color: #0066ff;
+  color: var(--se-color-action);
 }
 
 /* --- Utility: smooth opacity transition --- */
@@ -304,7 +461,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0);
-  background: rgba(0, 102, 255, 0.95);
+  background: rgba(47, 125, 50, 0.95);
   color: #fff;
   padding: 24px 48px;
   border-radius: 8px;
@@ -344,7 +501,7 @@
   position: absolute;
   top: -40px;
   left: 0;
-  background: #0066ff;
+  background: var(--se-color-action);
   color: #fff;
   padding: 8px 16px;
   z-index: 100;
@@ -362,13 +519,13 @@
 .mono-btn-primary:focus-visible,
 .mono-score-btn:focus-visible,
 .mono-type-card:focus-visible {
-  outline: 2px solid #0066ff;
+  outline: 2px solid var(--se-color-action);
   outline-offset: 2px;
 }
 
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid #0066ff;
+  outline: 2px solid var(--se-color-action);
   outline-offset: 2px;
 }
 

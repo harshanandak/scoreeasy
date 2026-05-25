@@ -17,12 +17,15 @@ describe('sports design tokens', () => {
     expect(prioritySports).toContain('volleyball');
   });
 
-  it('defines distinct sport accents for the most important sports', () => {
+  it('uses a restrained field-green and pitch-brown palette for the priority sports', () => {
     const priorityAccentColors = prioritySports.map((sport) => sportAccents[sport].primary);
+    const priorityFieldColors = prioritySports.map((sport) => sportAccents[sport].field);
 
-    expect(new Set(priorityAccentColors).size).toBe(priorityAccentColors.length);
+    expect(new Set(priorityAccentColors)).toEqual(new Set(['oklch(0.6230 0.1688 149.1777)']));
+    expect(new Set(priorityFieldColors)).toEqual(new Set(['oklch(0.6082 0.1213 58.2537)']));
     expect(sportAccents.cricket.primary).toBe(sportsTokens.color.action);
-    expect(sportAccents.football.field).toBe('#15803d');
+    expect(sportAccents.football.soft).toBe(sportsTokens.color.actionSoft);
+    expect(sportAccents.volleyball.field).toBe(sportAccents.cricket.field);
   });
 
   it('bridges central tokens into the current landing theme contract', () => {
@@ -55,7 +58,7 @@ describe('sports design tokens', () => {
 
   it('chooses readable text for bright sport accent backgrounds', () => {
     expect(getReadableTextColor(sportAccents.cricket.primary)).toBe(sportsTokens.color.inverse);
-    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inkStrong);
-    expect(getReadableTextColor(sportAccents.volleyball.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inverse);
+    expect(getReadableTextColor(sportAccents.racquet.primary)).toBe(sportsTokens.color.inverse);
   });
 });

@@ -230,13 +230,13 @@ function OnboardingReminder() {
         margin: '8px auto 0',
         maxWidth: '640px',
         padding: '12px',
-        borderColor: '#0066ff',
+        borderColor: 'var(--se-color-action)',
         color: '#111',
       }}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-widest" style={{ color: '#0066ff', marginBottom: 4 }}>
+          <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--se-color-action)', marginBottom: 4 }}>
             Profile setup can wait
           </p>
           <p className="text-sm" style={{ color: '#444', margin: 0 }}>
@@ -549,8 +549,8 @@ function GlobalNavigation({ requestScoringExit }) {
           justify-content: space-between;
           min-height: 56px;
           padding: 0 32px;
-          border-bottom: 1.5px solid #111;
-          background: #fafafa;
+          border-bottom: var(--se-border-standard) solid var(--se-color-line-strong);
+          background: var(--se-color-surface);
         }
 
         .global-nav-brand {
@@ -573,11 +573,12 @@ function GlobalNavigation({ requestScoringExit }) {
         }
 
         .global-nav-link {
-          border: 1.5px solid transparent;
+          border: var(--se-border-standard) solid transparent;
+          border-radius: var(--se-radius-button);
           background: transparent;
-          color: #555;
+          color: var(--se-color-ink-muted);
           cursor: pointer;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-family: var(--se-font-mono);
           font-size: 0.75rem;
           font-weight: 800;
           letter-spacing: 0.06em;
@@ -587,8 +588,9 @@ function GlobalNavigation({ requestScoringExit }) {
 
         .global-nav-link:hover,
         .global-nav-link[aria-current="page"] {
-          border-color: #111;
-          color: #111;
+          border-color: var(--se-color-action);
+          background: var(--se-color-action);
+          color: var(--se-color-inverse);
         }
 
         .global-mobile-menu-button,
@@ -606,7 +608,7 @@ function GlobalNavigation({ requestScoringExit }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(17, 17, 17, 0.62);
+          background: rgba(0, 0, 0, 0.28);
           padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
           backdrop-filter: blur(2px);
         }
@@ -625,16 +627,17 @@ function GlobalNavigation({ requestScoringExit }) {
           width: min(480px, 100%);
           max-height: min(720px, calc(100vh - 40px));
           overflow: auto;
-          border: 1.5px solid #111;
-          background: #fff;
-          color: #111;
-          box-shadow: 8px 8px 0 #111;
+          border: var(--se-border-standard) solid var(--se-color-line-strong);
+          border-radius: var(--se-radius-card);
+          background: var(--se-color-surface);
+          color: var(--se-color-ink-strong);
+          box-shadow: var(--se-shadow-hard);
           padding: 26px;
         }
 
         .app-confirm-eyebrow {
-          color: #0066ff;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          color: var(--se-color-action);
+          font-family: var(--se-font-mono);
           font-size: 0.6875rem;
           font-weight: 800;
           letter-spacing: 0.08em;
@@ -643,7 +646,7 @@ function GlobalNavigation({ requestScoringExit }) {
         }
 
         .app-confirm-title {
-          color: #111;
+          color: var(--se-color-ink-strong);
           font-size: 1.25rem;
           font-weight: 800;
           line-height: 1.2;
@@ -651,7 +654,7 @@ function GlobalNavigation({ requestScoringExit }) {
         }
 
         .app-confirm-message {
-          color: #555;
+          color: var(--se-color-ink-soft);
           font-size: 0.9375rem;
           line-height: 1.5;
           margin: 0 0 24px;
@@ -666,7 +669,8 @@ function GlobalNavigation({ requestScoringExit }) {
         .app-confirm-primary,
         .app-confirm-secondary {
           min-height: 48px;
-          border: 1.5px solid #111;
+          border: var(--se-border-standard) solid var(--se-color-line-strong);
+          border-radius: var(--se-radius-button);
           cursor: pointer;
           font-size: 0.875rem;
           font-weight: 700;
@@ -675,18 +679,18 @@ function GlobalNavigation({ requestScoringExit }) {
         }
 
         .app-confirm-primary {
-          background: #0066ff;
-          color: #fff;
+          background: var(--se-color-action);
+          color: var(--se-color-inverse);
         }
 
         .app-confirm-danger {
-          background: #111;
-          color: #fff;
+          background: var(--se-color-ink-strong);
+          color: var(--se-color-inverse);
         }
 
         .app-confirm-secondary {
-          background: #fff;
-          color: #111;
+          background: var(--se-color-surface);
+          color: var(--se-color-ink-strong);
         }
 
         .app-scoring-notice {
@@ -695,9 +699,10 @@ function GlobalNavigation({ requestScoringExit }) {
           justify-content: space-between;
           gap: 14px;
           margin-bottom: 16px;
-          border: 1.5px solid #111;
-          background: #fff;
-          box-shadow: 4px 4px 0 #111;
+          border: var(--se-border-standard) solid var(--se-color-line-strong);
+          border-radius: var(--se-radius-card);
+          background: var(--se-color-surface);
+          box-shadow: var(--se-shadow-card);
           padding: 14px 16px;
         }
 
@@ -715,8 +720,8 @@ function GlobalNavigation({ requestScoringExit }) {
 
         .app-scoring-notice-label {
           display: block;
-          color: #0066ff;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          color: var(--se-color-action);
+          font-family: var(--se-font-mono);
           font-size: 0.625rem;
           font-weight: 800;
           letter-spacing: 0.08em;
@@ -725,7 +730,7 @@ function GlobalNavigation({ requestScoringExit }) {
         }
 
         .app-scoring-notice-message {
-          color: #333;
+          color: var(--se-color-ink-soft);
           font-size: 0.875rem;
           line-height: 1.45;
           margin: 0;
@@ -733,9 +738,10 @@ function GlobalNavigation({ requestScoringExit }) {
 
         .app-scoring-notice-action {
           min-height: 44px;
-          border: 1.5px solid #111;
-          background: #111;
-          color: #fff;
+          border: var(--se-border-standard) solid var(--se-color-line-strong);
+          border-radius: var(--se-radius-button);
+          background: var(--se-color-action);
+          color: var(--se-color-inverse);
           cursor: pointer;
           font-size: 0.8125rem;
           font-weight: 800;
@@ -757,7 +763,7 @@ function GlobalNavigation({ requestScoringExit }) {
             width: 100%;
             max-height: min(88vh, 680px);
             padding: 20px;
-            box-shadow: 5px 5px 0 #111;
+            box-shadow: var(--se-shadow-hard);
           }
 
           .app-confirm-actions {
@@ -793,23 +799,24 @@ function GlobalNavigation({ requestScoringExit }) {
 
           .global-mobile-menu-button {
             display: inline-flex;
-            width: 44px;
-            height: 44px;
+            width: 38px;
+            height: 38px;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 5px;
-            border: 1.5px solid #111;
-            background: #fafafa;
+            gap: 4px;
+            border: var(--se-border-standard) solid var(--se-color-line-strong);
+            border-radius: 0;
+            background: var(--se-color-surface);
             cursor: pointer;
-            box-shadow: 3px 3px 0 #111;
+            box-shadow: 2px 2px 0px -1px hsl(0 0% 0% / 0.8);
           }
 
           .global-mobile-menu-button span {
             display: block;
-            width: 18px;
+            width: 16px;
             height: 2px;
-            background: #111;
+            background: var(--se-color-action);
           }
 
           .global-mobile-menu-sheet {
@@ -832,7 +839,7 @@ function GlobalNavigation({ requestScoringExit }) {
             inset: 0;
             display: block;
             border: 0;
-            background: rgba(17, 17, 17, 0.38);
+            background: rgba(0, 0, 0, 0.16);
             cursor: pointer;
           }
 
@@ -842,10 +849,12 @@ function GlobalNavigation({ requestScoringExit }) {
             bottom: calc(12px + env(safe-area-inset-bottom, 0px));
             left: 12px;
             display: block;
-            border: 1.5px solid #111;
-            background: #fff;
-            color: #111;
-            box-shadow: 4px 4px 0 #111;
+            border: var(--se-border-standard) solid var(--se-color-line-strong);
+            border-radius: var(--se-radius-card);
+            background: var(--se-color-surface);
+            color: var(--se-color-ink-strong);
+            box-shadow: var(--se-shadow-hard);
+            overflow: hidden;
           }
 
           .global-mobile-menu-sheet::backdrop {
@@ -858,9 +867,9 @@ function GlobalNavigation({ requestScoringExit }) {
             gap: 12px;
             min-height: 48px;
             align-items: center;
-            border-bottom: 1.5px solid #111;
-            color: #555;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            border-bottom: var(--se-border-standard) solid var(--se-color-line-strong);
+            color: var(--se-color-ink-muted);
+            font-family: var(--se-font-mono);
             font-size: 0.75rem;
             font-weight: 800;
             letter-spacing: 0.06em;
@@ -870,9 +879,10 @@ function GlobalNavigation({ requestScoringExit }) {
 
           .global-mobile-menu-close {
             min-height: 36px;
-            border: 1.5px solid #111;
-            background: #fafafa;
-            color: #111;
+            border: var(--se-border-standard) solid var(--se-color-line-strong);
+            border-radius: var(--se-radius-button);
+            background: var(--se-color-surface);
+            color: var(--se-color-ink-strong);
             cursor: pointer;
             font: inherit;
             padding: 0 10px;
@@ -882,14 +892,14 @@ function GlobalNavigation({ requestScoringExit }) {
           .global-mobile-menu-panel {
             display: flex;
             flex-direction: column;
-            background: #fff;
+            background: var(--se-color-surface);
           }
 
           .global-mobile-menu-item {
             border: 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
             background: transparent;
-            color: #111;
+            color: var(--se-color-ink-strong);
             cursor: pointer;
             font-family: inherit;
             font-size: 0.875rem;
@@ -900,8 +910,8 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-mobile-menu-item[aria-current="page"] {
-            background: #f0f6ff;
-            color: #0066ff;
+            background: var(--se-color-action);
+            color: var(--se-color-inverse);
           }
 
           .global-mobile-menu-item:last-child {
@@ -917,19 +927,20 @@ function GlobalNavigation({ requestScoringExit }) {
             display: grid;
             grid-template-columns: repeat(var(--bottom-nav-count), minmax(0, 1fr));
             gap: 0;
-            border-top: 1.5px solid #111;
-            background: #fafafa;
+            border-top: var(--se-border-standard) solid var(--se-color-line-strong);
+            background: var(--se-color-surface);
             padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-            box-shadow: 0 -3px 0 rgba(17, 17, 17, 0.08);
+            box-shadow: 0 -3px 0 color-mix(in oklch, var(--se-color-line) 8%, transparent);
           }
 
           .global-bottom-nav-item {
             min-height: 52px;
-            border: 1.5px solid transparent;
+            border: var(--se-border-standard) solid transparent;
+            border-radius: var(--se-radius-button);
             background: transparent;
-            color: #555;
+            color: var(--se-color-ink-muted);
             cursor: pointer;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            font-family: var(--se-font-mono);
             font-size: 0.6875rem;
             font-weight: 800;
             letter-spacing: 0.04em;
@@ -937,10 +948,10 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-bottom-nav-item[aria-current="page"] {
-            border-color: #111;
-            background: #fff;
-            color: #111;
-            box-shadow: 2px 2px 0 #111;
+            border-color: var(--se-color-action);
+            background: var(--se-color-action);
+            color: var(--se-color-inverse);
+            box-shadow: var(--se-shadow-card);
           }
         }
       `}</style>
@@ -1174,7 +1185,7 @@ export default function Design1Mono() {
   }, [location.pathname, location.search, navigate, requestScoringExit]);
 
   return (
-    <div className="min-h-screen font-swiss" style={{ background: '#fafafa', color: '#111' }}>
+    <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />

@@ -37,11 +37,14 @@ function sportPlayPath(sport) {
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const MOBILE_TAP_TARGET = 44;
+const softMix = (color, amount = 12) => `color-mix(in oklch, ${color} ${amount}%, var(--se-color-surface))`;
 
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const t = finalTheme;
   const [hoveredFeature, setHoveredFeature] = useState(null);
+  const [hoveredExperienceStat, setHoveredExperienceStat] = useState(null);
+  const [hoveredTrustNote, setHoveredTrustNote] = useState(null);
   const [hoveredSport, setHoveredSport] = useState(null);
   const [hoveredStep, setHoveredStep] = useState(null);
   const [activeHeroSport, setActiveHeroSport] = useState(0);
@@ -123,6 +126,7 @@ export default function GuestLanding() {
       background: primary ? activeAccent.primary : 'transparent',
       color: primary ? activeAccentText : t.text,
       border: `${t.borderWeight} solid ${primary ? activeAccent.primary : (!compact ? t.text : t.border)}`,
+      borderRadius: sportsTokens.component.button.radius,
       textAlign: 'center',
       minWidth: 0,
       minHeight: compact ? MOBILE_TAP_TARGET : 48,
@@ -141,6 +145,7 @@ export default function GuestLanding() {
     padding: '10px 14px',
     marginTop: mobile ? 16 : 20,
     border: `${t.borderWeight} solid ${activeAccent.primary}`,
+    borderRadius: sportsTokens.component.button.radius,
     background: activeAccent.primary,
     color: activeAccentText,
     fontFamily: MONO,
@@ -153,6 +158,26 @@ export default function GuestLanding() {
     boxSizing: 'border-box',
     width: mobile ? '100%' : 'auto',
   };
+  const ctaActionStyle = (primary) => ({
+    fontFamily: MONO,
+    fontSize: mobile ? '0.75rem' : '0.8125rem',
+    fontWeight: 700,
+    padding: mobile ? '12px 24px' : '14px 28px',
+    letterSpacing: '0.05em',
+    textDecoration: 'none',
+    background: primary ? activeAccent.primary : 'transparent',
+    color: primary ? activeAccentText : activeAccent.primary,
+    border: `2px solid ${activeAccent.primary}`,
+    borderRadius: sportsTokens.component.button.radius,
+    width: mobile ? '100%' : 'auto',
+    textAlign: 'center',
+    maxWidth: mobile ? 280 : 'none',
+    minHeight: mobile ? 48 : 50,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxSizing: 'border-box',
+  });
 
   const renderTag = (text, isHovered, tagColor) => {
     const accent = tagColor || t.blue;
@@ -161,25 +186,34 @@ export default function GuestLanding() {
       return (
         <span style={{
           ...base, padding: '3px 10px',
-          background: isHovered ? 'rgba(255,255,255,0.15)' : `${accent}18`,
-          color: isHovered ? '#fff' : accent,
-          border: `1px solid ${isHovered ? 'rgba(255,255,255,0.3)' : `${accent}35`}`,
+          background: isHovered ? 'transparent' : softMix(accent, 10),
+          color: isHovered ? sportsTokens.color.actionSoft : accent,
+          border: `1px solid ${accent}`,
         }}>{text}</span>
       );
     }
     return (
       <span style={{
         ...base, padding: '3px 8px',
-        border: `1px solid ${isHovered ? '#fff' : accent}`,
-        color: isHovered ? '#fff' : accent,
+        border: `1px solid ${accent}`,
+        color: accent,
       }}>{text}</span>
     );
   };
 
-  const Cross = ({ top, left, right, bottom }) => (
+  const Cross = ({ top, left, right, bottom, color }) => (
     <span style={{
-      position: 'absolute', fontFamily: MONO, fontSize: '0.5rem', color: t.textFaint, lineHeight: 1,
-      top, left, right, bottom, userSelect: 'none',
+      position: 'absolute',
+      fontFamily: MONO,
+      fontSize: '0.5rem',
+      color: color || t.textFaint,
+      lineHeight: 1,
+      top,
+      left,
+      right,
+      bottom,
+      userSelect: 'none',
+      pointerEvents: 'none',
     }}>+</span>
   );
 
@@ -245,14 +279,6 @@ export default function GuestLanding() {
               }}>
                 Create account for sync and history
               </Link>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, marginTop: 14 }}>
-                {experienceStats.map((item) => (
-                  <div key={item.label} style={{ border: `1px solid ${t.border}`, padding: '8px 6px', background: t.surface, minWidth: 0 }}>
-                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: '0.875rem', color: t.text }}>{item.value}</strong>
-                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5rem', letterSpacing: '0.04em', color: t.textMuted, textTransform: 'uppercase', overflowWrap: 'anywhere' }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Sport pill selector + dynamic scorecard mockup */}
@@ -261,38 +287,39 @@ export default function GuestLanding() {
                 {orderedHeroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
                     minHeight: MOBILE_TAP_TARGET, padding: '8px 12px', border: 'none', cursor: 'pointer',
-                    fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.06em',
-                    background: activeHeroSport === i ? t.text : t.surface,
-                    color: activeHeroSport === i ? t.bg : t.textMuted,
+                    fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em',
+                    background: activeHeroSport === i ? getSportAccent(sportIdByName.get(card.sport)).primary : t.surface,
+                    color: activeHeroSport === i ? activeAccentText : t.textMuted,
                     transition: 'all 200ms ease',
+                    borderRadius: 0,
                     borderBottom: activeHeroSport === i ? `2px solid ${getSportAccent(sportIdByName.get(card.sport)).primary}` : `2px solid transparent`,
                   }}>
                     {card.sport.toUpperCase()}
                   </button>
                 ))}
               </div>
-              <div style={{ border: `${t.borderWeight} solid ${activeAccent.primary}`, padding: 14, background: t.surface, position: 'relative', overflow: 'hidden', boxShadow: `0 10px 24px ${activeAccent.primary}18` }}>
+              <div style={{ border: `${t.borderWeight} solid ${sportsTokens.color.lineStrong}`, borderRadius: 0, boxSizing: 'border-box', padding: 14, background: t.surface, position: 'relative', overflow: 'hidden', boxShadow: `4px 4px 0 ${activeAccent.primary}` }}>
                 <div key={activeCard.sport} style={{ animation: 'card-fade 300ms ease' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: activeAccent.primary, fontWeight: 700 }}>&#9679; LIVE</span>
-                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: sportsTokens.color.actionStrong, fontWeight: 800 }}>&#9679; LIVE</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: sportsTokens.color.inkSoft, fontWeight: 800, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 600, letterSpacing: '0.08em', display: 'block', color: t.textMuted }}>{activeCard.teamA}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
-                        {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '0.75rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixA}</span>}
+                    <div style={{ textAlign: 'center', minWidth: 0 }}>
+                      <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.08em', display: 'block', color: sportsTokens.color.inkSoft }}>{activeCard.teamA}</span>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '1.5rem' : '1.75rem', fontWeight: 900, lineHeight: 1, color: sportsTokens.color.actionStrong }}>
+                        {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '0.75rem', fontWeight: 800, color: sportsTokens.color.inkSoft }}>{activeCard.suffixA}</span>}
                       </span>
                     </div>
-                    <span style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textFaint }}>VS</span>
-                    <div style={{ textAlign: 'center' }}>
-                      <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 600, letterSpacing: '0.08em', display: 'block', color: t.textMuted }}>{activeCard.teamB}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '1.5rem' : '1.75rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
-                        {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '0.75rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixB}</span>}
+                    <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, color: sportsTokens.color.inkMuted }}>VS</span>
+                    <div style={{ textAlign: 'center', minWidth: 0 }}>
+                      <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.08em', display: 'block', color: sportsTokens.color.inkSoft }}>{activeCard.teamB}</span>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '1.5rem' : '1.75rem', fontWeight: 900, lineHeight: 1, color: sportsTokens.color.actionStrong }}>
+                        {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '0.75rem', fontWeight: 800, color: sportsTokens.color.inkSoft }}>{activeCard.suffixB}</span>}
                       </span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, textAlign: 'center', marginTop: 10, paddingTop: 8, borderTop: `1px solid ${t.border}` }}>
+                  <div style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: sportsTokens.color.inkSoft, textAlign: 'center', marginTop: 10, paddingTop: 8, borderTop: `1px solid ${sportsTokens.color.line}` }}>
                     {activeCard.footer}
                   </div>
                 </div>
@@ -346,8 +373,8 @@ export default function GuestLanding() {
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
                     flex: 1, padding: '8px 4px', border: 'none', cursor: 'pointer',
                     fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.04em',
-                    background: activeHeroSport === i ? t.text : t.surface,
-                    color: activeHeroSport === i ? t.bg : t.textMuted,
+                    background: activeHeroSport === i ? getSportAccent(sportIdByName.get(card.sport)).primary : t.surface,
+                    color: activeHeroSport === i ? activeAccentText : t.textMuted,
                     transition: 'all 200ms ease',
                     borderBottom: activeHeroSport === i ? `2px solid ${getSportAccent(sportIdByName.get(card.sport)).primary}` : `2px solid ${t.border}`,
                   }}>
@@ -355,28 +382,28 @@ export default function GuestLanding() {
                   </button>
                 ))}
               </div>
-              <div style={{ border: `${t.borderWeight} solid ${activeAccent.primary}`, padding: 24, background: `linear-gradient(180deg, ${activeAccent.soft}, ${t.surface} 42%)`, boxShadow: `0 18px 40px ${activeAccent.primary}1f`, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ border: `${t.borderWeight} solid ${sportsTokens.color.lineStrong}`, borderRadius: 0, boxSizing: 'border-box', padding: 24, background: t.surface, boxShadow: `4px 4px 0 ${activeAccent.primary}`, position: 'relative', overflow: 'hidden' }}>
                 <div key={activeCard.sport} style={{ animation: 'card-fade 300ms ease' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: activeAccent.primary, fontWeight: 700 }}>&#9679; LIVE</span>
-                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: sportsTokens.color.actionStrong, fontWeight: 800 }}>&#9679; LIVE</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: sportsTokens.color.inkSoft, fontWeight: 800, letterSpacing: '0.1em' }}>{activeCard.sport.toUpperCase()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', color: t.textMuted }}>{activeCard.teamA}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
-                        {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '1.25rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixA}</span>}
+                      <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', color: sportsTokens.color.inkSoft }}>{activeCard.teamA}</span>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixA ? '2.25rem' : '3rem', fontWeight: 900, lineHeight: 1, color: sportsTokens.color.actionStrong }}>
+                        {activeCard.scoreA}{activeCard.suffixA && <span style={{ fontSize: '1.25rem', fontWeight: 800, color: sportsTokens.color.inkSoft }}>{activeCard.suffixA}</span>}
                       </span>
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textFaint }}>VS</div>
+                    <div style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 800, color: sportsTokens.color.inkMuted }}>VS</div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.08em', color: t.textMuted }}>{activeCard.teamB}</span>
-                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '2.25rem' : '3rem', fontWeight: 800, lineHeight: 1, color: activeAccent.primary }}>
-                        {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '1.25rem', fontWeight: 600, color: t.textMuted }}>{activeCard.suffixB}</span>}
+                      <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', color: sportsTokens.color.inkSoft }}>{activeCard.teamB}</span>
+                      <span style={{ fontFamily: MONO, fontSize: activeCard.suffixB ? '2.25rem' : '3rem', fontWeight: 900, lineHeight: 1, color: sportsTokens.color.actionStrong }}>
+                        {activeCard.scoreB}{activeCard.suffixB && <span style={{ fontSize: '1.25rem', fontWeight: 800, color: sportsTokens.color.inkSoft }}>{activeCard.suffixB}</span>}
                       </span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, textAlign: 'center', letterSpacing: '0.1em', paddingTop: 12, borderTop: `1px solid ${t.border}` }}>
+                  <div style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 800, color: sportsTokens.color.inkSoft, textAlign: 'center', letterSpacing: '0.1em', paddingTop: 12, borderTop: `1px solid ${sportsTokens.color.line}` }}>
                     {activeCard.footer}
                   </div>
                 </div>
@@ -388,7 +415,16 @@ export default function GuestLanding() {
 
       {/* ═══ TICKER ═══ */}
       <div
-        style={{ background: t.borderStrong, color: t.bg, padding: mobile ? '10px 0' : '14px 0', overflow: 'hidden', cursor: 'pointer' }}
+        style={{
+          display: mobile ? 'none' : 'block',
+          background: 'color-mix(in oklch, var(--se-color-ink) 92%, var(--se-color-surface))',
+          color: sportsTokens.color.actionSoft,
+          borderTop: `${t.borderWeight} solid ${t.borderStrong}`,
+          borderBottom: `${t.borderWeight} solid ${t.borderStrong}`,
+          padding: '14px 0',
+          overflow: 'hidden',
+          cursor: 'pointer',
+        }}
         onMouseEnter={() => setTickerPaused(true)}
         onMouseLeave={() => setTickerPaused(false)}
         onClick={handleTickerClick}
@@ -397,8 +433,8 @@ export default function GuestLanding() {
           {[0, 1].map(copy => (
             <div key={copy} style={{ display: 'flex', gap: mobile ? 16 : 40, paddingRight: mobile ? 16 : 40 }}>
               {tickerItems.map((item) => (
-                <span key={`${copy}-${item}`} style={{ fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.75rem', letterSpacing: '0.12em', fontWeight: 600, flexShrink: 0 }}>
-                  {item}<span style={{ margin: mobile ? '0 8px' : '0 20px', opacity: 0.3 }}>&#9670;</span>
+                <span key={`${copy}-${item}`} style={{ fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.75rem', letterSpacing: '0.12em', fontWeight: 800, flexShrink: 0 }}>
+                  {item}<span style={{ margin: mobile ? '0 8px' : '0 20px', color: sportsTokens.color.inverse, opacity: 0.42 }}>&#9670;</span>
                 </span>
               ))}
             </div>
@@ -411,42 +447,60 @@ export default function GuestLanding() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>01 / APP EXPERIENCE</p>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '0.8fr 1.2fr', gap: mobile ? 18 : 28, alignItems: 'start' }}>
-            <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: 0, color: t.text }}>
+            <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.65rem, 7vw, 2.15rem)' : 'clamp(2rem, 4vw, 2.875rem)', lineHeight: 1, letterSpacing: '0', margin: 0, color: t.text }}>
               START FIRST.<br />SAVE LATER.
             </h2>
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 2, marginBottom: mobile ? 16 : 14 }}>
-                {experienceStats.map((item) => (
-                  <div key={item.label} style={{
-                    border: `${t.borderWeight} solid ${t.borderStrong}`,
-                    borderLeft: mobile ? `6px solid ${sportsTokens.color.action}` : `${t.borderWeight} solid ${t.borderStrong}`,
-                    padding: mobile ? '16px 18px' : 20,
+              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 12 : 14 }}>
+                {experienceStats.map((item, i) => {
+                  const isHovered = hoveredExperienceStat === i;
+                  return (
+                  <div
+                    key={item.label}
+                    style={{
+                    border: `1px solid ${isHovered ? sportsTokens.color.action : `color-mix(in oklch, ${sportsTokens.color.action} 28%, ${t.border})`}`,
+                    borderRadius: sportsTokens.component.card.radius,
+                    padding: mobile ? '18px 22px' : '22px 24px',
                     background: t.surface,
-                    minHeight: mobile ? 104 : 0,
-                    boxShadow: t.cardShadow,
-                  }}>
-                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: sportsTokens.color.action }}>{item.value}</strong>
+                    minHeight: mobile ? 112 : 0,
+                    boxShadow: isHovered ? `3px 3px 0 ${sportsTokens.color.action}` : `0 0 0 1px color-mix(in oklch, ${sportsTokens.color.action} 8%, transparent), ${t.cardShadow}`,
+                    transform: isHovered ? 'translate(-1px, -1px)' : 'translate(0, 0)',
+                    transition: 'border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease',
+                  }}
+                    {...interactionHandlers(i, setHoveredExperienceStat, hoveredExperienceStat)}
+                  >
+                    <strong style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '1.5rem' : '2rem', lineHeight: 1, color: sportsTokens.color.action, transform: isHovered ? 'translateY(-1px)' : 'translateY(0)', transition: 'transform 120ms ease' }}>{item.value}</strong>
                     <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '8px 0', color: t.text }}>{item.label}</span>
                     <p style={{ fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft, margin: 0 }}>{item.detail}</p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
-              <ul style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 2, padding: 0, margin: 0, listStyle: 'none' }}>
-                {trustNotes.map((note, i) => (
-                  <li key={note} style={{
-                    border: `1px solid ${t.border}`,
-                    background: t.bg,
+              <ul style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 12, padding: 0, margin: 0, listStyle: 'none' }}>
+                {trustNotes.map((note, i) => {
+                  const isHovered = hoveredTrustNote === i;
+                  return (
+                  <li
+                    key={note}
+                    style={{
+                    border: `1px solid ${isHovered ? sportsTokens.color.action : 'color-mix(in oklch, var(--se-color-line) 32%, var(--se-color-surface))'}`,
+                    borderRadius: 0,
+                    background: isHovered ? 'color-mix(in oklch, var(--se-color-action) 8%, var(--se-color-surface))' : t.bg,
                     padding: mobile ? '12px 14px' : '14px 16px',
-                    color: t.textSoft,
+                    color: isHovered ? t.text : t.textSoft,
                     fontSize: mobile ? '0.8125rem' : '0.875rem',
                     lineHeight: 1.45,
-                  }}>
+                    transition: 'border-color 120ms ease, background 120ms ease, color 120ms ease',
+                  }}
+                    {...interactionHandlers(i, setHoveredTrustNote, hoveredTrustNote)}
+                  >
                     <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', color: sportsTokens.color.action, marginBottom: 6 }}>
                       APP 0{i + 1}
                     </span>
                     {note}
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
           </div>
@@ -457,10 +511,10 @@ export default function GuestLanding() {
       <section id="features" style={{ padding: mobile ? '36px 0' : '80px 0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>02 / FEATURES</p>
-          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
+          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 7vw, 2.25rem)' : 'clamp(2rem, 4vw, 3rem)', lineHeight: 1, letterSpacing: '0', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             EVERYTHING<br />YOU NEED.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 10 : 14 }}>
             {features.map((f, i) => {
               const isHovered = hoveredFeature === i;
               const fBg = t.featureBg || t.surface;
@@ -471,28 +525,28 @@ export default function GuestLanding() {
               const fHoverBorder = t.featureHoverBorder || fHoverBg;
               const fTextColor = t.featureTextColor || t.text;
               const fTextSoft = t.featureTextSoft || t.textSoft;
-              const fIconColor = t.featureIconColor || t.text;
-              const fIconHoverColor = t.featureIconHoverColor || t.blue;
               return (
                 <div
                   key={f.tag}
                   style={{
                     border: `${t.borderWeight} solid ${isHovered ? fHoverBorder : fBorder}`,
                     padding: mobile ? 20 : 28, cursor: 'default',
-                    transition: `all ${t.transitionSpeed} ease`,
+                    borderRadius: 0,
+                    transition: `border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease, background 120ms ease, color 120ms ease`,
                     background: isHovered ? fHoverBg : fBg,
                     color: isHovered ? fHoverColor : fTextColor,
                     position: 'relative', overflow: 'hidden',
-                    boxShadow: t.cardShadow,
+                    boxShadow: isHovered ? `3px 3px 0 ${t.borderStrong}` : 'none',
+                    transform: isHovered ? 'translate(-1px, -1px)' : 'translate(0, 0)',
                   }}
                   {...interactionHandlers(i, setHoveredFeature, hoveredFeature)}
                 >
                   <div style={{
                     position: 'absolute', bottom: mobile ? -10 : -15, right: mobile ? -10 : -15,
-                    opacity: isHovered ? (t.iconWatermarkHover || 0.6) : (t.iconWatermarkOpacity || 0.07),
+                    opacity: isHovered ? (t.iconWatermarkHover || 0.28) : (t.iconWatermarkOpacity || 0.07),
                     transition: 'opacity 400ms ease', transform: 'rotate(-5deg)',
                   }}>
-                    <SportIcon name={f.icon} size={mobile ? 80 : 120} color={isHovered ? fIconHoverColor : fIconColor} />
+                    <SportIcon name={f.icon} size={mobile ? 80 : 120} color={isHovered ? sportsTokens.color.actionSoft : t.text} />
                   </div>
                   <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ marginBottom: 12 }}>
@@ -512,31 +566,33 @@ export default function GuestLanding() {
       <section id="sports" style={{ padding: mobile ? '32px 0 40px' : '60px 0 80px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>03 / SPORTS</p>
-          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
+          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 7vw, 2.25rem)' : 'clamp(2rem, 4vw, 3rem)', lineHeight: 1, letterSpacing: '0', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             14 SPORTS.<br />YOUR RULES.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: mobile ? 8 : 4 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: mobile ? 8 : 12 }}>
             {sports.map((sp, i) => {
               const detail = sportDetails[sp];
               const isHovered = hoveredSport === i;
               const sBg = t.sportBg || t.surface;
-              const sHoverBg = t.sportHoverBg || t.blue;
-              const sHoverColor = t.sportHoverColor || '#fff';
+              const sHoverBg = t.sportHoverBg || t.text;
+              const sHoverColor = t.sportHoverColor || sportsTokens.color.inverse;
+              const sHoverTextSoft = t.sportHoverTextSoft || 'color-mix(in oklch, var(--se-color-inverse) 72%, var(--se-color-ink))';
               const sIconColor = t.sportIconColor || t.text;
-              const sHoverIconColor = t.sportHoverIconColor || '#fff';
+              const sHoverIconColor = t.sportHoverIconColor || sportsTokens.color.actionSoft;
               const sTextColor = t.sportTextColor || t.text;
-              const sBorderStyle = mobile ? 'solid' : (t.sportBorderStyle || 'dashed');
+              const sBorderStyle = t.sportBorderStyle || 'dashed';
               const sBorderColor = t.sportBorderColor || '#d0d0d0';
               const sportId = sportIdByName.get(sp);
               const sportAccent = getSportAccent(sportId);
-              const isPriority = prioritySports.includes(sportId);
+              const hoverBorderColor = t.sportHoverBorder || sportAccent.primary;
               const sportCardHandlers = {
                 ...interactionHandlers(i, setHoveredSport, hoveredSport),
                 onFocus: () => setHoveredSport(i),
                 onBlur: () => setHoveredSport(null),
               };
-              let detailColor = mobile ? t.textSoft : t.textMuted;
-              if (isHovered) detailColor = sHoverColor;
+              const sportCardText = isHovered ? sHoverColor : sTextColor;
+              const sportCardIcon = isHovered ? sHoverIconColor : sIconColor;
+              const detailColor = isHovered ? sHoverTextSoft : (mobile ? t.textSoft : t.textMuted);
               return (
                 <Link
                   key={sp}
@@ -545,38 +601,44 @@ export default function GuestLanding() {
                   style={{
                     display: 'block',
                     position: 'relative',
-                    border: `1.5px ${sBorderStyle} ${isHovered ? sportAccent.primary : (isPriority ? `${sportAccent.primary}66` : sBorderColor)}`,
+                    border: `1.5px ${isHovered ? 'solid' : sBorderStyle} ${isHovered ? hoverBorderColor : sBorderColor}`,
+                    borderRadius: 0,
                     padding: mobile ? '16px 10px' : '20px 14px',
-                    minHeight: mobile ? 132 : 0,
+                    minHeight: 0,
                     textAlign: 'center',
                     cursor: 'pointer',
                     textDecoration: 'none',
-                    transition: `all ${t.transitionSpeed} ease`,
-                    background: isHovered ? sportAccent.primary : (isPriority ? sportAccent.soft : sBg),
-                    color: isHovered ? sHoverColor : sTextColor,
+                    transition: `border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease`,
+                    background: isHovered ? sHoverBg : sBg,
+                    color: sportCardText,
+                    boxShadow: isHovered ? `4px 4px 0 ${hoverBorderColor}` : 'none',
+                    transform: isHovered ? 'translate(-1px, -1px)' : 'translate(0, 0)',
                   }}
                   {...sportCardHandlers}
                 >
-                  <Cross top={2} left={4} />
-                  <Cross top={2} right={4} />
-                  <Cross bottom={2} left={4} />
-                  <Cross bottom={2} right={4} />
+                  <Cross top={2} left={4} color={isHovered ? hoverBorderColor : t.textFaint} />
+                  <Cross top={2} right={4} color={isHovered ? hoverBorderColor : t.textFaint} />
+                  <Cross bottom={2} left={4} color={isHovered ? hoverBorderColor : t.textFaint} />
+                  <Cross bottom={2} right={4} color={isHovered ? hoverBorderColor : t.textFaint} />
                   <div style={{ marginBottom: mobile ? 6 : 10, display: 'flex', justifyContent: 'center' }}>
-                    <SportIcon name={sp} size={mobile ? 32 : 40} color={isHovered ? sHoverIconColor : (isPriority ? sportAccent.primary : sIconColor)} />
+                    <span style={{
+                      display: 'inline-flex',
+                      transition: 'transform 120ms ease',
+                      transform: isHovered ? 'translateY(-2px) rotate(-4deg)' : 'translateY(0) rotate(0deg)',
+                    }}>
+                      <SportIcon name={sp} size={mobile ? 32 : 40} color={sportCardIcon} />
+                    </span>
                   </div>
-                  {isPriority && (
-                    <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5rem', letterSpacing: '0.08em', color: isHovered ? sHoverColor : sportAccent.primary, marginBottom: 5 }}>
-                      POPULAR START
+                  <div>
+                    <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.5625rem', letterSpacing: '0.06em', lineHeight: 1.2, fontWeight: 800 }}>
+                      {sp.toUpperCase()}
                     </span>
-                  )}
-                  <span style={{ display: 'block', fontFamily: MONO, fontSize: mobile ? '0.625rem' : '0.5625rem', letterSpacing: '0.06em', lineHeight: 1.2, fontWeight: 700 }}>
-                    {sp.toUpperCase()}
-                  </span>
-                  {detail && (
-                    <span style={{ display: 'block', marginTop: 8, fontSize: '0.6875rem', lineHeight: 1.35, color: detailColor }}>
-                      {detail.duration}<br />{detail.players}<br />{detail.rules}
-                    </span>
-                  )}
+                    {detail && (
+                      <span style={{ display: 'block', marginTop: 8, fontSize: '0.6875rem', lineHeight: 1.35, color: detailColor }}>
+                        {detail.duration}<br />{detail.players}<br />{detail.rules}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               );
             })}
@@ -588,10 +650,10 @@ export default function GuestLanding() {
       <section id="how" style={{ padding: mobile ? '36px 0' : '80px 0', borderTop: `${t.borderWeight} solid ${t.borderStrong}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>04 / HOW IT WORKS</p>
-          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 8vw, 2.5rem)' : 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 0.95, letterSpacing: '-0.03em', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
+          <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 7vw, 2.25rem)' : 'clamp(2rem, 4vw, 3rem)', lineHeight: 1, letterSpacing: '0', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
             THREE STEPS.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 2 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: mobile ? 8 : 14 }}>
             {steps.map((step, i) => {
               const isHovered = hoveredStep === i;
               const restTransform = t.stepIconRest || 'rotate(6deg) scale(1)';
@@ -604,8 +666,16 @@ export default function GuestLanding() {
                 <div
                   key={step.num}
                   style={{
-                    border: `${t.borderWeight} solid ${t.borderStrong}`, padding: mobile ? 20 : 32,
-                    position: 'relative', overflow: 'hidden', boxShadow: t.cardShadow, cursor: 'default',
+                    border: `${t.borderWeight} solid ${isHovered ? activeAccent.primary : t.borderStrong}`,
+                    borderRadius: 0,
+                    padding: mobile ? 20 : 32,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: t.surface,
+                    boxShadow: isHovered ? `3px 3px 0 ${activeAccent.primary}` : 'none',
+                    cursor: 'default',
+                    transition: `border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease`,
+                    transform: isHovered ? 'translate(-1px, -1px)' : 'translate(0, 0)',
                   }}
                   {...interactionHandlers(i, setHoveredStep, hoveredStep)}
                 >
@@ -631,29 +701,19 @@ export default function GuestLanding() {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section style={{ background: t.borderStrong, color: t.bg, padding: mobile ? '48px 16px' : '80px 32px', textAlign: 'center' }}>
-        <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(2.5rem, 12vw, 4rem)' : 'clamp(3rem, 7vw, 6rem)', lineHeight: 0.9, letterSpacing: '-0.04em', margin: '0 0 24px 0' }}>
+      <section style={{ background: t.bg, color: t.text, padding: mobile ? '34px 16px' : '56px 32px', textAlign: 'center', borderTop: `${t.borderWeight} solid ${t.borderStrong}` }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: mobile ? '8px 0' : '12px 0' }}>
+        <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(2rem, 10vw, 3rem)' : 'clamp(2.5rem, 5vw, 4rem)', lineHeight: 1, letterSpacing: '0', margin: '0 0 20px 0', color: t.text }}>
           READY?
         </h2>
         <div style={{ display: 'flex', gap: mobile ? 10 : 16, justifyContent: 'center', flexDirection: mobile ? 'column' : 'row', alignItems: 'center' }}>
-          <Link to={sportPlayPath(activeCard.sport)} style={{
-            fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
-            padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-            background: activeAccent.primary, color: activeAccentText, border: `2px solid ${activeAccent.primary}`,
-            width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
-            minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
-          }}>
+          <Link to={sportPlayPath(activeCard.sport)} style={ctaActionStyle(true)}>
             {activeStartLabel}
           </Link>
-          <Link to={signupPath} style={{
-            fontFamily: MONO, fontSize: mobile ? '0.75rem' : '0.8125rem', fontWeight: 700,
-            padding: mobile ? '12px 24px' : '14px 28px', letterSpacing: '0.05em', textDecoration: 'none',
-            background: 'transparent', color: t.bg, border: `2px solid ${t.bg}`,
-            width: mobile ? '100%' : 'auto', textAlign: 'center', maxWidth: mobile ? 280 : 'none',
-            minHeight: mobile ? 48 : 50, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box',
-          }}>
+          <Link to={signupPath} style={ctaActionStyle(false)}>
             SIGN UP FREE
           </Link>
+        </div>
         </div>
       </section>
 

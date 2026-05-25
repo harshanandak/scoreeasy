@@ -352,7 +352,7 @@ export default function MonoStatistics() {
         </h1>
 
         {/* Tabs */}
-        <div className="flex gap-0 mb-8" style={{ borderBottom: '1px solid #eee' }} role="tablist" aria-label="Statistics categories">
+        <div className="mono-tabs" role="tablist" aria-label="Statistics categories">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -360,12 +360,7 @@ export default function MonoStatistics() {
               role="tab"
               aria-selected={tab === t.id}
               aria-controls={`tabpanel-stats-${t.id}`}
-              className="bg-transparent border-none cursor-pointer font-swiss px-4 py-3 text-sm"
-              style={{
-                color: tab === t.id ? '#0066ff' : '#888',
-                borderBottom: tab === t.id ? '2px solid #0066ff' : '2px solid transparent',
-                fontWeight: tab === t.id ? 500 : 400,
-              }}
+              className={tab === t.id ? 'mono-tab mono-tab-active' : 'mono-tab'}
             >
               {t.label}
             </button>
@@ -398,9 +393,9 @@ export default function MonoStatistics() {
             <div className="flex flex-col gap-3">
               {/* Show all sports with data */}
               {sportsWithData.map(sportData => (
-                <div key={sportData.sport.id} className="mono-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div key={sportData.sport.id} className="mono-card mono-stat-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
-                    <SportIcon name={sportData.sport.name} size={24} color="#111" />
+                    <SportIcon name={sportData.sport.name} size={24} color="var(--se-color-action)" />
                     <div>
                       <p className="text-sm font-medium" style={{ color: '#111' }}>{sportData.sport.name}</p>
                       <p className="text-xs" style={{ color: '#888' }}>
@@ -416,7 +411,7 @@ export default function MonoStatistics() {
 
               {/* Quick matches */}
               {quickMatches.length > 0 && (
-                <div className="mono-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div className="mono-card mono-stat-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-xl">⚡</span>
                     <div>
@@ -462,17 +457,17 @@ export default function MonoStatistics() {
           <div id="tabpanel-stats-quick" role="tabpanel" aria-label="Quick matches">
             {statsStatus && (
               <div
-                className="mono-card mb-4"
+                className="mono-card mono-status-card mb-4"
                 role="status"
                 aria-live="polite"
-                style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}
+                style={{ padding: '10px 12px' }}
               >
                 {statsStatus}
               </div>
             )}
 
             {pendingDelete && !pendingDelete.deleted && (
-              <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+              <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick stat?</p>
                 <p className="text-xs mb-4" style={{ color: '#666' }}>
                   {getQuickMatchLabel(pendingDelete.match)} will be removed from Statistics and History.
@@ -510,7 +505,7 @@ export default function MonoStatistics() {
             )}
 
             {pendingClear && !pendingClear.cleared && (
-              <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+              <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear all quick stats?</p>
                 <p className="text-xs mb-4" style={{ color: '#666' }}>
                   This removes quick matches from Statistics and History. You can undo before leaving this screen.
@@ -562,7 +557,7 @@ export default function MonoStatistics() {
                   <StatCard label="Draws" value={quickMatches.filter((match) => isDrawWinner(resolveWinner(match, getQuickScore(match)))).length} />
                 </div>
 
-                <div className="mono-card mb-6" style={{ padding: 0, overflow: 'hidden' }}>
+                <div className="mono-card mono-stat-panel mb-6" style={{ padding: 0, overflow: 'hidden' }}>
                   <div className="flex items-center justify-between gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid #eee' }}>
                     <h2 className="text-sm font-semibold" style={{ color: '#111', margin: 0 }}>Quick team form</h2>
                     <span className="text-xs" style={{ color: '#888' }}>Win rate and margin</span>
@@ -590,7 +585,7 @@ export default function MonoStatistics() {
                 <h2 className="text-sm font-semibold mb-3" style={{ color: '#111' }}>Recent quick matches</h2>
                 <div className="flex flex-col gap-2">
                   {quickMatches.map(qm => (
-                    <div key={qm.id} className="mono-card" style={{ padding: '12px 16px' }}>
+                    <div key={qm.id} className="mono-card mono-stat-card" style={{ padding: '12px 16px' }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
@@ -633,7 +628,7 @@ export default function MonoStatistics() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="mono-card text-center" style={{ padding: '16px 12px' }}>
+    <div className="mono-card mono-stat-card text-center" style={{ padding: '16px 12px' }}>
       <p className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>{value}</p>
       <p className="text-xs mt-1" style={{ color: '#888' }}>{label}</p>
     </div>
@@ -647,7 +642,7 @@ StatCard.propTypes = {
 
 function InsightCard({ label, value }) {
   return (
-    <div className="mono-card" style={{ padding: '14px 16px', minHeight: 82 }}>
+    <div className="mono-card mono-stat-card" style={{ padding: '14px 16px', minHeight: 82 }}>
       <p className="text-xs uppercase mb-2" style={{ color: '#888', letterSpacing: '0.08em' }}>{label}</p>
       <p className="text-sm font-semibold" style={{ color: '#111', lineHeight: 1.35 }}>{value}</p>
     </div>
@@ -832,7 +827,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
   if (data.length === 0) return <EmptyState icon={sportIcon} label={`No ${sportName.toLowerCase()} data yet`} />;
 
   return (
-    <div className="mono-card" style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="mono-card mono-stat-panel" style={{ padding: 0, overflow: 'hidden' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
         <caption className="sr-only">{sportName} team statistics</caption>
         <thead>

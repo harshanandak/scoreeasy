@@ -23,6 +23,7 @@ const QUICK_ACTION_HELP = {
   tournament: 'Schedule, standings, history',
 };
 const CATEGORY_PRIORITY = ['Cricket', 'Team Sports', 'Net Sports', 'Racquet Sports', 'Contact Sports'];
+const innerBoxRadius = sportsTokens.radius.none;
 
 const sportShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -59,19 +60,24 @@ function getOrderedCategories(sportCategories) {
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto', accent = sportsTokens.color.action }) {
   const primaryTextColor = getReadableTextColor(accent);
   const buttonStyle = compact
-    ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderColor: accent }
-    : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, borderColor: accent };
+    ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderColor: accent, borderRadius: innerBoxRadius }
+    : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, borderColor: accent, borderRadius: innerBoxRadius };
+  const primaryButtonStyle = {
+    ...buttonStyle,
+    '--mono-action-accent': accent,
+    '--mono-action-text': primaryTextColor,
+  };
   const flexClass = stacked ? '' : ' flex-1';
 
   return (
     <div className={className}>
-      <button onClick={onTournament} className={`mono-btn-primary${flexClass}`} style={{ ...buttonStyle, background: accent, borderColor: accent, color: primaryTextColor }}>
+      <button onClick={onTournament} className={`mono-btn-primary mono-action-primary${flexClass}`} style={primaryButtonStyle}>
         <span>Tournament</span>
         <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
       </button>
       <button onClick={onQuick} className={`mono-btn${flexClass}`} style={buttonStyle}>
         <span>Quick Match</span>
-        <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
+        <span style={{ fontSize: '0.625rem', fontWeight: 600, color: sportsTokens.color.inkMuted }}>{QUICK_ACTION_HELP.quick}</span>
       </button>
     </div>
   );
@@ -88,7 +94,7 @@ ActionButtons.propTypes = {
 
 function Metadata({ children }) {
   return (
-    <div className="flex gap-2 mb-4 text-xs font-mono" style={{ color: '#888' }}>
+    <div className="flex gap-2 mb-4 text-xs font-mono" style={{ color: sportsTokens.color.inkMuted }}>
       {children}
     </div>
   );
@@ -104,16 +110,16 @@ function SearchResultCard({ entry, navigate }) {
   const accent = getSportAccent(isCricketFormat ? 'cricket' : entry.id).primary;
 
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0, borderColor: `${accent}55` }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name={isCricketFormat ? 'Cricket' : entry.name} size={32} color={accent} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{entry.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{entry.name}</h3>
           </div>
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{entry.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{entry.desc}</p>
 
         <Metadata>
           {isCricketFormat ? (
@@ -147,7 +153,7 @@ SearchResultCard.propTypes = {
 function SearchResults({ filteredSports, navigate }) {
   return (
     <div className="mb-8">
-      <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
+      <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: sportsTokens.color.inkMuted }}>
         {filteredSports.length} result{filteredSports.length === 1 ? '' : 's'}
       </h2>
       {filteredSports.length > 0 ? (
@@ -157,7 +163,7 @@ function SearchResults({ filteredSports, navigate }) {
           ))}
         </div>
       ) : (
-        <p className="text-sm" style={{ color: '#888' }}>No sports found.</p>
+        <p className="text-sm" style={{ color: sportsTokens.color.inkMuted }}>No sports found.</p>
       )}
     </div>
   );
@@ -168,13 +174,20 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
+const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', borderRadius: innerBoxRadius };
 const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
 
 function PriorityFastStart({ onStartSport }) {
   return (
-    <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: sportsTokens.color.line }}>
-      <div style={{ padding: '22px 24px', background: `linear-gradient(135deg, ${sportsTokens.color.surfaceWarm}, ${sportAccents.cricket.soft})` }}>
+    <section
+      className="mb-8"
+      aria-label="Priority sport fast start"
+      style={{
+        padding: '8px 0 28px',
+        borderBottom: `1px solid color-mix(in oklch, ${sportsTokens.color.line} 28%, ${sportsTokens.color.surface})`,
+      }}
+    >
+      <div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-widest mb-1 font-mono" style={{ color: sportAccents.cricket.primary }}>Start from the popular games</p>
@@ -191,8 +204,9 @@ function PriorityFastStart({ onStartSport }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: getSportAccent(sportId).soft,
-                border: `1px solid ${getSportAccent(sportId).primary}44`,
+                background: sportsTokens.color.surface,
+                border: `1px solid ${getSportAccent(sportId).primary}`,
+                borderRadius: innerBoxRadius,
               }}>
                 <SportIcon name={getSportAccent(sportId).name} size={22} color={getSportAccent(sportId).primary} />
               </span>
@@ -212,9 +226,9 @@ function PriorityFastStart({ onStartSport }) {
                   style={{
                     ...(action.primary ? priorityActionStyle : secondaryPriorityActionStyle),
                     minHeight: 64,
-                    background: action.primary ? actionAccent.primary : actionAccent.soft,
+                    background: action.primary ? actionAccent.primary : sportsTokens.color.surface,
                     borderColor: actionAccent.primary,
-                    color: action.primary ? getReadableTextColor(actionAccent.primary) : sportsTokens.color.inkStrong,
+                    color: action.primary ? getReadableTextColor(actionAccent.primary) : actionAccent.primary,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 3,
@@ -254,9 +268,10 @@ function CategoryTabs({ categoryKeys, activeTab, setActiveTab }) {
             className={`mono-category-tab text-xs px-4 transition-all ${activeTab === category ? 'font-medium' : 'font-normal'}`}
             style={{
               minHeight: 48,
-              color: activeTab === category ? sportsTokens.color.action : sportsTokens.color.inkSoft,
-              background: activeTab === category ? sportsTokens.color.actionSoft : sportsTokens.color.surface,
+              background: activeTab === category ? sportsTokens.color.action : sportsTokens.color.surface,
               border: activeTab === category ? `1px solid ${sportsTokens.color.action}` : `1px solid ${sportsTokens.color.line}`,
+              color: activeTab === category ? sportsTokens.color.inverse : sportsTokens.color.inkSoft,
+              borderRadius: innerBoxRadius,
               cursor: 'pointer',
             }}
           >
@@ -278,16 +293,16 @@ function CricketListCard({ format, navigate }) {
   const accent = sportAccents.cricket.primary;
 
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0, borderTop: `4px solid ${accent}` }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0 }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name="Cricket" size={32} color={accent} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{format.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{format.name}</h3>
           </div>
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{format.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{format.desc}</p>
 
         <Metadata>
           {format.id === 'custom' ? (
@@ -322,21 +337,21 @@ function SportListCard({ sport, navigate, getCounts }) {
   const isPriority = prioritySports.includes(sport.id);
 
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0, borderTop: isPriority ? `4px solid ${accent}` : undefined }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name={sport.name} size={32} color={isPriority ? accent : sportsTokens.color.ink} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{sport.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{sport.name}</h3>
           </div>
           {isPriority && (
-            <span className="font-mono" style={{ fontSize: '0.625rem', color: accent, background: getSportAccent(sport.id).soft, padding: '3px 8px' }}>
+            <span className="font-mono" style={{ fontSize: '0.625rem', color: accent, background: sportsTokens.color.surface, border: `1px solid ${accent}`, borderRadius: sportsTokens.component.button.radius, padding: '3px 8px' }}>
               POPULAR
             </span>
           )}
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{sport.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{sport.desc}</p>
 
         <Metadata>
           {savedCount > 0 ? (
@@ -402,9 +417,9 @@ function CricketTab({ navigate, getCounts }) {
   return (
     <div>
       {cricketCount > 0 && (
-        <div className="text-xs mb-4 flex items-center gap-2" style={{ color: '#888' }}>
+        <div className="text-xs mb-4 flex items-center gap-2" style={{ color: sportsTokens.color.inkMuted }}>
           <span className="font-mono">{cricketCount} saved</span> tournament{cricketCount > 1 ? 's' : ''}
-          <button onClick={() => navigate('/cricket/tournament')} className="text-xs bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#0066ff' }}>
+          <button onClick={() => navigate('/cricket/tournament')} className="text-xs bg-transparent border-none cursor-pointer font-swiss" style={{ color: sportsTokens.color.actionStrong }}>
             View all
           </button>
         </div>
@@ -425,7 +440,7 @@ CricketTab.propTypes = {
 
 function SportTab({ activeSports, navigate, getCounts }) {
   if (activeSports.length === 0) {
-    return <p className="text-sm" style={{ color: '#888' }}>No sports available.</p>;
+    return <p className="text-sm" style={{ color: sportsTokens.color.inkMuted }}>No sports available.</p>;
   }
 
   return (
@@ -453,16 +468,18 @@ function GridCard({ id, title, description, iconName, selectedSportId, setSelect
       className="transition-all"
       style={{
         padding: '16px',
-        background: isOpen ? '#fff' : (isPriority ? getSportAccent(id).soft : 'transparent'),
-        border: isOpen ? `1px solid ${accent}` : `1px solid ${isPriority ? `${accent}55` : '#eee'}`,
+        background: isOpen ? sportsTokens.color.surface : 'transparent',
+        border: isOpen ? `2px solid ${accent}` : `1px solid ${sportsTokens.color.line}`,
+        borderTop: `4px solid ${accent}`,
+        borderRadius: innerBoxRadius,
       }}
     >
       <button className="w-full bg-transparent border-none cursor-pointer" style={{ padding: 0 }} onClick={() => setSelectedSportId(isOpen ? null : id)} aria-label={`Select ${title}`}>
         <div className="flex flex-col items-center text-center">
-          <SportIcon name={iconName} size={28} color={isPriority || isOpen ? accent : '#111'} />
-          <span className="text-sm font-semibold mb-1 block" style={{ color: '#111' }}>{title}</span>
-          {description && <span className="text-xs" style={{ color: '#888' }}>{description}</span>}
-          {savedCount > 0 && <span className="text-xs font-mono" style={{ color: '#888' }}>{savedCount} saved</span>}
+            <SportIcon name={iconName} size={28} color={isPriority || isOpen ? accent : sportsTokens.color.inkStrong} />
+            <span className="text-sm font-semibold mb-1 block" style={{ color: sportsTokens.color.inkStrong }}>{title}</span>
+            {description && <span className="text-xs" style={{ color: sportsTokens.color.inkSoft }}>{description}</span>}
+            {savedCount > 0 && <span className="text-xs font-mono" style={{ color: sportsTokens.color.inkMuted }}>{savedCount} saved</span>}
         </div>
       </button>
 
@@ -506,7 +523,7 @@ function GridLayout({ sportCategories, selectedSportId, setSelectedSportId, navi
     <>
       {Object.entries(sportCategories).map(([category, sports]) => (
         <div key={category} className="mb-8">
-          <h3 className="text-xs font-medium mb-4" style={{ color: '#666' }}>{category}</h3>
+          <h3 className="text-xs font-medium mb-4" style={{ color: sportsTokens.color.inkSoft }}>{category}</h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {category === 'Cricket' ? (
@@ -593,38 +610,39 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
     <section className="mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: '#888' }}>
-            Choose sport
-          </h2>
-          <p className="text-sm" style={{ color: '#666' }}>
-            Search, switch layout, or pick a category below.
-          </p>
+      <div>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: sportsTokens.color.inkMuted }}>
+              Choose sport
+            </h2>
+            <p className="text-sm" style={{ color: sportsTokens.color.inkSoft }}>
+              Search, switch layout, or pick a category below.
+            </p>
+          </div>
+          <div className="mono-sport-tools flex items-center gap-2 sm:min-w-[360px]">
+            <input
+              type="text"
+              className="mono-input flex-1"
+              aria-label="Search sports"
+              placeholder="Search sports..."
+              style={{ minWidth: 0 }}
+              value={searchQuery}
+              onChange={onSearchChange}
+            />
+            <button
+              onClick={switchLayout}
+              className="mono-btn flex items-center justify-center"
+              aria-label={`Switch to ${targetLayout} layout`}
+              style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700, borderRadius: innerBoxRadius }}
+              title={`Switch to ${targetLayout}`}
+            >
+              <LayoutToggleIcon layout={layout} />
+            </button>
+          </div>
         </div>
-        <div className="mono-sport-tools flex items-center gap-2 sm:min-w-[360px]">
-          <input
-            type="text"
-            className="mono-input flex-1"
-            aria-label="Search sports"
-            placeholder="Search sports..."
-            style={{ minWidth: 0 }}
-            value={searchQuery}
-            onChange={onSearchChange}
-          />
-          <button
-            onClick={switchLayout}
-            className="mono-btn flex items-center justify-center"
-            aria-label={`Switch to ${targetLayout} layout`}
-            style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
-            title={`Switch to ${targetLayout}`}
-          >
-            <LayoutToggleIcon layout={layout} />
-          </button>
-        </div>
+        {children}
       </div>
-
-      {children}
     </section>
   );
 }

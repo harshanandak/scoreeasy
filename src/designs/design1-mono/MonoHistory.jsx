@@ -458,10 +458,10 @@ export default function MonoHistory() {
           {clearableCount > 0 && (
             <button
               onClick={confirmClearMutableHistory}
-              className="bg-transparent cursor-pointer font-swiss text-xs"
-              style={{
-                border: '1.5px solid #dc2626',
-                color: '#dc2626',
+            className="mono-btn font-swiss text-xs"
+            style={{
+              border: '1.5px solid #dc2626',
+              color: '#dc2626',
                 minHeight: 40,
                 padding: '0 10px',
               }}
@@ -473,17 +473,17 @@ export default function MonoHistory() {
 
         {historyStatus && (
           <div
-            className="mono-card mb-4"
+            className="mono-card mono-status-card mb-4"
             role="status"
             aria-live="polite"
-            style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}
+            style={{ padding: '10px 12px' }}
           >
             {historyStatus}
           </div>
         )}
 
         {pendingClear && !pendingClear.cleared && (
-          <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+          <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
             <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear local history?</p>
             <p className="text-xs mb-4" style={{ color: '#666' }}>
               Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.
@@ -521,7 +521,7 @@ export default function MonoHistory() {
         )}
 
         {pendingDelete && !pendingDelete.deleted && (
-          <div className="mono-card mb-4" style={{ padding: '14px 16px', borderColor: '#dc2626' }}>
+          <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
             <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick match?</p>
             <p className="text-xs mb-4" style={{ color: '#666' }}>
               {pendingDelete.entry.team1} vs {pendingDelete.entry.team2} will be removed from History.
@@ -558,7 +558,7 @@ export default function MonoHistory() {
           </button>
         )}
 
-        <div className="flex gap-2 mb-6" role="tablist" aria-label="History filters">
+        <div className="mono-tabs" role="tablist" aria-label="History filters">
           {[
             { id: 'all', label: 'All', count: totalCount },
             { id: 'quick', label: 'Quick', count: quickCount },
@@ -568,8 +568,8 @@ export default function MonoHistory() {
               key={chip.id}
               role="tab"
               aria-selected={filter === chip.id}
-              className={filter === chip.id ? 'mono-btn-primary' : 'mono-btn'}
-              style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              className={filter === chip.id ? 'mono-tab mono-tab-active' : 'mono-tab'}
+              style={{ fontSize: '0.75rem' }}
               onClick={() => setFilter(chip.id)}
             >
               {chip.label} ({chip.count})
@@ -577,7 +577,7 @@ export default function MonoHistory() {
           ))}
         </div>
 
-        <div className="mono-card mb-6" style={{ padding: '14px 16px' }}>
+        <section className="mono-history-section mb-6">
           <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2" style={{ color: '#888' }}>
             Find match
           </label>
@@ -598,7 +598,7 @@ export default function MonoHistory() {
                 value={sportFilter}
                 onChange={(event) => setSportFilter(event.target.value)}
                 className="mono-input w-full"
-                style={{ minHeight: 44, background: '#fff' }}
+                style={{ minHeight: 44 }}
               >
                 <option value={ANY_SPORT}>All sports</option>
                 {sportOptions.map((sportName) => (
@@ -614,7 +614,7 @@ export default function MonoHistory() {
                 value={resultFilter}
                 onChange={(event) => setResultFilter(event.target.value)}
                 className="mono-input w-full"
-                style={{ minHeight: 44, background: '#fff' }}
+                style={{ minHeight: 44 }}
               >
                 <option value={RESULT_ALL}>All results</option>
                 <option value={RESULT_DECIDED}>Decided</option>
@@ -630,7 +630,7 @@ export default function MonoHistory() {
                 value={sortOrder}
                 onChange={(event) => setSortOrder(event.target.value)}
                 className="mono-input w-full"
-                style={{ minHeight: 44, background: '#fff' }}
+                style={{ minHeight: 44 }}
               >
                 <option value={SORT_NEWEST}>Newest first</option>
                 <option value={SORT_OLDEST}>Oldest first</option>
@@ -648,10 +648,10 @@ export default function MonoHistory() {
               Clear filters
             </button>
           )}
-        </div>
+        </section>
 
         {filteredEntries.length === 0 ? (
-          <div className="mono-card text-center" style={{ padding: '28px 18px' }}>
+          <section className="mono-history-section text-center" style={{ padding: '28px 18px' }}>
             <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
               {totalCount === 0 ? 'No match history yet' : 'No matches found'}
             </p>
@@ -693,11 +693,11 @@ export default function MonoHistory() {
                 Tournament
               </button>
             </div>
-          </div>
+          </section>
         ) : (
           <div className="flex flex-col gap-2">
             {filteredEntries.map((entry) => (
-              <div key={entry.id} className="mono-card" style={{ padding: '14px 16px' }}>
+              <div key={entry.id} className="mono-card mono-history-row" style={{ padding: '14px 0' }}>
                 <div className="flex items-start justify-between gap-3">
                   <button
                     type="button"
@@ -755,7 +755,7 @@ export default function MonoHistory() {
                       onClick={() => {
                         confirmDeleteQuickMatch(entry);
                       }}
-                      className="bg-transparent border-none cursor-pointer text-sm"
+                      className="mono-icon-button text-sm"
                       style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
                       title="Delete this match"
                       aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
@@ -770,7 +770,7 @@ export default function MonoHistory() {
         )}
 
         {selectedEntry && (
-          <div className="mono-card mt-6" style={{ padding: '16px' }}>
+          <div className="mono-card mono-history-detail mt-6" style={{ padding: '16px' }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>Match details</p>
             <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}

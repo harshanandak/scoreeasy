@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const isVercelPreview = process.env.VERCEL_ENV === 'preview';
@@ -37,6 +38,7 @@ export default defineConfig({
     'import.meta.env.VITE_VERCEL_PREVIEW': JSON.stringify(isVercelPreview),
   },
   plugins: [
+    tailwindcss(),
     react(),
     isVercelPreview ? previewServiceWorkerCleanup() : VitePWA({
       injectRegister: false,
@@ -124,7 +126,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
     }),
   ],
