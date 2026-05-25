@@ -8,6 +8,7 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { triggerConfetti } from '../utils/confetti';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -16,33 +17,6 @@ const triggerHaptic = (pattern) => {
   if ('vibrate' in navigator) {
     navigator.vibrate(pattern);
   }
-};
-
-// Confetti helper
-const triggerConfetti = () => {
-  const prefersReducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReducedMotion) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'mono-confetti-overlay';
-  document.body.appendChild(overlay);
-
-  const colors = ['#0066ff', '#00cc88', '#ff6b6b', '#ffd93d', '#a569bd'];
-  const confettiCount = 50;
-
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'mono-confetti mono-confetti-animate';
-    confetti.style.left = `${Math.random() * 100}%`;
-    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-    confetti.style.animationDuration = `${2 + Math.random()}s`;
-    overlay.appendChild(confetti);
-  }
-
-  setTimeout(() => {
-    overlay.remove();
-  }, 3500);
 };
 
 export default function MonoSetsLiveScore() {

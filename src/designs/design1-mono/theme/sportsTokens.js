@@ -161,12 +161,16 @@ function getRelativeLuminanceFromHex(hexColor) {
 }
 
 function getRelativeLuminanceFromOklch(color) {
-  const match = String(color || '').trim().match(/^oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(?:deg)?(?:\s*\/\s*[0-9.]+%?)?\s*\)$/i);
-  if (!match) return null;
+  const value = String(color || '').trim();
+  if (!value.toLowerCase().startsWith('oklch(') || !value.endsWith(')')) return null;
 
-  const lightness = match[1].endsWith('%') ? Number.parseFloat(match[1]) / 100 : Number.parseFloat(match[1]);
-  const chroma = Number.parseFloat(match[2]);
-  const hueRadians = Number.parseFloat(match[3]) * (Math.PI / 180);
+  const channels = value.slice(6, -1).split('/')[0].trim().split(/\s+/);
+  if (channels.length < 3) return null;
+
+  const [lightnessValue, chromaValue, hueValue] = channels;
+  const lightness = lightnessValue.endsWith('%') ? Number.parseFloat(lightnessValue) / 100 : Number.parseFloat(lightnessValue);
+  const chroma = Number.parseFloat(chromaValue);
+  const hueRadians = Number.parseFloat(hueValue.replace(/deg$/i, '')) * (Math.PI / 180);
 
   if (![lightness, chroma, hueRadians].every(Number.isFinite)) return null;
 
@@ -174,11 +178,11 @@ function getRelativeLuminanceFromOklch(color) {
   const b = chroma * Math.sin(hueRadians);
   const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
   const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
-  const s = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
 
   const red = Math.min(Math.max(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, 0), 1);
   const green = Math.min(Math.max(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, 0), 1);
-  const blue = Math.min(Math.max(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s, 0), 1);
+  const blue = Math.min(Math.max(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s, 0), 1);
 
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }

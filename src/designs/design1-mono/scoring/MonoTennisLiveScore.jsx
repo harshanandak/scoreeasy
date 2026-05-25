@@ -12,6 +12,7 @@ import {
   getTennisQuickDraftKey,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { triggerConfetti } from '../utils/confetti';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
 
@@ -22,26 +23,9 @@ const triggerHaptic = (pattern) => {
   }
 };
 
-// Confetti helper
-const triggerConfetti = () => {
-  const prefersReducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReducedMotion) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'mono-confetti-overlay';
-
-  const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'];
-  for (let i = 0; i < 50; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'mono-confetti mono-confetti-animate';
-    confetti.style.left = `${Math.random() * 100}%`;
-    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-    overlay.appendChild(confetti);
-  }
-
-  document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 3500);
+const TENNIS_CONFETTI = {
+  colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'],
+  includeDuration: false,
 };
 
 // Convert point value to tennis display (0→0, 1→15, 2→30, 3→40)
@@ -518,7 +502,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     if (scoringPrompt.isInteractionLocked) return;
 
     if (isMatchComplete) {
-      triggerConfetti();
+      triggerConfetti(TENNIS_CONFETTI);
       triggerHaptic([100, 100, 100, 100, 100]);
     }
 

@@ -20,6 +20,13 @@ const t = {
   r: 6,
 };
 
+const activateOnKeyboard = (handler) => (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    handler(event);
+  }
+};
+
 /* ─── Mock data ─── */
 const allSports = [
   { id: 'cricket', name: 'Cricket', icon: 'Cricket' },
@@ -343,10 +350,26 @@ function ExistingUser({ hasActive }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>Sports</span>
                 {!showAllSports && (
-                  <span onClick={() => setShowAllSports(true)} style={{ fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>Browse all &rarr;</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setShowAllSports(true)}
+                    onKeyDown={activateOnKeyboard(() => setShowAllSports(true))}
+                    style={{ fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}
+                  >
+                    Browse all &rarr;
+                  </span>
                 )}
                 {showAllSports && (
-                  <span onClick={() => setShowAllSports(false)} style={{ fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer' }}>Show less</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setShowAllSports(false)}
+                    onKeyDown={activateOnKeyboard(() => setShowAllSports(false))}
+                    style={{ fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer' }}
+                  >
+                    Show less
+                  </span>
                 )}
               </div>
 
@@ -528,14 +551,29 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
               <input value={tm} onChange={e => updateTourneyTeam(idx, e.target.value)} placeholder={`Team ${idx + 1}`}
                 style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `1.5px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
               {tourneyTeams.length > 3 && (
-                <span onClick={() => removeTourneyTeam(idx)} style={{ fontSize: '0.75rem', color: t.textFaint, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }} title="Remove team">&times;</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => removeTourneyTeam(idx)}
+                  onKeyDown={activateOnKeyboard(() => removeTourneyTeam(idx))}
+                  style={{ fontSize: '0.75rem', color: t.textFaint, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
+                  title="Remove team"
+                >
+                  &times;
+                </span>
               )}
             </div>
           ))}
         </div>
       </div>
       {tourneyTeams.length < 8 && (
-        <div onClick={addTourneyTeam} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${t.border}`, borderRadius: t.r, cursor: 'pointer' }}>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={addTourneyTeam}
+          onKeyDown={activateOnKeyboard(addTourneyTeam)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${t.border}`, borderRadius: t.r, cursor: 'pointer' }}
+        >
           <span style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.blue, fontWeight: 700 }}>+</span>
           <span style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textMuted, letterSpacing: '0.04em' }}>ADD TEAM ({tourneyTeams.length}/8)</span>
         </div>
@@ -636,7 +674,12 @@ function QuickMatchPreview({ sportIcon, sportName, team1, team2, mobile }) {
 function ModeCards({ selectedMode, pickMode, mobile }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 8 }}>
-      <div onClick={() => pickMode('tournament')} style={{
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => pickMode('tournament')}
+        onKeyDown={activateOnKeyboard(() => pickMode('tournament'))}
+        style={{
         background: selectedMode === 'tournament' ? t.text : t.surface,
         color: selectedMode === 'tournament' ? '#fff' : t.text,
         border: `1.5px solid ${selectedMode === 'tournament' ? t.text : t.border}`,
@@ -650,7 +693,12 @@ function ModeCards({ selectedMode, pickMode, mobile }) {
         </div>
         <p style={{ fontSize: '0.75rem', color: selectedMode === 'tournament' ? '#aaa' : t.textMuted, margin: 0, lineHeight: 1.4 }}>3-8 teams. Round-robin or knockout brackets. Auto standings and point tables.</p>
       </div>
-      <div onClick={() => pickMode('quick')} style={{
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => pickMode('quick')}
+        onKeyDown={activateOnKeyboard(() => pickMode('quick'))}
+        style={{
         background: selectedMode === 'quick' ? t.text : t.surface,
         color: selectedMode === 'quick' ? '#fff' : t.text,
         border: `1.5px solid ${selectedMode === 'quick' ? t.text : t.border}`,
@@ -673,7 +721,13 @@ function SportGrid({ selectedSport, pickSport, mobile, cols }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridCols}, 1fr)`, gap: mobile ? 8 : 6 }}>
       {allSports.map(s => (
-        <div key={s.id} onClick={() => pickSport(s.id)} style={{
+        <div
+          key={s.id}
+          role="button"
+          tabIndex={0}
+          onClick={() => pickSport(s.id)}
+          onKeyDown={activateOnKeyboard(() => pickSport(s.id))}
+          style={{
           background: selectedSport === s.id ? t.text : t.surface,
           color: selectedSport === s.id ? '#fff' : t.text,
           border: `1.5px solid ${selectedSport === s.id ? t.text : t.border}`,
@@ -749,7 +803,15 @@ export default function DashboardShowcase() {
               <SportGrid selectedSport={st.selectedSport} pickSport={(id) => { st.pickSport(id); setShowExpanded(false); }} mobile={mobile} />
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span onClick={() => setShowExpanded(true)} style={{ fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>Change sport</span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setShowExpanded(true)}
+                  onKeyDown={activateOnKeyboard(() => setShowExpanded(true))}
+                  style={{ fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}
+                >
+                  Change sport
+                </span>
               </div>
             )}
           </div>
@@ -789,7 +851,15 @@ export default function DashboardShowcase() {
           {/* Reset */}
           {st.selectedSport && (
             <div style={{ textAlign: 'center', marginTop: 20 }}>
-              <span onClick={() => { st.resetAll(); setShowExpanded(false); }} style={{ fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer', textDecoration: 'underline' }}>Start over</span>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={() => { st.resetAll(); setShowExpanded(false); }}
+                onKeyDown={activateOnKeyboard(() => { st.resetAll(); setShowExpanded(false); })}
+                style={{ fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Start over
+              </span>
             </div>
           )}
         </div>

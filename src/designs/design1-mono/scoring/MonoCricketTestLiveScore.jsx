@@ -578,8 +578,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   if (matchComplete && matchResult) {
     const winnerName = matchResult.winner === team1Id ? team1Name
       : matchResult.winner === team2Id ? team2Name
-      : matchResult.winner === 'draw' ? null
-      : matchResult.winner === 'tie' ? null
       : null;
 
     return (
