@@ -11,6 +11,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { triggerConfetti } from '../utils/confetti';
 import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -20,33 +21,6 @@ const triggerHaptic = (pattern) => {
   if ('vibrate' in navigator) {
     navigator.vibrate(pattern);
   }
-};
-
-// Confetti helper
-const triggerConfetti = () => {
-  const prefersReducedMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReducedMotion) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'mono-confetti-overlay';
-  document.body.appendChild(overlay);
-
-  const colors = ['#0066ff', '#00cc88', '#ff6b6b', '#ffd93d', '#a569bd'];
-  const confettiCount = 50;
-
-  for (let i = 0; i < confettiCount; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'mono-confetti mono-confetti-animate';
-    confetti.style.left = `${Math.random() * 100}%`;
-    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-    confetti.style.animationDuration = `${2 + Math.random()}s`;
-    overlay.appendChild(confetti);
-  }
-
-  setTimeout(() => {
-    overlay.remove();
-  }, 3500);
 };
 
 export default function MonoCricketLiveScore() {
@@ -176,6 +150,29 @@ export default function MonoCricketLiveScore() {
   const showOvers = !format || format.trackOvers !== false;
   const formatPreset = format?.preset ? getCricketFormat(format.preset) : null;
   const presetLabel = formatPreset?.name || (format?.preset === 'custom' ? 'Custom' : '');
+  const hasLoadedMatch = Boolean(tournament && match && format);
+  const getTeamName = (teamId) => tournament?.teams?.find(t => t.id === teamId)?.name || 'Unknown';
+  const team1Name = hasLoadedMatch ? getTeamName(match.team1Id) : 'Team A';
+  const team2Name = hasLoadedMatch ? getTeamName(match.team2Id) : 'Team B';
+  const currentKey = `team${battingTeam}`;
+  const currentScore = scores[currentKey];
+  const currentName = battingTeam === 1 ? team1Name : team2Name;
+  const otherName = battingTeam === 1 ? team2Name : team1Name;
+  const otherScore = battingTeam === 1 ? scores.team2 : scores.team1;
+
+  const target = hasLoadedMatch && innings === 2
+    ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
+    : null;
+
+  const isInningsComplete = hasLoadedMatch && (currentScore.balls >= totalBalls || currentScore.wickets >= maxWickets);
+  const isTied = innings === 2 && isInningsComplete && scores.team1.runs === scores.team2.runs;
+  const isMatchComplete = innings === 2 && (isInningsComplete || (target !== null && currentScore.runs > target));
+
+  useEffect(() => {
+    if (isTied && superOverPhase === 'inactive' && format?.totalInnings !== 4) {
+      setSuperOverPhase('prompt');
+    }
+  }, [isTied, superOverPhase, format?.totalInnings]);
 
   // Powerplay
   const currentOver = scores[`team${battingTeam}`]
@@ -479,31 +476,6 @@ export default function MonoCricketLiveScore() {
       <p style={{ color: '#888' }}>Loading...</p>
     </div>;
   }
-
-  const getTeamName = (teamId) => tournament.teams.find(t => t.id === teamId)?.name || 'Unknown';
-
-  const team1Name = getTeamName(match.team1Id);
-  const team2Name = getTeamName(match.team2Id);
-  const currentKey = `team${battingTeam}`;
-  const currentScore = scores[currentKey];
-  const currentName = battingTeam === 1 ? team1Name : team2Name;
-  const otherName = battingTeam === 1 ? team2Name : team1Name;
-  const otherScore = battingTeam === 1 ? scores.team2 : scores.team1;
-
-  const target = innings === 2
-    ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
-    : null;
-
-  const isInningsComplete = currentScore.balls >= totalBalls || currentScore.wickets >= maxWickets;
-  const isTied = innings === 2 && isInningsComplete && scores.team1.runs === scores.team2.runs;
-  const isMatchComplete = innings === 2 && (isInningsComplete || (target !== null && currentScore.runs > target));
-
-  // Check for tie and prompt super over
-  useEffect(() => {
-    if (isTied && superOverPhase === 'inactive' && format.totalInnings !== 4) {
-      setSuperOverPhase('prompt');
-    }
-  }, [isTied]);
 
   // Last Man Stands indicator
   const isLastMan = format.lastManStands && currentScore.wickets >= maxWickets - 1 && currentScore.wickets < maxWickets;

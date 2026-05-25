@@ -5,7 +5,7 @@ import SportIcon from './sportIcons';
 import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, experienceStats, trustNotes } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
-import { getReadableTextColor, getSportAccent, prioritySports, sportsTokens } from '../theme/sportsTokens';
+import { getReadableTextColor, getSportAccent, sportsTokens } from '../theme/sportsTokens';
 
 const heroSportPriority = new Map([
   ['Cricket', 0],
@@ -38,6 +38,13 @@ function sportPlayPath(sport) {
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const MOBILE_TAP_TARGET = 44;
 const softMix = (color, amount = 12) => `color-mix(in oklch, ${color} ${amount}%, var(--se-color-surface))`;
+
+const activateOnKeyboard = (handler) => (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    handler(event);
+  }
+};
 
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
@@ -415,6 +422,9 @@ export default function GuestLanding() {
 
       {/* ═══ TICKER ═══ */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="Nudge ticker"
         style={{
           display: mobile ? 'none' : 'block',
           background: 'color-mix(in oklch, var(--se-color-ink) 92%, var(--se-color-surface))',
@@ -428,6 +438,7 @@ export default function GuestLanding() {
         onMouseEnter={() => setTickerPaused(true)}
         onMouseLeave={() => setTickerPaused(false)}
         onClick={handleTickerClick}
+        onKeyDown={activateOnKeyboard(handleTickerClick)}
       >
         <div ref={tickerRef} style={{ display: 'flex', whiteSpace: 'nowrap', width: 'max-content' }}>
           {[0, 1].map(copy => (

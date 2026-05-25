@@ -1500,7 +1500,7 @@ export default function MonoQuickMatch() {
 
               {/* Next button */}
               <button
-                onClick={() => setSetupStep(hasRulesStep ? 2 : 2)}
+                onClick={() => setSetupStep(2)}
                 className="mono-btn-primary w-full"
                 style={{ padding: '12px', fontSize: '0.9375rem' }}
               >
