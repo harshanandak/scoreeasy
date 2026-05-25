@@ -165,9 +165,13 @@ function getRelativeLuminanceFromOklch(color) {
   if (!value.toLowerCase().startsWith('oklch(') || !value.endsWith(')')) return null;
 
   const channels = value.slice(6, -1).split('/')[0].trim().split(/\s+/);
-  if (channels.length < 3) return null;
+  if (channels.length !== 3) return null;
 
   const [lightnessValue, chromaValue, hueValue] = channels;
+  if (!/^\d+(\.\d+)?%?$/.test(lightnessValue)) return null;
+  if (!/^\d+(\.\d+)?$/.test(chromaValue)) return null;
+  if (!/^\d+(\.\d+)?(deg)?$/i.test(hueValue)) return null;
+
   const lightness = lightnessValue.endsWith('%') ? Number.parseFloat(lightnessValue) / 100 : Number.parseFloat(lightnessValue);
   const chroma = Number.parseFloat(chromaValue);
   const hueRadians = Number.parseFloat(hueValue.replace(/deg$/i, '')) * (Math.PI / 180);

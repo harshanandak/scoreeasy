@@ -424,6 +424,7 @@ export default function GuestLanding() {
       <div
         role="button"
         tabIndex={0}
+        aria-label="Nudge ticker"
         style={{
           display: mobile ? 'none' : 'block',
           background: 'color-mix(in oklch, var(--se-color-ink) 92%, var(--se-color-surface))',

@@ -554,6 +554,7 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
                 <span
                   role="button"
                   tabIndex={0}
+                  aria-label={`Remove team ${idx + 1}`}
                   onClick={() => removeTourneyTeam(idx)}
                   onKeyDown={activateOnKeyboard(() => removeTourneyTeam(idx))}
                   style={{ fontSize: '0.75rem', color: t.textFaint, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
