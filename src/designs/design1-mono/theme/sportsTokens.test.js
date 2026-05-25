@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import finalTheme, { MONO, SWISS } from '../landing/landingTheme';
 import {
   fontStacks,
+  getReadableTextColor,
+  getSportAccent,
   landingTokenBridge,
   prioritySports,
   sportAccents,
@@ -15,12 +17,15 @@ describe('sports design tokens', () => {
     expect(prioritySports).toContain('volleyball');
   });
 
-  it('defines distinct sport accents for the most important sports', () => {
+  it('uses a restrained field-green and pitch-brown palette for the priority sports', () => {
     const priorityAccentColors = prioritySports.map((sport) => sportAccents[sport].primary);
+    const priorityFieldColors = prioritySports.map((sport) => sportAccents[sport].field);
 
-    expect(new Set(priorityAccentColors).size).toBe(priorityAccentColors.length);
+    expect(new Set(priorityAccentColors)).toEqual(new Set(['oklch(0.6230 0.1688 149.1777)']));
+    expect(new Set(priorityFieldColors)).toEqual(new Set(['oklch(0.6082 0.1213 58.2537)']));
     expect(sportAccents.cricket.primary).toBe(sportsTokens.color.action);
-    expect(sportAccents.football.field).toBe('#15803d');
+    expect(sportAccents.football.soft).toBe(sportsTokens.color.actionSoft);
+    expect(sportAccents.volleyball.field).toBe(sportAccents.cricket.field);
   });
 
   it('bridges central tokens into the current landing theme contract', () => {
@@ -35,8 +40,31 @@ describe('sports design tokens', () => {
 
   it('exposes app-wide css variable names for non-react surfaces', () => {
     expect(sportsCssVariables['--se-color-action']).toBe(sportsTokens.color.action);
+    expect(sportsCssVariables['--se-color-action-strong']).toBe(sportsTokens.color.actionStrong);
     expect(sportsCssVariables['--se-color-canvas']).toBe(sportsTokens.color.canvas);
+    expect(sportsCssVariables['--se-color-inverse']).toBe(sportsTokens.color.inverse);
     expect(sportsCssVariables['--se-font-mono']).toBe(fontStacks.mono);
     expect(sportsCssVariables['--se-motion-standard']).toBe(sportsTokens.motion.standard);
+  });
+
+  it('returns named sport accents and a stable fallback accent', () => {
+    expect(getSportAccent('football')).toBe(sportAccents.football);
+    expect(getSportAccent('unknown')).toMatchObject({
+      name: 'Sport',
+      primary: sportsTokens.color.action,
+      soft: sportsTokens.color.actionSoft,
+    });
+  });
+
+  it('chooses readable text for oklch sport accent backgrounds', () => {
+    expect(getReadableTextColor(sportAccents.cricket.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.racquet.primary)).toBe(sportsTokens.color.inkStrong);
+  });
+
+  it('keeps legacy hex contrast support for non-token callers', () => {
+    expect(getReadableTextColor('#ffffff')).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor('#111111')).toBe(sportsTokens.color.inverse);
+    expect(getReadableTextColor('not-a-color')).toBe(sportsTokens.color.inverse);
   });
 });

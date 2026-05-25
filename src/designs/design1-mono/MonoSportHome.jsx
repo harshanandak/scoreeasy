@@ -5,6 +5,7 @@ import { loadSportTournaments, loadPreference, savePreference } from '../../util
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
 import { getPriorityStartActions } from '../../utils/startActions';
+import { getReadableTextColor, getSportAccent, prioritySports, sportAccents, sportsTokens } from './theme/sportsTokens';
 import SportIcon from './SportIcon';
 
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
@@ -21,6 +22,8 @@ const QUICK_ACTION_HELP = {
   quick: 'Score one match now',
   tournament: 'Schedule, standings, history',
 };
+const CATEGORY_PRIORITY = ['Cricket', 'Team Sports', 'Net Sports', 'Racquet Sports', 'Contact Sports'];
+const innerBoxRadius = sportsTokens.radius.none;
 
 const sportShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
@@ -46,21 +49,35 @@ function getCategoryForSport(sportCategories, sportId) {
   return Object.entries(sportCategories).find(([, sports]) => sports.some(sport => sport.id === sportId))?.[0] ?? null;
 }
 
-function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto' }) {
+function getOrderedCategories(sportCategories) {
+  const categoryKeys = Object.keys(sportCategories);
+  return [
+    ...CATEGORY_PRIORITY.filter(category => categoryKeys.includes(category)),
+    ...categoryKeys.filter(category => !CATEGORY_PRIORITY.includes(category)),
+  ];
+}
+
+function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto', accent = sportsTokens.color.action }) {
+  const primaryTextColor = getReadableTextColor(accent);
   const buttonStyle = compact
-    ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2 }
-    : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3 };
+    ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderColor: accent, borderRadius: innerBoxRadius }
+    : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, borderColor: accent, borderRadius: innerBoxRadius };
+  const primaryButtonStyle = {
+    ...buttonStyle,
+    '--mono-action-accent': accent,
+    '--mono-action-text': primaryTextColor,
+  };
   const flexClass = stacked ? '' : ' flex-1';
 
   return (
     <div className={className}>
-      <button onClick={onTournament} className={`mono-btn-primary${flexClass}`} style={buttonStyle}>
+      <button onClick={onTournament} className={`mono-btn-primary mono-action-primary${flexClass}`} style={primaryButtonStyle}>
         <span>Tournament</span>
         <span style={{ fontSize: '0.625rem', fontWeight: 500, opacity: 0.85 }}>{QUICK_ACTION_HELP.tournament}</span>
       </button>
       <button onClick={onQuick} className={`mono-btn${flexClass}`} style={buttonStyle}>
         <span>Quick Match</span>
-        <span style={{ fontSize: '0.625rem', fontWeight: 500, color: '#666' }}>{QUICK_ACTION_HELP.quick}</span>
+        <span style={{ fontSize: '0.625rem', fontWeight: 600, color: sportsTokens.color.inkMuted }}>{QUICK_ACTION_HELP.quick}</span>
       </button>
     </div>
   );
@@ -72,11 +89,12 @@ ActionButtons.propTypes = {
   compact: PropTypes.bool,
   stacked: PropTypes.bool,
   className: PropTypes.string,
+  accent: PropTypes.string,
 };
 
 function Metadata({ children }) {
   return (
-    <div className="flex gap-2 mb-4 text-xs font-mono" style={{ color: '#888' }}>
+    <div className="flex gap-2 mb-4 text-xs font-mono" style={{ color: sportsTokens.color.inkMuted }}>
       {children}
     </div>
   );
@@ -89,18 +107,19 @@ Metadata.propTypes = {
 function SearchResultCard({ entry, navigate }) {
   const isCricketFormat = entry.type === 'cricket-format';
   const format = CRICKET_FORMAT_CARDS.find(card => card.id === entry.formatId);
+  const accent = getSportAccent(isCricketFormat ? 'cricket' : entry.id).primary;
 
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0 }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
-          <SportIcon name={isCricketFormat ? 'Cricket' : entry.name} size={32} color="#111" />
+          <SportIcon name={isCricketFormat ? 'Cricket' : entry.name} size={32} color={accent} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{entry.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{entry.name}</h3>
           </div>
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{entry.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{entry.desc}</p>
 
         <Metadata>
           {isCricketFormat ? (
@@ -113,6 +132,7 @@ function SearchResultCard({ entry, navigate }) {
         <ActionButtons
           onTournament={() => navigate(isCricketFormat ? `/cricket/tournament/new?format=${entry.formatId}` : `/${entry.id}/tournament`)}
           onQuick={() => navigate(isCricketFormat ? `/cricket/quick?format=${entry.formatId}` : `/${entry.id}/quick`)}
+          accent={accent}
         />
       </div>
     </div>
@@ -133,7 +153,7 @@ SearchResultCard.propTypes = {
 function SearchResults({ filteredSports, navigate }) {
   return (
     <div className="mb-8">
-      <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: '#888' }}>
+      <h2 className="text-xs uppercase tracking-widest font-normal mb-6" style={{ color: sportsTokens.color.inkMuted }}>
         {filteredSports.length} result{filteredSports.length === 1 ? '' : 's'}
       </h2>
       {filteredSports.length > 0 ? (
@@ -143,7 +163,7 @@ function SearchResults({ filteredSports, navigate }) {
           ))}
         </div>
       ) : (
-        <p className="text-sm" style={{ color: '#888' }}>No sports found.</p>
+        <p className="text-sm" style={{ color: sportsTokens.color.inkMuted }}>No sports found.</p>
       )}
     </div>
   );
@@ -154,35 +174,73 @@ SearchResults.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
-const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px' };
+const priorityActionStyle = { minHeight: 52, fontSize: '0.875rem', padding: '10px 14px', borderRadius: innerBoxRadius };
 const secondaryPriorityActionStyle = { ...priorityActionStyle, background: '#fff' };
 
 function PriorityFastStart({ onStartSport }) {
   return (
-    <section className="mono-card mb-8" aria-label="Priority sport fast start" style={{ padding: 0, overflow: 'hidden', borderColor: '#dbe7ff' }}>
-      <div style={{ padding: '20px 24px', background: '#f8fbff' }}>
-        <div className="flex items-start gap-4">
-          <div aria-hidden="true" style={{ width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #dbe7ff' }}>
-            <SportIcon name="Cricket" size={32} color="#0066ff" />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: '#0066ff' }}>Ready to score</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>Cricket, football, and volleyball are ready</h2>
-            <p className="text-sm" style={{ color: '#555', lineHeight: 1.5 }}>
-              Start the most-played formats quickly, then use the sport cards below when you need another game.
+    <section
+      className="mb-8"
+      aria-label="Priority sport fast start"
+      style={{
+        padding: '8px 0 28px',
+        borderBottom: `1px solid color-mix(in oklch, ${sportsTokens.color.line} 28%, ${sportsTokens.color.surface})`,
+      }}
+    >
+      <div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-widest mb-1 font-mono" style={{ color: sportAccents.cricket.primary }}>Start from the popular games</p>
+            <h2 className="text-xl font-semibold mb-1" style={{ color: sportsTokens.color.inkStrong }}>Cricket, football, and volleyball first</h2>
+            <p className="text-sm" style={{ color: sportsTokens.color.inkSoft, lineHeight: 1.5 }}>
+              Pick a game, then choose the exact format on the next screen. No quick-match dead ends.
             </p>
+          </div>
+          <div aria-hidden="true" className="hidden sm:flex" style={{ gap: 8 }}>
+            {prioritySports.map((sportId) => (
+              <span key={sportId} style={{
+                width: 36,
+                height: 36,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: sportsTokens.color.surface,
+                border: `1px solid ${getSportAccent(sportId).primary}`,
+                borderRadius: innerBoxRadius,
+              }}>
+                <SportIcon name={getSportAccent(sportId).name} size={22} color={getSportAccent(sportId).primary} />
+              </span>
+            ))}
           </div>
         </div>
         <div className="mono-priority-actions grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
           {getPriorityStartActions().map((action) => (
-            <button
-              key={action.sportId}
-              onClick={() => onStartSport(action.sportId)}
-              className={action.primary ? 'mono-btn-primary' : 'mono-btn'}
-              style={action.primary ? priorityActionStyle : secondaryPriorityActionStyle}
-            >
-              {action.label}
-            </button>
+            (() => {
+              const actionAccent = getSportAccent(action.sportId);
+              return (
+                <button
+                  key={action.sportId}
+                  onClick={() => onStartSport(action.sportId)}
+                  aria-label={action.label}
+                  className="mono-btn"
+                  style={{
+                    ...(action.primary ? priorityActionStyle : secondaryPriorityActionStyle),
+                    minHeight: 64,
+                    background: action.primary ? actionAccent.primary : sportsTokens.color.surface,
+                    borderColor: actionAccent.primary,
+                    color: action.primary ? getReadableTextColor(actionAccent.primary) : actionAccent.primary,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                  }}
+                >
+                  <span>{action.label}</span>
+                  <span style={{ fontSize: '0.625rem', fontWeight: 600, opacity: action.primary ? 0.9 : 0.7 }}>
+                    Choose format next
+                  </span>
+                </button>
+              );
+            })()
           ))}
         </div>
       </div>
@@ -210,9 +268,10 @@ function CategoryTabs({ categoryKeys, activeTab, setActiveTab }) {
             className={`mono-category-tab text-xs px-4 transition-all ${activeTab === category ? 'font-medium' : 'font-normal'}`}
             style={{
               minHeight: 48,
-              color: activeTab === category ? '#0066ff' : '#555',
-              background: activeTab === category ? '#eef5ff' : '#fff',
-              border: activeTab === category ? '1px solid #0066ff' : '1px solid #eee',
+              background: activeTab === category ? sportsTokens.color.action : sportsTokens.color.surface,
+              border: activeTab === category ? `1px solid ${sportsTokens.color.action}` : `1px solid ${sportsTokens.color.line}`,
+              color: activeTab === category ? sportsTokens.color.inverse : sportsTokens.color.inkSoft,
+              borderRadius: innerBoxRadius,
               cursor: 'pointer',
             }}
           >
@@ -231,17 +290,19 @@ CategoryTabs.propTypes = {
 };
 
 function CricketListCard({ format, navigate }) {
+  const accent = sportAccents.cricket.primary;
+
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0 }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0 }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
-          <SportIcon name="Cricket" size={32} color="#111" />
+          <SportIcon name="Cricket" size={32} color={accent} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{format.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{format.name}</h3>
           </div>
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{format.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{format.desc}</p>
 
         <Metadata>
           {format.id === 'custom' ? (
@@ -258,6 +319,7 @@ function CricketListCard({ format, navigate }) {
         <ActionButtons
           onTournament={() => navigate(`/cricket/tournament/new?format=${format.id}`)}
           onQuick={() => navigate(`/cricket/quick?format=${format.id}`)}
+          accent={accent}
         />
       </div>
     </div>
@@ -271,18 +333,25 @@ CricketListCard.propTypes = {
 
 function SportListCard({ sport, navigate, getCounts }) {
   const savedCount = getCounts(sport.id);
+  const accent = getSportAccent(sport.id).primary;
+  const isPriority = prioritySports.includes(sport.id);
 
   return (
-    <div className="mono-card flex flex-col" style={{ padding: 0 }}>
+    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
-          <SportIcon name={sport.name} size={32} color="#111" />
+          <SportIcon name={sport.name} size={32} color={isPriority ? accent : sportsTokens.color.ink} />
           <div className="flex-1">
-            <h3 className="text-base font-semibold" style={{ color: '#111' }}>{sport.name}</h3>
+            <h3 className="text-base font-semibold" style={{ color: sportsTokens.color.inkStrong }}>{sport.name}</h3>
           </div>
+          {isPriority && (
+            <span className="font-mono" style={{ fontSize: '0.625rem', color: accent, background: sportsTokens.color.surface, border: `1px solid ${accent}`, borderRadius: sportsTokens.component.button.radius, padding: '3px 8px' }}>
+              POPULAR
+            </span>
+          )}
         </div>
 
-        <p className="text-xs mb-2" style={{ color: '#888' }}>{sport.desc}</p>
+        <p className="text-xs mb-2" style={{ color: sportsTokens.color.inkSoft }}>{sport.desc}</p>
 
         <Metadata>
           {savedCount > 0 ? (
@@ -295,6 +364,7 @@ function SportListCard({ sport, navigate, getCounts }) {
         <ActionButtons
           onTournament={() => navigate(`/${sport.id}/tournament`)}
           onQuick={() => navigate(`/${sport.id}/quick`)}
+          accent={accent}
         />
       </div>
     </div>
@@ -347,9 +417,9 @@ function CricketTab({ navigate, getCounts }) {
   return (
     <div>
       {cricketCount > 0 && (
-        <div className="text-xs mb-4 flex items-center gap-2" style={{ color: '#888' }}>
+        <div className="text-xs mb-4 flex items-center gap-2" style={{ color: sportsTokens.color.inkMuted }}>
           <span className="font-mono">{cricketCount} saved</span> tournament{cricketCount > 1 ? 's' : ''}
-          <button onClick={() => navigate('/cricket/tournament')} className="text-xs bg-transparent border-none cursor-pointer font-swiss" style={{ color: '#0066ff' }}>
+          <button onClick={() => navigate('/cricket/tournament')} className="text-xs bg-transparent border-none cursor-pointer font-swiss" style={{ color: sportsTokens.color.actionStrong }}>
             View all
           </button>
         </div>
@@ -370,7 +440,7 @@ CricketTab.propTypes = {
 
 function SportTab({ activeSports, navigate, getCounts }) {
   if (activeSports.length === 0) {
-    return <p className="text-sm" style={{ color: '#888' }}>No sports available.</p>;
+    return <p className="text-sm" style={{ color: sportsTokens.color.inkMuted }}>No sports available.</p>;
   }
 
   return (
@@ -390,22 +460,26 @@ SportTab.propTypes = {
 
 function GridCard({ id, title, description, iconName, selectedSportId, setSelectedSportId, children, savedCount = 0 }) {
   const isOpen = selectedSportId === id;
+  const accent = getSportAccent(id === 'cricket-custom' || id.startsWith('cricket-') ? 'cricket' : id).primary;
+  const isPriority = prioritySports.includes(id);
 
   return (
     <div
       className="transition-all"
       style={{
         padding: '16px',
-        background: isOpen ? '#fff' : 'transparent',
-        border: isOpen ? '1px solid #0066ff' : '1px solid #eee',
+        background: isOpen ? sportsTokens.color.surface : 'transparent',
+        border: isOpen ? `2px solid ${accent}` : `1px solid ${sportsTokens.color.line}`,
+        borderTop: `4px solid ${accent}`,
+        borderRadius: innerBoxRadius,
       }}
     >
       <button className="w-full bg-transparent border-none cursor-pointer" style={{ padding: 0 }} onClick={() => setSelectedSportId(isOpen ? null : id)} aria-label={`Select ${title}`}>
         <div className="flex flex-col items-center text-center">
-          <SportIcon name={iconName} size={28} color="#111" />
-          <span className="text-sm font-semibold mb-1 block" style={{ color: '#111' }}>{title}</span>
-          {description && <span className="text-xs" style={{ color: '#888' }}>{description}</span>}
-          {savedCount > 0 && <span className="text-xs font-mono" style={{ color: '#888' }}>{savedCount} saved</span>}
+            <SportIcon name={iconName} size={28} color={isPriority || isOpen ? accent : sportsTokens.color.inkStrong} />
+            <span className="text-sm font-semibold mb-1 block" style={{ color: sportsTokens.color.inkStrong }}>{title}</span>
+            {description && <span className="text-xs" style={{ color: sportsTokens.color.inkSoft }}>{description}</span>}
+            {savedCount > 0 && <span className="text-xs font-mono" style={{ color: sportsTokens.color.inkMuted }}>{savedCount} saved</span>}
         </div>
       </button>
 
@@ -425,7 +499,7 @@ GridCard.propTypes = {
   savedCount: PropTypes.number,
 };
 
-function GridActions({ onTournament, onQuick }) {
+function GridActions({ onTournament, onQuick, accent = sportsTokens.color.action }) {
   return (
     <ActionButtons
       onTournament={onTournament}
@@ -433,6 +507,7 @@ function GridActions({ onTournament, onQuick }) {
       compact
       stacked
       className="flex flex-col gap-2 mt-3 pt-3"
+      accent={accent}
     />
   );
 }
@@ -440,6 +515,7 @@ function GridActions({ onTournament, onQuick }) {
 GridActions.propTypes = {
   onTournament: PropTypes.func.isRequired,
   onQuick: PropTypes.func.isRequired,
+  accent: PropTypes.string,
 };
 
 function GridLayout({ sportCategories, selectedSportId, setSelectedSportId, navigate, getCounts }) {
@@ -447,7 +523,7 @@ function GridLayout({ sportCategories, selectedSportId, setSelectedSportId, navi
     <>
       {Object.entries(sportCategories).map(([category, sports]) => (
         <div key={category} className="mb-8">
-          <h3 className="text-xs font-medium mb-4" style={{ color: '#666' }}>{category}</h3>
+          <h3 className="text-xs font-medium mb-4" style={{ color: sportsTokens.color.inkSoft }}>{category}</h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {category === 'Cricket' ? (
@@ -464,6 +540,7 @@ function GridLayout({ sportCategories, selectedSportId, setSelectedSportId, navi
                   <GridActions
                     onTournament={() => navigate(`/cricket/tournament/new?format=${format.id}`)}
                     onQuick={() => navigate(`/cricket/quick?format=${format.id}`)}
+                    accent={sportAccents.cricket.primary}
                   />
                 </GridCard>
               ))
@@ -481,6 +558,7 @@ function GridLayout({ sportCategories, selectedSportId, setSelectedSportId, navi
                   <GridActions
                     onTournament={() => navigate(`/${sport.id}/tournament`)}
                     onQuick={() => navigate(`/${sport.id}/quick`)}
+                    accent={getSportAccent(sport.id).primary}
                   />
                 </GridCard>
               ))
@@ -532,38 +610,39 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
     <section className="mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: '#888' }}>
-            Choose sport
-          </h2>
-          <p className="text-sm" style={{ color: '#666' }}>
-            Search, switch layout, or pick a category below.
-          </p>
+      <div>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: sportsTokens.color.inkMuted }}>
+              Choose sport
+            </h2>
+            <p className="text-sm" style={{ color: sportsTokens.color.inkSoft }}>
+              Search, switch layout, or pick a category below.
+            </p>
+          </div>
+          <div className="mono-sport-tools flex items-center gap-2 sm:min-w-[360px]">
+            <input
+              type="text"
+              className="mono-input flex-1"
+              aria-label="Search sports"
+              placeholder="Search sports..."
+              style={{ minWidth: 0 }}
+              value={searchQuery}
+              onChange={onSearchChange}
+            />
+            <button
+              onClick={switchLayout}
+              className="mono-btn flex items-center justify-center"
+              aria-label={`Switch to ${targetLayout} layout`}
+              style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700, borderRadius: innerBoxRadius }}
+              title={`Switch to ${targetLayout}`}
+            >
+              <LayoutToggleIcon layout={layout} />
+            </button>
+          </div>
         </div>
-        <div className="mono-sport-tools flex items-center gap-2 sm:min-w-[360px]">
-          <input
-            type="text"
-            className="mono-input flex-1"
-            aria-label="Search sports"
-            placeholder="Search sports..."
-            style={{ minWidth: 0 }}
-            value={searchQuery}
-            onChange={onSearchChange}
-          />
-          <button
-            onClick={switchLayout}
-            className="mono-btn flex items-center justify-center"
-            aria-label={`Switch to ${targetLayout} layout`}
-            style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700 }}
-            title={`Switch to ${targetLayout}`}
-          >
-            <LayoutToggleIcon layout={layout} />
-          </button>
-        </div>
+        {children}
       </div>
-
-      {children}
     </section>
   );
 }
@@ -602,7 +681,7 @@ export default function MonoSportHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sportCategories = getSportsByCategory();
-  const categoryKeys = Object.keys(sportCategories);
+  const categoryKeys = getOrderedCategories(sportCategories);
   const requestedSportId = searchParams.get('sport')?.toLowerCase() ?? null;
   const requestedCategory = requestedSportId ? getCategoryForSport(sportCategories, requestedSportId) : null;
   const initialCategory = requestedCategory ?? (sportCategories[DEFAULT_CATEGORY] ? DEFAULT_CATEGORY : (categoryKeys[0] ?? null));
@@ -657,7 +736,14 @@ export default function MonoSportHome() {
 
   const allSports = Object.values(sportCategories).flat().filter(sport => sport.id !== 'cricket');
   const allEntries = [
-    ...allSports.map(sport => ({ ...sport, type: 'sport' })),
+    ...prioritySports
+      .filter(sportId => sportId !== 'cricket')
+      .map(sportId => allSports.find(sport => sport.id === sportId))
+      .filter(Boolean)
+      .map(sport => ({ ...sport, type: 'sport' })),
+    ...allSports
+      .filter(sport => !prioritySports.includes(sport.id))
+      .map(sport => ({ ...sport, type: 'sport' })),
     ...CRICKET_FORMAT_CARDS.map(format => ({
       id: `cricket-${format.id}`,
       name: `Cricket ${format.name}`,

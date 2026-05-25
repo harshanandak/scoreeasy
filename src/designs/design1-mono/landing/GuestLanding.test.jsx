@@ -81,7 +81,8 @@ describe('GuestLanding bottom CTA', () => {
 
     const cricketCard = screen.getByRole('link', { name: 'Start Cricket from sports' });
     expect(cricketCard).toHaveAttribute('href', '/play?sport=cricket');
-    expect(cricketCard).toHaveStyle({ minHeight: '132px' });
+    expect(cricketCard).toHaveStyle({ minHeight: '0' });
+    expect(cricketCard).toHaveStyle({ textAlign: 'center' });
     expect(screen.getByRole('link', { name: 'Start Football from sports' })).toHaveAttribute('href', '/play?sport=football');
     expect(screen.getByRole('link', { name: 'Start Volleyball from sports' })).toHaveAttribute('href', '/play?sport=volleyball');
     expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=tabletennis');
