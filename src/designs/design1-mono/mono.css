@@ -33,6 +33,50 @@
   border-radius: var(--se-radius-card);
 }
 
+.mono-sport-format-card {
+  box-shadow: none;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-sport-format-card:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 10%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 42%, var(--se-color-line));
+}
+
+.mono-sport-grid-card {
+  position: relative;
+  background: transparent;
+  border: 1px dashed color-mix(in oklch, var(--se-color-line) 52%, var(--se-color-surface));
+  border-radius: var(--radius);
+  box-shadow: none;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-sport-grid-card::before,
+.mono-sport-grid-card::after {
+  content: '+';
+  position: absolute;
+  color: var(--se-color-action);
+  font: 700 10px/1 var(--se-font-mono);
+  pointer-events: none;
+}
+
+.mono-sport-grid-card::before {
+  top: 5px;
+  left: 6px;
+}
+
+.mono-sport-grid-card::after {
+  right: 6px;
+  bottom: 5px;
+}
+
+.mono-sport-grid-card:hover,
+.mono-sport-grid-card-open {
+  background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--sport-card-accent, var(--se-color-action)) 48%, var(--se-color-line));
+}
+
 .mono-history-section {
   padding: 14px 0 18px;
   border-top: 1px solid color-mix(in oklch, var(--se-color-line) 32%, var(--se-color-surface));
@@ -44,30 +88,50 @@
   border-radius: 0;
   box-shadow: none;
   background: transparent;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease;
 }
 
 .mono-history-row:hover {
-  background: color-mix(in oklch, var(--se-color-action-soft) 20%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-action-soft) 14%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 32%, var(--se-color-line));
   box-shadow: none;
 }
 
 .mono-history-detail {
   box-shadow: none;
+  border-radius: var(--se-radius-card);
 }
 
 .mono-stat-card {
+  border-radius: var(--radius);
   box-shadow: none;
   transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-stat-card:hover {
-  background: color-mix(in oklch, var(--se-color-action-soft) 18%, var(--se-color-surface));
-  border-color: color-mix(in oklch, var(--se-color-action) 54%, var(--se-color-line));
-  box-shadow: var(--shadow-2xs);
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 38%, var(--se-color-line));
+  box-shadow: none;
 }
 
 .mono-stat-panel {
   box-shadow: none;
+  border-radius: var(--se-radius-card);
+}
+
+.mono-stat-row {
+  border-width: 0 0 1px 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mono-stat-row:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 28%, var(--se-color-line));
+}
+
+.mono-stat-number-card {
+  background: color-mix(in oklch, var(--se-color-action-soft) 7%, var(--se-color-surface));
 }
 
 .mono-status-card {
