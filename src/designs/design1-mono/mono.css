@@ -162,7 +162,7 @@
 .mono-input:focus,
 .mono-input:focus-visible {
   border-color: var(--se-color-action);
-  outline: 2px solid rgba(47, 125, 50, 0.2);
+  outline: 2px solid color-mix(in oklch, var(--se-color-action) 22%, transparent);
   outline-offset: 2px;
   box-shadow: var(--shadow-xs);
 }

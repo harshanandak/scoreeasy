@@ -148,17 +148,49 @@ export function getSportAccent(sportId) {
   };
 }
 
-export function getReadableTextColor(hexColor) {
+function getRelativeLuminanceFromHex(hexColor) {
   const clean = String(hexColor || '').replace('#', '');
-  if (!/^[0-9a-f]{6}$/i.test(clean)) return sportsTokens.color.inverse;
+  if (!/^[0-9a-f]{6}$/i.test(clean)) return null;
 
   const [red, green, blue] = [0, 2, 4].map((index) => {
     const channel = Number.parseInt(clean.slice(index, index + 2), 16) / 255;
     return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
   });
-  const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 
-  return luminance > 0.28 ? sportsTokens.color.inkStrong : sportsTokens.color.inverse;
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function getRelativeLuminanceFromOklch(color) {
+  const match = String(color || '').trim().match(/^oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(?:deg)?(?:\s*\/\s*[0-9.]+%?)?\s*\)$/i);
+  if (!match) return null;
+
+  const lightness = match[1].endsWith('%') ? Number.parseFloat(match[1]) / 100 : Number.parseFloat(match[1]);
+  const chroma = Number.parseFloat(match[2]);
+  const hueRadians = Number.parseFloat(match[3]) * (Math.PI / 180);
+
+  if (![lightness, chroma, hueRadians].every(Number.isFinite)) return null;
+
+  const a = chroma * Math.cos(hueRadians);
+  const b = chroma * Math.sin(hueRadians);
+  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+
+  const red = Math.min(Math.max(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, 0), 1);
+  const green = Math.min(Math.max(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, 0), 1);
+  const blue = Math.min(Math.max(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s, 0), 1);
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+export function getReadableTextColor(color) {
+  const luminance = getRelativeLuminanceFromHex(color) ?? getRelativeLuminanceFromOklch(color);
+  if (luminance === null) return sportsTokens.color.inverse;
+
+  const contrastWithInk = (luminance + 0.05) / 0.05;
+  const contrastWithInverse = 1.05 / (luminance + 0.05);
+
+  return contrastWithInk >= contrastWithInverse ? sportsTokens.color.inkStrong : sportsTokens.color.inverse;
 }
 
 export const sportsCssVariables = {

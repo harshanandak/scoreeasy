@@ -56,9 +56,15 @@ describe('sports design tokens', () => {
     });
   });
 
-  it('chooses readable text for bright sport accent backgrounds', () => {
-    expect(getReadableTextColor(sportAccents.cricket.primary)).toBe(sportsTokens.color.inverse);
-    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inverse);
-    expect(getReadableTextColor(sportAccents.racquet.primary)).toBe(sportsTokens.color.inverse);
+  it('chooses readable text for oklch sport accent backgrounds', () => {
+    expect(getReadableTextColor(sportAccents.cricket.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.football.primary)).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor(sportAccents.racquet.primary)).toBe(sportsTokens.color.inkStrong);
+  });
+
+  it('keeps legacy hex contrast support for non-token callers', () => {
+    expect(getReadableTextColor('#ffffff')).toBe(sportsTokens.color.inkStrong);
+    expect(getReadableTextColor('#111111')).toBe(sportsTokens.color.inverse);
+    expect(getReadableTextColor('not-a-color')).toBe(sportsTokens.color.inverse);
   });
 });
