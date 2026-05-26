@@ -110,7 +110,7 @@ function SearchResultCard({ entry, navigate }) {
   const accent = getSportAccent(isCricketFormat ? 'cricket' : entry.id).primary;
 
   return (
-    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
+    <div className="mono-soft-card mono-sport-format-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name={isCricketFormat ? 'Cricket' : entry.name} size={32} color={accent} />
@@ -293,7 +293,7 @@ function CricketListCard({ format, navigate }) {
   const accent = sportAccents.cricket.primary;
 
   return (
-    <div className="mono-soft-card flex flex-col" style={{ padding: 0 }}>
+    <div className="mono-soft-card mono-sport-format-card flex flex-col" style={{ padding: 0 }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name="Cricket" size={32} color={accent} />
@@ -337,7 +337,7 @@ function SportListCard({ sport, navigate, getCounts }) {
   const isPriority = prioritySports.includes(sport.id);
 
   return (
-    <div className="mono-soft-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
+    <div className="mono-soft-card mono-sport-format-card flex flex-col" style={{ padding: 0, borderColor: sportsTokens.color.line }}>
       <div className="flex flex-col flex-1" style={{ padding: '20px 24px' }}>
         <div className="flex items-center gap-3 mb-3">
           <SportIcon name={sport.name} size={32} color={isPriority ? accent : sportsTokens.color.ink} />
@@ -465,13 +465,10 @@ function GridCard({ id, title, description, iconName, selectedSportId, setSelect
 
   return (
     <div
-      className="transition-all"
+      className={`mono-sport-grid-card transition-all${isOpen ? ' mono-sport-grid-card-open' : ''}`}
       style={{
         padding: '16px',
-        background: isOpen ? sportsTokens.color.surface : 'transparent',
-        border: isOpen ? `2px solid ${accent}` : `1px solid ${sportsTokens.color.line}`,
-        borderTop: `4px solid ${accent}`,
-        borderRadius: innerBoxRadius,
+        '--sport-card-accent': accent,
       }}
     >
       <button className="w-full bg-transparent border-none cursor-pointer" style={{ padding: 0 }} onClick={() => setSelectedSportId(isOpen ? null : id)} aria-label={`Select ${title}`}>

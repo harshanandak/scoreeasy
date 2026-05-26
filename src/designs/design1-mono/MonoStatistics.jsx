@@ -393,7 +393,7 @@ export default function MonoStatistics() {
             <div className="flex flex-col gap-3">
               {/* Show all sports with data */}
               {sportsWithData.map(sportData => (
-                <div key={sportData.sport.id} className="mono-card mono-stat-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div key={sportData.sport.id} className="mono-card mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
                     <SportIcon name={sportData.sport.name} size={24} color="var(--se-color-action)" />
                     <div>
@@ -411,7 +411,7 @@ export default function MonoStatistics() {
 
               {/* Quick matches */}
               {quickMatches.length > 0 && (
-                <div className="mono-card mono-stat-card flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div className="mono-card mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-xl">⚡</span>
                     <div>
@@ -585,7 +585,7 @@ export default function MonoStatistics() {
                 <h2 className="text-sm font-semibold mb-3" style={{ color: '#111' }}>Recent quick matches</h2>
                 <div className="flex flex-col gap-2">
                   {quickMatches.map(qm => (
-                    <div key={qm.id} className="mono-card mono-stat-card" style={{ padding: '12px 16px' }}>
+                    <div key={qm.id} className="mono-card mono-stat-card mono-stat-row" style={{ padding: '12px 16px' }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
@@ -628,7 +628,7 @@ export default function MonoStatistics() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="mono-card mono-stat-card text-center" style={{ padding: '16px 12px' }}>
+    <div className="mono-card mono-stat-card mono-stat-number-card text-center" style={{ padding: '16px 12px' }}>
       <p className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>{value}</p>
       <p className="text-xs mt-1" style={{ color: '#888' }}>{label}</p>
     </div>
