@@ -3,6 +3,13 @@
    Clean, light, professional Swiss design
    ============================================ */
 
+.font-swiss,
+.font-swiss *,
+.font-swiss *::before,
+.font-swiss *::after {
+  box-sizing: border-box;
+}
+
 /* --- Cards --- */
 .mono-card {
   box-sizing: border-box;
@@ -39,6 +46,62 @@
   border-radius: var(--se-radius-card);
 }
 
+.mono-soft-panel {
+  box-sizing: border-box;
+  max-width: 100%;
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+  box-shadow: none;
+}
+
+.mono-brutal-panel {
+  box-sizing: border-box;
+  max-width: 100%;
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-row-panel {
+  background: transparent;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 58%, var(--se-color-surface));
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.mono-row-panel:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 36%, var(--se-color-line));
+}
+
+.mono-alert {
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--radius);
+  box-shadow: none;
+  padding: 10px 12px;
+  background: var(--se-color-surface);
+}
+
+.mono-alert-danger {
+  border-color: var(--se-color-danger, #dc2626);
+  color: var(--se-color-danger, #dc2626);
+  background: color-mix(in oklch, #fee2e2 36%, var(--se-color-surface));
+}
+
+.mono-alert-success {
+  border-color: var(--se-color-action);
+  color: var(--se-color-action-strong);
+  background: color-mix(in oklch, var(--se-color-action-soft) 32%, var(--se-color-surface));
+}
+
+.mono-alert-info {
+  border-color: color-mix(in oklch, var(--se-color-action) 48%, var(--se-color-line));
+  color: var(--se-color-action-strong);
+  background: color-mix(in oklch, var(--se-color-action-soft) 28%, var(--se-color-surface));
+}
+
 .mono-sport-format-card {
   box-shadow: none;
   transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
@@ -47,6 +110,41 @@
 .mono-sport-format-card:hover {
   background: color-mix(in oklch, var(--se-color-action-soft) 10%, var(--se-color-surface));
   border-color: color-mix(in oklch, var(--se-color-action) 42%, var(--se-color-line));
+}
+
+.mono-setup-option {
+  box-sizing: border-box;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 68%, var(--se-color-surface));
+  border-radius: var(--radius);
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-setup-option:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--se-color-action) 42%, var(--se-color-line));
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
+.mono-setup-option-selected {
+  border-color: var(--se-color-action);
+  background: color-mix(in oklch, var(--se-color-action-soft) 28%, var(--se-color-surface));
+}
+
+.mono-setup-summary {
+  border-radius: var(--se-radius-card);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 52%, var(--se-color-surface));
+  background: var(--se-color-surface);
+  box-shadow: none;
+}
+
+.mono-schedule-preview {
+  border-radius: var(--se-radius-card);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-surface) 92%, var(--se-color-action-soft));
+  box-shadow: none;
 }
 
 .mono-sport-grid-card {
@@ -198,6 +296,12 @@
 .mono-danger-card {
   border-color: var(--se-color-danger, #dc2626);
   background: color-mix(in oklch, #fee2e2 52%, var(--se-color-surface));
+}
+
+.mono-status-card,
+.mono-danger-card {
+  border-radius: var(--radius);
+  box-shadow: none;
 }
 
 .mono-tabs {
@@ -516,6 +620,81 @@
   animation: score-pop 0.3s ease;
 }
 
+.mono-score-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.mono-score-pad {
+  position: relative;
+  border: 1px solid color-mix(in oklch, var(--score-accent, var(--se-color-action)) 38%, var(--se-color-line));
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--se-color-action-soft) 8%, var(--se-color-surface));
+  box-shadow: var(--shadow-2xs);
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+}
+
+.mono-score-pad::before,
+.mono-score-pad::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--score-accent, var(--se-color-action));
+  background: var(--se-color-surface);
+  pointer-events: none;
+}
+
+.mono-score-pad::before {
+  top: 7px;
+  left: 7px;
+}
+
+.mono-score-pad::after {
+  right: 7px;
+  bottom: 7px;
+}
+
+.mono-score-pad:hover {
+  border-color: var(--score-accent, var(--se-color-action));
+  background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
+.mono-score-pad:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-score-pad[disabled],
+.mono-score-pad[aria-disabled="true"] {
+  transform: none;
+  cursor: default;
+}
+
+.mono-score-meta {
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 30%, var(--se-color-surface));
+  color: var(--se-color-ink-muted);
+}
+
+.mono-score-history-strip {
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 30%, var(--se-color-surface));
+  color: var(--se-color-ink-muted);
+}
+
+.mono-score-mini {
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 48%, var(--se-color-surface));
+  border-radius: var(--radius);
+  background: transparent;
+  box-shadow: none;
+}
+
+.mono-control-strip {
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 34%, var(--se-color-surface));
+}
+
 /* --- Set completion celebration --- */
 @keyframes set-complete {
   0% { transform: scale(1); opacity: 1; }
@@ -660,6 +839,14 @@ a:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .mono-score-grid {
+    gap: 10px;
+  }
+
+  .mono-score-pad {
+    min-height: 190px !important;
+  }
+
   .mono-category-tabs {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

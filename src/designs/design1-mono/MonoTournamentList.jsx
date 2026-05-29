@@ -124,10 +124,10 @@ export default function MonoTournamentList() {
 
         {deletedTournament && (
           <div
-            className="mono-card mb-4"
+            className="mono-alert mono-alert-info mb-4"
             role="status"
             aria-live="polite"
-            style={{ padding: '12px 14px', borderColor: '#0066ff' }}
+            style={{ padding: '12px 14px' }}
           >
             <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
               Deleted {deletedTournament.tournament.name}.
@@ -151,7 +151,7 @@ export default function MonoTournamentList() {
             <p className="text-sm mb-5" style={{ color: '#666', maxWidth: 320 }}>
               Build a match list, track standings, and resume the next game from one place.
             </p>
-            <div className="mono-card w-full mb-4 text-left" style={{ padding: '14px 16px', background: '#f8fafc' }}>
+            <div className="mono-soft-panel w-full mb-4 text-left" style={{ padding: '14px 16px' }}>
               {['Name teams', 'Schedule is generated', 'Continue from this list'].map((label, index) => (
                 <div key={label} className="flex items-center gap-3 mb-2 last:mb-0">
                   <span
@@ -215,7 +215,7 @@ export default function MonoTournamentList() {
               const statusColor = nextMatch ? '#111' : isWaitingForTeams ? '#92400e' : '#15803d';
 
               return (
-                <div key={t.id} className="mono-card" style={{ padding: 0 }}>
+                <div key={t.id} className="mono-row-panel" style={{ padding: 0 }}>
                   <button
                     className="cursor-pointer w-full text-left bg-transparent border-none"
                     style={{ padding: '16px 20px', display: 'block' }}

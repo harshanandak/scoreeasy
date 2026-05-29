@@ -489,7 +489,7 @@ export default function MonoCricketLiveScore() {
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -534,7 +534,7 @@ export default function MonoCricketLiveScore() {
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto">
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -600,7 +600,7 @@ export default function MonoCricketLiveScore() {
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
             {saveWarning && (
-              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              <div className="mono-alert mono-alert-danger mb-4">
                 {saveWarning}
               </div>
             )}
@@ -638,7 +638,7 @@ export default function MonoCricketLiveScore() {
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}
           </div>
         )}
@@ -669,7 +669,7 @@ export default function MonoCricketLiveScore() {
 
         {/* Trial ball banner */}
         {showTrialBall && (
-          <div className="mono-card text-center mb-4" style={{ padding: '12px 16px', borderColor: '#0066ff' }}>
+          <div className="mono-alert mono-alert-info text-center mb-4" style={{ padding: '12px 16px' }}>
             <p className="text-sm font-medium" style={{ color: '#0066ff' }}>Trial Ball — first delivery doesn't count</p>
             <button
               onClick={skipTrialBall}
@@ -708,7 +708,7 @@ export default function MonoCricketLiveScore() {
 
           {/* Free Hit banner */}
           {freeHit && (
-            <div className="mono-card mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
+            <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
               <p className="text-sm font-bold" style={{ color: '#ff6b00' }}>FREE HIT</p>
               <p className="text-xs" style={{ color: '#888' }}>Run Out Only</p>
             </div>
@@ -730,7 +730,7 @@ export default function MonoCricketLiveScore() {
         </div>
 
         {/* Other team score */}
-        <div className="mono-card text-center mb-8" style={{ padding: '12px 16px' }}>
+        <div className="mono-score-mini text-center mb-8" style={{ padding: '12px 16px' }}>
           <p className="text-xs" style={{ color: '#888' }}>
             {otherName}: {otherScore.runs}/{otherScore.wickets}
             {' '}({showOvers ? `${ballsToOvers(otherScore.balls)} ov` : `${otherScore.balls} balls`})

@@ -541,12 +541,15 @@ function GlobalNavigation({ requestScoringExit }) {
       )}
       <style>{`
         .global-nav {
+          box-sizing: border-box;
           position: sticky;
           top: 0;
           z-index: 200;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          width: 100%;
+          max-width: 100vw;
           min-height: 56px;
           padding: 0 32px;
           border-bottom: var(--se-border-standard) solid var(--se-color-line-strong);
@@ -798,7 +801,13 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-mobile-menu-button {
+            position: fixed;
+            top: calc(9px + env(safe-area-inset-top, 0px));
+            right: 16px;
+            z-index: 220;
             display: inline-flex;
+            flex: 0 0 38px;
+            margin-left: auto;
             width: 38px;
             height: 38px;
             flex-direction: column;

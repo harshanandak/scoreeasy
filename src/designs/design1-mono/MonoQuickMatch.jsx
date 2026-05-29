@@ -126,8 +126,8 @@ function ScoringStatusStrip({ label, value, lastAction }) {
 
   return (
     <div
-      className="mono-card mb-4 flex items-center justify-between gap-3"
-      style={{ padding: '10px 12px', backgroundColor: '#f8fafc' }}
+      className="mono-score-mini mb-4 flex items-center justify-between gap-3"
+      style={{ padding: '10px 12px' }}
       aria-live="polite"
     >
       {label ? (
@@ -1374,7 +1374,7 @@ export default function MonoQuickMatch() {
       <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
         <div className="max-w-2xl mx-auto">
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -1437,12 +1437,10 @@ export default function MonoQuickMatch() {
                             setShowCustomOvers(false);
                             setCustomOvers('');
                           }}
-                          className="mono-card text-left"
+                          className={`mono-setup-option text-left ${isSelected ? 'mono-setup-option-selected' : ''}`}
                           style={{
                             padding: '16px',
                             cursor: 'pointer',
-                            border: isSelected ? '2px solid #0066ff' : '1px solid #eee',
-                            background: isSelected ? '#f0f6ff' : '#fff',
                           }}
                         >
                           <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>
@@ -1470,12 +1468,10 @@ export default function MonoQuickMatch() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setFormatMode('standard')}
-                      className="mono-card flex-1 text-left"
+                      className={`mono-setup-option flex-1 text-left ${formatMode === 'standard' ? 'mono-setup-option-selected' : ''}`}
                       style={{
                         padding: '16px',
                         cursor: 'pointer',
-                        border: formatMode === 'standard' ? '2px solid #0066ff' : '1px solid #eee',
-                        background: formatMode === 'standard' ? '#f0f6ff' : '#fff',
                       }}
                     >
                       <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Standard</p>
@@ -1483,12 +1479,10 @@ export default function MonoQuickMatch() {
                     </button>
                     <button
                       onClick={() => setFormatMode('custom')}
-                      className="mono-card flex-1 text-left"
+                      className={`mono-setup-option flex-1 text-left ${formatMode === 'custom' ? 'mono-setup-option-selected' : ''}`}
                       style={{
                         padding: '16px',
                         cursor: 'pointer',
-                        border: formatMode === 'custom' ? '2px solid #0066ff' : '1px solid #eee',
-                        background: formatMode === 'custom' ? '#f0f6ff' : '#fff',
                       }}
                     >
                       <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Custom</p>
@@ -1514,7 +1508,7 @@ export default function MonoQuickMatch() {
             <>
               {/* Format summary card */}
               {isCricket && selectedCricketFormat && (
-                <div className="mono-card mb-6 flex items-center gap-3" style={{ padding: '12px 16px', background: '#f8f9fa' }}>
+                <div className="mono-soft-panel mb-6 flex items-center gap-3" style={{ padding: '12px 16px' }}>
                   <span className="text-2xl">🏏</span>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: '#111' }}>{selectedCricketFormat.name}</p>
@@ -1971,9 +1965,9 @@ export default function MonoQuickMatch() {
           {setupStep === totalSteps && (
             <>
               {/* Format summary */}
-              <section className="mono-card mb-6" style={{ padding: '16px', background: '#f8f9fa' }} aria-labelledby="quick-match-rules-heading">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
+              <section className="mono-soft-panel mb-6" style={{ padding: '16px' }} aria-labelledby="quick-match-rules-heading">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 min-w-0">
                     <span className="text-2xl">{sportConfig?.icon || '\u{1F3D0}'}</span>
                     <div>
                       <h2 id="quick-match-rules-heading" className="text-sm font-semibold" style={{ color: '#111' }}>
@@ -1989,7 +1983,7 @@ export default function MonoQuickMatch() {
                   </div>
                   <button
                     onClick={() => setSetupStep(1)}
-                    className="text-xs bg-transparent cursor-pointer"
+                    className="text-xs bg-transparent cursor-pointer w-full sm:w-auto"
                     style={{
                       minHeight: 44,
                       border: '1.5px solid #0066ff',
@@ -2226,7 +2220,7 @@ export default function MonoQuickMatch() {
           <div className="max-w-2xl mx-auto">
             {endMatchDialog}
             {saveWarning && (
-              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              <div className="mono-alert mono-alert-danger mb-4">
                 {saveWarning}
               </div>
             )}
@@ -2252,7 +2246,7 @@ export default function MonoQuickMatch() {
 
             {/* Trial ball banner */}
             {showTrialBall && (
-              <div className="mono-card text-center mb-4" style={{ padding: '12px 16px', borderColor: '#0066ff' }}>
+              <div className="mono-alert mono-alert-info text-center mb-4" style={{ padding: '12px 16px' }}>
                 <p className="text-sm font-medium" style={{ color: '#0066ff' }}>Trial Ball — first delivery doesn't count</p>
                 <button
                   onClick={() => setTrialBallUsed(true)}
@@ -2290,7 +2284,7 @@ export default function MonoQuickMatch() {
 
               {/* Free Hit banner */}
               {freeHit && (
-                <div className="mono-card mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
+                <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
                   <p className="text-sm font-bold" style={{ color: '#ff6b00' }}>FREE HIT</p>
                   <p className="text-xs" style={{ color: '#888' }}>Run Out Only</p>
                 </div>
@@ -2305,7 +2299,7 @@ export default function MonoQuickMatch() {
             </div>
 
             {/* Other team score */}
-            <div className="mono-card text-center mb-8" style={{ padding: '12px 16px' }}>
+            <div className="mono-score-mini text-center mb-8" style={{ padding: '12px 16px' }}>
               <p className="text-xs" style={{ color: '#888' }}>
                 {otherName}: {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
               </p>
@@ -2359,8 +2353,6 @@ export default function MonoQuickMatch() {
     const rightName = sidesSwapped ? team1Name : team2Name;
     const leftAccent = leftTeam === 1 ? '#0066ff' : '#16a34a';
     const rightAccent = rightTeam === 1 ? '#0066ff' : '#16a34a';
-    const leftSoftBg = leftTeam === 1 ? '#f5f9ff' : '#f3fbf6';
-    const rightSoftBg = rightTeam === 1 ? '#f5f9ff' : '#f3fbf6';
 
     // Goals-based scoring
     if (isGoals) {
@@ -2372,7 +2364,7 @@ export default function MonoQuickMatch() {
           <div className="max-w-2xl mx-auto">
             {endMatchDialog}
             {saveWarning && (
-              <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+              <div className="mono-alert mono-alert-danger mb-4">
                 {saveWarning}
               </div>
             )}
@@ -2398,15 +2390,15 @@ export default function MonoQuickMatch() {
             <ScoringStatusStrip label="Scoring" value={`${leftName} vs ${rightName}`} lastAction={lastAction} />
 
             {/* Score panels */}
-            <div className="flex items-start gap-4 mb-6">
+            <div className="mono-score-grid items-start mb-6">
               {/* Left team */}
               <div className="flex-1">
                 <button
                   type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-card"
+                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
                   disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: leftAccent, backgroundColor: leftSoftBg, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
                   aria-label={hasQuickButtons ? `${leftName} score` : `Add score for ${leftName}`}
                 >
                   <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
@@ -2433,10 +2425,10 @@ export default function MonoQuickMatch() {
               <div className="flex-1">
                 <button
                   type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-card"
+                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
                   disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: rightAccent, backgroundColor: rightSoftBg, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
                   aria-label={hasQuickButtons ? `${rightName} score` : `Add score for ${rightName}`}
                 >
                   <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
@@ -2523,7 +2515,7 @@ export default function MonoQuickMatch() {
         <div className="max-w-2xl mx-auto">
           {endMatchDialog}
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -2569,14 +2561,14 @@ export default function MonoQuickMatch() {
             </div>
           )}
 
-          <div className="flex items-start gap-4 mb-8">
+          <div className="mono-score-grid items-start mb-8">
             {/* Left team */}
             <div className="flex-1">
               <button
                 type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-card"
+                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(leftTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: leftAccent, backgroundColor: leftSoftBg, minHeight: '250px' }}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, minHeight: '250px' }}
                 aria-label={`Add point for ${leftName}`}
               >
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
@@ -2601,9 +2593,9 @@ export default function MonoQuickMatch() {
             <div className="flex-1">
               <button
                 type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-card"
+                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(rightTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', borderColor: rightAccent, backgroundColor: rightSoftBg, minHeight: '250px' }}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, minHeight: '250px' }}
                 aria-label={`Add point for ${rightName}`}
               >
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
@@ -2659,20 +2651,19 @@ export default function MonoQuickMatch() {
     <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="max-w-2xl mx-auto">
         {saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}
           </div>
         )}
         {result && !saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#16a34a', color: '#166534' }}>
+          <div className="mono-alert mono-alert-success mb-4">
             Match saved to History on this device.
           </div>
         )}
         {isAuthenticated && syncState !== 'idle' && (
           <div
-            className="mono-card mb-4"
+            className={`mono-alert mb-4 ${syncState === 'failed' ? 'mono-alert-danger' : syncState === 'synced' ? 'mono-alert-success' : 'mono-alert-info'}`}
             style={{
-              padding: '10px 12px',
               borderColor: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#16a34a' : '#0066ff',
               color: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#166534' : '#0066ff',
             }}
@@ -2725,13 +2716,13 @@ export default function MonoQuickMatch() {
         </div>
 
         {shareStatus && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#0066ff', color: '#0066ff' }}>
+          <div className="mono-alert mono-alert-info mb-4">
             {shareStatus}
           </div>
         )}
 
         {/* Scorecard */}
-        <div className="mono-card mb-8" style={{ padding: '20px 24px' }}>
+        <div className="mono-brutal-panel mb-8" style={{ padding: '20px 24px' }}>
           {isCricket && result.team1Score ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -2768,7 +2759,7 @@ export default function MonoQuickMatch() {
         </div>
 
         {resultSetSummary && (
-          <div className="mono-card mb-8" style={{ padding: '18px 20px' }}>
+          <div className="mono-soft-panel mb-8" style={{ padding: '18px 20px' }}>
             <div className="flex items-center justify-between gap-3 mb-4">
               <p className="text-xs uppercase tracking-widest" style={{ color: '#888', margin: 0 }}>
                 Set breakdown
