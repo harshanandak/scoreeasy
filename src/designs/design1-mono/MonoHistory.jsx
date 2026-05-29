@@ -13,6 +13,7 @@ import {
 } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
+import { sportsTokens } from './theme/sportsTokens';
 import { shareText } from '../../mobile/share';
 
 const QM_KEY = 'se_quickmatches';
@@ -470,6 +471,25 @@ export default function MonoHistory() {
             </button>
           )}
         </nav>
+
+        <section className="mono-history-summary grid grid-cols-3 gap-0 mb-6" aria-label="History summary">
+          {[
+            { label: 'All matches', value: totalCount },
+            { label: 'Quick', value: quickCount },
+            { label: 'Tournaments', value: tournamentCount },
+          ].map((item, index) => (
+            <div
+              key={item.label}
+              style={{
+                padding: '14px 16px',
+                borderLeft: index === 0 ? 0 : `1px solid ${sportsTokens.color.line}`,
+              }}
+            >
+              <div className="font-mono text-2xl font-bold" style={{ color: sportsTokens.color.action }}>{item.value}</div>
+              <div className="text-xs uppercase tracking-widest" style={{ color: sportsTokens.color.inkMuted }}>{item.label}</div>
+            </div>
+          ))}
+        </section>
 
         {historyStatus && (
           <div

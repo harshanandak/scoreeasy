@@ -15,7 +15,13 @@
 }
 
 .mono-card:hover {
-  box-shadow: var(--shadow-sm);
+  border-color: color-mix(in oklch, var(--se-color-line) 72%, var(--se-color-action));
+}
+
+.mono-section-shell {
+  padding: 22px 0;
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
+  border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
 }
 
 .mono-panel {
@@ -49,7 +55,7 @@
   border: 1px dashed color-mix(in oklch, var(--se-color-line) 52%, var(--se-color-surface));
   border-radius: var(--radius);
   box-shadow: none;
-  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
+  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-sport-grid-card::before,
@@ -73,8 +79,43 @@
 
 .mono-sport-grid-card:hover,
 .mono-sport-grid-card-open {
-  background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
-  border-color: color-mix(in oklch, var(--sport-card-accent, var(--se-color-action)) 48%, var(--se-color-line));
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+  border-color: color-mix(in oklch, var(--sport-card-accent, var(--se-color-action)) 42%, var(--se-color-line));
+  box-shadow: var(--shadow-2xs);
+  transform: translate(-1px, -1px);
+}
+
+.mono-sport-grid-card-open {
+  background: color-mix(in oklch, var(--se-color-action-soft) 18%, var(--se-color-surface));
+}
+
+.mono-corner-mark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--sport-card-accent, var(--se-color-action));
+  background: var(--se-color-surface);
+  pointer-events: none;
+}
+
+.mono-corner-mark-tl {
+  top: 6px;
+  left: 6px;
+}
+
+.mono-corner-mark-tr {
+  top: 6px;
+  right: 6px;
+}
+
+.mono-corner-mark-bl {
+  bottom: 6px;
+  left: 6px;
+}
+
+.mono-corner-mark-br {
+  right: 6px;
+  bottom: 6px;
 }
 
 .mono-history-section {
@@ -95,6 +136,12 @@
   background: color-mix(in oklch, var(--se-color-action-soft) 14%, var(--se-color-surface));
   border-color: color-mix(in oklch, var(--se-color-action) 32%, var(--se-color-line));
   box-shadow: none;
+}
+
+.mono-history-summary {
+  border-radius: var(--se-radius-card);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 48%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-surface) 92%, var(--se-color-action-soft));
 }
 
 .mono-history-detail {
@@ -128,6 +175,14 @@
 .mono-stat-row:hover {
   background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
   border-color: color-mix(in oklch, var(--se-color-action) 28%, var(--se-color-line));
+  box-shadow: none;
+}
+
+.mono-stat-strip {
+  border-radius: var(--se-radius-card);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-surface) 94%, var(--se-color-action-soft));
+  box-shadow: none;
 }
 
 .mono-stat-number-card {
