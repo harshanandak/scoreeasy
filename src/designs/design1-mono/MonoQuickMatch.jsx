@@ -2398,7 +2398,7 @@ export default function MonoQuickMatch() {
                   className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
                   disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
                   aria-label={hasQuickButtons ? `${leftName} score` : `Add score for ${leftName}`}
                 >
                   <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
@@ -2428,7 +2428,7 @@ export default function MonoQuickMatch() {
                   className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
                   disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, minHeight: hasQuickButtons ? '180px' : '250px', opacity: 1 }}
+                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
                   aria-label={hasQuickButtons ? `${rightName} score` : `Add score for ${rightName}`}
                 >
                   <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
@@ -2568,7 +2568,7 @@ export default function MonoQuickMatch() {
                 type="button"
                 className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(leftTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, minHeight: '250px' }}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': '250px' }}
                 aria-label={`Add point for ${leftName}`}
               >
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
@@ -2595,7 +2595,7 @@ export default function MonoQuickMatch() {
                 type="button"
                 className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(rightTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, minHeight: '250px' }}
+                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': '250px' }}
                 aria-label={`Add point for ${rightName}`}
               >
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>

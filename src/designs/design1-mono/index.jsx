@@ -806,8 +806,6 @@ function GlobalNavigation({ requestScoringExit }) {
             right: 16px;
             z-index: 220;
             display: inline-flex;
-            flex: 0 0 38px;
-            margin-left: auto;
             width: 38px;
             height: 38px;
             flex-direction: column;

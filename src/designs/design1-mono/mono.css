@@ -87,7 +87,7 @@
 .mono-alert-danger {
   border-color: var(--se-color-danger, #dc2626);
   color: var(--se-color-danger, #dc2626);
-  background: color-mix(in oklch, #fee2e2 36%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-danger-soft, #fee2e2) 36%, var(--se-color-surface));
 }
 
 .mono-alert-success {
@@ -295,7 +295,7 @@
 
 .mono-danger-card {
   border-color: var(--se-color-danger, #dc2626);
-  background: color-mix(in oklch, #fee2e2 52%, var(--se-color-surface));
+  background: color-mix(in oklch, var(--se-color-danger-soft, #fee2e2) 52%, var(--se-color-surface));
 }
 
 .mono-status-card,
@@ -628,6 +628,7 @@
 
 .mono-score-pad {
   position: relative;
+  min-height: var(--score-pad-height, auto);
   border: 1px solid color-mix(in oklch, var(--score-accent, var(--se-color-action)) 38%, var(--se-color-line));
   border-radius: var(--radius);
   background: color-mix(in oklch, var(--se-color-action-soft) 8%, var(--se-color-surface));
@@ -672,6 +673,11 @@
 .mono-score-pad[aria-disabled="true"] {
   transform: none;
   cursor: default;
+}
+
+.mono-score-pad:focus-visible {
+  outline: 2px solid var(--se-color-action);
+  outline-offset: 2px;
 }
 
 .mono-score-meta {
@@ -844,7 +850,7 @@ a:focus-visible {
   }
 
   .mono-score-pad {
-    min-height: 190px !important;
+    min-height: min(var(--score-pad-height, 190px), 190px);
   }
 
   .mono-category-tabs {
