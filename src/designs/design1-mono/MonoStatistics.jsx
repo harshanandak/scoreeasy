@@ -628,7 +628,7 @@ export default function MonoStatistics() {
 
 function StatCard({ label, value }) {
   return (
-    <div className="mono-card mono-stat-card mono-stat-number-card text-center" style={{ padding: '16px 12px' }}>
+    <div className="mono-stat-strip mono-stat-card mono-stat-number-card text-center" style={{ padding: '16px 12px' }}>
       <p className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>{value}</p>
       <p className="text-xs mt-1" style={{ color: '#888' }}>{label}</p>
     </div>
@@ -642,7 +642,7 @@ StatCard.propTypes = {
 
 function InsightCard({ label, value }) {
   return (
-    <div className="mono-card mono-stat-card" style={{ padding: '14px 16px', minHeight: 82 }}>
+    <div className="mono-stat-strip mono-stat-card" style={{ padding: '14px 16px', minHeight: 82 }}>
       <p className="text-xs uppercase mb-2" style={{ color: '#888', letterSpacing: '0.08em' }}>{label}</p>
       <p className="text-sm font-semibold" style={{ color: '#111', lineHeight: 1.35 }}>{value}</p>
     </div>

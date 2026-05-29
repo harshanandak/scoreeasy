@@ -467,16 +467,22 @@ function GridCard({ id, title, description, iconName, selectedSportId, setSelect
     <div
       className={`mono-sport-grid-card transition-all${isOpen ? ' mono-sport-grid-card-open' : ''}`}
       style={{
-        padding: '16px',
+        padding: '18px 20px',
         '--sport-card-accent': accent,
       }}
     >
+      <span className="mono-corner-mark mono-corner-mark-tl" aria-hidden="true" />
+      <span className="mono-corner-mark mono-corner-mark-tr" aria-hidden="true" />
+      <span className="mono-corner-mark mono-corner-mark-bl" aria-hidden="true" />
+      <span className="mono-corner-mark mono-corner-mark-br" aria-hidden="true" />
       <button className="w-full bg-transparent border-none cursor-pointer" style={{ padding: 0 }} onClick={() => setSelectedSportId(isOpen ? null : id)} aria-label={`Select ${title}`}>
-        <div className="flex flex-col items-center text-center">
-            <SportIcon name={iconName} size={28} color={isPriority || isOpen ? accent : sportsTokens.color.inkStrong} />
-            <span className="text-sm font-semibold mb-1 block" style={{ color: sportsTokens.color.inkStrong }}>{title}</span>
-            {description && <span className="text-xs" style={{ color: sportsTokens.color.inkSoft }}>{description}</span>}
-            {savedCount > 0 && <span className="text-xs font-mono" style={{ color: sportsTokens.color.inkMuted }}>{savedCount} saved</span>}
+        <div className="flex flex-col items-start text-left gap-2">
+            <SportIcon name={iconName} size={30} color={isPriority || isOpen ? accent : sportsTokens.color.inkStrong} />
+            <div>
+              <span className="text-sm font-semibold mb-1 block uppercase tracking-wide" style={{ color: sportsTokens.color.inkStrong }}>{title}</span>
+              {description && <span className="text-xs block" style={{ color: sportsTokens.color.inkSoft, lineHeight: 1.35 }}>{description}</span>}
+              {savedCount > 0 && <span className="text-xs font-mono block mt-1" style={{ color: sportsTokens.color.inkMuted }}>{savedCount} saved</span>}
+            </div>
         </div>
       </button>
 
@@ -604,7 +610,7 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
   const targetLayout = layout === 'grid' ? 'tabs' : 'grid';
 
   return (
-    <section className="mb-8" aria-labelledby="choose-sport">
+    <section className="mono-section-shell mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
 
       <div>
