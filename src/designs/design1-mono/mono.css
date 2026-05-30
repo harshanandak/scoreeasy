@@ -385,10 +385,6 @@
   overflow: hidden;
 }
 
-.mono-account-panel > * {
-  position: relative;
-}
-
 .mono-status-card {
   border-color: var(--se-color-action);
   color: var(--se-color-action-strong);
