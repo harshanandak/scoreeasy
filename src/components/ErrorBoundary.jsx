@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component {
 
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <div className="mono-card w-full max-w-lg" style={{ padding: '20px 24px' }}>
+        <div className="mono-table-panel w-full max-w-lg" style={{ padding: '20px 24px' }}>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
             Something went wrong
           </p>
@@ -62,8 +62,9 @@ class ErrorBoundary extends React.Component {
               className="text-xs mb-4"
               style={{
                 color: '#dc2626',
-                background: '#fff5f5',
+                background: 'var(--se-color-surface)',
                 border: '1px solid #fecaca',
+                borderRadius: 'var(--radius)',
                 padding: '10px',
                 overflowX: 'auto',
               }}

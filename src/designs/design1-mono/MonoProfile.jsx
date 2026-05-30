@@ -7,6 +7,7 @@ import { DEFAULT_GUEST_SCORING_PATH } from "../../utils/authRedirect";
 import { useAuth } from "../../hooks/useAuth";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
+import { sportsTokens } from "./theme/sportsTokens";
 
 function getRoleLabel(stats) {
   const played = stats?.totalMatches > 0;
@@ -24,8 +25,8 @@ function getStatsGridClass(stats) {
 
 function LoadingState({ onBack }) {
   return (
-    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition mono-visible">
+      <div className="mono-page-shell mono-profile-shell">
         <button
           onClick={onBack}
           className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
@@ -41,8 +42,8 @@ function LoadingState({ onBack }) {
 
 function RecoveryActions({ cloudAuthAvailable, message, onBack, onNavigate, title }) {
   return (
-    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition mono-visible">
+      <div className="mono-page-shell mono-profile-shell">
         <button
           type="button"
           onClick={onBack}
@@ -52,7 +53,7 @@ function RecoveryActions({ cloudAuthAvailable, message, onBack, onNavigate, titl
           <BackArrow /> Back
         </button>
 
-        <section className="mono-card" style={{ padding: "20px", borderColor: "#111" }}>
+        <section className="mono-table-panel" style={{ padding: "20px" }}>
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#888" }}>
             Profile
           </p>
@@ -174,8 +175,8 @@ export default function MonoProfile() {
   };
 
   return (
-    <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
-      <div className="max-w-2xl mx-auto">
+    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
+      <div className="mono-page-shell mono-profile-shell">
         <button
           onClick={() => navigate("/")}
           className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
@@ -184,7 +185,7 @@ export default function MonoProfile() {
           <BackArrow /> Back
         </button>
 
-        <section className="mb-8">
+        <section className="mono-page-header">
           <div className="flex items-center gap-4 mb-2">
             {displayUser?.avatarUrl ? (
               <img
@@ -193,8 +194,8 @@ export default function MonoProfile() {
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: "50%",
-                  border: "1px solid #eee",
+                  borderRadius: sportsTokens.radius.lg,
+                  border: `1px solid ${sportsTokens.color.line}`,
                 }}
               />
             ) : (
@@ -202,9 +203,9 @@ export default function MonoProfile() {
                 style={{
                   width: 48,
                   height: 48,
-                  borderRadius: "50%",
-                  background: "#f0f0f0",
-                  border: "1px solid #eee",
+                  borderRadius: sportsTokens.radius.lg,
+                  background: sportsTokens.color.surface,
+                  border: `1px solid ${sportsTokens.color.line}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -234,8 +235,6 @@ export default function MonoProfile() {
           )}
         </section>
 
-        <hr className="mono-divider mb-8" />
-
         <section className="mb-8">
           <h2
             className="text-xs uppercase tracking-widest font-normal mb-4"
@@ -244,26 +243,26 @@ export default function MonoProfile() {
             Stats
           </h2>
           <div className={getStatsGridClass(stats)}>
-            <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
+            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
                 {stats?.totalMatches ?? "-"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Matches</p>
             </div>
-            <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
+            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
                 {stats?.wins ?? "-"}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Wins</p>
             </div>
-            <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
+            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
               <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
                 {stats?.winRate == null ? "-" : `${stats.winRate}%`}
               </p>
               <p className="text-xs" style={{ color: "#888" }}>Win Rate</p>
             </div>
             {stats?.gamesOperated > 0 && (
-              <div className="mono-card" style={{ padding: "16px", textAlign: "center" }}>
+              <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
                 <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
                   {stats.gamesOperated}
                 </p>
@@ -283,7 +282,7 @@ export default function MonoProfile() {
               >
                 Sports
               </h2>
-              <div style={{ overflowX: "auto" }}>
+              <div className="mono-table-panel" style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
@@ -343,9 +342,9 @@ export default function MonoProfile() {
               >
                 Recent Matches
               </h2>
-              <div className="space-y-3">
+              <div className="mono-history-list flex flex-col">
                 {recentMatches.map((m) => (
-                  <div key={m._id} className="mono-card" style={{ padding: "12px 16px" }}>
+                  <div key={m._id} className="mono-history-row" style={{ padding: "14px 0" }}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs uppercase" style={{ color: "#888" }}>
                         {m.sport}
@@ -382,13 +381,12 @@ export default function MonoProfile() {
           </>
         )}
 
-        <hr className="mono-divider mb-8" />
         <Link
           to="/users/search"
-          className="text-sm"
-          style={{ color: "#0066ff" }}
+          className="mono-btn"
+          style={{ minHeight: 44, padding: "10px 14px", color: sportsTokens.color.action, borderColor: sportsTokens.color.action }}
         >
-          Find players ?
+          Find players
         </Link>
       </div>
     </div>
