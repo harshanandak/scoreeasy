@@ -610,7 +610,7 @@ export default function MonoHistory() {
             placeholder="Search team, sport, winner, tournament..."
           />
 
-          <div className="mono-control-grid sm:grid-cols-3">
+          <div className="mono-control-grid">
             <label className="text-xs" style={{ color: '#666' }}>
               <span className="block mb-1">Sport</span>
               <select

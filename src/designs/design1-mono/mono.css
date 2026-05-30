@@ -54,6 +54,12 @@
   gap: 12px;
 }
 
+@media (min-width: 640px) {
+  .mono-control-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .mono-section-label {
   font-size: 0.75rem;
   text-transform: uppercase;
