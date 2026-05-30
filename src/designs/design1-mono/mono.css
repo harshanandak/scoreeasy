@@ -31,6 +31,45 @@
   border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
 }
 
+.mono-page-shell {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.mono-page-header {
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 30%, var(--se-color-surface));
+}
+
+.mono-control-band {
+  padding: 16px 0 20px;
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
+  border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
+}
+
+.mono-control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.mono-section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--se-color-ink-muted);
+}
+
+.mono-tactile {
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-tactile:hover {
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
 .mono-panel {
   box-sizing: border-box;
   max-width: 100%;
@@ -110,6 +149,10 @@
 .mono-sport-format-card:hover {
   background: color-mix(in oklch, var(--se-color-action-soft) 10%, var(--se-color-surface));
   border-color: color-mix(in oklch, var(--se-color-action) 42%, var(--se-color-line));
+}
+
+.mono-play-browse {
+  padding: 20px 0 0;
 }
 
 .mono-setup-option {
@@ -238,13 +281,22 @@
 
 .mono-history-summary {
   border-radius: var(--se-radius-card);
-  border: 1px solid color-mix(in oklch, var(--se-color-line) 48%, var(--se-color-surface));
-  background: color-mix(in oklch, var(--se-color-surface) 92%, var(--se-color-action-soft));
+  border: 1px solid var(--se-color-line);
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
 }
 
 .mono-history-detail {
   box-shadow: none;
   border-radius: var(--se-radius-card);
+}
+
+.mono-history-list {
+  border-top: 1px solid var(--se-color-line);
+}
+
+.mono-history-list .mono-history-row:last-child {
+  border-bottom: 1px solid var(--se-color-line);
 }
 
 .mono-stat-card {
@@ -276,6 +328,14 @@
   box-shadow: none;
 }
 
+.mono-stat-list {
+  border-top: 1px solid var(--se-color-line);
+}
+
+.mono-stat-list .mono-stat-row:last-child {
+  border-bottom: 1px solid var(--se-color-line);
+}
+
 .mono-stat-strip {
   border-radius: var(--se-radius-card);
   border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, var(--se-color-surface));
@@ -284,7 +344,21 @@
 }
 
 .mono-stat-number-card {
-  background: color-mix(in oklch, var(--se-color-action-soft) 7%, var(--se-color-surface));
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-stat-insight-grid .mono-stat-strip {
+  border-radius: var(--radius);
+  background: transparent;
+}
+
+.mono-table-panel {
+  overflow: hidden;
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+  background: var(--se-color-surface);
+  box-shadow: none;
 }
 
 .mono-status-card {

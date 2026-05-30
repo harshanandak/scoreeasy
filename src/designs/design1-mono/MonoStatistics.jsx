@@ -339,15 +339,15 @@ export default function MonoStatistics() {
   ];
 
   return (
-    <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-2xl mx-auto">
+    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
+      <div className="mono-page-shell">
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
           <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1" style={{ color: '#888' }} aria-label="Go back to home">
             <BackArrow /> Home
           </button>
         </nav>
 
-        <h1 className="text-xl font-semibold tracking-tight mb-8" style={{ color: '#111' }}>
+        <h1 className="mono-page-header text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
           Statistics
         </h1>
 
@@ -376,7 +376,7 @@ export default function MonoStatistics() {
               <StatCard label="Teams" value={totalTeams} />
             </div>
 
-            <div className="grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+            <div className="mono-stat-insight-grid grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
               <InsightCard label="Top team" value={quickInsights.topTeam} />
               <InsightCard label="Last 5 form" value={quickInsights.form} />
               <InsightCard label="Current streak" value={quickInsights.streak} />
@@ -390,10 +390,10 @@ export default function MonoStatistics() {
 
             <hr className="mono-divider mb-6" />
 
-            <div className="flex flex-col gap-3">
+            <div className="mono-stat-list flex flex-col">
               {/* Show all sports with data */}
               {sportsWithData.map(sportData => (
-                <div key={sportData.sport.id} className="mono-card mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div key={sportData.sport.id} className="mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
                     <SportIcon name={sportData.sport.name} size={24} color="var(--se-color-action)" />
                     <div>
@@ -411,7 +411,7 @@ export default function MonoStatistics() {
 
               {/* Quick matches */}
               {quickMatches.length > 0 && (
-                <div className="mono-card mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
+                <div className="mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
                     <span className="text-xl">⚡</span>
                     <div>
@@ -557,7 +557,7 @@ export default function MonoStatistics() {
                   <StatCard label="Draws" value={quickMatches.filter((match) => isDrawWinner(resolveWinner(match, getQuickScore(match)))).length} />
                 </div>
 
-                <div className="mono-card mono-stat-panel mb-6" style={{ padding: 0, overflow: 'hidden' }}>
+                <div className="mono-table-panel mono-stat-panel mb-6" style={{ padding: 0 }}>
                   <div className="flex items-center justify-between gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid #eee' }}>
                     <h2 className="text-sm font-semibold" style={{ color: '#111', margin: 0 }}>Quick team form</h2>
                     <span className="text-xs" style={{ color: '#888' }}>Win rate and margin</span>
@@ -583,9 +583,9 @@ export default function MonoStatistics() {
                   </div>
                 )}
                 <h2 className="text-sm font-semibold mb-3" style={{ color: '#111' }}>Recent quick matches</h2>
-                <div className="flex flex-col gap-2">
+                <div className="mono-stat-list flex flex-col">
                   {quickMatches.map(qm => (
-                    <div key={qm.id} className="mono-card mono-stat-card mono-stat-row" style={{ padding: '12px 16px' }}>
+                    <div key={qm.id} className="mono-stat-card mono-stat-row" style={{ padding: '12px 16px' }}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
@@ -827,7 +827,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
   if (data.length === 0) return <EmptyState icon={sportIcon} label={`No ${sportName.toLowerCase()} data yet`} />;
 
   return (
-    <div className="mono-card mono-stat-panel" style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="mono-table-panel mono-stat-panel" style={{ padding: 0 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
         <caption className="sr-only">{sportName} team statistics</caption>
         <thead>
