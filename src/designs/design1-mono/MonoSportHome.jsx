@@ -610,10 +610,10 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
   const targetLayout = layout === 'grid' ? 'tabs' : 'grid';
 
   return (
-    <section className="mono-section-shell mb-8" aria-labelledby="choose-sport">
+    <section className="mono-section-shell mono-play-browse mb-8" aria-labelledby="choose-sport">
       <PriorityFastStart onStartSport={onStartSport} />
 
-      <div>
+      <div className="mono-control-band">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 id="choose-sport" className="text-xs uppercase tracking-widest font-normal mb-1" style={{ color: sportsTokens.color.inkMuted }}>
@@ -635,7 +635,7 @@ function SportChooserFrame({ children, layout, onSearchChange, onStartSport, sea
             />
             <button
               onClick={switchLayout}
-              className="mono-btn flex items-center justify-center"
+              className="mono-btn mono-tactile flex items-center justify-center"
               aria-label={`Switch to ${targetLayout} layout`}
               style={{ width: 48, minWidth: 48, minHeight: 48, padding: 0, fontSize: '0.8125rem', fontWeight: 700, borderRadius: innerBoxRadius }}
               title={`Switch to ${targetLayout}`}
@@ -763,7 +763,7 @@ export default function MonoSportHome() {
 
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-7xl mx-auto">
+      <div className="mono-page-shell">
         <SportChooserFrame
           layout={layout}
           onSearchChange={handleSearchChange}

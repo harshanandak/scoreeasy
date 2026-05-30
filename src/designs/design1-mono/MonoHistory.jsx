@@ -440,9 +440,9 @@ export default function MonoHistory() {
   };
 
   return (
-    <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-2xl mx-auto">
-        <nav className="flex items-center justify-between mb-6" aria-label="History navigation">
+    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
+      <div className="mono-page-shell">
+        <nav className="mono-page-header flex items-center justify-between" aria-label="History navigation">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/')}
@@ -459,10 +459,10 @@ export default function MonoHistory() {
           {clearableCount > 0 && (
             <button
               onClick={confirmClearMutableHistory}
-            className="mono-btn font-swiss text-xs"
-            style={{
-              border: '1.5px solid #dc2626',
-              color: '#dc2626',
+              className="mono-btn font-swiss text-xs"
+              style={{
+                border: '1.5px solid #dc2626',
+                color: '#dc2626',
                 minHeight: 40,
                 padding: '0 10px',
               }}
@@ -597,7 +597,7 @@ export default function MonoHistory() {
           ))}
         </div>
 
-        <section className="mono-history-section mb-6">
+        <section className="mono-control-band mb-6">
           <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2" style={{ color: '#888' }}>
             Find match
           </label>
@@ -610,7 +610,7 @@ export default function MonoHistory() {
             placeholder="Search team, sport, winner, tournament..."
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="mono-control-grid">
             <label className="text-xs" style={{ color: '#666' }}>
               <span className="block mb-1">Sport</span>
               <select
@@ -715,9 +715,9 @@ export default function MonoHistory() {
             </div>
           </section>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="mono-history-list flex flex-col">
             {filteredEntries.map((entry) => (
-              <div key={entry.id} className="mono-card mono-history-row" style={{ padding: '14px 0' }}>
+              <div key={entry.id} className="mono-card mono-history-row" style={{ padding: '16px 0' }}>
                 <div className="flex items-start justify-between gap-3">
                   <button
                     type="button"
@@ -790,7 +790,7 @@ export default function MonoHistory() {
         )}
 
         {selectedEntry && (
-          <div className="mono-card mono-history-detail mt-6" style={{ padding: '16px' }}>
+          <div className="mono-table-panel mono-history-detail mt-6" style={{ padding: '16px' }}>
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>Match details</p>
             <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
