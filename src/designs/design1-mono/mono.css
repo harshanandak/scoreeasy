@@ -42,6 +42,10 @@
   border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 30%, var(--se-color-surface));
 }
 
+.mono-profile-shell {
+  max-width: 48rem;
+}
+
 .mono-control-band {
   padding: 16px 0 20px;
   border-top: 1px solid color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface));
@@ -145,6 +149,12 @@
   border-color: color-mix(in oklch, var(--se-color-action) 48%, var(--se-color-line));
   color: var(--se-color-action-strong);
   background: color-mix(in oklch, var(--se-color-action-soft) 28%, var(--se-color-surface));
+}
+
+.mono-alert-warning {
+  border-color: var(--se-color-warning, #a16207);
+  color: color-mix(in oklch, var(--se-color-warning, #a16207) 82%, black);
+  background: color-mix(in oklch, var(--se-color-warning-soft, #fef3c7) 48%, var(--se-color-surface));
 }
 
 .mono-sport-format-card {
@@ -365,6 +375,14 @@
   border-radius: var(--se-radius-card);
   background: var(--se-color-surface);
   box-shadow: none;
+}
+
+.mono-account-panel {
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+  background: var(--se-color-surface);
+  box-shadow: var(--shadow-2xs);
+  overflow: hidden;
 }
 
 .mono-status-card {

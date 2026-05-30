@@ -22,7 +22,7 @@ export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
       className={`min-h-screen flex flex-col items-center justify-center px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
       style={{ background: sportsTokens.color.canvas }}
     >
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <SportIcon name="Volleyball" size={24} color={sportsTokens.color.action} />
@@ -38,7 +38,7 @@ export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
           </p>
         </div>
 
-        <div style={{ border: sportsTokens.component.card.border, borderRadius: sportsTokens.component.card.radius, boxShadow: sportsTokens.shadow.card, background: sportsTokens.color.surface, overflow: "hidden" }}>
+        <div className="mono-account-panel">
           {children}
         </div>
 

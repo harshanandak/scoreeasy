@@ -219,6 +219,8 @@ export const sportsCssVariables = {
   '--se-color-ink-faint': sportsTokens.color.inkFaint,
   '--se-color-line': sportsTokens.color.line,
   '--se-color-line-strong': sportsTokens.color.lineStrong,
+  '--se-color-warning': sportsTokens.color.warning,
+  '--se-color-warning-soft': sportsTokens.color.warningSoft,
   '--se-color-danger': sportsTokens.color.danger,
   '--se-color-danger-soft': sportsTokens.color.dangerSoft,
   '--se-color-inverse': sportsTokens.color.inverse,

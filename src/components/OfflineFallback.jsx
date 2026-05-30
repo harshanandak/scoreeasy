@@ -58,13 +58,11 @@ export default function OfflineFallback({ onNavigate = null }) {
 
   return (
     <div
-      className="mono-card"
+      className="mono-alert mono-alert-warning"
       style={{
         margin: '8px auto 0',
         maxWidth: '640px',
         padding: '12px',
-        borderColor: '#f59e0b',
-        color: '#92400e',
       }}
       role="status"
       aria-live="polite"
@@ -72,7 +70,7 @@ export default function OfflineFallback({ onNavigate = null }) {
       <p className="text-xs uppercase tracking-widest" style={{ marginBottom: '4px' }}>
         Offline mode
       </p>
-      <p className="text-sm" style={{ color: '#444', marginBottom: '10px' }}>
+      <p className="text-sm" style={{ color: 'var(--se-color-ink-soft)', marginBottom: '10px' }}>
         Scoring stays available locally. Cloud sync and sign-in will resume when the connection is back.
         {' '}Saved on this device: {snapshot.quickCount} quick {pluralize(snapshot.quickCount, 'match', 'matches')} and {snapshot.tournamentCount} {pluralize(snapshot.tournamentCount, 'tournament', 'tournaments')}.
         {snapshot.lastQuick ? ` Latest quick match: ${snapshot.lastQuick.team1} vs ${snapshot.lastQuick.team2}.` : ''}
