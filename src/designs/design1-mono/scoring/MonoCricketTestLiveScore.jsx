@@ -550,7 +550,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -584,7 +584,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '40px' }}>
           {saveWarning && (
-            <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+            <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
@@ -600,7 +600,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           )}
 
           {/* Innings summary table */}
-          <div className="mono-card mb-8" style={{ padding: '16px 20px' }}>
+          <div className="mono-soft-panel mb-8" style={{ padding: '16px 20px' }}>
             <div className="flex justify-between text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
               <span>Team</span>
               <div className="flex gap-8">
@@ -656,7 +656,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}
           </div>
         )}
@@ -710,7 +710,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         </div>
 
         {/* Innings summary cards */}
-        <div className="mono-card mb-6" style={{ padding: '12px 16px' }}>
+        <div className="mono-score-mini mb-6" style={{ padding: '12px 16px' }}>
           {innings.map((inn, i) => {
             if (!inn.teamId) return null;
             const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;

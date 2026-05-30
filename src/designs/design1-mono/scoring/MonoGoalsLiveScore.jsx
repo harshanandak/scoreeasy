@@ -399,7 +399,7 @@ export default function MonoGoalsLiveScore() {
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
         {saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}
           </div>
         )}
@@ -453,10 +453,10 @@ export default function MonoGoalsLiveScore() {
         </div>
 
         {/* Score cards - side by side */}
-        <div className="flex items-stretch gap-4 mb-8" style={{ minHeight: '280px' }}>
+        <div className="mono-score-grid mb-8" style={{ minHeight: '280px' }}>
           {/* Left Team Card */}
           <div
-            className="flex-1 flex flex-col items-center justify-center mono-card"
+            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
             style={{ padding: '24px 16px' }}
             role="region"
             aria-label={`${leftName} scoring`}
@@ -499,7 +499,7 @@ export default function MonoGoalsLiveScore() {
 
           {/* Right Team Card */}
           <div
-            className="flex-1 flex flex-col items-center justify-center mono-card"
+            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
             style={{ padding: '24px 16px' }}
             role="region"
             aria-label={`${rightName} scoring`}
@@ -555,7 +555,7 @@ export default function MonoGoalsLiveScore() {
         )}
 
         {/* Bottom bar */}
-        <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
+        <div className="mono-control-strip pt-4">
           <button
             onClick={saveMatch}
             disabled={scoringPrompt.isInteractionLocked}

@@ -461,7 +461,7 @@ export default function MonoTournamentSetup() {
           New Tournament
         </h1>
         {saveWarning && (
-          <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+          <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}
           </div>
         )}
@@ -525,7 +525,7 @@ export default function MonoTournamentSetup() {
               <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                 Tournament type
               </span>
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   onClick={() => {
                     setTournamentType('round-robin');
@@ -678,7 +678,7 @@ export default function MonoTournamentSetup() {
 
             {/* Pre-selected format badge */}
             {preselectedFormat && isCricket && (
-              <div className="mb-4 p-3 mono-card" style={{ background: '#f0f6ff', borderColor: '#bfdbfe' }}>
+              <div className="mb-4 p-3 mono-alert mono-alert-info">
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>Format</span>
@@ -762,7 +762,7 @@ export default function MonoTournamentSetup() {
                     <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                       Format
                     </span>
-                    <div className="mono-card p-4 mb-2" style={{ background: '#f0f6ff', borderColor: '#bfdbfe' }}>
+                    <div className="mono-alert mono-alert-info p-4 mb-2">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-semibold" style={{ color: '#111' }}>
@@ -1329,7 +1329,7 @@ export default function MonoTournamentSetup() {
                     </span>
 
                     <div
-                      className="mono-card p-3 mb-3"
+                      className="mono-setup-option p-3 mb-3"
                       style={{ background: knockoutSameFormat ? '#f8f8f8' : '#fff' }}
                     >
                       <p className="text-sm" style={{ color: '#111' }}>
@@ -1373,7 +1373,7 @@ export default function MonoTournamentSetup() {
 
                     {/* Playoff format options (when customized) */}
                     {!knockoutSameFormat && sportConfig?.engine === 'sets' && sportConfig.config.setFormats && (
-                      <div className="mt-2 p-4 mono-card">
+                      <div className="mt-2 p-4 mono-soft-panel">
                         <div className="flex gap-2 mb-3">
                           <button
                             onClick={() => setKnockoutFormat(prev => ({ ...prev, type: 'best-of', sets: 3, points: prev?.points || sportConfig.config.pointsPerSet }))}
@@ -1420,7 +1420,7 @@ export default function MonoTournamentSetup() {
                     )}
 
                     {!knockoutSameFormat && sportConfig?.engine === 'goals' && (
-                      <div className="mt-2 p-4 mono-card">
+                      <div className="mt-2 p-4 mono-soft-panel">
                         <div className="flex gap-2 mb-3">
                           <button
                             onClick={() => setKnockoutFormat({ mode: 'free' })}
@@ -1576,7 +1576,7 @@ export default function MonoTournamentSetup() {
               </button>
             </div>
 
-            <div className="mono-card mb-6" style={{ padding: '16px 20px' }}>
+            <div className="mono-setup-summary mb-6" style={{ padding: '16px 20px' }}>
               <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
                 Summary
               </h3>
@@ -1622,7 +1622,7 @@ export default function MonoTournamentSetup() {
               Start Tournament
             </button>
 
-            <div className="mono-card mb-6" style={{ padding: '16px 20px', background: '#f8fafc' }}>
+            <div className="mono-schedule-preview mb-6" style={{ padding: '16px 20px' }}>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <h3 className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
                   Schedule preview
@@ -1670,7 +1670,7 @@ export default function MonoTournamentSetup() {
               {showRoster && (
                 <>
               {/* Squad vs playing info */}
-              <div className="mb-4 p-3 mono-card" style={{ background: '#f8fafc' }}>
+              <div className="mb-4 p-3 mono-soft-panel">
                 <p className="text-xs" style={{ color: '#555' }}>
                   <strong>Squad</strong> = all available players for the tournament.
                   <strong> Playing {squadLimit.playing}</strong> = picked from the squad each match.
@@ -1708,7 +1708,7 @@ export default function MonoTournamentSetup() {
               })()}
 
               {teams.map((team, idx) => (
-                <div key={team.id} className="mono-card p-4 mb-3">
+                <div key={team.id} className="mono-row-panel p-4 mb-3">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium" style={{ color: '#111' }}>{team.name}</h4>
                     <div className="text-right">

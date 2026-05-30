@@ -578,7 +578,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
       {saveWarning && (
-        <div className="mono-card mb-4" style={{ padding: '10px 12px', borderColor: '#dc2626', color: '#dc2626' }}>
+        <div className="mono-alert mono-alert-danger mb-4">
           {saveWarning}
         </div>
       )}
@@ -630,14 +630,14 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </output>
 
       {/* Score cards — S6819: use <button> instead of role="button" div */}
-      <div className="flex items-stretch gap-4 mb-8" style={{ minHeight: '250px' }}>
+      <div className="mono-score-grid mb-8" style={{ minHeight: '250px' }}>
         {/* Left Team */}
         <button
           type="button"
           onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
           aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
           disabled={!canScoreCurrentSet}
-          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
+          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
           style={{
             touchAction: 'manipulation',
             borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
@@ -665,7 +665,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
           aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
           disabled={!canScoreCurrentSet}
-          className="flex-1 mono-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all bg-transparent"
+          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
           style={{
             touchAction: 'manipulation',
             borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
@@ -712,7 +712,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
             return (
               <div
                 key={setLabel}
-                className="flex items-center justify-between px-4 py-2 mono-card text-sm"
+                className="flex items-center justify-between px-4 py-2 mono-row-panel text-sm"
                 style={{
                   borderColor: isActive ? '#0066ff' : '#eee',
                   backgroundColor: set.completed ? '#fafafa' : '#fff',
@@ -729,7 +729,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </div>
 
       {/* Bottom bar */}
-      <div>
+      <div className="mono-control-strip pt-4">
         <button
           onClick={saveMatch}
           disabled={scoringPrompt.isInteractionLocked}
