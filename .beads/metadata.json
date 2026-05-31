@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "scoreeasy",
+  "project_id": "e7c17a45-c978-44ba-b672-6205e0b7e0e0"
+}
