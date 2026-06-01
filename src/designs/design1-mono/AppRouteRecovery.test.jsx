@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
@@ -136,5 +136,11 @@ describe('app route recovery', () => {
 
     expect(await screen.findByRole('heading', { name: 'This Badminton screen is not available' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Choose another sport' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+    });
   });
 });

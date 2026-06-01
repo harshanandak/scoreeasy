@@ -53,6 +53,7 @@ function renderQuickMatchWithSwitcher(initialEntry = '/volleyball/quick') {
 describe('MonoQuickMatch setup clarity', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
+    globalThis.history.replaceState(null, '', '/');
   });
 
   it('opens volleyball quick match on labeled teams with an immediate start path', async () => {
@@ -73,7 +74,8 @@ describe('MonoQuickMatch setup clarity', () => {
   });
 
   it('falls back to the sport chooser when direct-entry setup back has no prior route', async () => {
-    renderQuickMatchWithLocation('/football/quick');
+    globalThis.history.replaceState({ idx: 0 }, '', '/football/quick');
+    renderQuickMatchWithLocation({ pathname: '/football/quick', key: 'redirected-entry' });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Go back' }));
 

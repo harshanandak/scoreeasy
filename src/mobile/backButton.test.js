@@ -68,6 +68,10 @@ describe('isProtectedScoringRoute', () => {
     expect(isProtectedScoringRoute('/volleyball/quick')).toBe(true);
   });
 
+  it('does not protect game resume recovery routes', () => {
+    expect(isProtectedScoringRoute('/game/stale-draft')).toBe(false);
+  });
+
   it('does not match normal navigation routes', () => {
     expect(isProtectedScoringRoute('/play')).toBe(false);
     expect(isProtectedScoringRoute('/history')).toBe(false);

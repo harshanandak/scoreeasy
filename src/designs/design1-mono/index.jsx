@@ -166,8 +166,7 @@ const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
   const segments = pathname.split('/').filter(Boolean);
-  return segments.includes('game') ||
-    segments.includes('quick') ||
+  return segments.includes('quick') ||
     segments.some((segment, index) => (
       segment === 'tournament' &&
       segments[index + 2] === 'match' &&

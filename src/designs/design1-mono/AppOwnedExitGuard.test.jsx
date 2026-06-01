@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Design1Mono from './index';
 
@@ -73,5 +73,19 @@ describe('app-owned scoring exit guard', () => {
     expect(pushState).not.toHaveBeenCalled();
 
     unmount();
+  });
+
+  it('does not install scoring exit guards on game resume recovery routes', async () => {
+    const addEventListener = vi.spyOn(globalThis, 'addEventListener');
+
+    render(
+      <MemoryRouter initialEntries={['/game/stale-draft']}>
+        <Design1Mono />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
+    expect(nativeBackButtonMock.installNativeBackButtonGuard).not.toHaveBeenCalled();
+    expect(addEventListener).not.toHaveBeenCalledWith('popstate', expect.any(Function));
   });
 });

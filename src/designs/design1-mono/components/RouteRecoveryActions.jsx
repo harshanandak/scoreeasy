@@ -14,7 +14,7 @@ export default function RouteRecoveryActions({
   const sport = sportId ? getSportById(sportId) : null;
   const quickPath = sport ? `/${sport.id}/quick` : null;
   const tournamentPath = sport ? `/${sport.id}/tournament` : null;
-  const playPath = sport ? `/play?sport=${sport.id}` : '/play';
+  const playPath = '/play';
   const effectivePrimaryPath = primaryPath || tournamentPath || playPath;
   const effectivePrimaryLabel = primaryLabel || (sport ? `Back to ${sport.name} tournaments` : 'Play');
 

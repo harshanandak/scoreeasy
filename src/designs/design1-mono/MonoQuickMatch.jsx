@@ -1364,8 +1364,9 @@ export default function MonoQuickMatch() {
   const handleSetupBack = () => {
     if (isTeamSetupStep) {
       const browserHistoryIndex = globalThis.history?.state?.idx;
-      const hasPriorRoute = location.key !== 'default' ||
-        (typeof browserHistoryIndex === 'number' && browserHistoryIndex > 0);
+      const hasPriorRoute = typeof browserHistoryIndex === 'number'
+        ? browserHistoryIndex > 0
+        : location.key !== 'default';
       if (hasPriorRoute) {
         navigate(-1);
         return;
