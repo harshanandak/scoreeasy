@@ -131,6 +131,26 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
+  it('keeps older completed quick matches without explicit completed status as returning state', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'legacy-result-1',
+      sport: 'football',
+      winner: 'Team A',
+      completedAt: '2026-05-20T12:00:00.000Z',
+      team1: 'Team A',
+      team2: 'Team B',
+    }]));
+
+    const state = loadAppEntryState();
+
+    expect(loadQuickMatchSummaries()).toHaveLength(1);
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBeNull();
+    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+  });
+
   it('ignores expired cricket Test quick matches before choosing an app-entry route', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
