@@ -66,15 +66,15 @@ describe('DashboardLanding start flow', () => {
     expect(screen.getByText('New tournament setup')).toBeInTheDocument();
   });
 
-  it('routes empty existing-user New tournament to tournament setup instead of generic play', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'volleyball', team1: 'A', team2: 'B' }]));
+  it('routes empty existing-user New tournament to the recent match sport setup', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' }]));
 
     renderDashboard();
 
     fireEvent.click(await screen.findByRole('button', { name: 'New tournament' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/tournament/new');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/tournament/new');
     });
     expect(screen.getByText('New tournament setup')).toBeInTheDocument();
   });

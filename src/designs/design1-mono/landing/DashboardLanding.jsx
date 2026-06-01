@@ -11,7 +11,7 @@ import SportIcon from './sportIcons';
 
 const QM_KEY = 'se_quickmatches';
 const MIN_TOURNAMENT_TEAMS = 2;
-const DEFAULT_NEW_TOURNAMENT_PATH = '/volleyball/tournament/new';
+const FALLBACK_TOURNAMENT_SPORT_ID = 'volleyball';
 
 /* ─── Tokens ─── */
 const t = {
@@ -132,6 +132,23 @@ function getSportFromName(name) {
   if (!name) return null;
   const lower = name.toLowerCase();
   return SPORT_NAMES.find(s => lower.includes(s.toLowerCase())) || null;
+}
+
+function getNewTournamentPath({
+  activeTournaments = [],
+  displayTournaments = [],
+  favoriteSports = [],
+  recentMatches = [],
+} = {}) {
+  const candidateIds = [
+    recentMatches[0]?.sport,
+    activeTournaments[0]?.sportId,
+    displayTournaments[0]?.sportId,
+    favoriteSports[0]?.id,
+    FALLBACK_TOURNAMENT_SPORT_ID,
+  ];
+  const sportId = candidateIds.find((id) => id && getSportById(id)) || FALLBACK_TOURNAMENT_SPORT_ID;
+  return `/${sportId}/tournament/new`;
 }
 
 function getWinnerLabel(winner) {
@@ -553,6 +570,12 @@ function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recen
     : allSportsList.slice(0, 3);
   const otherSports = allSportsList.filter(sp => !favoriteSports.some(f => f.id === sp.id));
   const visibleOthers = showAllSports ? otherSports : otherSports.slice(0, 4);
+  const newTournamentPath = getNewTournamentPath({
+    activeTournaments,
+    displayTournaments,
+    favoriteSports,
+    recentMatches,
+  });
 
   return (
     <div style={{ maxWidth: 672, margin: '0 auto', padding: '40px 24px 56px' }}>
@@ -638,7 +661,7 @@ function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recen
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button type="button" onClick={() => navigate('/play')} style={btnPrimary}>Start a game</button>
-            <button type="button" onClick={() => navigate(DEFAULT_NEW_TOURNAMENT_PATH)} style={btnSecondary}>New tournament</button>
+            <button type="button" onClick={() => navigate(newTournamentPath)} style={btnSecondary}>New tournament</button>
           </div>
         </div>
       )}
