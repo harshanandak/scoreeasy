@@ -1,9 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ENTRY_PATH,
   PUBLIC_MARKETING_PATH,
   getAppEntryTarget,
   hasReturningPlayerState,
+  loadActiveSessionSummaries,
   loadAppEntryState,
   loadReturningPlayerState,
 } from './appEntry';
@@ -15,6 +16,7 @@ describe('app entry contract', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     globalThis.localStorage.clear();
   });
 
@@ -65,6 +67,23 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe('/volleyball/quick');
   });
 
+  it('ignores expired generic quick-match drafts before choosing an app-entry route', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
+    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+      phase: 'scoring',
+      sport: 'volleyball',
+      updatedAt: '2026-05-30T12:00:00.000Z',
+    }));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+
+    const state = loadAppEntryState();
+
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBeNull();
+    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+  });
+
   it('detects tennis quick-live drafts and returns their live route', () => {
     globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
       id: 'match-1',
@@ -79,6 +98,24 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
   });
 
+  it('ignores expired tennis quick-live drafts before choosing an app-entry route', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
+    globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
+      id: 'match-1',
+      sport: 'tennis',
+      status: 'in-progress',
+      updatedAt: '2026-05-30T12:00:00.000Z',
+    }));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+
+    const state = loadAppEntryState();
+
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBeNull();
+    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+  });
+
   it('checks saved tournaments without rewriting storage during app entry', () => {
     const storedTournament = [{ id: 'cup-1', name: 'Office Cup' }];
     globalThis.localStorage.setItem('se_volleyball', JSON.stringify(storedTournament));
@@ -91,5 +128,20 @@ describe('app entry contract', () => {
     globalThis.localStorage.setItem('se_volleyball', JSON.stringify({ id: 'bad-cup' }));
 
     expect(loadReturningPlayerState()).toBe(false);
+  });
+
+  it('keeps corrupt session storage from hiding other returning-player state', () => {
+    globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+
+    expect(loadActiveSessionSummaries()).toEqual([]);
+    expect(loadReturningPlayerState()).toBe(true);
+  });
+
+  it('does not route legacy history-only users to an empty app dashboard', () => {
+    globalThis.localStorage.setItem('gs_history', JSON.stringify([{ id: 'legacy-1' }]));
+
+    expect(loadReturningPlayerState()).toBe(false);
+    expect(getAppEntryTarget(loadAppEntryState())).toBe(PUBLIC_MARKETING_PATH);
   });
 });

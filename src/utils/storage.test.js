@@ -1,6 +1,7 @@
 import {
   saveData,
   loadData,
+  listDataKeys,
   clearData,
   safeSave,
   getStorageUsage,
@@ -22,6 +23,7 @@ import {
   isStaleQuickMatchDraft,
   saveStatistics,
   loadAllStatistics,
+  createMemoryFallback,
 } from './storage';
 
 beforeEach(() => {
@@ -89,6 +91,26 @@ describe('saveData / loadData / clearData', () => {
     saveData('key', 'first');
     saveData('key', 'second');
     expect(loadData('key')).toBe('second');
+  });
+
+  it('lists keys from the active storage backend', () => {
+    saveData('se_key_one', { ok: true });
+    saveData('se_key_two', { ok: true });
+
+    expect(listDataKeys()).toEqual(expect.arrayContaining(['se_key_one', 'se_key_two']));
+  });
+
+  it('memory fallback supports key enumeration', () => {
+    const fallback = createMemoryFallback();
+    fallback.setItem('se_memory_one', '1');
+    fallback.setItem('se_memory_two', '2');
+
+    expect(fallback.length).toBe(2);
+    expect([fallback.key(0), fallback.key(1)]).toEqual(expect.arrayContaining([
+      'se_memory_one',
+      'se_memory_two',
+    ]));
+    expect(fallback.key(2)).toBeNull();
   });
 });
 

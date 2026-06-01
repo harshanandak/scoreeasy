@@ -1,23 +1,13 @@
 import { getSportsList } from '../models/sportRegistry';
-import { loadData } from './storage';
+import { isStaleQuickMatchDraft, listDataKeys, loadData } from './storage';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
-import { getActiveSessions, loadHistory } from './universalStorage';
 
+export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
 export const PUBLIC_MARKETING_PATH = '/marketing';
 export const QUICK_MATCHES_KEY = 'se_quickmatches';
 export const QUICK_MATCH_DRAFT_PREFIX = 'se_quickmatch_draft_';
-
-function getBrowserStorageKeys() {
-  try {
-    const { localStorage } = globalThis;
-    if (!localStorage) return [];
-    return Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
+export const SESSIONS_KEY = 'gs_sessions';
 
 function hasItems(value) {
   return Array.isArray(value) && value.length > 0;
@@ -43,11 +33,11 @@ export function loadQuickMatchDrafts(sports = getSportsList()) {
       ...loadData(`${QUICK_MATCH_DRAFT_PREFIX}${sport.id}`, null),
       entryPath: `/${sport.id}/quick`,
     }))
-    .filter((draft) => draft?.phase === 'scoring');
+    .filter((draft) => draft?.phase === 'scoring' && !isStaleQuickMatchDraft(draft));
 }
 
 export function loadTennisQuickDrafts() {
-  return getBrowserStorageKeys()
+  return listDataKeys()
     .filter((key) => key.startsWith(TENNIS_QUICK_DRAFT_PREFIX))
     .map((key) => {
       const draft = loadData(key, null);
@@ -57,7 +47,7 @@ export function loadTennisQuickDrafts() {
         entryPath: `/tennis/quick/live/${matchId}`,
       };
     })
-    .filter((draft) => draft?.status === 'in-progress' && draft?.entryPath);
+    .filter((draft) => draft?.status === 'in-progress' && draft?.entryPath && !isStaleQuickMatchDraft(draft));
 }
 
 export function loadTournamentSummaries(sports = getSportsList()) {
@@ -65,6 +55,12 @@ export function loadTournamentSummaries(sports = getSportsList()) {
     const tournaments = loadData(sport.storageKey, []);
     return Array.isArray(tournaments) ? tournaments : [];
   });
+}
+
+export function loadActiveSessionSummaries() {
+  const sessions = loadData(SESSIONS_KEY, []);
+  if (!Array.isArray(sessions)) return [];
+  return sessions.filter((session) => session?.status === 'active' || session?.status === 'paused');
 }
 
 export function loadAppEntryState() {
@@ -79,10 +75,9 @@ export function loadAppEntryState() {
     return {
       draftEntryPath,
       returningPlayerState: hasReturningPlayerState({
-        activeSessions: getActiveSessions(),
+        activeSessions: loadActiveSessionSummaries(),
         quickMatchDrafts,
         quickMatches: loadData(QUICK_MATCHES_KEY, []),
-        history: loadHistory(),
         tournaments: loadTournamentSummaries(sports),
       }),
     };

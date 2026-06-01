@@ -1,6 +1,6 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
-import { APP_ENTRY_PATH } from "../../utils/appEntry";
+import { APP_ENTRY_RESOLVER_PATH } from "../../utils/appEntry";
 import { consumeAuthReturnTo } from "../../utils/authRedirect";
 import CloudAuthOnly from "./components/CloudAuthOnly";
 
@@ -8,7 +8,7 @@ export default function SSOCallback() {
   const [redirectTarget, setRedirectTarget] = useState(null);
 
   useEffect(() => {
-    setRedirectTarget(consumeAuthReturnTo(APP_ENTRY_PATH));
+    setRedirectTarget(consumeAuthReturnTo(APP_ENTRY_RESOLVER_PATH));
   }, []);
 
   if (redirectTarget === null) {
