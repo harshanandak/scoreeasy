@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { updateKnockoutBracket } from './knockoutManager';
 
+const createPlayInSource = (winner) => ({
+  id: 'play-in-1',
+  round: 'play-in-1',
+  team1Id: 'team4',
+  team2Id: 'team5',
+  status: 'completed',
+  winner,
+});
+
+const createPendingSemiFromPlayIn = () => ({
+  id: 'semi-1',
+  round: 'semi-1',
+  team1Id: 'team1',
+  team2Id: 'team5',
+  status: 'pending',
+  sourceMatchIds: ['play-in-1'],
+  sourceSlots: ['team2Id'],
+});
+
 describe('updateKnockoutBracket', () => {
   it('places a single play-in winner into the open seeded semi-final slot', () => {
     const playIn = {
@@ -61,23 +80,8 @@ describe('updateKnockoutBracket', () => {
   });
 
   it('leaves downstream source-linked slots pending when a source is drawn', () => {
-    const playIn = {
-      id: 'play-in-1',
-      round: 'play-in-1',
-      team1Id: 'team4',
-      team2Id: 'team5',
-      status: 'completed',
-      winner: 'draw',
-    };
-    const semi = {
-      id: 'semi-1',
-      round: 'semi-1',
-      team1Id: 'team1',
-      team2Id: 'team5',
-      status: 'pending',
-      sourceMatchIds: ['play-in-1'],
-      sourceSlots: ['team2Id'],
-    };
+    const playIn = createPlayInSource('draw');
+    const semi = createPendingSemiFromPlayIn();
 
     expect(updateKnockoutBracket([playIn, semi])[1]).toMatchObject({
       team1Id: 'team1',
@@ -86,23 +90,8 @@ describe('updateKnockoutBracket', () => {
   });
 
   it('leaves downstream source-linked slots pending when a source is tied', () => {
-    const playIn = {
-      id: 'play-in-1',
-      round: 'play-in-1',
-      team1Id: 'team4',
-      team2Id: 'team5',
-      status: 'completed',
-      winner: 'tie',
-    };
-    const semi = {
-      id: 'semi-1',
-      round: 'semi-1',
-      team1Id: 'team1',
-      team2Id: 'team5',
-      status: 'pending',
-      sourceMatchIds: ['play-in-1'],
-      sourceSlots: ['team2Id'],
-    };
+    const playIn = createPlayInSource('tie');
+    const semi = createPendingSemiFromPlayIn();
 
     expect(updateKnockoutBracket([playIn, semi])[1]).toMatchObject({
       team1Id: 'team1',
