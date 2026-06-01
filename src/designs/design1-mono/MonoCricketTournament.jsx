@@ -8,7 +8,7 @@ import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, i
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
-import { getTournamentProgressCounts } from '../../utils/tournamentDisplay';
+import { getKnockoutRoundGroups, getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 
 // Get human-readable format label from format object
 function getFormatLabel(format) {
@@ -261,6 +261,7 @@ export default function MonoCricketTournament() {
   };
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const knockoutRoundGroups = getKnockoutRoundGroups(tournament.knockoutMatches);
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
   const metaLabel = [
@@ -586,15 +587,13 @@ export default function MonoCricketTournament() {
 
             {tournament.phase === 'knockout' && tournament.knockoutMatches && (
               <div className="space-y-6">
-                {tournament.knockoutConfig.teamsAdvancing === 4 && (
-                  <div>
+                {knockoutRoundGroups.map((group) => (
+                  <div key={group.label}>
                     <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                      Semi-finals
+                      {group.label}
                     </h3>
                     <div className="space-y-3">
-                      {tournament.knockoutMatches
-                        .filter(m => m.round.startsWith('semi'))
-                        .map(match => (
+                      {group.matches.map(match => (
                           <KnockoutMatchCard
                             key={match.id}
                             match={match}
@@ -608,7 +607,7 @@ export default function MonoCricketTournament() {
                         ))}
                     </div>
                   </div>
-                )}
+                ))}
 
                 <div>
                   <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>

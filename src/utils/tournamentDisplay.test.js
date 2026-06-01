@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getKnockoutRoundGroups,
   getTournamentProgressCounts,
   getTournamentMatchCountPreview,
   getTournamentTypeLabel,
@@ -73,5 +74,19 @@ describe('tournament display helpers', () => {
         { status: 'pending' },
       ],
     })).toEqual({ completedMatches: 1, totalMatches: 3 });
+  });
+
+  it('groups playable knockout rounds before finals', () => {
+    expect(getKnockoutRoundGroups([
+      { id: 'p1', round: 'play-in-1' },
+      { id: 'q1', round: 'quarter-1' },
+      { id: 's1', round: 'semi-1' },
+      { id: 'f', round: 'final' },
+      { id: 't', round: 'third-place' },
+    ])).toEqual([
+      { label: 'Play-ins', matches: [{ id: 'p1', round: 'play-in-1' }] },
+      { label: 'Quarter-finals', matches: [{ id: 'q1', round: 'quarter-1' }] },
+      { label: 'Semi-finals', matches: [{ id: 's1', round: 'semi-1' }] },
+    ]);
   });
 });

@@ -46,3 +46,20 @@ export function getTournamentProgressCounts(tournament) {
     totalMatches: allMatches.length,
   };
 }
+
+export function getKnockoutRoundGroups(knockoutMatches = []) {
+  return [
+    {
+      label: 'Play-ins',
+      matches: knockoutMatches.filter((match) => match.round?.startsWith('play-in')),
+    },
+    {
+      label: 'Quarter-finals',
+      matches: knockoutMatches.filter((match) => match.round?.startsWith('quarter')),
+    },
+    {
+      label: 'Semi-finals',
+      matches: knockoutMatches.filter((match) => match.round?.startsWith('semi')),
+    },
+  ].filter((group) => group.matches.length > 0);
+}
