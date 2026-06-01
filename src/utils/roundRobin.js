@@ -101,7 +101,7 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
       sourceSlots: ['team1Id', 'team2Id'],
     };
 
-    return thirdPlaceMatch
+    return thirdPlaceMatch && teamsAdvancing >= 4
       ? [playInMatch, finalMatch, thirdPlaceMatchConfig]
       : [playInMatch, finalMatch];
   } else if (teamsAdvancing > 4) {

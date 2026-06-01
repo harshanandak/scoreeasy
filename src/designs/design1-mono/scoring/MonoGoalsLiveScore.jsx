@@ -11,6 +11,7 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import {
   getBasketballCompletionState,
   getFootballClockState,
+  getFootballHalfLengthSeconds,
   getTimedPeriodLimit,
   getTimedRemainingSeconds,
 } from '../../../utils/goalsScoring';
@@ -419,7 +420,13 @@ export default function MonoGoalsLiveScore() {
     : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const footballClockState = sport === 'football' && isTimedMode
-    ? getFootballClockState({ elapsedSeconds: timer.elapsed, halfLengthSeconds: Math.floor(timeLimit / 2) })
+    ? getFootballClockState({
+      elapsedSeconds: timer.elapsed,
+      halfLengthSeconds: getFootballHalfLengthSeconds({
+        timeLimitSeconds: timeLimit,
+        timePresets: sportConfig.config.timePresets,
+      }),
+    })
     : null;
 
   const formatCountdown = (seconds) => {

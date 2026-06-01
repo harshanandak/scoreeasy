@@ -66,6 +66,22 @@ export function getFootballClockState({
   };
 }
 
+export function getFootballHalfLengthSeconds({
+  timeLimitSeconds,
+  timePresets = [],
+} = {}) {
+  const timeLimit = Math.max(1, Number(timeLimitSeconds) || 0);
+  const preset = timePresets.find((candidate) => Number(candidate.value) === timeLimit);
+  if (/\bhalf\b/i.test(preset?.label || '')) {
+    return timeLimit;
+  }
+  return Math.max(1, Math.floor(timeLimit / 2));
+}
+
+/**
+ * Return the elapsed-second boundary for the current timed scoring period.
+ * Each overtime period adds one more base timeLimit window.
+ */
 export function getTimedPeriodLimit({
   timeLimit,
   overtimePeriod = 0,
@@ -75,6 +91,9 @@ export function getTimedPeriodLimit({
   return baseLimit * periods;
 }
 
+/**
+ * Return non-negative seconds remaining in the current timed scoring period.
+ */
 export function getTimedRemainingSeconds({
   elapsedSeconds,
   timeLimit,
