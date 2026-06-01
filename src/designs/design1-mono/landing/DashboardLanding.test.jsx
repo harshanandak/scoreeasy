@@ -78,4 +78,13 @@ describe('DashboardLanding start flow', () => {
     });
     expect(screen.getByText('New tournament setup')).toBeInTheDocument();
   });
+
+  it('renders returning-player dashboard when session storage is corrupt', async () => {
+    globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' }]));
+
+    renderDashboard();
+
+    expect(await screen.findByRole('button', { name: 'New tournament' })).toBeInTheDocument();
+  });
 });
