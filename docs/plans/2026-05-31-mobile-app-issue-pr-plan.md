@@ -95,12 +95,21 @@ Target: Make dashboard CTAs and first-run app launch match user intent.
 - `scoreeasy-nm8.2` - **I-007: Make empty-dashboard New tournament open tournament flow** (P2 bug)
 - `scoreeasy-nm8.3` - **I-028: App boots to marketing page instead of app experience** (P1 task)
 - `scoreeasy-nm8.4` - **I-029: New Match does not reset team names** (P2 bug)
+- `scoreeasy-nm8.5` - **I-072: Missing authenticated returning-player app route** (P1 bug)
 
 Validation gate:
 - New-user dashboard can start a valid 2-team tournament.
 - New tournament opens a tournament-focused flow.
 - Native/mobile launch defaults to an app-first surface.
+- Authenticated and returning-player launches resolve to the app dashboard while public marketing remains reachable.
 - New Match starts clean unless the user explicitly chooses a rematch/copy flow.
+
+Route contract for PR 9 account-menu/auth UI:
+- `/` is an app-entry resolver. Authenticated users and local returning players with active sessions, quick-match history, legacy history, or tournaments are sent to `/app`; anonymous first-time visitors are sent to `/marketing`.
+- `/app` is the returning-player dashboard surface with resume, recent match, start, and account-aware navigation.
+- `/marketing` is the intentionally public marketing landing page and remains reachable even after sign-in.
+- `/dashboard` is a legacy alias for `/app`.
+- Login, signup, and SSO callbacks default to `/app` when no safe `returnTo` is supplied.
 
 ## PR 5: Sport Scoring Logic and Tournament Flow Defects
 

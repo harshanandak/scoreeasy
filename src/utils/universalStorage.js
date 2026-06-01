@@ -36,7 +36,8 @@ export function saveSession(session) {
 }
 
 export function loadSessions() {
-  return loadData(KEYS.SESSIONS, []);
+  const sessions = loadData(KEYS.SESSIONS, []);
+  return Array.isArray(sessions) ? sessions : [];
 }
 
 export function deleteSession(id) {

@@ -165,8 +165,14 @@ function normalizedQuickMatches(matches) {
 function createMemoryFallback() {
   const store = {};
   return {
+    get length() {
+      return Object.keys(store).length;
+    },
     getItem(key) {
       return key in store ? store[key] : null;
+    },
+    key(index) {
+      return Object.keys(store)[index] ?? null;
     },
     setItem(key, value) {
       store[key] = String(value);
@@ -287,6 +293,15 @@ export const clearData = (key) => {
   }
 };
 
+export const listDataKeys = () => {
+  try {
+    const storage = getStorage();
+    return Array.from({ length: storage.length }, (_, index) => storage.key(index))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+};
 
 const isPlainPreferenceString = (value) => typeof value === 'string';
 
