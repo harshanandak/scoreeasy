@@ -84,4 +84,29 @@ describe('updateKnockoutBracket', () => {
       team2Id: null,
     });
   });
+
+  it('leaves downstream source-linked slots pending when a source is tied', () => {
+    const playIn = {
+      id: 'play-in-1',
+      round: 'play-in-1',
+      team1Id: 'team4',
+      team2Id: 'team5',
+      status: 'completed',
+      winner: 'tie',
+    };
+    const semi = {
+      id: 'semi-1',
+      round: 'semi-1',
+      team1Id: 'team1',
+      team2Id: 'team5',
+      status: 'pending',
+      sourceMatchIds: ['play-in-1'],
+      sourceSlots: ['team2Id'],
+    };
+
+    expect(updateKnockoutBracket([playIn, semi])[1]).toMatchObject({
+      team1Id: 'team1',
+      team2Id: null,
+    });
+  });
 });
