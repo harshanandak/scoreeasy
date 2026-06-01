@@ -1363,6 +1363,7 @@ export default function MonoQuickMatch() {
     setShowTeam1Roster(nextState);
     setShowTeam2Roster(nextState);
   };
+  const quickMatchScoringHeading = `${sportConfig?.name || sport || 'Sport'} quick match`;
   const handleSetupBack = () => {
     if (isTeamSetupStep) {
       const browserHistoryIndex = globalThis.history?.state?.idx;
@@ -2164,7 +2165,13 @@ export default function MonoQuickMatch() {
               <button
                 onClick={startMatch}
                 className="mono-btn-primary w-full"
-                style={{ minHeight: 52, padding: '12px', fontSize: '0.9375rem', opacity: teamNamesReady ? 1 : 0.4 }}
+                style={{
+                  minHeight: 52,
+                  padding: '12px',
+                  fontSize: '0.9375rem',
+                  opacity: teamNamesReady ? 1 : 0.4,
+                  cursor: teamNamesReady ? 'pointer' : 'not-allowed',
+                }}
                 disabled={!teamNamesReady}
               >
                 {startButtonLabel}
@@ -2228,6 +2235,7 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {saveWarning && (
               <div className="mono-alert mono-alert-danger mb-4">
@@ -2372,6 +2380,7 @@ export default function MonoQuickMatch() {
       return (
         <div className="min-h-screen px-6 py-10">
           <div className="max-w-2xl mx-auto">
+            <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {saveWarning && (
               <div className="mono-alert mono-alert-danger mb-4">
@@ -2523,6 +2532,7 @@ export default function MonoQuickMatch() {
     return (
       <div className="min-h-screen px-6 py-10">
         <div className="max-w-2xl mx-auto">
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">

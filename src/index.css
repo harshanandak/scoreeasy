@@ -58,6 +58,7 @@
   --se-font-mono: var(--font-mono);
   --se-font-sans: var(--font-sans);
   --se-color-action: var(--primary);
+  --se-color-focus-ring: oklch(0.58 0.22 255);
   --se-color-action-soft: var(--accent);
   --se-color-action-strong: var(--accent-foreground);
   --se-color-canvas: var(--background);
@@ -170,6 +171,17 @@ body {
   letter-spacing: var(--tracking-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:where(button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px color-mix(in oklch, var(--se-color-focus-ring) 18%, transparent);
+}
+
+:where(button, input, select, textarea):disabled,
+:where(button, input, select, textarea)[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 #root {
