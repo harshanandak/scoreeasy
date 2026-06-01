@@ -19,6 +19,14 @@ vi.mock('convex/react', () => ({
   useQuery: () => [],
 }));
 
+vi.mock('@clerk/clerk-react', () => ({
+  UserButton: (props) => (
+    <button type="button" aria-label={props['aria-label'] || 'Account menu'}>
+      Account
+    </button>
+  ),
+}));
+
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => authState.current,
 }));
@@ -97,5 +105,21 @@ describe('app onboarding guard', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/onboarding?returnTo=%2Fprofile');
     });
+  });
+
+  it('shows an account menu instead of sign-in navigation for authenticated users', async () => {
+    authState.current = {
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      isLoading: false,
+      needsOnboarding: false,
+      user: { id: 'user_1', username: 'alex' },
+    };
+
+    renderApp('/play');
+
+    expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Account menu' })).toBeInTheDocument();
   });
 });
