@@ -180,4 +180,37 @@ describe('generateKnockoutMatches', () => {
     expect(matches.filter((match) => match.round.startsWith('play-in-'))).toHaveLength(2);
     expect(matches.find((match) => match.round === 'third-place')).toBeTruthy();
   });
+
+  it('creates a playable 3-team elimination bracket', () => {
+    const matches = generateKnockoutMatches(makeStandings(3), {
+      teamsAdvancing: 3,
+      thirdPlaceMatch: false,
+    });
+
+    expect(matches).toHaveLength(2);
+    expect(matches.find((match) => match.round === 'play-in-1')).toMatchObject({
+      team1Id: 'team2',
+      team2Id: 'team3',
+    });
+    expect(matches.find((match) => match.round === 'final')).toMatchObject({
+      team1Id: 'team1',
+      team2Id: null,
+    });
+    expect(matches.find((match) => match.round === 'final').sourceMatchIds).toHaveLength(1);
+  });
+
+  it('wires every 7-team play-in into a semi-final', () => {
+    const matches = generateKnockoutMatches(makeStandings(7), {
+      teamsAdvancing: 7,
+      thirdPlaceMatch: false,
+    });
+
+    const playIns = matches.filter((match) => match.round.startsWith('play-in-'));
+    const semiSourceIds = matches
+      .filter((match) => match.round.startsWith('semi-'))
+      .flatMap((match) => match.sourceMatchIds || []);
+
+    expect(playIns).toHaveLength(3);
+    expect(semiSourceIds.sort()).toEqual(playIns.map((match) => match.id).sort());
+  });
 });

@@ -65,3 +65,22 @@ export function getFootballClockState({
     remainingSeconds: 0,
   };
 }
+
+export function getTimedPeriodLimit({
+  timeLimit,
+  overtimePeriod = 0,
+} = {}) {
+  const baseLimit = Math.max(0, Number(timeLimit) || 0);
+  const periods = 1 + Math.max(0, Number(overtimePeriod) || 0);
+  return baseLimit * periods;
+}
+
+export function getTimedRemainingSeconds({
+  elapsedSeconds,
+  timeLimit,
+  overtimePeriod = 0,
+} = {}) {
+  const periodLimit = getTimedPeriodLimit({ timeLimit, overtimePeriod });
+  const elapsed = Math.max(0, Number(elapsedSeconds) || 0);
+  return Math.max(0, periodLimit - elapsed);
+}

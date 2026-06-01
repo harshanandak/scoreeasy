@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   getBasketballCompletionState,
   getFootballClockState,
+  getTimedPeriodLimit,
+  getTimedRemainingSeconds,
 } from './goalsScoring';
 
 describe('goalsScoring', () => {
@@ -47,5 +49,11 @@ describe('goalsScoring', () => {
       phase: 'full-time',
       label: 'Full Time',
     });
+  });
+
+  it('extends the timed scoring window for basketball overtime periods', () => {
+    expect(getTimedPeriodLimit({ timeLimit: 600, overtimePeriod: 0 })).toBe(600);
+    expect(getTimedPeriodLimit({ timeLimit: 600, overtimePeriod: 1 })).toBe(1200);
+    expect(getTimedRemainingSeconds({ elapsedSeconds: 600, timeLimit: 600, overtimePeriod: 1 })).toBe(600);
   });
 });

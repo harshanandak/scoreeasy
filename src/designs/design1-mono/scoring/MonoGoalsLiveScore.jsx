@@ -8,7 +8,12 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
-import { getBasketballCompletionState, getFootballClockState } from '../../../utils/goalsScoring';
+import {
+  getBasketballCompletionState,
+  getFootballClockState,
+  getTimedPeriodLimit,
+  getTimedRemainingSeconds,
+} from '../../../utils/goalsScoring';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 
@@ -136,8 +141,9 @@ export default function MonoGoalsLiveScore() {
     if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
+    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit, overtimePeriod });
 
-    if (formatMode === 'timed' && timeLimit && timer.elapsed >= timeLimit) {
+    if (formatMode === 'timed' && timeLimit && timer.elapsed >= currentPeriodLimit) {
       const completionState = getBasketballCompletionState({
         score1,
         score2,
@@ -145,10 +151,8 @@ export default function MonoGoalsLiveScore() {
         overtimePeriod,
       });
       if (!completionState.canComplete) {
-        if (overtimePeriod === 0) {
-          setOvertimePeriod(1);
-          showScoringWarning(completionState.message);
-        }
+        setOvertimePeriod((period) => period + 1);
+        showScoringWarning(completionState.message);
         return undefined;
       }
 
@@ -197,7 +201,8 @@ export default function MonoGoalsLiveScore() {
     // Check if time is up in timed mode
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
-    if (formatMode === 'timed' && timeLimit && timer.elapsed >= timeLimit) {
+    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit, overtimePeriod });
+    if (formatMode === 'timed' && timeLimit && timer.elapsed >= currentPeriodLimit) {
       return; // Don't allow scoring after time expires
     }
 
@@ -409,7 +414,9 @@ export default function MonoGoalsLiveScore() {
   // Timed mode helpers
   const isTimedMode = effectiveFormat?.mode === 'timed';
   const timeLimit = isTimedMode ? effectiveFormat.timeLimit : null;
-  const remainingSeconds = isTimedMode && timeLimit ? Math.max(0, timeLimit - timer.elapsed) : null;
+  const remainingSeconds = isTimedMode && timeLimit
+    ? getTimedRemainingSeconds({ elapsedSeconds: timer.elapsed, timeLimit, overtimePeriod })
+    : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const footballClockState = sport === 'football' && isTimedMode
     ? getFootballClockState({ elapsedSeconds: timer.elapsed, halfLengthSeconds: Math.floor(timeLimit / 2) })
@@ -458,7 +465,9 @@ export default function MonoGoalsLiveScore() {
             </button>
             {isTimedMode ? (
               <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? '#dc2626' : undefined }}>
-                {footballClockState
+                {overtimePeriod > 0
+                  ? `OT ${overtimePeriod}`
+                  : footballClockState
                   ? `${footballClockState.label}${footballClockState.phase === 'full-time' ? '' : ` - ${formatCountdown(footballClockState.remainingSeconds)}`}`
                   : isTimeUp ? "Time's up!" : formatCountdown(remainingSeconds)}
               </span>

@@ -293,7 +293,7 @@ export default function MonoTournamentSetup() {
     const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
-      thirdPlaceMatch: activeTeamsAdvancing === 4 ? thirdPlaceMatch : false,
+      thirdPlaceMatch: activeTeamsAdvancing > 2 ? thirdPlaceMatch : false,
       format: activeKnockoutFormat,
       mode: isElimination ? 'single-elimination' : 'group-playoff',
     } : null;

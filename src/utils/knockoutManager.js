@@ -36,6 +36,16 @@ export function initializeKnockoutStage(tournament, standings) {
 export function updateKnockoutBracket(knockoutMatches) {
   if (!knockoutMatches || knockoutMatches.length === 0) return knockoutMatches;
 
+  const getSourceSlots = (match) => {
+    if (Array.isArray(match.sourceSlots) && match.sourceSlots.length > 0) {
+      return match.sourceSlots;
+    }
+    if (match.sourceMatchIds.length === 2) {
+      return ['team1Id', 'team2Id'];
+    }
+    return [match.team1Id ? 'team2Id' : 'team1Id'];
+  };
+
   const sourceLinkedMatches = knockoutMatches.filter(m => Array.isArray(m.sourceMatchIds) && m.sourceMatchIds.length > 0);
   if (sourceLinkedMatches.length > 0) {
     let changed = false;
@@ -46,18 +56,25 @@ export function updateKnockoutBracket(knockoutMatches) {
 
       const sources = match.sourceMatchIds.map((sourceId) => knockoutMatches.find((candidate) => candidate.id === sourceId));
       if (sources.some((source) => !source || source.status !== 'completed' || !source.winner)) {
-        return match;
+        const sourceSlots = getSourceSlots(match);
+        const cleared = sourceSlots.reduce((next, slot) => ({ ...next, [slot]: null }), match);
+        if (sourceSlots.every((slot) => cleared[slot] === match[slot])) return match;
+        changed = true;
+        return cleared;
       }
 
       const teamIds = match.round === 'third-place'
         ? sources.map((source) => source.winner === source.team1Id ? source.team2Id : source.team1Id)
         : sources.map((source) => source.winner);
-      const nextTeam1 = match.team1Id || teamIds[0] || null;
-      const nextTeam2 = match.team2Id || teamIds[1] || null;
-      if (nextTeam1 === match.team1Id && nextTeam2 === match.team2Id) return match;
+      const sourceSlots = getSourceSlots(match);
+      const nextMatch = sourceSlots.reduce((next, slot, index) => ({
+        ...next,
+        [slot]: teamIds[index] || null,
+      }), match);
+      if (nextMatch.team1Id === match.team1Id && nextMatch.team2Id === match.team2Id) return match;
 
       changed = true;
-      return { ...match, team1Id: nextTeam1, team2Id: nextTeam2 };
+      return nextMatch;
     });
 
     if (changed) return updated;

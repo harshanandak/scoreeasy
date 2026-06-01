@@ -59,7 +59,7 @@ export function generateRoundRobinMatches(teams) {
 /**
  * Generate knockout matches from standings.
  * @param {Array} standings - Sorted standings array (index 0 = 1st place)
- * @param {object} knockoutConfig - { teamsAdvancing: 2|4, thirdPlaceMatch: boolean }
+ * @param {object} knockoutConfig - { teamsAdvancing: 2..8, thirdPlaceMatch: boolean }
  * @returns {Array} Knockout match objects with round/label fields
  */
 export function generateKnockoutMatches(standings, knockoutConfig) {
@@ -67,9 +67,44 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
   const ts = Date.now();
   const matches = [];
 
-  if (teamsAdvancing > 4) {
+  if (teamsAdvancing === 3) {
+    const playInId = `${ts}-play-in-1`;
+    matches.push({
+      id: playInId,
+      round: 'play-in-1',
+      label: 'Play-in 1',
+      team1Id: standings[1]?.teamId || null,
+      team2Id: standings[2]?.teamId || null,
+      status: 'pending',
+      winner: null,
+    });
+    matches.push({
+      id: `${ts}-final`,
+      round: 'final',
+      label: 'Final',
+      team1Id: standings[0]?.teamId || null,
+      team2Id: null,
+      status: 'pending',
+      winner: null,
+      sourceMatchIds: [playInId],
+      sourceSlots: ['team2Id'],
+    });
+    if (thirdPlaceMatch) {
+      matches.push({
+        id: `${ts}-third`,
+        round: 'third-place',
+        label: '3rd Place',
+        team1Id: null,
+        team2Id: null,
+        status: 'pending',
+        winner: null,
+        sourceMatchIds: [playInId, `${ts}-final`],
+        sourceSlots: ['team1Id', 'team2Id'],
+      });
+    }
+  } else if (teamsAdvancing > 4) {
     const seeds = standings.slice(0, teamsAdvancing);
-    const addMatch = ({ id, round, label, team1Id = null, team2Id = null, sourceMatchIds = [] }) => {
+    const addMatch = ({ id, round, label, team1Id = null, team2Id = null, sourceMatchIds = [], sourceSlots = [] }) => {
       matches.push({
         id: `${ts}-${id}`,
         round,
@@ -79,54 +114,78 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
         status: 'pending',
         winner: null,
         sourceMatchIds,
+        sourceSlots,
       });
     };
 
-    if (teamsAdvancing === 8) {
-      [[1, 8], [4, 5], [2, 7], [3, 6]].forEach(([a, b], index) => {
-        addMatch({
-          id: `quarter-${index + 1}`,
-          round: `quarter-${index + 1}`,
-          label: `Quarter-final ${index + 1}`,
-          team1Id: seeds[a - 1]?.teamId || null,
-          team2Id: seeds[b - 1]?.teamId || null,
-        });
-      });
-      addMatch({ id: 'semi-1', round: 'semi-1', label: 'Semi-final 1', sourceMatchIds: [`${ts}-quarter-1`, `${ts}-quarter-2`] });
-      addMatch({ id: 'semi-2', round: 'semi-2', label: 'Semi-final 2', sourceMatchIds: [`${ts}-quarter-3`, `${ts}-quarter-4`] });
-    } else {
-      const playInCount = teamsAdvancing - 4;
-      const byeCount = 8 - teamsAdvancing;
-      for (let i = 0; i < playInCount; i++) {
-        addMatch({
-          id: `play-in-${i + 1}`,
-          round: `play-in-${i + 1}`,
-          label: `Play-in ${i + 1}`,
-          team1Id: seeds[byeCount + i]?.teamId || null,
-          team2Id: seeds[teamsAdvancing - 1 - i]?.teamId || null,
-        });
-      }
-      addMatch({
-        id: 'semi-1',
-        round: 'semi-1',
-        label: 'Semi-final 1',
-        team1Id: seeds[0]?.teamId || null,
-        team2Id: playInCount >= 1 ? null : (seeds[3]?.teamId || null),
-        sourceMatchIds: playInCount >= 1 ? [`${ts}-play-in-1`] : [],
-      });
-      addMatch({
-        id: 'semi-2',
-        round: 'semi-2',
-        label: 'Semi-final 2',
-        team1Id: seeds[1]?.teamId || null,
-        team2Id: playInCount >= 2 ? null : (seeds[2]?.teamId || null),
-        sourceMatchIds: playInCount >= 2 ? [`${ts}-play-in-2`] : [],
-      });
-    }
+    const sourcePrefix = teamsAdvancing === 8 ? 'quarter' : 'play-in';
+    const sourceLabel = teamsAdvancing === 8 ? 'Quarter-final' : 'Play-in';
+    const firstRoundPairs = [[1, 8], [4, 5], [2, 7], [3, 6]];
+    const semiSlots = [[], []];
+    let sourceIndex = 0;
 
-    addMatch({ id: 'final', round: 'final', label: 'Final', sourceMatchIds: [`${ts}-semi-1`, `${ts}-semi-2`] });
+    firstRoundPairs.forEach(([a, b], index) => {
+      const teamA = seeds[a - 1]?.teamId || null;
+      const teamB = seeds[b - 1]?.teamId || null;
+      const semiIndex = index < 2 ? 0 : 1;
+
+      if (teamA && teamB) {
+        sourceIndex += 1;
+        const sourceId = `${sourcePrefix}-${sourceIndex}`;
+        addMatch({
+          id: sourceId,
+          round: sourceId,
+          label: `${sourceLabel} ${sourceIndex}`,
+          team1Id: teamA,
+          team2Id: teamB,
+        });
+        semiSlots[semiIndex].push({ sourceId: `${ts}-${sourceId}` });
+      } else {
+        semiSlots[semiIndex].push({ teamId: teamA || teamB });
+      }
+    });
+
+    const addSemi = (semiNumber, slots) => {
+      const sourceMatchIds = [];
+      const sourceSlots = [];
+      const slotToTeamId = (slot, slotName) => {
+        if (slot?.sourceId) {
+          sourceMatchIds.push(slot.sourceId);
+          sourceSlots.push(slotName);
+          return null;
+        }
+        return slot?.teamId || null;
+      };
+
+      addMatch({
+        id: `semi-${semiNumber}`,
+        round: `semi-${semiNumber}`,
+        label: `Semi-final ${semiNumber}`,
+        team1Id: slotToTeamId(slots[0], 'team1Id'),
+        team2Id: slotToTeamId(slots[1], 'team2Id'),
+        sourceMatchIds,
+        sourceSlots,
+      });
+    };
+
+    addSemi(1, semiSlots[0]);
+    addSemi(2, semiSlots[1]);
+
+    addMatch({
+      id: 'final',
+      round: 'final',
+      label: 'Final',
+      sourceMatchIds: [`${ts}-semi-1`, `${ts}-semi-2`],
+      sourceSlots: ['team1Id', 'team2Id'],
+    });
     if (thirdPlaceMatch) {
-      addMatch({ id: 'third', round: 'third-place', label: '3rd Place', sourceMatchIds: [`${ts}-semi-1`, `${ts}-semi-2`] });
+      addMatch({
+        id: 'third',
+        round: 'third-place',
+        label: '3rd Place',
+        sourceMatchIds: [`${ts}-semi-1`, `${ts}-semi-2`],
+        sourceSlots: ['team1Id', 'team2Id'],
+      });
     }
     return matches;
   }
