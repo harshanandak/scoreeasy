@@ -438,7 +438,7 @@ export default function MonoCricketLiveScore() {
 
     if (!isMatchComplete && !winnerOverride && canManualComplete && innings === 1) {
       setInnings(2);
-      setBattingTeam(match.team2Id);
+      setBattingTeam(2);
       setSaveWarning('');
       return;
     }
