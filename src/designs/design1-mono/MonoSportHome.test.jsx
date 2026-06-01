@@ -54,6 +54,8 @@ describe('MonoSportHome priority starts', () => {
   it('keeps cricket prioritized while routing users to cricket format choices', () => {
     renderSportHome();
 
+    expect(screen.getByRole('heading', { level: 1, name: 'Play' })).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
 
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=cricket');

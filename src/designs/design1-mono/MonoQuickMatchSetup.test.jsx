@@ -48,6 +48,19 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(screen.queryByText('Format Mode')).not.toBeInTheDocument();
   });
 
+  it('uses a non-interactive cursor on disabled start controls', async () => {
+    renderQuickMatch();
+
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Team B name' }), {
+      target: { value: '' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toHaveStyle({
+      cursor: 'not-allowed',
+    });
+  });
+
   it('uses the selected sport name in the setup start action', async () => {
     renderQuickMatch('/football/quick');
 
@@ -144,6 +157,8 @@ describe('MonoQuickMatch setup clarity', () => {
     renderQuickMatch();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Start Volleyball' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Volleyball quick match' })).toBeInTheDocument();
 
     const endMatchButton = await screen.findByRole('button', { name: 'End Match' });
     fireEvent.click(endMatchButton);

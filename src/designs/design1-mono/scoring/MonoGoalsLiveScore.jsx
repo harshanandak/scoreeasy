@@ -398,6 +398,7 @@ export default function MonoGoalsLiveScore() {
   return (
     <div className="min-h-screen px-6 py-10">
       <div className="max-w-2xl mx-auto">
+        <h1 className="sr-only">{sportConfig.name} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
             {saveWarning}

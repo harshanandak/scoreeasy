@@ -46,10 +46,10 @@ function useClerkComponents(enabled) {
 }
 
 export function AuthSignInButton({ children, ...props }) {
-  const { cloudAuthAvailable } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, isLoading } = useAuth();
   const clerkComponents = useClerkComponents(cloudAuthAvailable);
 
-  if (!cloudAuthAvailable || !clerkComponents) {
+  if (isLoading || isAuthenticated || !cloudAuthAvailable || !clerkComponents) {
     return null;
   }
 
@@ -66,10 +66,10 @@ AuthSignInButton.propTypes = {
 };
 
 export function AuthSignUpButton({ children, ...props }) {
-  const { cloudAuthAvailable } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, isLoading } = useAuth();
   const clerkComponents = useClerkComponents(cloudAuthAvailable);
 
-  if (!cloudAuthAvailable || !clerkComponents) {
+  if (isLoading || isAuthenticated || !cloudAuthAvailable || !clerkComponents) {
     return null;
   }
 
@@ -86,10 +86,10 @@ AuthSignUpButton.propTypes = {
 };
 
 export function AuthUserButton(props) {
-  const { cloudAuthAvailable } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, isLoading } = useAuth();
   const clerkComponents = useClerkComponents(cloudAuthAvailable);
 
-  if (!cloudAuthAvailable || !clerkComponents) {
+  if (isLoading || !isAuthenticated || !cloudAuthAvailable || !clerkComponents) {
     return null;
   }
 
@@ -128,9 +128,9 @@ SignedIn.propTypes = {
 };
 
 export function SignedOut({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (isAuthenticated) {
+  if (isLoading || isAuthenticated) {
     return null;
   }
 

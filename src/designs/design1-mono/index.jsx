@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 're
 import MonoLanding from './MonoLanding';
 import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
+import { AuthUserButton } from '../../components/AuthButtons';
 import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
@@ -464,6 +465,12 @@ function GlobalNavigation({ requestScoringExit }) {
           ))}
         </nav>
 
+        {cloudAuthAvailable && isAuthenticated && (
+          <div className="global-nav-account">
+            <AuthUserButton aria-label="Account menu" />
+          </div>
+        )}
+
         <button
           type="button"
           className="global-mobile-menu-button"
@@ -516,6 +523,11 @@ function GlobalNavigation({ requestScoringExit }) {
                   {item.label}
                 </button>
               ))}
+              {cloudAuthAvailable && isAuthenticated && (
+                <div className="global-mobile-menu-account">
+                  <AuthUserButton aria-label="Account menu" />
+                </div>
+              )}
             </nav>
           </div>
         </dialog>
@@ -600,8 +612,16 @@ function GlobalNavigation({ requestScoringExit }) {
         .global-mobile-menu-backdrop,
         .global-mobile-menu-sheet,
         .global-mobile-menu-content,
+        .global-mobile-menu-account,
         .global-bottom-nav {
           display: none;
+        }
+
+        .global-nav-account {
+          display: inline-flex;
+          align-items: center;
+          min-width: 34px;
+          min-height: 34px;
         }
 
         .app-confirm-backdrop {
@@ -800,6 +820,10 @@ function GlobalNavigation({ requestScoringExit }) {
             display: none;
           }
 
+          .global-nav-account {
+            display: none;
+          }
+
           .global-mobile-menu-button {
             position: fixed;
             top: calc(9px + env(safe-area-inset-top, 0px));
@@ -923,6 +947,13 @@ function GlobalNavigation({ requestScoringExit }) {
 
           .global-mobile-menu-item:last-child {
             border-bottom: 0;
+          }
+
+          .global-mobile-menu-account {
+            display: flex;
+            justify-content: flex-start;
+            min-height: 52px;
+            padding: 12px 16px;
           }
 
           .global-bottom-nav {
