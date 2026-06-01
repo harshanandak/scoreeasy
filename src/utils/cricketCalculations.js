@@ -247,6 +247,9 @@ export function getLimitedOversResult(match) {
   const winner = getMatchWinner(match);
   if (!winner) return '';
   if (winner === 'tie') return 'Match Tied';
+  if (match.superOver && match.team1Score.runs === match.team2Score.runs) {
+    return 'Won in Super Over';
+  }
 
   const scoresByTeam = {
     [match.team1Id]: match.team1Score,

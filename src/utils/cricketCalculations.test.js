@@ -186,6 +186,24 @@ describe('getLimitedOversResult', () => {
 
     expect(getLimitedOversResult(match)).toBe('Won by 7 wickets');
   });
+
+  it('preserves Super Over result descriptions for tied innings scores', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      winner: 'b',
+      team1Score: { runs: 120, balls: 60, wickets: 8 },
+      team2Score: { runs: 120, balls: 60, wickets: 6 },
+      superOver: {
+        team1: { runs: 8, balls: 6, wickets: 1 },
+        team2: { runs: 9, balls: 5, wickets: 0 },
+      },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won in Super Over');
+  });
 });
 
 describe('calculateCricketPointsTable', () => {

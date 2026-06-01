@@ -457,6 +457,7 @@ export default function MonoCricketLiveScore() {
       team2Score: { runs: scores.team2.runs, balls: scores.team2.balls, wickets: scores.team2.wickets, allOut: scores.team2.allOut },
       winner,
       format,
+      superOver: superOverPhase !== 'inactive' ? superOver : undefined,
     };
 
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
@@ -466,7 +467,7 @@ export default function MonoCricketLiveScore() {
       battingOrder: completedMatch.battingOrder,
       winner,
       winDesc: getLimitedOversResult(completedMatch),
-      superOver: superOverPhase !== 'inactive' ? superOver : undefined,
+      superOver: completedMatch.superOver,
       status: 'completed',
       draftState: undefined,
       completedAt: new Date().toISOString(),
