@@ -1,5 +1,13 @@
 import { generateKnockoutMatches, generateRoundRobinMatches, getTotalMatchCount, getCompletedMatchCount } from './roundRobin';
 
+function makeStandings(n) {
+  return Array.from({ length: n }, (_, i) => ({
+    teamId: `team${i + 1}`,
+    team: { id: `team${i + 1}`, name: `Team ${i + 1}` },
+    seed: i + 1,
+  }));
+}
+
 describe('generateRoundRobinMatches', () => {
   function makeTeams(n) {
     return Array.from({ length: n }, (_, i) => ({ id: `team${i + 1}`, name: `Team ${i + 1}` }));
@@ -150,14 +158,6 @@ describe('getCompletedMatchCount', () => {
 });
 
 describe('generateKnockoutMatches', () => {
-  function makeStandings(n) {
-    return Array.from({ length: n }, (_, i) => ({
-      teamId: `team${i + 1}`,
-      team: { id: `team${i + 1}`, name: `Team ${i + 1}` },
-      seed: i + 1,
-    }));
-  }
-
   it('generates a full 8-team elimination bracket', () => {
     const matches = generateKnockoutMatches(makeStandings(8), {
       teamsAdvancing: 8,
@@ -211,6 +211,7 @@ describe('generateKnockoutMatches', () => {
       .flatMap((match) => match.sourceMatchIds || []);
 
     expect(playIns).toHaveLength(3);
-    expect(semiSourceIds.sort()).toEqual(playIns.map((match) => match.id).sort());
+    const byId = (a, b) => a.localeCompare(b);
+    expect([...semiSourceIds].sort(byId)).toEqual(playIns.map((match) => match.id).sort(byId));
   });
 });

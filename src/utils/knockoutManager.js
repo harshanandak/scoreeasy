@@ -55,7 +55,7 @@ export function updateKnockoutBracket(knockoutMatches) {
       }
 
       const sources = match.sourceMatchIds.map((sourceId) => knockoutMatches.find((candidate) => candidate.id === sourceId));
-      if (sources.some((source) => !source || source.status !== 'completed' || !source.winner)) {
+      if (sources.some((source) => source?.status !== 'completed' || !source?.winner)) {
         const sourceSlots = getSourceSlots(match);
         const cleared = sourceSlots.reduce((next, slot) => ({ ...next, [slot]: null }), match);
         if (sourceSlots.every((slot) => cleared[slot] === match[slot])) return match;

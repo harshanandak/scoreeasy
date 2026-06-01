@@ -69,7 +69,7 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
 
   if (teamsAdvancing === 3) {
     const playInId = `${ts}-play-in-1`;
-    matches.push({
+    const playInMatch = {
       id: playInId,
       round: 'play-in-1',
       label: 'Play-in 1',
@@ -77,8 +77,8 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
       team2Id: standings[2]?.teamId || null,
       status: 'pending',
       winner: null,
-    });
-    matches.push({
+    };
+    const finalMatch = {
       id: `${ts}-final`,
       round: 'final',
       label: 'Final',
@@ -88,20 +88,22 @@ export function generateKnockoutMatches(standings, knockoutConfig) {
       winner: null,
       sourceMatchIds: [playInId],
       sourceSlots: ['team2Id'],
-    });
-    if (thirdPlaceMatch) {
-      matches.push({
-        id: `${ts}-third`,
-        round: 'third-place',
-        label: '3rd Place',
-        team1Id: null,
-        team2Id: null,
-        status: 'pending',
-        winner: null,
-        sourceMatchIds: [playInId, `${ts}-final`],
-        sourceSlots: ['team1Id', 'team2Id'],
-      });
-    }
+    };
+    const thirdPlaceMatchConfig = {
+      id: `${ts}-third`,
+      round: 'third-place',
+      label: '3rd Place',
+      team1Id: null,
+      team2Id: null,
+      status: 'pending',
+      winner: null,
+      sourceMatchIds: [playInId, `${ts}-final`],
+      sourceSlots: ['team1Id', 'team2Id'],
+    };
+
+    return thirdPlaceMatch
+      ? [playInMatch, finalMatch, thirdPlaceMatchConfig]
+      : [playInMatch, finalMatch];
   } else if (teamsAdvancing > 4) {
     const seeds = standings.slice(0, teamsAdvancing);
     const addMatch = ({ id, round, label, team1Id = null, team2Id = null, sourceMatchIds = [], sourceSlots = [] }) => {
