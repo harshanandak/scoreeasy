@@ -5,7 +5,7 @@ import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
-import { clearData, saveData, loadData } from '../../utils/storage';
+import { clearData, saveData, loadData, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
 import { getSportById } from '../../models/sportRegistry';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
@@ -26,14 +26,6 @@ import {
   scoreImpact,
   warningImpact,
 } from '../../mobile/haptics';
-
-function saveQuickMatch(match) {
-  const all = loadData('se_quickmatches', []);
-  const idx = all.findIndex((m) => m.id === match.id);
-  if (idx >= 0) all[idx] = match;
-  else all.unshift(match);
-  return saveData('se_quickmatches', all);
-}
 
 // Swap button — defined outside component to avoid S6478 (component defined inside render)
 function SwapButton({ onSwap }) {
@@ -430,7 +422,11 @@ export default function MonoQuickMatch() {
     scoringSportRef.current = null;
 
     const draft = loadData(quickMatchDraftKey, null);
-    if (!draft || draft.sport !== sport || draft.phase !== 'scoring') {
+    if (isStaleQuickMatchDraft(draft)) {
+      clearData(quickMatchDraftKey);
+    }
+
+    if (!draft || isStaleQuickMatchDraft(draft) || draft.sport !== sport || draft.phase !== 'scoring') {
       if (previousSport && phase === 'scoring') {
         setPhase('setup');
         timer.pause();
