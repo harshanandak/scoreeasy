@@ -19,8 +19,9 @@ function normalizeIssuerDomain(domain: string | undefined) {
   return `https://${trimmed}`;
 }
 
+const clerkJwtIssuerEnv = convexEnv?.CLERK_JWT_ISSUER_DOMAIN?.trim();
 const clerkJwtIssuerDomain = normalizeIssuerDomain(
-  convexEnv?.CLERK_JWT_ISSUER_DOMAIN ?? convexEnv?.CLERK_FRONTEND_API_URL,
+  clerkJwtIssuerEnv ? clerkJwtIssuerEnv : convexEnv?.CLERK_FRONTEND_API_URL,
 );
 
 export default {
