@@ -298,6 +298,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       const draft = loadData(draftKey, null);
       if (isStaleQuickMatchDraft(draft)) {
         clearData(draftKey);
+        navigate(`/${sport}/quick`);
         return;
       }
       if (!draft) return;

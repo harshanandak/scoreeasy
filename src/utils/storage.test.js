@@ -397,14 +397,30 @@ describe('Quick match persistence normalization', () => {
         elapsedSeconds: 572 * 60 * 60,
         completedAt: freshDate,
       },
+      {
+        id: 'scoreless-draw',
+        sport: 'football',
+        team1: 'Nil A',
+        team2: 'Nil B',
+        status: 'completed',
+        winner: 'Draw',
+        score1: 0,
+        score2: 0,
+        completedAt: freshDate,
+      },
     ]);
 
-    expect(loadQuickMatches().map((match) => match.id)).toEqual(['fresh-draft', 'real-result']);
+    expect(loadQuickMatches().map((match) => match.id)).toEqual(['fresh-draft', 'real-result', 'scoreless-draw']);
     expect(loadCompletedQuickMatches()).toEqual([
       expect.objectContaining({
         id: 'real-result',
         status: 'completed',
         elapsedSeconds: undefined,
+      }),
+      expect.objectContaining({
+        id: 'scoreless-draw',
+        status: 'completed',
+        winner: 'Draw',
       }),
     ]);
   });
@@ -465,6 +481,18 @@ describe('Quick match persistence normalization', () => {
       phase: 'scoring',
       sport: 'football',
       updatedAt: freshDate,
+    })).toBe(false);
+
+    expect(isStaleQuickMatchDraft({
+      phase: 'scoring',
+      sport: 'tennis',
+      createdAt: staleDate,
+      draftState: { savedAt: freshDate },
+    })).toBe(false);
+
+    expect(isStaleQuickMatchDraft({
+      status: 'completed',
+      completedAt: staleDate,
     })).toBe(false);
   });
 });

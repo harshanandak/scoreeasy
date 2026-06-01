@@ -93,11 +93,16 @@ function sanitizeElapsedSeconds(value) {
 }
 
 function getQuickMatchTimestamp(match) {
-  return parseTimestamp(match?.updatedAt) ??
-    parseTimestamp(match?.savedAt) ??
-    parseTimestamp(match?.completedAt) ??
-    parseTimestamp(match?.date) ??
-    parseTimestamp(match?.createdAt);
+  const timestamps = [
+    parseTimestamp(match?.updatedAt),
+    parseTimestamp(match?.savedAt),
+    parseTimestamp(match?.draftState?.savedAt),
+    parseTimestamp(match?.completedAt),
+    parseTimestamp(match?.date),
+    parseTimestamp(match?.createdAt),
+  ].filter(Number.isFinite);
+
+  return timestamps.length > 0 ? Math.max(...timestamps) : null;
 }
 
 function isStaleQuickDraft(match) {
@@ -112,14 +117,10 @@ function isStaleQuickDraft(match) {
 
 export function isStaleQuickMatchDraft(draft) {
   if (!draft || typeof draft !== 'object') return false;
+  if (draft.status === 'completed') return false;
   const timestamp = getQuickMatchTimestamp(draft);
   if (timestamp === null) return false;
   return Date.now() - timestamp > QUICK_MATCH_DRAFT_TTL_MS;
-}
-
-function isDrawLikeWinner(winner) {
-  const normalized = normalizeWinnerToken(winner);
-  return normalized === 'Draw' || normalized === 'Tie';
 }
 
 function isCompletionSignal(match) {
@@ -135,7 +136,7 @@ function normalizeQuickMatchForStorage(match) {
 
   const completed = isCompletionSignal(match);
   if (!completed && isStaleQuickDraft(match)) return null;
-  if (completed && !hasMeaningfulQuickScore(match) && isDrawLikeWinner(match.winner)) return null;
+  if (completed && !hasMeaningfulQuickScore(match) && normalizeWinnerToken(match.winner) === 'Tie') return null;
 
   const timestamp = getQuickMatchTimestamp(match);
   const completedAt = completed
