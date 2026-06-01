@@ -72,7 +72,7 @@ export function loadQuickMatchSummaries() {
       ...match,
       entryPath: isCricketTest ? `/cricket/quick/test-match/${match.id}` : null,
     };
-  });
+  }).filter((match) => !isStaleQuickMatchDraft(match));
 }
 
 export function loadActiveSessionSummaries() {

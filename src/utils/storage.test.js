@@ -112,6 +112,14 @@ describe('saveData / loadData / clearData', () => {
     ]));
     expect(fallback.key(2)).toBeNull();
   });
+
+  it('memory fallback preserves empty string keys during enumeration', () => {
+    const fallback = createMemoryFallback();
+    fallback.setItem('', 'empty-key');
+
+    expect(fallback.key(0)).toBe('');
+    expect(fallback.getItem('')).toBe('empty-key');
+  });
 });
 
 // ─── safeSave ──────────────────────────────────────────────────────────────────

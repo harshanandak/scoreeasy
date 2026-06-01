@@ -172,7 +172,7 @@ function createMemoryFallback() {
       return key in store ? store[key] : null;
     },
     key(index) {
-      return Object.keys(store)[index] || null;
+      return Object.keys(store)[index] ?? null;
     },
     setItem(key, value) {
       store[key] = String(value);

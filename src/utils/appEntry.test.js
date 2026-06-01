@@ -131,6 +131,25 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
+  it('ignores expired cricket Test quick matches before choosing an app-entry route', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'test-1',
+      sport: 'cricket',
+      status: 'in-progress',
+      updatedAt: '2026-05-30T12:00:00.000Z',
+      format: { totalInnings: 4 },
+    }]));
+
+    const state = loadAppEntryState();
+
+    expect(loadQuickMatchSummaries()).toHaveLength(0);
+    expect(state.returningPlayerState).toBe(false);
+    expect(state.draftEntryPath).toBeNull();
+    expect(getAppEntryTarget(state)).toBe(PUBLIC_MARKETING_PATH);
+  });
+
   it('ignores expired tennis quick-live drafts before choosing an app-entry route', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
