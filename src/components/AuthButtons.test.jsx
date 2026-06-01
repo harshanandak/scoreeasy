@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { LocalAuthProvider } from '../auth/AuthContext';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { AuthContext, LocalAuthProvider } from '../auth/AuthContext';
 import {
   SignedIn,
   SignedOut,
@@ -9,6 +9,49 @@ import {
   AuthSignUpButton,
   AuthUserButton,
 } from './AuthButtons';
+
+vi.mock('@clerk/clerk-react', () => ({
+  GoogleOneTap: () => <div data-testid="clerk-one-tap" />,
+  SignInButton: MockClerkSignInButton,
+  SignUpButton: MockClerkSignUpButton,
+  UserButton: MockClerkUserButton,
+}));
+
+function createOptionalPropValidator() {
+  const validator = () => null;
+  validator.isRequired = validator;
+  return validator;
+}
+
+const optionalProp = createOptionalPropValidator();
+
+function MockClerkSignInButton({ children }) {
+  return <div data-testid="clerk-sign-in">{children}</div>;
+}
+
+MockClerkSignInButton.propTypes = {
+  children: optionalProp,
+};
+
+function MockClerkSignUpButton({ children }) {
+  return <div data-testid="clerk-sign-up">{children}</div>;
+}
+
+MockClerkSignUpButton.propTypes = {
+  children: optionalProp,
+};
+
+function MockClerkUserButton(props) {
+  return (
+    <button type="button" aria-label={props['aria-label'] || 'Account menu'}>
+      Account
+    </button>
+  );
+}
+
+MockClerkUserButton.propTypes = {
+  'aria-label': optionalProp,
+};
 
 describe('local auth button fallbacks', () => {
   it('renders signed-out content and hides signed-in content in local mode', () => {
@@ -42,5 +85,34 @@ describe('local auth button fallbacks', () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('shows the Clerk account menu and hides signed-out prompts for signed-in cloud users', async () => {
+    render(
+      <AuthContext.Provider
+        value={{
+          authMode: 'cloud',
+          authModeReason: 'available',
+          cloudAuthAvailable: true,
+          isAuthenticated: true,
+          isLoading: false,
+          isUserReady: true,
+          user: { id: 'user_1' },
+          clerkUser: { id: 'clerk_1' },
+          needsUsername: false,
+          needsOnboarding: false,
+        }}
+      >
+        <AuthUserButton aria-label="Account menu" />
+        <SignedOut>
+          <button type="button">Sign in</button>
+        </SignedOut>
+      </AuthContext.Provider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Account menu' })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
   });
 });

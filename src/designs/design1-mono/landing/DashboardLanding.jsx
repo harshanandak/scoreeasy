@@ -873,6 +873,7 @@ export default function DashboardLanding() {
   return (
     <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}
          className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
+      <h1 className="sr-only">Dashboard</h1>
 
       {/* ── Sticky Nav ── */}
       <nav style={{
