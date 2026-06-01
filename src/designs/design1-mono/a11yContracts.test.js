@@ -10,11 +10,18 @@ describe('mono accessibility contracts', () => {
     expect(css).toContain('outline: 3px solid var(--se-color-focus-ring');
   });
 
-  it('keeps cricket scorer headings safe when sport config is unavailable', () => {
-    const liveScorer = readFileSync(join(process.cwd(), 'src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx'), 'utf8');
-    const testScorer = readFileSync(join(process.cwd(), 'src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx'), 'utf8');
+  it('keeps scorer headings safe when sport config is unavailable', () => {
+    const scorerFiles = [
+      'src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx',
+      'src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx',
+      'src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx',
+      'src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx',
+      'src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx',
+    ];
 
-    expect(liveScorer).toContain("{sportConfig?.name || 'Sport'} match scorer");
-    expect(testScorer).toContain("{sportConfig?.name || 'Sport'} match scorer");
+    for (const scorerFile of scorerFiles) {
+      const source = readFileSync(join(process.cwd(), scorerFile), 'utf8');
+      expect(source).toMatch(/sportConfig\?\.name\s*\|\|\s*['"]Sport['"]}\s*match scorer/);
+    }
   });
 });
