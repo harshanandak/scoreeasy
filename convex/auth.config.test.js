@@ -54,6 +54,14 @@ describe('Convex Clerk auth config', () => {
     expect(authConfig.providers[0].domain).toBe('https://clerk.scoreeasy.test');
   });
 
+  it('canonicalizes configured issuer URLs to HTTPS without trailing slashes', async () => {
+    const { default: authConfig } = await loadAuthConfig({
+      CLERK_JWT_ISSUER_DOMAIN: 'http://scoreeasy.accounts.dev/',
+    });
+
+    expect(authConfig.providers[0].domain).toBe('https://scoreeasy.accounts.dev');
+  });
+
   it('uses the production issuer fallback when Clerk env is unavailable', async () => {
     const { default: authConfig } = await loadAuthConfig({});
 

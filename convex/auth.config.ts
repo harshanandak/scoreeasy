@@ -12,11 +12,13 @@ function normalizeIssuerDomain(domain: string | undefined) {
     return DEFAULT_CLERK_JWT_ISSUER_DOMAIN;
   }
 
-  if (/^https?:\/\//.test(trimmed)) {
-    return trimmed;
+  const issuer = trimmed.replace(/\/+$/, '').replace(/^http:\/\//i, "https://");
+
+  if (/^https:\/\//i.test(issuer)) {
+    return issuer;
   }
 
-  return `https://${trimmed}`;
+  return `https://${issuer}`;
 }
 
 const clerkJwtIssuerEnv = convexEnv?.CLERK_JWT_ISSUER_DOMAIN?.trim();
