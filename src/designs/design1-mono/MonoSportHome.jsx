@@ -764,6 +764,9 @@ export default function MonoSportHome() {
   return (
     <div className={`min-h-screen px-4 sm:px-6 py-6 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="mono-page-shell">
+        <h1 className="mono-page-header text-xl font-semibold tracking-tight" style={{ color: sportsTokens.color.inkStrong }}>
+          Play
+        </h1>
         <SportChooserFrame
           layout={layout}
           onSearchChange={handleSearchChange}

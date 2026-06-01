@@ -541,6 +541,15 @@
   box-shadow: var(--shadow-xs);
 }
 
+.mono-btn:disabled,
+.mono-btn-primary:disabled,
+.mono-score-btn:disabled,
+.mono-setup-option:disabled,
+.mono-type-card:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
 .mono-btn-primary:active {
   transform: translateY(1px);
   box-shadow: var(--shadow-2xs);
@@ -917,18 +926,10 @@
 }
 
 /* --- Focus Visible Styles (Accessibility) --- */
-.mono-btn:focus-visible,
-.mono-btn-primary:focus-visible,
-.mono-score-btn:focus-visible,
-.mono-type-card:focus-visible {
-  outline: 2px solid var(--se-color-action);
-  outline-offset: 2px;
-}
-
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--se-color-action);
-  outline-offset: 2px;
+:where(button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid var(--se-color-focus-ring, var(--se-color-action));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px color-mix(in oklch, var(--se-color-focus-ring, var(--se-color-action)) 18%, transparent);
 }
 
 /* --- Reduced Motion (Accessibility) --- */

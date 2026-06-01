@@ -598,6 +598,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
+      <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
       {saveWarning && (
         <div className="mono-alert mono-alert-danger mb-4">
           {saveWarning}
