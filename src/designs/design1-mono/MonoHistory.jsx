@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
-import { loadData, loadSportTournaments, saveData } from '../../utils/storage';
+import {
+  clearCompletedQuickMatches,
+  deleteQuickMatch as deleteStoredQuickMatch,
+  loadCompletedQuickMatches,
+  loadSportTournaments,
+  replaceCompletedQuickMatches,
+  saveData,
+} from '../../utils/storage';
 import { loadHistory } from '../../utils/universalStorage';
 import { getSportById, getSportsList } from '../../models/sportRegistry';
 import { getPriorityStartActions } from '../../utils/startActions';
@@ -16,7 +23,6 @@ import SportIcon from './SportIcon';
 import { sportsTokens } from './theme/sportsTokens';
 import { shareText } from '../../mobile/share';
 
-const QM_KEY = 'se_quickmatches';
 const ANY_SPORT = 'all';
 const RESULT_ALL = 'all';
 const RESULT_DECIDED = 'decided';
@@ -246,7 +252,7 @@ export default function MonoHistory() {
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
 
-    const loadedQuick = loadData(QM_KEY, []);
+    const loadedQuick = loadCompletedQuickMatches();
     loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
 
     setQuickMatches(loadedQuick);
@@ -348,7 +354,7 @@ export default function MonoHistory() {
   const deleteQuickMatch = (id) => {
     const updated = quickMatches.filter((qm) => qm.id !== id);
     setQuickMatches(updated);
-    saveData(QM_KEY, updated);
+    deleteStoredQuickMatch(id);
   };
 
   const confirmDeleteQuickMatch = (entry) => {
@@ -375,14 +381,14 @@ export default function MonoHistory() {
   const undoDeleteQuickMatch = () => {
     if (!pendingDelete?.quickSnapshot) return;
     setQuickMatches(pendingDelete.quickSnapshot);
-    saveData(QM_KEY, pendingDelete.quickSnapshot);
+    replaceCompletedQuickMatches(pendingDelete.quickSnapshot);
     setPendingDelete(null);
     setHistoryStatus('Quick match restored.');
   };
 
   const clearAllQuickMatches = () => {
     setQuickMatches([]);
-    saveData(QM_KEY, []);
+    clearCompletedQuickMatches();
   };
 
   const confirmClearMutableHistory = () => {
@@ -410,7 +416,7 @@ export default function MonoHistory() {
   const undoClearMutableHistory = () => {
     if (!pendingClear) return;
     setQuickMatches(pendingClear.quick);
-    saveData(QM_KEY, pendingClear.quick);
+    replaceCompletedQuickMatches(pendingClear.quick);
     saveData('gs_history', pendingClear.legacy);
     refreshLegacyHistory();
     setPendingClear(null);

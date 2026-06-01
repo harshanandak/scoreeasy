@@ -3,20 +3,28 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
 
-vi.mock('convex/react', () => ({
-  useMutation: () => vi.fn(),
-  useQuery: () => [],
-}));
-
-vi.mock('../../hooks/useAuth', () => ({
-  useAuth: () => ({
+const authState = vi.hoisted(() => ({
+  current: {
     authMode: 'local',
     cloudAuthAvailable: false,
     isAuthenticated: false,
     isLoading: false,
     needsOnboarding: false,
     user: null,
-  }),
+  },
+}));
+
+vi.mock('convex/react', () => ({
+  useMutation: () => vi.fn(),
+  useQuery: () => [],
+}));
+
+vi.mock('../../hooks/useAuth', () => ({
+  useAuth: () => authState.current,
+}));
+
+vi.mock('@clerk/clerk-react', () => ({
+  SignIn: () => <div>Sign in form</div>,
 }));
 
 function LocationProbe() {
@@ -35,6 +43,14 @@ function renderApp(initialEntry) {
 
 describe('app route recovery', () => {
   beforeEach(() => {
+    authState.current = {
+      authMode: 'local',
+      cloudAuthAvailable: false,
+      isAuthenticated: false,
+      isLoading: false,
+      needsOnboarding: false,
+      user: null,
+    };
     vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
     vi.stubGlobal('matchMedia', vi.fn(() => ({
       addEventListener: vi.fn(),
@@ -90,6 +106,24 @@ describe('app route recovery', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
     });
     expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+  });
+
+  it('preserves returnTo on signin alias redirects', async () => {
+    authState.current = {
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: false,
+      isLoading: false,
+      needsOnboarding: false,
+      user: null,
+    };
+
+    renderApp('/sign-in?returnTo=%2Fprofile');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fprofile');
+    });
+    expect(screen.getByText('Sign in form')).toBeInTheDocument();
   });
 
   it('recovers dead dashboard game resume links without generic not found', async () => {

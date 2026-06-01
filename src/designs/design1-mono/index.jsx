@@ -127,6 +127,11 @@ function LegacyTennisLiveRoute() {
   return <Navigate to={`/${sport}/quick/live/${matchId}`} replace />;
 }
 
+function SignInAliasRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/login${location.search}${location.hash}`} replace />;
+}
+
 function GameResumeRecoveryRoute() {
   return (
     <RouteRecoveryActions
@@ -1220,8 +1225,8 @@ export default function Design1Mono() {
                 <Route path="contact" element={<LegalPage type="contact" />} />
 
                 <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
-                <Route path="signin/*" element={<Navigate to="/login" replace />} />
-                <Route path="sign-in/*" element={<Navigate to="/login" replace />} />
+                <Route path="signin/*" element={<SignInAliasRedirect />} />
+                <Route path="sign-in/*" element={<SignInAliasRedirect />} />
                 <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
                 <Route path="sso-callback" element={<CloudAuthOnly><SSOCallback /></CloudAuthOnly>} />
                 <Route path="onboarding" element={<CloudAuthOnly><MonoOnboarding /></CloudAuthOnly>} />

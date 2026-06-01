@@ -1,13 +1,17 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadSportTournaments, loadData, saveData } from '../../utils/storage';
+import {
+  clearCompletedQuickMatches,
+  deleteQuickMatch as deleteStoredQuickMatch,
+  loadCompletedQuickMatches,
+  loadSportTournaments,
+  replaceCompletedQuickMatches,
+} from '../../utils/storage';
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
-
-const QM_KEY = 'se_quickmatches';
 
 function getMatchDate(match) {
   return new Date(match.completedAt || match.date || match.createdAt || 0);
@@ -222,7 +226,7 @@ export default function MonoStatistics() {
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
 
-    const qm = loadData(QM_KEY, []);
+    const qm = loadCompletedQuickMatches();
     qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
     setQuickMatches(qm);
 
@@ -256,7 +260,7 @@ export default function MonoStatistics() {
   const deleteQuickMatch = (id) => {
     const updated = quickMatches.filter(qm => qm.id !== id);
     setQuickMatches(updated);
-    saveData(QM_KEY, updated);
+    deleteStoredQuickMatch(id);
   };
 
   const requestDeleteQuickMatch = (match) => {
@@ -282,7 +286,7 @@ export default function MonoStatistics() {
   const undoDeleteQuickMatch = () => {
     if (!pendingDelete?.quickSnapshot) return;
     setQuickMatches(pendingDelete.quickSnapshot);
-    saveData(QM_KEY, pendingDelete.quickSnapshot);
+    replaceCompletedQuickMatches(pendingDelete.quickSnapshot);
     setPendingDelete(null);
     setStatsStatus('Quick stat restored.');
   };
@@ -298,7 +302,7 @@ export default function MonoStatistics() {
 
   const clearAllQuickMatches = () => {
     setQuickMatches([]);
-    saveData(QM_KEY, []);
+    clearCompletedQuickMatches();
   };
 
   const completeClearAllQuickMatches = () => {
@@ -314,7 +318,7 @@ export default function MonoStatistics() {
   const undoClearAllQuickMatches = () => {
     if (!pendingClear?.quickSnapshot) return;
     setQuickMatches(pendingClear.quickSnapshot);
-    saveData(QM_KEY, pendingClear.quickSnapshot);
+    replaceCompletedQuickMatches(pendingClear.quickSnapshot);
     setPendingClear(null);
     setStatsStatus('Quick stats restored.');
   };
