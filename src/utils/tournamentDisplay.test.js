@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getTournamentProgressCounts,
   getTournamentMatchCountPreview,
   getTournamentTypeLabel,
   isPureKnockoutTournament,
@@ -40,5 +41,31 @@ describe('tournament display helpers', () => {
       teamCount: 4,
       thirdPlaceMatch: false,
     })).toBe(3);
+  });
+
+  it('counts larger single-elimination brackets from the team count', () => {
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
+      teamCount: 6,
+      thirdPlaceMatch: false,
+    })).toBe(5);
+
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
+      teamCount: 8,
+      thirdPlaceMatch: true,
+    })).toBe(8);
+  });
+
+  it('includes knockout matches in elimination dashboard progress', () => {
+    expect(getTournamentProgressCounts({
+      type: 'knockout',
+      matches: [],
+      knockoutMatches: [
+        { status: 'completed' },
+        { status: 'pending' },
+        { status: 'pending' },
+      ],
+    })).toEqual({ completedMatches: 1, totalMatches: 3 });
   });
 });

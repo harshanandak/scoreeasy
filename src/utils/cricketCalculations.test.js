@@ -4,6 +4,7 @@ import {
   calculateRunRate,
   calculateNRR,
   getMatchWinner,
+  getLimitedOversResult,
   calculateCricketPointsTable,
   OVERS_PRESETS,
 } from './cricketCalculations';
@@ -142,6 +143,48 @@ describe('getMatchWinner', () => {
   it('returns null when team2Score is missing', () => {
     const match = { team1Id: 'a', team2Id: 'b', team1Score: { runs: 100 }, team2Score: null };
     expect(getMatchWinner(match)).toBeNull();
+  });
+
+  it('does not declare a winner before a limited-overs match is complete', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'in-progress',
+      team1Score: { runs: 120, balls: 60, wickets: 4 },
+      team2Score: { runs: 30, balls: 18, wickets: 1 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getMatchWinner(match)).toBeNull();
+  });
+});
+
+describe('getLimitedOversResult', () => {
+  it('labels a chase win by wickets when team 2 chases successfully', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      team1Score: { runs: 120, balls: 60, wickets: 8 },
+      team2Score: { runs: 121, balls: 54, wickets: 4 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won by 6 wickets');
+  });
+
+  it('labels a reversed-batting-order chase win by wickets', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      battingOrder: ['b', 'a'],
+      team1Score: { runs: 151, balls: 58, wickets: 3 },
+      team2Score: { runs: 150, balls: 60, wickets: 8 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won by 7 wickets');
   });
 });
 

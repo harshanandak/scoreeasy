@@ -36,6 +36,33 @@ export function initializeKnockoutStage(tournament, standings) {
 export function updateKnockoutBracket(knockoutMatches) {
   if (!knockoutMatches || knockoutMatches.length === 0) return knockoutMatches;
 
+  const sourceLinkedMatches = knockoutMatches.filter(m => Array.isArray(m.sourceMatchIds) && m.sourceMatchIds.length > 0);
+  if (sourceLinkedMatches.length > 0) {
+    let changed = false;
+    const updated = knockoutMatches.map((match) => {
+      if (!Array.isArray(match.sourceMatchIds) || match.sourceMatchIds.length === 0 || match.status !== 'pending') {
+        return match;
+      }
+
+      const sources = match.sourceMatchIds.map((sourceId) => knockoutMatches.find((candidate) => candidate.id === sourceId));
+      if (sources.some((source) => !source || source.status !== 'completed' || !source.winner)) {
+        return match;
+      }
+
+      const teamIds = match.round === 'third-place'
+        ? sources.map((source) => source.winner === source.team1Id ? source.team2Id : source.team1Id)
+        : sources.map((source) => source.winner);
+      const nextTeam1 = match.team1Id || teamIds[0] || null;
+      const nextTeam2 = match.team2Id || teamIds[1] || null;
+      if (nextTeam1 === match.team1Id && nextTeam2 === match.team2Id) return match;
+
+      changed = true;
+      return { ...match, team1Id: nextTeam1, team2Id: nextTeam2 };
+    });
+
+    if (changed) return updated;
+  }
+
   const semi1 = knockoutMatches.find(m => m.round === 'semi-1');
   const semi2 = knockoutMatches.find(m => m.round === 'semi-2');
 

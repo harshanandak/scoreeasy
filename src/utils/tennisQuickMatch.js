@@ -37,6 +37,20 @@ export function countTennisQuickSetsWon(sets) {
     }, { setsWon1: 0, setsWon2: 0 });
 }
 
+export function getVisibleTennisSetRows(sets) {
+  if (!Array.isArray(sets)) return [];
+
+  const { setsWon1, setsWon2 } = countTennisQuickSetsWon(sets);
+  const setsToWin = Math.ceil(sets.length / 2);
+  if (setsWon1 >= setsToWin || setsWon2 >= setsToWin) {
+    return sets.filter((set) => set.completed);
+  }
+
+  const firstIncompleteIndex = sets.findIndex((set) => !set.completed);
+  if (firstIncompleteIndex === -1) return sets;
+  return sets.slice(0, firstIncompleteIndex + 1);
+}
+
 export function buildTennisQuickDraft({ matchId, sport, team1Name, team2Name, format, sets, nowIso }) {
   return {
     id: matchId,

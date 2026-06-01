@@ -8,6 +8,7 @@ import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { getBasketballCompletionState, getFootballClockState } from '../../../utils/goalsScoring';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 
@@ -47,7 +48,9 @@ export default function MonoGoalsLiveScore() {
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
+  const [overtimePeriod, setOvertimePeriod] = useState(0);
   const scoringPrompt = useAppScoringPrompt();
+  const showScoringWarning = scoringPrompt.showWarning;
 
   // Timer for timed mode
   const timer = useTimer();
@@ -135,6 +138,20 @@ export default function MonoGoalsLiveScore() {
     const timeLimit = effectiveFormat?.timeLimit;
 
     if (formatMode === 'timed' && timeLimit && timer.elapsed >= timeLimit) {
+      const completionState = getBasketballCompletionState({
+        score1,
+        score2,
+        drawAllowed: sportConfig.config.drawAllowed,
+        overtimePeriod,
+      });
+      if (!completionState.canComplete) {
+        if (overtimePeriod === 0) {
+          setOvertimePeriod(1);
+          showScoringWarning(completionState.message);
+        }
+        return undefined;
+      }
+
       // Time's up - auto-save match
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
@@ -171,7 +188,7 @@ export default function MonoGoalsLiveScore() {
     }
 
     return undefined;
-  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate, scoringPrompt.isInteractionLocked]);
+  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate, scoringPrompt.isInteractionLocked, showScoringWarning, overtimePeriod]);
 
   // Add point/goal
   const addScore = (team, value = 1) => {
@@ -321,9 +338,15 @@ export default function MonoGoalsLiveScore() {
   const saveMatch = () => {
     if (scoringPrompt.isInteractionLocked) return;
 
-    // Check for draw if not allowed
-    if (!sportConfig.config.drawAllowed && score1 === score2) {
-      scoringPrompt.showWarning(`Draws are not allowed in ${sportConfig.name}.`);
+    const completionState = getBasketballCompletionState({
+      score1,
+      score2,
+      drawAllowed: sportConfig.config.drawAllowed,
+      overtimePeriod,
+    });
+    if (!completionState.canComplete) {
+      setOvertimePeriod((period) => period + 1);
+      showScoringWarning(completionState.message);
       return;
     }
 
@@ -388,6 +411,9 @@ export default function MonoGoalsLiveScore() {
   const timeLimit = isTimedMode ? effectiveFormat.timeLimit : null;
   const remainingSeconds = isTimedMode && timeLimit ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
+  const footballClockState = sport === 'football' && isTimedMode
+    ? getFootballClockState({ elapsedSeconds: timer.elapsed, halfLengthSeconds: Math.floor(timeLimit / 2) })
+    : null;
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -432,11 +458,13 @@ export default function MonoGoalsLiveScore() {
             </button>
             {isTimedMode ? (
               <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? '#dc2626' : undefined }}>
-                {isTimeUp ? "Time's up!" : formatCountdown(remainingSeconds)}
+                {footballClockState
+                  ? `${footballClockState.label}${footballClockState.phase === 'full-time' ? '' : ` - ${formatCountdown(footballClockState.remainingSeconds)}`}`
+                  : isTimeUp ? "Time's up!" : formatCountdown(remainingSeconds)}
               </span>
             ) : (
               <span className="mono-badge mono-badge-live">
-                {effectiveFormat?.mode === 'points' ? `First to ${effectiveFormat.target}` : 'Live Scoring'}
+                {overtimePeriod > 0 ? `OT ${overtimePeriod}` : effectiveFormat?.mode === 'points' ? `First to ${effectiveFormat.target}` : 'Live Scoring'}
               </span>
             )}
           </div>

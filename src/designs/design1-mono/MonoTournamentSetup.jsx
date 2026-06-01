@@ -37,7 +37,7 @@ function getCricketReviewLabel(format) {
     ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset)
     : 'Custom';
   const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
-  return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
+  return presetName + ' - ' + oversLabel + ' - ' + format.players + ' players';
 }
 
 function getSetsReviewLabel(format) {
@@ -289,7 +289,7 @@ export default function MonoTournamentSetup() {
     const isElimination = tournamentType === 'knockout';
     const isGroupKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
     const isKnockout = isElimination || isGroupKnockout;
-    const activeTeamsAdvancing = isElimination ? (teamCount === 2 ? 2 : 4) : teamsAdvancing;
+    const activeTeamsAdvancing = isElimination ? teamCount : teamsAdvancing;
     const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
@@ -363,7 +363,7 @@ export default function MonoTournamentSetup() {
 
   const finalStageLabel = (() => {
     if (tournamentType === 'knockout') {
-      return `${teamCount}-team elimination${teamCount === 4 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
+      return `${teamCount}-team elimination${teamCount > 2 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
     }
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
@@ -401,8 +401,8 @@ export default function MonoTournamentSetup() {
     if (tournamentType === 'knockout') {
       const seededStandings = teams.map((team, index) => ({ teamId: team.id, team, seed: index + 1 }));
       const config = {
-        teamsAdvancing: teamCount === 2 ? 2 : 4,
-        thirdPlaceMatch: teamCount === 4 ? thirdPlaceMatch : false,
+        teamsAdvancing: teamCount,
+        thirdPlaceMatch: teamCount > 2 ? thirdPlaceMatch : false,
       };
       return generateKnockoutMatches(seededStandings, config).map((match) => ({
         ...match,
@@ -410,7 +410,7 @@ export default function MonoTournamentSetup() {
       }));
     }
     if (tournamentType === 'series') {
-      return Array.from({ length: Math.min(seriesGames, 4) }, (_, i) => ({
+      return Array.from({ length: seriesGames }, (_, i) => ({
         label: `Match ${i + 1}`,
         team1Id: teams[0]?.id,
         team2Id: teams[1]?.id,
@@ -589,7 +589,7 @@ export default function MonoTournamentSetup() {
                   {tournamentType === 'knockout' ? 'Bracket size' : 'Number of teams'}
                 </legend>
                 <div className="flex gap-2">
-                  {(tournamentType === 'knockout' ? [2, 4] : teamCountOptions).map(n => (
+                  {teamCountOptions.map(n => (
                     <button
                       key={n}
                       onClick={() => {
@@ -616,10 +616,10 @@ export default function MonoTournamentSetup() {
                 </div>
                 <p className="text-xs mt-2" style={{ color: '#888' }}>
                   {tournamentType === 'knockout'
-                    ? `Will generate ${teamCount === 2 ? 'a final' : 'two semi-finals and a final'}`
+                    ? `Will generate ${matchCountPreview} ${matchCountPreview === 1 ? 'match' : 'matches'}`
                     : (
                       <>
-                        Will generate {teamCount === 2 ? '1 match' : `${(teamCount * (teamCount - 1)) / 2} matches`}
+                        Will generate {matchCountPreview === 1 ? '1 match' : `${matchCountPreview} matches`}
                         {teamCount >= 3 && ' (round-robin format)'}
                       </>
                     )}
@@ -627,7 +627,7 @@ export default function MonoTournamentSetup() {
               </fieldset>
             )}
 
-            {tournamentType === 'knockout' && teamCount === 4 && (
+            {tournamentType === 'knockout' && teamCount > 2 && (
               <label className="flex items-center gap-2 mb-8 cursor-pointer">
                 <input
                   type="checkbox"

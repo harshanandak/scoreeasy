@@ -21,7 +21,9 @@ export function getTournamentMatchCountPreview({
   thirdPlaceMatch,
 }) {
   if (tournamentType === 'series') return seriesGames;
-  if (tournamentType === 'knockout') return teamCount === 2 ? 1 : (thirdPlaceMatch ? 4 : 3);
+  if (tournamentType === 'knockout') {
+    return Math.max(0, teamCount - 1) + (thirdPlaceMatch && teamCount > 2 ? 1 : 0);
+  }
 
   const groupMatches = teamCount === 2 ? 1 : (teamCount * (teamCount - 1)) / 2;
   if (tournamentType !== 'round-robin' || teamCount < 3 || winnerMode !== 'knockouts') {
@@ -31,4 +33,16 @@ export function getTournamentMatchCountPreview({
   const playoffTeams = teamCount >= 4 && teamsAdvancing === 4 ? 4 : 2;
   const playoffMatches = playoffTeams === 4 ? (thirdPlaceMatch ? 4 : 3) : 1;
   return groupMatches + playoffMatches;
+}
+
+export function getTournamentProgressCounts(tournament) {
+  const allMatches = [
+    ...(tournament?.matches || []),
+    ...(tournament?.knockoutMatches || []),
+  ];
+
+  return {
+    completedMatches: allMatches.filter((match) => match.status === 'completed').length,
+    totalMatches: allMatches.length,
+  };
 }

@@ -1,4 +1,4 @@
-import { generateRoundRobinMatches, getTotalMatchCount, getCompletedMatchCount } from './roundRobin';
+import { generateKnockoutMatches, generateRoundRobinMatches, getTotalMatchCount, getCompletedMatchCount } from './roundRobin';
 
 describe('generateRoundRobinMatches', () => {
   function makeTeams(n) {
@@ -146,5 +146,38 @@ describe('getCompletedMatchCount', () => {
       { status: 'completed' },
     ];
     expect(getCompletedMatchCount(matches)).toBe(3);
+  });
+});
+
+describe('generateKnockoutMatches', () => {
+  function makeStandings(n) {
+    return Array.from({ length: n }, (_, i) => ({
+      teamId: `team${i + 1}`,
+      team: { id: `team${i + 1}`, name: `Team ${i + 1}` },
+      seed: i + 1,
+    }));
+  }
+
+  it('generates a full 8-team elimination bracket', () => {
+    const matches = generateKnockoutMatches(makeStandings(8), {
+      teamsAdvancing: 8,
+      thirdPlaceMatch: false,
+    });
+
+    expect(matches).toHaveLength(7);
+    expect(matches.filter((match) => match.round.startsWith('quarter-'))).toHaveLength(4);
+    expect(matches.filter((match) => match.round.startsWith('semi-'))).toHaveLength(2);
+    expect(matches.find((match) => match.round === 'final')).toBeTruthy();
+  });
+
+  it('supports non-power-of-two elimination brackets with byes', () => {
+    const matches = generateKnockoutMatches(makeStandings(6), {
+      teamsAdvancing: 6,
+      thirdPlaceMatch: true,
+    });
+
+    expect(matches).toHaveLength(6);
+    expect(matches.filter((match) => match.round.startsWith('play-in-'))).toHaveLength(2);
+    expect(matches.find((match) => match.round === 'third-place')).toBeTruthy();
   });
 });

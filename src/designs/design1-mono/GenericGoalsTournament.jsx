@@ -9,6 +9,7 @@ import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
+import { getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 
 export default function GenericGoalsTournament() {
   const navigate = useNavigate();
@@ -93,10 +94,7 @@ export default function GenericGoalsTournament() {
     return team?.name || 'Unknown';
   };
 
-  const completedMatches = tournament.matches.filter(m =>
-    (m.score1 !== null && m.score1 !== undefined) && m.status === 'completed'
-  ).length;
-  const totalMatches = tournament.matches.length;
+  const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);

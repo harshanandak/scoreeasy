@@ -9,6 +9,7 @@ import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
+import { getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -117,10 +118,7 @@ export default function GenericSetsTournament() {
     return team?.name || 'Unknown';
   };
 
-  const completedMatches = tournament.matches.filter(m =>
-    m.sets && m.sets.length > 0 && m.status === 'completed'
-  ).length;
-  const totalMatches = tournament.matches.length;
+  const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const tournamentDone = isTournamentComplete(tournament);
