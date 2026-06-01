@@ -161,7 +161,7 @@ export function getTotalBalls(format) {
 }
 
 export function canManuallyCompleteUnlimitedMatch(format, innings) {
-  return format?.totalInnings === 2 && format?.overs == null && innings === 2;
+  return format?.totalInnings === 2 && format?.overs == null && (innings === 1 || innings === 2);
 }
 
 // ==========================================

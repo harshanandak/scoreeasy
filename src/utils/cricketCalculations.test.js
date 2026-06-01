@@ -208,12 +208,14 @@ describe('getLimitedOversResult', () => {
 });
 
 describe('canManuallyCompleteUnlimitedMatch', () => {
-  it('allows manual completion for unlimited two-innings formats after innings two starts', () => {
+  it('allows manual completion for unlimited two-innings formats in either innings', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 1)).toBe(true);
     expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 2)).toBe(true);
   });
 
-  it('does not allow manual completion before innings two or for fixed-over formats', () => {
-    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 1)).toBe(false);
+  it('does not allow manual completion outside playable innings or for fixed-over formats', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 0)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 3)).toBe(false);
     expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: 10 }, 2)).toBe(false);
     expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 4, overs: null }, 2)).toBe(false);
   });

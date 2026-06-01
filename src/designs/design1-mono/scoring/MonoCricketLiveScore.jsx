@@ -436,6 +436,13 @@ export default function MonoCricketLiveScore() {
       return;
     }
 
+    if (!isMatchComplete && !winnerOverride && canManualComplete && innings === 1) {
+      setInnings(2);
+      setBattingTeam(match.team2Id);
+      setSaveWarning('');
+      return;
+    }
+
     if (scores.team1.balls > 0 || scores.team2.balls > 0) {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
