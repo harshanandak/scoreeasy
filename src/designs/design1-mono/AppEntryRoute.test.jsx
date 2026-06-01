@@ -30,6 +30,10 @@ vi.mock('./scoring/MonoTennisLiveScore', () => ({
   default: () => <p>Tennis quick scorer</p>,
 }));
 
+vi.mock('./scoring/MonoCricketTestLiveScore', () => ({
+  default: () => <p>Cricket Test scorer</p>,
+}));
+
 function LocationProbe() {
   const location = useLocation();
   return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
@@ -134,6 +138,22 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/match-1');
     });
     expect(screen.getByText('Tennis quick scorer')).toBeInTheDocument();
+  });
+
+  it('sends in-progress cricket Test quick matches to their scorer route', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'test-1',
+      sport: 'cricket',
+      status: 'in-progress',
+      format: { totalInnings: 4 },
+    }]));
+
+    renderApp('/');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/test-1');
+    });
+    expect(screen.getByText('Cricket Test scorer')).toBeInTheDocument();
   });
 
   it('keeps public marketing intentionally reachable for signed-in users', async () => {

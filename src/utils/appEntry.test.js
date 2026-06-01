@@ -6,6 +6,7 @@ import {
   hasReturningPlayerState,
   loadActiveSessionSummaries,
   loadAppEntryState,
+  loadQuickMatchSummaries,
   loadReturningPlayerState,
 } from './appEntry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
@@ -96,6 +97,38 @@ describe('app entry contract', () => {
     expect(state.returningPlayerState).toBe(true);
     expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
     expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
+  });
+
+  it('returns the scorer route for in-progress cricket Test quick matches', () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'test-1',
+      sport: 'cricket',
+      status: 'in-progress',
+      format: { totalInnings: 4 },
+    }]));
+
+    const state = loadAppEntryState();
+
+    expect(loadQuickMatchSummaries()[0].entryPath).toBe('/cricket/quick/test-match/test-1');
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBe('/cricket/quick/test-match/test-1');
+    expect(getAppEntryTarget(state)).toBe('/cricket/quick/test-match/test-1');
+  });
+
+  it('does not use completed cricket Test quick matches as app-entry scorer routes', () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'test-1',
+      sport: 'cricket',
+      status: 'completed',
+      format: { totalInnings: 4 },
+    }]));
+
+    const state = loadAppEntryState();
+
+    expect(loadQuickMatchSummaries()[0].entryPath).toBeNull();
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBeNull();
+    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
   it('ignores expired tennis quick-live drafts before choosing an app-entry route', () => {

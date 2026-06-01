@@ -57,6 +57,24 @@ export function loadTournamentSummaries(sports = getSportsList()) {
   });
 }
 
+export function loadQuickMatchSummaries() {
+  const quickMatches = loadData(QUICK_MATCHES_KEY, []);
+  if (!Array.isArray(quickMatches)) return [];
+
+  return quickMatches.map((match) => {
+    const isCricketTest = match?.sport === 'cricket' &&
+      match?.status === 'in-progress' &&
+      match?.format?.totalInnings === 4 &&
+      match?.id !== undefined &&
+      match?.id !== null;
+
+    return {
+      ...match,
+      entryPath: isCricketTest ? `/cricket/quick/test-match/${match.id}` : null,
+    };
+  });
+}
+
 export function loadActiveSessionSummaries() {
   const sessions = loadData(SESSIONS_KEY, []);
   if (!Array.isArray(sessions)) return [];
@@ -70,14 +88,17 @@ export function loadAppEntryState() {
       ...loadQuickMatchDrafts(sports),
       ...loadTennisQuickDrafts(),
     ];
-    const draftEntryPath = quickMatchDrafts.find((draft) => draft.entryPath)?.entryPath || null;
+    const quickMatches = loadQuickMatchSummaries();
+    const draftEntryPath = quickMatchDrafts.find((draft) => draft.entryPath)?.entryPath ||
+      quickMatches.find((match) => match.entryPath)?.entryPath ||
+      null;
 
     return {
       draftEntryPath,
       returningPlayerState: hasReturningPlayerState({
         activeSessions: loadActiveSessionSummaries(),
         quickMatchDrafts,
-        quickMatches: loadData(QUICK_MATCHES_KEY, []),
+        quickMatches,
         tournaments: loadTournamentSummaries(sports),
       }),
     };
