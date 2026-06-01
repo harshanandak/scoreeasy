@@ -22,7 +22,7 @@ export function getTournamentMatchCountPreview({
 }) {
   if (tournamentType === 'series') return seriesGames;
   if (tournamentType === 'knockout') {
-    return Math.max(0, teamCount - 1) + (thirdPlaceMatch && teamCount > 2 ? 1 : 0);
+    return Math.max(0, teamCount - 1) + (thirdPlaceMatch && teamCount >= 4 ? 1 : 0);
   }
 
   const groupMatches = teamCount === 2 ? 1 : (teamCount * (teamCount - 1)) / 2;

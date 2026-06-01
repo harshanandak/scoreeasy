@@ -293,7 +293,7 @@ export default function MonoTournamentSetup() {
     const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
-      thirdPlaceMatch: activeTeamsAdvancing > 2 ? thirdPlaceMatch : false,
+      thirdPlaceMatch: activeTeamsAdvancing >= 4 ? thirdPlaceMatch : false,
       format: activeKnockoutFormat,
       mode: isElimination ? 'single-elimination' : 'group-playoff',
     } : null;
@@ -363,11 +363,11 @@ export default function MonoTournamentSetup() {
 
   const finalStageLabel = (() => {
     if (tournamentType === 'knockout') {
-      return `${teamCount}-team elimination${teamCount > 2 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
+      return `${teamCount}-team elimination${teamCount >= 4 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
     }
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
-    const suffix = thirdPlaceMatch ? ' + 3rd place' : '';
+    const suffix = teamsAdvancing >= 4 && thirdPlaceMatch ? ' + 3rd place' : '';
     return `Playoffs (Top ${teamsAdvancing}${suffix})`;
   })();
 
@@ -402,7 +402,7 @@ export default function MonoTournamentSetup() {
       const seededStandings = teams.map((team, index) => ({ teamId: team.id, team, seed: index + 1 }));
       const config = {
         teamsAdvancing: teamCount,
-        thirdPlaceMatch: teamCount > 2 ? thirdPlaceMatch : false,
+        thirdPlaceMatch: teamCount >= 4 ? thirdPlaceMatch : false,
       };
       return generateKnockoutMatches(seededStandings, config).map((match) => ({
         ...match,
@@ -597,7 +597,7 @@ export default function MonoTournamentSetup() {
                         if (tournamentType === 'knockout') {
                           setWinnerMode('knockouts');
                           setTeamsAdvancing(n);
-                          if (n === 2) setThirdPlaceMatch(false);
+                          if (n < 4) setThirdPlaceMatch(false);
                         } else if (n < 3) {
                           setWinnerMode('table-topper');
                           setTeamsAdvancing(2);
@@ -627,7 +627,7 @@ export default function MonoTournamentSetup() {
               </fieldset>
             )}
 
-            {tournamentType === 'knockout' && teamCount > 2 && (
+            {tournamentType === 'knockout' && teamCount >= 4 && (
               <label className="flex items-center gap-2 mb-8 cursor-pointer">
                 <input
                   type="checkbox"

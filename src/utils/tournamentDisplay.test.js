@@ -46,6 +46,12 @@ describe('tournament display helpers', () => {
   it('counts larger single-elimination brackets from the team count', () => {
     expect(getTournamentMatchCountPreview({
       tournamentType: 'knockout',
+      teamCount: 3,
+      thirdPlaceMatch: true,
+    })).toBe(2);
+
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
       teamCount: 6,
       thirdPlaceMatch: false,
     })).toBe(5);
