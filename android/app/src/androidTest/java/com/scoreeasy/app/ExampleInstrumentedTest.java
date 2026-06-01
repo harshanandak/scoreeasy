@@ -1,11 +1,10 @@
-package com.getcapacitor.myapp;
+package com.scoreeasy.app;
 
 import static org.junit.Assert.*;
 
 import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
-import com.scoreeasy.app.BuildConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -19,7 +18,6 @@ public class ExampleInstrumentedTest {
 
     @Test
     public void useAppContext() throws Exception {
-        // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         assertEquals(BuildConfig.APPLICATION_ID, appContext.getPackageName());

@@ -39,6 +39,14 @@ bun run mobile:android
 bun run mobile:ios
 ```
 
+On Windows, use the Android environment helper before emulator QA:
+
+```powershell
+.\scripts\mobile-android-env.ps1 -RequireDevice
+```
+
+The helper exports the Android Studio JBR and `%LOCALAPPDATA%\Android\Sdk` paths when present, prints the resolved `JAVA_HOME`, `ANDROID_HOME`, and `ANDROID_SDK_ROOT`, then runs `adb devices`. The `-RequireDevice` flag fails when no running emulator or device is listed.
+
 Expected:
 
 - Web tests, lint, type-check, and build pass.
