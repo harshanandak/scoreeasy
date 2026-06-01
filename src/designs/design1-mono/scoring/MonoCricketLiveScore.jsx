@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
-import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat } from '../../../utils/cricketCalculations';
+import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult, canManuallyCompleteUnlimitedMatch } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
@@ -430,6 +430,18 @@ export default function MonoCricketLiveScore() {
   // Save match (complete)
   const saveMatch = (winnerOverride) => {
     if (!tournament || !match || scoringPrompt.isInteractionLocked) return;
+    const canManualComplete = canManuallyCompleteUnlimitedMatch(format, innings);
+    if (!isMatchComplete && !winnerOverride && !canManualComplete) {
+      scoringPrompt.showWarning('Complete both innings before ending the match.');
+      return;
+    }
+
+    if (!isMatchComplete && !winnerOverride && canManualComplete && innings === 1) {
+      setInnings(2);
+      setBattingTeam(2);
+      setSaveWarning('');
+      return;
+    }
 
     if (scores.team1.balls > 0 || scores.team2.balls > 0) {
       triggerConfetti();
@@ -445,13 +457,25 @@ export default function MonoCricketLiveScore() {
       else if (scores.team2.runs > scores.team1.runs) winner = match.team2Id;
       else winner = 'tie';
     }
-
-    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-      ...m,
+    const completedMatch = {
+      ...match,
+      status: 'completed',
+      battingOrder: [match.team1Id, match.team2Id],
       team1Score: { runs: scores.team1.runs, balls: scores.team1.balls, wickets: scores.team1.wickets, allOut: scores.team1.allOut },
       team2Score: { runs: scores.team2.runs, balls: scores.team2.balls, wickets: scores.team2.wickets, allOut: scores.team2.allOut },
       winner,
+      format,
       superOver: superOverPhase !== 'inactive' ? superOver : undefined,
+    };
+
+    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+      ...m,
+      team1Score: completedMatch.team1Score,
+      team2Score: completedMatch.team2Score,
+      battingOrder: completedMatch.battingOrder,
+      winner,
+      winDesc: getLimitedOversResult(completedMatch),
+      superOver: completedMatch.superOver,
       status: 'completed',
       draftState: undefined,
       completedAt: new Date().toISOString(),

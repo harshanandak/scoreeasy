@@ -18,6 +18,7 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import {
   buildTennisQuickHistoryEntry,
   getTennisQuickDraftKey,
+  getVisibleTennisSetRows,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
@@ -722,7 +723,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           Match Score
         </h3>
         <div className="flex flex-col gap-2">
-          {sets.map((set, idx) => {
+          {getVisibleTennisSetRows(sets).map((set, idx) => {
             const isActive = idx === currentSet;
             // S6479: use stable key derived from set label, not array index
             const setLabel = `Set ${idx + 1}`;

@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
-import { ballsToOvers, calculateCricketPointsTable, getCricketFormat } from '../../utils/cricketCalculations';
+import { ballsToOvers, calculateCricketPointsTable, getCricketFormat, getLimitedOversResult } from '../../utils/cricketCalculations';
 import { getSportById } from '../../models/sportRegistry';
 import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
+import { getKnockoutRoundGroups, getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 
 // Get human-readable format label from format object
 function getFormatLabel(format) {
@@ -236,8 +237,7 @@ export default function MonoCricketTournament() {
     return team?.name || 'Unknown';
   };
 
-  const completedMatches = tournament.matches.filter(m => m.status === 'completed').length;
-  const totalMatches = tournament.matches.length;
+  const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
 
   const clearScore = (matchId) => {
     setTournament(prev => ({
@@ -261,6 +261,7 @@ export default function MonoCricketTournament() {
   };
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const knockoutRoundGroups = getKnockoutRoundGroups(tournament.knockoutMatches);
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
   const metaLabel = [
@@ -389,6 +390,9 @@ export default function MonoCricketTournament() {
                 } else if (match.team1Score && match.team2Score) {
                   t1Wins = match.team1Score.runs > match.team2Score.runs;
                   t2Wins = match.team2Score.runs > match.team1Score.runs;
+                }
+                if (!winDesc && match.team1Score && match.team2Score) {
+                  winDesc = getLimitedOversResult(match);
                 }
               }
 
@@ -583,15 +587,13 @@ export default function MonoCricketTournament() {
 
             {tournament.phase === 'knockout' && tournament.knockoutMatches && (
               <div className="space-y-6">
-                {tournament.knockoutConfig.teamsAdvancing === 4 && (
-                  <div>
+                {knockoutRoundGroups.map((group) => (
+                  <div key={group.label}>
                     <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                      Semi-finals
+                      {group.label}
                     </h3>
                     <div className="space-y-3">
-                      {tournament.knockoutMatches
-                        .filter(m => m.round.startsWith('semi'))
-                        .map(match => (
+                      {group.matches.map(match => (
                           <KnockoutMatchCard
                             key={match.id}
                             match={match}
@@ -605,7 +607,7 @@ export default function MonoCricketTournament() {
                         ))}
                     </div>
                   </div>
-                )}
+                ))}
 
                 <div>
                   <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>

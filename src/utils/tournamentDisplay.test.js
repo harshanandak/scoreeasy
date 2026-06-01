@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getKnockoutRoundGroups,
+  getTournamentProgressCounts,
   getTournamentMatchCountPreview,
   getTournamentTypeLabel,
   isPureKnockoutTournament,
@@ -40,5 +42,51 @@ describe('tournament display helpers', () => {
       teamCount: 4,
       thirdPlaceMatch: false,
     })).toBe(3);
+  });
+
+  it('counts larger single-elimination brackets from the team count', () => {
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
+      teamCount: 3,
+      thirdPlaceMatch: true,
+    })).toBe(2);
+
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
+      teamCount: 6,
+      thirdPlaceMatch: false,
+    })).toBe(5);
+
+    expect(getTournamentMatchCountPreview({
+      tournamentType: 'knockout',
+      teamCount: 8,
+      thirdPlaceMatch: true,
+    })).toBe(8);
+  });
+
+  it('includes knockout matches in elimination dashboard progress', () => {
+    expect(getTournamentProgressCounts({
+      type: 'knockout',
+      matches: [],
+      knockoutMatches: [
+        { status: 'completed' },
+        { status: 'pending' },
+        { status: 'pending' },
+      ],
+    })).toEqual({ completedMatches: 1, totalMatches: 3 });
+  });
+
+  it('groups playable knockout rounds before finals', () => {
+    expect(getKnockoutRoundGroups([
+      { id: 'p1', round: 'play-in-1' },
+      { id: 'q1', round: 'quarter-1' },
+      { id: 's1', round: 'semi-1' },
+      { id: 'f', round: 'final' },
+      { id: 't', round: 'third-place' },
+    ])).toEqual([
+      { label: 'Play-ins', matches: [{ id: 'p1', round: 'play-in-1' }] },
+      { label: 'Quarter-finals', matches: [{ id: 'q1', round: 'quarter-1' }] },
+      { label: 'Semi-finals', matches: [{ id: 's1', round: 'semi-1' }] },
+    ]);
   });
 });

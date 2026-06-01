@@ -160,6 +160,10 @@ export function getTotalBalls(format) {
   return format.overs ? format.overs * 6 : Infinity;
 }
 
+export function canManuallyCompleteUnlimitedMatch(format, innings) {
+  return format?.totalInnings === 2 && format?.overs == null && (innings === 1 || innings === 2);
+}
+
 // ==========================================
 // MATCH WINNER & RESULT
 // ==========================================
@@ -168,6 +172,8 @@ export function getTotalBalls(format) {
  * Get match winner — handles both limited overs and test match data shapes
  */
 export function getMatchWinner(match) {
+  if (match.status && match.status !== 'completed') return null;
+
   // If winner is explicitly set (by test scorer or super over), use it
   if (match.winner) return match.winner;
 
@@ -242,17 +248,34 @@ export function getTestMatchResult(innings, team1Id, team2Id, maxWickets) {
 export function getLimitedOversResult(match) {
   if (!match.team1Score || !match.team2Score) return '';
 
-  const t1 = match.team1Score.runs;
-  const t2 = match.team2Score.runs;
+  const winner = getMatchWinner(match);
+  if (!winner) return '';
+  if (winner === 'tie') return 'Match Tied';
+  if (match.superOver && match.team1Score.runs === match.team2Score.runs) {
+    return 'Won in Super Over';
+  }
 
-  if (t1 === t2) return 'Match Tied';
-  if (t1 > t2) return `Won by ${t1 - t2} runs`;
+  const scoresByTeam = {
+    [match.team1Id]: match.team1Score,
+    [match.team2Id]: match.team2Score,
+  };
+  const battingOrder = Array.isArray(match.battingOrder) && match.battingOrder.length >= 2
+    ? match.battingOrder
+    : [match.team1Id, match.team2Id];
+  const chasingTeam = battingOrder[1];
+  const winnerScore = scoresByTeam[winner];
+  const loserId = winner === match.team1Id ? match.team2Id : match.team1Id;
+  const loserScore = scoresByTeam[loserId];
 
   // Team 2 won — won by wickets
-  const maxWickets = (match.format?.players || 11) - 1;
-  const wicketsLeft = maxWickets - (match.team2Score.wickets || 0);
-  const plural = wicketsLeft === 1 ? '' : 's';
-  return `Won by ${wicketsLeft} wicket${plural}`;
+  if (winner === chasingTeam) {
+    const maxWickets = (match.format?.players || 11) - 1;
+    const wicketsLeft = maxWickets - (winnerScore.wickets || 0);
+    const plural = wicketsLeft === 1 ? '' : 's';
+    return `Won by ${wicketsLeft} wicket${plural}`;
+  }
+
+  return `Won by ${(winnerScore?.runs || 0) - (loserScore?.runs || 0)} runs`;
 }
 
 // ==========================================

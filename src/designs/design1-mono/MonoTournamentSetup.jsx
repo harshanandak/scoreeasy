@@ -37,7 +37,7 @@ function getCricketReviewLabel(format) {
     ? (CRICKET_FORMATS.find(f => f.id === format.preset)?.name || format.preset)
     : 'Custom';
   const oversLabel = format.overs ? format.overs + ' ov' : 'No limit';
-  return presetName + ' - ' + oversLabel + ' - ' + format.players + 'p';
+  return presetName + ' - ' + oversLabel + ' - ' + format.players + ' players';
 }
 
 function getSetsReviewLabel(format) {
@@ -84,6 +84,10 @@ function makeTeam(index, existing, suggestedName) {
     name: existing?.name || suggestedName || `Team ${index + 1}`,
     members: existing?.members || [],
   };
+}
+
+function getRoundRobinPlayoffTeamsAdvancing(teamCount, requestedTeamsAdvancing) {
+  return teamCount >= 4 && Number(requestedTeamsAdvancing) === 4 ? 4 : 2;
 }
 
 export default function MonoTournamentSetup() {
@@ -289,11 +293,13 @@ export default function MonoTournamentSetup() {
     const isElimination = tournamentType === 'knockout';
     const isGroupKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
     const isKnockout = isElimination || isGroupKnockout;
-    const activeTeamsAdvancing = isElimination ? (teamCount === 2 ? 2 : 4) : teamsAdvancing;
+    const activeTeamsAdvancing = isElimination
+      ? teamCount
+      : getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing);
     const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
-      thirdPlaceMatch: activeTeamsAdvancing === 4 ? thirdPlaceMatch : false,
+      thirdPlaceMatch: activeTeamsAdvancing >= 4 ? thirdPlaceMatch : false,
       format: activeKnockoutFormat,
       mode: isElimination ? 'single-elimination' : 'group-playoff',
     } : null;
@@ -355,7 +361,9 @@ export default function MonoTournamentSetup() {
     teamCount,
     seriesGames,
     winnerMode,
-    teamsAdvancing,
+    teamsAdvancing: tournamentType === 'round-robin'
+      ? getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing)
+      : teamsAdvancing,
     thirdPlaceMatch,
   });
 
@@ -363,12 +371,13 @@ export default function MonoTournamentSetup() {
 
   const finalStageLabel = (() => {
     if (tournamentType === 'knockout') {
-      return `${teamCount}-team elimination${teamCount === 4 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
+      return `${teamCount}-team elimination${teamCount >= 4 && thirdPlaceMatch ? ' + 3rd place' : ''}`;
     }
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
-    const suffix = thirdPlaceMatch ? ' + 3rd place' : '';
-    return `Playoffs (Top ${teamsAdvancing}${suffix})`;
+    const playoffTeamsAdvancing = getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing);
+    const suffix = playoffTeamsAdvancing >= 4 && thirdPlaceMatch ? ' + 3rd place' : '';
+    return `Playoffs (Top ${playoffTeamsAdvancing}${suffix})`;
   })();
 
   const tournamentTypePreset = (() => {
@@ -401,8 +410,8 @@ export default function MonoTournamentSetup() {
     if (tournamentType === 'knockout') {
       const seededStandings = teams.map((team, index) => ({ teamId: team.id, team, seed: index + 1 }));
       const config = {
-        teamsAdvancing: teamCount === 2 ? 2 : 4,
-        thirdPlaceMatch: teamCount === 4 ? thirdPlaceMatch : false,
+        teamsAdvancing: teamCount,
+        thirdPlaceMatch: teamCount >= 4 ? thirdPlaceMatch : false,
       };
       return generateKnockoutMatches(seededStandings, config).map((match) => ({
         ...match,
@@ -410,7 +419,7 @@ export default function MonoTournamentSetup() {
       }));
     }
     if (tournamentType === 'series') {
-      return Array.from({ length: Math.min(seriesGames, 4) }, (_, i) => ({
+      return Array.from({ length: seriesGames }, (_, i) => ({
         label: `Match ${i + 1}`,
         team1Id: teams[0]?.id,
         team2Id: teams[1]?.id,
@@ -531,6 +540,8 @@ export default function MonoTournamentSetup() {
                     setTournamentType('round-robin');
                     setWinnerMode('table-topper');
                     setTeamCount(4);
+                    setTeamsAdvancing(2);
+                    setThirdPlaceMatch(false);
                   }}
                   className={tournamentTypePreset === 'round-robin' ? 'mono-btn-primary' : 'mono-btn'}
                   style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
@@ -589,7 +600,7 @@ export default function MonoTournamentSetup() {
                   {tournamentType === 'knockout' ? 'Bracket size' : 'Number of teams'}
                 </legend>
                 <div className="flex gap-2">
-                  {(tournamentType === 'knockout' ? [2, 4] : teamCountOptions).map(n => (
+                  {teamCountOptions.map(n => (
                     <button
                       key={n}
                       onClick={() => {
@@ -597,7 +608,7 @@ export default function MonoTournamentSetup() {
                         if (tournamentType === 'knockout') {
                           setWinnerMode('knockouts');
                           setTeamsAdvancing(n);
-                          if (n === 2) setThirdPlaceMatch(false);
+                          if (n < 4) setThirdPlaceMatch(false);
                         } else if (n < 3) {
                           setWinnerMode('table-topper');
                           setTeamsAdvancing(2);
@@ -616,10 +627,10 @@ export default function MonoTournamentSetup() {
                 </div>
                 <p className="text-xs mt-2" style={{ color: '#888' }}>
                   {tournamentType === 'knockout'
-                    ? `Will generate ${teamCount === 2 ? 'a final' : 'two semi-finals and a final'}`
+                    ? `Will generate ${matchCountPreview} ${matchCountPreview === 1 ? 'match' : 'matches'}`
                     : (
                       <>
-                        Will generate {teamCount === 2 ? '1 match' : `${(teamCount * (teamCount - 1)) / 2} matches`}
+                        Will generate {matchCountPreview === 1 ? '1 match' : `${matchCountPreview} matches`}
                         {teamCount >= 3 && ' (round-robin format)'}
                       </>
                     )}
@@ -627,7 +638,7 @@ export default function MonoTournamentSetup() {
               </fieldset>
             )}
 
-            {tournamentType === 'knockout' && teamCount === 4 && (
+            {tournamentType === 'knockout' && teamCount >= 4 && (
               <label className="flex items-center gap-2 mb-8 cursor-pointer">
                 <input
                   type="checkbox"
@@ -1253,7 +1264,10 @@ export default function MonoTournamentSetup() {
                       Standings decide
                     </button>
                     <button
-                      onClick={() => setWinnerMode('knockouts')}
+                      onClick={() => {
+                        setWinnerMode('knockouts');
+                        setTeamsAdvancing(prev => getRoundRobinPlayoffTeamsAdvancing(teamCount, prev));
+                      }}
                       className={winnerMode === 'knockouts' ? 'mono-btn-primary' : 'mono-btn'}
                       style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
                     >

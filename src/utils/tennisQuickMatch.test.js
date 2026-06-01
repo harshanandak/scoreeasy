@@ -4,6 +4,7 @@ import {
   buildTennisQuickHistoryEntry,
   countTennisQuickSetsWon,
   getTennisQuickDraftKey,
+  getVisibleTennisSetRows,
   mapTennisSetsForQuickHistory,
 } from './tennisQuickMatch';
 
@@ -78,5 +79,25 @@ describe('tennisQuickMatch', () => {
       winner: 'Baseline',
       status: 'completed',
     });
+  });
+
+  it('hides unplayed sets after the match is decided', () => {
+    const rows = getVisibleTennisSetRows([
+      { games1: 6, games2: 4, completed: true },
+      { games1: 6, games2: 3, completed: true },
+      { games1: 0, games2: 0, completed: false },
+    ]);
+
+    expect(rows).toHaveLength(2);
+  });
+
+  it('keeps the active unplayed set visible before the match is decided', () => {
+    const rows = getVisibleTennisSetRows([
+      { games1: 6, games2: 4, completed: true },
+      { games1: 2, games2: 1, completed: false },
+      { games1: 0, games2: 0, completed: false },
+    ]);
+
+    expect(rows).toHaveLength(2);
   });
 });

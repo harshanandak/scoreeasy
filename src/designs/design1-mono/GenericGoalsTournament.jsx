@@ -9,6 +9,7 @@ import TournamentNotFoundActions from './components/TournamentNotFoundActions';
 import TournamentScoreClearActions from './components/TournamentScoreClearActions';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
+import { getKnockoutRoundGroups, getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 
 export default function GenericGoalsTournament() {
   const navigate = useNavigate();
@@ -93,12 +94,10 @@ export default function GenericGoalsTournament() {
     return team?.name || 'Unknown';
   };
 
-  const completedMatches = tournament.matches.filter(m =>
-    (m.score1 !== null && m.score1 !== undefined) && m.status === 'completed'
-  ).length;
-  const totalMatches = tournament.matches.length;
+  const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
+  const knockoutRoundGroups = getKnockoutRoundGroups(tournament.knockoutMatches);
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
 
@@ -413,15 +412,13 @@ export default function GenericGoalsTournament() {
 
             {tournament.phase === 'knockout' && tournament.knockoutMatches && (
               <div className="space-y-6">
-                {tournament.knockoutConfig.teamsAdvancing === 4 && (
-                  <div>
+                {knockoutRoundGroups.map((group) => (
+                  <div key={group.label}>
                     <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                      Semi-finals
+                      {group.label}
                     </h3>
                     <div className="space-y-3">
-                      {tournament.knockoutMatches
-                        .filter(m => m.round.startsWith('semi'))
-                        .map(match => (
+                      {group.matches.map(match => (
                           <KnockoutMatchCard
                             key={match.id}
                             match={match}
@@ -435,7 +432,7 @@ export default function GenericGoalsTournament() {
                         ))}
                     </div>
                   </div>
-                )}
+                ))}
 
                 <div>
                   <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>

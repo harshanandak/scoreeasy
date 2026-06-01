@@ -36,6 +36,50 @@ export function initializeKnockoutStage(tournament, standings) {
 export function updateKnockoutBracket(knockoutMatches) {
   if (!knockoutMatches || knockoutMatches.length === 0) return knockoutMatches;
 
+  const getSourceSlots = (match) => {
+    if (Array.isArray(match.sourceSlots) && match.sourceSlots.length > 0) {
+      return match.sourceSlots;
+    }
+    if (match.sourceMatchIds.length === 2) {
+      return ['team1Id', 'team2Id'];
+    }
+    return [match.team1Id ? 'team2Id' : 'team1Id'];
+  };
+
+  const sourceLinkedMatches = knockoutMatches.filter(m => Array.isArray(m.sourceMatchIds) && m.sourceMatchIds.length > 0);
+  if (sourceLinkedMatches.length > 0) {
+    let changed = false;
+    const updated = knockoutMatches.map((match) => {
+      if (!Array.isArray(match.sourceMatchIds) || match.sourceMatchIds.length === 0 || match.status !== 'pending') {
+        return match;
+      }
+
+      const sources = match.sourceMatchIds.map((sourceId) => knockoutMatches.find((candidate) => candidate.id === sourceId));
+      if (sources.some((source) => source?.status !== 'completed' || !source?.winner || source?.winner === 'draw' || source?.winner === 'tie')) {
+        const sourceSlots = getSourceSlots(match);
+        const cleared = sourceSlots.reduce((next, slot) => ({ ...next, [slot]: null }), match);
+        if (sourceSlots.every((slot) => cleared[slot] === match[slot])) return match;
+        changed = true;
+        return cleared;
+      }
+
+      const teamIds = match.round === 'third-place'
+        ? sources.map((source) => source.winner === source.team1Id ? source.team2Id : source.team1Id)
+        : sources.map((source) => source.winner);
+      const sourceSlots = getSourceSlots(match);
+      const nextMatch = sourceSlots.reduce((next, slot, index) => ({
+        ...next,
+        [slot]: teamIds[index] || null,
+      }), match);
+      if (nextMatch.team1Id === match.team1Id && nextMatch.team2Id === match.team2Id) return match;
+
+      changed = true;
+      return nextMatch;
+    });
+
+    if (changed) return updated;
+  }
+
   const semi1 = knockoutMatches.find(m => m.round === 'semi-1');
   const semi2 = knockoutMatches.find(m => m.round === 'semi-2');
 

@@ -306,6 +306,35 @@ describe('tournament destructive safety', () => {
     });
   });
 
+  it('resets hidden elimination bracket size before saving round-robin playoffs', async () => {
+    renderRoute('/volleyball/tournament/new', '/:sport/tournament/new', <MonoTournamentSetup />);
+
+    fireEvent.change(await screen.findByLabelText('Tournament name'), {
+      target: { value: 'Clamped Playoffs' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Elimination' }));
+    fireEvent.click(screen.getByRole('button', { name: '6' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Round-robin' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Match Rules' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Playoffs' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Name Teams' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next: Review & Start' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start Tournament' }));
+
+    await waitFor(() => {
+      const [saved] = readTournaments(VOLLEYBALL_KEY);
+      expect(saved).toMatchObject({
+        name: 'Clamped Playoffs',
+        type: 'round-robin',
+        winnerMode: 'knockouts',
+      });
+      expect(saved.knockoutConfig).toMatchObject({
+        mode: 'group-playoff',
+        teamsAdvancing: 2,
+      });
+    });
+  });
+
   it('shows recovery actions when a cricket tournament link is stale', async () => {
     renderRoute('/cricket/tournament/missing', '/:sport/tournament/:id', <MonoCricketTournament />);
 

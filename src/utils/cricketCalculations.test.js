@@ -4,8 +4,10 @@ import {
   calculateRunRate,
   calculateNRR,
   getMatchWinner,
+  getLimitedOversResult,
   calculateCricketPointsTable,
   OVERS_PRESETS,
+  canManuallyCompleteUnlimitedMatch,
 } from './cricketCalculations';
 
 describe('ballsToOvers', () => {
@@ -142,6 +144,80 @@ describe('getMatchWinner', () => {
   it('returns null when team2Score is missing', () => {
     const match = { team1Id: 'a', team2Id: 'b', team1Score: { runs: 100 }, team2Score: null };
     expect(getMatchWinner(match)).toBeNull();
+  });
+
+  it('does not declare a winner before a limited-overs match is complete', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'in-progress',
+      team1Score: { runs: 120, balls: 60, wickets: 4 },
+      team2Score: { runs: 30, balls: 18, wickets: 1 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getMatchWinner(match)).toBeNull();
+  });
+});
+
+describe('getLimitedOversResult', () => {
+  it('labels a chase win by wickets when team 2 chases successfully', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      team1Score: { runs: 120, balls: 60, wickets: 8 },
+      team2Score: { runs: 121, balls: 54, wickets: 4 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won by 6 wickets');
+  });
+
+  it('labels a reversed-batting-order chase win by wickets', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      battingOrder: ['b', 'a'],
+      team1Score: { runs: 151, balls: 58, wickets: 3 },
+      team2Score: { runs: 150, balls: 60, wickets: 8 },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won by 7 wickets');
+  });
+
+  it('preserves Super Over result descriptions for tied innings scores', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      winner: 'b',
+      team1Score: { runs: 120, balls: 60, wickets: 8 },
+      team2Score: { runs: 120, balls: 60, wickets: 6 },
+      superOver: {
+        team1: { runs: 8, balls: 6, wickets: 1 },
+        team2: { runs: 9, balls: 5, wickets: 0 },
+      },
+      format: { overs: 10, players: 11 },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won in Super Over');
+  });
+});
+
+describe('canManuallyCompleteUnlimitedMatch', () => {
+  it('allows manual completion for unlimited two-innings formats in either innings', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 1)).toBe(true);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 2)).toBe(true);
+  });
+
+  it('does not allow manual completion outside playable innings or for fixed-over formats', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 0)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 3)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: 10 }, 2)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 4, overs: null }, 2)).toBe(false);
   });
 });
 
