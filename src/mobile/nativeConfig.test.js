@@ -14,4 +14,14 @@ describe('native app link configuration', () => {
     const entitlementLinks = project.match(/CODE_SIGN_ENTITLEMENTS = App\/App\.entitlements;/g) ?? [];
     expect(entitlementLinks).toHaveLength(2);
   });
+
+  it('documents deployment-owned association assets for the declared app-link host', () => {
+    const runbook = readFileSync(join(repoRoot, 'docs/mobile/app-link-associations.md'), 'utf8');
+
+    expect(runbook).toContain('https://scoreeasy.app/.well-known/assetlinks.json');
+    expect(runbook).toContain('https://scoreeasy.app/.well-known/apple-app-site-association');
+    expect(runbook).toContain('Android package: `com.scoreeasy.app`');
+    expect(runbook).toContain('iOS bundle identifier: `com.scoreeasy.app`');
+    expect(runbook).toContain('Do not commit placeholder fingerprints or Team IDs');
+  });
 });

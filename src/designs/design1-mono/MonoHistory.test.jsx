@@ -231,6 +231,14 @@ describe('MonoHistory', () => {
     expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
   });
 
+  it('routes empty tournament recovery through the neutral sport chooser', async () => {
+    renderHistory();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tournament' }));
+
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/play');
+  });
+
   it('shows only completed quick results and preserves fresh drafts when clearing history', async () => {
     globalThis.localStorage.setItem(
       QUICK_MATCHES_KEY,
