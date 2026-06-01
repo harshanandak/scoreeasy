@@ -32,6 +32,133 @@ const STORAGE_KEYS = {
   QUICK_MATCHES: 'se_quickmatches',
 };
 
+const QUICK_MATCH_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_MATCH_DURATION_SECONDS = 24 * 60 * 60;
+
+function parseTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const parsed = Date.parse(value || '');
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeWinnerToken(winner) {
+  if (typeof winner !== 'string') return winner || null;
+  const lower = winner.trim().toLowerCase();
+  if (!lower) return null;
+  if (lower === 'draw') return 'Draw';
+  if (lower === 'tie' || lower === 'tied') return 'Tie';
+  return winner;
+}
+
+function hasNonZeroNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value !== 0;
+}
+
+function hasMeaningfulQuickScore(match) {
+  if (hasNonZeroNumber(match?.score1) || hasNonZeroNumber(match?.score2)) return true;
+  if (hasNonZeroNumber(match?.setsWon1) || hasNonZeroNumber(match?.setsWon2)) return true;
+
+  if (Array.isArray(match?.sets)) {
+    return match.sets.some((set) =>
+      set?.completed === true ||
+      hasNonZeroNumber(set?.score1) ||
+      hasNonZeroNumber(set?.score2) ||
+      hasNonZeroNumber(set?.games1) ||
+      hasNonZeroNumber(set?.games2)
+    );
+  }
+
+  if (match?.team1Score || match?.team2Score) {
+    return hasNonZeroNumber(match.team1Score?.runs) ||
+      hasNonZeroNumber(match.team1Score?.wickets) ||
+      hasNonZeroNumber(match.team2Score?.runs) ||
+      hasNonZeroNumber(match.team2Score?.wickets);
+  }
+
+  if (Array.isArray(match?.innings)) {
+    return match.innings.some((innings) =>
+      hasNonZeroNumber(innings?.runs) ||
+      hasNonZeroNumber(innings?.wickets) ||
+      hasNonZeroNumber(innings?.balls)
+    );
+  }
+
+  return false;
+}
+
+function sanitizeElapsedSeconds(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  if (value < 0 || value > MAX_MATCH_DURATION_SECONDS) return undefined;
+  return Math.round(value);
+}
+
+function getQuickMatchTimestamp(match) {
+  return parseTimestamp(match?.updatedAt) ??
+    parseTimestamp(match?.savedAt) ??
+    parseTimestamp(match?.completedAt) ??
+    parseTimestamp(match?.date) ??
+    parseTimestamp(match?.createdAt);
+}
+
+function isStaleQuickDraft(match) {
+  const status = String(match?.status || '').toLowerCase();
+  if (status !== 'in-progress' && status !== 'active' && status !== 'paused') return false;
+
+  const timestamp = getQuickMatchTimestamp(match);
+  if (timestamp === null) return false;
+
+  return Date.now() - timestamp > QUICK_MATCH_DRAFT_TTL_MS;
+}
+
+export function isStaleQuickMatchDraft(draft) {
+  if (!draft || typeof draft !== 'object') return false;
+  const timestamp = getQuickMatchTimestamp(draft);
+  if (timestamp === null) return false;
+  return Date.now() - timestamp > QUICK_MATCH_DRAFT_TTL_MS;
+}
+
+function isDrawLikeWinner(winner) {
+  const normalized = normalizeWinnerToken(winner);
+  return normalized === 'Draw' || normalized === 'Tie';
+}
+
+function isCompletionSignal(match) {
+  if (match?.status === 'completed') return true;
+  if (match?.completedAt || match?.endedAt) return true;
+  return Boolean(match?.winner && hasMeaningfulQuickScore(match));
+}
+
+function normalizeQuickMatchForStorage(match) {
+  if (!match || typeof match !== 'object' || match.id === undefined || match.id === null) {
+    return null;
+  }
+
+  const completed = isCompletionSignal(match);
+  if (!completed && isStaleQuickDraft(match)) return null;
+  if (completed && !hasMeaningfulQuickScore(match) && isDrawLikeWinner(match.winner)) return null;
+
+  const timestamp = getQuickMatchTimestamp(match);
+  const completedAt = completed
+    ? (match.completedAt || match.endedAt || match.date || match.savedAt || match.createdAt || new Date(timestamp ?? Date.now()).toISOString())
+    : match.completedAt;
+
+  return {
+    ...match,
+    winner: normalizeWinnerToken(match.winner),
+    status: completed ? 'completed' : (match.status || 'in-progress'),
+    completedAt,
+    elapsedSeconds: sanitizeElapsedSeconds(match.elapsedSeconds),
+    draftState: completed ? undefined : match.draftState,
+  };
+}
+
+function normalizedQuickMatches(matches) {
+  if (!Array.isArray(matches)) return [];
+  return matches
+    .map(normalizeQuickMatchForStorage)
+    .filter(Boolean);
+}
+
 // --- Safari Private Mode Detection & Memory Fallback ---
 
 function createMemoryFallback() {
@@ -238,19 +365,50 @@ export const deleteSportTournament = (storageKey, tournamentId) => {
 };
 
 // Quick Match storage (for test matches that navigate to a separate page)
-export const saveQuickMatch = (match) => {
-  const matches = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
-  const idx = matches.findIndex(m => m.id === match.id);
-  if (idx >= 0) {
-    matches[idx] = match;
-  } else {
-    matches.push(match);
-  }
-  return saveData(STORAGE_KEYS.QUICK_MATCHES, matches);
+export const saveQuickMatches = (matches) => {
+  return saveData(STORAGE_KEYS.QUICK_MATCHES, normalizedQuickMatches(matches));
 };
 
 export const loadQuickMatches = () => {
-  return loadData(STORAGE_KEYS.QUICK_MATCHES, []);
+  const stored = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
+  const normalized = normalizedQuickMatches(stored);
+  if (JSON.stringify(stored) !== JSON.stringify(normalized)) {
+    saveData(STORAGE_KEYS.QUICK_MATCHES, normalized);
+  }
+  return normalized;
+};
+
+export const loadCompletedQuickMatches = () => {
+  return loadQuickMatches().filter(m => m.status === 'completed');
+};
+
+export const replaceCompletedQuickMatches = (completedMatches) => {
+  const activeMatches = loadQuickMatches().filter(m => m.status !== 'completed');
+  return saveQuickMatches([...activeMatches, ...completedMatches]);
+};
+
+export const clearCompletedQuickMatches = () => {
+  return replaceCompletedQuickMatches([]);
+};
+
+export const saveQuickMatch = (match) => {
+  const normalized = normalizeQuickMatchForStorage(match);
+  const matches = loadQuickMatches();
+  const idx = matches.findIndex(m => m.id === match.id);
+  if (!normalized) {
+    if (idx >= 0) {
+      matches.splice(idx, 1);
+      return saveQuickMatches(matches);
+    }
+    return true;
+  }
+
+  if (idx >= 0) {
+    matches[idx] = normalized;
+  } else {
+    matches.push(normalized);
+  }
+  return saveQuickMatches(matches);
 };
 
 export const loadQuickMatch = (matchId) => {
@@ -259,9 +417,9 @@ export const loadQuickMatch = (matchId) => {
 };
 
 export const deleteQuickMatch = (matchId) => {
-  const matches = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
-  const filtered = matches.filter(m => m.id !== matchId);
-  return saveData(STORAGE_KEYS.QUICK_MATCHES, filtered);
+  const matches = loadQuickMatches();
+  const filtered = matches.filter(m => String(m.id) !== String(matchId));
+  return saveQuickMatches(filtered);
 };
 
 export {

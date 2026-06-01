@@ -13,6 +13,13 @@ import {
   saveSportTournament,
   loadSportTournaments,
   deleteSportTournament,
+  deleteQuickMatch,
+  loadCompletedQuickMatches,
+  loadQuickMatches,
+  replaceCompletedQuickMatches,
+  saveQuickMatch,
+  saveQuickMatches,
+  isStaleQuickMatchDraft,
   saveStatistics,
   loadAllStatistics,
 } from './storage';
@@ -290,5 +297,173 @@ describe('Statistics storage', () => {
     saveStatistics('football', { gamesPlayed: 10 });
     saveStatistics('football', { gamesPlayed: 20 });
     expect(loadAllStatistics().football).toEqual({ gamesPlayed: 20 });
+  });
+});
+
+describe('Quick match persistence normalization', () => {
+  const freshDate = '2026-06-01T10:00:00.000Z';
+  const staleDate = '2026-05-29T10:00:00.000Z';
+  const now = new Date('2026-06-01T12:00:00.000Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('stores completed quick matches for every supported sport with terminal status', () => {
+    const sports = [
+      'volleyball',
+      'badminton',
+      'tabletennis',
+      'tennis',
+      'pickleball',
+      'squash',
+      'football',
+      'basketball',
+      'hockey',
+      'handball',
+      'futsal',
+      'kabaddi',
+      'rugby',
+      'cricket',
+    ];
+
+    sports.forEach((sport, index) => {
+      expect(saveQuickMatch({
+        id: `${sport}-${index}`,
+        sport,
+        team1: `${sport} A`,
+        team2: `${sport} B`,
+        score1: index + 1,
+        score2: index,
+        winner: `${sport} A`,
+        completedAt: freshDate,
+      })).toBe(true);
+    });
+
+    const completed = loadCompletedQuickMatches();
+    expect(completed).toHaveLength(sports.length);
+    expect(completed.map((match) => match.sport).sort()).toEqual([...sports].sort());
+    expect(completed.every((match) => match.status === 'completed')).toBe(true);
+  });
+
+  it('cleans stale drafts, phantom 0-0 ties, and impossible durations while keeping valid drafts', () => {
+    saveQuickMatches([
+      {
+        id: 'stale-draft',
+        sport: 'football',
+        team1: 'Old A',
+        team2: 'Old B',
+        status: 'in-progress',
+        updatedAt: staleDate,
+        score1: 1,
+        score2: 0,
+      },
+      {
+        id: 'fresh-draft',
+        sport: 'football',
+        team1: 'Fresh A',
+        team2: 'Fresh B',
+        status: 'in-progress',
+        updatedAt: freshDate,
+        score1: 1,
+        score2: 0,
+      },
+      {
+        id: 'phantom',
+        sport: 'football',
+        team1: 'Ghost A',
+        team2: 'Ghost B',
+        status: 'completed',
+        winner: 'Tie',
+        score1: 0,
+        score2: 0,
+        completedAt: freshDate,
+      },
+      {
+        id: 'real-result',
+        sport: 'football',
+        team1: 'Real A',
+        team2: 'Real B',
+        status: 'completed',
+        winner: 'Real A',
+        score1: 3,
+        score2: 1,
+        elapsedSeconds: 572 * 60 * 60,
+        completedAt: freshDate,
+      },
+    ]);
+
+    expect(loadQuickMatches().map((match) => match.id)).toEqual(['fresh-draft', 'real-result']);
+    expect(loadCompletedQuickMatches()).toEqual([
+      expect.objectContaining({
+        id: 'real-result',
+        status: 'completed',
+        elapsedSeconds: undefined,
+      }),
+    ]);
+  });
+
+  it('replaces completed quick matches without deleting active drafts', () => {
+    saveQuickMatches([
+      {
+        id: 'active-draft',
+        sport: 'football',
+        team1: 'Draft A',
+        team2: 'Draft B',
+        status: 'in-progress',
+        updatedAt: freshDate,
+        score1: 1,
+        score2: 0,
+      },
+      {
+        id: 'completed-match',
+        sport: 'football',
+        team1: 'Done A',
+        team2: 'Done B',
+        status: 'completed',
+        winner: 'Done A',
+        score1: 2,
+        score2: 1,
+        completedAt: freshDate,
+      },
+    ]);
+
+    expect(deleteQuickMatch('completed-match')).toBe(true);
+    expect(loadQuickMatches().map((match) => match.id)).toEqual(['active-draft']);
+
+    expect(replaceCompletedQuickMatches([
+      {
+        id: 'restored-match',
+        sport: 'football',
+        team1: 'Restored A',
+        team2: 'Restored B',
+        status: 'completed',
+        winner: 'Restored A',
+        score1: 4,
+        score2: 2,
+        completedAt: freshDate,
+      },
+    ])).toBe(true);
+
+    expect(loadQuickMatches().map((match) => match.id)).toEqual(['active-draft', 'restored-match']);
+  });
+
+  it('detects stale per-sport quick match drafts by updated timestamp', () => {
+    expect(isStaleQuickMatchDraft({
+      phase: 'scoring',
+      sport: 'football',
+      updatedAt: staleDate,
+    })).toBe(true);
+
+    expect(isStaleQuickMatchDraft({
+      phase: 'scoring',
+      sport: 'football',
+      updatedAt: freshDate,
+    })).toBe(false);
   });
 });
