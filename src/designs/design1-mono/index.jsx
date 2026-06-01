@@ -8,7 +8,7 @@ import {
   APP_ENTRY_PATH,
   PUBLIC_MARKETING_PATH,
   getAppEntryTarget,
-  loadReturningPlayerState,
+  loadAppEntryState,
 } from '../../utils/appEntry';
 import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -198,10 +198,11 @@ function shouldDeferOnboardingForPath(pathname = '') {
 
 function AppEntryRoute() {
   const { isAuthenticated, isLoading } = useAuth();
+  const appEntryState = loadAppEntryState();
   const target = getAppEntryTarget({
     isAuthenticated,
     isLoading,
-    returningPlayerState: loadReturningPlayerState(),
+    ...appEntryState,
   });
 
   if (!target) return <LazyFallback />;

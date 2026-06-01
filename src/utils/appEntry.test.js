@@ -4,8 +4,10 @@ import {
   PUBLIC_MARKETING_PATH,
   getAppEntryTarget,
   hasReturningPlayerState,
+  loadAppEntryState,
   loadReturningPlayerState,
 } from './appEntry';
+import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 describe('app entry contract', () => {
   beforeEach(() => {
@@ -50,11 +52,44 @@ describe('app entry contract', () => {
     expect(loadReturningPlayerState()).toBe(true);
   });
 
+  it('returns the quick-match route for generic draft-only app entry', () => {
+    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+      phase: 'scoring',
+      sport: 'volleyball',
+    }));
+
+    const state = loadAppEntryState();
+
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBe('/volleyball/quick');
+    expect(getAppEntryTarget(state)).toBe('/volleyball/quick');
+  });
+
+  it('detects tennis quick-live drafts and returns their live route', () => {
+    globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
+      id: 'match-1',
+      sport: 'tennis',
+      status: 'in-progress',
+    }));
+
+    const state = loadAppEntryState();
+
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
+    expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
+  });
+
   it('checks saved tournaments without rewriting storage during app entry', () => {
     const storedTournament = [{ id: 'cup-1', name: 'Office Cup' }];
     globalThis.localStorage.setItem('se_volleyball', JSON.stringify(storedTournament));
 
     expect(loadReturningPlayerState()).toBe(true);
     expect(JSON.parse(globalThis.localStorage.getItem('se_volleyball'))).toEqual(storedTournament);
+  });
+
+  it('ignores malformed tournament storage during app entry', () => {
+    globalThis.localStorage.setItem('se_volleyball', JSON.stringify({ id: 'bad-cup' }));
+
+    expect(loadReturningPlayerState()).toBe(false);
   });
 });
