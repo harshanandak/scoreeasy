@@ -70,7 +70,7 @@ describe('app route recovery', () => {
     renderApp('/dashboard');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
   });
 

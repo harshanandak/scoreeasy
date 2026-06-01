@@ -167,4 +167,19 @@ describe('MonoQuickMatch setup clarity', () => {
       expect(screen.queryByRole('dialog', { name: 'End match?' })).not.toBeInTheDocument();
     });
   });
+
+  it('clears team names when starting a distinct new match from the result screen', async () => {
+    renderQuickMatch();
+
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Team A name' }), { target: { value: 'Eagles' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Team B name' }), { target: { value: 'Hawks' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start Volleyball' }));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'End Match' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
+
+    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Team A');
+    expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Team B');
+  });
 });

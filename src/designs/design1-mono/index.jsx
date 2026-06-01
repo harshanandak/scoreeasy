@@ -4,6 +4,12 @@ import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 're
 import MonoLanding from './MonoLanding';
 import { getSportById } from '../../models/sportRegistry';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  APP_ENTRY_PATH,
+  PUBLIC_MARKETING_PATH,
+  getAppEntryTarget,
+  loadReturningPlayerState,
+} from '../../utils/appEntry';
 import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
@@ -15,6 +21,7 @@ import './mono.css';
 
 // Lazy-loaded primary app routes (not needed for the initial landing view)
 const MonoSportHome = lazy(() => import('./MonoSportHome'));
+const DashboardLanding = lazy(() => import('./landing/DashboardLanding'));
 const MonoHistory = lazy(() => import('./MonoHistory'));
 const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
 const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
@@ -133,12 +140,14 @@ const GUARD_BYPASS_PREFIXES = [
   '/signup',
   '/sso-callback',
   '/showcase',
+  PUBLIC_MARKETING_PATH,
   '/privacy',
   '/terms',
   '/contact',
 ];
 const ONBOARDING_DEFER_PATHS = new Set([
   '/',
+  APP_ENTRY_PATH,
   '/dashboard',
   '/history',
   '/play',
@@ -185,6 +194,18 @@ function shouldDeferOnboardingForPath(pathname = '') {
   return ONBOARDING_DEFER_PATHS.has(normalizedPathname) ||
     isProtectedScoringPath(normalizedPathname) ||
     isSportAppPath(normalizedPathname);
+}
+
+function AppEntryRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const target = getAppEntryTarget({
+    isAuthenticated,
+    isLoading,
+    returningPlayerState: loadReturningPlayerState(),
+  });
+
+  if (!target) return <LazyFallback />;
+  return <Navigate to={target} replace />;
 }
 
 function OnboardingGuard({ children }) {
@@ -1202,7 +1223,9 @@ export default function Design1Mono() {
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
             <OnboardingGuard>
               <Routes>
-                <Route path="" element={<MonoLanding />} />
+                <Route path="" element={<AppEntryRoute />} />
+                <Route path={PUBLIC_MARKETING_PATH.slice(1)} element={<MonoLanding />} />
+                <Route path={APP_ENTRY_PATH.slice(1)} element={<DashboardLanding />} />
                 <Route path="privacy" element={<LegalPage type="privacy" />} />
                 <Route path="terms" element={<LegalPage type="terms" />} />
                 <Route path="contact" element={<LegalPage type="contact" />} />
@@ -1217,7 +1240,7 @@ export default function Design1Mono() {
                 <Route path="users/search" element={<CloudAuthOnly><MonoUserSearch /></CloudAuthOnly>} />
 
                 <Route path="play" element={<MonoSportHome />} />
-                <Route path="dashboard" element={<Navigate to="/" replace />} />
+                <Route path="dashboard" element={<Navigate to={APP_ENTRY_PATH} replace />} />
                 <Route path="quick-match" element={<Navigate to="/volleyball/quick" replace />} />
                 <Route path="tournament" element={<Navigate to="/volleyball/tournament" replace />} />
                 <Route path="stats" element={<Navigate to="/statistics" replace />} />

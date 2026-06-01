@@ -10,6 +10,8 @@ import { MONO, SWISS } from './landingTheme';
 import SportIcon from './sportIcons';
 
 const QM_KEY = 'se_quickmatches';
+const MIN_TOURNAMENT_TEAMS = 2;
+const DEFAULT_NEW_TOURNAMENT_PATH = '/volleyball/tournament/new';
 
 /* ─── Tokens ─── */
 const t = {
@@ -166,7 +168,7 @@ function useSportState() {
   const [selectedMode, setSelectedMode] = useState(null);
   const [team1, setTeam1] = useState('');
   const [team2, setTeam2] = useState('');
-  const [tourneyTeams, setTourneyTeams] = useState(['', '', '']);
+  const [tourneyTeams, setTourneyTeams] = useState(['', '']);
   const [tourneyName, setTourneyName] = useState('');
 
   const sportObj = selectedSport ? allSportsList.find(s => s.id === selectedSport) : null;
@@ -175,11 +177,11 @@ function useSportState() {
   const isTourney = selectedMode === 'tournament';
   const filledTourneyTeams = tourneyTeams.filter(x => x.trim().length > 0).length;
   const teamsReady = isTourney
-    ? tourneyName.trim().length > 0 && filledTourneyTeams >= 3
+    ? tourneyName.trim().length > 0 && filledTourneyTeams >= MIN_TOURNAMENT_TEAMS
     : team1.trim().length > 0 && team2.trim().length > 0;
   const allReady = selectedSport && selectedMode && teamsReady;
 
-  const resetTeams = () => { setTeam1(''); setTeam2(''); setTourneyTeams(['', '', '']); setTourneyName(''); };
+  const resetTeams = () => { setTeam1(''); setTeam2(''); setTourneyTeams(['', '']); setTourneyName(''); };
   const pickSport = (id) => {
     if (id === selectedSport) { setSelectedSport(null); setSelectedMode(null); resetTeams(); }
     else { setSelectedSport(id); setSelectedMode(null); resetTeams(); }
@@ -192,7 +194,7 @@ function useSportState() {
     const next = [...tourneyTeams]; next[idx] = val; setTourneyTeams(next);
   };
   const addTourneyTeam = () => { if (tourneyTeams.length < 8) setTourneyTeams([...tourneyTeams, '']); };
-  const removeTourneyTeam = (idx) => { if (tourneyTeams.length > 3) setTourneyTeams(tourneyTeams.filter((_, i) => i !== idx)); };
+  const removeTourneyTeam = (idx) => { if (tourneyTeams.length > MIN_TOURNAMENT_TEAMS) setTourneyTeams(tourneyTeams.filter((_, i) => i !== idx)); };
   const resetAll = () => { setSelectedSport(null); setSelectedMode(null); resetTeams(); };
 
   return {
@@ -250,7 +252,7 @@ function ModeCards({ selectedMode, pickMode }) {
           </div>
           <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Tournament</span>
         </div>
-        <p style={{ fontSize: '0.75rem', color: selectedMode === 'tournament' ? '#aaa' : t.textMuted, margin: 0, lineHeight: 1.4 }}>3-8 teams. Round-robin or knockout brackets. Auto standings and point tables.</p>
+        <p style={{ fontSize: '0.75rem', color: selectedMode === 'tournament' ? '#aaa' : t.textMuted, margin: 0, lineHeight: 1.4 }}>2-8 teams. Round-robin or knockout brackets. Auto standings and point tables.</p>
       </button>
       <button
         type="button"
@@ -288,8 +290,8 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em' }}>TEAMS ({filledTourneyTeams}/{tourneyTeams.length})</span>
-          <span style={{ fontFamily: MONO, fontSize: '0.5rem', color: filledTourneyTeams >= 3 ? t.green : t.textFaint, letterSpacing: '0.06em' }}>
-            {filledTourneyTeams >= 3 ? 'MIN 3 MET' : `NEED ${3 - filledTourneyTeams} MORE`}
+          <span style={{ fontFamily: MONO, fontSize: '0.5rem', color: filledTourneyTeams >= MIN_TOURNAMENT_TEAMS ? t.green : t.textFaint, letterSpacing: '0.06em' }}>
+            {filledTourneyTeams >= MIN_TOURNAMENT_TEAMS ? 'MIN 2 MET' : `NEED ${MIN_TOURNAMENT_TEAMS - filledTourneyTeams} MORE`}
           </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -298,7 +300,7 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
               <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: tm.trim() ? t.blue : t.textFaint, width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
               <input id={`wizard-team-${idx + 1}`} value={tm} onChange={e => updateTourneyTeam(idx, e.target.value)} placeholder={`Team ${idx + 1}`}
                 style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `1.5px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
-              {tourneyTeams.length > 3 && (
+              {tourneyTeams.length > MIN_TOURNAMENT_TEAMS && (
                 <button type="button" onClick={() => removeTourneyTeam(idx)} style={{ ...bareButton, fontSize: '0.75rem', color: t.textFaint, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }} title="Remove team" aria-label={`Remove team ${idx + 1}`}>&times;</button>
               )}
             </div>
@@ -636,7 +638,7 @@ function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recen
           </p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button type="button" onClick={() => navigate('/play')} style={btnPrimary}>Start a game</button>
-            <button type="button" onClick={() => navigate('/play')} style={btnSecondary}>New tournament</button>
+            <button type="button" onClick={() => navigate(DEFAULT_NEW_TOURNAMENT_PATH)} style={btnSecondary}>New tournament</button>
           </div>
         </div>
       )}

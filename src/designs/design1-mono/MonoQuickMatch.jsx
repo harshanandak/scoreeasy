@@ -1279,10 +1279,16 @@ export default function MonoQuickMatch() {
     }
   };
 
-  const resetMatchState = (nextPhase = 'setup') => {
+  const resetMatchState = (nextPhase = 'setup', options = {}) => {
     restoredDraftRef.current = false;
     setSaveWarning('');
     setPhase(nextPhase);
+    if (options.resetTeams) {
+      setTeam1Name('Team A');
+      setTeam2Name('Team B');
+      setTeam1Players([]);
+      setTeam2Players([]);
+    }
     setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
     setVScore1(0);
     setVScore2(0);
@@ -2806,7 +2812,7 @@ export default function MonoQuickMatch() {
             See Stats
           </button>
           <button
-            onClick={() => resetMatchState('setup')}
+            onClick={() => resetMatchState('setup', { resetTeams: true })}
             className="mono-btn"
             style={{ minHeight: 48, padding: '12px' }}
           >
