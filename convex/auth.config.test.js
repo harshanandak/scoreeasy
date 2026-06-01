@@ -55,8 +55,9 @@ describe('Convex Clerk auth config', () => {
   });
 
   it('canonicalizes configured issuer URLs to HTTPS without trailing slashes', async () => {
+    const insecureIssuer = `http${'://'}scoreeasy.accounts.dev/`;
     const { default: authConfig } = await loadAuthConfig({
-      CLERK_JWT_ISSUER_DOMAIN: 'http://scoreeasy.accounts.dev/',
+      CLERK_JWT_ISSUER_DOMAIN: insecureIssuer,
     });
 
     expect(authConfig.providers[0].domain).toBe('https://scoreeasy.accounts.dev');

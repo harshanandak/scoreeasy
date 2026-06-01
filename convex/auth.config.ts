@@ -6,15 +6,26 @@ const convexEnv = (globalThis as typeof globalThis & {
 
 const DEFAULT_CLERK_JWT_ISSUER_DOMAIN = "https://clerk.scoreeasy.app";
 
+function stripTrailingSlashes(value: string) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
+
 function normalizeIssuerDomain(domain: string | undefined) {
   const trimmed = domain?.trim();
   if (!trimmed) {
     return DEFAULT_CLERK_JWT_ISSUER_DOMAIN;
   }
 
-  const issuer = trimmed.replace(/\/+$/, '').replace(/^http:\/\//i, "https://");
+  const withoutTrailingSlashes = stripTrailingSlashes(trimmed);
+  const issuer = withoutTrailingSlashes.slice(0, 7).toLowerCase() === "http://"
+    ? `https://${withoutTrailingSlashes.slice(7)}`
+    : withoutTrailingSlashes;
 
-  if (/^https:\/\//i.test(issuer)) {
+  if (issuer.slice(0, 8).toLowerCase() === "https://") {
     return issuer;
   }
 
@@ -22,8 +33,9 @@ function normalizeIssuerDomain(domain: string | undefined) {
 }
 
 const clerkJwtIssuerEnv = convexEnv?.CLERK_JWT_ISSUER_DOMAIN?.trim();
+const issuerSource = clerkJwtIssuerEnv || convexEnv?.CLERK_FRONTEND_API_URL;
 const clerkJwtIssuerDomain = normalizeIssuerDomain(
-  clerkJwtIssuerEnv ? clerkJwtIssuerEnv : convexEnv?.CLERK_FRONTEND_API_URL,
+  issuerSource,
 );
 
 export default {
