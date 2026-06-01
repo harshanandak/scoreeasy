@@ -86,6 +86,10 @@ function makeTeam(index, existing, suggestedName) {
   };
 }
 
+function getRoundRobinPlayoffTeamsAdvancing(teamCount, requestedTeamsAdvancing) {
+  return teamCount >= 4 && Number(requestedTeamsAdvancing) === 4 ? 4 : 2;
+}
+
 export default function MonoTournamentSetup() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -289,7 +293,9 @@ export default function MonoTournamentSetup() {
     const isElimination = tournamentType === 'knockout';
     const isGroupKnockout = tournamentType === 'round-robin' && teamCount >= 3 && winnerMode === 'knockouts';
     const isKnockout = isElimination || isGroupKnockout;
-    const activeTeamsAdvancing = isElimination ? teamCount : teamsAdvancing;
+    const activeTeamsAdvancing = isElimination
+      ? teamCount
+      : getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing);
     const activeKnockoutFormat = isElimination || knockoutSameFormat ? format : (knockoutFormat || format);
     const knockoutConfig = isKnockout ? {
       teamsAdvancing: activeTeamsAdvancing,
@@ -355,7 +361,9 @@ export default function MonoTournamentSetup() {
     teamCount,
     seriesGames,
     winnerMode,
-    teamsAdvancing,
+    teamsAdvancing: tournamentType === 'round-robin'
+      ? getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing)
+      : teamsAdvancing,
     thirdPlaceMatch,
   });
 
@@ -367,8 +375,9 @@ export default function MonoTournamentSetup() {
     }
     if (tournamentType !== 'round-robin' || teamCount < 3) return null;
     if (winnerMode !== 'knockouts') return 'Standings';
-    const suffix = teamsAdvancing >= 4 && thirdPlaceMatch ? ' + 3rd place' : '';
-    return `Playoffs (Top ${teamsAdvancing}${suffix})`;
+    const playoffTeamsAdvancing = getRoundRobinPlayoffTeamsAdvancing(teamCount, teamsAdvancing);
+    const suffix = playoffTeamsAdvancing >= 4 && thirdPlaceMatch ? ' + 3rd place' : '';
+    return `Playoffs (Top ${playoffTeamsAdvancing}${suffix})`;
   })();
 
   const tournamentTypePreset = (() => {
@@ -531,6 +540,8 @@ export default function MonoTournamentSetup() {
                     setTournamentType('round-robin');
                     setWinnerMode('table-topper');
                     setTeamCount(4);
+                    setTeamsAdvancing(2);
+                    setThirdPlaceMatch(false);
                   }}
                   className={tournamentTypePreset === 'round-robin' ? 'mono-btn-primary' : 'mono-btn'}
                   style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.8125rem' }}
@@ -1253,7 +1264,10 @@ export default function MonoTournamentSetup() {
                       Standings decide
                     </button>
                     <button
-                      onClick={() => setWinnerMode('knockouts')}
+                      onClick={() => {
+                        setWinnerMode('knockouts');
+                        setTeamsAdvancing(prev => getRoundRobinPlayoffTeamsAdvancing(teamCount, prev));
+                      }}
                       className={winnerMode === 'knockouts' ? 'mono-btn-primary' : 'mono-btn'}
                       style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
                     >

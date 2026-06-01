@@ -160,6 +160,10 @@ export function getTotalBalls(format) {
   return format.overs ? format.overs * 6 : Infinity;
 }
 
+export function canManuallyCompleteUnlimitedMatch(format, innings) {
+  return format?.totalInnings === 2 && format?.overs == null && innings === 2;
+}
+
 // ==========================================
 // MATCH WINNER & RESULT
 // ==========================================

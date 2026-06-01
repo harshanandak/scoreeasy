@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
-import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult } from '../../../utils/cricketCalculations';
+import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult, canManuallyCompleteUnlimitedMatch } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
@@ -430,7 +430,8 @@ export default function MonoCricketLiveScore() {
   // Save match (complete)
   const saveMatch = (winnerOverride) => {
     if (!tournament || !match || scoringPrompt.isInteractionLocked) return;
-    if (!isMatchComplete && !winnerOverride) {
+    const canManualComplete = canManuallyCompleteUnlimitedMatch(format, innings);
+    if (!isMatchComplete && !winnerOverride && !canManualComplete) {
       scoringPrompt.showWarning('Complete both innings before ending the match.');
       return;
     }

@@ -70,7 +70,8 @@ export function getFootballHalfLengthSeconds({
   timeLimitSeconds,
   timePresets = [],
 } = {}) {
-  const timeLimit = Math.max(1, Number(timeLimitSeconds) || 0);
+  const numericLimit = Number(timeLimitSeconds);
+  const timeLimit = numericLimit > 0 ? numericLimit : 5400;
   const preset = timePresets.find((candidate) => Number(candidate.value) === timeLimit);
   if (/\bhalf\b/i.test(preset?.label || '')) {
     return timeLimit;

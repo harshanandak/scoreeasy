@@ -7,6 +7,7 @@ import {
   getLimitedOversResult,
   calculateCricketPointsTable,
   OVERS_PRESETS,
+  canManuallyCompleteUnlimitedMatch,
 } from './cricketCalculations';
 
 describe('ballsToOvers', () => {
@@ -203,6 +204,18 @@ describe('getLimitedOversResult', () => {
     };
 
     expect(getLimitedOversResult(match)).toBe('Won in Super Over');
+  });
+});
+
+describe('canManuallyCompleteUnlimitedMatch', () => {
+  it('allows manual completion for unlimited two-innings formats after innings two starts', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 2)).toBe(true);
+  });
+
+  it('does not allow manual completion before innings two or for fixed-over formats', () => {
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: null }, 1)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 2, overs: 10 }, 2)).toBe(false);
+    expect(canManuallyCompleteUnlimitedMatch({ totalInnings: 4, overs: null }, 2)).toBe(false);
   });
 });
 

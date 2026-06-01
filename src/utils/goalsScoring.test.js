@@ -73,7 +73,10 @@ describe('goalsScoring', () => {
 
     expect(getFootballHalfLengthSeconds({ timeLimitSeconds: 2700, timePresets })).toBe(2700);
     expect(getFootballHalfLengthSeconds({ timeLimitSeconds: 5400, timePresets })).toBe(2700);
+    expect(getFootballHalfLengthSeconds({ timeLimitSeconds: undefined, timePresets })).toBe(2700);
+    expect(getFootballHalfLengthSeconds({ timeLimitSeconds: 'bad', timePresets })).toBe(2700);
     expect(getFootballMatchLimitSeconds({ timeLimitSeconds: 2700, timePresets })).toBe(5400);
     expect(getFootballMatchLimitSeconds({ timeLimitSeconds: 5400, timePresets })).toBe(5400);
+    expect(getFootballMatchLimitSeconds({ timeLimitSeconds: undefined, timePresets })).toBe(5400);
   });
 });
