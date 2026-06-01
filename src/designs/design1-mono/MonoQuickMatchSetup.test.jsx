@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
 
 vi.mock('convex/react', () => ({
@@ -15,6 +15,23 @@ function renderQuickMatch(initialEntry = '/volleyball/quick') {
         <Route path="/:sport/quick" element={<MonoQuickMatch />} />
         <Route path="/:sport/quick/test-match/:matchId" element={<p>Cricket Test Match scorer</p>} />
         <Route path="/:sport/quick/live/:matchId" element={<p>Real tennis scorer</p>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="current-route">{`${location.pathname}${location.search}`}</output>;
+}
+
+function renderQuickMatchWithLocation(initialEntry = '/football/quick') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <LocationProbe />
+      <Routes>
+        <Route path="/play" element={<p>Play chooser</p>} />
+        <Route path="/:sport/quick" element={<MonoQuickMatch />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -36,6 +53,7 @@ function renderQuickMatchWithSwitcher(initialEntry = '/volleyball/quick') {
 describe('MonoQuickMatch setup clarity', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
+    globalThis.history.replaceState(null, '', '/');
   });
 
   it('opens volleyball quick match on labeled teams with an immediate start path', async () => {
@@ -66,6 +84,15 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start Football' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Start Match' })).not.toBeInTheDocument();
+  });
+
+  it('falls back to the sport chooser when direct-entry setup back has no prior route', async () => {
+    globalThis.history.replaceState({ idx: 0 }, '', '/football/quick');
+    renderQuickMatchWithLocation({ pathname: '/football/quick', key: 'redirected-entry' });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Go back' }));
+
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/play?sport=football');
   });
 
   it('starts tennis quick matches in the real tennis scorer without creating completed history', async () => {
