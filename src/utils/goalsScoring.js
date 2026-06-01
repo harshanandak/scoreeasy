@@ -78,6 +78,13 @@ export function getFootballHalfLengthSeconds({
   return Math.max(1, Math.floor(timeLimit / 2));
 }
 
+export function getFootballMatchLimitSeconds({
+  timeLimitSeconds,
+  timePresets = [],
+} = {}) {
+  return getFootballHalfLengthSeconds({ timeLimitSeconds, timePresets }) * 2;
+}
+
 /**
  * Return the elapsed-second boundary for the current timed scoring period.
  * Each overtime period adds one more base timeLimit window.

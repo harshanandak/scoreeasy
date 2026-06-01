@@ -12,6 +12,7 @@ import {
   getBasketballCompletionState,
   getFootballClockState,
   getFootballHalfLengthSeconds,
+  getFootballMatchLimitSeconds,
   getTimedPeriodLimit,
   getTimedRemainingSeconds,
 } from '../../../utils/goalsScoring';
@@ -142,9 +143,12 @@ export default function MonoGoalsLiveScore() {
     if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
-    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit, overtimePeriod });
+    const timedMatchLimit = sport === 'football'
+      ? getFootballMatchLimitSeconds({ timeLimitSeconds: timeLimit, timePresets: sportConfig.config.timePresets })
+      : timeLimit;
+    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit: timedMatchLimit, overtimePeriod });
 
-    if (formatMode === 'timed' && timeLimit && timer.elapsed >= currentPeriodLimit) {
+    if (formatMode === 'timed' && timedMatchLimit && timer.elapsed >= currentPeriodLimit) {
       const completionState = getBasketballCompletionState({
         score1,
         score2,
@@ -202,8 +206,11 @@ export default function MonoGoalsLiveScore() {
     // Check if time is up in timed mode
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
-    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit, overtimePeriod });
-    if (formatMode === 'timed' && timeLimit && timer.elapsed >= currentPeriodLimit) {
+    const timedMatchLimit = sport === 'football'
+      ? getFootballMatchLimitSeconds({ timeLimitSeconds: timeLimit, timePresets: sportConfig.config.timePresets })
+      : timeLimit;
+    const currentPeriodLimit = getTimedPeriodLimit({ timeLimit: timedMatchLimit, overtimePeriod });
+    if (formatMode === 'timed' && timedMatchLimit && timer.elapsed >= currentPeriodLimit) {
       return; // Don't allow scoring after time expires
     }
 
@@ -415,8 +422,14 @@ export default function MonoGoalsLiveScore() {
   // Timed mode helpers
   const isTimedMode = effectiveFormat?.mode === 'timed';
   const timeLimit = isTimedMode ? effectiveFormat.timeLimit : null;
-  const remainingSeconds = isTimedMode && timeLimit
-    ? getTimedRemainingSeconds({ elapsedSeconds: timer.elapsed, timeLimit, overtimePeriod })
+  const timedMatchLimit = sport === 'football' && timeLimit
+    ? getFootballMatchLimitSeconds({
+      timeLimitSeconds: timeLimit,
+      timePresets: sportConfig.config.timePresets,
+    })
+    : timeLimit;
+  const remainingSeconds = isTimedMode && timedMatchLimit
+    ? getTimedRemainingSeconds({ elapsedSeconds: timer.elapsed, timeLimit: timedMatchLimit, overtimePeriod })
     : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const footballClockState = sport === 'football' && isTimedMode
