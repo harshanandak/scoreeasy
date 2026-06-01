@@ -1359,7 +1359,15 @@ export default function MonoQuickMatch() {
   };
   const handleSetupBack = () => {
     if (isTeamSetupStep) {
-      navigate(-1);
+      const browserHistoryIndex = globalThis.history?.state?.idx;
+      const hasPriorRoute = typeof browserHistoryIndex === 'number'
+        ? browserHistoryIndex > 0
+        : location.key !== 'default';
+      if (hasPriorRoute) {
+        navigate(-1);
+        return;
+      }
+      navigate(`/play?sport=${sport}`, { replace: true });
       return;
     }
     setSetupStep(totalSteps);

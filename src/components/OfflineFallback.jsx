@@ -76,7 +76,7 @@ export default function OfflineFallback({ onNavigate = null }) {
         {snapshot.lastQuick ? ` Latest quick match: ${snapshot.lastQuick.team1} vs ${snapshot.lastQuick.team2}.` : ''}
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        <button type="button" className="mono-btn-primary" style={{ minHeight: 40, padding: '8px 12px' }} onClick={() => handleNavigate('/volleyball/quick')}>
+        <button type="button" className="mono-btn-primary" style={{ minHeight: 40, padding: '8px 12px' }} onClick={() => handleNavigate('/play')}>
           Start quick match
         </button>
         <button type="button" className="mono-btn" style={{ minHeight: 40, padding: '8px 12px' }} onClick={() => handleNavigate('/history')}>

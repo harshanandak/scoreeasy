@@ -11,6 +11,7 @@ import { installNativeBackButtonGuard } from '../../mobile/backButton';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
+import RouteRecoveryActions from './components/RouteRecoveryActions';
 import './mono.css';
 
 // Lazy-loaded primary app routes (not needed for the initial landing view)
@@ -51,40 +52,20 @@ function LazyFallback() {
 }
 
 function NotFoundRoute() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const firstSegment = location.pathname.split('/').filter(Boolean)[0];
+  const sport = getSportById(firstSegment);
+  const title = sport ? `This ${sport.name} screen is not available` : 'This screen is not available';
 
   return (
-    <div className="min-h-screen px-6 py-10 mono-transition mono-visible">
-      <div className="max-w-2xl mx-auto">
-        <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
-          Page not found
-        </p>
-        <h1 className="text-2xl font-bold font-mono mb-3" style={{ color: '#111' }}>
-          This screen is not available
-        </h1>
-        <p className="text-sm mb-6" style={{ color: '#666' }}>
-          The link may be old, incomplete, or not part of the mobile app flow yet.
-        </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="mono-btn-primary flex-1"
-            style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/play', { replace: true })}
-          >
-            Play
-          </button>
-          <button
-            type="button"
-            className="mono-btn flex-1"
-            style={{ padding: '12px', fontSize: '0.875rem' }}
-            onClick={() => navigate('/', { replace: true })}
-          >
-            Home
-          </button>
-        </div>
-      </div>
-    </div>
+    <RouteRecoveryActions
+      eyebrow="Page not found"
+      title={title}
+      message="The link may be old, incomplete, or not part of the mobile app flow yet."
+      sportId={sport?.id}
+      primaryLabel={sport ? `Back to ${sport.name}` : 'Play'}
+      primaryPath={sport ? `/play?sport=${sport.id}` : '/play'}
+    />
   );
 }
 
@@ -126,6 +107,43 @@ function TennisQuickScorerRoute() {
   );
 }
 
+function LegacyQuickMatchRoute() {
+  const location = useLocation();
+  const requestedSport = new URLSearchParams(location.search).get('sport')?.toLowerCase();
+  const sport = getSportById(requestedSport) ? requestedSport : 'volleyball';
+  return <Navigate to={`/${sport}/quick`} replace />;
+}
+
+function LegacyTournamentRoute() {
+  const location = useLocation();
+  const requestedSport = new URLSearchParams(location.search).get('sport')?.toLowerCase();
+  const sport = getSportById(requestedSport) ? requestedSport : null;
+  return <Navigate to={sport ? `/${sport}/tournament` : '/play'} replace />;
+}
+
+function LegacyTennisLiveRoute() {
+  const { matchId, sport } = useParams();
+  if (sport !== 'tennis') return <NotFoundRoute />;
+  return <Navigate to={`/${sport}/quick/live/${matchId}`} replace />;
+}
+
+function SignInAliasRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/login${location.search}${location.hash}`} replace />;
+}
+
+function GameResumeRecoveryRoute() {
+  return (
+    <RouteRecoveryActions
+      eyebrow="Resume recovery"
+      title="Resume link unavailable"
+      message="This saved resume link no longer maps to a live scorer route. Pick a saved match or start fresh."
+      primaryLabel="Find matches to resume"
+      primaryPath="/history"
+    />
+  );
+}
+
 // Redirects authenticated users who haven't completed onboarding
 const GUARD_BYPASS_PREFIXES = [
   '/onboarding',
@@ -153,8 +171,7 @@ const NO_PRIOR_ROUTE_INDEX = -1;
 
 function isProtectedScoringPath(pathname = '') {
   const segments = pathname.split('/').filter(Boolean);
-  return segments.includes('game') ||
-    segments.includes('quick') ||
+  return segments.includes('quick') ||
     segments.some((segment, index) => (
       segment === 'tournament' &&
       segments[index + 2] === 'match' &&
@@ -1208,6 +1225,8 @@ export default function Design1Mono() {
                 <Route path="contact" element={<LegalPage type="contact" />} />
 
                 <Route path="login/*" element={<CloudAuthOnly><MonoLogin /></CloudAuthOnly>} />
+                <Route path="signin/*" element={<SignInAliasRedirect />} />
+                <Route path="sign-in/*" element={<SignInAliasRedirect />} />
                 <Route path="signup/*" element={<CloudAuthOnly><MonoSignUp /></CloudAuthOnly>} />
                 <Route path="sso-callback" element={<CloudAuthOnly><SSOCallback /></CloudAuthOnly>} />
                 <Route path="onboarding" element={<CloudAuthOnly><MonoOnboarding /></CloudAuthOnly>} />
@@ -1218,9 +1237,10 @@ export default function Design1Mono() {
 
                 <Route path="play" element={<MonoSportHome />} />
                 <Route path="dashboard" element={<Navigate to="/" replace />} />
-                <Route path="quick-match" element={<Navigate to="/volleyball/quick" replace />} />
-                <Route path="tournament" element={<Navigate to="/volleyball/tournament" replace />} />
+                <Route path="quick-match" element={<LegacyQuickMatchRoute />} />
+                <Route path="tournament" element={<LegacyTournamentRoute />} />
                 <Route path="stats" element={<Navigate to="/statistics" replace />} />
+                <Route path="game/:id" element={<GameResumeRecoveryRoute />} />
 
                 <Route path=":sport/tournament" element={<SportRouteGuard><MonoTournamentList /></SportRouteGuard>} />
                 <Route path=":sport/tournament/new" element={<SportRouteGuard><MonoTournamentSetup /></SportRouteGuard>} />
@@ -1230,6 +1250,7 @@ export default function Design1Mono() {
                 <Route path=":sport/quick/test/:matchId" element={<LegacyCricketQuickTestRoute />} />
                 <Route path=":sport/quick/test-match/:matchId" element={<CricketQuickTestScorerRoute />} />
                 <Route path=":sport/quick/live/:matchId" element={<TennisQuickScorerRoute />} />
+                <Route path=":sport/live/:matchId" element={<LegacyTennisLiveRoute />} />
 
                 <Route path="statistics" element={<MonoStatistics />} />
 

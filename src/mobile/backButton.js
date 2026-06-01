@@ -3,8 +3,7 @@ import { hasNativePlugin, isNativeMobile } from './platform';
 
 export function isProtectedScoringRoute(pathname) {
   const segments = pathname.split('/').filter(Boolean);
-  return segments.includes('game')
-    || segments.includes('quick')
+  return segments.includes('quick')
     || segments.some((segment, index) => (
       segment === 'tournament'
       && segments[index + 2] === 'match'
