@@ -5,13 +5,21 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $studioJbr = 'C:\Program Files\Android\Android Studio\jbr'
-$sdkRoot = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+$localAppData = $env:LOCALAPPDATA
+if (-not $localAppData) {
+    $localAppData = [Environment]::GetFolderPath('LocalApplicationData')
+}
+$sdkRoot = if ($localAppData) { Join-Path $localAppData 'Android\Sdk' } else { $null }
 
 if (-not $env:JAVA_HOME -and (Test-Path -LiteralPath $studioJbr)) {
     $env:JAVA_HOME = $studioJbr
 }
 
-if (-not $env:ANDROID_HOME -and (Test-Path -LiteralPath $sdkRoot)) {
+if (-not $env:ANDROID_HOME -and $env:ANDROID_SDK_ROOT) {
+    $env:ANDROID_HOME = $env:ANDROID_SDK_ROOT
+}
+
+if (-not $env:ANDROID_HOME -and $sdkRoot -and (Test-Path -LiteralPath $sdkRoot)) {
     $env:ANDROID_HOME = $sdkRoot
 }
 
@@ -19,14 +27,16 @@ if (-not $env:ANDROID_SDK_ROOT -and $env:ANDROID_HOME) {
     $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
 }
 
+$androidSdk = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
+
 $pathEntries = @()
 if ($env:JAVA_HOME) {
     $pathEntries += (Join-Path $env:JAVA_HOME 'bin')
 }
-if ($env:ANDROID_HOME) {
-    $pathEntries += (Join-Path $env:ANDROID_HOME 'platform-tools')
-    $pathEntries += (Join-Path $env:ANDROID_HOME 'emulator')
-    $pathEntries += (Join-Path $env:ANDROID_HOME 'cmdline-tools\latest\bin')
+if ($androidSdk) {
+    $pathEntries += (Join-Path $androidSdk 'platform-tools')
+    $pathEntries += (Join-Path $androidSdk 'emulator')
+    $pathEntries += (Join-Path $androidSdk 'cmdline-tools\latest\bin')
 }
 $env:Path = (($pathEntries | Where-Object { Test-Path -LiteralPath $_ }) + $env:Path) -join ';'
 
