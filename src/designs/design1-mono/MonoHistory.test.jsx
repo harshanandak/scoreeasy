@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
 
@@ -229,5 +229,60 @@ describe('MonoHistory', () => {
     expect(screen.getByTestId('current-route')).toHaveTextContent('/play?sport=cricket');
     expect(screen.getByRole('button', { name: 'Start Football' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
+  });
+
+  it('shows only completed quick results and preserves fresh drafts when clearing history', async () => {
+    globalThis.localStorage.setItem(
+      QUICK_MATCHES_KEY,
+      JSON.stringify([
+        {
+          id: 'active-draft',
+          sport: 'football',
+          team1: 'Draft A',
+          team2: 'Draft B',
+          status: 'in-progress',
+          updatedAt: new Date().toISOString(),
+          score1: 1,
+          score2: 0,
+        },
+        {
+          id: 'phantom-tie',
+          sport: 'football',
+          team1: 'Ghost A',
+          team2: 'Ghost B',
+          status: 'completed',
+          winner: 'Tie',
+          score1: 0,
+          score2: 0,
+          completedAt: '2026-05-18T12:00:00.000Z',
+        },
+        {
+          id: 'real-match',
+          sport: 'football',
+          team1: 'Real A',
+          team2: 'Real B',
+          status: 'completed',
+          winner: 'Real A',
+          score1: 2,
+          score2: 1,
+          completedAt: '2026-05-18T12:00:00.000Z',
+        },
+      ]),
+    );
+
+    renderHistory();
+
+    expect(await screen.findByText('Real A vs Real B')).toBeInTheDocument();
+    const summary = screen.getByLabelText('History summary');
+    expect(within(summary).getByText('Quick').parentElement).toHaveTextContent('1');
+    expect(screen.queryByText('Draft A vs Draft B')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ghost A vs Ghost B')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    await waitFor(() => {
+      expect(readQuickMatches().map((match) => match.id)).toEqual(['active-draft']);
+    });
   });
 });

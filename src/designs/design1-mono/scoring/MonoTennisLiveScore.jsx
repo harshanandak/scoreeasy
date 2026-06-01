@@ -3,7 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
-import { clearData, loadData, loadSportTournaments, saveData, saveSportTournament } from '../../../utils/storage';
+import {
+  clearData,
+  isStaleQuickMatchDraft,
+  loadData,
+  loadSportTournaments,
+  saveData,
+  saveQuickMatch as saveStoredQuickMatch,
+  saveSportTournament,
+} from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
@@ -14,8 +22,6 @@ import {
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
-
-const QUICK_MATCHES_KEY = 'se_quickmatches';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -289,7 +295,13 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     if (!config) return;
 
     if (isQuickMatch) {
-      const draft = loadData(getTennisQuickDraftKey(matchId), null);
+      const draftKey = getTennisQuickDraftKey(matchId);
+      const draft = loadData(draftKey, null);
+      if (isStaleQuickMatchDraft(draft)) {
+        clearData(draftKey);
+        navigate(`/${sport}/quick`);
+        return;
+      }
       if (!draft) return;
       setSportConfig(config);
       setTournament(null);
@@ -485,9 +497,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       return;
     }
 
-    const quickMatches = loadData(QUICK_MATCHES_KEY, []);
-    const withoutCurrent = quickMatches.filter((item) => String(item.id) !== String(match.id));
-    const ok = saveData(QUICK_MATCHES_KEY, [...withoutCurrent, entry]);
+    const ok = saveStoredQuickMatch(entry);
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
       return;

@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import MonoStatistics from './MonoStatistics';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
+const FOOTBALL_KEY = 'se_football';
 
 function seedQuickMatches() {
   globalThis.localStorage.setItem(
@@ -136,5 +137,79 @@ describe('MonoStatistics', () => {
     });
     expect(screen.getByRole('tab', { name: 'Quick' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo clear' })).toBeInTheDocument();
+  });
+
+  it('reconciles overview counters with completed quick and tournament records only', async () => {
+    globalThis.localStorage.setItem(
+      QUICK_MATCHES_KEY,
+      JSON.stringify([
+        {
+          id: 'active-draft',
+          sport: 'football',
+          sportName: 'Football',
+          team1: 'Draft A',
+          team2: 'Draft B',
+          status: 'in-progress',
+          updatedAt: '2026-05-18T12:00:00.000Z',
+          score1: 1,
+          score2: 0,
+        },
+        {
+          id: 'phantom-tie',
+          sport: 'football',
+          sportName: 'Football',
+          team1: 'Ghost A',
+          team2: 'Ghost B',
+          status: 'completed',
+          winner: 'Tie',
+          score1: 0,
+          score2: 0,
+          completedAt: '2026-05-18T12:00:00.000Z',
+        },
+        {
+          id: 'quick-real',
+          sport: 'football',
+          sportName: 'Football',
+          team1: 'Quick A',
+          team2: 'Quick B',
+          status: 'completed',
+          winner: 'Quick A',
+          score1: 3,
+          score2: 2,
+          completedAt: '2026-05-18T12:00:00.000Z',
+        },
+      ]),
+    );
+    globalThis.localStorage.setItem(
+      FOOTBALL_KEY,
+      JSON.stringify([
+        {
+          id: 'cup',
+          name: 'City Cup',
+          teams: [
+            { id: 't1', name: 'Tigers' },
+            { id: 't2', name: 'Lions' },
+            { id: 't3', name: 'Bears' },
+            { id: 't4', name: 'Wolves' },
+          ],
+          matches: [
+            { id: 'group-1', team1Id: 't1', team2Id: 't2', score1: 2, score2: 1, status: 'completed', winner: 't1' },
+            { id: 'group-2', team1Id: 't3', team2Id: 't4', score1: null, score2: null, status: 'pending' },
+          ],
+          knockoutMatches: [
+            { id: 'final', team1Id: 't1', team2Id: 't3', score1: 4, score2: 3, status: 'completed', winner: 't1' },
+          ],
+        },
+      ]),
+    );
+
+    renderStatistics();
+
+    expect(await screen.findByText('Tournaments')).toBeInTheDocument();
+    expect(screen.getByText('Tournaments').closest('.mono-stat-card')).toHaveTextContent('1');
+    expect(screen.getByText('Matches').closest('.mono-stat-card')).toHaveTextContent('3');
+    expect(screen.getByText('Teams').closest('.mono-stat-card')).toHaveTextContent('6');
+    expect(screen.queryByText('Draft A')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ghost A')).not.toBeInTheDocument();
   });
 });
