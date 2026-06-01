@@ -38,7 +38,8 @@ if ($androidSdk) {
     $pathEntries += (Join-Path $androidSdk 'emulator')
     $pathEntries += (Join-Path $androidSdk 'cmdline-tools\latest\bin')
 }
-$env:Path = (($pathEntries | Where-Object { Test-Path -LiteralPath $_ }) + $env:Path) -join ';'
+$existingPathEntries = @($pathEntries | Where-Object { Test-Path -LiteralPath $_ })
+$env:Path = ($existingPathEntries + @($env:Path)) -join ';'
 
 Write-Host "JAVA_HOME=$env:JAVA_HOME"
 Write-Host "ANDROID_HOME=$env:ANDROID_HOME"
