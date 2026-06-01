@@ -347,7 +347,8 @@ describe('Quick match persistence normalization', () => {
 
     const completed = loadCompletedQuickMatches();
     expect(completed).toHaveLength(sports.length);
-    expect(completed.map((match) => match.sport).sort()).toEqual([...sports].sort());
+    const bySportName = (a, b) => a.localeCompare(b);
+    expect(completed.map((match) => match.sport).sort(bySportName)).toEqual([...sports].sort(bySportName));
     expect(completed.every((match) => match.status === 'completed')).toBe(true);
   });
 
