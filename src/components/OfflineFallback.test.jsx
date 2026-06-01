@@ -62,7 +62,7 @@ describe('OfflineFallback', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start quick match' }));
     fireEvent.click(screen.getByRole('button', { name: 'View saved matches' }));
 
-    expect(onNavigate).toHaveBeenNthCalledWith(1, '/volleyball/quick');
+    expect(onNavigate).toHaveBeenNthCalledWith(1, '/play');
     expect(onNavigate).toHaveBeenNthCalledWith(2, '/history');
   });
 

@@ -66,6 +66,15 @@ describe('app route recovery', () => {
     expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
   });
 
+  it('honors supported sport query params on legacy quick-match links', async () => {
+    renderApp('/quick-match?sport=tennis');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick');
+    });
+    expect(await screen.findByRole('button', { name: 'Start Tennis' })).toBeEnabled();
+  });
+
   it('redirects legacy dashboard links home', async () => {
     renderApp('/dashboard');
 
@@ -74,10 +83,36 @@ describe('app route recovery', () => {
     });
   });
 
+  it('redirects signin aliases through the supported auth route', async () => {
+    renderApp('/signin');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
+    });
+    expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+  });
+
+  it('recovers dead dashboard game resume links without generic not found', async () => {
+    renderApp('/game/stale-draft');
+
+    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Find matches to resume' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+  });
+
+  it('shows actionable recovery for missing tournament scorer deep links', async () => {
+    renderApp('/football/tournament/missing/match/missing/score');
+
+    expect(await screen.findByRole('heading', { name: 'Match not found' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to Football tournaments' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Football quick match' })).toBeInTheDocument();
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  });
+
   it('keeps quick test scoring restricted to cricket routes', async () => {
     renderApp('/tennis/quick/test/123');
 
-    expect(await screen.findByText('This screen is not available')).toBeInTheDocument();
+    expect(await screen.findByText('This Tennis screen is not available')).toBeInTheDocument();
   });
 
   it('redirects legacy cricket Test Match quick links to product route language', async () => {
@@ -86,5 +121,20 @@ describe('app route recovery', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/123');
     });
+  });
+
+  it('redirects legacy tennis live links to the canonical quick live scorer route', async () => {
+    renderApp('/tennis/live/match-123');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/match-123');
+    });
+  });
+
+  it('preserves sport context in bad sport-scoped route recovery', async () => {
+    renderApp('/badminton/not-a-route');
+
+    expect(await screen.findByRole('heading', { name: 'This Badminton screen is not available' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
   });
 });

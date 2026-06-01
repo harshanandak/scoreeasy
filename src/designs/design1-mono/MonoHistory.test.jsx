@@ -230,4 +230,12 @@ describe('MonoHistory', () => {
     expect(screen.getByRole('button', { name: 'Start Football' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
   });
+
+  it('routes empty tournament recovery through the neutral sport chooser', async () => {
+    renderHistory();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tournament' }));
+
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/play');
+  });
 });

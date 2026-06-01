@@ -12,6 +12,7 @@ import {
   getTennisQuickDraftKey,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import { triggerConfetti } from '../utils/confetti';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
@@ -550,7 +551,16 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateBack);
 
   if ((!isQuickMatch && !tournament) || !match) {
-    return <div className="max-w-2xl mx-auto px-6 py-10">Match not found.</div>;
+    return (
+      <RouteRecoveryActions
+        eyebrow="Scorer recovery"
+        title="Match not found"
+        message="This tennis scorer link does not match a saved quick match or tournament match on this device."
+        sportId="tennis"
+        primaryLabel={isQuickMatch ? 'Back to Tennis setup' : 'Back to Tennis tournaments'}
+        primaryPath={isQuickMatch ? '/tennis/quick' : '/tennis/tournament'}
+      />
+    );
   }
 
   const currentSetData = sets[currentSet];
