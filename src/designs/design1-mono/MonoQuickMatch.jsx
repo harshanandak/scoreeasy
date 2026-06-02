@@ -2327,7 +2327,7 @@ export default function MonoQuickMatch() {
                   key={r}
                   onClick={() => addRuns(r)}
                   className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
-                  style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation' }}
+                  style={{ touchAction: 'manipulation' }}
                 >
                   {r}
                 </button>

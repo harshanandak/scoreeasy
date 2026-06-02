@@ -182,6 +182,7 @@ describe('app-owned scoring prompts', () => {
 
   it('keeps active scorer layouts compact and thumb-reachable on mobile', () => {
     const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
+    const quickMatchSource = readFileSync(`${import.meta.dirname}/../MonoQuickMatch.jsx`, 'utf8');
     const sourceByComponent = Object.fromEntries(scoringComponents.map((componentFile) => [
       componentFile,
       readFileSync(new URL(componentFile, import.meta.url), 'utf8'),
@@ -209,6 +210,7 @@ describe('app-owned scoring prompts', () => {
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain('className="max-w-2xl mx-auto text-center"');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(followOnPrompt\)[\s\S]*className="min-h-screen px-6 py-10"/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(matchComplete && matchResult\)[\s\S]*className="min-h-screen px-6 py-10"/);
+    expect(quickMatchSource).not.toMatch(/mono-scorer-run-button[\s\S]{0,240}width: '56px'/);
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {
