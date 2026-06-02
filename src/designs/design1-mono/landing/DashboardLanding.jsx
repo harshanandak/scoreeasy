@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
 import { getActiveSessions } from '../../../utils/universalStorage';
 import { getSportsList, getSportById } from '../../../models/sportRegistry';
@@ -893,56 +893,10 @@ export default function DashboardLanding() {
 
   /* New user = no tournaments AND no quick matches AND no active sessions */
   const isNewUser = allTournaments.length === 0 && recentMatches.length === 0 && sessions.length === 0;
-  const username = user?.username || '...';
-
   return (
     <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}
          className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <h1 className="sr-only">Dashboard</h1>
-
-      {/* ── Sticky Nav ── */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: t.bg,
-        borderBottom: '1.5px solid #1a1a1a',
-      }}>
-        <div style={{
-          maxWidth: 672, margin: '0 auto',
-          padding: '14px 24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <Link to="/" style={{ textDecoration: 'none' }}>
-            <span style={{
-              fontFamily: MONO, fontWeight: 800, fontSize: '0.875rem',
-              lineHeight: 1.1, letterSpacing: '-0.02em', color: t.text,
-            }}>
-              SCORE<br />EASY
-            </span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            {['History', 'Statistics'].map(link => (
-              <button key={link} type="button" onClick={() => navigate(`/${link.toLowerCase()}`)}
-                style={{
-                  ...bareButton,
-                  fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted,
-                  textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer',
-                }}>{link}</button>
-            ))}
-            <Link to="/users/search" style={{
-              fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted,
-              textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.08em',
-            }}>Find players</Link>
-            <Link to="/profile" style={{
-              fontFamily: MONO, fontSize: '0.75rem', fontWeight: 700,
-              color: t.text, textDecoration: 'none',
-              padding: '8px 16px',
-              border: '1.5px solid #1a1a1a', background: 'transparent',
-            }}>
-              @{username}
-            </Link>
-          </div>
-        </div>
-      </nav>
 
       {/* ── Route to correct view ── */}
       {isNewUser ? (
