@@ -180,6 +180,39 @@ describe('app-owned scoring prompts', () => {
     expect(source).toContain('env(safe-area-inset-bottom, 0px)');
   });
 
+  it('keeps active scorer layouts compact and thumb-reachable on mobile', () => {
+    const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
+    const quickMatchSource = readFileSync(`${import.meta.dirname}/../MonoQuickMatch.jsx`, 'utf8');
+    const sourceByComponent = Object.fromEntries(scoringComponents.map((componentFile) => [
+      componentFile,
+      readFileSync(new URL(componentFile, import.meta.url), 'utf8'),
+    ]));
+
+    expect(monoCss).toContain('.mono-scorer-screen');
+    expect(monoCss).toContain('.mono-scorer-control-strip');
+    expect(monoCss).toMatch(/\.mono-scorer-control-strip\s*\{[\s\S]*position:\s*sticky/);
+    expect(monoCss).toMatch(/\.mono-scorer-control-strip\s*\{[\s\S]*bottom:\s*0/);
+    expect(monoCss).toContain('env(safe-area-inset-bottom, 0px)');
+    expect(monoCss).toContain('clamp(2.75rem, 16vw, 3.5rem)');
+    expect(monoCss).toContain('grid-template-columns: repeat(7, minmax(0, 1fr))');
+    expect(monoCss).toContain('@media (max-width: 640px) and (max-height: 740px)');
+
+    for (const [componentFile, source] of Object.entries(sourceByComponent)) {
+      expect(source, componentFile).toContain('mono-scorer-screen');
+      expect(source, componentFile).toContain('mono-scorer-control-strip');
+      expect(source, componentFile).toContain('mono-scorer-score-value');
+    }
+
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-grid');
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-grid');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain('className="max-w-2xl mx-auto text-center"');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(followOnPrompt\)[\s\S]*className="min-h-screen px-6 py-10"/);
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(matchComplete && matchResult\)[\s\S]*className="min-h-screen px-6 py-10"/);
+    expect(quickMatchSource).not.toMatch(/mono-scorer-run-button[\s\S]{0,240}width: '56px'/);
+  });
+
   it('locks scorer interaction while the post-save redirect is pending', () => {
     vi.useFakeTimers();
     const navigateAfterSave = vi.fn();

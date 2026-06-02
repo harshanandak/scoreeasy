@@ -12,7 +12,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
-import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -510,8 +509,8 @@ export default function MonoCricketLiveScore() {
   // Super Over prompt
   if (superOverPhase === 'prompt') {
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '80px' }}>
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
@@ -555,21 +554,21 @@ export default function MonoCricketLiveScore() {
     const soDone = soScore.balls >= 6 || soScore.wickets >= 2;
 
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto">
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell">
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
             </div>
           )}
-          <div className="flex items-center justify-between mb-6">
+          <div className="mono-scorer-topbar">
             <span className="text-sm" style={{ color: '#888' }}>Super Over</span>
             <span className="mono-badge mono-badge-live">{soName} batting</span>
           </div>
 
-          <div className="text-center mb-8">
+          <div className="mono-scorer-main-score">
             <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>{soName}</p>
-            <p className="text-6xl font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
+            <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
               {soScore.runs}<span style={{ color: '#bbb', fontSize: '0.5em' }}>/{soScore.wickets}</span>
             </p>
             <p className="text-sm font-mono" style={{ color: '#888' }}>
@@ -584,16 +583,16 @@ export default function MonoCricketLiveScore() {
 
           {!soDone && (
             <>
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
+              <div className="mono-scorer-run-grid">
                 {CRICKET_RUN_VALUES.map(r => (
                   <button key={r} onClick={() => addSuperOverRuns(r)}
-                    className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
+                    className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
                     style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation' }}>
                     {r}
                   </button>
                 ))}
               </div>
-              <div className="flex gap-2 justify-center mb-4">
+              <div className="mono-scorer-extra-row">
                 <button onClick={addSuperOverExtra} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
                   Wide (+1)
                 </button>
@@ -621,8 +620,8 @@ export default function MonoCricketLiveScore() {
     if (!soWinner) {
       // Still tied — offer another super over
       return (
-        <div className="min-h-screen px-6 py-10">
-          <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+        <div className="mono-scorer-screen">
+          <div className="mono-scorer-shell text-center" style={{ paddingTop: '80px' }}>
             {saveWarning && (
               <div className="mono-alert mono-alert-danger mb-4">
                 {saveWarning}
@@ -659,8 +658,8 @@ export default function MonoCricketLiveScore() {
     : `${currentScore.balls} balls${format.maxBalls ? ' / ' + format.maxBalls : ''}`;
 
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="max-w-2xl mx-auto">
+    <div className="mono-scorer-screen">
+      <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
@@ -669,15 +668,11 @@ export default function MonoCricketLiveScore() {
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={handleCancel}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-            style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
-            <BackArrow /> Back
-          </button>
-          <div className="flex items-center gap-2">
+        <div className="mono-scorer-topbar">
+          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+            {sportConfig?.name || 'Match'}
+          </span>
+          <div className="mono-scorer-topbar-actions">
             {presetLabel && (
               <span className="mono-badge">{presetLabel}</span>
             )}
@@ -707,11 +702,11 @@ export default function MonoCricketLiveScore() {
         )}
 
         {/* Batting team score */}
-        <div className="text-center mb-8">
+        <div className="mono-scorer-main-score">
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
             {currentName} batting
           </p>
-          <p key={scoreAnimKey} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-2" style={{ color: '#111' }}>
+          <p key={scoreAnimKey} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-2" style={{ color: '#111' }}>
             {currentScore.runs}
             <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
           </p>
@@ -755,7 +750,7 @@ export default function MonoCricketLiveScore() {
         </div>
 
         {/* Other team score */}
-        <div className="mono-score-mini text-center mb-8" style={{ padding: '12px 16px' }}>
+        <div className="mono-score-mini text-center mb-4" style={{ padding: '12px 16px' }}>
           <p className="text-xs" style={{ color: '#888' }}>
             {otherName}: {otherScore.runs}/{otherScore.wickets}
             {' '}({showOvers ? `${ballsToOvers(otherScore.balls)} ov` : `${otherScore.balls} balls`})
@@ -765,13 +760,13 @@ export default function MonoCricketLiveScore() {
         {/* Scoring controls */}
         {!isMatchComplete && (
           <>
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="mono-scorer-run-grid">
               {CRICKET_RUN_VALUES.map(r => (
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
                   disabled={isInningsComplete || scoringPrompt.isInteractionLocked}
-                  className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
+                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
                   style={{
                     width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0,
                     opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation',
@@ -782,7 +777,7 @@ export default function MonoCricketLiveScore() {
               ))}
             </div>
 
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="mono-scorer-extra-row">
               <button onClick={() => addExtra('wide')} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn"
                 style={{ padding: '10px 16px', fontSize: '0.8125rem', opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
                 Wide (+1)
@@ -813,7 +808,7 @@ export default function MonoCricketLiveScore() {
         )}
 
         {/* Bottom bar */}
-        <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
+        <div className="mono-scorer-control-strip pt-4">
           <button
             onClick={() => saveMatch()}
             disabled={scoringPrompt.isInteractionLocked}
@@ -830,6 +825,14 @@ export default function MonoCricketLiveScore() {
               style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
+              Cancel
             </button>
             {hasChanges && (
               <button

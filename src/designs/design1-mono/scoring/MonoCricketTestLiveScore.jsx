@@ -12,7 +12,6 @@ import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
-import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -547,8 +546,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   if (followOnPrompt) {
     const lead = innings[0].runs - innings[1].runs;
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '80px' }}>
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
@@ -581,8 +580,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       : null;
 
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '40px' }}>
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '40px' }}>
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
@@ -653,8 +652,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const contextLine = getContextLine();
 
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="max-w-2xl mx-auto">
+    <div className="mono-scorer-screen">
+      <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
@@ -663,27 +662,22 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={handleCancel}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1"
-            style={{ color: '#888', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-          >
-            <BackArrow /> Back
-          </button>
-          <div className="flex items-center gap-2">
+        <div className="mono-scorer-topbar">
+          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+            {sportConfig?.name || 'Match'}
+          </span>
+          <div className="mono-scorer-topbar-actions">
             <span className="mono-badge">Test Match</span>
             <span className="mono-badge mono-badge-live">{ORDINALS[currentInningsIndex]} Innings</span>
           </div>
         </div>
 
         {/* Batting team score */}
-        <div className="text-center mb-6">
+        <div className="mono-scorer-main-score">
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
             {battingTeamName} batting
           </p>
-          <p className="text-6xl font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
+          <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
             {currentInning.runs}
             <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentInning.wickets}</span>
           </p>
@@ -733,18 +727,18 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         {/* Scoring controls */}
         {!isInningsOver && (
           <>
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="mono-scorer-run-grid">
               {CRICKET_RUN_VALUES.map(r => (
                 <button key={r} onClick={() => addRuns(r)}
                   disabled={scoringPrompt.isInteractionLocked}
-                  className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
+                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
                   style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
                   {r}
                 </button>
               ))}
             </div>
 
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="mono-scorer-extra-row">
               <button onClick={() => addExtra('wide')} disabled={scoringPrompt.isInteractionLocked} className="mono-btn"
                 style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
                 Wide (+1)
@@ -769,7 +763,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         )}
 
         {/* Bottom bar */}
-        <div className="pt-4" style={{ borderTop: '1px solid #eee' }}>
+        <div className="mono-scorer-control-strip pt-4">
           <div className="flex gap-2 mb-3">
             <button
               onClick={undo}
