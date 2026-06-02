@@ -586,8 +586,8 @@ export default function MonoCricketLiveScore() {
               <div className="mono-scorer-run-grid">
                 {CRICKET_RUN_VALUES.map(r => (
                   <button key={r} onClick={() => addSuperOverRuns(r)}
-                    className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
-                    style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation' }}>
+                    className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
+                    style={{ touchAction: 'manipulation' }}>
                     {r}
                   </button>
                 ))}
@@ -600,8 +600,8 @@ export default function MonoCricketLiveScore() {
                   No Ball (+1)
                 </button>
               </div>
-              <button onClick={addSuperOverWicket} className="mono-btn w-full"
-                style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation' }}>
+              <button onClick={addSuperOverWicket} className="mono-btn mono-btn-warning w-full"
+                style={{ padding: '14px', fontSize: '0.9375rem', touchAction: 'manipulation' }}>
                 Wicket
               </button>
             </>
@@ -766,9 +766,8 @@ export default function MonoCricketLiveScore() {
                   key={r}
                   onClick={() => addRuns(r)}
                   disabled={isInningsComplete || scoringPrompt.isInteractionLocked}
-                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
+                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
                   style={{
-                    width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0,
                     opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation',
                   }}
                 >
@@ -788,8 +787,8 @@ export default function MonoCricketLiveScore() {
               </button>
             </div>
 
-            <button onClick={addWicket} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn w-full mb-4"
-              style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb',
+            <button onClick={addWicket} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-warning w-full mb-4"
+              style={{ padding: '14px', fontSize: '0.9375rem',
                 opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
               {freeHit ? 'Run Out Only' : 'Wicket'}
             </button>

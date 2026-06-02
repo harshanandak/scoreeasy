@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -292,5 +293,14 @@ describe('MonoHistory', () => {
     await waitFor(() => {
       expect(readQuickMatches().map((match) => match.id)).toEqual(['active-draft']);
     });
+  });
+
+  it('keeps history rows readable instead of disabled-looking', () => {
+    const source = readFileSync(`${import.meta.dirname}/MonoHistory.jsx`, 'utf8');
+
+    expect(source).not.toContain("color: '#bbb'");
+    expect(source).toContain('mono-muted-text');
+    expect(source).toContain('mono-subtle-text');
+    expect(source).toContain('mono-action-text');
   });
 });

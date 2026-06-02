@@ -72,6 +72,10 @@
   --se-color-line: var(--border);
   --se-color-line-strong: var(--border);
   --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
   --se-border-standard: 1.5px;
   --se-radius-button: var(--radius);
   --se-radius-card: calc(var(--radius) + 4px);

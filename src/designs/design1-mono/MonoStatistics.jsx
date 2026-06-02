@@ -346,7 +346,7 @@ export default function MonoStatistics() {
     <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="mono-page-shell">
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1" style={{ color: '#888' }} aria-label="Go back to home">
+          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
             <BackArrow /> Home
           </button>
         </nav>
@@ -402,12 +402,12 @@ export default function MonoStatistics() {
                     <SportIcon name={sportData.sport.name} size={24} color="var(--se-color-action)" />
                     <div>
                       <p className="text-sm font-medium" style={{ color: '#111' }}>{sportData.sport.name}</p>
-                      <p className="text-xs" style={{ color: '#888' }}>
+                      <p className="text-xs mono-muted-text">
                         {sportData.tournaments} tournament{sportData.tournaments > 1 ? 's' : ''} &middot; {sportData.matches} match{sportData.matches !== 1 ? 'es' : ''}
                       </p>
                     </div>
                   </div>
-                  <span className="font-mono text-sm" style={{ color: '#888' }}>
+                  <span className="font-mono text-sm mono-muted-text">
                     {sportData.teams.size} team{sportData.teams.size !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -417,10 +417,10 @@ export default function MonoStatistics() {
               {quickMatches.length > 0 && (
                 <div className="mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">⚡</span>
+                    <span className="text-xl font-mono mono-action-text" aria-hidden="true">Q</span>
                     <div>
                       <p className="text-sm font-medium" style={{ color: '#111' }}>Quick Matches</p>
-                      <p className="text-xs" style={{ color: '#888' }}>
+                      <p className="text-xs mono-muted-text">
                         {quickMatches.length} match{quickMatches.length !== 1 ? 'es' : ''} played
                       </p>
                     </div>
@@ -473,7 +473,7 @@ export default function MonoStatistics() {
             {pendingDelete && !pendingDelete.deleted && (
               <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick stat?</p>
-                <p className="text-xs mb-4" style={{ color: '#666' }}>
+                <p className="text-xs mb-4 mono-muted-text">
                   {getQuickMatchLabel(pendingDelete.match)} will be removed from Statistics and History.
                 </p>
                 <div className="flex gap-2">
@@ -487,8 +487,8 @@ export default function MonoStatistics() {
                   </button>
                   <button
                     type="button"
-                    className="mono-btn-primary flex-1"
-                    style={{ minHeight: 44, padding: '10px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                    className="mono-btn-primary mono-btn-danger flex-1"
+                    style={{ minHeight: 44, padding: '10px' }}
                     onClick={completeDeleteQuickMatch}
                   >
                     Delete
@@ -511,7 +511,7 @@ export default function MonoStatistics() {
             {pendingClear && !pendingClear.cleared && (
               <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear all quick stats?</p>
-                <p className="text-xs mb-4" style={{ color: '#666' }}>
+                <p className="text-xs mb-4 mono-muted-text">
                   This removes quick matches from Statistics and History. You can undo before leaving this screen.
                 </p>
                 <div className="flex gap-2">
@@ -525,8 +525,8 @@ export default function MonoStatistics() {
                   </button>
                   <button
                     type="button"
-                    className="mono-btn-primary flex-1"
-                    style={{ minHeight: 44, padding: '10px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}
+                    className="mono-btn-primary mono-btn-danger flex-1"
+                    style={{ minHeight: 44, padding: '10px' }}
                     onClick={completeClearAllQuickMatches}
                   >
                     Clear all
@@ -564,7 +564,7 @@ export default function MonoStatistics() {
                 <div className="mono-table-panel mono-stat-panel mb-6" style={{ padding: 0 }}>
                   <div className="flex items-center justify-between gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid #eee' }}>
                     <h2 className="text-sm font-semibold" style={{ color: '#111', margin: 0 }}>Quick team form</h2>
-                    <span className="text-xs" style={{ color: '#888' }}>Win rate and margin</span>
+                    <span className="text-xs mono-muted-text">Win rate and margin</span>
                   </div>
                   <QuickTeamTable rows={quickTeamRows} />
                 </div>
@@ -596,13 +596,13 @@ export default function MonoStatistics() {
                             <span className="text-sm" style={{ color: '#111' }}>
                               {qm.team1} vs {qm.team2}
                             </span>
-                            <span className="text-xs font-mono" style={{ color: '#888' }}>
+                            <span className="text-xs font-mono mono-muted-text">
                               {formatQuickScore(qm)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs" style={{ color: '#0066ff' }}>{qm.winner}</span>
-                            <span className="text-xs" style={{ color: '#bbb' }}>
+                            <span className="text-xs mono-action-text">{qm.winner}</span>
+                            <span className="text-xs mono-subtle-text">
                               {new Date(qm.completedAt || qm.date || qm.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -611,7 +611,7 @@ export default function MonoStatistics() {
                           type="button"
                           onClick={() => requestDeleteQuickMatch(qm)}
                           className="bg-transparent border-none cursor-pointer text-sm"
-                          style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
+                          style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
                           title="Delete this match"
                           aria-label={`Delete match ${qm.team1} vs ${qm.team2}, ${formatQuickScore(qm)}`}
                         >
@@ -634,7 +634,7 @@ function StatCard({ label, value }) {
   return (
     <div className="mono-stat-strip mono-stat-card mono-stat-number-card text-center" style={{ padding: '16px 12px' }}>
       <p className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>{value}</p>
-      <p className="text-xs mt-1" style={{ color: '#888' }}>{label}</p>
+      <p className="text-xs mt-1 mono-muted-text">{label}</p>
     </div>
   );
 }
@@ -647,7 +647,7 @@ StatCard.propTypes = {
 function InsightCard({ label, value }) {
   return (
     <div className="mono-stat-strip mono-stat-card" style={{ padding: '14px 16px', minHeight: 82 }}>
-      <p className="text-xs uppercase mb-2" style={{ color: '#888', letterSpacing: '0.08em' }}>{label}</p>
+      <p className="text-xs uppercase mb-2 mono-muted-text" style={{ letterSpacing: '0.08em' }}>{label}</p>
       <p className="text-sm font-semibold" style={{ color: '#111', lineHeight: 1.35 }}>{value}</p>
     </div>
   );
@@ -662,35 +662,37 @@ function QuickTeamTable({ rows }) {
   if (rows.length === 0) return null;
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
-      <caption className="sr-only">Quick match team form</caption>
-      <thead>
-        <tr style={{ borderBottom: '1px solid #eee' }}>
-          <th scope="col" className="text-left font-normal" style={{ color: '#888', padding: '10px 12px' }}>Team</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>P</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>W</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>L</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>D</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 6px' }}>+/-</th>
-          <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '10px 12px' }}>Win%</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
-            <td scope="row" className="font-medium" style={{ color: '#111', padding: '10px 12px' }}>{row.name}</td>
-            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.played}</td>
-            <td className="text-center font-mono" style={{ color: '#111', padding: '10px 6px' }}>{row.won}</td>
-            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.lost}</td>
-            <td className="text-center font-mono" style={{ color: '#888', padding: '10px 6px' }}>{row.drawn}</td>
-            <td className="text-center font-mono" style={{ color: row.margin >= 0 ? '#0066ff' : '#dc2626', padding: '10px 6px' }}>
-              {row.margin > 0 ? `+${row.margin}` : row.margin}
-            </td>
-            <td className="text-center font-mono" style={{ color: '#0066ff', padding: '10px 12px' }}>{row.winRate}%</td>
+    <div className="mono-table-scroll">
+      <table className="mono-data-table">
+        <caption className="sr-only">Quick match team form</caption>
+        <thead>
+          <tr style={{ borderBottom: '1px solid #eee' }}>
+            <th scope="col" className="text-left" style={{ padding: '10px 12px' }}>Team</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>P</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>W</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>L</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>D</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>+/-</th>
+            <th scope="col" className="text-center font-mono" style={{ padding: '10px 12px' }}>Win%</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
+              <th scope="row" className="font-medium mono-table-primary text-left" style={{ padding: '10px 12px' }}>{row.name}</th>
+              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.played}</td>
+              <td className="text-center font-mono mono-table-primary" style={{ padding: '10px 6px' }}>{row.won}</td>
+              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.lost}</td>
+              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.drawn}</td>
+              <td className={`text-center font-mono ${row.margin >= 0 ? 'mono-table-action' : 'mono-table-danger'}`} style={{ padding: '10px 6px' }}>
+                {row.margin > 0 ? `+${row.margin}` : row.margin}
+              </td>
+              <td className="text-center font-mono mono-table-action" style={{ padding: '10px 12px' }}>{row.winRate}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -713,9 +715,9 @@ function EmptyState({ icon, label, primaryAction, secondaryAction }) {
       {isEmoji ? (
         <span className="text-4xl mb-3">{icon}</span>
       ) : (
-        <div className="mb-3"><SportIcon name={icon} size={36} color="#bbb" /></div>
+        <div className="mb-3"><SportIcon name={icon} size={36} color="var(--se-color-ink-muted)" /></div>
       )}
-      <p className="text-sm mb-4" style={{ color: '#888', maxWidth: 340 }}>{label}</p>
+      <p className="text-sm mb-4 mono-muted-text" style={{ maxWidth: 340 }}>{label}</p>
       {(primaryAction || secondaryAction) && (
         <div className="flex flex-col sm:flex-row gap-2">
           {primaryAction && (
@@ -832,37 +834,39 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
 
   return (
     <div className="mono-table-panel mono-stat-panel" style={{ padding: 0 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-        <caption className="sr-only">{sportName} team statistics</caption>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #eee' }}>
-            <th scope="col" className="text-left font-normal" style={{ color: '#888', padding: '12px 16px' }}>Team</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>P</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>W</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>L</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>For</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>Agst</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 8px' }}>Avg</th>
-            <th scope="col" className="text-center font-normal font-mono" style={{ color: '#888', padding: '12px 16px' }}>Win%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(row => (
-            <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
-              <td scope="row" className="font-medium" style={{ color: '#111', padding: '12px 16px' }}>{row.name}</td>
-              <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.played}</td>
-              <td className="text-center font-mono" style={{ color: '#111', padding: '12px 8px' }}>{row.won}</td>
-              <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.lost}</td>
-              <td className="text-center font-mono" style={{ color: '#111', padding: '12px 8px' }}>{row.pointsFor}</td>
-              <td className="text-center font-mono" style={{ color: '#888', padding: '12px 8px' }}>{row.pointsAgainst}</td>
-              <td className="text-center font-mono" style={{ color: row.averageMargin >= 0 ? '#0066ff' : '#dc2626', padding: '12px 8px' }}>{row.averageMargin}</td>
-              <td className="text-center font-mono" style={{ color: '#0066ff', padding: '12px 16px' }}>
-                {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
-              </td>
+      <div className="mono-table-scroll">
+        <table className="mono-data-table">
+          <caption className="sr-only">{sportName} team statistics</caption>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #eee' }}>
+              <th scope="col" className="text-left" style={{ padding: '12px 16px' }}>Team</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>P</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>W</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>L</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>For</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>Agst</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>Avg</th>
+              <th scope="col" className="text-center font-mono" style={{ padding: '12px 16px' }}>Win%</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map(row => (
+              <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                <th scope="row" className="font-medium mono-table-primary text-left" style={{ padding: '12px 16px' }}>{row.name}</th>
+                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.played}</td>
+                <td className="text-center font-mono mono-table-primary" style={{ padding: '12px 8px' }}>{row.won}</td>
+                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.lost}</td>
+                <td className="text-center font-mono mono-table-primary" style={{ padding: '12px 8px' }}>{row.pointsFor}</td>
+                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.pointsAgainst}</td>
+                <td className={`text-center font-mono ${row.averageMargin >= 0 ? 'mono-table-action' : 'mono-table-danger'}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
+                <td className="text-center font-mono mono-table-action" style={{ padding: '12px 16px' }}>
+                  {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
