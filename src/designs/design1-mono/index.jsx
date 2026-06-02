@@ -497,7 +497,7 @@ function GlobalNavigation({ requestScoringExit }) {
   };
 
   const navItems = [
-    { label: 'Home', path: APP_ENTRY_PATH },
+    { label: 'Home', path: '/' },
     { label: 'Play', path: '/play' },
     { label: 'Matches', path: '/history' },
     { label: 'Stats', path: '/statistics' },

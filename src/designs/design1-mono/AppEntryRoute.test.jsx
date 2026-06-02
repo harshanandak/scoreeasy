@@ -222,6 +222,18 @@ describe('app entry route contract', () => {
     expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
   });
 
+  it('routes public Home clicks through the entry resolver', async () => {
+    renderApp('/marketing');
+
+    expect(await screen.findByText('Public marketing')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing');
+    });
+    expect(screen.queryByText('App dashboard')).not.toBeInTheDocument();
+  });
+
   it('does not show app bottom navigation on protected scorer routes', async () => {
     globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
       id: 'match-1',
