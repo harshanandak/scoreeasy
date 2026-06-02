@@ -108,6 +108,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         navigateFallback: '/index.html',
         runtimeCaching: [
