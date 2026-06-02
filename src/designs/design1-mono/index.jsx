@@ -505,7 +505,7 @@ function GlobalNavigation({ requestScoringExit }) {
 
   if (cloudAuthAvailable) {
     navItems.push({
-      label: isAuthenticated ? 'Profile' : 'Sign in',
+      label: isAuthenticated ? 'Account' : 'Sign in',
       path: isAuthenticated ? '/profile' : '/login',
     });
   }
@@ -516,7 +516,11 @@ function GlobalNavigation({ requestScoringExit }) {
     { label: 'Matches', path: '/history' },
     { label: 'Stats', path: '/statistics' },
     cloudAuthAvailable
-      ? { label: isAuthenticated ? 'Account' : 'Sign in', path: isAuthenticated ? '/profile' : '/login' }
+      ? {
+        label: isAuthenticated ? 'Account' : 'Sign in',
+        path: isAuthenticated ? '/profile' : '/login',
+        kind: isAuthenticated ? 'accountMenu' : 'link',
+      }
       : null,
   ].filter(Boolean);
 
@@ -639,17 +643,32 @@ function GlobalNavigation({ requestScoringExit }) {
           aria-label="App navigation"
           style={{ '--bottom-nav-count': bottomNavItems.length }}
         >
-          {bottomNavItems.map((item) => (
-            <button
-              key={item.path}
-              type="button"
-              onClick={() => go(item.path)}
-              className="global-bottom-nav-item"
-              aria-current={isActive(item) ? 'page' : undefined}
-            >
-              {item.label}
-            </button>
-          ))}
+          {bottomNavItems.map((item) => {
+            if (item.kind === 'accountMenu') {
+              return (
+                <div
+                  key={item.path}
+                  className="global-bottom-nav-item global-bottom-nav-account-item"
+                  aria-current={isActive(item) ? 'page' : undefined}
+                >
+                  <span className="global-bottom-nav-account-label">{item.label}</span>
+                  <AuthUserButton aria-label="Account menu" />
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => go(item.path)}
+                className="global-bottom-nav-item"
+                aria-current={isActive(item) ? 'page' : undefined}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
       )}
       <style>{`
@@ -1061,6 +1080,11 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-bottom-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 4px;
             min-height: 52px;
             border: var(--se-border-standard) solid transparent;
             border-radius: var(--se-radius-button);
@@ -1072,6 +1096,14 @@ function GlobalNavigation({ requestScoringExit }) {
             font-weight: 800;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+          }
+
+          .global-bottom-nav-account-item {
+            cursor: default;
+          }
+
+          .global-bottom-nav-account-label {
+            line-height: 1;
           }
 
           .global-bottom-nav-item[aria-current="page"] {

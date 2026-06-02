@@ -14,6 +14,10 @@ vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('../../components/AuthButtons', () => ({
+  AuthUserButton: (props) => <button type="button" {...props}>Account menu</button>,
+}));
+
 vi.mock('./MonoLanding', () => ({
   default: () => <p>Public marketing</p>,
 }));
@@ -192,6 +196,23 @@ describe('app entry route contract', () => {
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Matches', hidden: true })).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
+  });
+
+  it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    const { container } = renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const appNav = container.querySelector('.global-bottom-nav');
+
+    expect(within(appNav).getByText('Account')).toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
   });
 
   it('does not show app bottom navigation on the public marketing route', async () => {

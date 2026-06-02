@@ -41,6 +41,10 @@ function renderApp(initialEntry) {
   );
 }
 
+function expectCurrentRoute(route) {
+  expect(screen.getByLabelText('Current route').textContent).toBe(route);
+}
+
 describe('app route recovery', () => {
   beforeEach(() => {
     authState.current = {
@@ -96,7 +100,7 @@ describe('app route recovery', () => {
     renderApp('/tournament');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+      expectCurrentRoute('/play');
     });
   });
 
@@ -104,7 +108,7 @@ describe('app route recovery', () => {
     renderApp('/tournament?sport=cricket');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/tournament');
+      expectCurrentRoute('/cricket/tournament');
     });
   });
 
@@ -112,7 +116,7 @@ describe('app route recovery', () => {
     renderApp('/stats');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/statistics');
+      expectCurrentRoute('/statistics');
     });
   });
 
@@ -120,7 +124,7 @@ describe('app route recovery', () => {
     renderApp('/dashboard');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expectCurrentRoute('/app');
     });
   });
 
@@ -146,7 +150,7 @@ describe('app route recovery', () => {
     renderApp('/signin?returnTo=%2Fapp#oauth');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fapp#oauth');
+      expectCurrentRoute('/login?returnTo=%2Fapp#oauth');
     });
   });
 
