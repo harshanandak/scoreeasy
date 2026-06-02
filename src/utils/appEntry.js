@@ -117,10 +117,8 @@ export function loadReturningPlayerState() {
 export function getAppEntryTarget({
   isAuthenticated = false,
   isLoading = false,
-  draftEntryPath = null,
   returningPlayerState = false,
 } = {}) {
   if (isLoading) return null;
-  if (draftEntryPath) return draftEntryPath;
   return isAuthenticated || returningPlayerState ? APP_ENTRY_PATH : PUBLIC_MARKETING_PATH;
 }

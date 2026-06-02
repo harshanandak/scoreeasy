@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
@@ -71,6 +71,7 @@ describe('app entry route contract', () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     globalThis.localStorage.clear();
@@ -111,7 +112,7 @@ describe('app entry route contract', () => {
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('sends draft-only quick-match players to the sport quick route', async () => {
+  it('sends draft-only quick-match players to the app dashboard route', async () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
@@ -120,12 +121,12 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
-    expect(screen.getByText('Quick match setup')).toBeInTheDocument();
+    expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('sends tennis quick-live draft players to their live scorer route', async () => {
+  it('sends tennis quick-live draft players to the app dashboard route', async () => {
     globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
@@ -135,12 +136,12 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/match-1');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
-    expect(screen.getByText('Tennis quick scorer')).toBeInTheDocument();
+    expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('sends in-progress cricket Test quick matches to their scorer route', async () => {
+  it('sends in-progress cricket Test quick matches to the app dashboard route', async () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
@@ -151,9 +152,9 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/test-1');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
-    expect(screen.getByText('Cricket Test scorer')).toBeInTheDocument();
+    expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
   it('keeps public marketing intentionally reachable for signed-in users', async () => {
@@ -178,5 +179,53 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
+  });
+
+  it('shows simple app tabs with Home active on the app dashboard', async () => {
+    const { container } = renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const appNav = container.querySelector('.global-bottom-nav');
+    expect(appNav).toHaveAttribute('aria-label', 'App navigation');
+
+    expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
+    expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Matches', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
+  });
+
+  it('does not show app bottom navigation on the public marketing route', async () => {
+    renderApp('/marketing');
+
+    expect(await screen.findByText('Public marketing')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
+  });
+
+  it('does not show app bottom navigation on protected scorer routes', async () => {
+    globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
+      id: 'match-1',
+      sport: 'tennis',
+      status: 'in-progress',
+    }));
+
+    renderApp('/tennis/quick/live/match-1');
+
+    expect(await screen.findByText('Tennis quick scorer')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
+  });
+
+  it('marks mobile input focus so the bottom nav can hide for keyboards', async () => {
+    renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+
+    fireEvent.focusIn(input);
+    expect(document.body).toHaveClass('has-mobile-input-focus');
+
+    fireEvent.focusOut(input);
+    expect(document.body).not.toHaveClass('has-mobile-input-focus');
+    input.remove();
   });
 });

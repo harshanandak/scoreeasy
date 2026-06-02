@@ -178,6 +178,27 @@ const ONBOARDING_DEFER_PATHS = new Set([
 const SCORING_EXIT_TITLE = 'Leave this page?';
 const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
 const NO_PRIOR_ROUTE_INDEX = -1;
+const APP_SHELL_PREFIXES = [
+  APP_ENTRY_PATH,
+  '/play',
+  '/history',
+  '/statistics',
+  '/profile',
+  '/users/search',
+];
+const PUBLIC_SHELL_PREFIXES = [
+  PUBLIC_MARKETING_PATH,
+  '/privacy',
+  '/terms',
+  '/contact',
+  '/login',
+  '/signin',
+  '/sign-in',
+  '/signup',
+  '/sso-callback',
+  '/onboarding',
+  '/showcase',
+];
 
 function isProtectedScoringPath(pathname = '') {
   const segments = pathname.split('/').filter(Boolean);
@@ -194,6 +215,16 @@ function isSportAppPath(pathname = '') {
   if (segments.length < 2) return false;
   if (!getSportById(segments[0])) return false;
   return segments[1] === 'quick' || segments[1] === 'tournament';
+}
+
+function isAppShellPath(pathname = '') {
+  const normalizedPathname = normalizePathname(pathname);
+  if (PUBLIC_SHELL_PREFIXES.some((prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(`${prefix}/`))) {
+    return false;
+  }
+
+  return APP_SHELL_PREFIXES.some((prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(`${prefix}/`)) ||
+    isSportAppPath(normalizedPathname);
 }
 
 function getReturnTo(location) {
@@ -384,7 +415,7 @@ function GlobalNavigation({ requestScoringExit }) {
   const [open, setOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
-  const showBottomNav = !isProtectedScoringPath(pathname);
+  const showBottomNav = isAppShellPath(pathname) && !isProtectedScoringPath(pathname);
 
   useEffect(() => {
     setOpen(false);
@@ -426,6 +457,32 @@ function GlobalNavigation({ requestScoringExit }) {
     };
   }, [showBottomNav]);
 
+  useEffect(() => {
+    const body = globalThis.document?.body;
+    if (!body) return undefined;
+
+    const isEditingTarget = (target) => target instanceof HTMLElement &&
+      (
+        target.matches('input, textarea, select, [contenteditable="true"]') ||
+        Boolean(target.closest('[contenteditable="true"]'))
+      );
+    const handleFocusIn = (event) => {
+      body.classList.toggle('has-mobile-input-focus', isEditingTarget(event.target));
+    };
+    const handleFocusOut = () => {
+      body.classList.remove('has-mobile-input-focus');
+    };
+
+    globalThis.document.addEventListener('focusin', handleFocusIn);
+    globalThis.document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      body.classList.remove('has-mobile-input-focus');
+      globalThis.document.removeEventListener('focusin', handleFocusIn);
+      globalThis.document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
   const go = (path) => {
     if (path !== pathname && isProtectedScoringPath(pathname)) {
       setOpen(false);
@@ -440,10 +497,10 @@ function GlobalNavigation({ requestScoringExit }) {
   };
 
   const navItems = [
-    { label: 'Home', path: '/' },
+    { label: 'Home', path: APP_ENTRY_PATH },
     { label: 'Play', path: '/play' },
-    { label: 'History', path: '/history' },
-    { label: 'Statistics', path: '/statistics' },
+    { label: 'Matches', path: '/history' },
+    { label: 'Stats', path: '/statistics' },
   ];
 
   if (cloudAuthAvailable) {
@@ -454,16 +511,21 @@ function GlobalNavigation({ requestScoringExit }) {
   }
 
   const bottomNavItems = [
+    { label: 'Home', path: APP_ENTRY_PATH },
     { label: 'Play', path: '/play' },
-    { label: 'History', path: '/history' },
+    { label: 'Matches', path: '/history' },
     { label: 'Stats', path: '/statistics' },
     cloudAuthAvailable
-      ? { label: isAuthenticated ? 'Profile' : 'Sign in', path: isAuthenticated ? '/profile' : '/login' }
+      ? { label: isAuthenticated ? 'Account' : 'Sign in', path: isAuthenticated ? '/profile' : '/login' }
       : null,
   ].filter(Boolean);
 
   const isActive = (item) => {
-    if (item.path === '/') return pathname === '/';
+    if (item.path === APP_ENTRY_PATH) {
+      return pathname === '/' ||
+        pathname === APP_ENTRY_PATH ||
+        pathname === '/dashboard';
+    }
     if (item.path === '/play') {
       return pathname === '/play' ||
         /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
@@ -816,6 +878,10 @@ function GlobalNavigation({ requestScoringExit }) {
             padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
           }
 
+          body.has-mobile-input-focus {
+            padding-bottom: 0;
+          }
+
           .app-confirm-backdrop {
             align-items: flex-end;
             padding: 16px 16px max(16px, env(safe-area-inset-bottom, 0px));
@@ -851,8 +917,7 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-nav {
-            min-height: 56px;
-            padding: env(safe-area-inset-top, 0px) 16px 0;
+            display: none;
           }
 
           .global-nav-links {
@@ -864,22 +929,7 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-mobile-menu-button {
-            position: fixed;
-            top: calc(9px + env(safe-area-inset-top, 0px));
-            right: 16px;
-            z-index: 220;
-            display: inline-flex;
-            width: 38px;
-            height: 38px;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            border: var(--se-border-standard) solid var(--se-color-line-strong);
-            border-radius: 0;
-            background: var(--se-color-surface);
-            cursor: pointer;
-            box-shadow: 2px 2px 0px -1px hsl(0 0% 0% / 0.8);
+            display: none;
           }
 
           .global-mobile-menu-button span {
@@ -1029,6 +1079,20 @@ function GlobalNavigation({ requestScoringExit }) {
             background: var(--se-color-action);
             color: var(--se-color-inverse);
             box-shadow: var(--se-shadow-card);
+          }
+
+          body.has-mobile-input-focus .global-bottom-nav {
+            display: none;
+          }
+        }
+
+        @media (max-width: 767px) and (max-height: 520px) {
+          body.has-mobile-bottom-nav {
+            padding-bottom: 0;
+          }
+
+          .global-bottom-nav {
+            display: none;
           }
         }
       `}</style>
