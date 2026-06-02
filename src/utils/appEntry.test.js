@@ -55,7 +55,7 @@ describe('app entry contract', () => {
     expect(loadReturningPlayerState()).toBe(true);
   });
 
-  it('returns the quick-match route for generic draft-only app entry', () => {
+  it('routes generic draft-only app entry to the draft scorer path', () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
@@ -85,7 +85,7 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
-  it('detects tennis quick-live drafts and returns their live route', () => {
+  it('routes tennis quick-live drafts to the draft scorer path', () => {
     globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
@@ -99,7 +99,7 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
   });
 
-  it('returns the scorer route for in-progress cricket Test quick matches', () => {
+  it('routes in-progress cricket Test quick matches to the draft scorer path', () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',

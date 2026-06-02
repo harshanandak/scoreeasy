@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
@@ -29,7 +29,7 @@ vi.mock('@clerk/clerk-react', () => ({
 
 function LocationProbe() {
   const location = useLocation();
-  return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
+  return <output aria-label="Current route">{`${location.pathname}${location.search}${location.hash}`}</output>;
 }
 
 function renderApp(initialEntry) {
@@ -39,6 +39,10 @@ function renderApp(initialEntry) {
       <Design1Mono />
     </MemoryRouter>,
   );
+}
+
+function expectCurrentRoute(route) {
+  expect(screen.getByLabelText('Current route').textContent).toBe(route);
 }
 
 describe('app route recovery', () => {
@@ -60,6 +64,7 @@ describe('app route recovery', () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 
@@ -91,11 +96,35 @@ describe('app route recovery', () => {
     expect(await screen.findByRole('button', { name: 'Start Tennis' })).toBeEnabled();
   });
 
-  it('redirects legacy dashboard links home', async () => {
+  it('redirects legacy tournament links to the sport chooser when no sport is supplied', async () => {
+    renderApp('/tournament');
+
+    await waitFor(() => {
+      expectCurrentRoute('/play');
+    });
+  });
+
+  it('honors supported sport query params on legacy tournament links', async () => {
+    renderApp('/tournament?sport=cricket');
+
+    await waitFor(() => {
+      expectCurrentRoute('/cricket/tournament');
+    });
+  });
+
+  it('redirects legacy stats links to the Statistics route', async () => {
+    renderApp('/stats');
+
+    await waitFor(() => {
+      expectCurrentRoute('/statistics');
+    });
+  });
+
+  it('redirects legacy dashboard links to the app dashboard', async () => {
     renderApp('/dashboard');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expectCurrentRoute('/app');
     });
   });
 
@@ -106,6 +135,23 @@ describe('app route recovery', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
     });
     expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+  });
+
+  it('preserves hash fragments on signin alias redirects', async () => {
+    authState.current = {
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: false,
+      isLoading: false,
+      needsOnboarding: false,
+      user: null,
+    };
+
+    renderApp('/signin?returnTo=%2Fapp#oauth');
+
+    await waitFor(() => {
+      expectCurrentRoute('/login?returnTo=%2Fapp#oauth');
+    });
   });
 
   it('preserves returnTo on signin alias redirects', async () => {

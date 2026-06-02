@@ -115,9 +115,9 @@ export function loadReturningPlayerState() {
 }
 
 export function getAppEntryTarget({
+  draftEntryPath = null,
   isAuthenticated = false,
   isLoading = false,
-  draftEntryPath = null,
   returningPlayerState = false,
 } = {}) {
   if (isLoading) return null;
