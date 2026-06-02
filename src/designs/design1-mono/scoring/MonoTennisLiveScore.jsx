@@ -597,7 +597,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10 mono-transition mono-visible">
+    <div className="mono-scorer-screen mono-scorer-shell mono-transition mono-visible">
       <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
       {saveWarning && (
         <div className="mono-alert mono-alert-danger mb-4">
@@ -606,7 +606,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       )}
       {scoringPrompt.renderPrompt(confirmPendingPrompt)}
       {/* Top bar */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="mono-scorer-topbar">
         <button
           onClick={handleCancel}
           disabled={scoringPrompt.isInteractionLocked}
@@ -615,7 +615,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         >
           ← Back
         </button>
-        <div className="flex items-center gap-2">
+        <div className="mono-scorer-topbar-actions">
           <button
             type="button"
             onClick={handleSwapSides}
@@ -652,7 +652,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </output>
 
       {/* Score cards — S6819: use <button> instead of role="button" div */}
-      <div className="mono-score-grid mb-8" style={{ minHeight: '250px' }}>
+      <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '250px' }}>
         {/* Left Team */}
         <button
           type="button"
@@ -671,7 +671,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           </p>
           <p
             key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
-            className="text-7xl font-bold mono-score mono-score-animate font-mono"
+            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
             style={{ color: '#111' }}
           >
             {leftScoreDisplay}
@@ -699,7 +699,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           </p>
           <p
             key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
-            className="text-7xl font-bold mono-score mono-score-animate font-mono"
+            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
             style={{ color: '#111' }}
           >
             {rightScoreDisplay}
@@ -718,7 +718,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       )}
 
       {/* Set history */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
           Match Score
         </h3>
@@ -751,7 +751,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </div>
 
       {/* Bottom bar */}
-      <div className="mono-control-strip pt-4">
+      <div className="mono-control-strip mono-scorer-control-strip pt-4">
         <button
           onClick={saveMatch}
           disabled={scoringPrompt.isInteractionLocked}

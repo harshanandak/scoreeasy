@@ -449,8 +449,8 @@ export default function MonoGoalsLiveScore() {
   };
 
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="max-w-2xl mx-auto">
+    <div className="mono-scorer-screen">
+      <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
@@ -459,7 +459,7 @@ export default function MonoGoalsLiveScore() {
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="mono-scorer-topbar">
           <button
             onClick={handleCancel}
             className="text-sm bg-transparent border-none cursor-pointer font-swiss"
@@ -467,7 +467,7 @@ export default function MonoGoalsLiveScore() {
           >
             ← Back
           </button>
-          <div className="flex items-center gap-2">
+          <div className="mono-scorer-topbar-actions">
             <button
               type="button"
               onClick={() => { setSidesSwapped(s => !s); }}
@@ -511,7 +511,7 @@ export default function MonoGoalsLiveScore() {
         </div>
 
         {/* Score cards - side by side */}
-        <div className="mono-score-grid mb-8" style={{ minHeight: '280px' }}>
+        <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '280px' }}>
           {/* Left Team Card */}
           <div
             className="flex-1 flex flex-col items-center justify-center mono-score-pad"
@@ -522,7 +522,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {leftName}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
               {leftScore}
             </p>
 
@@ -565,7 +565,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {rightName}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="text-6xl font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
               {rightScore}
             </p>
 
@@ -613,7 +613,7 @@ export default function MonoGoalsLiveScore() {
         )}
 
         {/* Bottom bar */}
-        <div className="mono-control-strip pt-4">
+        <div className="mono-control-strip mono-scorer-control-strip pt-4">
           <button
             onClick={saveMatch}
             disabled={scoringPrompt.isInteractionLocked}

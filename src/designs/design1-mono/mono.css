@@ -808,6 +808,73 @@
   border-top: 1px solid color-mix(in oklch, var(--se-color-line) 34%, var(--se-color-surface));
 }
 
+.mono-scorer-screen {
+  min-height: 100dvh;
+  padding: 40px 24px calc(40px + env(safe-area-inset-bottom, 0px));
+}
+
+.mono-scorer-shell {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.mono-scorer-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.mono-scorer-topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mono-scorer-main-score {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.mono-scorer-score-value {
+  font-size: 3.75rem;
+  line-height: 1;
+}
+
+.mono-scorer-score-area {
+  margin-bottom: 32px;
+}
+
+.mono-scorer-run-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(42px, 56px));
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mono-scorer-run-button {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mono-scorer-extra-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mono-scorer-control-strip {
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 34%, var(--se-color-surface));
+}
+
 /* --- Set completion celebration --- */
 @keyframes set-complete {
   0% { transform: scale(1); opacity: 1; }
@@ -944,12 +1011,91 @@
 }
 
 @media (max-width: 640px) {
+  .mono-scorer-screen {
+    min-height: 100dvh;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mono-scorer-shell {
+    max-width: none;
+  }
+
+  .mono-scorer-topbar {
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mono-scorer-topbar-actions {
+    gap: 6px;
+  }
+
+  .mono-scorer-main-score {
+    margin-bottom: 16px;
+  }
+
+  .mono-scorer-score-value {
+    font-size: clamp(2.75rem, 16vw, 3.5rem);
+  }
+
+  .mono-score-grid.mono-scorer-score-area {
+    min-height: 0 !important;
+    margin-bottom: 14px !important;
+  }
+
   .mono-score-grid {
     gap: 10px;
   }
 
   .mono-score-pad {
     min-height: min(var(--score-pad-height, 190px), 190px);
+  }
+
+  .mono-scorer-score-area .mono-score-pad {
+    min-height: 148px;
+    padding: 14px 10px !important;
+  }
+
+  .mono-scorer-run-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .mono-scorer-run-button {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 42px;
+    aspect-ratio: 1 / 1;
+    font-size: 1rem;
+  }
+
+  .mono-scorer-extra-row {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .mono-scorer-control-strip {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-right: -12px;
+    margin-left: -12px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    background: color-mix(in oklch, var(--se-color-canvas) 94%, var(--se-color-surface));
+    box-shadow: 0 -10px 24px color-mix(in oklch, var(--se-color-ink) 10%, transparent);
+  }
+
+  .mono-scorer-control-strip > .flex {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 8px;
+  }
+
+  .mono-scorer-control-strip .mono-btn,
+  .mono-scorer-control-strip .mono-btn-primary {
+    min-height: 44px;
+    padding: 8px !important;
   }
 
   .mono-category-tabs {
@@ -979,5 +1125,27 @@
   .mono-priority-actions .mono-btn,
   .mono-priority-actions .mono-btn-primary {
     min-height: 52px;
+  }
+}
+
+@media (max-width: 640px) and (max-height: 740px) {
+  .mono-scorer-screen {
+    padding-top: 8px;
+  }
+
+  .mono-scorer-topbar {
+    margin-bottom: 8px;
+  }
+
+  .mono-scorer-main-score {
+    margin-bottom: 12px;
+  }
+
+  .mono-scorer-score-value {
+    font-size: clamp(2.35rem, 14vw, 3rem);
+  }
+
+  .mono-scorer-score-area .mono-score-pad {
+    min-height: 132px;
   }
 }
