@@ -72,6 +72,16 @@ function shouldClearProductionServiceWorkerCache() {
     getLocalStorageItem(PRODUCTION_SW_RESET_KEY) !== '1';
 }
 
+function getCleanupReloadKey(shouldClearProduction) {
+  if (shouldClearProduction) {
+    return PRODUCTION_SW_RESET_KEY;
+  }
+
+  return isNativeRuntime()
+    ? 'se-native-sw-cleared'
+    : 'se-preview-sw-cleared';
+}
+
 function subscribeToPathnameChanges(onChange) {
   if (typeof globalThis.addEventListener !== 'function') {
     return () => {};
@@ -116,11 +126,7 @@ async function cleanupServiceWorkerCache() {
   }
 
   const hadController = Boolean(navigator.serviceWorker.controller);
-  const reloadKey = shouldClearProduction
-    ? PRODUCTION_SW_RESET_KEY
-    : isNativeRuntime()
-      ? 'se-native-sw-cleared'
-      : 'se-preview-sw-cleared';
+  const reloadKey = getCleanupReloadKey(shouldClearProduction);
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations.map((registration) => registration.unregister()));
 
@@ -160,12 +166,19 @@ function registerWebServiceWorker() {
     });
   }
 
-  globalThis.addEventListener('load', () => {
+  const registerServiceWorker = () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => registration.update())
       .catch(() => {});
-  });
+  };
+
+  if (globalThis.document?.readyState === 'complete') {
+    registerServiceWorker();
+    return;
+  }
+
+  globalThis.addEventListener('load', registerServiceWorker, { once: true });
 }
 
 function initSentryAfterStartup() {
