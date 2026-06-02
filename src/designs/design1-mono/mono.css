@@ -875,6 +875,46 @@
   border-top: 1px solid color-mix(in oklch, var(--se-color-line) 34%, var(--se-color-surface));
 }
 
+.mono-quick-other-score {
+  margin-bottom: 18px;
+}
+
+.mono-quick-cricket-secondary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mono-quick-wicket-button {
+  min-height: 46px;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
+}
+
+.mono-quick-action-strip {
+  margin-top: 16px;
+}
+
+.mono-quick-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mono-quick-action-row-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mono-quick-action-row .mono-btn {
+  min-height: 46px;
+  padding: 10px;
+}
+
+.mono-quick-end-button {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
 /* --- Set completion celebration --- */
 @keyframes set-complete {
   0% { transform: scale(1); opacity: 1; }
@@ -1034,6 +1074,10 @@
     margin-bottom: 16px;
   }
 
+  .mono-quick-cricket-score {
+    margin-bottom: 12px;
+  }
+
   .mono-scorer-score-value {
     font-size: clamp(2.75rem, 16vw, 3.5rem);
   }
@@ -1075,6 +1119,26 @@
     margin-bottom: 10px;
   }
 
+  .mono-scorer-extra-row .mono-btn {
+    flex: 1;
+    max-width: 150px;
+    min-height: 42px;
+    padding: 8px 10px !important;
+  }
+
+  .mono-quick-other-score {
+    margin-bottom: 12px;
+  }
+
+  .mono-quick-wicket-button {
+    min-height: 44px;
+    padding: 9px 12px !important;
+  }
+
+  .mono-quick-action-strip {
+    margin-top: 12px;
+  }
+
   .mono-scorer-control-strip {
     position: sticky;
     bottom: 0;
@@ -1090,6 +1154,18 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
     gap: 8px;
+  }
+
+  .mono-scorer-control-strip > .mono-quick-action-row {
+    display: grid;
+  }
+
+  .mono-quick-action-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .mono-quick-action-row-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .mono-scorer-control-strip .mono-btn,

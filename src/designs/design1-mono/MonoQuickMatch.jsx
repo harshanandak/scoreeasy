@@ -164,36 +164,34 @@ function CorrectionControls({ teamName, onMinus, onPlus }) {
 
 function ThumbActionBar({ canUndo, onUndo, onSwap, onEnd }) {
   return (
-    <div className="grid grid-cols-3 gap-2 mt-4">
-      <button
-        type="button"
-        onClick={onUndo}
-        disabled={!canUndo}
-        className="mono-btn"
-        style={{ minHeight: '46px', padding: '10px', opacity: canUndo ? 1 : 0.42 }}
-      >
-        Undo
-      </button>
-      {onSwap ? (
+    <div className="mono-scorer-control-strip mono-quick-action-strip">
+      <div className={onSwap ? 'mono-quick-action-row mono-quick-action-row-three' : 'mono-quick-action-row'}>
         <button
           type="button"
-          onClick={onSwap}
+          onClick={onUndo}
+          disabled={!canUndo}
           className="mono-btn"
-          style={{ minHeight: '46px', padding: '10px' }}
+          style={{ opacity: canUndo ? 1 : 0.42 }}
         >
-          Swap
+          Undo
         </button>
-      ) : (
-        <span />
-      )}
-      <button
-        type="button"
-        onClick={onEnd}
-        className="mono-btn"
-        style={{ minHeight: '46px', padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
-      >
-        End
-      </button>
+        {onSwap ? (
+          <button
+            type="button"
+            onClick={onSwap}
+            className="mono-btn"
+          >
+            Swap
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onEnd}
+          className="mono-btn mono-quick-end-button"
+        >
+          End Match
+        </button>
+      </div>
     </div>
   );
 }
@@ -2233,8 +2231,8 @@ export default function MonoQuickMatch() {
         : `${otherScore.balls} balls`;
 
       return (
-        <div className="min-h-screen px-6 py-10">
-          <div className="max-w-2xl mx-auto">
+        <div className="mono-scorer-screen">
+          <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {saveWarning && (
@@ -2243,19 +2241,15 @@ export default function MonoQuickMatch() {
               </div>
             )}
             {/* Top bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-              <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
-                End Match
-              </button>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
+            <div className="mono-scorer-topbar">
+              <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Cricket'}</span>
+              <div className="mono-scorer-topbar-actions">
                 {presetLabel && <span className="mono-badge">{presetLabel}</span>}
+                <span className="text-xs font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
                 {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">Innings {innings}</span>
               </div>
             </div>
-
-            <ScoringStatusStrip label="Batting" value={currentName} lastAction={lastAction} />
 
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
@@ -2277,16 +2271,19 @@ export default function MonoQuickMatch() {
             )}
 
             {/* Batting team */}
-            <div className="text-center mb-8">
+            <div className="mono-scorer-main-score mono-quick-cricket-score">
               <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
                 {currentName} batting
               </p>
-              <p className="text-6xl font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
+              <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
                 {currentScore.runs}<span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
               </p>
               <p className="text-sm font-mono" style={{ color: '#888' }}>
                 {oversDisplay} &middot; RR {currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls).toFixed(2) : '0.00'}
               </p>
+              {lastAction && (
+                <p className="text-xs mt-1" style={{ color: '#888' }}>{lastAction}</p>
+              )}
 
               {/* Powerplay indicator */}
               {powerplay && (
@@ -2317,19 +2314,19 @@ export default function MonoQuickMatch() {
             </div>
 
             {/* Other team score */}
-            <div className="mono-score-mini text-center mb-8" style={{ padding: '12px 16px' }}>
+            <div className="mono-score-mini mono-quick-other-score text-center" style={{ padding: '10px 12px' }}>
               <p className="text-xs" style={{ color: '#888' }}>
                 {otherName}: {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
               </p>
             </div>
 
             {/* Run buttons */}
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="mono-scorer-run-grid">
               {CRICKET_RUN_VALUES.map(r => (
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
-                  className={r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'}
+                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
                   style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation' }}
                 >
                   {r}
@@ -2337,7 +2334,7 @@ export default function MonoQuickMatch() {
               ))}
             </div>
 
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="mono-scorer-extra-row">
               <button onClick={() => addExtra('wide')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
                 Wide (+1)
               </button>
@@ -2346,13 +2343,15 @@ export default function MonoQuickMatch() {
               </button>
             </div>
 
-            <button
-              onClick={addWicket}
-              className="mono-btn w-full"
-              style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation' }}
-            >
-              {freeHit ? 'Run Out Only' : 'Wicket'}
-            </button>
+            <div className="mono-quick-cricket-secondary-row">
+              <button
+                onClick={addWicket}
+                className="mono-btn mono-quick-wicket-button"
+                style={{ borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation' }}
+              >
+                {freeHit ? 'Run Out Only' : 'Wicket'}
+              </button>
+            </div>
 
             <ThumbActionBar
               canUndo={cricketHistory.length > 0}
