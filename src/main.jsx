@@ -19,6 +19,8 @@ const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 const NATIVE_CLOUD_RETRY_DELAY_MS = 5000;
+const PRODUCTION_SW_RESET_KEY = 'se-production-sw-cache-cleared-2026-06-02';
+const SW_CONTROLLER_RELOAD_KEY = 'se-sw-controller-reloaded';
 const IS_VERCEL_PREVIEW =
   import.meta.env.VITE_VERCEL_PREVIEW === true ||
   import.meta.env.VITE_VERCEL_PREVIEW === 'true';
@@ -47,6 +49,27 @@ function getCurrentHostname() {
 
 function isVercelPreviewBuild() {
   return IS_VERCEL_PREVIEW;
+}
+
+function getLocalStorageItem(key) {
+  try {
+    return globalThis.localStorage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function setLocalStorageItem(key, value) {
+  try {
+    globalThis.localStorage?.setItem(key, value);
+  } catch {
+    // Storage can be blocked in private or embedded browser contexts.
+  }
+}
+
+function shouldClearProductionServiceWorkerCache() {
+  return getCurrentHostname() === 'scoreeasy.app' &&
+    getLocalStorageItem(PRODUCTION_SW_RESET_KEY) !== '1';
 }
 
 function subscribeToPathnameChanges(onChange) {
@@ -86,21 +109,28 @@ function subscribeToPathnameChanges(onChange) {
 }
 
 async function cleanupServiceWorkerCache() {
-  const shouldClear = isNativeRuntime() || isVercelPreviewBuild();
+  const shouldClearProduction = shouldClearProductionServiceWorkerCache();
+  const shouldClear = isNativeRuntime() || isVercelPreviewBuild() || shouldClearProduction;
   if (!shouldClear || !('serviceWorker' in navigator)) {
     return;
   }
 
   const hadController = Boolean(navigator.serviceWorker.controller);
-  const reloadKey = isNativeRuntime()
-    ? 'se-native-sw-cleared'
-    : 'se-preview-sw-cleared';
+  const reloadKey = shouldClearProduction
+    ? PRODUCTION_SW_RESET_KEY
+    : isNativeRuntime()
+      ? 'se-native-sw-cleared'
+      : 'se-preview-sw-cleared';
   const registrations = await navigator.serviceWorker.getRegistrations();
   await Promise.all(registrations.map((registration) => registration.unregister()));
 
   if ('caches' in globalThis) {
     const cacheNames = await caches.keys();
     await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+  }
+
+  if (shouldClearProduction) {
+    setLocalStorageItem(PRODUCTION_SW_RESET_KEY, '1');
   }
 
   if (hadController && !sessionStorage.getItem(reloadKey)) {
@@ -119,8 +149,22 @@ function registerWebServiceWorker() {
     return;
   }
 
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (sessionStorage.getItem(SW_CONTROLLER_RELOAD_KEY)) {
+        return;
+      }
+
+      sessionStorage.setItem(SW_CONTROLLER_RELOAD_KEY, '1');
+      globalThis.location.reload();
+    });
+  }
+
   globalThis.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => registration.update())
+      .catch(() => {});
   });
 }
 
@@ -159,8 +203,7 @@ if (shouldLoadReactGrab(import.meta.env)) {
 }
 
 void setupNativeChrome();
-void cleanupServiceWorkerCache();
-registerWebServiceWorker();
+void cleanupServiceWorkerCache().then(registerWebServiceWorker);
 initSentryAfterStartup();
 
 function RootApp() {
