@@ -826,6 +826,14 @@ export default function MonoCricketLiveScore() {
             >
               Undo
             </button>
+            <button
+              onClick={handleCancel}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
+              Cancel
+            </button>
             {hasChanges && (
               <button
                 onClick={saveDraft}

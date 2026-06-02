@@ -2388,9 +2388,7 @@ export default function MonoQuickMatch() {
             )}
             {/* Top bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-              <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
-                End Match
-              </button>
+              <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Match'}</span>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="text-sm font-mono" style={{ color: timerColor }}>
                   {isTimeUp ? "Time's up!" : timerDisplay}
@@ -2539,9 +2537,7 @@ export default function MonoQuickMatch() {
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-            <button onClick={requestEndMatch} className="mono-btn" style={{ padding: '8px 12px', fontSize: '0.8125rem', borderColor: '#dc2626', color: '#dc2626' }}>
-              End Match
-            </button>
+            <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Match'}</span>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
               <SwapButton onSwap={handleSideSwap} />

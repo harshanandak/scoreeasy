@@ -546,8 +546,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   if (followOnPrompt) {
     const lead = innings[0].runs - innings[1].runs;
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '80px' }}>
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '80px' }}>
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
@@ -580,8 +580,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       : null;
 
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto text-center" style={{ paddingTop: '40px' }}>
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '40px' }}>
           {saveWarning && (
             <div className="mono-alert mono-alert-danger mb-4">
               {saveWarning}
