@@ -12,7 +12,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
-import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -670,13 +669,9 @@ export default function MonoCricketLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <button
-            onClick={handleCancel}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-            style={{ color: '#888', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-          >
-            <BackArrow /> Back
-          </button>
+          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+            {sportConfig?.name || 'Match'}
+          </span>
           <div className="mono-scorer-topbar-actions">
             {presetLabel && (
               <span className="mono-badge">{presetLabel}</span>

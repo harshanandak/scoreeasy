@@ -12,7 +12,6 @@ import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
-import BackArrow from '../components/BackArrow';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -664,14 +663,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <button
-            onClick={handleCancel}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1"
-            style={{ color: '#888', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-          >
-            <BackArrow /> Back
-          </button>
+          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+            {sportConfig?.name || 'Match'}
+          </span>
           <div className="mono-scorer-topbar-actions">
             <span className="mono-badge">Test Match</span>
             <span className="mono-badge mono-badge-live">{ORDINALS[currentInningsIndex]} Innings</span>

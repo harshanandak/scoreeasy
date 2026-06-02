@@ -477,14 +477,9 @@ export default function MonoSetsLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <button
-            onClick={handleCancel}
-            disabled={isInteractionLocked}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-            style={{ color: '#888', opacity: isInteractionLocked ? 0.45 : 1 }}
-          >
-            ← Back
-          </button>
+          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+            {sportConfig?.name || 'Match'}
+          </span>
           <div className="mono-scorer-topbar-actions">
             <button
               type="button"
