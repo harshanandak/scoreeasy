@@ -216,7 +216,7 @@ if (shouldLoadReactGrab(import.meta.env)) {
 }
 
 void setupNativeChrome();
-void cleanupServiceWorkerCache().then(registerWebServiceWorker);
+void cleanupServiceWorkerCache().finally(registerWebServiceWorker);
 initSentryAfterStartup();
 
 function RootApp() {
