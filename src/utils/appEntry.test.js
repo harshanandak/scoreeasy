@@ -55,7 +55,7 @@ describe('app entry contract', () => {
     expect(loadReturningPlayerState()).toBe(true);
   });
 
-  it('keeps generic draft-only app entry on the app dashboard', () => {
+  it('routes generic draft-only app entry to the draft scorer path', () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
@@ -65,7 +65,7 @@ describe('app entry contract', () => {
 
     expect(state.returningPlayerState).toBe(true);
     expect(state.draftEntryPath).toBe('/volleyball/quick');
-    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+    expect(getAppEntryTarget(state)).toBe('/volleyball/quick');
   });
 
   it('ignores expired generic quick-match drafts before choosing an app-entry route', () => {
@@ -85,7 +85,7 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
-  it('detects tennis quick-live drafts without bypassing the app dashboard', () => {
+  it('routes tennis quick-live drafts to the draft scorer path', () => {
     globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
@@ -96,10 +96,10 @@ describe('app entry contract', () => {
 
     expect(state.returningPlayerState).toBe(true);
     expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
-    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+    expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
   });
 
-  it('detects in-progress cricket Test quick matches without bypassing the app dashboard', () => {
+  it('routes in-progress cricket Test quick matches to the draft scorer path', () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
@@ -112,7 +112,7 @@ describe('app entry contract', () => {
     expect(loadQuickMatchSummaries()[0].entryPath).toBe('/cricket/quick/test-match/test-1');
     expect(state.returningPlayerState).toBe(true);
     expect(state.draftEntryPath).toBe('/cricket/quick/test-match/test-1');
-    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+    expect(getAppEntryTarget(state)).toBe('/cricket/quick/test-match/test-1');
   });
 
   it('does not use completed cricket Test quick matches as app-entry scorer routes', () => {

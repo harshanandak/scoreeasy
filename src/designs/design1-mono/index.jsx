@@ -1118,15 +1118,6 @@ function GlobalNavigation({ requestScoringExit }) {
           }
         }
 
-        @media (max-width: 767px) and (max-height: 520px) {
-          body.has-mobile-bottom-nav {
-            padding-bottom: 0;
-          }
-
-          .global-bottom-nav {
-            display: none;
-          }
-        }
       `}</style>
     </>
   );

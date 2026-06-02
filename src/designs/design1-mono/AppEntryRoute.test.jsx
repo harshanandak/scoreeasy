@@ -116,7 +116,7 @@ describe('app entry route contract', () => {
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('sends draft-only quick-match players to the app dashboard route', async () => {
+  it('sends draft-only quick-match players to the draft scorer route', async () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
@@ -125,12 +125,12 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
     });
-    expect(screen.getByText('App dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Quick match setup')).toBeInTheDocument();
   });
 
-  it('sends tennis quick-live draft players to the app dashboard route', async () => {
+  it('sends tennis quick-live draft players to the draft scorer route', async () => {
     globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
@@ -140,12 +140,12 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/match-1');
     });
-    expect(screen.getByText('App dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Tennis quick scorer')).toBeInTheDocument();
   });
 
-  it('sends in-progress cricket Test quick matches to the app dashboard route', async () => {
+  it('sends in-progress cricket Test quick matches to the draft scorer route', async () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
@@ -156,9 +156,9 @@ describe('app entry route contract', () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/test-1');
     });
-    expect(screen.getByText('App dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Cricket Test scorer')).toBeInTheDocument();
   });
 
   it('keeps public marketing intentionally reachable for signed-in users', async () => {
