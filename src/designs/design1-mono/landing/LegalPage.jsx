@@ -7,8 +7,9 @@ const pages = {
     title: 'Privacy',
     eyebrow: 'Privacy notes',
     sections: [
-      ['Local scoring first', 'Guest matches and history can be stored locally on your device so scoring does not require an account.'],
-      ['Cloud features', 'Sign-in, profile search, backup, and sync may use connected cloud services when you choose to use them.'],
+      ['Local scoring first', 'Guest matches, drafts, preferences, and history can be stored in browser localStorage on your device so scoring does not require an account.'],
+      ['Cloud features', 'Sign-in and profile search use Clerk for authentication and Convex for user profiles, synced matches, and public profile data when you choose cloud features.'],
+      ['App services', 'Native app capabilities such as sharing use Capacitor plugins, and production error reports may be sent to Sentry so crashes can be diagnosed.'],
       ['Control', 'You can keep using Score Easy without signing in, and you can clear local match history from the app.'],
     ],
   },
@@ -16,7 +17,7 @@ const pages = {
     title: 'Terms',
     eyebrow: 'Use notes',
     sections: [
-      ['Scorekeeping tool', 'Score Easy helps organize games, tournaments, and match history. Review scores before sharing or relying on them.'],
+      ['Scorekeeping tool', 'Score Easy helps organize games, tournaments, and match history, but it is not an official referee record. Review scores before sharing or relying on them.'],
       ['Fair use', 'Do not use the app to publish abusive, unlawful, or misleading content.'],
       ['Availability', 'Local scoring is designed to keep working without cloud services, while sync and account features depend on connectivity.'],
     ],

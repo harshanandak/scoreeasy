@@ -249,6 +249,15 @@ describe('getSportsByCategory', () => {
     expect(getSportsByCategory()['Racquet Sports']).toHaveLength(5);
   });
 
+  it('keeps tennis and table tennis as intentionally distinct cards', () => {
+    const racquetSports = getSportsByCategory()['Racquet Sports'];
+    const tennisCards = racquetSports.filter(sport => /tennis/i.test(sport.name));
+
+    expect(tennisCards.map(sport => sport.id)).toEqual(['tabletennis', 'tennis']);
+    expect(tennisCards.map(sport => sport.name)).toEqual(['Table Tennis', 'Tennis']);
+    expect(new Set(tennisCards.map(sport => sport.desc)).size).toBe(2);
+  });
+
   it('Team Sports has 5 sports', () => {
     expect(getSportsByCategory()['Team Sports']).toHaveLength(5);
   });
