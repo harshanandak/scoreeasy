@@ -26,8 +26,8 @@ describe('shareText', () => {
     });
   });
 
-  it('falls back to clipboard when the Web Share API rejects', async () => {
-    const share = vi.fn().mockRejectedValue(new Error('Share dismissed'));
+  it('falls back to clipboard when the Web Share API rejects with a non-cancel failure', async () => {
+    const share = vi.fn().mockRejectedValue(new Error('Share transport unavailable'));
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', {
       share,
@@ -42,6 +42,26 @@ describe('shareText', () => {
       method: 'clipboard',
     });
     expect(writeText).toHaveBeenCalledWith('Falcons 2 - 1 Sharks\nhttps://scoreeasy.example/match/1');
+  });
+
+  it('does not copy to clipboard when the Web Share API is cancelled', async () => {
+    const abort = new Error('Share dismissed');
+    abort.name = 'AbortError';
+    const share = vi.fn().mockRejectedValue(abort);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', {
+      share,
+      clipboard: { writeText },
+    });
+
+    await expect(shareText({
+      text: 'Falcons 2 - 1 Sharks',
+      url: 'https://scoreeasy.example/match/1',
+    })).resolves.toEqual({
+      shared: false,
+      method: 'web-share-cancelled',
+    });
+    expect(writeText).not.toHaveBeenCalled();
   });
 
   it('returns a structured failure when clipboard fallback is blocked', async () => {
