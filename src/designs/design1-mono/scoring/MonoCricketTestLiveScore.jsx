@@ -731,8 +731,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               {CRICKET_RUN_VALUES.map(r => (
                 <button key={r} onClick={() => addRuns(r)}
                   disabled={scoringPrompt.isInteractionLocked}
-                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
-                  style={{ width: '56px', height: '56px', fontSize: '1.25rem', fontWeight: 700, padding: 0, touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
+                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
+                  style={{ touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
                   {r}
                 </button>
               ))}
@@ -749,8 +749,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               </button>
             </div>
 
-            <button onClick={addWicket} disabled={scoringPrompt.isInteractionLocked} className="mono-btn w-full mb-4"
-              style={{ padding: '14px', fontSize: '0.9375rem', borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
+            <button onClick={addWicket} disabled={scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-warning w-full mb-4"
+              style={{ padding: '14px', fontSize: '0.9375rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
               Wicket
             </button>
           </>

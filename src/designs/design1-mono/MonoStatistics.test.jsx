@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -211,5 +212,19 @@ describe('MonoStatistics', () => {
     expect(screen.getByText('Teams').closest('.mono-stat-card')).toHaveTextContent('6');
     expect(screen.queryByText('Draft A')).not.toBeInTheDocument();
     expect(screen.queryByText('Ghost A')).not.toBeInTheDocument();
+  });
+
+  it('keeps statistics visual states readable and free of corrupted symbols', () => {
+    const source = readFileSync(`${import.meta.dirname}/MonoStatistics.jsx`, 'utf8');
+
+    expect(source).not.toMatch(/[âð�]/);
+    expect(source).not.toContain("backgroundColor: '#dc2626'");
+    expect(source).not.toContain("color: '#dc2626'");
+    expect(source).not.toContain('margin >= 0 ?');
+    expect(source).not.toContain('averageMargin >= 0 ?');
+    expect(source).not.toContain("color: '#bbb'");
+    expect(source).toContain('mono-data-table');
+    expect(source).toContain('mono-table-scroll');
+    expect(source).toContain('Start quick match');
   });
 });

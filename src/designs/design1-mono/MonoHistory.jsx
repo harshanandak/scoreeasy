@@ -453,7 +453,7 @@ export default function MonoHistory() {
             <button
               onClick={() => navigate('/')}
               className="bg-transparent border-none cursor-pointer font-swiss text-sm"
-              style={{ color: '#888' }}
+              style={{ color: 'var(--se-color-ink-muted)' }}
               aria-label="Go back to home"
             >
               <BackArrow />
@@ -465,10 +465,8 @@ export default function MonoHistory() {
           {clearableCount > 0 && (
             <button
               onClick={confirmClearMutableHistory}
-              className="mono-btn font-swiss text-xs"
+              className="mono-btn mono-btn-danger font-swiss text-xs"
               style={{
-                border: '1.5px solid #dc2626',
-                color: '#dc2626',
                 minHeight: 40,
                 padding: '0 10px',
               }}
@@ -511,7 +509,7 @@ export default function MonoHistory() {
         {pendingClear && !pendingClear.cleared && (
           <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
             <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear local history?</p>
-            <p className="text-xs mb-4" style={{ color: '#666' }}>
+            <p className="text-xs mb-4 mono-muted-text">
               Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.
             </p>
             <div className="flex gap-2">
@@ -525,8 +523,8 @@ export default function MonoHistory() {
               </button>
               <button
                 type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                className="mono-btn mono-btn-danger flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
                 onClick={clearMutableHistory}
               >
                 Clear
@@ -549,7 +547,7 @@ export default function MonoHistory() {
         {pendingDelete && !pendingDelete.deleted && (
           <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
             <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick match?</p>
-            <p className="text-xs mb-4" style={{ color: '#666' }}>
+            <p className="text-xs mb-4 mono-muted-text">
               {pendingDelete.entry.team1} vs {pendingDelete.entry.team2} will be removed from History.
             </p>
             <div className="flex gap-2">
@@ -563,8 +561,8 @@ export default function MonoHistory() {
               </button>
               <button
                 type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                className="mono-btn mono-btn-danger flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
                 onClick={completeDeleteQuickMatch}
               >
                 Delete
@@ -604,7 +602,7 @@ export default function MonoHistory() {
         </div>
 
         <section className="mono-control-band mb-6">
-          <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2" style={{ color: '#888' }}>
+          <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2 mono-muted-text">
             Find match
           </label>
           <input
@@ -617,7 +615,7 @@ export default function MonoHistory() {
           />
 
           <div className="mono-control-grid">
-            <label className="text-xs" style={{ color: '#666' }}>
+            <label className="text-xs mono-muted-text">
               <span className="block mb-1">Sport</span>
               <select
                 aria-label="Filter by sport"
@@ -633,7 +631,7 @@ export default function MonoHistory() {
               </select>
             </label>
 
-            <label className="text-xs" style={{ color: '#666' }}>
+            <label className="text-xs mono-muted-text">
               <span className="block mb-1">Result</span>
               <select
                 aria-label="Filter by result"
@@ -649,7 +647,7 @@ export default function MonoHistory() {
               </select>
             </label>
 
-            <label className="text-xs" style={{ color: '#666' }}>
+            <label className="text-xs mono-muted-text">
               <span className="block mb-1">Date</span>
               <select
                 aria-label="Sort by date"
@@ -681,7 +679,7 @@ export default function MonoHistory() {
             <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
               {totalCount === 0 ? 'No match history yet' : 'No matches found'}
             </p>
-            <p className="text-xs mb-5" style={{ color: '#666' }}>
+            <p className="text-xs mb-5 mono-muted-text">
               {totalCount === 0
                 ? 'Completed quick matches and tournaments will appear here.'
                 : 'Try a different search, sport, result, or date filter.'}
@@ -732,46 +730,46 @@ export default function MonoHistory() {
                     onClick={() => setSelectedEntry(entry)}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <SportIcon name={entry.sportName} size={18} color="#888" />
+                      <SportIcon name={entry.sportName} size={18} color="var(--se-color-ink-muted)" />
                       <span className="text-sm font-medium" style={{ color: '#111' }}>
                         {entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`}
                       </span>
                     </div>
 
                     {entry.isLegacy && (
-                      <p className="text-xs mb-1" style={{ color: '#888' }}>{entry.participants}</p>
+                      <p className="text-xs mb-1 mono-muted-text">{entry.participants}</p>
                     )}
 
                     {!entry.isLegacy && entry.tournamentName && (
-                      <p className="text-xs mb-1" style={{ color: '#888' }}>{entry.tournamentName}</p>
+                      <p className="text-xs mb-1 mono-muted-text">{entry.tournamentName}</p>
                     )}
 
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-mono font-bold" style={{ color: '#111' }}>
                         {entry.score}
                       </span>
-                      <span className="text-xs" style={{ color: '#0066ff' }}>
+                      <span className="text-xs mono-action-text">
                         {winnerLabel(entry.winner)}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                      <span className="text-xs font-mono mono-subtle-text">
                         {formatDate(entry.date)}
                       </span>
                       {entry.elapsedSeconds > 0 && (
-                        <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                        <span className="text-xs font-mono mono-subtle-text">
                           {formatElapsed(entry.elapsedSeconds)}
                         </span>
                       )}
-                      <span className="text-xs" style={{ color: '#bbb' }}>
+                      <span className="text-xs mono-subtle-text">
                         {entry.sportName}
                       </span>
-                      <span className="text-xs" style={{ color: '#bbb' }}>
+                      <span className="text-xs mono-subtle-text">
                         {entry.source === 'quick' ? 'Quick' : 'Tournament'}
                       </span>
                     </div>
-                    <span className="inline-block text-xs font-semibold mt-3" style={{ color: '#0066ff' }}>
+                    <span className="inline-block text-xs font-semibold mt-3 mono-action-text">
                       View details
                     </span>
                   </button>
@@ -782,7 +780,7 @@ export default function MonoHistory() {
                         confirmDeleteQuickMatch(entry);
                       }}
                       className="mono-icon-button text-sm"
-                      style={{ color: '#888', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
+                      style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
                       title="Delete this match"
                       aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
                     >
@@ -797,7 +795,7 @@ export default function MonoHistory() {
 
         {selectedEntry && (
           <div className="mono-table-panel mono-history-detail mt-6" style={{ padding: '16px' }}>
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>Match details</p>
+            <p className="text-xs uppercase tracking-widest mb-2 mono-muted-text">Match details</p>
             <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
             </h2>

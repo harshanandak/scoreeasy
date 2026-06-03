@@ -2326,7 +2326,7 @@ export default function MonoQuickMatch() {
                 <button
                   key={r}
                   onClick={() => addRuns(r)}
-                  className={`${r === 4 || r === 6 ? 'mono-btn-primary' : 'mono-btn'} mono-scorer-run-button`}
+                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
                   style={{ touchAction: 'manipulation' }}
                 >
                   {r}
@@ -2346,8 +2346,8 @@ export default function MonoQuickMatch() {
             <div className="mono-quick-cricket-secondary-row">
               <button
                 onClick={addWicket}
-                className="mono-btn mono-quick-wicket-button"
-                style={{ borderColor: '#f59e0b', color: '#92400e', background: '#fffbeb', touchAction: 'manipulation' }}
+                className="mono-btn mono-btn-warning mono-quick-wicket-button"
+                style={{ touchAction: 'manipulation' }}
               >
                 {freeHit ? 'Run Out Only' : 'Wicket'}
               </button>

@@ -211,6 +211,13 @@ describe('app-owned scoring prompts', () => {
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(followOnPrompt\)[\s\S]*className="min-h-screen px-6 py-10"/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(matchComplete && matchResult\)[\s\S]*className="min-h-screen px-6 py-10"/);
     expect(quickMatchSource).not.toMatch(/mono-scorer-run-button[\s\S]{0,240}width: '56px'/);
+    expect(quickMatchSource).not.toContain("background: '#fffbeb'");
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).not.toContain("background: '#fffbeb'");
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain("background: '#fffbeb'");
+    expect(quickMatchSource).toContain('mono-scorer-run-button-accent');
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
+    expect(quickMatchSource).toContain('mono-btn-warning');
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {
