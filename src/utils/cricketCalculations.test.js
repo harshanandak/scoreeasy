@@ -6,6 +6,7 @@ import {
   getMatchWinner,
   getLimitedOversResult,
   calculateCricketPointsTable,
+  CRICKET_FORMATS,
   OVERS_PRESETS,
   canManuallyCompleteUnlimitedMatch,
 } from './cricketCalculations';
@@ -69,6 +70,19 @@ describe('calculateRunRate', () => {
   it('handles single ball', () => {
     // 4 runs in 1 ball => (4*6)/1 = 24 rpo
     expect(calculateRunRate(4, 1)).toBe(24);
+  });
+});
+
+describe('CRICKET_FORMATS', () => {
+  it('describes T10 as 10 overs per side', () => {
+    const t10 = CRICKET_FORMATS.find(format => format.id === 'T10');
+
+    expect(t10).toMatchObject({
+      name: 'T10',
+      desc: '10 overs per side',
+      overs: 10,
+    });
+    expect(t10.desc).not.toMatch(/20 overs/i);
   });
 });
 

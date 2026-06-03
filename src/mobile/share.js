@@ -5,6 +5,19 @@ function getClipboardPayload({ text, url }) {
   return text && url ? `${text}\n${url}` : (text || url);
 }
 
+async function copySharePayloadToClipboard({ text, url }) {
+  if (!globalThis.navigator?.clipboard || (!text && !url)) {
+    return { shared: false, method: 'unsupported' };
+  }
+
+  try {
+    await globalThis.navigator.clipboard.writeText(getClipboardPayload({ text, url }));
+    return { shared: true, method: 'clipboard' };
+  } catch {
+    return { shared: false, method: 'clipboard-failed' };
+  }
+}
+
 export async function shareText({ title = 'Score Easy', text, url, dialogTitle = 'Share score' }) {
   if (!text && !url) return { shared: false, method: 'empty' };
 
@@ -22,18 +35,11 @@ export async function shareText({ title = 'Score Easy', text, url, dialogTitle =
       await globalThis.navigator.share({ title, text, url });
       return { shared: true, method: 'web-share' };
     } catch {
+      const fallback = await copySharePayloadToClipboard({ text, url });
+      if (fallback.shared) return fallback;
       return { shared: false, method: 'web-share-failed' };
     }
   }
 
-  if (globalThis.navigator?.clipboard && (text || url)) {
-    try {
-      await globalThis.navigator.clipboard.writeText(getClipboardPayload({ text, url }));
-      return { shared: true, method: 'clipboard' };
-    } catch {
-      return { shared: false, method: 'clipboard-failed' };
-    }
-  }
-
-  return { shared: false, method: 'unsupported' };
+  return copySharePayloadToClipboard({ text, url });
 }

@@ -160,9 +160,22 @@ export default function MonoUserSearch() {
         )}
 
         {debouncedQuery.length >= 2 && results && results.length === 0 && (
-          <p className="text-sm" style={{ color: "#888" }}>
-            No users found for "{debouncedQuery}"
-          </p>
+          <div className="mono-table-panel" style={{ padding: 16 }}>
+            <p className="text-sm font-bold mb-2" style={{ color: "#111" }}>
+              No players found for "{debouncedQuery}"
+            </p>
+            <p className="text-xs mb-4" style={{ color: "#888" }}>
+              Try another username, check the spelling, or keep scoring without a cloud profile.
+            </p>
+            <button
+              type="button"
+              className="mono-btn"
+              style={{ minHeight: 44, padding: "10px 14px", fontSize: "0.8125rem" }}
+              onClick={() => navigate("/volleyball/quick")}
+            >
+              Start guest match
+            </button>
+          </div>
         )}
 
         {debouncedQuery.length < 2 && query.length > 0 && (
