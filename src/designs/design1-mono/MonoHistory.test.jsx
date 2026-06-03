@@ -299,6 +299,9 @@ describe('MonoHistory', () => {
     const source = readFileSync(`${import.meta.dirname}/MonoHistory.jsx`, 'utf8');
 
     expect(source).not.toContain("color: '#bbb'");
+    expect(source).not.toContain("color: '#dc2626'");
+    expect(source).not.toContain("borderColor: '#dc2626'");
+    expect(source).not.toContain("border: '1.5px solid #dc2626'");
     expect(source).toContain('mono-muted-text');
     expect(source).toContain('mono-subtle-text');
     expect(source).toContain('mono-action-text');

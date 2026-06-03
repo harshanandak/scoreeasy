@@ -219,6 +219,9 @@ describe('MonoStatistics', () => {
 
     expect(source).not.toMatch(/[âð�]/);
     expect(source).not.toContain("backgroundColor: '#dc2626'");
+    expect(source).not.toContain("color: '#dc2626'");
+    expect(source).not.toContain('margin >= 0 ?');
+    expect(source).not.toContain('averageMargin >= 0 ?');
     expect(source).not.toContain("color: '#bbb'");
     expect(source).toContain('mono-data-table');
     expect(source).toContain('mono-table-scroll');

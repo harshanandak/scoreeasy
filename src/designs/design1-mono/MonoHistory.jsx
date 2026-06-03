@@ -465,10 +465,8 @@ export default function MonoHistory() {
           {clearableCount > 0 && (
             <button
               onClick={confirmClearMutableHistory}
-              className="mono-btn font-swiss text-xs"
+              className="mono-btn mono-btn-danger font-swiss text-xs"
               style={{
-                border: '1.5px solid #dc2626',
-                color: '#dc2626',
                 minHeight: 40,
                 padding: '0 10px',
               }}
@@ -525,8 +523,8 @@ export default function MonoHistory() {
               </button>
               <button
                 type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                className="mono-btn mono-btn-danger flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
                 onClick={clearMutableHistory}
               >
                 Clear
@@ -563,8 +561,8 @@ export default function MonoHistory() {
               </button>
               <button
                 type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px', borderColor: '#dc2626', color: '#dc2626' }}
+                className="mono-btn mono-btn-danger flex-1"
+                style={{ minHeight: 44, padding: '10px' }}
                 onClick={completeDeleteQuickMatch}
               >
                 Delete

@@ -574,10 +574,8 @@ export default function MonoStatistics() {
                     <button
                       type="button"
                       onClick={requestClearAllQuickMatches}
-                      className="bg-transparent cursor-pointer font-swiss text-xs"
+                      className="mono-btn mono-btn-danger font-swiss text-xs"
                       style={{
-                        border: '1.5px solid #dc2626',
-                        color: '#dc2626',
                         minHeight: 40,
                         padding: '0 12px',
                       }}
@@ -684,7 +682,7 @@ function QuickTeamTable({ rows }) {
               <td className="text-center font-mono mono-table-primary" style={{ padding: '10px 6px' }}>{row.won}</td>
               <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.lost}</td>
               <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.drawn}</td>
-              <td className={`text-center font-mono ${row.margin >= 0 ? 'mono-table-action' : 'mono-table-danger'}`} style={{ padding: '10px 6px' }}>
+              <td className={`text-center font-mono ${row.margin > 0 ? 'mono-table-action' : row.margin < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '10px 6px' }}>
                 {row.margin > 0 ? `+${row.margin}` : row.margin}
               </td>
               <td className="text-center font-mono mono-table-action" style={{ padding: '10px 12px' }}>{row.winRate}%</td>
@@ -858,7 +856,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
                 <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.lost}</td>
                 <td className="text-center font-mono mono-table-primary" style={{ padding: '12px 8px' }}>{row.pointsFor}</td>
                 <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.pointsAgainst}</td>
-                <td className={`text-center font-mono ${row.averageMargin >= 0 ? 'mono-table-action' : 'mono-table-danger'}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
+                <td className={`text-center font-mono ${Number(row.averageMargin) > 0 ? 'mono-table-action' : Number(row.averageMargin) < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
                 <td className="text-center font-mono mono-table-action" style={{ padding: '12px 16px' }}>
                   {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
                 </td>
