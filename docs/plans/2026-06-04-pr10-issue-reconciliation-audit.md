@@ -33,9 +33,19 @@ Reconcile the planned PR1-PR9 mobile-audit backlog against merged GitHub PR evid
 
 ## Tracker State
 
-Beads is stale relative to GitHub. Planned PR1-PR9 issues still show as open in Beads even where merged PR bodies, tests, and Android runtime proof show the behavior is fixed.
+Beads was stale relative to GitHub before this PR10 reconciliation pass. The exported tracker has now been reconciled against the merged PR evidence available in this audit.
 
-Do not use the current open Beads count as the product backlog without reconciling it first.
+Post-reconciliation Beads state:
+
+- 80 total mobile-audit records.
+- 66 records closed with merged PR and audit evidence.
+- 14 records remain open because proof is incomplete or the issue was intentionally outside the proven PR scope.
+
+Remaining open records:
+
+- `scoreeasy-x7s` / `scoreeasy-x7s.2` - native emulator QA environment remains open until repeatable Android emulator validation is proven.
+- `scoreeasy-ngb` / `scoreeasy-ngb.4` / `scoreeasy-ngb.5` - real Clerk to Convex token exchange and Convex WebSocket stability still need backend-session proof.
+- `scoreeasy-oee` plus `scoreeasy-oee.2`, `.4`, `.5`, `.7`, `.9`, `.10`, `.11`, `.12` - broad visual polish issues that were not directly proven by PR #81 source/tests remain open.
 
 ## Confirmed Fixed By Source And Tests
 
@@ -91,9 +101,7 @@ Risks:
 
 ## Remaining Work To Turn Into Next PR
 
-1. Tracker reconciliation:
-   - Close or update Beads records already proven fixed by PRs #71-#82.
-   - Preserve `scoreeasy-ngb.4` and `scoreeasy-ngb.5` until backend auth/session proof exists.
+1. Native QA closure:
    - Decide whether `scoreeasy-x7s.2` can close after one more repeatable Android emulator run.
 
 2. Backend auth/session verification:
