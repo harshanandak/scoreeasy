@@ -66,16 +66,16 @@ The APK used for validation was freshly built from this PR10 worktree:
 
 Native screenshots were captured from the emulator:
 
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-after-wait.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-after-start-cricket.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-cricket-format.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-quick-setup.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-scorer.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-scorer-after-runs.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-end-match-dialog.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-post-game.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-history-after-game.png`
-- `C:\Users\harsha_befach\AppData\Local\Temp\scoreeasy-android-stats-after-game.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-after-wait.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-after-start-cricket.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-cricket-format.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-quick-setup.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-scorer.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-scorer-after-runs.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-end-match-dialog.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-post-game.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-history-after-game.png`
+- `docs/audits/pr10-screenshots/scoreeasy-android-stats-after-game.png`
 
 ## Native UX Findings
 
