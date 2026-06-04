@@ -107,4 +107,3 @@ Risks:
 4. Native QA hardening:
    - Keep `scripts/mobile-android-env.ps1` in the documented Android build path.
    - Add a repeatable runbook step for `mobile:android`, `assembleDebug`, uninstall, install, launch, screenshot, play-through, History, and Stats.
-
