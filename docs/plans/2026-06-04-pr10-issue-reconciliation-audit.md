@@ -24,7 +24,7 @@ Reconcile the planned PR1-PR9 mobile-audit backlog against merged GitHub PR evid
 | PR1 | `scoreeasy-x7s` | 5 | 4 | 4 | `scoreeasy-x7s.2` native emulator QA environment is now partially proven but should be tracked until repeatable |
 | PR2 | `scoreeasy-viq` | 10 | 10 | 10 | None found |
 | PR3 | `scoreeasy-9g4` | 9 | 9 | 9 | None found |
-| PR4 | `scoreeasy-nm8` | 5 | 5 | 5 | Beads anomaly: `scoreeasy-nm8.5` appears in the plan/PR #75 body but not in current `bd list` |
+| PR4 | `scoreeasy-nm8` | 6 | 6 | 6 | Restored and closed `scoreeasy-nm8.5` with PR #75 returning-player route evidence |
 | PR5 | `scoreeasy-9ve` | 11 | 11 | 11 | None found |
 | PR6 | `scoreeasy-4ay` | 5 | 5 | 5 | None found |
 | PR7 | `scoreeasy-oee` | 15 | 7 by PR-body evidence | App shell/native visual flow verified for core screens | Per-issue source closure should be checked before closing the remaining visual records |
@@ -37,8 +37,8 @@ Beads was stale relative to GitHub before this PR10 reconciliation pass. The exp
 
 Post-reconciliation Beads state:
 
-- 80 total mobile-audit records.
-- 66 records closed with merged PR and audit evidence.
+- 81 total mobile-audit records.
+- 67 records closed with merged PR and audit evidence.
 - 14 records remain open because proof is incomplete or the issue was intentionally outside the proven PR scope.
 
 Remaining open records:
