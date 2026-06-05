@@ -600,7 +600,7 @@ export default function MonoCricketLiveScore() {
                   No Ball (+1)
                 </button>
               </div>
-              <button onClick={addSuperOverWicket} className="mono-btn mono-btn-warning w-full"
+              <button onClick={addSuperOverWicket} className="mono-btn mono-btn-danger w-full"
                 style={{ padding: '14px', fontSize: '0.9375rem', touchAction: 'manipulation' }}>
                 Wicket
               </button>
@@ -787,7 +787,7 @@ export default function MonoCricketLiveScore() {
               </button>
             </div>
 
-            <button onClick={addWicket} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-warning w-full mb-4"
+            <button onClick={addWicket} disabled={isInningsComplete || scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-danger w-full mb-4"
               style={{ padding: '14px', fontSize: '0.9375rem',
                 opacity: isInningsComplete || scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}>
               {freeHit ? 'Run Out Only' : 'Wicket'}

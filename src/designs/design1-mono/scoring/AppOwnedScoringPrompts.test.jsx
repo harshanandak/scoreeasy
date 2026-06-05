@@ -217,7 +217,10 @@ describe('app-owned scoring prompts', () => {
     expect(quickMatchSource).toContain('mono-scorer-run-button-accent');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
-    expect(quickMatchSource).toContain('mono-btn-warning');
+    expect(quickMatchSource).toContain('mono-btn-danger mono-quick-wicket-button');
+    expect(quickMatchSource).not.toContain('autoFocus');
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {

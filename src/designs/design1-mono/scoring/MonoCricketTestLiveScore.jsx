@@ -749,7 +749,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               </button>
             </div>
 
-            <button onClick={addWicket} disabled={scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-warning w-full mb-4"
+            <button onClick={addWicket} disabled={scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-danger w-full mb-4"
               style={{ padding: '14px', fontSize: '0.9375rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
               Wicket
             </button>
