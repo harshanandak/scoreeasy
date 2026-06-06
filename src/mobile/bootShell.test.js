@@ -7,7 +7,7 @@ describe('native boot shell', () => {
     const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 
     expect(html).toContain('<div id="root">');
-    expect(html).toContain('class="boot-shell"');
+    expect(html).toContain('<output class="boot-shell"');
     expect(html).toContain('Loading Score Easy');
   });
 });
