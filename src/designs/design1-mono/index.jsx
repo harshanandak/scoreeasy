@@ -14,7 +14,11 @@ import { AuthUserButton } from '../../components/AuthButtons';
 import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
-import { installNativeBackButtonGuard } from '../../mobile/backButton';
+import {
+  getProtectedScoringBackFallback,
+  installNativeBackButtonGuard,
+  isProtectedScoringRoute,
+} from '../../mobile/backButton';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
@@ -201,13 +205,7 @@ const PUBLIC_SHELL_PREFIXES = [
 ];
 
 function isProtectedScoringPath(pathname = '') {
-  const segments = pathname.split('/').filter(Boolean);
-  return segments.includes('quick') ||
-    segments.some((segment, index) => (
-      segment === 'tournament' &&
-      segments[index + 2] === 'match' &&
-      segments[index + 4] === 'score'
-    ));
+  return isProtectedScoringRoute(pathname);
 }
 
 function isSportAppPath(pathname = '') {
@@ -1285,6 +1283,7 @@ export default function Design1Mono() {
     };
 
     const leaveProtectedRouteAfterConfirm = () => {
+      const protectedBackFallback = getProtectedScoringBackFallback(location.pathname) || '/play';
       const currentRouteHistoryIndex = globalThis.history.state?.idx;
       const baseRouteHistoryIndex = protectedRouteHistoryIndexRef.current;
       const canReturnToPriorRoute =
@@ -1304,7 +1303,7 @@ export default function Design1Mono() {
       allowNextProtectedPopRef.current = true;
       replaceScoringEntryOnPop = () => {
         clearPendingFallbackNavigation();
-        navigate('/play', { replace: true });
+        navigate(protectedBackFallback, { replace: true });
       };
 
       globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
@@ -1312,7 +1311,7 @@ export default function Design1Mono() {
       fallbackTimeoutId = globalThis.setTimeout(() => {
         clearPendingFallbackNavigation();
         if (isProtectedScoringPath(globalThis.location.pathname)) {
-          navigate('/play', { replace: true });
+          navigate(protectedBackFallback, { replace: true });
         }
       }, 300);
     };
@@ -1339,6 +1338,7 @@ export default function Design1Mono() {
         });
       }),
       goBack: leaveProtectedRouteAfterConfirm,
+      navigateFallback: (path, options) => navigate(path, options),
     });
 
     return () => {

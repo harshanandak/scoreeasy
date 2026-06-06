@@ -7,7 +7,8 @@ const nativeBackButtonMock = vi.hoisted(() => ({
   installNativeBackButtonGuard: vi.fn(() => vi.fn()),
 }));
 
-vi.mock('../../mobile/backButton', () => ({
+vi.mock('../../mobile/backButton', async (importOriginal) => ({
+  ...(await importOriginal()),
   installNativeBackButtonGuard: nativeBackButtonMock.installNativeBackButtonGuard,
 }));
 
@@ -60,6 +61,7 @@ describe('app-owned scoring exit guard', () => {
     await waitFor(() => {
       expect(nativeBackButtonMock.installNativeBackButtonGuard).toHaveBeenCalledWith(expect.objectContaining({
         goBack: expect.any(Function),
+        navigateFallback: expect.any(Function),
       }));
     });
 
@@ -73,6 +75,23 @@ describe('app-owned scoring exit guard', () => {
     expect(pushState).not.toHaveBeenCalled();
 
     unmount();
+  });
+
+  it('passes native fallback navigation through the app router with replace semantics', async () => {
+    render(
+      <MemoryRouter initialEntries={['/volleyball/quick']}>
+        <Design1Mono />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(nativeBackButtonMock.installNativeBackButtonGuard).toHaveBeenCalledWith(expect.objectContaining({
+        navigateFallback: expect.any(Function),
+      }));
+    });
+
+    const options = nativeBackButtonMock.installNativeBackButtonGuard.mock.calls[0][0];
+    expect(() => options.navigateFallback('/play?sport=cricket', { replace: true })).not.toThrow();
   });
 
   it('does not install scoring exit guards on game resume recovery routes', async () => {

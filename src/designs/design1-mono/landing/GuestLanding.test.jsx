@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
 import GuestLanding from './GuestLanding';
 
@@ -39,6 +39,10 @@ function setViewport(width, mobile = false) {
 describe('GuestLanding bottom CTA', () => {
   beforeEach(() => {
     setViewport(1024);
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it('keeps the signup CTA visible on preview/local auth builds', () => {
