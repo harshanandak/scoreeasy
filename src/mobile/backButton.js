@@ -1,21 +1,25 @@
 import { App } from '@capacitor/app';
 import { hasNativePlugin, isNativeMobile } from './platform';
+import { getSportById } from '../models/sportRegistry';
 
 export function isProtectedScoringRoute(pathname) {
   const segments = pathname.split('/').filter(Boolean);
-  return segments.includes('quick')
-    || segments.some((segment, index) => (
-      segment === 'tournament'
-      && segments[index + 2] === 'match'
-      && segments[index + 4] === 'score'
-    ));
+  const [sport, flow] = segments;
+
+  if (!getSportById(sport)) return false;
+  return flow === 'quick'
+    || (
+      flow === 'tournament'
+      && segments[3] === 'match'
+      && segments[5] === 'score'
+    );
 }
 
 export function getProtectedScoringBackFallback(pathname) {
   const segments = pathname.split('/').filter(Boolean);
   const [sport, flow, tournamentId] = segments;
 
-  if (!sport) return null;
+  if (!getSportById(sport)) return null;
   if (flow === 'quick') return `/play?sport=${encodeURIComponent(sport)}`;
   if (flow === 'tournament' && tournamentId && segments[3] === 'match' && segments[5] === 'score') {
     return `/${encodeURIComponent(sport)}/tournament/${encodeURIComponent(tournamentId)}`;

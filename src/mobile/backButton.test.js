@@ -87,6 +87,11 @@ describe('isProtectedScoringRoute', () => {
     expect(isProtectedScoringRoute('/guides/quickstart')).toBe(false);
     expect(isProtectedScoringRoute('/volleyball/tournament/123/match/abc/scoreboard')).toBe(false);
   });
+
+  it('does not protect non-sport routes with scorer-like segments', () => {
+    expect(isProtectedScoringRoute('/profile/quick')).toBe(false);
+    expect(isProtectedScoringRoute('/madeupsport/quick')).toBe(false);
+  });
 });
 
 describe('getProtectedScoringBackFallback', () => {
@@ -101,6 +106,8 @@ describe('getProtectedScoringBackFallback', () => {
 
   it('has no fallback for unprotected routes', () => {
     expect(getProtectedScoringBackFallback('/history')).toBeNull();
+    expect(getProtectedScoringBackFallback('/profile/quick')).toBeNull();
+    expect(getProtectedScoringBackFallback('/madeupsport/tournament/cup/match/game/score')).toBeNull();
   });
 });
 
