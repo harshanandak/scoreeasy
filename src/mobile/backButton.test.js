@@ -151,7 +151,10 @@ describe('installNativeBackButtonGuard', () => {
     await backButtonHandler({ canGoBack: true });
 
     expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
-    expect(navigateFallback).toHaveBeenCalledWith('/play?sport=cricket', { replace: true });
+    expect(navigateFallback).toHaveBeenCalledWith('/play?sport=cricket', {
+      replace: true,
+      unwindProtectedEntry: true,
+    });
     expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });
@@ -164,7 +167,10 @@ describe('installNativeBackButtonGuard', () => {
 
     await backButtonHandler({ canGoBack: false });
 
-    expect(navigateFallback).toHaveBeenCalledWith('/football/tournament/cup-1', { replace: true });
+    expect(navigateFallback).toHaveBeenCalledWith('/football/tournament/cup-1', {
+      replace: true,
+      unwindProtectedEntry: true,
+    });
     expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });

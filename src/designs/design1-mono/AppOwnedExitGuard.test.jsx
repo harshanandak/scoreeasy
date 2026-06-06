@@ -77,7 +77,9 @@ describe('app-owned scoring exit guard', () => {
     unmount();
   });
 
-  it('passes native fallback navigation through the app router with replace semantics', async () => {
+  it('unwinds the protected scorer entry for confirmed native fallback navigation', async () => {
+    const historyBack = vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
+
     render(
       <MemoryRouter initialEntries={['/volleyball/quick']}>
         <Design1Mono />
@@ -91,7 +93,12 @@ describe('app-owned scoring exit guard', () => {
     });
 
     const options = nativeBackButtonMock.installNativeBackButtonGuard.mock.calls[0][0];
-    expect(() => options.navigateFallback('/play?sport=cricket', { replace: true })).not.toThrow();
+    options.navigateFallback('/play?sport=volleyball', {
+      replace: true,
+      unwindProtectedEntry: true,
+    });
+
+    expect(historyBack).toHaveBeenCalledTimes(1);
   });
 
   it('does not install scoring exit guards on game resume recovery routes', async () => {

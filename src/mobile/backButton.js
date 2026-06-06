@@ -57,7 +57,7 @@ export function installNativeBackButtonGuard({
 
       const fallbackPath = getProtectedScoringBackFallback(pathname);
       if (fallbackPath && typeof navigateFallback === 'function') {
-        navigateFallback(fallbackPath, { replace: true });
+        navigateFallback(fallbackPath, { replace: true, unwindProtectedEntry: true });
         return;
       }
     }

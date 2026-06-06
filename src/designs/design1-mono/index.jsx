@@ -1282,8 +1282,8 @@ export default function Design1Mono() {
       }
     };
 
-    const leaveProtectedRouteAfterConfirm = () => {
-      const protectedBackFallback = getProtectedScoringBackFallback(location.pathname) || '/play';
+    const leaveProtectedRouteAfterConfirm = (fallbackPath) => {
+      const protectedBackFallback = fallbackPath || getProtectedScoringBackFallback(location.pathname) || '/play';
       const currentRouteHistoryIndex = globalThis.history.state?.idx;
       const baseRouteHistoryIndex = protectedRouteHistoryIndexRef.current;
       const canReturnToPriorRoute =
@@ -1338,7 +1338,14 @@ export default function Design1Mono() {
         });
       }),
       goBack: leaveProtectedRouteAfterConfirm,
-      navigateFallback: (path, options) => navigate(path, options),
+      navigateFallback: (path, options = {}) => {
+        if (options.unwindProtectedEntry) {
+          leaveProtectedRouteAfterConfirm(path);
+          return;
+        }
+
+        navigate(path, options);
+      },
     });
 
     return () => {
