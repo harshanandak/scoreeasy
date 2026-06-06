@@ -33,7 +33,7 @@ export function getProtectedScoringBackFallback(pathname) {
 
 export function installNativeBackButtonGuard({
   getPathname,
-  confirmLeave = globalThis.confirm,
+  confirmLeave = (message) => Promise.resolve(globalThis.confirm(message)),
   goBack = () => globalThis.history.back(),
   navigateFallback,
   exitApp = () => App.exitApp(),
@@ -50,7 +50,7 @@ export function installNativeBackButtonGuard({
     const protectedRoute = isProtectedScoringRoute(pathname);
 
     if (protectedRoute) {
-      const leaveConfirmed = await Promise.resolve(confirmLeave('Leave this page? Your unsaved scoring progress may be lost.'));
+      const leaveConfirmed = await confirmLeave('Leave this page? Your unsaved scoring progress may be lost.');
       if (!leaveConfirmed) {
         return;
       }
