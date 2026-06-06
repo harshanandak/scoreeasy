@@ -1613,7 +1613,6 @@ export default function MonoQuickMatch() {
                               setCustomOvers(e.target.value);
                               if (v >= 1 && v <= 50) setFormat(prev => ({ ...prev, overs: v }));
                             }}
-                            autoFocus
                           />
                           <span className="text-xs" style={{ color: '#888' }}>overs</span>
                         </div>
@@ -2025,7 +2024,6 @@ export default function MonoQuickMatch() {
                     onChange={e => { setTeam1Name(e.target.value); setShowTeam1Suggestions(e.target.value.length >= 2); }}
                     onFocus={() => setShowTeam1Suggestions(true)}
                     maxLength={50}
-                    autoFocus
                   />
                   {showTeam1Suggestions && sortedTeam1.length > 0 && (
                     <div
@@ -2346,7 +2344,7 @@ export default function MonoQuickMatch() {
             <div className="mono-quick-cricket-secondary-row">
               <button
                 onClick={addWicket}
-                className="mono-btn mono-btn-warning mono-quick-wicket-button"
+                className="mono-btn mono-btn-danger mono-quick-wicket-button"
                 style={{ touchAction: 'manipulation' }}
               >
                 {freeHit ? 'Run Out Only' : 'Wicket'}
