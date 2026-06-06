@@ -39,6 +39,13 @@ describe('pathFromAppUrl', () => {
     expect(pathFromAppUrl('https://scoreeasy.app/play?tab=team#top')).toBe('/play?tab=team#top');
   });
 
+  it('canonicalizes legacy native app links before navigation', () => {
+    expect(pathFromAppUrl('https://scoreeasy.app/stats?range=month#totals')).toBe('/statistics?range=month#totals');
+    expect(pathFromAppUrl('https://scoreeasy.app/dashboard')).toBe('/app');
+    expect(pathFromAppUrl('https://scoreeasy.app/stats/')).toBe('/statistics');
+    expect(pathFromAppUrl('https://scoreeasy.app/dashboard/')).toBe('/app');
+  });
+
   it('ignores unsupported hosts and schemes', () => {
     expect(pathFromAppUrl('https://example.com/play')).toBeNull();
     expect(pathFromAppUrl('scoreeasy://play')).toBeNull();

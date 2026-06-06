@@ -3,6 +3,12 @@ import { hasNativePlugin, isNativeMobile } from './platform';
 
 export const APP_LINK_HOST = 'scoreeasy.app';
 
+export function canonicalizeAppPath(pathname = '/') {
+  if (pathname === '/stats' || pathname === '/stats/') return '/statistics';
+  if (pathname === '/dashboard' || pathname === '/dashboard/') return '/app';
+  return pathname || '/';
+}
+
 export function pathFromAppUrl(url) {
   if (!url) return null;
 
@@ -10,7 +16,7 @@ export function pathFromAppUrl(url) {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:' || parsed.hostname !== APP_LINK_HOST) return null;
 
-    return `${parsed.pathname || '/'}${parsed.search || ''}${parsed.hash || ''}`;
+    return `${canonicalizeAppPath(parsed.pathname)}${parsed.search || ''}${parsed.hash || ''}`;
   } catch {
     return null;
   }

@@ -19,7 +19,11 @@ vi.mock('./platform', () => ({
   isNativeMobile: mocks.isNativeMobile,
 }));
 
-import { installNativeBackButtonGuard, isProtectedScoringRoute } from './backButton';
+import {
+  getProtectedScoringBackFallback,
+  installNativeBackButtonGuard,
+  isProtectedScoringRoute,
+} from './backButton';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,16 +51,18 @@ async function setupNativeBackHandler({
   const confirmLeave = vi.fn(() => confirmResult);
   const goBack = vi.fn();
   const exitApp = vi.fn();
+  const navigateFallback = vi.fn();
 
   installNativeBackButtonGuard({
     confirmLeave,
     exitApp,
     getPathname: () => pathname,
     goBack,
+    navigateFallback,
   });
   await Promise.resolve();
 
-  return { backButtonHandler, confirmLeave, exitApp, goBack };
+  return { backButtonHandler, confirmLeave, exitApp, goBack, navigateFallback };
 }
 
 describe('isProtectedScoringRoute', () => {
@@ -80,6 +86,28 @@ describe('isProtectedScoringRoute', () => {
   it('does not match scoring-like route substrings', () => {
     expect(isProtectedScoringRoute('/guides/quickstart')).toBe(false);
     expect(isProtectedScoringRoute('/volleyball/tournament/123/match/abc/scoreboard')).toBe(false);
+  });
+
+  it('does not protect non-sport routes with scorer-like segments', () => {
+    expect(isProtectedScoringRoute('/profile/quick')).toBe(false);
+    expect(isProtectedScoringRoute('/madeupsport/quick')).toBe(false);
+  });
+});
+
+describe('getProtectedScoringBackFallback', () => {
+  it('sends quick-match routes back to the sport-scoped Play chooser', () => {
+    expect(getProtectedScoringBackFallback('/cricket/quick')).toBe('/play?sport=cricket');
+    expect(getProtectedScoringBackFallback('/tennis/quick/live/match-123')).toBe('/play?sport=tennis');
+  });
+
+  it('sends tournament scorer routes back to the tournament dashboard when possible', () => {
+    expect(getProtectedScoringBackFallback('/football/tournament/cup-1/match/match-2/score')).toBe('/football/tournament/cup-1');
+  });
+
+  it('has no fallback for unprotected routes', () => {
+    expect(getProtectedScoringBackFallback('/history')).toBeNull();
+    expect(getProtectedScoringBackFallback('/profile/quick')).toBeNull();
+    expect(getProtectedScoringBackFallback('/madeupsport/tournament/cup/match/game/score')).toBeNull();
   });
 });
 
@@ -114,15 +142,36 @@ describe('installNativeBackButtonGuard', () => {
     expect(exitApp).not.toHaveBeenCalled();
   });
 
-  it('navigates back from protected routes after confirmation', async () => {
-    const { backButtonHandler, confirmLeave, exitApp, goBack } = await setupNativeBackHandler({
+  it('uses the scoring fallback from protected routes after confirmation', async () => {
+    const { backButtonHandler, confirmLeave, exitApp, goBack, navigateFallback } = await setupNativeBackHandler({
       confirmResult: true,
+      pathname: '/cricket/quick/test-match/match-123',
     });
 
     await backButtonHandler({ canGoBack: true });
 
     expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
-    expect(goBack).toHaveBeenCalledTimes(1);
+    expect(navigateFallback).toHaveBeenCalledWith('/play?sport=cricket', {
+      replace: true,
+      unwindProtectedEntry: true,
+    });
+    expect(goBack).not.toHaveBeenCalled();
+    expect(exitApp).not.toHaveBeenCalled();
+  });
+
+  it('does not exit the native app from direct-entry protected routes after confirmation', async () => {
+    const { backButtonHandler, exitApp, goBack, navigateFallback } = await setupNativeBackHandler({
+      confirmResult: true,
+      pathname: '/football/tournament/cup-1/match/match-2/score',
+    });
+
+    await backButtonHandler({ canGoBack: false });
+
+    expect(navigateFallback).toHaveBeenCalledWith('/football/tournament/cup-1', {
+      replace: true,
+      unwindProtectedEntry: true,
+    });
+    expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });
 
