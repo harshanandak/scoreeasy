@@ -23,13 +23,14 @@ Reconcile the planned PR1-PR9 mobile-audit backlog against merged GitHub PR evid
 | --- | --- | ---: | ---: | ---: | --- |
 | PR1 | `scoreeasy-x7s` | 5 | 4 | 4 | `scoreeasy-x7s.2` native emulator QA environment is now partially proven but should be tracked until repeatable |
 | PR2 | `scoreeasy-viq` | 10 | 10 | 10 | None found |
-| PR3 | `scoreeasy-9g4` | 9 | 9 | 9 | None found |
+| PR3 | `scoreeasy-9g4` | 9 | 6 | 6 | `scoreeasy-9g4.4`, `scoreeasy-9g4.8`, and `scoreeasy-9g4.9` were reopened after native Android back-stack/deep-link verification |
 | PR4 | `scoreeasy-nm8` | 6 | 6 | 6 | Restored and closed `scoreeasy-nm8.5` with PR #75 returning-player route evidence |
 | PR5 | `scoreeasy-9ve` | 11 | 11 | 11 | None found |
 | PR6 | `scoreeasy-4ay` | 5 | 5 | 5 | None found |
 | PR7 | `scoreeasy-oee` | 15 | 7 by PR-body evidence | App shell/native visual flow verified for core screens | Per-issue source closure should be checked before closing the remaining visual records |
 | PR8 | `scoreeasy-woa` | 5 | 5 | 5 | None found |
 | PR9 | `scoreeasy-ngb` | 7 | 5 | 5 | `scoreeasy-ngb.4`, `scoreeasy-ngb.5` need real Clerk/Convex backend-session verification |
+| PR11 | `scoreeasy-rdk` | 7 | 1 | 1 | Native app-shell follow-up remains open for dashboard, account CTA, Play density, History density, Statistics loading, and bottom navigation |
 
 ## Tracker State
 
@@ -37,15 +38,18 @@ Beads was stale relative to GitHub before this PR10 reconciliation pass. The exp
 
 Post-reconciliation Beads state:
 
-- 81 total mobile-audit records.
-- 67 records closed with merged PR and audit evidence.
-- 14 records remain open because proof is incomplete or the issue was intentionally outside the proven PR scope.
+- 89 total mobile-audit records.
+- 63 records closed with merged PR, source/test, or native Android evidence.
+- 26 records remain open because proof is incomplete, native UX work remains, or the issue was intentionally outside the proven PR scope.
 
 Remaining open records:
 
 - `scoreeasy-x7s` / `scoreeasy-x7s.2` - native emulator QA environment remains open until repeatable Android emulator validation is proven.
+- `scoreeasy-9g4` plus `scoreeasy-9g4.4`, `.8`, `.9` - native back-stack, resume escape, and route-contract/deep-link issues remain open after Android follow-up.
 - `scoreeasy-ngb` / `scoreeasy-ngb.4` / `scoreeasy-ngb.5` - real Clerk to Convex token exchange and Convex WebSocket stability still need backend-session proof.
 - `scoreeasy-oee` plus `scoreeasy-oee.2`, `.4`, `.5`, `.7`, `.9`, `.10`, `.11`, `.12` - broad visual polish issues that were not directly proven by PR #81 source/tests remain open.
+- `scoreeasy-oee.13` - cricket 4/6 run-button emphasis still needs a visual-system decision.
+- `scoreeasy-rdk` plus `scoreeasy-rdk.2`, `.3`, `.4`, `.5`, `.6`, `.7` - PR11 native app-shell follow-up remains open for dashboard, account CTA, Play screen duplication, History density, Statistics loading, and bottom navigation.
 
 ## Confirmed Fixed By Source And Tests
 
