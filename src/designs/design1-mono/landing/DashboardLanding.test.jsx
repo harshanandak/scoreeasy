@@ -3,18 +3,15 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DashboardLanding from './DashboardLanding';
 
+let authState;
+
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
   useQuery: () => [],
 }));
 
 vi.mock('../../../hooks/useAuth', () => ({
-  useAuth: () => ({
-    isAuthenticated: false,
-    isLoading: false,
-    needsOnboarding: false,
-    user: null,
-  }),
+  useAuth: () => authState,
 }));
 
 function LocationProbe() {
@@ -29,6 +26,9 @@ function renderDashboard() {
       <Routes>
         <Route path="/app" element={<DashboardLanding />} />
         <Route path="/:sport/tournament/new" element={<p>New tournament setup</p>} />
+        <Route path="/play" element={<p>Play hub</p>} />
+        <Route path="/login" element={<p>Account entry</p>} />
+        <Route path="/profile" element={<p>Profile</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -36,6 +36,13 @@ function renderDashboard() {
 
 describe('DashboardLanding start flow', () => {
   beforeEach(() => {
+    authState = {
+      cloudAuthAvailable: true,
+      isAuthenticated: false,
+      isLoading: false,
+      needsOnboarding: false,
+      user: null,
+    };
     globalThis.localStorage.clear();
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
       callback?.(0);
@@ -77,6 +84,53 @@ describe('DashboardLanding start flow', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/tournament/new');
     });
     expect(screen.getByText('New tournament setup')).toBeInTheDocument();
+  });
+
+  it('puts returning guest scoring and account choices above sports', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+    expect(screen.getByText('Guest mode')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start scoring' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New tournament' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in or create account' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fapp');
+    });
+    expect(screen.getByText('Account entry')).toBeInTheDocument();
+  });
+
+  it('shows signed-in account status instead of the guest account prompt', async () => {
+    authState = {
+      ...authState,
+      isAuthenticated: true,
+      user: {
+        username: 'harsha',
+        favoriteGames: ['cricket'],
+      },
+    };
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    expect(await screen.findByRole('heading', { name: 'Welcome back, harsha' })).toBeInTheDocument();
+    expect(screen.getByText('Signed in')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sign in or create account' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+    expect(screen.getByText('Profile')).toBeInTheDocument();
   });
 
   it('renders returning-player dashboard when session storage is corrupt', async () => {

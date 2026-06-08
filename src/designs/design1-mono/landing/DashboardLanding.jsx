@@ -559,10 +559,28 @@ function NewUserFlow({ navigate }) {
 }
 
 /* ─── Existing User Dashboard ─── */
-function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recentMatches, showAllSports, setShowAllSports }) {
+function getDashboardDisplayName(user) {
+  return user?.username || user?.name || user?.displayName || null;
+}
+
+function ExistingUserDashboard({
+  cloudAuthAvailable,
+  isAuthenticated,
+  navigate,
+  user,
+  sessions,
+  allTournaments,
+  recentMatches,
+  showAllSports,
+  setShowAllSports,
+}) {
   const hasActive = sessions.length > 0;
   const activeTournaments = allTournaments.filter(tr => tr.isActive);
   const displayTournaments = allTournaments.slice(0, 4);
+  const displayName = getDashboardDisplayName(user);
+  const dashboardTitle = displayName ? `Welcome back, ${displayName}` : 'Welcome back';
+  const playedCount = recentMatches.length;
+  const tournamentCount = allTournaments.length;
 
   const favoriteIds = user?.favoriteGames || [];
   const favoriteSports = favoriteIds.length > 0
@@ -578,11 +596,82 @@ function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recen
   });
 
   return (
-    <div style={{ maxWidth: 672, margin: '0 auto', padding: '40px 24px 56px' }}>
+    <div style={{ maxWidth: 672, margin: '0 auto', padding: '18px 16px 56px' }}>
+      <section
+        aria-labelledby="dashboard-welcome-title"
+        style={{
+          background: t.surface,
+          border: `1px solid ${t.border}`,
+          borderRadius: 10,
+          boxShadow: t.cardShadow,
+          marginBottom: 20,
+          padding: 18,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+          <div>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>
+              App dashboard
+            </span>
+            <h2 id="dashboard-welcome-title" style={{ fontSize: '1.45rem', fontWeight: 750, lineHeight: 1.12, margin: '6px 0 0', color: t.text }}>
+              {dashboardTitle}
+            </h2>
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', padding: '6px 9px', borderRadius: 999, background: isAuthenticated ? t.greenLight : t.blueLight, color: isAuthenticated ? t.green : t.blue, whiteSpace: 'nowrap' }}>
+            {isAuthenticated ? 'Signed in' : 'Guest mode'}
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 14 }}>
+          {[
+            ['Active', sessions.length],
+            ['Recent', playedCount],
+            ['Events', tournamentCount],
+          ].map(([label, value]) => (
+            <div key={label} style={{ border: `1px solid ${t.border}`, borderRadius: 8, padding: '10px 8px', background: t.bg }}>
+              <div style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textMuted }}>{label}</div>
+              <div style={{ fontFamily: MONO, fontSize: '1.2rem', fontWeight: 850, color: t.text, lineHeight: 1.1 }}>{value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <button type="button" onClick={() => navigate('/play')} style={{ ...btnPrimary, minHeight: 44, fontSize: '0.75rem' }}>Start scoring</button>
+          <button type="button" onClick={() => navigate(newTournamentPath)} style={{ ...btnSecondary, minHeight: 44, fontSize: '0.75rem' }}>New tournament</button>
+        </div>
+
+        {cloudAuthAvailable && (
+          <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 12 }}>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                aria-label="Account"
+                onClick={() => navigate('/profile')}
+                style={{ ...bareButton, width: '100%', minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${t.border}`, borderRadius: 8, cursor: 'pointer', padding: '10px 12px' }}
+              >
+                <span style={{ fontSize: '0.8125rem', fontWeight: 650, color: t.text }}>Account</span>
+                <span style={{ fontSize: '0.75rem', color: t.textMuted }}>Sync and profile settings</span>
+              </button>
+            ) : (
+              <div style={{ display: 'grid', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft }}>
+                  Continue as guest on this device, or use one account path to sign in or create an account for sync.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/login?returnTo=%2Fapp')}
+                  style={{ ...btnSecondary, width: '100%', minHeight: 42, fontSize: '0.75rem', borderColor: t.blue, color: t.blue }}
+                >
+                  Sign in or create account
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* ── ACTIVE STATE ── */}
       {hasActive && (
-        <div style={{ marginBottom: 48 }}>
+        <div style={{ marginTop: 20 }}>
           <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted, display: 'block', marginBottom: 16 }}>Active</span>
 
           {sessions.map((session) => {
@@ -655,19 +744,17 @@ function ExistingUserDashboard({ navigate, user, sessions, allTournaments, recen
 
       {/* ── INACTIVE STATE ── */}
       {!hasActive && (
-        <div style={{ textAlign: 'center', padding: '56px 0 56px' }}>
-          <p style={{ fontSize: '0.875rem', color: t.textMuted, margin: '0 0 20px' }}>
-            No active games
+        <div style={{ borderTop: `1px solid ${t.border}`, marginTop: 14, paddingTop: 12 }}>
+          <p style={{ fontSize: '0.8125rem', color: t.textMuted, margin: 0 }}>
+            No active games right now.
           </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => navigate('/play')} style={btnPrimary}>Start a game</button>
-            <button type="button" onClick={() => navigate(newTournamentPath)} style={btnSecondary}>New tournament</button>
-          </div>
         </div>
       )}
 
       {/* ── Sports ── */}
-      <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 24, marginBottom: 48 }}>
+      </section>
+
+      <div style={{ paddingTop: 4, marginBottom: 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>Sports</span>
           {!showAllSports && (
@@ -832,9 +919,14 @@ NewUserFlow.propTypes = {
 };
 
 ExistingUserDashboard.propTypes = {
+  cloudAuthAvailable: PropTypes.bool.isRequired,
+  isAuthenticated: PropTypes.bool.isRequired,
   navigate: PropTypes.func.isRequired,
   user: PropTypes.shape({
     favoriteGames: PropTypes.arrayOf(PropTypes.string),
+    username: PropTypes.string,
+    name: PropTypes.string,
+    displayName: PropTypes.string,
   }),
   sessions: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
@@ -873,7 +965,7 @@ ExistingUserDashboard.propTypes = {
    ═══════════════════════════════════════ */
 export default function DashboardLanding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [allTournaments, setAllTournaments] = useState([]);
@@ -903,6 +995,8 @@ export default function DashboardLanding() {
         <NewUserFlow navigate={navigate} />
       ) : (
         <ExistingUserDashboard
+          cloudAuthAvailable={Boolean(cloudAuthAvailable)}
+          isAuthenticated={Boolean(isAuthenticated)}
           navigate={navigate}
           user={user}
           sessions={sessions}

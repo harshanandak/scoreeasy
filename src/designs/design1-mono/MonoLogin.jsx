@@ -21,8 +21,8 @@ export default function MonoLogin() {
   return (
     <CloudAuthOnly>
       <MonoAuthPageFrame
-        subtitle="Sign in to continue"
-        helperText="Use email recovery from the password step if you cannot sign in. You can keep scoring locally as a guest anytime."
+        subtitle="Sign in or create account"
+        helperText="Use one secure account path for sign in and new accounts. You can keep scoring locally as a guest anytime."
       >
         <SignIn
           appearance={monoClerkAppearance}
