@@ -185,12 +185,14 @@ describe('app entry route contract', () => {
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('shows simple app tabs with Home active on the app dashboard', async () => {
+  it('shows icon-led native app tabs with Home active on the app dashboard', async () => {
     const { container } = renderApp('/app');
 
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveAttribute('aria-label', 'App navigation');
+    expect(appNav).toHaveClass('global-bottom-nav-native');
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
 
     expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();

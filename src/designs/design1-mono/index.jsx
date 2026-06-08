@@ -406,6 +406,72 @@ AppConfirmDialog.propTypes = {
   onConfirm: PropTypes.func.isRequired,
 };
 
+function NavIcon({ name }) {
+  const commonProps = {
+    'aria-hidden': 'true',
+    fill: 'none',
+    height: 22,
+    stroke: 'currentColor',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    strokeWidth: 1.8,
+    viewBox: '0 0 24 24',
+    width: 22,
+  };
+
+  if (name === 'home') {
+    return (
+      <svg {...commonProps}>
+        <path d="M4 10.5 12 4l8 6.5" />
+        <path d="M6.5 10v9h11v-9" />
+        <path d="M10 19v-5h4v5" />
+      </svg>
+    );
+  }
+
+  if (name === 'play') {
+    return (
+      <svg {...commonProps}>
+        <path d="M8 5.5v13l10-6.5z" />
+      </svg>
+    );
+  }
+
+  if (name === 'matches') {
+    return (
+      <svg {...commonProps}>
+        <path d="M7 6h11" />
+        <path d="M7 12h11" />
+        <path d="M7 18h11" />
+        <path d="M4 6h.01" />
+        <path d="M4 12h.01" />
+        <path d="M4 18h.01" />
+      </svg>
+    );
+  }
+
+  if (name === 'stats') {
+    return (
+      <svg {...commonProps}>
+        <path d="M5 19V9" />
+        <path d="M12 19V5" />
+        <path d="M19 19v-7" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...commonProps}>
+      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </svg>
+  );
+}
+
+NavIcon.propTypes = {
+  name: PropTypes.oneOf(['home', 'play', 'matches', 'stats', 'account']).isRequired,
+};
+
 function GlobalNavigation({ requestScoringExit }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -509,14 +575,15 @@ function GlobalNavigation({ requestScoringExit }) {
   }
 
   const bottomNavItems = [
-    { label: 'Home', path: APP_ENTRY_PATH },
-    { label: 'Play', path: '/play' },
-    { label: 'Matches', path: '/history' },
-    { label: 'Stats', path: '/statistics' },
+    { label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
+    { label: 'Play', path: '/play', icon: 'play' },
+    { label: 'Matches', path: '/history', icon: 'matches' },
+    { label: 'Stats', path: '/statistics', icon: 'stats' },
     cloudAuthAvailable
       ? {
-        label: isAuthenticated ? 'Account' : 'Sign in',
+        label: 'Account',
         path: isAuthenticated ? '/profile' : '/login',
+        icon: 'account',
         kind: isAuthenticated ? 'accountMenu' : 'link',
       }
       : null,
@@ -637,7 +704,7 @@ function GlobalNavigation({ requestScoringExit }) {
       )}
       {showBottomNav && bottomNavItems.length > 0 && (
         <nav
-          className="global-bottom-nav"
+          className="global-bottom-nav global-bottom-nav-native"
           aria-label="App navigation"
           style={{ '--bottom-nav-count': bottomNavItems.length }}
         >
@@ -649,6 +716,9 @@ function GlobalNavigation({ requestScoringExit }) {
                   className="global-bottom-nav-item global-bottom-nav-account-item"
                   aria-current={isActive(item) ? 'page' : undefined}
                 >
+                  <span className="global-bottom-nav-icon">
+                    <NavIcon name={item.icon} />
+                  </span>
                   <span className="global-bottom-nav-account-label">{item.label}</span>
                   <AuthUserButton aria-label="Account menu" />
                 </div>
@@ -663,7 +733,10 @@ function GlobalNavigation({ requestScoringExit }) {
                 className="global-bottom-nav-item"
                 aria-current={isActive(item) ? 'page' : undefined}
               >
-                {item.label}
+                <span className="global-bottom-nav-icon">
+                  <NavIcon name={item.icon} />
+                </span>
+                <span className="global-bottom-nav-label">{item.label}</span>
               </button>
             );
           })}
@@ -892,7 +965,7 @@ function GlobalNavigation({ requestScoringExit }) {
 
         @media (max-width: 767px) {
           body.has-mobile-bottom-nav {
-            padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
           }
 
           body.has-mobile-input-focus {
@@ -1064,17 +1137,21 @@ function GlobalNavigation({ requestScoringExit }) {
 
           .global-bottom-nav {
             position: fixed;
-            right: 0;
-            bottom: 0;
-            left: 0;
+            right: max(10px, env(safe-area-inset-right, 0px));
+            bottom: max(8px, env(safe-area-inset-bottom, 0px));
+            left: max(10px, env(safe-area-inset-left, 0px));
             z-index: 210;
             display: grid;
             grid-template-columns: repeat(var(--bottom-nav-count), minmax(0, 1fr));
-            gap: 0;
-            border-top: var(--se-border-standard) solid var(--se-color-line-strong);
-            background: var(--se-color-surface);
-            padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-            box-shadow: 0 -3px 0 color-mix(in oklch, var(--se-color-line) 8%, transparent);
+            gap: 2px;
+            width: min(520px, calc(100vw - 20px));
+            margin: 0 auto;
+            border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, transparent);
+            border-radius: 24px;
+            background: color-mix(in oklch, var(--se-color-surface) 92%, transparent);
+            padding: 6px;
+            box-shadow: 0 10px 28px color-mix(in oklch, var(--se-color-line-strong) 14%, transparent);
+            backdrop-filter: blur(18px);
           }
 
           .global-bottom-nav-item {
@@ -1082,33 +1159,60 @@ function GlobalNavigation({ requestScoringExit }) {
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            gap: 4px;
-            min-height: 52px;
-            border: var(--se-border-standard) solid transparent;
-            border-radius: var(--se-radius-button);
+            gap: 3px;
+            min-height: 54px;
+            border: 0;
+            border-radius: 18px;
             background: transparent;
             color: var(--se-color-ink-muted);
             cursor: pointer;
-            font-family: var(--se-font-mono);
+            font-family: var(--se-font-swiss);
             font-size: 0.6875rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1;
+            position: relative;
           }
 
           .global-bottom-nav-account-item {
-            cursor: default;
+            cursor: pointer;
           }
 
+          .global-bottom-nav-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            color: currentColor;
+          }
+
+          .global-bottom-nav-label,
           .global-bottom-nav-account-label {
             line-height: 1;
           }
 
+          .global-bottom-nav-account-item > button {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+          }
+
           .global-bottom-nav-item[aria-current="page"] {
-            border-color: var(--se-color-action);
-            background: var(--se-color-action);
-            color: var(--se-color-inverse);
-            box-shadow: var(--se-shadow-card);
+            background: color-mix(in oklch, var(--se-color-action) 12%, transparent);
+            color: var(--se-color-action);
+          }
+
+          .global-bottom-nav-item[aria-current="page"]::after {
+            content: "";
+            position: absolute;
+            top: 6px;
+            width: 4px;
+            height: 4px;
+            border-radius: 999px;
+            background: currentColor;
           }
 
           body.has-mobile-input-focus .global-bottom-nav {
