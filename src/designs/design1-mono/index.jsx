@@ -1214,17 +1214,18 @@ function GlobalNavigation({ requestScoringExit }) {
             display: flex;
             align-items: stretch;
             justify-content: stretch;
-            pointer-events: auto;
-          }
-
-          .global-bottom-nav-account-menu:empty {
             pointer-events: none;
           }
 
-          .global-bottom-nav-account-menu > button {
+          .global-bottom-nav-account-menu > *,
+          .global-bottom-nav-account-menu button {
             width: 100%;
             height: 100%;
             opacity: 0;
+          }
+
+          .global-bottom-nav-account-menu button {
+            pointer-events: auto;
           }
 
           .global-bottom-nav-item[aria-current="page"] {
