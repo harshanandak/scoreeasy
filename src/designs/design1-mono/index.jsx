@@ -1145,6 +1145,9 @@ function GlobalNavigation({ requestScoringExit }) {
 
           .global-bottom-nav {
             position: fixed;
+            right: 10px;
+            bottom: 8px;
+            left: 10px;
             right: max(10px, env(safe-area-inset-right, 0px));
             bottom: max(8px, env(safe-area-inset-bottom, 0px));
             left: max(10px, env(safe-area-inset-left, 0px));
@@ -1154,11 +1157,12 @@ function GlobalNavigation({ requestScoringExit }) {
             gap: 2px;
             width: min(520px, calc(100vw - 20px));
             margin: 0 auto;
-            border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, transparent);
+            border: 1px solid rgba(26, 26, 26, 0.14);
             border-radius: 24px;
-            background: color-mix(in oklch, var(--se-color-surface) 92%, transparent);
+            background: rgba(255, 255, 255, 0.94);
             padding: 6px;
-            box-shadow: 0 10px 28px color-mix(in oklch, var(--se-color-line-strong) 14%, transparent);
+            box-shadow: 0 10px 28px rgba(26, 26, 26, 0.14);
+            -webkit-backdrop-filter: blur(18px);
             backdrop-filter: blur(18px);
           }
 
@@ -1203,6 +1207,12 @@ function GlobalNavigation({ requestScoringExit }) {
             color: currentColor;
           }
 
+          .global-bottom-nav-icon svg {
+            display: block;
+            width: 22px;
+            height: 22px;
+          }
+
           .global-bottom-nav-label,
           .global-bottom-nav-account-label {
             line-height: 1;
@@ -1229,18 +1239,8 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-bottom-nav-item[aria-current="page"] {
-            background: color-mix(in oklch, var(--se-color-action) 12%, transparent);
+            background: rgba(0, 102, 255, 0.1);
             color: var(--se-color-action);
-          }
-
-          .global-bottom-nav-item[aria-current="page"]::after {
-            content: "";
-            position: absolute;
-            top: 6px;
-            width: 4px;
-            height: 4px;
-            border-radius: 999px;
-            background: currentColor;
           }
 
           body.has-mobile-input-focus .global-bottom-nav {

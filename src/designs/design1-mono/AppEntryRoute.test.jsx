@@ -206,6 +206,25 @@ describe('app entry route contract', () => {
     expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
   });
 
+  it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
+    const { container } = renderApp('/play');
+
+    expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
+    let appNav = container.querySelector('.global-bottom-nav');
+    expect(appNav).toHaveClass('global-bottom-nav-native');
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=cricket');
+    });
+    appNav = container.querySelector('.global-bottom-nav');
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
+  });
+
   it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
     authState = {
       ...authState,
