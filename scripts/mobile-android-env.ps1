@@ -90,14 +90,15 @@ function Invoke-Adb {
 
 function Invoke-AdbCapture {
     param(
-        [string[]] $AdbArgs
+        [string[]] $AdbArgs,
+        [string] $Serial = $DeviceSerial
     )
 
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
-        $output = if ($DeviceSerial) {
-            & $adb.Source -s $DeviceSerial @AdbArgs 2>$null
+        $output = if ($Serial) {
+            & $adb.Source -s $Serial @AdbArgs 2>$null
         } else {
             & $adb.Source @AdbArgs 2>$null
         }
@@ -112,10 +113,14 @@ function Invoke-AdbCapture {
     }
 }
 
-function Get-RunningAndroidDevices {
-    $devices = @(& $adb.Source devices | Select-String -Pattern "`tdevice$" | ForEach-Object {
+function Get-AdbDeviceSerials {
+    @(& $adb.Source devices | Select-String -Pattern "`tdevice$" | ForEach-Object {
         ($_ -split "`t")[0]
     })
+}
+
+function Get-RunningAndroidDevices {
+    $devices = @(Get-AdbDeviceSerials)
 
     if ($DeviceSerial) {
         @($devices | Where-Object { $_ -eq $DeviceSerial })
@@ -125,14 +130,72 @@ function Get-RunningAndroidDevices {
     $devices
 }
 
+function Find-RunningAvdSerial {
+    param(
+        [string] $TargetAvdName
+    )
+
+    foreach ($serial in @(Get-AdbDeviceSerials | Where-Object { $_ -like 'emulator-*' })) {
+        $avdResult = Invoke-AdbCapture -Serial $serial -AdbArgs @('emu', 'avd', 'name')
+        if ($avdResult.ExitCode -ne 0) {
+            continue
+        }
+
+        $runningAvdNameLine = $avdResult.Output | Where-Object { $_ -and $_.ToString().Trim() -ne 'OK' } | Select-Object -First 1
+        if (-not $runningAvdNameLine) {
+            continue
+        }
+
+        $runningAvdName = $runningAvdNameLine.ToString().Trim()
+        if ($runningAvdName -eq $TargetAvdName) {
+            return $serial
+        }
+    }
+
+    $null
+}
+
+function Wait-ForNewAndroidDeviceSerial {
+    param(
+        [string[]] $BeforeDevices
+    )
+
+    $deadline = [DateTime]::UtcNow.AddSeconds($BootTimeoutSeconds)
+    do {
+        $currentDevices = @(Get-AdbDeviceSerials)
+        $newDevices = @($currentDevices | Where-Object { $BeforeDevices -notcontains $_ })
+
+        if ($newDevices.Count -gt 0) {
+            return $newDevices[0]
+        }
+
+        if ($BeforeDevices.Count -eq 0 -and $currentDevices.Count -eq 1) {
+            return $currentDevices[0]
+        }
+
+        Start-Sleep -Seconds 2
+    } while ([DateTime]::UtcNow -lt $deadline)
+
+    throw "Android emulator/device did not register with adb within $BootTimeoutSeconds seconds."
+}
+
 function Wait-ForAndroidBoot {
     $deadline = [DateTime]::UtcNow.AddSeconds($BootTimeoutSeconds)
 
     do {
-        $waitResult = Invoke-AdbCapture -AdbArgs @('wait-for-device')
-        if ($waitResult.ExitCode -ne 0) {
+        $devices = @(Get-RunningAndroidDevices)
+        if ($devices.Count -eq 0) {
             Start-Sleep -Seconds 2
             continue
+        }
+
+        if (-not $DeviceSerial) {
+            if ($devices.Count -gt 1) {
+                throw "Multiple Android devices are running ($($devices -join ', ')); pass -DeviceSerial or use -StartEmulator -AvdName to select one."
+            }
+
+            $script:DeviceSerial = $devices[0]
+            Write-Host "Using Android device $DeviceSerial."
         }
 
         $bootResult = Invoke-AdbCapture -AdbArgs @('shell', 'getprop', 'sys.boot_completed')
@@ -141,7 +204,8 @@ function Wait-ForAndroidBoot {
             continue
         }
 
-        $bootState = ($bootResult.Output | Select-Object -First 1).ToString().Trim()
+        $bootStateLine = $bootResult.Output | Select-Object -First 1
+        $bootState = if ($bootStateLine) { $bootStateLine.ToString().Trim() } else { '' }
         if ($bootState -eq '1') {
             Write-Host 'Android device boot completed.'
             return
@@ -158,18 +222,27 @@ if ($StartEmulator) {
         throw 'emulator was not found. Install Android SDK emulator or update ANDROID_HOME.'
     }
 
+    $avds = @(& $emulator.Source -list-avds | Where-Object { $_ })
+    if ($avds.Count -eq 0) {
+        throw 'No Android Virtual Devices found. Create one in Android Studio Device Manager.'
+    }
+
+    $selectedAvd = if ($AvdName) { $AvdName } else { $avds[0] }
+    if ($avds -notcontains $selectedAvd) {
+        throw "AVD '$selectedAvd' was not found. Available AVDs: $($avds -join ', ')"
+    }
+
     $runningDevices = Get-RunningAndroidDevices
-    if ($runningDevices.Count -eq 0) {
-        $avds = @(& $emulator.Source -list-avds | Where-Object { $_ })
-        if ($avds.Count -eq 0) {
-            throw 'No Android Virtual Devices found. Create one in Android Studio Device Manager.'
+    $runningAvdSerial = if ($AvdName) { Find-RunningAvdSerial -TargetAvdName $selectedAvd } else { $null }
+    if ($runningAvdSerial) {
+        $script:DeviceSerial = $runningAvdSerial
+        Write-Host "Android emulator '$selectedAvd' already running as $DeviceSerial."
+    } elseif ($AvdName -or $runningDevices.Count -eq 0) {
+        if ($DeviceSerial -and $runningDevices.Count -gt 0) {
+            Write-Host "Starting AVD '$selectedAvd' and switching from requested device serial '$DeviceSerial' to the new emulator when it registers."
         }
 
-        $selectedAvd = if ($AvdName) { $AvdName } else { $avds[0] }
-        if ($avds -notcontains $selectedAvd) {
-            throw "AVD '$selectedAvd' was not found. Available AVDs: $($avds -join ', ')"
-        }
-
+        $beforeDevices = @(Get-AdbDeviceSerials)
         $emulatorArgs = @('-avd', $selectedAvd, '-no-snapshot-load', '-no-audio')
         if ($Headless) {
             $emulatorArgs += @('-no-window', '-gpu', 'swiftshader_indirect', '-no-boot-anim')
@@ -186,6 +259,8 @@ if ($StartEmulator) {
 
         $process = Start-Process @startArgs
         Write-Host "Started Android emulator '$selectedAvd' (pid $($process.Id))."
+        $script:DeviceSerial = Wait-ForNewAndroidDeviceSerial -BeforeDevices $beforeDevices
+        Write-Host "Using Android emulator $DeviceSerial."
     } else {
         Write-Host "Android device already running: $($runningDevices -join ', ')"
     }
