@@ -47,6 +47,28 @@ On Windows, use the Android environment helper before emulator QA:
 
 The helper exports the Android Studio JBR and `%LOCALAPPDATA%\Android\Sdk` paths when present, prints the resolved `JAVA_HOME`, `ANDROID_HOME`, and `ANDROID_SDK_ROOT`, then runs `adb devices`. The `-RequireDevice` flag fails when no running emulator or device is listed.
 
+To start the first available AVD and wait for boot from a clean shell:
+
+```powershell
+.\scripts\mobile-android-env.ps1 -StartEmulator -Headless -RequireDevice
+```
+
+Headless mode starts the emulator with `-gpu swiftshader_indirect` so the app window can render in no-window QA runs.
+
+To target a specific AVD:
+
+```powershell
+.\scripts\mobile-android-env.ps1 -StartEmulator -AvdName Pixel_10 -Headless -RequireDevice
+```
+
+If Gradle is launched from a separate terminal and cannot see `ANDROID_HOME`, write the local Android SDK path before building:
+
+```powershell
+.\scripts\mobile-android-env.ps1 -WriteLocalProperties
+```
+
+This writes an ignored `android/local.properties` file with `sdk.dir=<resolved Android SDK path>`.
+
 Expected:
 
 - Web tests, lint, type-check, and build pass.
@@ -75,9 +97,7 @@ Push-Location android
 .\gradlew.bat assembleDebug
 .\gradlew.bat bundleDebug
 Pop-Location
-adb devices
-adb install -r android\app\build\outputs\apk\debug\app-debug.apk
-adb shell monkey -p com.scoreeasy.app 1
+.\scripts\mobile-android-env.ps1 -RequireDevice -InstallDebug -LaunchApp
 ```
 
 Capture logs while testing:
