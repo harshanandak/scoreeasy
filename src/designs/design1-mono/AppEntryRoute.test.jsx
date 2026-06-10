@@ -199,6 +199,12 @@ describe('app entry route contract', () => {
     expect(appNav).toHaveAttribute('aria-label', 'App navigation');
     expect(appNav).toHaveClass('global-bottom-nav-native');
     expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('width: auto;');
+    expect(navStyles).toContain('max-width: 520px;');
+    expect(navStyles).not.toContain('calc(100vw - 20px)');
 
     expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();

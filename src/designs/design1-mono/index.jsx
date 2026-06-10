@@ -1155,7 +1155,8 @@ function GlobalNavigation({ requestScoringExit }) {
             display: grid;
             grid-template-columns: repeat(var(--bottom-nav-count), minmax(0, 1fr));
             gap: 2px;
-            width: min(520px, calc(100vw - 20px));
+            width: auto;
+            max-width: 520px;
             margin: 0 auto;
             border: 1px solid rgba(26, 26, 26, 0.14);
             border-radius: 24px;
