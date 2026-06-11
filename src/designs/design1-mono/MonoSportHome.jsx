@@ -5,7 +5,7 @@ import { loadSportTournaments, loadPreference, savePreference } from '../../util
 import { getSportsByCategory } from '../../models/sportRegistry';
 import { CRICKET_FORMATS } from '../../utils/cricketCalculations';
 import { getPriorityStartActions } from '../../utils/startActions';
-import { getReadableTextColor, getSportAccent, prioritySports, sportAccents, sportsTokens } from './theme/sportsTokens';
+import { getSportAccent, prioritySports, sportAccents, sportsTokens } from './theme/sportsTokens';
 import SportIcon from './SportIcon';
 
 const CRICKET_FORMAT_CARDS = CRICKET_FORMATS.map(format => ({
@@ -58,7 +58,8 @@ function getOrderedCategories(sportCategories) {
 }
 
 function ActionButtons({ onTournament, onQuick, compact = false, stacked = false, className = 'flex gap-2 mt-auto', accent = sportsTokens.color.action }) {
-  const primaryTextColor = getReadableTextColor(accent);
+  // Design philosophy: text on a sport-accent fill is always white, not auto-contrast black.
+  const primaryTextColor = sportsTokens.color.inverse;
   const buttonStyle = compact
     ? { minHeight: 56, padding: '9px 10px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderColor: accent, borderRadius: innerBoxRadius }
     : { minHeight: 56, fontSize: '0.8125rem', padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, borderColor: accent, borderRadius: innerBoxRadius };
@@ -228,7 +229,7 @@ function PriorityFastStart({ onStartSport }) {
                     minHeight: 64,
                     background: action.primary ? actionAccent.primary : sportsTokens.color.surface,
                     borderColor: actionAccent.primary,
-                    color: action.primary ? getReadableTextColor(actionAccent.primary) : actionAccent.primary,
+                    color: action.primary ? sportsTokens.color.inverse : actionAccent.primary,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 3,
