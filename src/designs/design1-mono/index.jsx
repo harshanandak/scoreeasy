@@ -850,7 +850,7 @@ function GlobalNavigation({ requestScoringExit }) {
           max-height: min(720px, calc(100vh - 40px));
           overflow: auto;
           border: var(--se-border-standard) solid var(--se-color-line-strong);
-          border-radius: var(--se-radius-button);
+          border-radius: var(--se-radius-card);
           background: var(--se-color-surface);
           color: var(--se-color-ink-strong);
           box-shadow: var(--se-shadow-hard);
