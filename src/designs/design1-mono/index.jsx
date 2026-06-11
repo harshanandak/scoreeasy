@@ -763,16 +763,16 @@ function GlobalNavigation({ requestScoringExit }) {
           max-width: 100vw;
           min-height: 56px;
           padding: 0 32px;
-          border-bottom: var(--se-border-standard) solid var(--se-color-line-strong);
+          border-bottom: 1px solid var(--se-color-line);
           background: var(--se-color-surface);
         }
 
         .global-nav-brand {
           border: 0;
           background: transparent;
-          color: #111;
+          color: var(--se-color-ink-strong);
           cursor: pointer;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+          font-family: var(--se-font-mono);
           font-size: 0.75rem;
           font-weight: 800;
           line-height: 1.1;
@@ -1158,13 +1158,12 @@ function GlobalNavigation({ requestScoringExit }) {
             width: auto;
             max-width: 520px;
             margin: 0 auto;
-            border: 1px solid rgba(26, 26, 26, 0.14);
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.94);
-            padding: 6px;
-            box-shadow: 0 10px 28px rgba(26, 26, 26, 0.14);
-            -webkit-backdrop-filter: blur(18px);
-            backdrop-filter: blur(18px);
+            border: 1px solid color-mix(in oklch, var(--se-color-line) 12%, transparent);
+            border-radius: 14px;
+            background: color-mix(in oklch, var(--se-color-surface) 86%, transparent);
+            padding: 4px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
           }
 
           .global-bottom-nav-item {
@@ -1175,14 +1174,15 @@ function GlobalNavigation({ requestScoringExit }) {
             gap: 3px;
             min-height: 54px;
             border: 0;
-            border-radius: 18px;
+            border-radius: 10px;
             background: transparent;
             color: var(--se-color-ink-muted);
             cursor: pointer;
-            font-family: var(--se-font-swiss);
-            font-size: 0.6875rem;
-            font-weight: 700;
-            letter-spacing: 0;
+            font-family: var(--se-font-mono);
+            font-size: 0.5625rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
             line-height: 1;
             position: relative;
           }
@@ -1240,8 +1240,8 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           .global-bottom-nav-item[aria-current="page"] {
-            background: rgba(0, 102, 255, 0.1);
-            color: var(--se-color-action);
+            background: var(--se-color-action-soft);
+            color: var(--se-color-action-strong);
           }
 
           body.has-mobile-input-focus .global-bottom-nav {
