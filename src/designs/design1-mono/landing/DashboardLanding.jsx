@@ -721,7 +721,7 @@ function ExistingUserDashboard({
       {/* ── Hero scorecard — landing-style card when nothing is live.
             Body tap = view the result in history; Rematch = quick match with the same teams. ── */}
       {!hasActive && (
-        <div style={{ position: 'relative', border: `1px solid ${t.border}`, borderRadius: 'calc(var(--radius) + 4px)', background: t.surface, boxShadow: `4px 4px 0 ${t.blue}`, boxSizing: 'border-box' }}>
+        <div style={{ position: 'relative', border: `1px solid ${t.border}`, borderRadius: 0, background: t.surface, boxShadow: `4px 4px 0 ${t.blue}`, boxSizing: 'border-box' }}>
           <CardCross top={3} left={6} />
           <CardCross top={3} right={6} />
           <CardCross bottom={3} left={6} />
