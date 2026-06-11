@@ -11,42 +11,43 @@ import SportIcon from './sportIcons';
 
 const QM_KEY = 'se_quickmatches';
 const MIN_TOURNAMENT_TEAMS = 2;
-const FALLBACK_TOURNAMENT_SPORT_ID = 'volleyball';
 
-/* ─── Tokens ─── */
+/* ─── Tokens (CSS variables from the design system in index.css — single source of truth) ─── */
 const t = {
-  blue: '#0066ff', blueLight: '#e8f0ff',
-  bg: '#fafafa', surface: '#ffffff', text: '#1a1a1a',
-  textSoft: '#555', textMuted: '#888', textFaint: '#bbb',
-  border: '#e8e8e8', borderStrong: '#1a1a1a',
-  green: '#16a34a', greenLight: '#dcfce7',
-  orange: '#ea580c', orangeLight: '#fff7ed',
-  cardShadow: '0 1px 4px rgba(0,0,0,0.05)',
-  r: 6,
+  blue: 'var(--primary)', blueLight: 'var(--accent)',
+  bg: 'var(--background)', surface: 'var(--card)', text: 'var(--foreground)',
+  textSoft: 'var(--se-color-ink-soft)', textMuted: 'var(--muted-foreground)', textFaint: 'var(--muted-foreground)',
+  border: 'var(--border)', borderStrong: 'var(--border)',
+  /* Interior dividers dissect content softly; pure black is reserved for object edges. */
+  divider: 'color-mix(in oklch, var(--border) 14%, transparent)',
+  green: 'var(--primary)', greenLight: 'var(--accent)',
+  orange: 'var(--se-color-warning)', orangeLight: 'var(--se-color-warning-soft)',
+  cardShadow: 'var(--shadow-2xs)',
+  r: 'var(--radius)',
 };
 
 /* ─── Layered style tokens ─── */
 const s = {
-  sportCard: { background: t.surface, border: 'none', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px 12px' },
-  btn: { borderRadius: 6 },
+  sportCard: { background: t.surface, border: `1px solid ${t.border}`, borderRadius: 'calc(var(--radius) + 4px)', boxShadow: t.cardShadow, padding: '16px 12px' },
+  btn: { borderRadius: 'var(--radius)' },
   activeRow: { background: t.blueLight, border: 'none', borderRadius: 0, boxShadow: 'none' },
   darkCard: {
-    bg: '#1a1a1a', text: '#ffffff', muted: '#999', border: '#333',
-    outer: { background: '#1a1a1a', border: '1.5px solid #444', borderRadius: 0, boxShadow: `6px 6px 0 -1.5px #1a1a1a, 6px 6px 0 0 ${t.blue}` },
-    badge: { background: `${t.blue}25`, color: t.blue },
-    resumeBtn: { background: t.blue, color: '#fff', border: 'none' },
+    bg: 'var(--foreground)', text: 'var(--primary-foreground)', muted: '#999', border: '#333',
+    outer: { background: 'var(--foreground)', border: '1.5px solid #444', borderRadius: 0, boxShadow: `6px 6px 0 -1.5px var(--foreground), 6px 6px 0 0 ${t.blue}` },
+    badge: { background: `color-mix(in oklch, ${t.blue} 15%, transparent)`, color: t.blue },
+    resumeBtn: { background: t.blue, color: 'var(--primary-foreground)', border: 'none' },
   },
 };
 
 const btnPrimary = {
   fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.04em',
-  padding: '10px 16px', background: t.blue, color: '#fff', border: 'none',
+  padding: '10px 16px', background: t.blue, color: 'var(--primary-foreground)', border: 'none',
   borderRadius: s.btn.borderRadius, cursor: 'pointer', textAlign: 'center',
 };
 const btnSecondary = {
   fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.04em',
   padding: '10px 16px', background: 'transparent', color: t.text,
-  border: `1.5px solid ${t.border}`, borderRadius: s.btn.borderRadius,
+  border: `1px solid ${t.border}`, borderRadius: s.btn.borderRadius,
   cursor: 'pointer', textAlign: 'center',
 };
 
@@ -56,6 +57,19 @@ const bareButton = {
   padding: 0,
   margin: 0,
   textAlign: 'inherit',
+};
+
+/* Corner cross marks — the landing scorecard's signature detail */
+function CardCross({ top, left, right, bottom }) {
+  return (
+    <span aria-hidden="true" style={{ position: 'absolute', top, left, right, bottom, fontFamily: MONO, fontSize: '0.5rem', color: t.textFaint, lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>+</span>
+  );
+}
+CardCross.propTypes = {
+  top: PropTypes.number,
+  left: PropTypes.number,
+  right: PropTypes.number,
+  bottom: PropTypes.number,
 };
 
 const allSportsList = getSportsList();
@@ -132,23 +146,6 @@ function getSportFromName(name) {
   if (!name) return null;
   const lower = name.toLowerCase();
   return SPORT_NAMES.find(s => lower.includes(s.toLowerCase())) || null;
-}
-
-function getNewTournamentPath({
-  activeTournaments = [],
-  displayTournaments = [],
-  favoriteSports = [],
-  recentMatches = [],
-} = {}) {
-  const candidateIds = [
-    recentMatches[0]?.sport,
-    activeTournaments[0]?.sportId,
-    displayTournaments[0]?.sportId,
-    favoriteSports[0]?.id,
-    FALLBACK_TOURNAMENT_SPORT_ID,
-  ];
-  const sportId = candidateIds.find((id) => id && getSportById(id)) || FALLBACK_TOURNAMENT_SPORT_ID;
-  return `/${sportId}/tournament/new`;
 }
 
 function getWinnerLabel(winner) {
@@ -234,7 +231,7 @@ function SportGrid({ selectedSport, pickSport }) {
             ...bareButton,
           background: selectedSport === sp.id ? t.text : t.surface,
           color: selectedSport === sp.id ? '#fff' : t.text,
-          border: `1.5px solid ${selectedSport === sp.id ? t.text : t.border}`,
+          border: `1px solid ${selectedSport === sp.id ? t.text : t.border}`,
           borderRadius: t.r, padding: '14px 8px', textAlign: 'center', cursor: 'pointer',
           transition: 'all 200ms ease', boxShadow: t.cardShadow,
           }}
@@ -259,7 +256,7 @@ function ModeCards({ selectedMode, pickMode }) {
           ...bareButton,
         background: selectedMode === 'tournament' ? t.text : t.surface,
         color: selectedMode === 'tournament' ? '#fff' : t.text,
-        border: `1.5px solid ${selectedMode === 'tournament' ? t.text : t.border}`,
+        border: `1px solid ${selectedMode === 'tournament' ? t.text : t.border}`,
         borderRadius: t.r, padding: 20, cursor: 'pointer', transition: 'all 200ms ease', boxShadow: t.cardShadow,
         }}
       >
@@ -278,7 +275,7 @@ function ModeCards({ selectedMode, pickMode }) {
           ...bareButton,
         background: selectedMode === 'quick' ? t.text : t.surface,
         color: selectedMode === 'quick' ? '#fff' : t.text,
-        border: `1.5px solid ${selectedMode === 'quick' ? t.text : t.border}`,
+        border: `1px solid ${selectedMode === 'quick' ? t.text : t.border}`,
         borderRadius: t.r, padding: 20, cursor: 'pointer', transition: 'all 200ms ease', boxShadow: t.cardShadow,
         }}
       >
@@ -316,7 +313,7 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: tm.trim() ? t.blue : t.textFaint, width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
               <input id={`wizard-team-${idx + 1}`} value={tm} onChange={e => updateTourneyTeam(idx, e.target.value)} placeholder={`Team ${idx + 1}`}
-                style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `1.5px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
+                style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `2px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
               {tourneyTeams.length > MIN_TOURNAMENT_TEAMS && (
                 <button type="button" onClick={() => removeTourneyTeam(idx)} style={{ ...bareButton, fontSize: '0.75rem', color: t.textFaint, cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }} title="Remove team" aria-label={`Remove team ${idx + 1}`}>&times;</button>
               )}
@@ -362,7 +359,7 @@ function TournamentPreview({ sportIcon, sportName, tourneyName, tourneyTeams }) 
   const keyedTeams = withStableKeys(teams, 'preview-team');
   const matchCount = teams.length * (teams.length - 1) / 2;
   return (
-    <div style={{ background: t.surface, border: `1.5px solid ${t.text}`, borderRadius: t.r, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+    <div style={{ background: t.surface, border: `1px solid ${t.text}`, borderRadius: t.r, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SportIcon name={sportIcon} size={20} color={t.text} />
@@ -397,7 +394,7 @@ function TournamentPreview({ sportIcon, sportName, tourneyName, tourneyTeams }) 
 
 function QuickMatchPreview({ sportIcon, sportName, team1, team2 }) {
   return (
-    <div style={{ background: t.surface, border: `1.5px solid ${t.text}`, borderRadius: t.r, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+    <div style={{ background: t.surface, border: `1px solid ${t.text}`, borderRadius: t.r, padding: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SportIcon name={sportIcon} size={20} color={t.text} />
@@ -485,7 +482,7 @@ function NewUserFlow({ navigate }) {
           const { filled, current } = getProgressState(step, st);
           let background = t.border;
           if (filled) background = t.blue;
-          else if (current) background = `${t.blue}40`;
+          else if (current) background = `color-mix(in oklch, ${t.blue} 26%, transparent)`;
           return <div key={step} style={{ flex: 1, height: 3, borderRadius: 2, background, transition: 'background 400ms ease' }} />;
         })}
       </div>
@@ -578,96 +575,75 @@ function ExistingUserDashboard({
   const activeTournaments = allTournaments.filter(tr => tr.isActive);
   const displayTournaments = allTournaments.slice(0, 4);
   const displayName = getDashboardDisplayName(user);
-  const dashboardTitle = displayName ? `Welcome back, ${displayName}` : 'Welcome back';
   const playedCount = recentMatches.length;
   const tournamentCount = allTournaments.length;
 
+  /* Featured tier: real favourites first; else sports they recently played; else no tier at all. */
   const favoriteIds = user?.favoriteGames || [];
-  const favoriteSports = favoriteIds.length > 0
+  const recentSportIds = [...new Set(recentMatches.map(qm => qm.sport).filter(Boolean))];
+  const featuredSports = favoriteIds.length > 0
     ? allSportsList.filter(sp => favoriteIds.includes(sp.id))
-    : allSportsList.slice(0, 3);
-  const otherSports = allSportsList.filter(sp => !favoriteSports.some(f => f.id === sp.id));
-  const visibleOthers = showAllSports ? otherSports : otherSports.slice(0, 4);
-  const newTournamentPath = getNewTournamentPath({
-    activeTournaments,
-    displayTournaments,
-    favoriteSports,
-    recentMatches,
-  });
-
+    : recentSportIds.map(id => allSportsList.find(sp => sp.id === id)).filter(Boolean).slice(0, 4);
+  const featuredLabel = favoriteIds.length > 0 ? 'Favourites' : 'Recently played';
+  const otherSports = allSportsList.filter(sp => !featuredSports.some(f => f.id === sp.id));
+  const visibleOthers = showAllSports ? otherSports : otherSports.slice(0, 7);
   return (
-    <div style={{ maxWidth: 672, margin: '0 auto', padding: '18px 16px 56px' }}>
-      <section
-        aria-labelledby="dashboard-welcome-title"
-        style={{
-          background: t.surface,
-          border: `1px solid ${t.border}`,
-          borderRadius: 10,
-          boxShadow: t.cardShadow,
-          marginBottom: 20,
-          padding: 18,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
-          <div>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>
-              App dashboard
-            </span>
-            <h2 id="dashboard-welcome-title" style={{ fontSize: '1.45rem', fontWeight: 750, lineHeight: 1.12, margin: '6px 0 0', color: t.text }}>
-              {dashboardTitle}
-            </h2>
-          </div>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', padding: '6px 9px', borderRadius: 999, background: isAuthenticated ? t.greenLight : t.blueLight, color: isAuthenticated ? t.green : t.blue, whiteSpace: 'nowrap' }}>
+    <div style={{ maxWidth: 672, margin: '0 auto', padding: '20px 16px 96px' }}>
+      {/* ── Typographic header — no card, straight on the canvas ── */}
+      <header style={{ marginBottom: 18, position: 'relative' }}>
+        <div aria-hidden="true" style={{ position: 'absolute', top: 30, right: 0, opacity: 0.12, transform: 'rotate(-8deg)', pointerEvents: 'none' }}>
+          <SportIcon name={featuredSports[0]?.name || 'Cricket'} size={48} color={t.text} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>
+            App dashboard
+          </span>
+          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 8px', borderRadius: 'var(--radius)', background: t.blueLight, color: 'var(--accent-foreground)', whiteSpace: 'nowrap' }}>
             {isAuthenticated ? 'Signed in' : 'Guest mode'}
           </span>
         </div>
+        <h2 id="dashboard-welcome-title" style={{ fontSize: 'clamp(2rem, 9vw, 2.75rem)', fontWeight: 900, lineHeight: 0.95, letterSpacing: '-0.04em', margin: 0, color: t.text }}>
+          {displayName ? <>Welcome back,<br />{displayName}.</> : <>Welcome<br />back.</>}
+        </h2>
+        <div aria-hidden="true" style={{ height: 2, background: t.text, marginTop: 16 }} />
+      </header>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginBottom: 14 }}>
-          {[
-            ['Active', sessions.length],
-            ['Recent', playedCount],
-            ['Events', tournamentCount],
-          ].map(([label, value]) => (
-            <div key={label} style={{ border: `1px solid ${t.border}`, borderRadius: 8, padding: '10px 8px', background: t.bg }}>
-              <div style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textMuted }}>{label}</div>
-              <div style={{ fontFamily: MONO, fontSize: '1.2rem', fontWeight: 850, color: t.text, lineHeight: 1.1 }}>{value}</div>
-            </div>
-          ))}
-        </div>
+      {/* ── Stat line — pure typography, no chrome ── */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap', marginBottom: 16 }}>
+        {[
+          ['Active', sessions.length],
+          ['Recent', playedCount],
+          ['Events', tournamentCount],
+        ].map(([label, value]) => (
+          <span key={label} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: '1.125rem', fontWeight: 900, color: t.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>{label}</span>
+          </span>
+        ))}
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <button type="button" onClick={() => navigate('/play')} style={{ ...btnPrimary, minHeight: 44, fontSize: '0.75rem' }}>Start scoring</button>
-          <button type="button" onClick={() => navigate(newTournamentPath)} style={{ ...btnSecondary, minHeight: 44, fontSize: '0.75rem' }}>New tournament</button>
-        </div>
-
-        {cloudAuthAvailable && (
-          <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 12 }}>
-            {isAuthenticated ? (
-              <button
-                type="button"
-                aria-label="Account"
-                onClick={() => navigate('/profile')}
-                style={{ ...bareButton, width: '100%', minHeight: 42, display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${t.border}`, borderRadius: 8, cursor: 'pointer', padding: '10px 12px' }}
-              >
-                <span style={{ fontSize: '0.8125rem', fontWeight: 650, color: t.text }}>Account</span>
-                <span style={{ fontSize: '0.75rem', color: t.textMuted }}>Sync and profile settings</span>
-              </button>
-            ) : (
-              <div style={{ display: 'grid', gap: 8 }}>
-                <p style={{ margin: 0, fontSize: '0.8125rem', lineHeight: 1.45, color: t.textSoft }}>
-                  Continue as guest on this device, or use one account path to sign in or create an account for sync.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/login?returnTo=%2Fapp')}
-                  style={{ ...btnSecondary, width: '100%', minHeight: 42, fontSize: '0.75rem', borderColor: t.blue, color: t.blue }}
-                >
-                  Sign in or create account
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+      {cloudAuthAvailable && (
+        isAuthenticated ? (
+          <button
+            type="button"
+            aria-label="Account"
+            onClick={() => navigate('/profile')}
+            style={{ ...bareButton, width: '100%', minHeight: 46, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, cursor: 'pointer', padding: '10px 14px', marginBottom: 12 }}
+          >
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.text }}>Account</span>
+            <span style={{ fontSize: '0.75rem', color: t.textMuted }}>Sync and profile settings &rarr;</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate('/login?returnTo=%2Fapp')}
+            style={{ ...bareButton, width: '100%', minHeight: 46, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, cursor: 'pointer', padding: '10px 14px', marginBottom: 12 }}
+          >
+            <span style={{ fontSize: '0.8125rem', color: t.textSoft }}>Guest on this device</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue }}>Sign in &rarr;</span>
+          </button>
+        )
+      )}
 
       {/* ── ACTIVE STATE ── */}
       {hasActive && (
@@ -680,7 +656,7 @@ function ExistingUserDashboard({
             const scores = session.participants.map(p => session.scores[p.id]?.total ?? 0);
             const sportName = getSportFromName(session.name);
             const statusLabel = session.status === 'paused' ? 'PAUSED' : 'LIVE';
-            const badgeBg = session.status === 'paused' ? { background: `${t.orange}25`, color: t.orange } : d.badge;
+            const badgeBg = session.status === 'paused' ? { background: `color-mix(in oklch, ${t.orange} 15%, transparent)`, color: t.orange } : d.badge;
 
             return (
               <button
@@ -725,8 +701,8 @@ function ExistingUserDashboard({
                   onClick={() => navigate(`/${tr.sportId}/tournament/${tr.id}`)}
                   style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer', ...s.activeRow }}
                 >
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: t.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <SportIcon name={tr.sportIcon} size={18} color={t.blue} />
+                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius)', border: `1px solid ${t.border}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+                    <SportIcon name={tr.sportIcon} size={18} color={t.text} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 600, color: t.text }}>{tr.name}</div>
@@ -742,85 +718,148 @@ function ExistingUserDashboard({
         </div>
       )}
 
-      {/* ── INACTIVE STATE ── */}
+      {/* ── Hero scorecard — landing-style card when nothing is live.
+            Body tap = view the result in history; Rematch = quick match with the same teams. ── */}
       {!hasActive && (
-        <div style={{ borderTop: `1px solid ${t.border}`, marginTop: 14, paddingTop: 12 }}>
-          <p style={{ fontSize: '0.8125rem', color: t.textMuted, margin: 0 }}>
-            No active games right now.
-          </p>
+        <div style={{ position: 'relative', border: `1px solid ${t.border}`, borderRadius: 'calc(var(--radius) + 4px)', background: t.surface, boxShadow: `4px 4px 0 ${t.blue}`, boxSizing: 'border-box' }}>
+          <CardCross top={3} left={6} />
+          <CardCross top={3} right={6} />
+          <CardCross bottom={3} left={6} />
+          <CardCross bottom={3} right={6} />
+          {recentMatches[0] ? (
+            <>
+              <button
+                type="button"
+                aria-label="View last match in history"
+                onClick={() => navigate('/history')}
+                style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 0', cursor: 'pointer' }}
+              >
+                <span style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em' }}>&#9679; LAST MATCH</span>
+                  {getSportById(recentMatches[0].sport)?.name && (
+                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textSoft }}>{getSportById(recentMatches[0].sport).name}</span>
+                  )}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingBottom: 12 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textSoft, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{recentMatches[0].team1}</span>
+                  <span style={{ flexShrink: 0, fontFamily: MONO, fontSize: '1.5rem', fontWeight: 900, color: t.text, fontVariantNumeric: 'tabular-nums' }}>{getScore(recentMatches[0])}</span>
+                  <span style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textSoft, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{recentMatches[0].team2}</span>
+                </span>
+              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
+                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
+                <button
+                  type="button"
+                  className="dash-action"
+                  aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
+                  onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
+                  style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+                >
+                  Rematch &#9656;
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/play')}
+              style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
+            >
+              <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
+              <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Start your first match.</span>
+              <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
+            </button>
+          )}
         </div>
       )}
 
       {/* ── Sports ── */}
-      </section>
-
-      <div style={{ paddingTop: 4, marginBottom: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>Sports</span>
-          {!showAllSports && (
-            <button type="button" onClick={() => setShowAllSports(true)} style={{ ...bareButton, fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>Browse all &rarr;</button>
-          )}
-          {showAllSports && (
-            <button type="button" onClick={() => setShowAllSports(false)} style={{ ...bareButton, fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer' }}>Show less</button>
-          )}
+      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 24, paddingTop: 18, marginBottom: 28 }}>
+        <div style={{ marginBottom: 4 }}>
+          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>01 / Sports</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(favoriteSports.length, 3)}, 1fr)`, gap: 12, marginBottom: 16 }}>
-          {favoriteSports.map(sp => (
-            <div key={sp.id} style={{ padding: '20px', cursor: 'pointer', ...s.sportCard }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <SportIcon name={sp.name} size={28} color={t.text} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: t.text }}>{sp.name}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => navigate(`/${sp.id}/tournament`)} style={{ ...btnPrimary, flex: 1, fontSize: '0.625rem', padding: '8px 8px' }}>Tournament</button>
-                <button type="button" onClick={() => navigate(`/${sp.id}/quick`)} style={{ ...btnSecondary, flex: 1, fontSize: '0.625rem', padding: '8px 8px' }}>Quick Match</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <p style={{ margin: '0 0 14px', fontSize: '0.75rem', color: t.textMuted }}>
+          Quick starts scoring now. Tournament builds a bracket.
+        </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+        {/* Featured tier — only when the user has favourites or recent play */}
+        {featuredSports.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: t.textFaint, display: 'block', marginBottom: 2 }}>{featuredLabel}</span>
+            {featuredSports.map((sp, i) => (
+              <div key={sp.id} className="dash-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: i < featuredSports.length - 1 ? `1px solid ${t.divider}` : 'none' }}>
+                <SportIcon name={sp.name} size={22} color={t.text} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 700, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
+                <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/quick`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Quick &#9656;</button>
+                <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/tournament`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.text, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Tournament</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* All sports — naked icon tiles, border appears on hover/press */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: 6 }}>
           {visibleOthers.map(sp => (
             <button
               key={sp.id}
               type="button"
+              className="dash-tile"
+              aria-label={`Quick match: ${sp.name}`}
               onClick={() => navigate(`/${sp.id}/quick`)}
-              style={{ ...bareButton, padding: '14px 10px', cursor: 'pointer', textAlign: 'center', ...s.sportCard }}
+              style={{ ...bareButton, padding: '12px 4px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, borderRadius: 'var(--radius)' }}
             >
-              <SportIcon name={sp.name} size={20} color={t.textSoft} />
-              <div style={{ fontSize: '0.75rem', fontWeight: 500, color: t.text, marginTop: 6 }}>{sp.name}</div>
+              <SportIcon name={sp.name} size={22} color={t.text} />
+              <span style={{ width: '100%', fontSize: '0.625rem', fontWeight: 600, color: t.textSoft, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
             </button>
           ))}
+          {otherSports.length > 7 && (
+            <button
+              type="button"
+              className="dash-tile"
+              onClick={() => setShowAllSports(!showAllSports)}
+              style={{ ...bareButton, padding: '12px 4px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, borderRadius: 'var(--radius)' }}
+            >
+              <span aria-hidden="true" style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: '1.05rem', fontWeight: 800, color: t.blue, lineHeight: 1 }}>{showAllSports ? '−' : '+'}</span>
+              <span style={{ width: '100%', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.blue, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{showAllSports ? 'Less' : `${otherSports.length - 7} more`}</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* ── Recent matches ── */}
       {recentMatches.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 24, marginBottom: 48 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>Recent</span>
-            <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 18, marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>02 / Recent</span>
+            <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
           </div>
           {recentMatches.map((qm, i) => {
             const sportConfig = getSportById(qm.sport);
             const sportName = sportConfig?.name || null;
+            const team1Won = qm.winner === qm.team1;
+            const team2Won = qm.winner === qm.team2;
             return (
               <div key={qm.id}>
-                {i > 0 && <div style={{ height: 1, background: t.border }} />}
+                {i > 0 && <div style={{ height: 1, background: t.divider }} />}
                 <button
                   type="button"
-                  style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', cursor: 'pointer' }}
+                  className="dash-row"
+                  style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', cursor: 'pointer' }}
                   onClick={() => navigate('/history')}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <SportIcon name={sportName} size={16} color={t.textMuted} />
-                    <span style={{ fontSize: '0.875rem', color: t.text }}>{qm.team1} vs {qm.team2}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <span style={{ fontFamily: MONO, fontSize: '0.875rem', fontWeight: 700, color: t.text, fontVariantNumeric: 'tabular-nums' }}>{getScore(qm)}</span>
-                    {qm.winner && <span style={{ fontSize: '0.6875rem', color: t.blue }}>{getWinnerLabel(qm.winner)}</span>}
-                  </div>
+                  <SportIcon name={sportName} size={18} color={t.textMuted} />
+                  <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                    <span style={{ display: 'block', fontSize: '0.875rem', color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: team1Won ? 800 : 500 }}>{qm.team1}</span>
+                      <span style={{ color: t.textFaint }}> vs </span>
+                      <span style={{ fontWeight: team2Won ? 800 : 500 }}>{qm.team2}</span>
+                    </span>
+                    <span style={{ display: 'block', marginTop: 2, fontSize: '0.6875rem', color: t.textMuted }}>
+                      {sportName ? `${sportName} · ` : ''}{qm.winner ? getWinnerLabel(qm.winner) : 'Completed'}
+                    </span>
+                  </span>
+                  <span style={{ fontFamily: MONO, fontSize: '1rem', fontWeight: 800, color: t.text, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{getScore(qm)}</span>
                 </button>
               </div>
             );
@@ -830,29 +869,29 @@ function ExistingUserDashboard({
 
       {/* ── Tournaments ── */}
       {displayTournaments.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>Tournaments</span>
-            <button type="button" onClick={() => navigate('/play')} style={{ ...bareButton, fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>View all &rarr;</button>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>03 / Tournaments</span>
+            <button type="button" onClick={() => navigate('/play')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>View all &rarr;</button>
           </div>
           {displayTournaments.map((tr, i) => (
             <div key={tr.id}>
-              {i > 0 && <div style={{ height: 1, background: t.border }} />}
+              {i > 0 && <div style={{ height: 1, background: t.divider }} />}
               <button
                 type="button"
                 onClick={() => navigate(`/${tr.sportId}/tournament/${tr.id}`)}
                 style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: tr.isActive ? t.blueLight : t.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <SportIcon name={tr.sportIcon} size={18} color={tr.isActive ? t.blue : t.green} />
+                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius)', border: `1px solid ${t.border}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
+                    <SportIcon name={tr.sportIcon} size={18} color={t.text} />
                   </div>
                   <div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 600, color: t.text }}>{tr.name}</div>
                     <div style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: 2 }}>{tr.teams?.length || 0} teams &middot; {tr.sportName}</div>
                   </div>
                 </div>
-                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 600, padding: '4px 10px', borderRadius: 10, background: tr.isActive ? t.blueLight : t.greenLight, color: tr.isActive ? t.blue : t.green }}>
+                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', padding: '4px 10px', borderRadius: 'var(--radius)', background: tr.isActive ? t.blueLight : t.greenLight, color: 'var(--accent-foreground)' }}>
                   {tr.isActive ? `${tr.completed}/${tr.total}` : 'DONE'}
                 </span>
               </button>
@@ -860,6 +899,17 @@ function ExistingUserDashboard({
           ))}
         </div>
       )}
+
+      {/* Micro-interactions for rows, actions, and tiles */}
+      <style>{`
+        .dash-row { transition: background 150ms ease; }
+        .dash-action { border-radius: var(--radius); transition: background 150ms ease, transform 120ms ease; }
+        .dash-action:hover { background: var(--muted); transform: translateY(-1px); }
+        .dash-action:active { transform: translateY(0); background: var(--accent); }
+        .dash-tile { border: 1px solid transparent; transition: border-color 150ms ease, background 150ms ease, transform 120ms ease, box-shadow 150ms ease; }
+        .dash-tile:hover { border-color: var(--border); background: var(--card); transform: translateY(-1px); box-shadow: var(--shadow-2xs); }
+        .dash-tile:active { transform: translateY(0); box-shadow: none; background: var(--accent); border-color: var(--border); }
+      `}</style>
     </div>
   );
 }
@@ -1007,15 +1057,6 @@ export default function DashboardLanding() {
         />
       )}
 
-      {/* ── Footer ── */}
-      <footer style={{
-        padding: '24px 32px', borderTop: '1.5px solid #1a1a1a',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        maxWidth: 672, margin: '0 auto',
-      }}>
-        <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 700, color: t.text }}>SCORE EASY</span>
-        <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted }}>&copy; 2025</span>
-      </footer>
     </div>
   );
 }

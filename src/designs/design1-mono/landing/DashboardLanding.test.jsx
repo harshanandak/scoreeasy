@@ -26,6 +26,7 @@ function renderDashboard() {
       <Routes>
         <Route path="/app" element={<DashboardLanding />} />
         <Route path="/:sport/tournament/new" element={<p>New tournament setup</p>} />
+        <Route path="/:sport/tournament" element={<p>Tournament hub</p>} />
         <Route path="/play" element={<p>Play hub</p>} />
         <Route path="/login" element={<p>Account entry</p>} />
         <Route path="/profile" element={<p>Profile</p>} />
@@ -73,17 +74,17 @@ describe('DashboardLanding start flow', () => {
     expect(screen.getByText('New tournament setup')).toBeInTheDocument();
   });
 
-  it('routes empty existing-user New tournament to the recent match sport setup', async () => {
+  it('routes the featured sport Tournament action to that sport tournament hub', async () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' }]));
 
     renderDashboard();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'New tournament' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Tournament' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/tournament/new');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/tournament');
     });
-    expect(screen.getByText('New tournament setup')).toBeInTheDocument();
+    expect(screen.getByText('Tournament hub')).toBeInTheDocument();
   });
 
   it('puts returning guest scoring and account choices above sports', async () => {
@@ -93,12 +94,12 @@ describe('DashboardLanding start flow', () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Welcome\s*back/i })).toBeInTheDocument();
     expect(screen.getByText('Guest mode')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start scoring' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'New tournament' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quick ▸' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tournament' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in or create account' }));
+    fireEvent.click(screen.getByRole('button', { name: /Sign in/i }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fapp');
@@ -121,9 +122,9 @@ describe('DashboardLanding start flow', () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole('heading', { name: 'Welcome back, harsha' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Welcome back,\s*harsha/i })).toBeInTheDocument();
     expect(screen.getByText('Signed in')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Sign in or create account' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Guest on this device/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Account' }));
 
@@ -139,7 +140,7 @@ describe('DashboardLanding start flow', () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole('button', { name: 'New tournament' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Tournament' })).toBeInTheDocument();
   });
 
   it('does not render a second dashboard navigation inside the app shell', async () => {
@@ -147,7 +148,7 @@ describe('DashboardLanding start flow', () => {
 
     renderDashboard();
 
-    expect(await screen.findByRole('button', { name: 'New tournament' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Tournament' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Find players/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
