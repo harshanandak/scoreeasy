@@ -1405,6 +1405,15 @@ export default function MonoQuickMatch() {
                 {isTeamSetupStep ? 'Setup match' : `Edit ${currentStepLabel.toLowerCase()}`}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => navigate(`/${sport}/tournament`)}
+              className="bg-transparent border-none cursor-pointer"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)', padding: '12px 0', minHeight: 44 }}
+              aria-label="Switch to tournament setup"
+            >
+              Tournament &rarr;
+            </button>
           </nav>
 
           {/* Step progress bar */}
@@ -1416,7 +1425,7 @@ export default function MonoQuickMatch() {
                   className="flex-1"
                   style={{
                     height: '3px',
-                    background: i < setupStep ? '#0066ff' : '#eee',
+                    background: i < setupStep ? 'var(--primary)' : 'var(--muted)',
                     transition: 'background 0.2s ease',
                   }}
                 />
