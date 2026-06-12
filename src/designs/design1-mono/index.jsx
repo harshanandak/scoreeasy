@@ -1180,7 +1180,7 @@ function GlobalNavigation({ requestScoringExit }) {
             cursor: pointer;
             font-family: var(--se-font-mono);
             font-size: 0.5625rem;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
             line-height: 1;

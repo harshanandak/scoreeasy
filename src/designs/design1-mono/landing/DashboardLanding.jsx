@@ -590,15 +590,15 @@ function ExistingUserDashboard({
   return (
     <div style={{ maxWidth: 672, margin: '0 auto', padding: '20px 16px 96px' }}>
       {/* ── Typographic header — no card, straight on the canvas ── */}
-      <header style={{ marginBottom: 18, position: 'relative' }}>
+      <header style={{ marginBottom: 24, position: 'relative' }}>
         <div aria-hidden="true" style={{ position: 'absolute', top: 30, right: 0, opacity: 0.12, transform: 'rotate(-8deg)', pointerEvents: 'none' }}>
           <SportIcon name={featuredSports[0]?.name || 'Cricket'} size={48} color={t.text} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>
+          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>
             App dashboard
           </span>
-          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 8px', borderRadius: 'var(--radius)', background: t.blueLight, color: 'var(--accent-foreground)', whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 8px', borderRadius: 'var(--radius)', background: t.blueLight, color: 'var(--accent-foreground)', whiteSpace: 'nowrap' }}>
             {isAuthenticated ? 'Signed in' : 'Guest mode'}
           </span>
         </div>
@@ -609,7 +609,7 @@ function ExistingUserDashboard({
       </header>
 
       {/* ── Stat line — pure typography, no chrome ── */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap', marginBottom: 20 }}>
         {[
           ['Active', sessions.length],
           ['Recent', playedCount],
@@ -617,7 +617,7 @@ function ExistingUserDashboard({
         ].map(([label, value]) => (
           <span key={label} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontFamily: MONO, fontSize: '1.125rem', fontWeight: 900, color: t.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted }}>{label}</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>{label}</span>
           </span>
         ))}
       </div>
@@ -735,9 +735,9 @@ function ExistingUserDashboard({
                 style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 0', cursor: 'pointer' }}
               >
                 <span style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em' }}>&#9679; LAST MATCH</span>
+                  <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em' }}>&#9679; LAST MATCH</span>
                   {getSportById(recentMatches[0].sport)?.name && (
-                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textSoft }}>{getSportById(recentMatches[0].sport).name}</span>
+                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textSoft }}>{getSportById(recentMatches[0].sport).name}</span>
                   )}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingBottom: 12 }}>
@@ -747,13 +747,13 @@ function ExistingUserDashboard({
                 </span>
               </button>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
-                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
+                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
                 <button
                   type="button"
                   className="dash-action"
                   aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
                   onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
-                  style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+                  style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
                 >
                   Rematch &#9656;
                 </button>
@@ -765,7 +765,7 @@ function ExistingUserDashboard({
               onClick={() => navigate('/play')}
               style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
             >
-              <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
+              <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
               <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Start your first match.</span>
               <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
             </button>
@@ -774,9 +774,9 @@ function ExistingUserDashboard({
       )}
 
       {/* ── Sports ── */}
-      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 24, paddingTop: 18, marginBottom: 28 }}>
+      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 28, paddingTop: 24, marginBottom: 36 }}>
         <div style={{ marginBottom: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>01 / Sports</span>
+          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>01 / Sports</span>
         </div>
 
         <p style={{ margin: '0 0 14px', fontSize: '0.75rem', color: t.textMuted }}>
@@ -786,7 +786,7 @@ function ExistingUserDashboard({
         {/* Featured tier — only when the user has favourites or recent play */}
         {featuredSports.length > 0 && (
           <div style={{ marginBottom: 18 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: t.textFaint, display: 'block', marginBottom: 2 }}>{featuredLabel}</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textFaint, display: 'block', marginBottom: 2 }}>{featuredLabel}</span>
             {featuredSports.map((sp, i) => (
               <div key={sp.id} className="dash-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: i < featuredSports.length - 1 ? `1px solid ${t.divider}` : 'none' }}>
                 <SportIcon name={sp.name} size={22} color={t.text} />
@@ -829,9 +829,9 @@ function ExistingUserDashboard({
 
       {/* ── Recent matches ── */}
       {recentMatches.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 18, marginBottom: 28 }}>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 24, marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>02 / Recent</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>02 / Recent</span>
             <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
           </div>
           {recentMatches.map((qm, i) => {
@@ -869,9 +869,9 @@ function ExistingUserDashboard({
 
       {/* ── Tournaments ── */}
       {displayTournaments.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 18 }}>
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.textMuted }}>03 / Tournaments</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>03 / Tournaments</span>
             <button type="button" onClick={() => navigate('/play')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>View all &rarr;</button>
           </div>
           {displayTournaments.map((tr, i) => (
