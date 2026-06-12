@@ -183,21 +183,25 @@ describe('MonoHistory', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Sport' })).getByRole('button', { name: 'Football' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Draws' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sport' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sport options' })).getByRole('button', { name: 'Football' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Draws' }));
 
     expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Close' }));
 
     expect(screen.getByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: City vs United' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Sort' })).getByRole('button', { name: 'Oldest' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sort options' })).getByRole('button', { name: 'Oldest' }));
 
     const rows = screen.getAllByRole('button', { name: /^View details:/ });
     expect(rows[0]).toHaveAccessibleName('View details: City vs United');

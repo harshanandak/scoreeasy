@@ -30,6 +30,16 @@ const RESULT_DRAW = 'draw';
 const RESULT_CLOSE = 'close';
 const SORT_NEWEST = 'newest';
 const SORT_OLDEST = 'oldest';
+const RESULT_LABELS = {
+  [RESULT_DECIDED]: 'Decided',
+  [RESULT_DRAW]: 'Draws',
+  [RESULT_CLOSE]: 'Close',
+};
+/* Every sport is offered, not just the ones already played — re-picking a chip clears it. */
+const ALL_SPORT_OPTIONS = getSportsList()
+  .map((sport) => sport.name)
+  .sort((a, b) => a.localeCompare(b))
+  .map((name) => ({ value: name, label: name }));
 
 function toTimestamp(value) {
   const parsed = Date.parse(value || '');
@@ -231,51 +241,48 @@ function buildTournamentEntries() {
   return entries.sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
 }
 
-function FilterChips({ label, value, options, onChange }) {
+function OptionChips({ label, options, selected, onPick }) {
   return (
-    <div role="group" aria-label={label}>
-      <span className="font-mono block" style={{ marginBottom: 6, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>{label}</span>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {options.map((option) => {
-          const active = value === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onChange(option.value)}
-              className="font-mono cursor-pointer"
-              style={{
-                minHeight: 40,
-                padding: '8px 14px',
-                fontSize: '0.625rem',
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                border: active ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
-                borderRadius: 'var(--radius)',
-                background: active ? 'var(--accent)' : 'transparent',
-                color: active ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
-                transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
-              }}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
+    <div role="group" aria-label={label} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+      {options.map((option) => {
+        const active = selected === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onPick(option.value)}
+            className="font-mono cursor-pointer"
+            style={{
+              minHeight: 40,
+              padding: '8px 14px',
+              fontSize: '0.625rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              border: active ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
+              borderRadius: 'var(--radius)',
+              background: active ? 'var(--accent)' : 'transparent',
+              color: active ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
+              transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-FilterChips.propTypes = {
+OptionChips.propTypes = {
   label: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
+  selected: PropTypes.string.isRequired,
   options: PropTypes.arrayOf(PropTypes.shape({
     value: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
   })).isRequired,
-  onChange: PropTypes.func.isRequired,
+  onPick: PropTypes.func.isRequired,
 };
 
 export default function MonoHistory() {
@@ -290,6 +297,7 @@ export default function MonoHistory() {
   const [resultFilter, setResultFilter] = useState(RESULT_ALL);
   const [sortOrder, setSortOrder] = useState(SORT_NEWEST);
   const [showFilters, setShowFilters] = useState(false);
+  const [openFilterSection, setOpenFilterSection] = useState(null);
   const [pendingClear, setPendingClear] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -372,11 +380,6 @@ export default function MonoHistory() {
         return sortOrder === SORT_NEWEST ? diff : -diff;
       });
   }, [allEntries, filter, resultFilter, searchQuery, sortOrder, sportFilter]);
-
-  const sportOptions = useMemo(() => {
-    return [...new Set(allEntries.map((entry) => entry.sportName).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b));
-  }, [allEntries]);
 
   const hasActiveDiscoveryFilter = Boolean(normalizeSearchValue(searchQuery))
     || sportFilter !== ANY_SPORT
@@ -522,29 +525,23 @@ export default function MonoHistory() {
           )}
         </nav>
 
-        {/* The summary board IS the type filter — tap a cell to filter. */}
-        <section className="mono-history-summary grid grid-cols-3 gap-0 mb-6" aria-label="History summary">
+        {/* The summary board IS the type filter — stat cards double as buttons. */}
+        <section className="grid grid-cols-3 gap-3 mb-6" aria-label="History summary">
           {[
             { id: 'all', label: 'All matches', value: totalCount },
             { id: 'quick', label: 'Quick', value: quickCount },
             { id: 'tournament', label: 'Tournaments', value: tournamentCount },
-          ].map((item, index) => (
+          ].map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setFilter(item.id)}
               aria-pressed={filter === item.id}
-              className="mono-summary-cell bg-transparent cursor-pointer text-left"
-              style={{
-                padding: '14px 16px 12px',
-                border: 'none',
-                borderLeft: index === 0 ? 'none' : '1px solid color-mix(in oklch, var(--border) 14%, transparent)',
-                borderBottom: filter === item.id ? '2px solid var(--primary)' : '2px solid transparent',
-                borderRadius: 'var(--radius)',
-              }}
+              className="mono-stat-strip mono-stat-card mono-stat-number-card text-center"
+              style={{ padding: '16px 12px' }}
             >
-              <div className="font-mono" style={{ fontSize: '1.375rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
-              <div className="font-mono" style={{ marginTop: 2, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: filter === item.id ? 'var(--accent-foreground)' : sportsTokens.color.inkMuted }}>{item.label}</div>
+              <p className="text-2xl font-bold font-mono mono-score" style={{ margin: 0, color: 'var(--foreground)' }}>{item.value}</p>
+              <p className="text-xs mt-1 mono-muted-text" style={{ margin: 0 }}>{item.label}</p>
             </button>
           ))}
         </section>
@@ -660,36 +657,84 @@ export default function MonoHistory() {
           </button>
 
           {showFilters && (
-            <div style={{ display: 'grid', gap: 12, paddingTop: 4 }}>
-              <FilterChips
-                label="Sport"
-                value={sportFilter}
-                onChange={setSportFilter}
-                options={[
-                  { value: ANY_SPORT, label: 'All' },
-                  ...sportOptions.map((sportName) => ({ value: sportName, label: sportName })),
-                ]}
-              />
-              <FilterChips
-                label="Result"
-                value={resultFilter}
-                onChange={setResultFilter}
-                options={[
-                  { value: RESULT_ALL, label: 'All' },
-                  { value: RESULT_DECIDED, label: 'Decided' },
-                  { value: RESULT_DRAW, label: 'Draws' },
-                  { value: RESULT_CLOSE, label: 'Close' },
-                ]}
-              />
-              <FilterChips
-                label="Sort"
-                value={sortOrder}
-                onChange={setSortOrder}
-                options={[
-                  { value: SORT_NEWEST, label: 'Newest' },
-                  { value: SORT_OLDEST, label: 'Oldest' },
-                ]}
-              />
+            <div style={{ paddingTop: 4 }}>
+              {/* Progressive filtering: pick a dimension, then its options open. */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  { id: 'sport', label: 'Sport', value: sportFilter === ANY_SPORT ? null : sportFilter },
+                  { id: 'result', label: 'Result', value: RESULT_LABELS[resultFilter] || null },
+                  { id: 'sort', label: 'Sort', value: sortOrder === SORT_OLDEST ? 'Oldest' : 'Newest' },
+                ].map((dimension) => {
+                  const open = openFilterSection === dimension.id;
+                  const engaged = open || Boolean(dimension.value);
+                  return (
+                    <button
+                      key={dimension.id}
+                      type="button"
+                      aria-label={dimension.label}
+                      aria-expanded={open}
+                      onClick={() => setOpenFilterSection(open ? null : dimension.id)}
+                      className="font-mono cursor-pointer"
+                      style={{
+                        minHeight: 40,
+                        padding: '8px 14px',
+                        fontSize: '0.625rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        border: engaged ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
+                        borderRadius: 'var(--radius)',
+                        background: engaged ? 'var(--accent)' : 'transparent',
+                        color: engaged ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
+                        transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
+                      }}
+                    >
+                      {dimension.label}{dimension.value ? ` · ${dimension.value}` : ''} <span aria-hidden="true">{open ? '−' : '+'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {openFilterSection === 'sport' && (
+                <OptionChips
+                  label="Sport options"
+                  options={ALL_SPORT_OPTIONS}
+                  selected={sportFilter}
+                  onPick={(value) => {
+                    setSportFilter(value === sportFilter ? ANY_SPORT : value);
+                    setOpenFilterSection(null);
+                  }}
+                />
+              )}
+              {openFilterSection === 'result' && (
+                <OptionChips
+                  label="Result options"
+                  options={[
+                    { value: RESULT_DECIDED, label: 'Decided' },
+                    { value: RESULT_DRAW, label: 'Draws' },
+                    { value: RESULT_CLOSE, label: 'Close' },
+                  ]}
+                  selected={resultFilter}
+                  onPick={(value) => {
+                    setResultFilter(value === resultFilter ? RESULT_ALL : value);
+                    setOpenFilterSection(null);
+                  }}
+                />
+              )}
+              {openFilterSection === 'sort' && (
+                <OptionChips
+                  label="Sort options"
+                  options={[
+                    { value: SORT_NEWEST, label: 'Newest' },
+                    { value: SORT_OLDEST, label: 'Oldest' },
+                  ]}
+                  selected={sortOrder}
+                  onPick={(value) => {
+                    setSortOrder(value);
+                    setOpenFilterSection(null);
+                  }}
+                />
+              )}
             </div>
           )}
 
