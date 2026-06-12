@@ -182,6 +182,7 @@ describe('MonoHistory', () => {
     expect(screen.queryByRole('button', { name: 'View details: Falcons vs Sharks' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     fireEvent.change(screen.getByLabelText('Filter by sport'), { target: { value: 'Football' } });
     fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'draw' } });
 

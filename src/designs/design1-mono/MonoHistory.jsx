@@ -241,6 +241,7 @@ export default function MonoHistory() {
   const [sportFilter, setSportFilter] = useState(ANY_SPORT);
   const [resultFilter, setResultFilter] = useState(RESULT_ALL);
   const [sortOrder, setSortOrder] = useState(SORT_NEWEST);
+  const [showFilters, setShowFilters] = useState(false);
   const [pendingClear, setPendingClear] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -473,22 +474,30 @@ export default function MonoHistory() {
           )}
         </nav>
 
+        {/* The summary board IS the type filter — tap a cell to filter. */}
         <section className="mono-history-summary grid grid-cols-3 gap-0 mb-6" aria-label="History summary">
           {[
-            { label: 'All matches', value: totalCount },
-            { label: 'Quick', value: quickCount },
-            { label: 'Tournaments', value: tournamentCount },
+            { id: 'all', label: 'All matches', value: totalCount },
+            { id: 'quick', label: 'Quick', value: quickCount },
+            { id: 'tournament', label: 'Tournaments', value: tournamentCount },
           ].map((item, index) => (
-            <div
-              key={item.label}
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setFilter(item.id)}
+              aria-pressed={filter === item.id}
+              className="bg-transparent cursor-pointer text-left"
               style={{
-                padding: '14px 16px',
-                borderLeft: index === 0 ? 0 : '1px solid color-mix(in oklch, var(--border) 14%, transparent)',
+                padding: '14px 16px 12px',
+                border: 'none',
+                borderLeft: index === 0 ? 'none' : '1px solid color-mix(in oklch, var(--border) 14%, transparent)',
+                borderBottom: filter === item.id ? '2px solid var(--primary)' : '2px solid transparent',
+                transition: 'border-color 150ms ease',
               }}
             >
               <div className="font-mono" style={{ fontSize: '1.375rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
-              <div className="font-mono" style={{ marginTop: 2, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: sportsTokens.color.inkMuted }}>{item.label}</div>
-            </div>
+              <div className="font-mono" style={{ marginTop: 2, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: filter === item.id ? 'var(--accent-foreground)' : sportsTokens.color.inkMuted }}>{item.label}</div>
+            </button>
           ))}
         </section>
 
@@ -579,25 +588,6 @@ export default function MonoHistory() {
           </button>
         )}
 
-        <div className="mono-tabs" role="tablist" aria-label="History filters">
-          {[
-            { id: 'all', label: 'All', count: totalCount },
-            { id: 'quick', label: 'Quick', count: quickCount },
-            { id: 'tournament', label: 'Tournament', count: tournamentCount },
-          ].map((chip) => (
-            <button
-              key={chip.id}
-              role="tab"
-              aria-selected={filter === chip.id}
-              className={filter === chip.id ? 'mono-tab mono-tab-active' : 'mono-tab'}
-              style={{ fontSize: '0.75rem' }}
-              onClick={() => setFilter(chip.id)}
-            >
-              {chip.label} ({chip.count})
-            </button>
-          ))}
-        </div>
-
         <section className="mono-control-band mb-6">
           <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
             Find match
@@ -611,6 +601,17 @@ export default function MonoHistory() {
             placeholder="Search team, sport, winner, tournament..."
           />
 
+          <button
+            type="button"
+            onClick={() => setShowFilters(value => !value)}
+            aria-expanded={showFilters}
+            className="bg-transparent border-none cursor-pointer font-mono"
+            style={{ padding: '10px 0', minHeight: 44, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)' }}
+          >
+            Filters <span aria-hidden="true">{showFilters ? '−' : '+'}</span>
+          </button>
+
+          {showFilters && (
           <div className="mono-control-grid">
             <label className="text-xs mono-muted-text">
               <span className="block mb-1">Sport</span>
@@ -658,6 +659,7 @@ export default function MonoHistory() {
               </select>
             </label>
           </div>
+          )}
 
           {hasActiveDiscoveryFilter && filteredEntries.length > 0 && (
             <button
