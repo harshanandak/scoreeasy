@@ -11,7 +11,6 @@ import {
 } from '../../utils/storage';
 import { loadHistory } from '../../utils/universalStorage';
 import { getSportById, getSportsList } from '../../models/sportRegistry';
-import { getPriorityStartActions } from '../../utils/startActions';
 import {
   getCompletedAt,
   getTournamentMatches,
@@ -30,8 +29,6 @@ const RESULT_DRAW = 'draw';
 const RESULT_CLOSE = 'close';
 const SORT_NEWEST = 'newest';
 const SORT_OLDEST = 'oldest';
-const priorityStartButtonStyle = { minHeight: 44, padding: '10px' };
-const priorityStartSecondaryStyle = { ...priorityStartButtonStyle, background: '#fff' };
 
 function toTimestamp(value) {
   const parsed = Date.parse(value || '');
@@ -486,11 +483,11 @@ export default function MonoHistory() {
               key={item.label}
               style={{
                 padding: '14px 16px',
-                borderLeft: index === 0 ? 0 : `1px solid ${sportsTokens.color.line}`,
+                borderLeft: index === 0 ? 0 : '1px solid color-mix(in oklch, var(--border) 14%, transparent)',
               }}
             >
-              <div className="font-mono text-2xl font-bold" style={{ color: sportsTokens.color.action }}>{item.value}</div>
-              <div className="text-xs uppercase tracking-widest" style={{ color: sportsTokens.color.inkMuted }}>{item.label}</div>
+              <div className="font-mono" style={{ fontSize: '1.375rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
+              <div className="font-mono" style={{ marginTop: 2, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: sportsTokens.color.inkMuted }}>{item.label}</div>
             </div>
           ))}
         </section>
@@ -602,7 +599,7 @@ export default function MonoHistory() {
         </div>
 
         <section className="mono-control-band mb-6">
-          <label htmlFor="history-search" className="text-xs uppercase tracking-widest block mb-2 mono-muted-text">
+          <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
             Find match
           </label>
           <input
@@ -694,100 +691,78 @@ export default function MonoHistory() {
                 Clear filters
               </button>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {getPriorityStartActions().map((action) => (
-                <button
-                  key={action.sportId}
-                  type="button"
-                  className={action.primary ? 'mono-btn-primary' : 'mono-btn'}
-                  style={action.primary ? priorityStartButtonStyle : priorityStartSecondaryStyle}
-                  onClick={() => navigate(`/play?sport=${action.sportId}`)}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => navigate('/play')}
-              >
-                Tournament
-              </button>
-            </div>
+            <button
+              type="button"
+              className="mono-btn-primary w-full"
+              style={{ minHeight: 44, padding: '10px' }}
+              onClick={() => navigate('/play')}
+            >
+              Choose a sport
+            </button>
           </section>
         ) : (
           <div className="mono-history-list flex flex-col">
-            {filteredEntries.map((entry) => (
-              <div key={entry.id} className="mono-card mono-history-row" style={{ padding: '16px 0' }}>
-                <div className="flex items-start justify-between gap-3">
-                  <button
-                    type="button"
-                    className="flex-1 bg-transparent border-none text-left cursor-pointer"
-                    style={{ padding: 0 }}
-                    onClick={() => setSelectedEntry(entry)}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <SportIcon name={entry.sportName} size={18} color="var(--se-color-ink-muted)" />
-                      <span className="text-sm font-medium" style={{ color: '#111' }}>
-                        {entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`}
-                      </span>
-                    </div>
-
-                    {entry.isLegacy && (
-                      <p className="text-xs mb-1 mono-muted-text">{entry.participants}</p>
-                    )}
-
-                    {!entry.isLegacy && entry.tournamentName && (
-                      <p className="text-xs mb-1 mono-muted-text">{entry.tournamentName}</p>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-mono font-bold" style={{ color: '#111' }}>
-                        {entry.score}
-                      </span>
-                      <span className="text-xs mono-action-text">
-                        {winnerLabel(entry.winner)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs font-mono mono-subtle-text">
-                        {formatDate(entry.date)}
-                      </span>
-                      {entry.elapsedSeconds > 0 && (
-                        <span className="text-xs font-mono mono-subtle-text">
-                          {formatElapsed(entry.elapsedSeconds)}
-                        </span>
+            {filteredEntries.map((entry, entryIndex) => (
+              <div
+                key={entry.id}
+                className="mono-history-row"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '12px 0',
+                  borderBottom: entryIndex < filteredEntries.length - 1 ? '1px solid color-mix(in oklch, var(--border) 14%, transparent)' : 'none',
+                }}
+              >
+                <button
+                  type="button"
+                  className="flex-1 bg-transparent border-none text-left cursor-pointer"
+                  style={{ padding: 0, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12 }}
+                  onClick={() => setSelectedEntry(entry)}
+                  aria-label={`View details: ${entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`}`}
+                >
+                  <SportIcon name={entry.sportName} size={18} color="var(--se-color-ink-muted)" />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span className="block text-sm" style={{ color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {entry.isLegacy ? (
+                        <span style={{ fontWeight: 600 }}>{entry.tournamentName}</span>
+                      ) : (
+                        <>
+                          <span style={{ fontWeight: entry.winner === entry.team1 ? 800 : 500 }}>{entry.team1}</span>
+                          <span style={{ color: 'var(--muted-foreground)' }}> vs </span>
+                          <span style={{ fontWeight: entry.winner === entry.team2 ? 800 : 500 }}>{entry.team2}</span>
+                        </>
                       )}
-                      <span className="text-xs mono-subtle-text">
-                        {entry.sportName}
-                      </span>
-                      <span className="text-xs mono-subtle-text">
-                        {entry.source === 'quick' ? 'Quick' : 'Tournament'}
-                      </span>
-                    </div>
-                    <span className="inline-block text-xs font-semibold mt-3 mono-action-text">
-                      View details
                     </span>
-                  </button>
+                    <span className="block text-xs" style={{ marginTop: 2, color: 'var(--muted-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {[
+                        winnerLabel(entry.winner),
+                        entry.sportName,
+                        entry.source === 'quick' ? 'Quick' : 'Tournament',
+                        entry.isLegacy ? entry.participants : entry.tournamentName,
+                        formatDate(entry.date),
+                        entry.elapsedSeconds > 0 ? formatElapsed(entry.elapsedSeconds) : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                  <span className="font-mono" style={{ flexShrink: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>
+                    {entry.score}
+                  </span>
+                </button>
 
-                  {entry.source === 'quick' && (
-                    <button
-                      onClick={() => {
-                        confirmDeleteQuickMatch(entry);
-                      }}
-                      className="mono-icon-button text-sm"
-                      style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
-                      title="Delete this match"
-                      aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
+                {entry.source === 'quick' && (
+                  <button
+                    onClick={() => {
+                      confirmDeleteQuickMatch(entry);
+                    }}
+                    className="mono-icon-button text-sm"
+                    style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px', flexShrink: 0 }}
+                    title="Delete this match"
+                    aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
+                  >
+                    &times;
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -795,7 +770,7 @@ export default function MonoHistory() {
 
         {selectedEntry && (
           <div className="mono-table-panel mono-history-detail mt-6" style={{ padding: '16px' }}>
-            <p className="text-xs uppercase tracking-widest mb-2 mono-muted-text">Match details</p>
+            <p className="font-mono mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Match details</p>
             <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
             </h2>
