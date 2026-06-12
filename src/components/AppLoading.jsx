@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 /**
  * Renders the branded loading state while app routes or auth state initialize.
  */
-export default function AppLoading({ message = 'Preparing scoreboards', compact = false }) {
+export default function AppLoading({ message = 'Loading Score Easy', compact = false }) {
   return (
     <div className={`app-loading${compact ? ' app-loading-compact' : ''}`} role="status" aria-live="polite">
       <div className="app-loading-panel" aria-label={message}>
