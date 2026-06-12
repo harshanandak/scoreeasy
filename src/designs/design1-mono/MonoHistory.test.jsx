@@ -183,21 +183,21 @@ describe('MonoHistory', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
-    fireEvent.change(screen.getByLabelText('Filter by sport'), { target: { value: 'Football' } });
-    fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'draw' } });
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sport' })).getByRole('button', { name: 'Football' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Draws' }));
 
     expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'close' } });
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Close' }));
 
     expect(screen.getByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: City vs United' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.change(screen.getByLabelText('Sort by date'), { target: { value: 'oldest' } });
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sort' })).getByRole('button', { name: 'Oldest' }));
 
     const rows = screen.getAllByRole('button', { name: /^View details:/ });
     expect(rows[0]).toHaveAccessibleName('View details: City vs United');

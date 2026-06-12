@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
@@ -229,6 +230,53 @@ function buildTournamentEntries() {
 
   return entries.sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
 }
+
+function FilterChips({ label, value, options, onChange }) {
+  return (
+    <div role="group" aria-label={label}>
+      <span className="font-mono block" style={{ marginBottom: 6, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>{label}</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {options.map((option) => {
+          const active = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(option.value)}
+              className="font-mono cursor-pointer"
+              style={{
+                minHeight: 40,
+                padding: '8px 14px',
+                fontSize: '0.625rem',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                border: active ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
+                borderRadius: 'var(--radius)',
+                background: active ? 'var(--accent)' : 'transparent',
+                color: active ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
+                transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
+              }}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+FilterChips.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+  })).isRequired,
+  onChange: PropTypes.func.isRequired,
+};
 
 export default function MonoHistory() {
   const navigate = useNavigate();
@@ -486,13 +534,13 @@ export default function MonoHistory() {
               type="button"
               onClick={() => setFilter(item.id)}
               aria-pressed={filter === item.id}
-              className="bg-transparent cursor-pointer text-left"
+              className="mono-summary-cell bg-transparent cursor-pointer text-left"
               style={{
                 padding: '14px 16px 12px',
                 border: 'none',
                 borderLeft: index === 0 ? 'none' : '1px solid color-mix(in oklch, var(--border) 14%, transparent)',
                 borderBottom: filter === item.id ? '2px solid var(--primary)' : '2px solid transparent',
-                transition: 'border-color 150ms ease',
+                borderRadius: 'var(--radius)',
               }}
             >
               <div className="font-mono" style={{ fontSize: '1.375rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</div>
@@ -588,7 +636,7 @@ export default function MonoHistory() {
           </button>
         )}
 
-        <section className="mono-control-band mb-6">
+        <section className="mb-6">
           <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
             Find match
           </label>
@@ -612,53 +660,37 @@ export default function MonoHistory() {
           </button>
 
           {showFilters && (
-          <div className="mono-control-grid">
-            <label className="text-xs mono-muted-text">
-              <span className="block mb-1">Sport</span>
-              <select
-                aria-label="Filter by sport"
+            <div style={{ display: 'grid', gap: 12, paddingTop: 4 }}>
+              <FilterChips
+                label="Sport"
                 value={sportFilter}
-                onChange={(event) => setSportFilter(event.target.value)}
-                className="mono-input w-full"
-                style={{ minHeight: 44 }}
-              >
-                <option value={ANY_SPORT}>All sports</option>
-                {sportOptions.map((sportName) => (
-                  <option key={sportName} value={sportName}>{sportName}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-xs mono-muted-text">
-              <span className="block mb-1">Result</span>
-              <select
-                aria-label="Filter by result"
+                onChange={setSportFilter}
+                options={[
+                  { value: ANY_SPORT, label: 'All' },
+                  ...sportOptions.map((sportName) => ({ value: sportName, label: sportName })),
+                ]}
+              />
+              <FilterChips
+                label="Result"
                 value={resultFilter}
-                onChange={(event) => setResultFilter(event.target.value)}
-                className="mono-input w-full"
-                style={{ minHeight: 44 }}
-              >
-                <option value={RESULT_ALL}>All results</option>
-                <option value={RESULT_DECIDED}>Decided</option>
-                <option value={RESULT_DRAW}>Draws and ties</option>
-                <option value={RESULT_CLOSE}>Close games</option>
-              </select>
-            </label>
-
-            <label className="text-xs mono-muted-text">
-              <span className="block mb-1">Date</span>
-              <select
-                aria-label="Sort by date"
+                onChange={setResultFilter}
+                options={[
+                  { value: RESULT_ALL, label: 'All' },
+                  { value: RESULT_DECIDED, label: 'Decided' },
+                  { value: RESULT_DRAW, label: 'Draws' },
+                  { value: RESULT_CLOSE, label: 'Close' },
+                ]}
+              />
+              <FilterChips
+                label="Sort"
                 value={sortOrder}
-                onChange={(event) => setSortOrder(event.target.value)}
-                className="mono-input w-full"
-                style={{ minHeight: 44 }}
-              >
-                <option value={SORT_NEWEST}>Newest first</option>
-                <option value={SORT_OLDEST}>Oldest first</option>
-              </select>
-            </label>
-          </div>
+                onChange={setSortOrder}
+                options={[
+                  { value: SORT_NEWEST, label: 'Newest' },
+                  { value: SORT_OLDEST, label: 'Oldest' },
+                ]}
+              />
+            </div>
           )}
 
           {hasActiveDiscoveryFilter && filteredEntries.length > 0 && (
@@ -703,7 +735,11 @@ export default function MonoHistory() {
             </button>
           </section>
         ) : (
-          <div className="mono-history-list flex flex-col">
+          <>
+            <p className="font-mono" style={{ margin: '0 0 2px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
+              {filter === 'quick' ? 'Quick matches' : filter === 'tournament' ? 'Tournament matches' : 'All matches'}
+            </p>
+            <div className="mono-history-list flex flex-col">
             {filteredEntries.map((entry, entryIndex) => (
               <div
                 key={entry.id}
@@ -767,7 +803,8 @@ export default function MonoHistory() {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          </>
         )}
 
         {selectedEntry && (

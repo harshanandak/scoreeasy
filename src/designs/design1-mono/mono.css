@@ -318,6 +318,20 @@
   box-shadow: var(--shadow-2xs);
 }
 
+/* Summary cells share the stat-card motion: the selected cell lifts out of the board. */
+.mono-summary-cell {
+  transition: transform var(--se-motion-standard) ease, background var(--se-motion-standard) ease, border-color 150ms ease;
+}
+
+.mono-summary-cell:hover {
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+}
+
+.mono-summary-cell[aria-pressed="true"] {
+  transform: translateY(-2px);
+  background: color-mix(in oklch, var(--se-color-action-soft) 12%, var(--se-color-surface));
+}
+
 .mono-history-detail {
   box-shadow: none;
   border-radius: var(--se-radius-card);
