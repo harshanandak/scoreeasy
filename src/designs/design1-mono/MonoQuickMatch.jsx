@@ -345,8 +345,8 @@ export default function MonoQuickMatch() {
   // dismissed here; they persist until the user resolves them.
   useEffect(() => {
     if (saveWarning && saveWarning.startsWith('Resumed')) {
-      const timer = setTimeout(() => setSaveWarning(''), 3300);
-      return () => clearTimeout(timer);
+      const dismissTimer = setTimeout(() => setSaveWarning(''), 3300);
+      return () => clearTimeout(dismissTimer);
     }
     return undefined;
   }, [saveWarning]);
