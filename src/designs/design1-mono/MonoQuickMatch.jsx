@@ -2467,8 +2467,10 @@ export default function MonoQuickMatch() {
     const rightTeam = sidesSwapped ? 1 : 2;
     const leftName = sidesSwapped ? team2Name : team1Name;
     const rightName = sidesSwapped ? team1Name : team2Name;
-    const leftAccent = leftTeam === 1 ? 'var(--primary)' : 'var(--se-color-warning)';
-    const rightAccent = rightTeam === 1 ? 'var(--primary)' : 'var(--se-color-warning)';
+    // Accent by state: the team ahead is green; a tie shows both teams brown;
+    // a trailing team is plain ink (black).
+    const teamAccent = (mine, other) =>
+      mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
 
     // Goals-based scoring
     if (isGoals) {
@@ -2476,8 +2478,8 @@ export default function MonoQuickMatch() {
       const rightScore = sidesSwapped ? gScore1 : gScore2;
 
       const goalHalves = [
-        { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: leftAccent, leading: leftScore > rightScore },
-        { side: 'right', name: rightName, score: rightScore, team: rightTeam, accent: rightAccent, leading: rightScore > leftScore },
+        { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: teamAccent(leftScore, rightScore), leading: leftScore > rightScore },
+        { side: 'right', name: rightName, score: rightScore, team: rightTeam, accent: teamAccent(rightScore, leftScore), leading: rightScore > leftScore },
       ];
       return (
         <div className="mono-scorer-screen mono-arena-screen">
@@ -2510,8 +2512,8 @@ export default function MonoQuickMatch() {
                     style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
                     aria-label={hasQuickButtons ? `${h.name} score` : `Add 1 to ${h.name}`}
                   >
-                    <span className="mono-arena-overline" style={{ color: h.leading ? h.accent : 'var(--se-color-ink-muted)' }}>{h.name}</span>
-                    <span className="mono-arena-num mono-score" style={{ color: h.leading ? h.accent : 'var(--se-color-ink)' }}>{h.score}</span>
+                    <span className="mono-arena-overline" style={{ color: h.accent }}>{h.name}</span>
+                    <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
                     {!hasQuickButtons && <span className="mono-arena-hint">Tap +1</span>}
                   </button>
                   {hasQuickButtons && (
@@ -2552,8 +2554,8 @@ export default function MonoQuickMatch() {
     const leftSetScore = rawLeftSetScore;
     const rightSetScore = rawRightSetScore;
     const setHalves = [
-      { side: 'left', name: leftName, score: leftSetScore, team: leftTeam, accent: leftAccent, leading: leftSetScore > rightSetScore, serving: tracksPointWinnerServe && servingTeam === leftTeam },
-      { side: 'right', name: rightName, score: rightSetScore, team: rightTeam, accent: rightAccent, leading: rightSetScore > leftSetScore, serving: tracksPointWinnerServe && servingTeam === rightTeam },
+      { side: 'left', name: leftName, score: leftSetScore, team: leftTeam, accent: teamAccent(leftSetScore, rightSetScore), leading: leftSetScore > rightSetScore, serving: tracksPointWinnerServe && servingTeam === leftTeam },
+      { side: 'right', name: rightName, score: rightSetScore, team: rightTeam, accent: teamAccent(rightSetScore, leftSetScore), leading: rightSetScore > leftSetScore, serving: tracksPointWinnerServe && servingTeam === rightTeam },
     ];
     const setsRule = format.type === 'best-of'
       ? `${format.points || 25} pts · win by 2`
@@ -2597,10 +2599,10 @@ export default function MonoQuickMatch() {
                   style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
                   aria-label={`Add point for ${h.name}`}
                 >
-                  <span className="mono-arena-overline" style={{ color: (h.leading || h.serving) ? h.accent : 'var(--se-color-ink-muted)' }}>
+                  <span className="mono-arena-overline" style={{ color: h.accent }}>
                     {h.serving ? '● ' : ''}{h.name}
                   </span>
-                  <span className="mono-arena-num mono-score" style={{ color: h.leading ? h.accent : 'var(--se-color-ink)' }}>{h.score}</span>
+                  <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
                   <span className="mono-arena-hint">Tap +1</span>
                 </button>
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
