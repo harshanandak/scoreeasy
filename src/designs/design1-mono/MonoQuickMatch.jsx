@@ -2266,8 +2266,8 @@ export default function MonoQuickMatch() {
         : `${otherScore.balls} balls`;
 
       return (
-        <div className="mono-scorer-screen">
-          <div className="mono-scorer-shell">
+        <div className="mono-scorer-screen mono-arena-screen">
+          <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {saveWarning && (
@@ -2346,6 +2346,9 @@ export default function MonoQuickMatch() {
                 {otherName} {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
               </p>
             </div>
+
+            {/* Spacer pushes the keypad into the thumb zone, filling the page */}
+            <div aria-hidden="true" style={{ flex: 1, minHeight: 8 }} />
 
             {/* Run buttons */}
             <div className="mono-scorer-run-grid">
