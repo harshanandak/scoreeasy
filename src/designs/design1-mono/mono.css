@@ -1098,6 +1098,18 @@ button.mono-stat-card {
   margin-bottom: 32px;
 }
 
+/* Cricket hero is the flex "sink": it absorbs reclaimed vertical space and
+   centers the batting summary so the score breathes (even whitespace above and
+   below) while the capped keypad stays a comfortable size below. */
+.mono-quick-cricket-score {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
 .mono-scorer-score-value {
   font-size: 3.75rem;
   line-height: 1;
@@ -1332,9 +1344,9 @@ button.mono-stat-card {
 .mono-cricket-keypad {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  margin-top: 14px;
+  margin-top: 16px;
   gap: 1px;
   background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
   border: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent);
@@ -1345,9 +1357,9 @@ button.mono-stat-card {
 .mono-cricket-keys {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;
+  grid-auto-rows: clamp(72px, 12vh, 104px);
   gap: 1px;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
 }
 
@@ -1659,7 +1671,7 @@ button.mono-stat-card {
   }
 
   .mono-quick-cricket-score {
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
 
   .mono-scorer-score-value {

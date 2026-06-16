@@ -2369,9 +2369,10 @@ export default function MonoQuickMatch() {
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
-              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)', margin: 0, lineHeight: 0.95, fontSize: 'clamp(3.5rem, 17vw, 6rem)' }}>
-                {currentScore.runs}<span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.45em' }}>/{currentScore.wickets}</span>
-                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.26em', fontWeight: 700, marginLeft: 8 }}>({oversDisplay})</span>
+              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '0.06em', color: 'var(--se-color-ink)', margin: 0, lineHeight: 0.95, fontSize: 'clamp(3.5rem, 17vw, 6rem)', fontVariantNumeric: 'tabular-nums' }}>
+                <span>{currentScore.runs}</span>
+                <span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.42em', fontWeight: 700 }}>/{currentScore.wickets}</span>
+                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.2em', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>({oversDisplay})</span>
               </p>
               <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', marginTop: 6 }}>
                 CRR {crr.toFixed(2)}
