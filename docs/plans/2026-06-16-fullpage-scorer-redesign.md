@@ -109,3 +109,58 @@ The CrickHeroes live scorer (Lions XI screenshot) shows this anatomy, top→bott
 - **Striker/non-striker batsmen** with runs(balls) + strike rotation, and **bowler** name + O-M-R-W figures. Our quick-match cricket is team-level only; adding per-player tracking is a sizable feature with storage + strike-rotation rules.
 
 **Decision:** ship the team-level CrickHeroes look (hero + this-over strip + CRR/projected + BYE/LB + keypad) now; treat batsman/bowler tracking as a separate opt-in feature.
+
+---
+
+## 11. As-built design system — canonical scorer language (2026-06-16, shipped on PR #86)
+
+This is the authoritative set of decisions realized in `MonoQuickMatch.jsx` + `mono.css`. **Every scoring surface must follow it** (see §12 for the propagation checklist). No one-off restyles, no hardcoded hex — tokens only.
+
+### 11.1 No boxes — line-divided, open zones
+- Team score "halves" are **borderless open tap zones**, NOT bordered/filled cards. No `border`, no fill, no radius, no shadow at rest. (`.mono-arena-half`)
+- **Tap zones are always LEFT/RIGHT (side by side), never top/bottom** — people score with two thumbs side-by-side, in BOTH portrait and landscape. `.mono-arena-grid` is `flex-direction: row` with `gap: 0`; the two zones split by a **single vertical 1px @14% hairline seam** (`.mono-arena-col + .mono-arena-col` border-left). Columns use `min-width: 0` to stay equal regardless of score width; the numeral clamp is width-aware (`clamp(3rem, min(22vh, 26vw), 8rem)`) so a 2-digit score fits a ~50vw column. Short/landscape viewports get a `@media (max-height: 540px)` compaction (tighter padding, hidden hint).
+- **Known gap:** on landscape *phones* the page still scrolls ~the global top-nav height — the wide-screen nav + the full-height (`100dvh`) scorer overflow. The arena itself fits; the fix is an app-shell change (immersive/compact nav on scorer routes in landscape), tracked separately.
+- The leading team is marked by a **short 2px accent baseline** under the numeral (`.mono-arena-half[data-leading="true"] .mono-arena-num::after`, width 56px) — the decisive "who's ahead" cue replaces the box.
+- Press feedback = a brief **accent-tint flash** only (`:active { background: color-mix(--score-accent 10%, surface) }`) — never a permanent box, transform, or shadow.
+- Focus = **inset** ring (`outline-offset: -3px`), since there's no frame for an outer ring to hug.
+
+### 11.2 Cricket keypad — brutalist-monotone, fading lines
+- **No tile grid, no box.** Keys sit transparent on the open canvas. Structure is carried only by **soft gradient hairlines that bleed out / fade at the ends** (`linear-gradient(<dir>, transparent, var(--cricket-line), transparent)`), never solid full borders. Drawn via the container's `background-image` (edges + grid dividers) and `::before` pseudo-elements (per-cell dividers). `--cricket-line: color-mix(--se-color-line 46%, transparent)`.
+- Run buttons are a **comfortable capped size** (`grid-auto-rows: clamp(72px, 12vh, 104px)`), never stretched to fill (no `flex: 1` on `.mono-cricket-keys`).
+- **Boundaries (4 & 6) share the single green accent** (`var(--primary)`) so they read as a matched pair — never two different colours (the old brown-4 / green-6 is dead).
+
+### 11.3 Hero & rhythm
+- The cricket hero is the **flex sink** (`.mono-quick-cricket-score { flex: 1 1 auto; justify-content: center }`) — it absorbs slack and centres the batting summary so the score breathes with even whitespace; the keypad stays a comfortable block below. Fill the viewport, **no scroll, no empty band**.
+- Score line: **baseline-aligned flex, tabular-nums** — big runs, faint `/wickets` (0.42em), muted uppercase `(overs)` (0.2em).
+- Generous top spacing (mobile screen padding-top 16px; topbar→seam ~18px).
+
+### 11.4 Chrome — controls, not cards
+- **Bottom action strip:** flat, line-divided tiles (no boxed buttons). Undo is an **icon-only ~46–58px square**; labelled actions (Swap) fill the rest as **uppercase mono labels**; a **short centered 22px fading divider** between tiles. Cricket folds Undo into the **OUT row** (no separate strip).
+- **End Match** = a small top **chip** (`.mono-scorer-end-chip`), red outline, `aria-label="End Match"`. Not a big bottom button.
+- **Topbar** = a flat spine, items vertically centered, no heavy frame.
+
+### 11.5 Notices — transient & toned
+- The **resume info** ("Resumed your match") is a **transient toast**: fixed top-centred pill, green status dot, **fades in → holds → fades out over ~3.3s then auto-dismisses** (`mono-note-toast` + a JS timeout), does NOT shift layout. Reduced-motion → static + timeout-dismiss.
+- Genuine **save errors** (danger) and **end-match validation** (warning) keep a proper in-flow `.mono-alert` box. Tone is derived in `ScoringNotice` (info | warning | danger).
+
+### 11.6 Tokens, lines, motion (hard rules)
+- **Tokens only.** `var(--primary)` (single green accent), `var(--se-color-warning)` brown (team-2 only), `var(--destructive)`, `var(--se-color-ink/-muted/-faint/-soft)`, `var(--se-color-surface)`, `var(--se-color-line)`, `var(--se-color-inverse)`, `var(--se-font-mono)`. **`#0066ff` is dead** — purge it and all `#888/#111/#ddd/#ccc/#fffbeb/#dc2626`-style literals.
+- **Lines:** 1px pure black = object edge (rare); **1px @14% = interior divider/seam**; 2px = emphasis only (e.g. leading baseline). No 1.5px.
+- **Radius:** 0 brutal score zones / keypad, 4px buttons, 8px dialogs.
+- **Brutalism-as-action:** bold/fill/shadow only on press; ambient chrome is flat hairlines, no shadow.
+- All animations collapse under `prefers-reduced-motion`; PropTypes defined on every in-file component.
+
+## 12. Propagation — apply the §11 language to ALL scoring surfaces
+
+`MonoQuickMatch.jsx` (cricket/goals/sets quick) is **done**. The following still use the **old design** (boxy blue `.mono-score-pad`/`.mono-score-grid`, dead `#0066ff`, hardcoded hex) and must be brought onto §11:
+
+| Surface | Old debt | Action |
+|---|---|---|
+| `scoring/MonoTennisLiveScore.jsx` | boxy `.mono-score-pad`, `#0066ff` border, `#888/#111/#ddd/#ccc` | borderless line-divided score zones + tokens |
+| `scoring/MonoGoalsLiveScore.jsx` | same | same |
+| `scoring/MonoSetsLiveScore.jsx` | same | same |
+| `scoring/MonoCricketLiveScore.jsx` | `#0066ff` + hardcoded hex, run-button grid | token cleanup; align keypad to §11.2 |
+| `scoring/MonoCricketTestLiveScore.jsx` | same | same |
+| `MonoCricketTournament.jsx`, `GenericGoalsTournament.jsx`, `GenericSetsTournament.jsx`, `MonoTournamentSetup.jsx`, `MonoTournamentList.jsx`, `MonoTournamentLiveScore.jsx` | `#0066ff` + hardcoded hex | token + line-divided pass (tournament family — secondary scope) |
+
+**DRY lever:** the three two-team live scorers (Tennis/Goals/Sets) share `.mono-score-grid` + `.mono-score-pad`. Restyle those classes once in `mono.css` to the borderless line-divided design (§11.1) and remove the inline `#0066ff`/hex overrides in each file — that updates all three together. Keep the `AppOwnedScoringPrompts.test.jsx` contract in sync with any class changes.

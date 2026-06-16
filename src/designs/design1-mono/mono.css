@@ -977,9 +977,9 @@ button.mono-stat-card {
 
 .mono-arena-grid {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* tap zones sit side by side — score left/right, never top/bottom */
   flex: 1;
-  gap: 0; /* one hairline seam (below) replaces the gap — line-divided, not boxed */
+  gap: 0; /* one vertical hairline seam (below) divides the two zones */
   min-height: 0;
   margin-bottom: 12px;
 }
@@ -989,11 +989,12 @@ button.mono-stat-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0; /* keep the two zones equal even with a wide score */
 }
 
 /* Single 1px @ ~14% black seam between the two team zones (Mono interior-divider rule). */
 .mono-arena-col + .mono-arena-col {
-  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+  border-left: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
 }
 
 /* Each half is an open typographic tap zone — NOT a boxed button. */
@@ -1043,7 +1044,9 @@ button.mono-stat-card {
 
 .mono-arena-num {
   font-family: var(--se-font-mono);
-  font-size: clamp(4rem, 20vh, 9rem);
+  /* fit the score in a ~50vw side-by-side column (portrait) while staying big in
+     a wide landscape half — limited by column width or available height */
+  font-size: clamp(3rem, min(22vh, 26vw), 8rem);
   font-weight: 900;
   line-height: 0.95;
   font-variant-numeric: tabular-nums;
@@ -1058,6 +1061,33 @@ button.mono-stat-card {
   height: 2px;
   margin: 12px auto 0;
   background: var(--score-accent, var(--primary));
+}
+
+/* Landscape / short viewports (e.g. a phone turned sideways): compact the chrome
+   so the two side-by-side tap halves fit with no scroll. Keyed on height, since a
+   landscape phone is wide (>640px) and would otherwise get the desktop spacing. */
+@media (max-height: 540px) {
+  .mono-arena-screen.mono-scorer-screen {
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .mono-arena-screen .mono-scorer-shell {
+    min-height: 0;
+  }
+  .mono-arena-screen .mono-scorer-topbar {
+    margin-bottom: 8px;
+  }
+  .mono-arena-seam {
+    padding: 0 0 6px;
+  }
+  .mono-arena-grid {
+    margin-bottom: 8px;
+  }
+  .mono-arena-hint {
+    display: none;
+  }
+  .mono-correct {
+    min-height: 32px;
+  }
 }
 
 .mono-arena-hint {
