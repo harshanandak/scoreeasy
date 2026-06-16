@@ -410,7 +410,7 @@ export default function MonoSetsLiveScore() {
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -480,7 +480,7 @@ export default function MonoSetsLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
@@ -494,8 +494,8 @@ export default function MonoSetsLiveScore() {
                 fontSize: '0.75rem',
                 minWidth: 0,
                 touchAction: 'manipulation',
-                borderColor: sidesSwapped ? '#0066ff' : '#ddd',
-                color: sidesSwapped ? '#0066ff' : '#111',
+                borderColor: sidesSwapped ? 'var(--primary)' : 'var(--se-color-line)',
+                color: sidesSwapped ? 'var(--primary)' : 'var(--se-color-ink)',
                 opacity: isInteractionLocked ? 0.45 : 1,
               }}
               title="Swap sides"
@@ -553,13 +553,13 @@ export default function MonoSetsLiveScore() {
               touchAction: 'manipulation',
             }}
           >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
-              {leftName} {showServeIndicator && leftServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
+            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }} aria-hidden="true">
+              {leftName} {showServeIndicator && leftServing ? <span style={{ color: 'var(--primary)' }}>SERVE</span> : null}
             </p>
             <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(leftScore, rightScore) }} aria-hidden="true">
               {leftScore}
             </p>
-            <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
+            <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-faint)' }} aria-hidden="true">
               {scoreCardVisualHint}
             </p>
           </div>
@@ -585,24 +585,24 @@ export default function MonoSetsLiveScore() {
               touchAction: 'manipulation',
             }}
           >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
-              {rightName} {showServeIndicator && rightServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
+            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }} aria-hidden="true">
+              {rightName} {showServeIndicator && rightServing ? <span style={{ color: 'var(--primary)' }}>SERVE</span> : null}
             </p>
             <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(rightScore, leftScore) }} aria-hidden="true">
               {rightScore}
             </p>
-            <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
+            <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-faint)' }} aria-hidden="true">
               {scoreCardVisualHint}
             </p>
           </div>
         </div>
 
         {/* Rules info */}
-        <p className="text-xs text-center mb-2" style={{ color: '#bbb' }}>
+        <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-faint)' }}>
           {targetPoints} points to win &middot; Win by {winBy}
         </p>
         {!isTouchDevice && (
-          <p className="text-xs text-center mb-6" style={{ color: '#ccc' }}>
+          <p className="text-xs text-center mb-6" style={{ color: 'var(--se-color-ink-faint)' }}>
             Keyboard: Q = {leftName} &middot; P = {rightName} &middot; U = Undo
           </p>
         )}
@@ -652,7 +652,7 @@ export default function MonoSetsLiveScore() {
                 onClick={saveDraft}
                 disabled={isInteractionLocked}
                 className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: isInteractionLocked ? 0.45 : 1 }}
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: isInteractionLocked ? 0.45 : 1 }}
               >
                 Save Draft
               </button>

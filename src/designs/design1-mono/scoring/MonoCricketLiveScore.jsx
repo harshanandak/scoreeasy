@@ -496,7 +496,7 @@ export default function MonoCricketLiveScore() {
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -516,11 +516,11 @@ export default function MonoCricketLiveScore() {
               {saveWarning}
             </div>
           )}
-          <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Match Tied!</h2>
-          <p className="text-sm mb-2" style={{ color: '#888' }}>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--se-color-ink)' }}>Match Tied!</h2>
+          <p className="text-sm mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             Both teams scored {scores.team1.runs}.
           </p>
-          <p className="text-sm mb-8" style={{ color: '#888' }}>Play a Super Over?</p>
+          <p className="text-sm mb-8" style={{ color: 'var(--se-color-ink-muted)' }}>Play a Super Over?</p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => {
@@ -562,20 +562,20 @@ export default function MonoCricketLiveScore() {
             </div>
           )}
           <div className="mono-scorer-topbar">
-            <span className="text-sm" style={{ color: '#888' }}>Super Over</span>
+            <span className="text-sm" style={{ color: 'var(--se-color-ink-muted)' }}>Super Over</span>
             <span className="mono-badge mono-badge-live">{soName} batting</span>
           </div>
 
           <div className="mono-scorer-main-score">
-            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>{soName}</p>
-            <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
-              {soScore.runs}<span style={{ color: '#bbb', fontSize: '0.5em' }}>/{soScore.wickets}</span>
+            <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>{soName}</p>
+            <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: 'var(--se-color-ink)' }}>
+              {soScore.runs}<span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.5em' }}>/{soScore.wickets}</span>
             </p>
-            <p className="text-sm font-mono" style={{ color: '#888' }}>
+            <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>
               {soScore.balls}/6 balls · {2 - soScore.wickets} wickets left
             </p>
             {soTarget !== null && (
-              <p className="text-sm mt-2" style={{ color: '#0066ff' }}>
+              <p className="text-sm mt-2" style={{ color: 'var(--primary)' }}>
                 Target: {soTarget + 1} · Need {Math.max(0, soTarget + 1 - soScore.runs)} from {6 - soScore.balls} balls
               </p>
             )}
@@ -627,8 +627,8 @@ export default function MonoCricketLiveScore() {
                 {saveWarning}
               </div>
             )}
-            <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Super Over Tied!</h2>
-            <p className="text-sm mb-8" style={{ color: '#888' }}>
+            <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--se-color-ink)' }}>Super Over Tied!</h2>
+            <p className="text-sm mb-8" style={{ color: 'var(--se-color-ink-muted)' }}>
               {team1Name}: {superOver.team1.runs}/{superOver.team1.wickets} · {team2Name}: {superOver.team2.runs}/{superOver.team2.wickets}
             </p>
             <div className="flex gap-3 justify-center">
@@ -669,7 +669,7 @@ export default function MonoCricketLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
@@ -684,17 +684,17 @@ export default function MonoCricketLiveScore() {
 
         {/* Gully rule indicators */}
         {format.oneTipOneHand && (
-          <p className="text-xs text-center mb-2" style={{ color: '#888' }}>One tip one hand active</p>
+          <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
         )}
 
         {/* Trial ball banner */}
         {showTrialBall && (
           <div className="mono-alert mono-alert-info text-center mb-4" style={{ padding: '12px 16px' }}>
-            <p className="text-sm font-medium" style={{ color: '#0066ff' }}>Trial Ball — first delivery doesn't count</p>
+            <p className="text-sm font-medium" style={{ color: 'var(--primary)' }}>Trial Ball — first delivery doesn't count</p>
             <button
               onClick={skipTrialBall}
               className="mono-btn mt-2"
-              style={{ padding: '6px 16px', fontSize: '0.75rem', borderColor: '#0066ff', color: '#0066ff' }}
+              style={{ padding: '6px 16px', fontSize: '0.75rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
             >
               Skip (Trial)
             </button>
@@ -703,20 +703,20 @@ export default function MonoCricketLiveScore() {
 
         {/* Batting team score */}
         <div className="mono-scorer-main-score">
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
+          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {currentName} batting
           </p>
-          <p key={scoreAnimKey} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-2" style={{ color: '#111' }}>
+          <p key={scoreAnimKey} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-2" style={{ color: 'var(--se-color-ink)' }}>
             {currentScore.runs}
-            <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
+            <span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
           </p>
-          <p className="text-sm font-mono mb-1" style={{ color: '#888' }}>
+          <p className="text-sm font-mono mb-1" style={{ color: 'var(--se-color-ink-muted)' }}>
             {oversDisplay} &middot; RR {currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls).toFixed(2) : '0.00'}
           </p>
 
           {/* Powerplay indicator */}
           {powerplayPhase && (
-            <p className="text-xs mt-1" style={{ color: '#0066ff' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--primary)' }}>
               {powerplayPhase.label} (Overs {powerplayPhase.start}-{powerplayPhase.end})
             </p>
           )}
@@ -730,20 +730,20 @@ export default function MonoCricketLiveScore() {
           {freeHit && (
             <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
               <p className="text-sm font-bold" style={{ color: '#ff6b00' }}>FREE HIT</p>
-              <p className="text-xs" style={{ color: '#888' }}>Run Out Only</p>
+              <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Run Out Only</p>
             </div>
           )}
 
           {/* Target line */}
           {target !== null && (
-            <p className="text-sm mt-2" style={{ color: '#0066ff' }}>
+            <p className="text-sm mt-2" style={{ color: 'var(--primary)' }}>
               Target: {target + 1} &middot; Need {Math.max(0, target + 1 - currentScore.runs)}
               {totalBalls !== Infinity ? ` from ${totalBalls - currentScore.balls} balls` : ''}
             </p>
           )}
 
           {!isTouchDevice && (
-            <p className="text-xs mt-3" style={{ color: '#ccc' }}>
+            <p className="text-xs mt-3" style={{ color: 'var(--se-color-ink-faint)' }}>
               Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
             </p>
           )}
@@ -751,7 +751,7 @@ export default function MonoCricketLiveScore() {
 
         {/* Other team score */}
         <div className="mono-score-mini text-center mb-4" style={{ padding: '12px 16px' }}>
-          <p className="text-xs" style={{ color: '#888' }}>
+          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
             {otherName}: {otherScore.runs}/{otherScore.wickets}
             {' '}({showOvers ? `${ballsToOvers(otherScore.balls)} ov` : `${otherScore.balls} balls`})
           </p>
@@ -797,9 +797,9 @@ export default function MonoCricketLiveScore() {
 
         {/* Innings complete message */}
         {isInningsComplete && !isMatchComplete && (
-          <div className="text-center mb-6 py-4" style={{ borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}>
-            <p className="text-sm font-medium" style={{ color: '#0066ff' }}>End of Innings</p>
-            <p className="text-xs mt-1" style={{ color: '#888' }}>
+          <div className="text-center mb-6 py-4" style={{ borderTop: '1px solid var(--se-color-line)', borderBottom: '1px solid var(--se-color-line)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--primary)' }}>End of Innings</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--se-color-ink-muted)' }}>
               {currentName}: {currentScore.runs}/{currentScore.wickets}
               {' '}({showOvers ? ballsToOvers(currentScore.balls) : `${currentScore.balls} balls`})
             </p>
@@ -838,7 +838,7 @@ export default function MonoCricketLiveScore() {
                 onClick={saveDraft}
                 disabled={scoringPrompt.isInteractionLocked}
                 className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
               >
                 Pause Match
               </button>

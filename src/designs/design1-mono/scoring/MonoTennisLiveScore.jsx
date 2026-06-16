@@ -617,7 +617,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       {scoringPrompt.renderPrompt(confirmPendingPrompt)}
       {/* Top bar */}
       <div className="mono-scorer-topbar">
-        <span className="text-sm font-swiss" style={{ color: '#888' }}>
+        <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
           {sportConfig?.name || 'Match'}
         </span>
         <div className="mono-scorer-topbar-actions">
@@ -631,8 +631,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
               fontSize: '0.75rem',
               minWidth: 0,
               touchAction: 'manipulation',
-              borderColor: sidesSwapped ? '#0066ff' : '#ddd',
-              color: sidesSwapped ? '#0066ff' : '#111',
+              borderColor: sidesSwapped ? 'var(--primary)' : 'var(--se-color-line)',
+              color: sidesSwapped ? 'var(--primary)' : 'var(--se-color-ink)',
               opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1,
             }}
             title="Swap sides"
@@ -667,11 +667,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
           style={{
             touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            borderColor: canScoreCurrentSet ? 'var(--primary)' : 'var(--se-color-line)',
             opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
+          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: 'var(--se-color-ink-muted)' }}>
             {leftName}
           </p>
           <p
@@ -681,7 +681,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           >
             {leftScoreDisplay}
           </p>
-          <p className="text-xs" style={{ color: '#888' }}>
+          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
             Games: {leftGames}
           </p>
         </button>
@@ -695,11 +695,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
           style={{
             touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
+            borderColor: canScoreCurrentSet ? 'var(--primary)' : 'var(--se-color-line)',
             opacity: canScoreCurrentSet ? 1 : 0.6,
           }}
         >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
+          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: 'var(--se-color-ink-muted)' }}>
             {rightName}
           </p>
           <p
@@ -709,7 +709,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           >
             {rightScoreDisplay}
           </p>
-          <p className="text-xs" style={{ color: '#888' }}>
+          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
             Games: {rightGames}
           </p>
         </button>
@@ -717,14 +717,14 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
       {/* Keyboard shortcuts hint (desktop only) */}
       {!isTouchDevice && (
-        <p className="text-xs text-center mb-6" style={{ color: '#ccc' }}>
+        <p className="text-xs text-center mb-6" style={{ color: 'var(--se-color-ink-faint)' }}>
           Keyboard: Q = {leftName} · P = {rightName} · U = Undo
         </p>
       )}
 
       {/* Set history */}
       <div className="mb-6">
-        <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
+        <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
           Match Score
         </h3>
         <div className="flex flex-col gap-2">
@@ -741,12 +741,12 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
                 key={setLabel}
                 className="flex items-center justify-between px-4 py-2 mono-row-panel text-sm"
                 style={{
-                  borderColor: isActive ? '#0066ff' : '#eee',
+                  borderColor: isActive ? 'var(--primary)' : 'var(--se-color-line)',
                   backgroundColor: set.completed ? '#fafafa' : '#fff',
                 }}
               >
-                <span style={{ color: isActive ? '#0066ff' : '#888' }}>{setLabel}</span>
-                <span className="font-mono font-bold" style={{ color: '#111' }}>
+                <span style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink-muted)' }}>{setLabel}</span>
+                <span className="font-mono font-bold" style={{ color: 'var(--se-color-ink)' }}>
                   {scoreDisplay}
                 </span>
               </div>
@@ -782,7 +782,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
               onClick={saveDraft}
               disabled={scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
             >
               Save Draft
             </button>

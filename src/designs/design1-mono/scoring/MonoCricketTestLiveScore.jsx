@@ -532,7 +532,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   if (!match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -553,11 +553,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               {saveWarning}
             </div>
           )}
-          <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Enforce Follow-on?</h2>
-          <p className="text-sm mb-2" style={{ color: '#888' }}>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--se-color-ink)' }}>Enforce Follow-on?</h2>
+          <p className="text-sm mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {team1Name} leads by {lead} runs.
           </p>
-          <p className="text-sm mb-8" style={{ color: '#888' }}>
+          <p className="text-sm mb-8" style={{ color: 'var(--se-color-ink-muted)' }}>
             Force {team2Name} to bat again?
           </p>
           <div className="flex gap-3 justify-center">
@@ -587,20 +587,20 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               {saveWarning}
             </div>
           )}
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>Match Complete</p>
+          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>Match Complete</p>
 
           {winnerName ? (
             <>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: '#111' }}>{winnerName}</h1>
-              <p className="text-sm mb-6" style={{ color: '#0066ff' }}>{matchResult.desc}</p>
+              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--se-color-ink)' }}>{winnerName}</h1>
+              <p className="text-sm mb-6" style={{ color: 'var(--primary)' }}>{matchResult.desc}</p>
             </>
           ) : (
-            <h1 className="text-2xl font-bold mb-6" style={{ color: '#111' }}>{matchResult.desc}</h1>
+            <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--se-color-ink)' }}>{matchResult.desc}</h1>
           )}
 
           {/* Innings summary table */}
           <div className="mono-soft-panel mb-8" style={{ padding: '16px 20px' }}>
-            <div className="flex justify-between text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
+            <div className="flex justify-between text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
               <span>Team</span>
               <div className="flex gap-8">
                 <span>1st Inn.</span>
@@ -612,11 +612,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               const name = getTeamName(teamId);
               const isWinner = matchResult.winner === teamId;
               return (
-                <div key={teamId} className="flex justify-between items-center py-2" style={{ borderTop: '1px solid #eee' }}>
-                  <span className="text-sm font-medium" style={{ color: isWinner ? '#111' : '#888' }}>
+                <div key={teamId} className="flex justify-between items-center py-2" style={{ borderTop: '1px solid var(--se-color-line)' }}>
+                  <span className="text-sm font-medium" style={{ color: isWinner ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                     {isWinner ? '\u2605 ' : ''}{name}
                   </span>
-                  <div className="flex gap-8 font-mono text-sm" style={{ color: isWinner ? '#111' : '#888' }}>
+                  <div className="flex gap-8 font-mono text-sm" style={{ color: isWinner ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                     {teamInns.map((inn, i) => (
                       <span key={`inn-result-${i}-${inn.runs}-${inn.wickets}`}>
                         {inn.runs > 0 || inn.allOut || inn.declared
@@ -663,7 +663,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
@@ -674,18 +674,18 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
         {/* Batting team score */}
         <div className="mono-scorer-main-score">
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
+          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {battingTeamName} batting
           </p>
-          <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
+          <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: 'var(--se-color-ink)' }}>
             {currentInning.runs}
-            <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentInning.wickets}</span>
+            <span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.5em' }}>/{currentInning.wickets}</span>
           </p>
-          <p className="text-sm font-mono mb-1" style={{ color: '#888' }}>
+          <p className="text-sm font-mono mb-1" style={{ color: 'var(--se-color-ink-muted)' }}>
             {ballsToOvers(currentInning.balls)} ov &middot; RR {currentInning.balls > 0 ? calculateRunRate(currentInning.runs, currentInning.balls).toFixed(2) : '0.00'}
           </p>
           {contextLine && (
-            <p className="text-sm mt-1" style={{ color: '#0066ff' }}>{contextLine}</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--primary)' }}>{contextLine}</p>
           )}
         </div>
 
@@ -696,7 +696,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             const hasData = inn.runs > 0 || inn.allOut || inn.declared;
             return (
               <div key={`inn-tab-${i}-${inn.teamId || 'unset'}`} className="text-center" style={{ minWidth: '60px' }}>
-                <span className="text-xs font-medium" style={{ color: isCurrent ? '#0066ff' : hasData ? '#111' : '#ccc' }}>
+                <span className="text-xs font-medium" style={{ color: isCurrent ? 'var(--primary)' : hasData ? 'var(--se-color-ink)' : 'var(--se-color-ink-faint)' }}>
                   {ORDINALS[i]}
                 </span>
               </div>
@@ -711,7 +711,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;
             const isCurrent = i === currentInningsIndex;
             return (
-              <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? '#111' : '#888' }}>
+              <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                 <span>{ORDINALS[i]}: {getTeamName(inn.teamId)}</span>
                 <span className="font-mono">
                   {hasData
@@ -757,7 +757,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         )}
 
         {!isTouchDevice && !isInningsOver && (
-          <p className="text-xs text-center mb-4" style={{ color: '#ccc' }}>
+          <p className="text-xs text-center mb-4" style={{ color: 'var(--se-color-ink-faint)' }}>
             Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
           </p>
         )}
@@ -778,7 +778,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
                 onClick={handleDeclare}
                 disabled={scoringPrompt.isInteractionLocked}
                 className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
               >
                 Declare
               </button>
@@ -796,7 +796,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
                 onClick={saveDraft}
                 disabled={scoringPrompt.isInteractionLocked}
                 className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
               >
                 Pause
               </button>

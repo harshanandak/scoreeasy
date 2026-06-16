@@ -399,7 +399,7 @@ export default function MonoGoalsLiveScore() {
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -463,7 +463,7 @@ export default function MonoGoalsLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
@@ -476,15 +476,15 @@ export default function MonoGoalsLiveScore() {
                 fontSize: '0.75rem',
                 minWidth: 0,
                 touchAction: 'manipulation',
-                borderColor: sidesSwapped ? '#0066ff' : '#ddd',
-                color: sidesSwapped ? '#0066ff' : '#111',
+                borderColor: sidesSwapped ? 'var(--primary)' : 'var(--se-color-line)',
+                color: sidesSwapped ? 'var(--primary)' : 'var(--se-color-ink)',
               }}
               title="Swap sides"
             >
               Swap
             </button>
             {isTimedMode ? (
-              <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? '#dc2626' : undefined }}>
+              <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? 'var(--destructive)' : undefined }}>
                 {overtimePeriod > 0
                   ? `OT ${overtimePeriod}`
                   : footballClockState
@@ -518,7 +518,7 @@ export default function MonoGoalsLiveScore() {
             role="region"
             aria-label={`${leftName} scoring`}
           >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
+            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
               {leftName}
             </p>
             <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(leftScore, rightScore) }} aria-label={`${leftName} score: ${leftScore}`}>
@@ -561,7 +561,7 @@ export default function MonoGoalsLiveScore() {
             role="region"
             aria-label={`${rightName} scoring`}
           >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
+            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
               {rightName}
             </p>
             <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(rightScore, leftScore) }} aria-label={`${rightName} score: ${rightScore}`}>
@@ -599,14 +599,14 @@ export default function MonoGoalsLiveScore() {
         </div>
 
         {/* Info */}
-        <p className="text-xs text-center mb-2" style={{ color: '#bbb' }}>
+        <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-faint)' }}>
           {isTimedMode ? `${Math.floor(timeLimit / 60)} min match` :
            effectiveFormat?.mode === 'points' ? `First to ${effectiveFormat.target}` : 'Free play'}
           {' · '}
           {sportConfig.config.drawAllowed ? 'Draws allowed' : 'No draws'}
         </p>
         {!isTouchDevice && (
-          <p className="text-xs text-center mb-6" style={{ color: '#ccc' }}>
+          <p className="text-xs text-center mb-6" style={{ color: 'var(--se-color-ink-faint)' }}>
             Keyboard: Q = {leftName} &middot; P = {rightName} &middot; U = Undo
           </p>
         )}
@@ -638,7 +638,7 @@ export default function MonoGoalsLiveScore() {
                 onClick={saveDraft}
                 disabled={scoringPrompt.isInteractionLocked}
                 className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
               >
                 Save Draft
               </button>
