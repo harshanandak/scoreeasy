@@ -164,10 +164,10 @@ function ThumbActionBar({ canUndo, onUndo, onSwap }) {
           disabled={!canUndo}
           className="mono-btn mono-quick-undo"
           aria-label="Undo last action"
+          title="Undo last action"
           style={{ color: canUndo ? 'var(--se-color-ink)' : 'var(--se-color-ink-faint)' }}
         >
           <UndoIcon />
-          <span>Undo</span>
         </button>
         {onSwap ? (
           <button type="button" onClick={onSwap} className="mono-btn">
@@ -2464,6 +2464,7 @@ export default function MonoQuickMatch() {
                   <button
                     type="button"
                     className="mono-arena-half"
+                    data-leading={h.leading ? 'true' : 'false'}
                     onClick={!hasQuickButtons ? () => addGoal(h.team) : undefined}
                     disabled={hasQuickButtons}
                     style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
@@ -2553,6 +2554,7 @@ export default function MonoQuickMatch() {
                 <button
                   type="button"
                   className="mono-arena-half"
+                  data-leading={h.leading ? 'true' : 'false'}
                   onClick={() => addPoint(h.team)}
                   style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
                   aria-label={`Add point for ${h.name}`}

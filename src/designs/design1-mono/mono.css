@@ -940,7 +940,7 @@ button.mono-stat-card {
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 10px;
+  gap: 0; /* one hairline seam (below) replaces the gap — line-divided, not boxed */
   min-height: 0;
   margin-bottom: 12px;
 }
@@ -952,6 +952,12 @@ button.mono-stat-card {
   min-height: 0;
 }
 
+/* Single 1px @ ~14% black seam between the two team zones (Mono interior-divider rule). */
+.mono-arena-col + .mono-arena-col {
+  border-top: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+}
+
+/* Each half is an open typographic tap zone — NOT a boxed button. */
 .mono-arena-half {
   flex: 1;
   width: 100%;
@@ -962,17 +968,22 @@ button.mono-stat-card {
   justify-content: center;
   gap: 4px;
   padding: 16px;
-  border: 1px solid var(--se-color-line);
+  border: 0;
   border-radius: 0;
-  background: color-mix(in oklch, var(--se-color-action-soft) 7%, var(--se-color-surface));
+  background: transparent;
   box-shadow: none;
   cursor: pointer;
-  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+  transition: background 150ms ease;
 }
 
+/* Press feedback = brief accent-tint flash only (no box edge, no transform, no shadow). */
 .mono-arena-half:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-2xs);
+  background: color-mix(in oklch, var(--score-accent, var(--se-color-action-soft)) 10%, var(--se-color-surface));
+}
+
+.mono-arena-half:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -3px;
 }
 
 .mono-arena-half:disabled {
@@ -997,6 +1008,17 @@ button.mono-stat-card {
   font-weight: 900;
   line-height: 0.95;
   font-variant-numeric: tabular-nums;
+}
+
+/* Leading team: one short, decisive 2px accent baseline under the numeral.
+   Replaces the box as the "this team is ahead" mark — typographic, not a frame. */
+.mono-arena-half[data-leading="true"] .mono-arena-num::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 2px;
+  margin: 12px auto 0;
+  background: var(--score-accent, var(--primary));
 }
 
 .mono-arena-hint {
@@ -1104,18 +1126,26 @@ button.mono-stat-card {
 }
 
 .mono-quick-action-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .mono-quick-action-row-three {
+  /* legacy 3-up grid (unused by the icon-only bar) */
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .mono-quick-action-row .mono-btn {
   min-height: 46px;
   padding: 10px;
+}
+
+/* Labelled actions (Swap) take the remaining width beside the compact Undo icon. */
+.mono-quick-action-row .mono-btn:not(.mono-quick-undo) {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* CrickHeroes-style "this over" ball strip */
@@ -1179,20 +1209,27 @@ button.mono-stat-card {
   color: var(--se-color-ink-muted);
 }
 
-/* Undo as a compact icon+label action; End Match moved to a small top chip. */
+/* Undo is a compact icon-only square; End Match lives in a small top chip. */
 .mono-quick-action-row-one {
-  grid-template-columns: minmax(0, 1fr);
+  /* cricket: undo only — pin the compact icon left, never stretch it full-width */
+  justify-content: flex-start;
 }
 
 .mono-quick-action-row-two {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  /* goals/sets: undo icon square + Swap fills the rest */
+  justify-content: flex-start;
 }
 
-.mono-quick-undo {
+.mono-quick-action-row .mono-quick-undo {
+  flex: 0 0 46px;
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0;
 }
 
 .mono-scorer-end-chip {
@@ -1593,14 +1630,13 @@ button.mono-stat-card {
   }
 
   .mono-scorer-control-strip > .mono-quick-action-row {
-    display: grid;
-  }
-
-  .mono-quick-action-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .mono-quick-action-row-three {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
