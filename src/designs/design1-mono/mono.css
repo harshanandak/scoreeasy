@@ -1186,9 +1186,20 @@ button.mono-stat-card {
   box-shadow: none;
 }
 
-/* A single hairline divider separates the tiles (no per-button box edges). */
+/* A short, centered hairline separates the tiles — sleeker than a full-height edge. */
 .mono-quick-action-row .mono-btn + .mono-btn {
-  border-left: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+  position: relative;
+}
+
+.mono-quick-action-row .mono-btn + .mono-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 22px;
+  background: color-mix(in oklch, var(--se-color-line) 24%, var(--se-color-surface));
 }
 
 .mono-quick-action-row .mono-btn:active {
@@ -1281,9 +1292,9 @@ button.mono-stat-card {
 }
 
 .mono-quick-action-row .mono-quick-undo {
-  flex: 0 0 46px;
-  width: 46px;
-  min-width: 46px;
+  flex: 0 0 58px;
+  width: 58px;
+  min-width: 58px;
   height: 46px;
   padding: 0;
   display: inline-flex;
@@ -1592,7 +1603,7 @@ button.mono-stat-card {
 @media (max-width: 640px) {
   .mono-scorer-screen {
     min-height: 100dvh;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .mono-scorer-shell {
@@ -1601,8 +1612,8 @@ button.mono-stat-card {
 
   .mono-scorer-topbar {
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 18px;
   }
 
   .mono-scorer-topbar-actions {
