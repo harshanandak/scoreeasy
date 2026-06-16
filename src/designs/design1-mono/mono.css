@@ -1179,6 +1179,46 @@ button.mono-stat-card {
   color: var(--se-color-ink-muted);
 }
 
+/* Undo as a compact icon+label action; End Match moved to a small top chip. */
+.mono-quick-action-row-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mono-quick-action-row-two {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.mono-quick-undo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mono-scorer-end-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in oklch, var(--destructive) 38%, transparent);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--destructive);
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.mono-scorer-end-chip:active {
+  background: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
 /* Line-divided cricket keypad — one flat surface dissected by hairlines, not boxy buttons.
    The keypad bg is the hairline colour; transparent child grids let it show through 1px gaps. */
 .mono-cricket-keypad {

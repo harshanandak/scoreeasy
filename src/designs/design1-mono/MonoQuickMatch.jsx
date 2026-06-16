@@ -138,37 +138,46 @@ function CorrectionControls({ teamName, onMinus }) {
   );
 }
 
-function ThumbActionBar({ canUndo, onUndo, onSwap, onEnd }) {
+function UndoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-2" />
+    </svg>
+  );
+}
+
+// Frequent action (Undo) stays in the thumb bar; rare End Match moves to a small top chip.
+function ThumbActionBar({ canUndo, onUndo, onSwap }) {
   return (
     <div className="mono-scorer-control-strip mono-quick-action-strip">
-      <div className={onSwap ? 'mono-quick-action-row mono-quick-action-row-three' : 'mono-quick-action-row'}>
+      <div className={`mono-quick-action-row ${onSwap ? 'mono-quick-action-row-two' : 'mono-quick-action-row-one'}`}>
         <button
           type="button"
           onClick={onUndo}
           disabled={!canUndo}
-          className="mono-btn"
-          style={{ opacity: canUndo ? 1 : 0.42 }}
+          className="mono-btn mono-quick-undo"
+          aria-label="Undo last action"
+          style={{ color: canUndo ? 'var(--se-color-ink)' : 'var(--se-color-ink-faint)' }}
         >
-          Undo
+          <UndoIcon />
+          <span>Undo</span>
         </button>
         {onSwap ? (
-          <button
-            type="button"
-            onClick={onSwap}
-            className="mono-btn"
-          >
+          <button type="button" onClick={onSwap} className="mono-btn">
             Swap
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={onEnd}
-          className="mono-btn mono-quick-end-button"
-        >
-          End Match
-        </button>
       </div>
     </div>
+  );
+}
+
+function EndMatchButton({ onEnd }) {
+  return (
+    <button type="button" onClick={onEnd} className="mono-scorer-end-chip" aria-label="End match">
+      End
+    </button>
   );
 }
 
@@ -2283,6 +2292,7 @@ export default function MonoQuickMatch() {
                 <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>{timer.formatted}</span>
                 {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">Innings {innings}</span>
+                <EndMatchButton onEnd={requestEndMatch} />
               </div>
             </div>
 
@@ -2388,7 +2398,6 @@ export default function MonoQuickMatch() {
             <ThumbActionBar
               canUndo={cricketHistory.length > 0}
               onUndo={undoCricketAction}
-              onEnd={requestEndMatch}
             />
           </div>
         </div>
@@ -2426,7 +2435,10 @@ export default function MonoQuickMatch() {
               <span className="text-sm font-mono" style={{ color: timerColor, fontWeight: 700 }}>
                 {isTimeUp ? "Time's up!" : timerDisplay}
               </span>
-              <span className="mono-badge mono-badge-live">{isPointsMode ? `First to ${format.target}` : 'Live'}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span className="mono-badge mono-badge-live">{isPointsMode ? `First to ${format.target}` : 'Live'}</span>
+                <EndMatchButton onEnd={requestEndMatch} />
+              </span>
             </div>
 
             {/* Arena: two full-bleed halves; whole half = +1 */}
@@ -2465,7 +2477,6 @@ export default function MonoQuickMatch() {
               canUndo={gScoreHistory.length > 0}
               onUndo={undoGoal}
               onSwap={handleSideSwap}
-              onEnd={requestEndMatch}
             />
           </div>
         </div>
@@ -2503,8 +2514,11 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-topbar">
             <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
             <span className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700 }}>{timer.formatted}</span>
-            <span className="mono-badge mono-badge-live">
-              {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span className="mono-badge mono-badge-live">
+                {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
+              </span>
+              <EndMatchButton onEnd={requestEndMatch} />
             </span>
           </div>
 
