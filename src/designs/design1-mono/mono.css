@@ -923,6 +923,91 @@ button.mono-stat-card {
   gap: 8px;
 }
 
+/* Full-bleed arena: two team halves fill the page; action bar sits at the bottom of the flex column. */
+.mono-arena-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.mono-arena-screen .mono-scorer-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+}
+
+.mono-arena-grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+  margin-bottom: 12px;
+}
+
+.mono-arena-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.mono-arena-half {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--se-color-line);
+  border-radius: 0;
+  background: color-mix(in oklch, var(--se-color-action-soft) 7%, var(--se-color-surface));
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+}
+
+.mono-arena-half:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-arena-half:disabled {
+  cursor: default;
+}
+
+.mono-arena-overline {
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mono-arena-num {
+  font-family: var(--se-font-mono);
+  font-size: clamp(4rem, 20vh, 9rem);
+  font-weight: 900;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-arena-hint {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-faint);
+}
+
 .mono-scorer-main-score {
   text-align: center;
   margin-bottom: 32px;

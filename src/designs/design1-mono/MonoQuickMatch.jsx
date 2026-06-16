@@ -2412,124 +2412,58 @@ export default function MonoQuickMatch() {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
 
+      const goalHalves = [
+        { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: leftAccent, leading: leftScore > rightScore },
+        { side: 'right', name: rightName, score: rightScore, team: rightTeam, accent: rightAccent, leading: rightScore > leftScore },
+      ];
       return (
-        <div className="min-h-screen px-6 py-10">
-          <div className="max-w-2xl mx-auto">
+        <div className="mono-scorer-screen mono-arena-screen">
+          <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {saveWarning && (
-              <div className="mono-alert mono-alert-danger mb-4">
-                {saveWarning}
-              </div>
+              <div className="mono-alert mono-alert-danger mb-4">{saveWarning}</div>
             )}
-            {/* Top bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+            {/* Top spine */}
+            <div className="mono-scorer-topbar">
               <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm font-mono" style={{ color: timerColor }}>
-                  {isTimeUp ? "Time's up!" : timerDisplay}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
-                <span className="mono-badge mono-badge-live">
-                  {isPointsMode ? `First to ${format.target}` : 'Live'}
-                </span>
-              </div>
+              <span className="text-sm font-mono" style={{ color: timerColor, fontWeight: 700 }}>
+                {isTimeUp ? "Time's up!" : timerDisplay}
+              </span>
+              <span className="mono-badge mono-badge-live">{isPointsMode ? `First to ${format.target}` : 'Live'}</span>
             </div>
 
-            <ScoringStatusStrip label="Scoring" value={`${leftName} vs ${rightName}`} lastAction={lastAction} />
-
-            {/* Score panels */}
-            <div className="mono-score-grid items-start mb-6">
-              {/* Left team */}
-              <div className="flex-1">
-                <button
-                  type="button"
-                  className="w-full flex flex-col items-center justify-center mono-score-pad"
-                  onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
-                  disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
-                  aria-label={hasQuickButtons ? `${leftName} score` : `Add score for ${leftName}`}
-                >
-                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
-                    Left side
-                  </p>
-                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    {leftName}
-                  </p>
-                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
-                    {leftScore}
-                  </p>
-                  {!hasQuickButtons && (
-                    <p className="text-xs mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>Tap +1</p>
+            {/* Arena: two full-bleed halves; whole half = +1 */}
+            <div className="mono-arena-grid">
+              {goalHalves.map((h) => (
+                <div className="mono-arena-col" key={h.side}>
+                  <button
+                    type="button"
+                    className="mono-arena-half"
+                    onClick={!hasQuickButtons ? () => addGoal(h.team) : undefined}
+                    disabled={hasQuickButtons}
+                    style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                    aria-label={hasQuickButtons ? `${h.name} score` : `Add 1 to ${h.name}`}
+                  >
+                    <span className="mono-arena-overline" style={{ color: h.leading ? h.accent : 'var(--se-color-ink-muted)' }}>{h.name}</span>
+                    <span className="mono-arena-num mono-score" style={{ color: h.leading ? h.accent : 'var(--se-color-ink)' }}>{h.score}</span>
+                    {!hasQuickButtons && <span className="mono-arena-hint">Tap +1</span>}
+                  </button>
+                  {hasQuickButtons && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
+                      {quickButtons.map((btn) => (
+                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </button>
-                <CorrectionControls
-                  teamName={leftName}
-                  onMinus={() => adjustGoalScore(leftTeam, -1)}
-                />
-              </div>
-
-              {/* Right team */}
-              <div className="flex-1">
-                <button
-                  type="button"
-                  className="w-full flex flex-col items-center justify-center mono-score-pad"
-                  onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
-                  disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
-                  aria-label={hasQuickButtons ? `${rightName} score` : `Add score for ${rightName}`}
-                >
-                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
-                    Right side
-                  </p>
-                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    {rightName}
-                  </p>
-                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
-                    {rightScore}
-                  </p>
-                  {!hasQuickButtons && (
-                    <p className="text-xs mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>Tap +1</p>
-                  )}
-                </button>
-                <CorrectionControls
-                  teamName={rightName}
-                  onMinus={() => adjustGoalScore(rightTeam, -1)}
-                />
-              </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+                    <CorrectionControls teamName={h.name} onMinus={() => adjustGoalScore(h.team, -1)} />
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Quick buttons per team (for button sports) */}
-            {hasQuickButtons && (
-              <div className="flex gap-4 mb-6">
-                <div className="flex-1 flex flex-wrap gap-2 justify-center">
-                  {quickButtons.map(btn => (
-                    <button
-                      key={`left-${btn.label}`}
-                      onClick={() => addGoal(leftTeam, btn.value)}
-                      className="mono-btn"
-                      style={{ padding: '8px 10px', fontSize: '0.75rem', touchAction: 'manipulation' }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2 justify-center">
-                  {quickButtons.map(btn => (
-                    <button
-                      key={`right-${btn.label}`}
-                      onClick={() => addGoal(rightTeam, btn.value)}
-                      className="mono-btn"
-                      style={{ padding: '8px 10px', fontSize: '0.75rem', touchAction: 'manipulation' }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <ThumbActionBar
               canUndo={gScoreHistory.length > 0}
@@ -2537,11 +2471,6 @@ export default function MonoQuickMatch() {
               onSwap={handleSideSwap}
               onEnd={requestEndMatch}
             />
-
-            <p className="text-xs text-center mt-4" style={{ color: 'var(--se-color-ink-faint)' }}>
-              {!hasQuickButtons ? `Tap a team to add 1 ${scoringUnit}` : null}
-              {isPointsMode && format.target ? ` · First to ${format.target}` : null}
-            </p>
           </div>
         </div>
       );
