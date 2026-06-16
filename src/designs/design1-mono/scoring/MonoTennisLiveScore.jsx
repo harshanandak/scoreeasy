@@ -557,9 +557,14 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     navigate(`/${sport}/tournament/${id}`);
   };
 
-  // Cancel and discard changes
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateBack);
+  // Cancel and discard changes — clear the in-progress quick draft so the app
+  // entry stops auto-resuming this match (otherwise you can't leave the scorer).
+  const discardAndExit = () => {
+    if (quickDraftKey) clearData(quickDraftKey);
+    navigateBack();
+  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if ((!isQuickMatch && !tournament) || !match) {
     return (
