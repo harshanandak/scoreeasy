@@ -1179,111 +1179,94 @@ button.mono-stat-card {
   color: var(--se-color-ink-muted);
 }
 
-/* Importance-weighted cricket keypad: common runs fill the lower half. */
-.mono-cricket-pad {
+/* Line-divided cricket keypad — one flat surface dissected by hairlines, not boxy buttons.
+   The keypad bg is the hairline colour; transparent child grids let it show through 1px gaps. */
+.mono-cricket-keypad {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   flex: 1;
   min-height: 0;
-  margin-top: 10px;
+  margin-top: 14px;
+  gap: 1px;
+  background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.mono-cricket-runs {
+.mono-cricket-keys {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: 1fr;
-  gap: 8px;
+  gap: 1px;
   flex: 1;
-  min-height: 168px;
+  min-height: 0;
 }
 
-.mono-cricket-run {
+.mono-cricket-keys-sec {
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  grid-auto-rows: auto;
+  flex: 0 0 auto;
+}
+
+.mono-cricket-key {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 56px;
-  border: 1px solid var(--se-color-line);
-  border-radius: var(--radius);
+  min-height: 52px;
+  border: none;
   background: var(--se-color-surface);
   color: var(--se-color-ink);
   font-family: var(--se-font-mono);
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.875rem;
+  font-weight: 700;
   line-height: 1;
-  box-shadow: none;
   cursor: pointer;
-  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+  transition: background 120ms ease;
 }
 
-.mono-cricket-run:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-2xs);
-}
-
-.mono-cricket-run small {
-  font-size: 0.5rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.mono-cricket-run-four {
-  background: var(--se-color-warning);
-  border-color: var(--se-color-warning);
-  color: var(--se-color-inverse);
-}
-
-.mono-cricket-run-six {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--se-color-inverse);
-}
-
-.mono-cricket-secondary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
-  gap: 8px;
-}
-
-.mono-cricket-sec-btn {
-  min-height: 46px;
-  border: 1px solid color-mix(in oklch, var(--se-color-line) 38%, var(--se-color-surface));
-  border-radius: var(--radius);
-  background: var(--se-color-surface);
-  color: var(--se-color-ink-soft);
-  font-family: var(--se-font-mono);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: background 150ms ease, transform 120ms ease;
-}
-
-.mono-cricket-sec-btn:active {
-  transform: translateY(1px);
+.mono-cricket-key:active {
   background: var(--accent);
 }
 
-.mono-cricket-out {
-  min-height: 52px;
-  width: 100%;
-  border: 1.5px solid var(--destructive);
-  border-radius: var(--radius);
+.mono-cricket-key small {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--se-color-ink-faint);
+}
+
+/* Boundaries pop by accent TEXT, not a filled box. */
+.mono-cricket-key-four { color: var(--se-color-warning); }
+.mono-cricket-key-six { color: var(--primary); }
+.mono-cricket-key-four small,
+.mono-cricket-key-six small { color: inherit; opacity: 0.85; }
+
+.mono-cricket-key-sec {
+  min-height: 46px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--se-color-ink-soft);
+}
+
+.mono-cricket-out-line {
+  min-height: 50px;
+  border: none;
   background: var(--se-color-surface);
   color: var(--destructive);
   font-family: var(--se-font-mono);
   font-size: 0.9375rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+  transition: background 120ms ease, color 120ms ease;
 }
 
-.mono-cricket-out:active {
-  transform: translateY(1px);
+.mono-cricket-out-line:active {
   background: var(--destructive);
   color: var(--se-color-inverse);
 }

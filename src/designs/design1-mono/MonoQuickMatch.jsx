@@ -2347,14 +2347,14 @@ export default function MonoQuickMatch() {
               </p>
             </div>
 
-            {/* Importance-weighted keypad — fills the lower half; common runs largest. */}
-            <div className="mono-cricket-pad">
-              <div className="mono-cricket-runs">
+            {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
+            <div className="mono-cricket-keypad">
+              <div className="mono-cricket-keys">
                 {[0, 1, 2, 3, 4, 6].filter((v) => CRICKET_RUN_VALUES.includes(v)).map((r) => (
                   <button
                     key={r}
                     onClick={() => addRuns(r)}
-                    className={`mono-cricket-run${r === 4 ? ' mono-cricket-run-four' : r === 6 ? ' mono-cricket-run-six' : ''}`}
+                    className={`mono-cricket-key${r === 4 ? ' mono-cricket-key-four' : r === 6 ? ' mono-cricket-key-six' : ''}`}
                     style={{ touchAction: 'manipulation' }}
                     aria-label={r === 4 ? 'Four runs' : r === 6 ? 'Six runs' : `${r} run${r === 1 ? '' : 's'}`}
                   >
@@ -2364,9 +2364,9 @@ export default function MonoQuickMatch() {
                 ))}
               </div>
 
-              <div className="mono-cricket-secondary">
+              <div className="mono-cricket-keys mono-cricket-keys-sec">
                 {CRICKET_RUN_VALUES.filter((v) => ![0, 1, 2, 3, 4, 6].includes(v)).map((r) => (
-                  <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-sec-btn" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
+                  <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
                 ))}
                 {[
                   { type: 'wide', label: 'WD' },
@@ -2374,13 +2374,13 @@ export default function MonoQuickMatch() {
                   { type: 'bye', label: 'BYE' },
                   { type: 'legBye', label: 'LB' },
                 ].map((ex) => (
-                  <button key={ex.type} onClick={() => addExtra(ex.type)} className="mono-cricket-sec-btn" style={{ touchAction: 'manipulation' }}>
+                  <button key={ex.type} onClick={() => addExtra(ex.type)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }}>
                     {ex.label}
                   </button>
                 ))}
               </div>
 
-              <button onClick={addWicket} className="mono-cricket-out" style={{ touchAction: 'manipulation' }}>
+              <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
                 {freeHit ? 'Run Out Only' : 'OUT'}
               </button>
             </div>
