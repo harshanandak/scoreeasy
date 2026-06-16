@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
@@ -138,6 +139,11 @@ function CorrectionControls({ teamName, onMinus }) {
   );
 }
 
+CorrectionControls.propTypes = {
+  teamName: PropTypes.string.isRequired,
+  onMinus: PropTypes.func.isRequired,
+};
+
 function UndoIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -180,6 +186,16 @@ function EndMatchButton({ onEnd }) {
     </button>
   );
 }
+
+ThumbActionBar.propTypes = {
+  canUndo: PropTypes.bool,
+  onUndo: PropTypes.func.isRequired,
+  onSwap: PropTypes.func,
+};
+
+EndMatchButton.propTypes = {
+  onEnd: PropTypes.func.isRequired,
+};
 
 // CrickHeroes-style "this over" strip, derived from the existing per-delivery log (no new storage).
 function cricketOverPips(history, innings, battingTeam) {
