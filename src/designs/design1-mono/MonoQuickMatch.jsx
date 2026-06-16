@@ -340,6 +340,17 @@ export default function MonoQuickMatch() {
   const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || 'Team B');
   const [saveWarning, setSaveWarning] = useState('');
 
+  // The "resumed your match" info is a transient toast — auto-dismiss it shortly
+  // after it appears. Real save errors / end-match validation messages are NOT
+  // dismissed here; they persist until the user resolves them.
+  useEffect(() => {
+    if (saveWarning && saveWarning.startsWith('Resumed')) {
+      const timer = setTimeout(() => setSaveWarning(''), 3300);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [saveWarning]);
+
   // Auth + Convex integration for match saving
   const { isAuthenticated, user } = useAuth();
 
