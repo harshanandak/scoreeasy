@@ -216,19 +216,18 @@ describe('app entry route contract', () => {
     const { container } = renderApp('/play');
 
     expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
-    let appNav = container.querySelector('.global-bottom-nav');
+    const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveClass('global-bottom-nav-native');
     expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
+    // The /play hub was simplified into a ledger-style chooser: the quick-match
+    // action now navigates straight to the sport scorer.
+    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=cricket');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
     });
-    appNav = container.querySelector('.global-bottom-nav');
-    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
-    expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
   });
 
   it('keeps the signed-in account menu reachable from app bottom navigation', async () => {

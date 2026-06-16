@@ -214,10 +214,13 @@ describe('app-owned scoring prompts', () => {
     expect(quickMatchSource).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain("background: '#fffbeb'");
-    expect(quickMatchSource).toContain('mono-scorer-run-button-accent');
+    // MonoQuickMatch's cricket scorer was redesigned to a line-divided keypad
+    // (mono-cricket-*); the other two surfaces still use the run-button grid.
+    expect(quickMatchSource).toContain('mono-cricket-keypad');
+    expect(quickMatchSource).toContain('mono-cricket-key-six');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
-    expect(quickMatchSource).toContain('mono-btn-danger mono-quick-wicket-button');
+    expect(quickMatchSource).toContain('mono-cricket-out-line');
     expect(quickMatchSource).not.toContain('autoFocus');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');

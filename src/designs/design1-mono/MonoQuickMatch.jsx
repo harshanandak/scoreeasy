@@ -181,7 +181,7 @@ function ThumbActionBar({ canUndo, onUndo, onSwap }) {
 
 function EndMatchButton({ onEnd }) {
   return (
-    <button type="button" onClick={onEnd} className="mono-scorer-end-chip" aria-label="End match">
+    <button type="button" onClick={onEnd} className="mono-scorer-end-chip" aria-label="End Match">
       End
     </button>
   );
@@ -2410,7 +2410,7 @@ export default function MonoQuickMatch() {
             {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
             <div className="mono-cricket-keypad">
               <div className="mono-cricket-keys">
-                {[0, 1, 2, 3, 4, 6].filter((v) => CRICKET_RUN_VALUES.includes(v)).map((r) => (
+                {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
                   <button
                     key={r}
                     onClick={() => addRuns(r)}
@@ -2425,7 +2425,7 @@ export default function MonoQuickMatch() {
               </div>
 
               <div className="mono-cricket-keys mono-cricket-keys-sec">
-                {CRICKET_RUN_VALUES.filter((v) => ![0, 1, 2, 3, 4, 6].includes(v)).map((r) => (
+                {CRICKET_RUN_VALUES.filter((v) => v === 5).map((r) => (
                   <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
                 ))}
                 {[
