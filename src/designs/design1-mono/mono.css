@@ -1339,37 +1339,66 @@ button.mono-stat-card {
   color: var(--se-color-inverse);
 }
 
-/* Line-divided cricket keypad — one flat surface dissected by hairlines, not boxy buttons.
-   The keypad bg is the hairline colour; transparent child grids let it show through 1px gaps. */
+/* Brutalist-monotone keypad — no tile grid, no box. Structure is carried only by
+   soft fading hairlines that bleed out at the ends; keys sit on the open canvas. */
 .mono-cricket-keypad {
+  --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent);
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
   min-height: 0;
   margin-top: 16px;
-  gap: 1px;
-  background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
-  border: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent);
-  border-radius: var(--radius);
-  overflow: hidden;
+  /* edges only: a fading hairline at the top and bottom of the pad */
+  background-image:
+    linear-gradient(to right, transparent, var(--cricket-line), transparent),
+    linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
 }
 
 .mono-cricket-keys {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: clamp(72px, 12vh, 104px);
-  gap: 1px;
+  gap: 0;
   flex: 0 0 auto;
   min-height: 0;
+  /* two fading column dividers + one fading row divider — no cell borders */
+  background-image:
+    linear-gradient(to bottom, transparent, var(--cricket-line), transparent),
+    linear-gradient(to bottom, transparent, var(--cricket-line), transparent),
+    linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 1px 100%, 1px 100%, 100% 1px;
+  background-position: 33.33% 50%, 66.67% 50%, 50% 50%;
+  background-repeat: no-repeat;
 }
 
 .mono-cricket-keys-sec {
   grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
   grid-auto-rows: auto;
   flex: 0 0 auto;
+  /* reset the primary 3-col dividers; just a fading top section divider */
+  background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+/* fading vertical divider between the secondary cells (5 · WD · NB · BYE · LB) */
+.mono-cricket-keys-sec .mono-cricket-key-sec:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 56%;
+  background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent);
 }
 
 .mono-cricket-key {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1377,7 +1406,7 @@ button.mono-stat-card {
   gap: 2px;
   min-height: 52px;
   border: none;
-  background: var(--se-color-surface);
+  background: transparent;
   color: var(--se-color-ink);
   font-family: var(--se-font-mono);
   font-size: 1.875rem;
@@ -1398,8 +1427,9 @@ button.mono-stat-card {
   color: var(--se-color-ink-faint);
 }
 
-/* Boundaries pop by accent TEXT, not a filled box. */
-.mono-cricket-key-four { color: var(--se-color-warning); }
+/* Boundaries pop by accent TEXT, not a filled box — both share the single
+   green accent so 4 and 6 read as a matched pair, not two different colours. */
+.mono-cricket-key-four { color: var(--primary); }
 .mono-cricket-key-six { color: var(--primary); }
 .mono-cricket-key-four small,
 .mono-cricket-key-six small { color: inherit; opacity: 0.85; }
@@ -1415,7 +1445,7 @@ button.mono-stat-card {
 .mono-cricket-out-line {
   min-height: 50px;
   border: none;
-  background: var(--se-color-surface);
+  background: transparent;
   color: var(--destructive);
   font-family: var(--se-font-mono);
   font-size: 0.9375rem;
@@ -1435,8 +1465,11 @@ button.mono-stat-card {
    the bottom strip isn't a near-empty band below the pad. */
 .mono-cricket-out-line-row {
   display: flex;
-  gap: 1px;
-  background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
+  gap: 0;
+  background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }
 
 .mono-cricket-out-line-row .mono-cricket-out-line {
@@ -1444,13 +1477,14 @@ button.mono-stat-card {
 }
 
 .mono-cricket-undo-line {
+  position: relative;
   flex: 0 0 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 50px;
   border: none;
-  background: var(--se-color-surface);
+  background: transparent;
   color: var(--se-color-ink);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
@@ -1463,6 +1497,18 @@ button.mono-stat-card {
 
 .mono-cricket-undo-line:active {
   background: var(--accent);
+}
+
+/* fading vertical divider between OUT and the Undo icon */
+.mono-cricket-undo-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 56%;
+  background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent);
 }
 
 /* Compact cricket status chips (replace stacked banners) */
