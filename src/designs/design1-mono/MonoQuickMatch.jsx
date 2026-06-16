@@ -2310,9 +2310,9 @@ export default function MonoQuickMatch() {
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
-              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)', margin: 0, lineHeight: 1 }}>
-                {currentScore.runs}<span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
-                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.3em', fontWeight: 700, marginLeft: 8 }}>({oversDisplay})</span>
+              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)', margin: 0, lineHeight: 0.95, fontSize: 'clamp(3.5rem, 17vw, 6rem)' }}>
+                {currentScore.runs}<span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.45em' }}>/{currentScore.wickets}</span>
+                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.26em', fontWeight: 700, marginLeft: 8 }}>({oversDisplay})</span>
               </p>
               <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', marginTop: 6 }}>
                 CRR {crr.toFixed(2)}
@@ -2347,48 +2347,41 @@ export default function MonoQuickMatch() {
               </p>
             </div>
 
-            {/* Spacer pushes the keypad into the thumb zone, filling the page */}
-            <div aria-hidden="true" style={{ flex: 1, minHeight: 8 }} />
+            {/* Importance-weighted keypad — fills the lower half; common runs largest. */}
+            <div className="mono-cricket-pad">
+              <div className="mono-cricket-runs">
+                {[0, 1, 2, 3, 4, 6].filter((v) => CRICKET_RUN_VALUES.includes(v)).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => addRuns(r)}
+                    className={`mono-cricket-run${r === 4 ? ' mono-cricket-run-four' : r === 6 ? ' mono-cricket-run-six' : ''}`}
+                    style={{ touchAction: 'manipulation' }}
+                    aria-label={r === 4 ? 'Four runs' : r === 6 ? 'Six runs' : `${r} run${r === 1 ? '' : 's'}`}
+                  >
+                    <span>{r}</span>
+                    {(r === 4 || r === 6) && <small>{r === 4 ? 'FOUR' : 'SIX'}</small>}
+                  </button>
+                ))}
+              </div>
 
-            {/* Run buttons */}
-            <div className="mono-scorer-run-grid">
-              {CRICKET_RUN_VALUES.map(r => (
-                <button
-                  key={r}
-                  onClick={() => addRuns(r)}
-                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+              <div className="mono-cricket-secondary">
+                {CRICKET_RUN_VALUES.filter((v) => ![0, 1, 2, 3, 4, 6].includes(v)).map((r) => (
+                  <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-sec-btn" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
+                ))}
+                {[
+                  { type: 'wide', label: 'WD' },
+                  { type: 'noBall', label: 'NB' },
+                  { type: 'bye', label: 'BYE' },
+                  { type: 'legBye', label: 'LB' },
+                ].map((ex) => (
+                  <button key={ex.type} onClick={() => addExtra(ex.type)} className="mono-cricket-sec-btn" style={{ touchAction: 'manipulation' }}>
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
 
-            <div className="mono-scorer-extra-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
-              {[
-                { type: 'wide', label: 'WD' },
-                { type: 'noBall', label: 'NB' },
-                { type: 'bye', label: 'BYE' },
-                { type: 'legBye', label: 'LB' },
-              ].map((ex) => (
-                <button
-                  key={ex.type}
-                  onClick={() => addExtra(ex.type)}
-                  className="mono-btn font-mono"
-                  style={{ padding: '10px 6px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em', touchAction: 'manipulation' }}
-                >
-                  {ex.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mono-quick-cricket-secondary-row">
-              <button
-                onClick={addWicket}
-                className="mono-btn mono-btn-danger mono-quick-wicket-button"
-                style={{ touchAction: 'manipulation' }}
-              >
-                {freeHit ? 'Run Out Only' : 'Wicket'}
+              <button onClick={addWicket} className="mono-cricket-out" style={{ touchAction: 'manipulation' }}>
+                {freeHit ? 'Run Out Only' : 'OUT'}
               </button>
             </div>
 

@@ -1179,6 +1179,115 @@ button.mono-stat-card {
   color: var(--se-color-ink-muted);
 }
 
+/* Importance-weighted cricket keypad: common runs fill the lower half. */
+.mono-cricket-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+}
+
+.mono-cricket-runs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 168px;
+}
+
+.mono-cricket-run {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--radius);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-mono);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 150ms ease, transform 120ms ease, box-shadow 150ms ease;
+}
+
+.mono-cricket-run:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-2xs);
+}
+
+.mono-cricket-run small {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mono-cricket-run-four {
+  background: var(--se-color-warning);
+  border-color: var(--se-color-warning);
+  color: var(--se-color-inverse);
+}
+
+.mono-cricket-run-six {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--se-color-inverse);
+}
+
+.mono-cricket-secondary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 8px;
+}
+
+.mono-cricket-sec-btn {
+  min-height: 46px;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 38%, var(--se-color-surface));
+  border-radius: var(--radius);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink-soft);
+  font-family: var(--se-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 150ms ease, transform 120ms ease;
+}
+
+.mono-cricket-sec-btn:active {
+  transform: translateY(1px);
+  background: var(--accent);
+}
+
+.mono-cricket-out {
+  min-height: 52px;
+  width: 100%;
+  border: 1.5px solid var(--destructive);
+  border-radius: var(--radius);
+  background: var(--se-color-surface);
+  color: var(--destructive);
+  font-family: var(--se-font-mono);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.mono-cricket-out:active {
+  transform: translateY(1px);
+  background: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
 /* Compact cricket status chips (replace stacked banners) */
 .mono-cricket-chips {
   display: flex;
