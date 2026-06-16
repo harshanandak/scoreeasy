@@ -2487,108 +2487,61 @@ export default function MonoQuickMatch() {
       : (sidesSwapped ? vScore1 : vScore2);
     const leftSetScore = rawLeftSetScore;
     const rightSetScore = rawRightSetScore;
+    const setHalves = [
+      { side: 'left', name: leftName, score: leftSetScore, team: leftTeam, accent: leftAccent, leading: leftSetScore > rightSetScore, serving: tracksPointWinnerServe && servingTeam === leftTeam },
+      { side: 'right', name: rightName, score: rightSetScore, team: rightTeam, accent: rightAccent, leading: rightSetScore > leftSetScore, serving: tracksPointWinnerServe && servingTeam === rightTeam },
+    ];
+    const setsRule = format.type === 'best-of'
+      ? `${format.points || 25} pts · win by 2`
+      : `${format.target} pts · win by 2`;
 
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto">
+      <div className="mono-scorer-screen mono-arena-screen">
+        <div className="mono-scorer-shell">
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
           {saveWarning && (
-            <div className="mono-alert mono-alert-danger mb-4">
-              {saveWarning}
-            </div>
+            <div className="mono-alert mono-alert-danger mb-4">{saveWarning}</div>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+          {/* Top spine */}
+          <div className="mono-scorer-topbar">
             <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>{timer.formatted}</span>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
-              <span className="mono-badge mono-badge-live">
-                {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
-              </span>
-            </div>
+            <span className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700 }}>{timer.formatted}</span>
+            <span className="mono-badge mono-badge-live">
+              {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
+            </span>
           </div>
 
-          <ScoringStatusStrip
-            label={tracksPointWinnerServe ? 'Serving' : 'Scoring'}
-            value={tracksPointWinnerServe ? (servingTeam === leftTeam ? leftName : rightName) : `${leftName} vs ${rightName}`}
-            lastAction={lastAction}
-          />
+          {/* Seam: sets-won tally + rule */}
+          <div className="mono-arena-seam">
+            {format.type === 'best-of' && (
+              <span><b>{leftSetsWon}</b> &ndash; <b>{rightSetsWon}</b> sets</span>
+            )}
+            <span className="mono-arena-seam-rule">{setsRule}</span>
+          </div>
 
-          {/* Sets won (best-of only) */}
-          {format.type === 'best-of' && (
-            <div className="flex justify-center gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--se-color-ink-muted)' }}>{leftName}</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)' }}>
-                  {leftSetsWon}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--se-color-ink-faint)' }}>sets</p>
+          {/* Arena: two full-bleed halves; whole half = +1 point */}
+          <div className="mono-arena-grid">
+            {setHalves.map((h) => (
+              <div className="mono-arena-col" key={h.side}>
+                <button
+                  type="button"
+                  className="mono-arena-half"
+                  onClick={() => addPoint(h.team)}
+                  style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                  aria-label={`Add point for ${h.name}`}
+                >
+                  <span className="mono-arena-overline" style={{ color: (h.leading || h.serving) ? h.accent : 'var(--se-color-ink-muted)' }}>
+                    {h.serving ? '● ' : ''}{h.name}
+                  </span>
+                  <span className="mono-arena-num mono-score" style={{ color: h.leading ? h.accent : 'var(--se-color-ink)' }}>{h.score}</span>
+                  <span className="mono-arena-hint">Tap +1</span>
+                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+                  <CorrectionControls teamName={h.name} onMinus={() => adjustSetScore(h.team, -1)} />
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--se-color-ink-muted)' }}>{rightName}</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)' }}>
-                  {rightSetsWon}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--se-color-ink-faint)' }}>sets</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mono-score-grid items-start mb-8">
-            {/* Left team */}
-            <div className="flex-1">
-              <button
-                type="button"
-                className="w-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
-                onClick={() => addPoint(leftTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': '250px' }}
-                aria-label={`Add point for ${leftName}`}
-              >
-                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
-                  Left side
-                </p>
-                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
-                  {leftName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
-                  {leftSetScore}
-                </p>
-                <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-muted)' }}>Tap +1</p>
-              </button>
-              <CorrectionControls
-                teamName={leftName}
-                onMinus={() => adjustSetScore(leftTeam, -1)}
-              />
-            </div>
-
-            {/* Right team */}
-            <div className="flex-1">
-              <button
-                type="button"
-                className="w-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
-                onClick={() => addPoint(rightTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': '250px' }}
-                aria-label={`Add point for ${rightName}`}
-              >
-                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
-                  Right side
-                </p>
-                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
-                  {rightName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
-                  {rightSetScore}
-                </p>
-                <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-muted)' }}>Tap +1</p>
-              </button>
-              <CorrectionControls
-                teamName={rightName}
-                onMinus={() => adjustSetScore(rightTeam, -1)}
-              />
-            </div>
+            ))}
           </div>
 
           <ThumbActionBar
@@ -2597,12 +2550,6 @@ export default function MonoQuickMatch() {
             onSwap={handleSideSwap}
             onEnd={requestEndMatch}
           />
-
-          <p className="text-xs text-center" style={{ color: 'var(--se-color-ink-faint)' }}>
-            {format.type === 'best-of'
-              ? `${format.points || 25} points · Win by 2 at deuce`
-              : `${format.target} points to win · Win by 2 at deuce`}
-          </p>
         </div>
       </div>
     );

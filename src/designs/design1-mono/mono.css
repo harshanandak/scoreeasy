@@ -1008,6 +1008,30 @@ button.mono-stat-card {
   color: var(--se-color-ink-faint);
 }
 
+.mono-arena-seam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 0 12px;
+  font-family: var(--se-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-muted);
+}
+
+.mono-arena-seam b {
+  color: var(--se-color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-arena-seam .mono-arena-seam-rule {
+  color: var(--se-color-ink-faint);
+}
+
 .mono-scorer-main-score {
   text-align: center;
   margin-bottom: 32px;
