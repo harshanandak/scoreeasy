@@ -86,3 +86,26 @@ Long-press discoverability/accidental-trigger (mitigated by keeping the visible 
 4. Numeral clamp ceiling (reflow safety for cricket)?
 5. Relocate quick-buttons into the halves — confirm?
 6. Ship token/a11y cleanup as a separate PR or bundle?
+
+## 10. Cricket — CrickHeroes reference (from user-provided screenshot)
+
+The CrickHeroes live scorer (Lions XI screenshot) shows this anatomy, top→bottom:
+1. **Top bar:** back · batting-team name · share + settings.
+2. **Hero (dark):** big `47/0` with overs `(5.5/10)` inline; sub-line `CRR: 8.06 · Projected: 80 (at 8.06 RPO)`.
+3. **Batsmen strip:** striker `Ankit Jha 27(20)` (highlighted) | non-striker `Aaryan Shah 20(15)`.
+4. **Bowler row:** `Amit Patel` + figures `1.5-0-23-0`, and a **this-over ball strip** of circles `1 0 0 0 6` (the 6 accent-filled).
+5. **Keypad (light):** runs grid `0 1 2 / 3 4(FOUR) 6(SIX)`, a right column `UNDO / 5,7 / OUT`, and an extras row `WD NB BYE LB`. Footer: "Scoring Shortcuts".
+
+### Feasibility against our data model (`{runs, balls, wickets}` + `cricketHistory` per-delivery log)
+
+**Build now (UI + trivial derivation, no new storage):**
+- **This-over ball strip** — derive the current over's deliveries from `cricketHistory` (legal balls = `runs`/`wicket` entries this innings; `extra` shown as WD/NB pips). Boundaries (4/6) get the green accent. This is the signature CrickHeroes element and it's free.
+- **CRR + projected score** sub-line under the hero (`projected = runRate × totalOvers`).
+- **Bigger runs/wickets hero** filling the arena top, overs in parens.
+- **BYE / LB extras** added beside WD/NB (small `addExtra` extension).
+- **Clean keypad** in the Mono system: grouped run buttons (4=FOUR, 6=SIX accent), prominent OUT, extras row — replacing today's scattered rows.
+
+**Needs a real feature (data + logic, NOT a reskin) — flagged for decision:**
+- **Striker/non-striker batsmen** with runs(balls) + strike rotation, and **bowler** name + O-M-R-W figures. Our quick-match cricket is team-level only; adding per-player tracking is a sizable feature with storage + strike-rotation rules.
+
+**Decision:** ship the team-level CrickHeroes look (hero + this-over strip + CRR/projected + BYE/LB + keypad) now; treat batsman/bowler tracking as a separate opt-in feature.

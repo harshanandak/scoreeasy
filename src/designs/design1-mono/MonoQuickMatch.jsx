@@ -172,6 +172,28 @@ function ThumbActionBar({ canUndo, onUndo, onSwap, onEnd }) {
   );
 }
 
+// CrickHeroes-style "this over" strip, derived from the existing per-delivery log (no new storage).
+function cricketOverPips(history, innings, battingTeam) {
+  const inn = history.filter((h) => h.innings === innings && h.battingTeam === battingTeam);
+  const extraLabel = { wide: 'Wd', noBall: 'Nb', bye: 'B', legBye: 'Lb' };
+  let cur = [];
+  let last = [];
+  let legal = 0;
+  for (const d of inn) {
+    let pip;
+    if (d.type === 'wicket') pip = { label: 'W', kind: 'wicket' };
+    else if (d.type === 'extra') pip = { label: extraLabel[d.extraType] || 'Ex', kind: 'extra' };
+    else pip = { label: String(d.value), kind: d.value === 4 ? 'four' : d.value === 6 ? 'six' : 'run' };
+    cur.push(pip);
+    const isLegal = d.type === 'runs' || d.type === 'wicket' || (d.type === 'extra' && (d.extraType === 'bye' || d.extraType === 'legBye'));
+    if (isLegal) {
+      legal += 1;
+      if (legal === 6) { last = cur; cur = []; legal = 0; }
+    }
+  }
+  return cur.length ? cur : last;
+}
+
 function getWinnerName(score1, score2, team1Name, team2Name, tiedName = 'Tie') {
   if (score1 > score2) return team1Name;
   if (score2 > score1) return team2Name;
@@ -849,12 +871,33 @@ export default function MonoQuickMatch() {
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
-    setLastAction(`${battingName} ${type === 'noBall' ? 'no ball' : 'wide'} +1`);
+    const countsAsBall = type === 'bye' || type === 'legBye';
+    const extraLabel = { wide: 'wide', noBall: 'no ball', bye: 'bye', legBye: 'leg bye' };
+    setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
-    setScores(prev => ({
-      ...prev,
-      [key]: { ...prev[key], runs: prev[key].runs + 1 },
-    }));
+    setScores(prev => {
+      const team = { ...prev[key], runs: prev[key].runs + 1 };
+      // Byes / leg byes are legal deliveries — they consume a ball.
+      if (countsAsBall) {
+        team.balls += 1;
+        if (team.balls >= totalBalls) {
+          if (innings === 1) {
+            setInnings(2);
+            setBattingTeam(battingTeam === 1 ? 2 : 1);
+          } else {
+            finishCricketMatch({ ...prev, [key]: team });
+          }
+        }
+      }
+      // Chase complete in the second innings (any extra adds a run).
+      if (innings === 2) {
+        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
+        if (team.runs > target) {
+          finishCricketMatch({ ...prev, [key]: team });
+        }
+      }
+      return { ...prev, [key]: team };
+    });
 
     // No ball triggers free hit if format supports it
     if (type === 'noBall' && format.freeHit) {
@@ -886,6 +929,10 @@ export default function MonoQuickMatch() {
         team.allOut = false;
       } else if (last.type === 'extra') {
         team.runs = Math.max(0, team.runs - 1);
+        if (last.extraType === 'bye' || last.extraType === 'legBye') {
+          team.balls = Math.max(0, team.balls - 1);
+        }
+        team.allOut = false;
       }
       return { ...prev, [last.key]: team };
     });
@@ -2197,6 +2244,11 @@ export default function MonoQuickMatch() {
         ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
         : null;
 
+      // CrickHeroes-style derived context (no new storage)
+      const overPips = cricketOverPips(cricketHistory, innings, battingTeam);
+      const crr = currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls) : 0;
+      const projectedScore = (showOvers && format.overs && currentScore.balls > 0) ? Math.round(crr * format.overs) : null;
+
       // Powerplay
       const currentOver = Math.floor(currentScore.balls / 6) + 1;
       const powerplay = showOvers ? getPowerplayPhase(format, currentOver) : null;
@@ -2253,53 +2305,45 @@ export default function MonoQuickMatch() {
               </div>
             )}
 
-            {/* Batting team */}
+            {/* Batting team — hero */}
             <div className="mono-scorer-main-score mono-quick-cricket-score">
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
+              <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
-              <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: 'var(--se-color-ink)' }}>
+              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)', margin: 0, lineHeight: 1 }}>
                 {currentScore.runs}<span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
+                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.3em', fontWeight: 700, marginLeft: 8 }}>({oversDisplay})</span>
               </p>
-              <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>
-                {oversDisplay} &middot; RR {currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls).toFixed(2) : '0.00'}
+              <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', marginTop: 6 }}>
+                CRR {crr.toFixed(2)}
+                {projectedScore !== null ? ` · Proj ${projectedScore}` : ''}
+                {target !== null ? ` · Need ${Math.max(0, target + 1 - currentScore.runs)}${totalBalls !== Infinity ? ` (${totalBalls - currentScore.balls} b)` : ''}` : ''}
               </p>
-              {lastAction && (
-                <p className="text-xs mt-1" style={{ color: 'var(--se-color-ink-muted)' }}>{lastAction}</p>
-              )}
 
-              {/* Powerplay indicator */}
-              {powerplay && (
-                <p className="text-xs mt-1" style={{ color: 'var(--primary)' }}>
-                  {powerplay.label} (Overs {powerplay.start}-{powerplay.end})
-                </p>
-              )}
-
-              {/* Last Man Stands */}
-              {isLastMan && (
-                <p className="text-xs mt-1 font-medium" style={{ color: 'var(--se-color-warning)' }}>Last Man Batting</p>
-              )}
-
-              {/* Free Hit banner */}
-              {freeHit && (
-                <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: 'var(--se-color-warning)', backgroundColor: 'var(--se-color-warning-soft)' }}>
-                  <p className="text-sm font-bold" style={{ color: 'var(--se-color-warning)' }}>FREE HIT</p>
-                  <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Run Out Only</p>
+              {/* This over */}
+              {overPips.length > 0 && (
+                <div className="mono-over-strip" aria-label="This over">
+                  <span className="mono-over-label">Over</span>
+                  {overPips.map((p, i) => (
+                    <span key={`${i}-${p.label}`} className={`mono-over-pip mono-over-pip-${p.kind}`}>{p.label}</span>
+                  ))}
                 </div>
               )}
 
-              {target !== null && (
-                <p className="text-sm mt-2" style={{ color: 'var(--primary)' }}>
-                  Target: {target + 1} &middot; Need {Math.max(0, target + 1 - currentScore.runs)}
-                  {totalBalls !== Infinity ? ` from ${totalBalls - currentScore.balls} balls` : ''}
-                </p>
+              {/* Status chips (compact, not stacked banners) */}
+              {(powerplay || isLastMan || freeHit) && (
+                <div className="mono-cricket-chips">
+                  {powerplay && <span className="mono-cricket-chip mono-cricket-chip-accent">{powerplay.label}</span>}
+                  {isLastMan && <span className="mono-cricket-chip mono-cricket-chip-warn">Last man</span>}
+                  {freeHit && <span className="mono-cricket-chip mono-cricket-chip-warn">Free hit · run out only</span>}
+                </div>
               )}
             </div>
 
-            {/* Other team score */}
-            <div className="mono-score-mini mono-quick-other-score text-center" style={{ padding: '10px 12px' }}>
-              <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
-                {otherName}: {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
+            {/* Other team */}
+            <div className="mono-quick-other-score" style={{ textAlign: 'center', padding: '6px 12px' }}>
+              <p className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)', margin: 0 }}>
+                {otherName} {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
               </p>
             </div>
 
@@ -2317,13 +2361,22 @@ export default function MonoQuickMatch() {
               ))}
             </div>
 
-            <div className="mono-scorer-extra-row">
-              <button onClick={() => addExtra('wide')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
-                Wide (+1)
-              </button>
-              <button onClick={() => addExtra('noBall')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
-                No Ball (+1)
-              </button>
+            <div className="mono-scorer-extra-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
+              {[
+                { type: 'wide', label: 'WD' },
+                { type: 'noBall', label: 'NB' },
+                { type: 'bye', label: 'BYE' },
+                { type: 'legBye', label: 'LB' },
+              ].map((ex) => (
+                <button
+                  key={ex.type}
+                  onClick={() => addExtra(ex.type)}
+                  className="mono-btn font-mono"
+                  style={{ padding: '10px 6px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.04em', touchAction: 'manipulation' }}
+                >
+                  {ex.label}
+                </button>
+              ))}
             </div>
 
             <div className="mono-quick-cricket-secondary-row">

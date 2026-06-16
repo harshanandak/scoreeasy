@@ -1009,6 +1009,100 @@ button.mono-stat-card {
   padding: 10px;
 }
 
+/* CrickHeroes-style "this over" ball strip */
+.mono-over-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mono-over-label {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-faint);
+  margin-right: 2px;
+}
+
+.mono-over-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 28%, transparent);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-over-pip-four {
+  background: var(--se-color-warning);
+  border-color: var(--se-color-warning);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-six {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-wicket {
+  background: var(--destructive);
+  border-color: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-extra {
+  background: transparent;
+  border-style: dashed;
+  color: var(--se-color-ink-muted);
+}
+
+/* Compact cricket status chips (replace stacked banners) */
+.mono-cricket-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.mono-cricket-chip {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent);
+  color: var(--se-color-ink-muted);
+}
+
+.mono-cricket-chip-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.mono-cricket-chip-warn {
+  background: var(--se-color-warning-soft);
+  border-color: var(--se-color-warning);
+  color: var(--se-color-warning);
+}
+
 .mono-quick-end-button {
   border-color: var(--destructive);
   color: var(--destructive);
