@@ -27,21 +27,6 @@ import {
   warningImpact,
 } from '../../mobile/haptics';
 
-// Swap button — defined outside component to avoid S6478 (component defined inside render)
-function SwapButton({ onSwap }) {
-  return (
-    <button
-      onClick={onSwap}
-      className="mono-btn"
-      style={{ padding: '6px 10px', fontSize: '0.75rem' }}
-      title="Swap sides"
-      aria-label="Swap team sides"
-    >
-      ⇄ Swap
-    </button>
-  );
-}
-
 function EndMatchDialog({ onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
   const onCancelRef = useRef(onCancel);
@@ -137,26 +122,18 @@ function ScoringStatusStrip({ label, value, lastAction }) {
   );
 }
 
-function CorrectionControls({ teamName, onMinus, onPlus }) {
+// Correction = the one action the score pad can't do (the pad already adds +1).
+function CorrectionControls({ teamName, onMinus }) {
   return (
-    <div className="grid grid-cols-2 gap-2 mt-2">
+    <div className="mt-2">
       <button
         type="button"
         onClick={onMinus}
-        className="mono-btn"
+        className="mono-btn w-full"
         style={{ minHeight: '44px', padding: '8px 10px' }}
         aria-label={`Subtract one from ${teamName}`}
       >
-        -1
-      </button>
-      <button
-        type="button"
-        onClick={onPlus}
-        className="mono-btn"
-        style={{ minHeight: '44px', padding: '8px 10px' }}
-        aria-label={`Add one to ${teamName}`}
-      >
-        +1
+        Correct &minus;1
       </button>
     </div>
   );
@@ -2375,8 +2352,8 @@ export default function MonoQuickMatch() {
     const rightTeam = sidesSwapped ? 1 : 2;
     const leftName = sidesSwapped ? team2Name : team1Name;
     const rightName = sidesSwapped ? team1Name : team2Name;
-    const leftAccent = leftTeam === 1 ? '#0066ff' : '#16a34a';
-    const rightAccent = rightTeam === 1 ? '#0066ff' : '#16a34a';
+    const leftAccent = leftTeam === 1 ? 'var(--primary)' : 'var(--se-color-warning)';
+    const rightAccent = rightTeam === 1 ? 'var(--primary)' : 'var(--se-color-warning)';
 
     // Goals-based scoring
     if (isGoals) {
@@ -2400,7 +2377,6 @@ export default function MonoQuickMatch() {
                 <span className="text-sm font-mono" style={{ color: timerColor }}>
                   {isTimeUp ? "Time's up!" : timerDisplay}
                 </span>
-                <SwapButton onSwap={handleSideSwap} />
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
@@ -2440,7 +2416,6 @@ export default function MonoQuickMatch() {
                 <CorrectionControls
                   teamName={leftName}
                   onMinus={() => adjustGoalScore(leftTeam, -1)}
-                  onPlus={() => adjustGoalScore(leftTeam, 1)}
                 />
               </div>
 
@@ -2470,7 +2445,6 @@ export default function MonoQuickMatch() {
                 <CorrectionControls
                   teamName={rightName}
                   onMinus={() => adjustGoalScore(rightTeam, -1)}
-                  onPlus={() => adjustGoalScore(rightTeam, 1)}
                 />
               </div>
             </div>
@@ -2547,7 +2521,6 @@ export default function MonoQuickMatch() {
             <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Match'}</span>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
-              <SwapButton onSwap={handleSideSwap} />
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
@@ -2607,7 +2580,6 @@ export default function MonoQuickMatch() {
               <CorrectionControls
                 teamName={leftName}
                 onMinus={() => adjustSetScore(leftTeam, -1)}
-                onPlus={() => adjustSetScore(leftTeam, 1)}
               />
             </div>
 
@@ -2634,7 +2606,6 @@ export default function MonoQuickMatch() {
               <CorrectionControls
                 teamName={rightName}
                 onMinus={() => adjustSetScore(rightTeam, -1)}
-                onPlus={() => adjustSetScore(rightTeam, 1)}
               />
             </div>
           </div>
