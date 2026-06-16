@@ -428,6 +428,9 @@ export default function MonoSetsLiveScore() {
   const rightName = sidesSwapped ? team1Name : team2Name;
   const leftScore = sidesSwapped ? (sets[currentSet]?.score2 || 0) : (sets[currentSet]?.score1 || 0);
   const rightScore = sidesSwapped ? (sets[currentSet]?.score1 || 0) : (sets[currentSet]?.score2 || 0);
+  // Score colour follows the lead: ahead = green, tied = brown (both), trailing = ink.
+  const teamAccent = (mine, other) =>
+    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
   const availableScoringModes = effectiveFormat?.scoringModes || sportConfig?.config?.scoringModes || ['rally'];
   const showServeIndicator = scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
   const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
@@ -553,7 +556,7 @@ export default function MonoSetsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
               {leftName} {showServeIndicator && leftServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: '#111' }} aria-hidden="true">
+            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(leftScore, rightScore) }} aria-hidden="true">
               {leftScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">
@@ -585,7 +588,7 @@ export default function MonoSetsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }} aria-hidden="true">
               {rightName} {showServeIndicator && rightServing ? <span style={{ color: '#0066ff' }}>SERVE</span> : null}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: '#111' }} aria-hidden="true">
+            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(rightScore, leftScore) }} aria-hidden="true">
               {rightScore}
             </p>
             <p className="text-xs mt-4" style={{ color: '#bbb' }} aria-hidden="true">

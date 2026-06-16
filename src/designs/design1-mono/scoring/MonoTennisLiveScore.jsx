@@ -587,6 +587,16 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightGames = sidesSwapped ? currentSetData.games1 : currentSetData.games2;
   const leftTeam = sidesSwapped ? 2 : 1;
   const rightTeam = sidesSwapped ? 1 : 2;
+  // Score colour follows the current-game lead: ahead = green, level (0-0, deuce)
+  // = brown (both), trailing = ink. Compares the underlying point counts.
+  const teamAccent = (mine, other) =>
+    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
+  const leftPoints = isTiebreakMode
+    ? (sidesSwapped ? currentSetData.tiebreakPoints2 : currentSetData.tiebreakPoints1)
+    : (sidesSwapped ? currentSetData.points2 : currentSetData.points1);
+  const rightPoints = isTiebreakMode
+    ? (sidesSwapped ? currentSetData.tiebreakPoints1 : currentSetData.tiebreakPoints2)
+    : (sidesSwapped ? currentSetData.points1 : currentSetData.points2);
   const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked;
   const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
     ? 'Scoring is temporarily locked'
@@ -667,7 +677,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           <p
             key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
             className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: '#111' }}
+            style={{ color: teamAccent(leftPoints, rightPoints) }}
           >
             {leftScoreDisplay}
           </p>
@@ -695,7 +705,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           <p
             key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
             className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: '#111' }}
+            style={{ color: teamAccent(rightPoints, leftPoints) }}
           >
             {rightScoreDisplay}
           </p>

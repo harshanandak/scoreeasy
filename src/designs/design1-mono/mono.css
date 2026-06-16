@@ -842,38 +842,38 @@ button.mono-stat-card {
 .mono-score-grid {
   display: flex;
   align-items: stretch;
-  gap: 16px;
+  gap: 0; /* vertical hairline seam (below) replaces the gap — borderless, line-divided */
 }
 
+/* single vertical seam between the two team zones (matches the arena) */
+.mono-score-grid > .flex-1 + .flex-1 {
+  border-left: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+}
+
+/* Open, borderless tap zone — no card, no blue edge; press flashes the accent. */
 .mono-score-pad {
   position: relative;
   min-height: var(--score-pad-height, auto);
-  border: 1px solid color-mix(in oklch, var(--score-accent, var(--se-color-action)) 38%, var(--se-color-line));
-  border-radius: var(--radius);
-  background: color-mix(in oklch, var(--se-color-action-soft) 8%, var(--se-color-surface));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
-  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
-}
-
-.mono-score-pad:hover {
-  border-color: var(--score-accent, var(--se-color-action));
-  background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
+  transition: background var(--se-motion-standard) ease;
 }
 
 .mono-score-pad:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-2xs);
+  background: color-mix(in oklch, var(--score-accent, var(--se-color-action-soft)) 10%, var(--se-color-surface));
 }
 
 .mono-score-pad[disabled],
 .mono-score-pad[aria-disabled="true"] {
-  transform: none;
   cursor: default;
+  background: transparent;
 }
 
 .mono-score-pad:focus-visible {
   outline: 2px solid var(--se-color-action);
-  outline-offset: 2px;
+  outline-offset: -3px;
 }
 
 .mono-score-meta {

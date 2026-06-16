@@ -418,6 +418,9 @@ export default function MonoGoalsLiveScore() {
   const rightName = sidesSwapped ? team1Name : team2Name;
   const leftScore = sidesSwapped ? score2 : score1;
   const rightScore = sidesSwapped ? score1 : score2;
+  // Score colour follows the lead: ahead = green, tied = brown (both), trailing = ink.
+  const teamAccent = (mine, other) =>
+    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
 
   // Timed mode helpers
   const isTimedMode = effectiveFormat?.mode === 'timed';
@@ -518,7 +521,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {leftName}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(leftScore, rightScore) }} aria-label={`${leftName} score: ${leftScore}`}>
               {leftScore}
             </p>
 
@@ -561,7 +564,7 @@ export default function MonoGoalsLiveScore() {
             <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
               {rightName}
             </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
+            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(rightScore, leftScore) }} aria-label={`${rightName} score: ${rightScore}`}>
               {rightScore}
             </p>
 
