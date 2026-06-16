@@ -2394,7 +2394,7 @@ export default function MonoQuickMatch() {
               <div className="flex-1">
                 <button
                   type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
+                  className="w-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
                   disabled={hasQuickButtons}
                   style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
@@ -2423,7 +2423,7 @@ export default function MonoQuickMatch() {
               <div className="flex-1">
                 <button
                   type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
+                  className="w-full flex flex-col items-center justify-center mono-score-pad"
                   onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
                   disabled={hasQuickButtons}
                   style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
@@ -2561,7 +2561,7 @@ export default function MonoQuickMatch() {
             <div className="flex-1">
               <button
                 type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
+                className="w-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(leftTeam)}
                 style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': '250px' }}
                 aria-label={`Add point for ${leftName}`}
@@ -2587,7 +2587,7 @@ export default function MonoQuickMatch() {
             <div className="flex-1">
               <button
                 type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
+                className="w-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
                 onClick={() => addPoint(rightTeam)}
                 style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': '250px' }}
                 aria-label={`Add point for ${rightName}`}
