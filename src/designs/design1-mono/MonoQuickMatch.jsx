@@ -125,15 +125,14 @@ function ScoringStatusStrip({ label, value, lastAction }) {
 // Correction = the one action the score pad can't do (the pad already adds +1).
 function CorrectionControls({ teamName, onMinus }) {
   return (
-    <div className="mt-2">
+    <div className="mt-2 flex justify-center">
       <button
         type="button"
         onClick={onMinus}
-        className="mono-btn w-full"
-        style={{ minHeight: '44px', padding: '8px 10px' }}
+        className="mono-correct"
         aria-label={`Subtract one from ${teamName}`}
       >
-        Correct &minus;1
+        &minus;1
       </button>
     </div>
   );

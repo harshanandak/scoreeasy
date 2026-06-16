@@ -561,7 +561,7 @@ button.mono-stat-card {
   border-radius: var(--se-radius-button);
   background: transparent;
   color: var(--se-color-ink);
-  box-shadow: var(--shadow-2xs);
+  box-shadow: none;
   font-size: 0.875rem;
   font-family: var(--se-font-sans);
   cursor: pointer;
@@ -570,7 +570,36 @@ button.mono-stat-card {
 
 .mono-btn:hover {
   background: var(--se-color-action-soft);
-  box-shadow: var(--shadow-xs);
+}
+
+/* Quiet inline correction — small, borderless, low-emphasis (the rare -1 action). */
+.mono-correct {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 6px 18px;
+  border: none;
+  border-radius: var(--se-radius-button);
+  background: transparent;
+  color: var(--se-color-ink-muted);
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.mono-correct:hover {
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+}
+
+.mono-correct:active {
+  transform: translateY(1px);
+  background: var(--se-color-action-soft);
+  color: var(--se-color-action-strong);
 }
 
 .mono-btn:active {
@@ -822,15 +851,13 @@ button.mono-stat-card {
   border: 1px solid color-mix(in oklch, var(--score-accent, var(--se-color-action)) 38%, var(--se-color-line));
   border-radius: var(--radius);
   background: color-mix(in oklch, var(--se-color-action-soft) 8%, var(--se-color-surface));
-  box-shadow: var(--shadow-2xs);
+  box-shadow: none;
   transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
 }
 
 .mono-score-pad:hover {
   border-color: var(--score-accent, var(--se-color-action));
   background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
-  box-shadow: var(--shadow-xs);
-  transform: translate(-1px, -1px);
 }
 
 .mono-score-pad:active {
@@ -860,8 +887,8 @@ button.mono-stat-card {
 }
 
 .mono-score-mini {
-  border: 1px solid color-mix(in oklch, var(--se-color-line) 48%, var(--se-color-surface));
-  border-radius: var(--radius);
+  border: none;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
@@ -1217,9 +1244,11 @@ button.mono-stat-card {
     z-index: 20;
     margin-right: -12px;
     margin-left: -12px;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-    background: color-mix(in oklch, var(--se-color-canvas) 94%, var(--se-color-surface));
-    box-shadow: 0 -10px 24px color-mix(in oklch, var(--se-color-ink) 10%, transparent);
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    background: color-mix(in oklch, var(--se-color-canvas) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: none;
   }
 
   .mono-scorer-control-strip > .flex {
