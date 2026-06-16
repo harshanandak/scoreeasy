@@ -923,6 +923,28 @@ button.mono-stat-card {
   gap: 8px;
 }
 
+/* Quiet ambient info note (e.g. "resumed your match") — a line, not an alarm box. */
+.mono-scorer-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--se-color-ink-muted);
+  border-bottom: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+}
+
+.mono-scorer-note::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
 /* Full-bleed arena: two team halves fill the page; action bar sits at the bottom of the flex column. */
 .mono-arena-screen {
   display: flex;
@@ -1532,7 +1554,7 @@ button.mono-stat-card {
   }
 
   .mono-scorer-topbar {
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     margin-bottom: 12px;
   }

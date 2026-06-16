@@ -197,6 +197,32 @@ EndMatchButton.propTypes = {
   onEnd: PropTypes.func.isRequired,
 };
 
+// Scoring-phase notice. The "resumed" info reads as a quiet ambient line; real
+// save errors and end-match validation keep a proper alert box. Tone is derived
+// from the message so the save/end logic sites stay untouched.
+function ScoringNotice({ message }) {
+  if (!message) return null;
+  const tone = message.startsWith('Resumed')
+    ? 'info'
+    : message.includes('cannot end tied')
+      ? 'warning'
+      : 'danger';
+  if (tone === 'info') {
+    return (
+      <p className="mono-scorer-note" role="status">{message}</p>
+    );
+  }
+  return (
+    <div className={`mono-alert mb-4 ${tone === 'warning' ? 'mono-alert-warning' : 'mono-alert-danger'}`} role="alert">
+      {message}
+    </div>
+  );
+}
+
+ScoringNotice.propTypes = {
+  message: PropTypes.string,
+};
+
 // CrickHeroes-style "this over" strip, derived from the existing per-delivery log (no new storage).
 function cricketOverPips(history, innings, battingTeam) {
   const inn = history.filter((h) => h.innings === innings && h.battingTeam === battingTeam);
@@ -2295,11 +2321,7 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {saveWarning && (
-              <div className="mono-alert mono-alert-danger mb-4">
-                {saveWarning}
-              </div>
-            )}
+            <ScoringNotice message={saveWarning} />
             {/* Top bar */}
             <div className="mono-scorer-topbar">
               <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Cricket'}</span>
@@ -2442,9 +2464,7 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {saveWarning && (
-              <div className="mono-alert mono-alert-danger mb-4">{saveWarning}</div>
-            )}
+            <ScoringNotice message={saveWarning} />
             {/* Top spine */}
             <div className="mono-scorer-topbar">
               <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
@@ -2524,9 +2544,7 @@ export default function MonoQuickMatch() {
         <div className="mono-scorer-shell">
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
-          {saveWarning && (
-            <div className="mono-alert mono-alert-danger mb-4">{saveWarning}</div>
-          )}
+          <ScoringNotice message={saveWarning} />
           {/* Top spine */}
           <div className="mono-scorer-topbar">
             <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
