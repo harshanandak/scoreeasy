@@ -1419,6 +1419,40 @@ button.mono-stat-card {
   color: var(--se-color-inverse);
 }
 
+/* OUT shares its row with a compact Undo, split by the keypad's 1px hairline so
+   the bottom strip isn't a near-empty band below the pad. */
+.mono-cricket-out-line-row {
+  display: flex;
+  gap: 1px;
+  background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
+}
+
+.mono-cricket-out-line-row .mono-cricket-out-line {
+  flex: 1 1 0;
+}
+
+.mono-cricket-undo-line {
+  flex: 0 0 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border: none;
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.mono-cricket-undo-line:disabled {
+  color: var(--se-color-ink-faint);
+  cursor: default;
+}
+
+.mono-cricket-undo-line:active {
+  background: var(--accent);
+}
+
 /* Compact cricket status chips (replace stacked banners) */
 .mono-cricket-chips {
   display: flex;

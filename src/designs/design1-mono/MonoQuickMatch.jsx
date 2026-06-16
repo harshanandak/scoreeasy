@@ -2439,15 +2439,23 @@ export default function MonoQuickMatch() {
                 ))}
               </div>
 
-              <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
-                {freeHit ? 'Run Out Only' : 'OUT'}
-              </button>
+              <div className="mono-cricket-out-line-row">
+                <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
+                  {freeHit ? 'Run Out Only' : 'OUT'}
+                </button>
+                <button
+                  type="button"
+                  onClick={undoCricketAction}
+                  disabled={cricketHistory.length === 0}
+                  className="mono-cricket-undo-line"
+                  aria-label="Undo last action"
+                  title="Undo last action"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <UndoIcon />
+                </button>
+              </div>
             </div>
-
-            <ThumbActionBar
-              canUndo={cricketHistory.length > 0}
-              onUndo={undoCricketAction}
-            />
           </div>
         </div>
       );
