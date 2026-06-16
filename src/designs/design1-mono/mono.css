@@ -1054,12 +1054,18 @@ button.mono-stat-card {
 
 /* Leading team: one short, decisive 2px accent baseline under the numeral.
    Replaces the box as the "this team is ahead" mark — typographic, not a frame. */
-.mono-arena-half[data-leading="true"] .mono-arena-num::after {
+/* Always reserve the baseline's space so a leading number stays on the SAME
+   vertical level as the other team — only the leader's baseline is coloured. */
+.mono-arena-num::after {
   content: '';
   display: block;
   width: 56px;
   height: 2px;
   margin: 12px auto 0;
+  background: transparent;
+}
+
+.mono-arena-half[data-leading="true"] .mono-arena-num::after {
   background: var(--score-accent, var(--primary));
 }
 
