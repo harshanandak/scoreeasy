@@ -607,7 +607,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   };
 
   return (
-    <div className="mono-scorer-screen mono-scorer-shell mono-transition mono-visible">
+    <div className="mono-scorer-screen mono-arena-screen mono-transition mono-visible">
+      <div className="mono-scorer-shell">
       <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
       {saveWarning && (
         <div className="mono-alert mono-alert-danger mb-4">
@@ -657,7 +658,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </output>
 
       {/* Score cards — S6819: use <button> instead of role="button" div */}
-      <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '250px' }}>
+      <div className="mono-score-grid mono-scorer-score-area" style={{ flex: 1, minHeight: 0 }}>
         {/* Left Team */}
         <button
           type="button"
@@ -788,6 +789,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
             </button>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
