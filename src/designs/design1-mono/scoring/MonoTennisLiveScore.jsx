@@ -420,34 +420,16 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
   }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.isInteractionLocked]);
 
-  // Save draft
-  const saveDraft = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
-    if (isQuickMatch) {
-      const ok = saveData(quickDraftKey, {
-        ...match,
-        sets,
-        status: 'in-progress',
-        draftState: {
-          currentSet,
-          sets,
-          history,
-          savedAt: new Date().toISOString(),
-        },
-      });
-      if (!ok) {
-        setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
-      }
-      setSaveWarning('');
-      setHasChanges(false);
-      scoringPrompt.scheduleDraftRedirect(navigateBack);
-      return;
-    }
-
-    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-      ...m,
+  // Auto-save the in-progress quick match as a draft on every scoring change, so
+  // leaving the scorer (back button, navigating away, closing the app) always
+  // keeps a resumable draft — no manual "Save Draft" step. Mirrors the volleyball
+  // arena's continuous draft autosave. Skips empty/complete matches so we never
+  // pile up blank drafts, and the draft is cleared on finish/discard.
+  useEffect(() => {
+    if (!isQuickMatch || !quickDraftKey || !match) return;
+    if (isMatchComplete || history.length === 0) return;
+    saveData(quickDraftKey, {
+      ...match,
       sets,
       status: 'in-progress',
       draftState: {
@@ -456,17 +438,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         history,
         savedAt: new Date().toISOString(),
       },
-    }));
-
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(navigateBack);
-  };
+    });
+  }, [isQuickMatch, quickDraftKey, match, isMatchComplete, sets, currentSet, history]);
 
   const saveQuickMatch = () => {
     const completedAt = new Date().toISOString();
@@ -711,23 +684,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         </button>
       </div>
 
-      {/* Keyboard shortcuts hint (desktop only) */}
-      {!isTouchDevice && (
-        <p className="text-xs text-center mb-6" style={{ color: 'var(--se-color-ink-faint)' }}>
-          Keyboard: Q = {leftName} · P = {rightName} · U = Undo
-        </p>
-      )}
-
-      {/* Bottom bar */}
+      {/* Bottom bar — thin line-divided action row to match the arena scorers.
+          Saving is automatic (see the autosave effect); these are manual controls.
+          "Save" finalizes a finished match / returns; "Cancel" discards the draft. */}
       <div className="mono-control-strip mono-scorer-control-strip pt-4">
-        <button
-          onClick={saveMatch}
-          disabled={scoringPrompt.isInteractionLocked}
-          className="mono-btn-primary w-full mb-3"
-          style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-        >
-          Save &amp; Return
-        </button>
         <div className="mono-quick-action-row">
           <button
             onClick={undo}
@@ -748,16 +708,14 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           <button onClick={handleCancel} className="mono-btn">
             Cancel
           </button>
-          {hasChanges && !isMatchComplete && (
-            <button
-              onClick={saveDraft}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn"
-              style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Save Draft
-            </button>
-          )}
+          <button
+            onClick={saveMatch}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn"
+            style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+          >
+            Save
+          </button>
         </div>
       </div>
       </div>
