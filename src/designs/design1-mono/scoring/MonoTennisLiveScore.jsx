@@ -625,68 +625,65 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         <span className="mono-arena-seam-rule">{isTiebreakMode ? 'tiebreak' : `best of ${sets.length}`}</span>
       </div>
 
-      {/* Score cards — S6819: use <button> instead of role="button" div */}
-      <div className="mono-score-grid mono-scorer-score-area" style={{ flex: 1, minHeight: 0 }}>
-        {/* Left Team */}
-        <button
-          type="button"
-          onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
-          aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
-          disabled={!canScoreCurrentSet}
-          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
-          style={{
-            touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? 'var(--primary)' : 'var(--se-color-line)',
-            opacity: canScoreCurrentSet ? 1 : 0.6,
-          }}
-        >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: 'var(--se-color-ink-muted)' }}>
-            {leftName}
-          </p>
-          <p
-            key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
-            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: teamAccent(leftPoints, rightPoints) }}
+      {/* Score halves — identical structure to the arena scorer (football/volleyball):
+          big tabular number, accent-coloured team name, a 2px "leading" underline, and
+          a subtle pop on each point. Tennis games sit in the arena hint slot.
+          S6819: use <button> instead of role="button" div. */}
+      <div className="mono-arena-grid">
+        {/* Left team */}
+        <div className="mono-arena-col">
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
+            disabled={!canScoreCurrentSet}
+            data-leading={leftPoints > rightPoints ? 'true' : 'false'}
+            aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
+            className="mono-arena-half"
+            style={{ '--score-accent': teamAccent(leftPoints, rightPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
           >
-            {leftScoreDisplay}
-          </p>
-          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
-            Games: {leftGames}
-          </p>
-        </button>
+            <span className="mono-arena-overline" style={{ color: teamAccent(leftPoints, rightPoints) }}>
+              {leftName}
+            </span>
+            <span
+              key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+              style={{ color: teamAccent(leftPoints, rightPoints) }}
+            >
+              {leftScoreDisplay}
+            </span>
+            <span className="mono-arena-hint">{leftGames} {leftGames === 1 ? 'game' : 'games'}</span>
+          </button>
+        </div>
 
-        {/* Right Team */}
-        <button
-          type="button"
-          onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
-          aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
-          disabled={!canScoreCurrentSet}
-          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
-          style={{
-            touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? 'var(--primary)' : 'var(--se-color-line)',
-            opacity: canScoreCurrentSet ? 1 : 0.6,
-          }}
-        >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: 'var(--se-color-ink-muted)' }}>
-            {rightName}
-          </p>
-          <p
-            key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
-            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: teamAccent(rightPoints, leftPoints) }}
+        {/* Right team */}
+        <div className="mono-arena-col">
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
+            disabled={!canScoreCurrentSet}
+            data-leading={rightPoints > leftPoints ? 'true' : 'false'}
+            aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
+            className="mono-arena-half"
+            style={{ '--score-accent': teamAccent(rightPoints, leftPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
           >
-            {rightScoreDisplay}
-          </p>
-          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>
-            Games: {rightGames}
-          </p>
-        </button>
+            <span className="mono-arena-overline" style={{ color: teamAccent(rightPoints, leftPoints) }}>
+              {rightName}
+            </span>
+            <span
+              key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+              style={{ color: teamAccent(rightPoints, leftPoints) }}
+            >
+              {rightScoreDisplay}
+            </span>
+            <span className="mono-arena-hint">{rightGames} {rightGames === 1 ? 'game' : 'games'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Bottom bar — thin line-divided action row to match the arena scorers.
           Saving is automatic (see the autosave effect); these are manual controls.
-          "Save" finalizes a finished match / returns; "Cancel" discards the draft. */}
+          "Save" keeps/finishes the match; "Discard" deletes this in-progress match. */}
       <div className="mono-control-strip mono-scorer-control-strip pt-4">
         <div className="mono-quick-action-row">
           <button
@@ -706,7 +703,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
             Swap
           </button>
           <button onClick={handleCancel} className="mono-btn">
-            Cancel
+            Discard
           </button>
           <button
             onClick={saveMatch}
