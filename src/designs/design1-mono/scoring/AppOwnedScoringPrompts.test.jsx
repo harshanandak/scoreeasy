@@ -293,15 +293,17 @@ describe('app-owned scoring prompts', () => {
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
   });
 
-  it('pauses timed goal auto-finish before delayed draft redirects', () => {
+  it('guards the timed-goal auto-finish timeout (autosave replaced manual draft redirects)', () => {
     const goalsComponentFile = 'MonoGoalsLiveScore.jsx';
     const source = readFileSync(new URL(goalsComponentFile, import.meta.url), 'utf8');
 
+    // Draft persistence is now a continuous autosave effect — there is no manual
+    // saveDraft / timer.pause redirect. The timed auto-finish is still guarded
+    // against firing while interaction is locked, and its timeout is always cleared,
+    // so navigating away (which unmounts the scorer and stops the timer) is safe.
     expect(source).toContain('const autoFinishTimeoutRef = useRef(null);');
     expect(source).toContain('if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;');
     expect(source).toContain('clearTimeout(autoFinishTimeoutRef.current);');
-    expect(source).toContain('timer.pause();');
-    expect(source).toMatch(/timer\.pause\(\);\s+setHasChanges\(false\);\s+scoringPrompt\.scheduleDraftRedirect\(navigateToTournament\);/);
   });
 
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {

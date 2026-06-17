@@ -288,10 +288,12 @@ export default function MonoGoalsLiveScore() {
     setHistory(prev => prev.slice(0, -1));
   };
 
-  // Save draft (in-progress match)
-  const saveDraft = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
+  // Auto-save the in-progress match to the tournament on every score change, so
+  // leaving the scorer always keeps progress — no manual "Save Draft". "Discard"
+  // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
+  useEffect(() => {
+    if (!tournament || !matchId || scoringPrompt.isInteractionLocked) return;
+    if (history.length === 0) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -302,22 +304,8 @@ export default function MonoGoalsLiveScore() {
         savedAt: new Date().toISOString(),
       },
     }));
-
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-
-    if (autoFinishTimeoutRef.current) {
-      clearTimeout(autoFinishTimeoutRef.current);
-      autoFinishTimeoutRef.current = null;
-    }
-    timer.pause();
-    setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
-  };
+    saveSportTournament(sportConfig.storageKey, updatedTournament);
+  }, [tournament, matchId, score1, score2, history, sportConfig, scoringPrompt.isInteractionLocked]);
 
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {
@@ -394,8 +382,17 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Cancel and return
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
+  // Discard the in-progress draft for this match (revert to its committed state),
+  // then return to the bracket. Saving is automatic, so plain navigation keeps it.
+  const discardAndExit = () => {
+    if (tournament && matchId) {
+      const reverted = updateMatchInTournament(tournament, matchId, m => ({ ...m, draftState: undefined }));
+      saveSportTournament(sportConfig.storageKey, reverted);
+    }
+    navigateToTournament();
+  };
+  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -467,22 +464,6 @@ export default function MonoGoalsLiveScore() {
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
-            <button
-              type="button"
-              onClick={() => { setSidesSwapped(s => !s); }}
-              className="mono-btn"
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.75rem',
-                minWidth: 0,
-                touchAction: 'manipulation',
-                borderColor: sidesSwapped ? 'var(--primary)' : 'var(--se-color-line)',
-                color: sidesSwapped ? 'var(--primary)' : 'var(--se-color-ink)',
-              }}
-              title="Swap sides"
-            >
-              Swap
-            </button>
             {isTimedMode ? (
               <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? 'var(--destructive)' : undefined }}>
                 {overtimePeriod > 0
@@ -609,38 +590,37 @@ export default function MonoGoalsLiveScore() {
           </p>
         )}
 
-        {/* Bottom bar */}
+        {/* Unified bottom bar — same thin line-divided row as every scorer.
+            Saving is automatic; Save commits & returns, Discard reverts this match. */}
         <div className="mono-control-strip mono-scorer-control-strip pt-4">
-          <button
-            onClick={saveMatch}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn-primary w-full mb-3"
-            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-          >
-            Save &amp; Return
-          </button>
-          <div className="flex gap-2">
+          <div className="mono-quick-action-row">
             <button
               onClick={undo}
               disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
+              className="mono-btn"
+              style={{ opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
-            <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
-              Cancel
+            <button
+              onClick={() => { setSidesSwapped(s => !s); }}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn"
+              style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+            >
+              Swap
             </button>
-            {hasChanges && (
-              <button
-                onClick={saveDraft}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Save Draft
-              </button>
-            )}
+            <button onClick={handleDiscard} className="mono-btn">
+              Discard
+            </button>
+            <button
+              onClick={saveMatch}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn"
+              style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
