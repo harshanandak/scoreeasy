@@ -89,9 +89,15 @@ export function loadAppEntryState() {
       ...loadTennisQuickDrafts(),
     ];
     const quickMatches = loadQuickMatchSummaries();
-    const draftEntryPath = quickMatchDrafts.find((draft) => draft.entryPath)?.entryPath ||
-      quickMatches.find((match) => match.entryPath)?.entryPath ||
-      null;
+    // Only auto-resume when there's exactly ONE in-progress match. If several are
+    // saved (e.g. abandoned quick drafts piling up), don't force-redirect into an
+    // arbitrary one — return null so the app entry lands on the dashboard and the
+    // player can go home (or pick a match to resume) instead of being trapped.
+    const resumableEntryPaths = [
+      ...quickMatchDrafts.map((draft) => draft.entryPath),
+      ...quickMatches.map((match) => match.entryPath),
+    ].filter(Boolean);
+    const draftEntryPath = resumableEntryPaths.length === 1 ? resumableEntryPaths[0] : null;
 
     return {
       draftEntryPath,
