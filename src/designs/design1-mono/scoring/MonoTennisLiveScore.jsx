@@ -18,7 +18,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import {
   buildTennisQuickHistoryEntry,
   getTennisQuickDraftKey,
-  getVisibleTennisSetRows,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
@@ -581,6 +580,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
   const currentSetData = sets[currentSet];
   const isTiebreakMode = currentSetData?.isTiebreak;
+  const { team1Sets, team2Sets } = countSetsWon(sets.filter((s) => s.completed));
+  const leftSetsWon = sidesSwapped ? team2Sets : team1Sets;
+  const rightSetsWon = sidesSwapped ? team1Sets : team2Sets;
 
   // Display score for current game/tiebreak
   const { score1: score1Display, score2: score2Display } = computeScoreDisplay(currentSetData);
@@ -643,6 +645,12 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         {leftName}: {leftScoreDisplay}. {rightName}: {rightScoreDisplay}.
         {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}.
       </output>
+
+      {/* Seam: sets tally + format — matches the arena scorers */}
+      <div className="mono-arena-seam">
+        <span><b>{leftSetsWon}</b> &ndash; <b>{rightSetsWon}</b> sets</span>
+        <span className="mono-arena-seam-rule">{isTiebreakMode ? 'tiebreak' : `best of ${sets.length}`}</span>
+      </div>
 
       {/* Score cards — S6819: use <button> instead of role="button" div */}
       <div className="mono-score-grid mono-scorer-score-area" style={{ flex: 1, minHeight: 0 }}>
@@ -709,36 +717,6 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           Keyboard: Q = {leftName} · P = {rightName} · U = Undo
         </p>
       )}
-
-      {/* Set history */}
-      <div className="mb-6">
-        <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
-          Match Score
-        </h3>
-        <div className="flex flex-col">
-          {getVisibleTennisSetRows(sets).map((set, idx) => {
-            const isActive = idx === currentSet;
-            // S6479: use stable key derived from set label, not array index
-            const setLabel = `Set ${idx + 1}`;
-            const scoreDisplay = (set.isTiebreak && set.completed)
-              ? `${set.games1}-${set.games2} (${set.tiebreakPoints1}-${set.tiebreakPoints2})`
-              : `${set.games1}-${set.games2}`;
-
-            return (
-              <div
-                key={setLabel}
-                className="flex items-center justify-between py-2 text-sm"
-                style={{ borderBottom: '1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface))' }}
-              >
-                <span className="font-mono uppercase tracking-widest text-xs" style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink-muted)', fontWeight: 700 }}>{setLabel}</span>
-                <span className="font-mono font-bold" style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink)', fontVariantNumeric: 'tabular-nums' }}>
-                  {scoreDisplay}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Bottom bar */}
       <div className="mono-control-strip mono-scorer-control-strip pt-4">
