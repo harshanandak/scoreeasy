@@ -711,7 +711,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
             className="mono-btn"
             style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
           >
-            Save
+            Finish
           </button>
         </div>
       </div>

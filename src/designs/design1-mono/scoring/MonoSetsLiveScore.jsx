@@ -621,7 +621,7 @@ export default function MonoSetsLiveScore() {
               className="mono-btn"
               style={{ color: 'var(--primary)', opacity: isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
             >
-              Save
+              Finish
             </button>
           </div>
         </div>
