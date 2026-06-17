@@ -733,7 +733,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
           Match Score
         </h3>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           {getVisibleTennisSetRows(sets).map((set, idx) => {
             const isActive = idx === currentSet;
             // S6479: use stable key derived from set label, not array index
@@ -745,14 +745,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
             return (
               <div
                 key={setLabel}
-                className="flex items-center justify-between px-4 py-2 mono-row-panel text-sm"
-                style={{
-                  borderColor: isActive ? 'var(--primary)' : 'var(--se-color-line)',
-                  backgroundColor: set.completed ? '#fafafa' : '#fff',
-                }}
+                className="flex items-center justify-between py-2 text-sm"
+                style={{ borderBottom: '1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface))' }}
               >
-                <span style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink-muted)' }}>{setLabel}</span>
-                <span className="font-mono font-bold" style={{ color: 'var(--se-color-ink)' }}>
+                <span className="font-mono uppercase tracking-widest text-xs" style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink-muted)', fontWeight: 700 }}>{setLabel}</span>
+                <span className="font-mono font-bold" style={{ color: isActive ? 'var(--primary)' : 'var(--se-color-ink)', fontVariantNumeric: 'tabular-nums' }}>
                   {scoreDisplay}
                 </span>
               </div>
