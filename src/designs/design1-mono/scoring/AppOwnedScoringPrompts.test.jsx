@@ -270,7 +270,10 @@ describe('app-owned scoring prompts', () => {
     expect(source).toMatch(/const handleSwapSides = \(\) => \{\s+if \(isInteractionLocked\) return;/);
     expect(source).toMatch(/const handleToggleScoringMode = \(\) => \{\s+if \(isInteractionLocked\) return;/);
     expect(source).toContain('disabled={isInteractionLocked}');
-    expect(source).toContain('tabIndex={canScoreCurrentSet ? 0 : -1}');
+    // Score halves are native <button>s now (arena structure); the locked/redirect
+    // state disables them via canScoreCurrentSet (which includes isInteractionLocked),
+    // which also removes them from the tab order — no manual tabIndex needed.
+    expect(source).toContain('disabled={!canScoreCurrentSet}');
     expect(source).toMatch(/isInteractionLocked\r?\n {4}\? 'Scoring is temporarily locked'/);
     expect(source).toMatch(/isInteractionLocked\r?\n {4}\? 'Scoring locked'/);
   });

@@ -469,7 +469,7 @@ export default function MonoSetsLiveScore() {
   };
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen mono-arena-screen">
       <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
@@ -530,70 +530,58 @@ export default function MonoSetsLiveScore() {
           {team1Name}: {sets[currentSet]?.score1 || 0}. {team2Name}: {sets[currentSet]?.score2 || 0}. Set {currentSet + 1} of {effectiveFormat?.sets || 0}.
         </div>
 
-        {/* Score cards - side by side */}
-        <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '250px' }}>
+        {/* Score halves — same arena structure as the quick scorer: big tabular
+            number, accent-coloured name (with serving dot), a 2px leading underline,
+            and a pop on each point. */}
+        <div className="mono-arena-grid">
           {/* Left team */}
-          <div
-            role="button"
-            tabIndex={canScoreCurrentSet ? 0 : -1}
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
-            onKeyDown={(e) => {
-              if (canScoreCurrentSet && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                addPoint(leftTeam);
-              }
-            }}
-            aria-label={`${leftName}: ${leftScore} points. ${scoreCardAssistiveHint}`}
-            aria-disabled={!canScoreCurrentSet}
-            style={{
-              padding: '24px 16px',
-              cursor: canScoreCurrentSet ? 'pointer' : 'default',
-              opacity: canScoreCurrentSet ? 1 : 0.6,
-              touchAction: 'manipulation',
-            }}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }} aria-hidden="true">
-              {leftName} {showServeIndicator && leftServing ? <span style={{ color: 'var(--primary)' }}>SERVE</span> : null}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(leftScore, rightScore) }} aria-hidden="true">
-              {leftScore}
-            </p>
-            <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-faint)' }} aria-hidden="true">
-              {scoreCardVisualHint}
-            </p>
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
+              disabled={!canScoreCurrentSet}
+              data-leading={leftScore > rightScore ? 'true' : 'false'}
+              aria-label={`${leftName}: ${leftScore} points. ${scoreCardAssistiveHint}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(leftScore, rightScore), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(leftScore, rightScore) }}>
+                {showServeIndicator && leftServing ? '● ' : ''}{leftName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(leftScore, rightScore) }}
+              >
+                {leftScore}
+              </span>
+              <span className="mono-arena-hint">{scoreCardVisualHint}</span>
+            </button>
           </div>
 
           {/* Right team */}
-          <div
-            role="button"
-            tabIndex={canScoreCurrentSet ? 0 : -1}
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
-            onKeyDown={(e) => {
-              if (canScoreCurrentSet && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                addPoint(rightTeam);
-              }
-            }}
-            aria-label={`${rightName}: ${rightScore} points. ${scoreCardAssistiveHint}`}
-            aria-disabled={!canScoreCurrentSet}
-            style={{
-              padding: '24px 16px',
-              cursor: canScoreCurrentSet ? 'pointer' : 'default',
-              opacity: canScoreCurrentSet ? 1 : 0.6,
-              touchAction: 'manipulation',
-            }}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }} aria-hidden="true">
-              {rightName} {showServeIndicator && rightServing ? <span style={{ color: 'var(--primary)' }}>SERVE</span> : null}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate" style={{ color: teamAccent(rightScore, leftScore) }} aria-hidden="true">
-              {rightScore}
-            </p>
-            <p className="text-xs mt-4" style={{ color: 'var(--se-color-ink-faint)' }} aria-hidden="true">
-              {scoreCardVisualHint}
-            </p>
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
+              disabled={!canScoreCurrentSet}
+              data-leading={rightScore > leftScore ? 'true' : 'false'}
+              aria-label={`${rightName}: ${rightScore} points. ${scoreCardAssistiveHint}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(rightScore, leftScore), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(rightScore, leftScore) }}>
+                {showServeIndicator && rightServing ? '● ' : ''}{rightName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(rightScore, leftScore) }}
+              >
+                {rightScore}
+              </span>
+              <span className="mono-arena-hint">{scoreCardVisualHint}</span>
+            </button>
           </div>
         </div>
 

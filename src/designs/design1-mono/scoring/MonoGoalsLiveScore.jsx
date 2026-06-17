@@ -452,7 +452,7 @@ export default function MonoGoalsLiveScore() {
   };
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen mono-arena-screen">
       <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
@@ -509,26 +509,36 @@ export default function MonoGoalsLiveScore() {
           {leftName}: {leftScore}. {rightName}: {rightScore}.
         </div>
 
-        {/* Score cards - side by side */}
-        <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '280px' }}>
-          {/* Left Team Card */}
-          <div
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            style={{ padding: '24px 16px' }}
-            role="region"
-            aria-label={`${leftName} scoring`}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
-              {leftName}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(leftScore, rightScore) }} aria-label={`${leftName} score: ${leftScore}`}>
-              {leftScore}
-            </p>
-
-            {/* Quick buttons or simple +1 */}
-            <div className="flex flex-col gap-2 w-full px-4">
-              {quickButtons ? (
-                quickButtons.map((btn, idx) => (
+        {/* Score halves — same arena layout as the quick scorer. With quick
+            buttons (e.g. basketball +1/+2/+3) the half is a display and the buttons
+            sit below; otherwise the half itself taps to add a point. */}
+        <div className="mono-arena-grid">
+          {/* Left team */}
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={quickButtons ? undefined : () => addScore(leftTeam, 1)}
+              disabled={quickButtons ? true : (isTimeUp || scoringPrompt.isInteractionLocked)}
+              data-leading={leftScore > rightScore ? 'true' : 'false'}
+              aria-label={quickButtons ? `${leftName} score: ${leftScore}` : `Add 1 point to ${leftName}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(leftScore, rightScore), touchAction: 'manipulation' }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(leftScore, rightScore) }}>
+                {leftName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(leftScore, rightScore) }}
+              >
+                {leftScore}
+              </span>
+              {!quickButtons && <span className="mono-arena-hint">Tap +1</span>}
+            </button>
+            {quickButtons && (
+              <div className="flex flex-col gap-2 w-full px-4" style={{ marginTop: 8 }}>
+                {quickButtons.map((btn, idx) => (
                   <button
                     key={`left-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(leftTeam, btn.value)}
@@ -539,39 +549,37 @@ export default function MonoGoalsLiveScore() {
                   >
                     {btn.label}
                   </button>
-                ))
-              ) : (
-                <button
-                  onClick={() => addScore(leftTeam, 1)}
-                  className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
-                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
-                  aria-label={`Add 1 point to ${leftName}`}
-                >
-                  + 1
-                </button>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right Team Card */}
-          <div
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            style={{ padding: '24px 16px' }}
-            role="region"
-            aria-label={`${rightName} scoring`}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
-              {rightName}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: teamAccent(rightScore, leftScore) }} aria-label={`${rightName} score: ${rightScore}`}>
-              {rightScore}
-            </p>
-
-            {/* Quick buttons or simple +1 */}
-            <div className="flex flex-col gap-2 w-full px-4">
-              {quickButtons ? (
-                quickButtons.map((btn, idx) => (
+          {/* Right team */}
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={quickButtons ? undefined : () => addScore(rightTeam, 1)}
+              disabled={quickButtons ? true : (isTimeUp || scoringPrompt.isInteractionLocked)}
+              data-leading={rightScore > leftScore ? 'true' : 'false'}
+              aria-label={quickButtons ? `${rightName} score: ${rightScore}` : `Add 1 point to ${rightName}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(rightScore, leftScore), touchAction: 'manipulation' }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(rightScore, leftScore) }}>
+                {rightName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(rightScore, leftScore) }}
+              >
+                {rightScore}
+              </span>
+              {!quickButtons && <span className="mono-arena-hint">Tap +1</span>}
+            </button>
+            {quickButtons && (
+              <div className="flex flex-col gap-2 w-full px-4" style={{ marginTop: 8 }}>
+                {quickButtons.map((btn, idx) => (
                   <button
                     key={`right-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(rightTeam, btn.value)}
@@ -582,19 +590,9 @@ export default function MonoGoalsLiveScore() {
                   >
                     {btn.label}
                   </button>
-                ))
-              ) : (
-                <button
-                  onClick={() => addScore(rightTeam, 1)}
-                  className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
-                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
-                  aria-label={`Add 1 point to ${rightName}`}
-                >
-                  + 1
-                </button>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1151,6 +1151,15 @@ button.mono-stat-card {
   line-height: 1;
 }
 
+/* Scorers that adopt the arena number (tennis, sets, goals) carry BOTH
+   .mono-arena-num and the .mono-scorer-score-value marker. The two-class selector
+   wins on specificity so they get the full arena sizing at every breakpoint,
+   while cricket — which keeps .mono-scorer-score-value alone — is unaffected. */
+.mono-arena-num.mono-scorer-score-value {
+  font-size: clamp(3rem, min(22vh, 26vw), 8rem);
+  line-height: 0.95;
+}
+
 .mono-scorer-score-area {
   margin-bottom: 32px;
 }
