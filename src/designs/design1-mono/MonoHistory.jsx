@@ -500,7 +500,7 @@ export default function MonoHistory() {
         <nav className="mono-page-header flex items-center justify-between" aria-label="History navigation">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/app')}
               className="bg-transparent border-none cursor-pointer font-swiss text-sm"
               style={{ color: 'var(--se-color-ink-muted)' }}
               aria-label="Go back to home"

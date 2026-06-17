@@ -2801,7 +2801,7 @@ export default function MonoQuickMatch() {
           >
             New Match
           </button>
-          <button onClick={() => navigate('/')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+          <button onClick={() => navigate('/app')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
             Home
           </button>
         </div>

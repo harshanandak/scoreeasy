@@ -346,7 +346,7 @@ export default function MonoStatistics() {
     <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="mono-page-shell">
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
+          <button onClick={() => navigate('/app')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
             <BackArrow /> Home
           </button>
         </nav>

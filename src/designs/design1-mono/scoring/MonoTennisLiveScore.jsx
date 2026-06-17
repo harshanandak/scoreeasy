@@ -627,24 +627,6 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           {sportConfig?.name || 'Match'}
         </span>
         <div className="mono-scorer-topbar-actions">
-          <button
-            type="button"
-            onClick={handleSwapSides}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn"
-            style={{
-              padding: '6px 12px',
-              fontSize: '0.75rem',
-              minWidth: 0,
-              touchAction: 'manipulation',
-              borderColor: sidesSwapped ? 'var(--primary)' : 'var(--se-color-line)',
-              color: sidesSwapped ? 'var(--primary)' : 'var(--se-color-ink)',
-              opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1,
-            }}
-            title="Swap sides"
-          >
-            Swap
-          </button>
           <span
             className={`mono-badge ${isTiebreakMode ? 'mono-badge-paused' : 'mono-badge-live'}`}
           >
@@ -768,24 +750,32 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         >
           Save &amp; Return
         </button>
-        <div className="flex gap-2">
+        <div className="mono-quick-action-row">
           <button
             onClick={undo}
             disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-            className="mono-btn flex-1"
-            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
+            className="mono-btn"
+            style={{ opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
           >
             Undo
           </button>
-          <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
+          <button
+            onClick={handleSwapSides}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn"
+            style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+          >
+            Swap
+          </button>
+          <button onClick={handleCancel} className="mono-btn">
             Cancel
           </button>
           {hasChanges && !isMatchComplete && (
             <button
               onClick={saveDraft}
               disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              className="mono-btn"
+              style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
             >
               Save Draft
             </button>
