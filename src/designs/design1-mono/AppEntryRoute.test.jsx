@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
 
 let authState;
+let renderAuthUserButton;
 
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
@@ -15,7 +16,7 @@ vi.mock('../../hooks/useAuth', () => ({
 }));
 
 vi.mock('../../components/AuthButtons', () => ({
-  AuthUserButton: (props) => <button type="button" {...props}>Account menu</button>,
+  AuthUserButton: (props) => (renderAuthUserButton ? <button type="button" {...props}>Account menu</button> : null),
 }));
 
 vi.mock('./MonoLanding', () => ({
@@ -28,6 +29,10 @@ vi.mock('./landing/DashboardLanding', () => ({
 
 vi.mock('./MonoQuickMatch', () => ({
   default: () => <p>Quick match setup</p>,
+}));
+
+vi.mock('./MonoProfile', () => ({
+  default: () => <p>Profile screen</p>,
 }));
 
 vi.mock('./scoring/MonoTennisLiveScore', () => ({
@@ -62,6 +67,7 @@ describe('app entry route contract', () => {
       needsOnboarding: false,
       user: null,
     };
+    renderAuthUserButton = true;
     globalThis.localStorage.clear();
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
       callback?.(0);
@@ -185,17 +191,43 @@ describe('app entry route contract', () => {
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('shows simple app tabs with Home active on the app dashboard', async () => {
+  it('shows icon-led native app tabs with Home active on the app dashboard', async () => {
     const { container } = renderApp('/app');
 
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveAttribute('aria-label', 'App navigation');
+    expect(appNav).toHaveClass('global-bottom-nav-native');
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('width: auto;');
+    expect(navStyles).toContain('max-width: 520px;');
+    expect(navStyles).not.toContain('calc(100vw - 20px)');
 
     expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Matches', hidden: true })).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
+  });
+
+  it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
+    const { container } = renderApp('/play');
+
+    expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
+    const appNav = container.querySelector('.global-bottom-nav');
+    expect(appNav).toHaveClass('global-bottom-nav-native');
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
+
+    // The /play hub was simplified into a ledger-style chooser: the quick-match
+    // action now navigates straight to the sport scorer.
+    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
+    });
   });
 
   it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
@@ -213,6 +245,28 @@ describe('app entry route contract', () => {
 
     expect(within(appNav).getByText('Account')).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
+  });
+
+  it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    renderAuthUserButton = false;
+    const { container } = renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const appNav = container.querySelector('.global-bottom-nav');
+
+    fireEvent.click(within(appNav).getByRole('button', { name: 'Account', hidden: true }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+    expect(screen.getByText('Profile screen')).toBeInTheDocument();
   });
 
   it('does not show app bottom navigation on the public marketing route', async () => {

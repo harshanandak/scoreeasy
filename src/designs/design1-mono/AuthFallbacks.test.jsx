@@ -59,6 +59,7 @@ describe('auth fallback app entry routing', () => {
     renderAuthRoute('/login', <MonoLogin />);
 
     expect(screen.getByText('Sign in widget')).toBeInTheDocument();
+    expect(screen.getByText('Sign in or create account')).toBeInTheDocument();
     expect(signInProps.forceRedirectUrl).toBe('/');
     expect(signInProps.fallbackRedirectUrl).toBe('/');
     expect(signInProps.signUpUrl).toBe('/signup?returnTo=%2F');

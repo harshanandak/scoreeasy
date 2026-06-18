@@ -45,6 +45,19 @@ describe('Convex Clerk auth config', () => {
     ]);
   });
 
+  it('accepts the Score Easy development Clerk issuer', async () => {
+    const { default: authConfig } = await loadAuthConfig({
+      CLERK_JWT_ISSUER_DOMAIN: 'https://elegant-seahorse-53.clerk.accounts.dev',
+    });
+
+    expect(authConfig.providers).toEqual([
+      {
+        domain: 'https://elegant-seahorse-53.clerk.accounts.dev',
+        applicationID: 'convex',
+      },
+    ]);
+  });
+
   it('falls back to the frontend API URL when the issuer env is blank', async () => {
     const { default: authConfig } = await loadAuthConfig({
       CLERK_JWT_ISSUER_DOMAIN: '   ',

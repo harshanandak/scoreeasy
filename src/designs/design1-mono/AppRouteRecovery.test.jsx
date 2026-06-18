@@ -1,7 +1,22 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
+
+// This file renders the real Design1Mono app, which code-splits its routes via
+// React.lazy (see index.jsx). Each test navigates to a route whose component is
+// fetched through an on-demand dynamic import(). When the full suite runs in
+// parallel, those one-time module transforms contend for CPU and can take
+// several seconds to resolve, leaving the Suspense fallback (<AppLoading />)
+// mounted past the global 5s asyncUtilTimeout — which surfaces as a flaky
+// waitFor/findBy timeout even though the route eventually renders correctly.
+//
+// Give the async queries generous headroom (file-local, so the rest of the
+// suite keeps the tighter global default) and raise the per-test timeout above
+// 2x asyncUtilTimeout so tests with two sequential awaits (e.g. waitFor the
+// redirect, then findBy the loaded screen) are never killed mid-wait.
+configure({ asyncUtilTimeout: 15000 });
+vi.setConfig({ testTimeout: 40000, hookTimeout: 40000 });
 
 const authState = vi.hoisted(() => ({
   current: {

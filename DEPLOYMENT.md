@@ -36,6 +36,45 @@ Recommended Vercel settings:
 
 If you are configuring Vercel manually, add the environment variables above in Project Settings before the first deployment.
 
+### Vercel Preview Auth
+
+Vercel Preview deployments should use the Clerk development application, not
+the production Clerk app. Set these variables in the Vercel project with the
+`Preview` environment selected:
+
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_<development-clerk-publishable-key>
+VITE_CONVEX_URL=https://<development-convex-deployment>.convex.cloud
+```
+
+The current Clerk development issuer is:
+
+```bash
+https://elegant-seahorse-53.clerk.accounts.dev
+```
+
+That issuer's JWKS is:
+
+```bash
+https://elegant-seahorse-53.clerk.accounts.dev/.well-known/jwks.json
+```
+
+In the matching Convex development deployment, set:
+
+```bash
+bunx convex env set CLERK_JWT_ISSUER_DOMAIN https://elegant-seahorse-53.clerk.accounts.dev --deployment dev
+```
+
+If you are setting the variable on the production Convex deployment for
+`scoreeasy.app`, use the production Clerk issuer instead:
+
+```bash
+bunx convex env set CLERK_JWT_ISSUER_DOMAIN https://clerk.scoreeasy.app --prod
+```
+
+The Clerk JWT template must be named exactly `convex`; the app requests that
+template through `ConvexProviderWithClerk`.
+
 ## CI
 
 The repository includes `.github/workflows/ci.yml`, which runs:

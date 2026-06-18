@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
@@ -26,21 +27,6 @@ import {
   scoreImpact,
   warningImpact,
 } from '../../mobile/haptics';
-
-// Swap button — defined outside component to avoid S6478 (component defined inside render)
-function SwapButton({ onSwap }) {
-  return (
-    <button
-      onClick={onSwap}
-      className="mono-btn"
-      style={{ padding: '6px 10px', fontSize: '0.75rem' }}
-      title="Swap sides"
-      aria-label="Swap team sides"
-    >
-      ⇄ Swap
-    </button>
-  );
-}
 
 function EndMatchDialog({ onCancel, onConfirm }) {
   const cancelButtonRef = useRef(null);
@@ -124,12 +110,12 @@ function ScoringStatusStrip({ label, value, lastAction }) {
     >
       {label ? (
         <div>
-          <p className="text-[10px] uppercase tracking-widest" style={{ color: '#888' }}>{label}</p>
-          <p className="text-sm font-medium" style={{ color: '#111' }}>{value}</p>
+          <p className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--se-color-ink-muted)' }}>{label}</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--se-color-ink)' }}>{value}</p>
         </div>
       ) : <span />}
       {lastAction && (
-        <p className="text-xs text-right" style={{ color: '#555' }}>
+        <p className="text-xs text-right" style={{ color: 'var(--se-color-ink-muted)' }}>
           Last: {lastAction}
         </p>
       )}
@@ -137,63 +123,139 @@ function ScoringStatusStrip({ label, value, lastAction }) {
   );
 }
 
-function CorrectionControls({ teamName, onMinus, onPlus }) {
+// Correction = the one action the score pad can't do (the pad already adds +1).
+function CorrectionControls({ teamName, onMinus }) {
   return (
-    <div className="grid grid-cols-2 gap-2 mt-2">
+    <div className="mt-2 flex justify-center">
       <button
         type="button"
         onClick={onMinus}
-        className="mono-btn"
-        style={{ minHeight: '44px', padding: '8px 10px' }}
+        className="mono-correct"
         aria-label={`Subtract one from ${teamName}`}
       >
-        -1
-      </button>
-      <button
-        type="button"
-        onClick={onPlus}
-        className="mono-btn"
-        style={{ minHeight: '44px', padding: '8px 10px' }}
-        aria-label={`Add one to ${teamName}`}
-      >
-        +1
+        &minus;1
       </button>
     </div>
   );
 }
 
-function ThumbActionBar({ canUndo, onUndo, onSwap, onEnd }) {
+CorrectionControls.propTypes = {
+  teamName: PropTypes.string.isRequired,
+  onMinus: PropTypes.func.isRequired,
+};
+
+function UndoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-2" />
+    </svg>
+  );
+}
+
+// One shared bottom bar for every scorer: [Undo · Swap · Discard · Finish].
+// Saving is automatic; Finish ends the match (with confirm), Discard drops it.
+function ThumbActionBar({ canUndo, onUndo, onSwap, onDiscard, onEnd }) {
   return (
     <div className="mono-scorer-control-strip mono-quick-action-strip">
-      <div className={onSwap ? 'mono-quick-action-row mono-quick-action-row-three' : 'mono-quick-action-row'}>
+      <div className="mono-quick-action-row">
         <button
           type="button"
           onClick={onUndo}
           disabled={!canUndo}
-          className="mono-btn"
-          style={{ opacity: canUndo ? 1 : 0.42 }}
+          className="mono-btn mono-quick-undo"
+          aria-label="Undo last action"
+          title="Undo last action"
+          style={{ color: canUndo ? 'var(--se-color-ink)' : 'var(--se-color-ink-faint)' }}
         >
-          Undo
+          <UndoIcon />
         </button>
         {onSwap ? (
-          <button
-            type="button"
-            onClick={onSwap}
-            className="mono-btn"
-          >
+          <button type="button" onClick={onSwap} className="mono-btn">
             Swap
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={onEnd}
-          className="mono-btn mono-quick-end-button"
-        >
-          End Match
-        </button>
+        {onDiscard ? (
+          <button type="button" onClick={onDiscard} className="mono-btn">
+            Discard
+          </button>
+        ) : null}
+        {onEnd ? (
+          <button type="button" onClick={onEnd} className="mono-btn" style={{ color: 'var(--primary)' }}>
+            Finish
+          </button>
+        ) : null}
       </div>
     </div>
   );
+}
+
+function EndMatchButton({ onEnd }) {
+  return (
+    <button type="button" onClick={onEnd} className="mono-scorer-end-chip" aria-label="End Match">
+      End
+    </button>
+  );
+}
+
+ThumbActionBar.propTypes = {
+  canUndo: PropTypes.bool,
+  onUndo: PropTypes.func.isRequired,
+  onSwap: PropTypes.func,
+  onDiscard: PropTypes.func,
+  onEnd: PropTypes.func,
+};
+
+EndMatchButton.propTypes = {
+  onEnd: PropTypes.func.isRequired,
+};
+
+// Scoring-phase notice. The "resumed" info reads as a quiet ambient line; real
+// save errors and end-match validation keep a proper alert box. Tone is derived
+// from the message so the save/end logic sites stay untouched.
+function ScoringNotice({ message }) {
+  if (!message) return null;
+  const tone = message.startsWith('Resumed')
+    ? 'info'
+    : message.includes('cannot end tied')
+      ? 'warning'
+      : 'danger';
+  if (tone === 'info') {
+    return (
+      <p className="mono-scorer-note" role="status">{message}</p>
+    );
+  }
+  return (
+    <div className={`mono-alert mb-4 ${tone === 'warning' ? 'mono-alert-warning' : 'mono-alert-danger'}`} role="alert">
+      {message}
+    </div>
+  );
+}
+
+ScoringNotice.propTypes = {
+  message: PropTypes.string,
+};
+
+// CrickHeroes-style "this over" strip, derived from the existing per-delivery log (no new storage).
+function cricketOverPips(history, innings, battingTeam) {
+  const inn = history.filter((h) => h.innings === innings && h.battingTeam === battingTeam);
+  const extraLabel = { wide: 'Wd', noBall: 'Nb', bye: 'B', legBye: 'Lb' };
+  let cur = [];
+  let last = [];
+  let legal = 0;
+  for (const d of inn) {
+    let pip;
+    if (d.type === 'wicket') pip = { label: 'W', kind: 'wicket' };
+    else if (d.type === 'extra') pip = { label: extraLabel[d.extraType] || 'Ex', kind: 'extra' };
+    else pip = { label: String(d.value), kind: d.value === 4 ? 'four' : d.value === 6 ? 'six' : 'run' };
+    cur.push(pip);
+    const isLegal = d.type === 'runs' || d.type === 'wicket' || (d.type === 'extra' && (d.extraType === 'bye' || d.extraType === 'legBye'));
+    if (isLegal) {
+      legal += 1;
+      if (legal === 6) { last = cur; cur = []; legal = 0; }
+    }
+  }
+  return cur.length ? cur : last;
 }
 
 function getWinnerName(score1, score2, team1Name, team2Name, tiedName = 'Tie') {
@@ -290,6 +352,17 @@ export default function MonoQuickMatch() {
   const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || 'Team A');
   const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || 'Team B');
   const [saveWarning, setSaveWarning] = useState('');
+
+  // The "resumed your match" info is a transient toast — auto-dismiss it shortly
+  // after it appears. Real save errors / end-match validation messages are NOT
+  // dismissed here; they persist until the user resolves them.
+  useEffect(() => {
+    if (saveWarning && saveWarning.startsWith('Resumed')) {
+      const dismissTimer = setTimeout(() => setSaveWarning(''), 3300);
+      return () => clearTimeout(dismissTimer);
+    }
+    return undefined;
+  }, [saveWarning]);
 
   // Auth + Convex integration for match saving
   const { isAuthenticated, user } = useAuth();
@@ -681,6 +754,12 @@ export default function MonoQuickMatch() {
     endMatchManually();
   };
 
+  // Discard the in-progress quick match: clear its auto-saved draft and go home.
+  const discardQuickMatch = () => {
+    clearData(quickMatchDraftKey);
+    navigate('/app');
+  };
+
   const handleSideSwap = () => {
     void correctionImpact();
     setSidesSwapped(prev => !prev);
@@ -873,12 +952,36 @@ export default function MonoQuickMatch() {
 
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
-    setLastAction(`${battingName} ${type === 'noBall' ? 'no ball' : 'wide'} +1`);
+    const countsAsBall = type === 'bye' || type === 'legBye';
+    // Byes / leg byes are legal deliveries, so a free hit is used up even when no
+    // runs come off the bat. Wides / no-balls don't count as a ball and keep it.
+    if (countsAsBall && freeHit) setFreeHit(false);
+    const extraLabel = { wide: 'wide', noBall: 'no ball', bye: 'bye', legBye: 'leg bye' };
+    setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
-    setScores(prev => ({
-      ...prev,
-      [key]: { ...prev[key], runs: prev[key].runs + 1 },
-    }));
+    setScores(prev => {
+      const team = { ...prev[key], runs: prev[key].runs + 1 };
+      // Byes / leg byes are legal deliveries — they consume a ball.
+      if (countsAsBall) {
+        team.balls += 1;
+        if (team.balls >= totalBalls) {
+          if (innings === 1) {
+            setInnings(2);
+            setBattingTeam(battingTeam === 1 ? 2 : 1);
+          } else {
+            finishCricketMatch({ ...prev, [key]: team });
+          }
+        }
+      }
+      // Chase complete in the second innings (any extra adds a run).
+      if (innings === 2) {
+        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
+        if (team.runs > target) {
+          finishCricketMatch({ ...prev, [key]: team });
+        }
+      }
+      return { ...prev, [key]: team };
+    });
 
     // No ball triggers free hit if format supports it
     if (type === 'noBall' && format.freeHit) {
@@ -910,6 +1013,10 @@ export default function MonoQuickMatch() {
         team.allOut = false;
       } else if (last.type === 'extra') {
         team.runs = Math.max(0, team.runs - 1);
+        if (last.extraType === 'bye' || last.extraType === 'legBye') {
+          team.balls = Math.max(0, team.balls - 1);
+        }
+        team.allOut = false;
       }
       return { ...prev, [last.key]: team };
     });
@@ -1392,19 +1499,28 @@ export default function MonoQuickMatch() {
             <button
               onClick={handleSetupBack}
               className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-              style={{ color: '#888' }}
+              style={{ color: 'var(--se-color-ink-muted)' }}
               aria-label={isTeamSetupStep ? 'Go back' : 'Return to match setup'}
             >
               <BackArrow />
             </button>
             <div className="flex-1">
-              <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
+              <h1 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--se-color-ink)' }}>
                 {sportConfig?.icon || '\u{1F3D0}'} Quick Match
               </h1>
-              <p className="text-xs mt-0.5" style={{ color: '#888' }}>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--se-color-ink-muted)' }}>
                 {isTeamSetupStep ? 'Setup match' : `Edit ${currentStepLabel.toLowerCase()}`}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => navigate(`/${sport}/tournament`)}
+              className="bg-transparent border-none cursor-pointer"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)', padding: '12px 0', minHeight: 44 }}
+              aria-label="Switch to tournament setup"
+            >
+              Tournament &rarr;
+            </button>
           </nav>
 
           {/* Step progress bar */}
@@ -1416,7 +1532,7 @@ export default function MonoQuickMatch() {
                   className="flex-1"
                   style={{
                     height: '3px',
-                    background: i < setupStep ? '#0066ff' : '#eee',
+                    background: i < setupStep ? 'var(--primary)' : 'var(--muted)',
                     transition: 'background 0.2s ease',
                   }}
                 />
@@ -1430,7 +1546,7 @@ export default function MonoQuickMatch() {
               {/* Cricket Format Cards */}
               {isCricket && (
                 <div className="mb-8">
-                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
+                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                     Choose Format
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1452,10 +1568,10 @@ export default function MonoQuickMatch() {
                             cursor: 'pointer',
                           }}
                         >
-                          <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>
+                          <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>
                             {cf.name}
                           </p>
-                          <p className="text-xs" style={{ color: '#888' }}>{cf.desc}</p>
+                          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>{cf.desc}</p>
                           {cf.id !== 'custom' && (
                             <p className="text-xs font-mono mt-2" style={{ color: '#aaa' }}>
                               {cf.overs ? `${cf.overs} ov` : 'Unlimited'} &middot; {cf.players}p
@@ -1471,7 +1587,7 @@ export default function MonoQuickMatch() {
               {/* Non-cricket: Format Mode */}
               {!isCricket && (
                 <div className="mb-8">
-                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
+                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                     Format Mode
                   </label>
                   <div className="flex gap-3">
@@ -1483,8 +1599,8 @@ export default function MonoQuickMatch() {
                         cursor: 'pointer',
                       }}
                     >
-                      <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Standard</p>
-                      <p className="text-xs" style={{ color: '#888' }}>Official rules for {sportConfig?.name || 'this sport'}</p>
+                      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>Standard</p>
+                      <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Official rules for {sportConfig?.name || 'this sport'}</p>
                     </button>
                     <button
                       onClick={() => setFormatMode('custom')}
@@ -1494,8 +1610,8 @@ export default function MonoQuickMatch() {
                         cursor: 'pointer',
                       }}
                     >
-                      <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Custom</p>
-                      <p className="text-xs" style={{ color: '#888' }}>Set your own rules</p>
+                      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>Custom</p>
+                      <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Set your own rules</p>
                     </button>
                   </div>
                 </div>
@@ -1520,13 +1636,13 @@ export default function MonoQuickMatch() {
                 <div className="mono-soft-panel mb-6 flex items-center gap-3" style={{ padding: '12px 16px' }}>
                   <span className="text-2xl">🏏</span>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#111' }}>{selectedCricketFormat.name}</p>
-                    <p className="text-xs" style={{ color: '#888' }}>{selectedCricketFormat.desc}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--se-color-ink)' }}>{selectedCricketFormat.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>{selectedCricketFormat.desc}</p>
                   </div>
                   <button
                     onClick={() => setSetupStep(1)}
                     className="ml-auto text-xs bg-transparent border-none cursor-pointer"
-                    style={{ color: '#0066ff' }}
+                    style={{ color: 'var(--primary)' }}
                   >
                     Change
                   </button>
@@ -1539,7 +1655,7 @@ export default function MonoQuickMatch() {
                   {/* Scoring Format toggle (Custom only) */}
                   {cricketPreset === 'custom' && (
                     <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                         Scoring format
                       </span>
                       <div className="flex gap-2">
@@ -1564,7 +1680,7 @@ export default function MonoQuickMatch() {
                   {/* Overs (when tracking overs) */}
                   {format.trackOvers !== false && (
                     <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                         Overs
                       </span>
                       <div className="flex gap-2 flex-wrap mb-3">
@@ -1614,7 +1730,7 @@ export default function MonoQuickMatch() {
                               if (v >= 1 && v <= 50) setFormat(prev => ({ ...prev, overs: v }));
                             }}
                           />
-                          <span className="text-xs" style={{ color: '#888' }}>overs</span>
+                          <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>overs</span>
                         </div>
                       )}
                     </div>
@@ -1623,7 +1739,7 @@ export default function MonoQuickMatch() {
                   {/* Ball limit (when tracking balls only, Custom) */}
                   {cricketPreset === 'custom' && format.trackOvers === false && (
                     <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                         Ball limit
                       </span>
                       <div className="flex items-center gap-4">
@@ -1641,7 +1757,7 @@ export default function MonoQuickMatch() {
                         >
                           &minus;
                         </button>
-                        <span className="text-2xl font-bold font-mono" style={{ color: '#111', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+                        <span className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
                           {format.maxBalls || '\u221E'}
                         </span>
                         <button
@@ -1652,7 +1768,7 @@ export default function MonoQuickMatch() {
                           +
                         </button>
                       </div>
-                      <p className="text-xs mt-2" style={{ color: '#bbb' }}>No over structure — just track runs and balls</p>
+                      <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>No over structure — just track runs and balls</p>
                     </div>
                   )}
 
@@ -1660,7 +1776,7 @@ export default function MonoQuickMatch() {
 
                   {/* Players */}
                   <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                       Players per side
                     </span>
                     <div className="flex items-center gap-4">
@@ -1672,7 +1788,7 @@ export default function MonoQuickMatch() {
                       >
                         &minus;
                       </button>
-                      <span className="text-2xl font-bold font-mono" style={{ color: '#111', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
+                      <span className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
                         {format.players || 6}
                       </span>
                       <button
@@ -1687,14 +1803,14 @@ export default function MonoQuickMatch() {
                         +
                       </button>
                     </div>
-                    <p className="text-xs mt-2" style={{ color: '#bbb' }}>
+                    <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
                       {(format.players || 6) - 1} wickets to bowl a team out
                     </p>
                   </div>
 
                   {/* Match type */}
                   <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                       Match type
                     </span>
                     <div className="flex gap-2">
@@ -1713,7 +1829,7 @@ export default function MonoQuickMatch() {
                         Bat &amp; Bowl
                       </button>
                     </div>
-                    <p className="text-xs mt-2" style={{ color: '#bbb' }}>
+                    <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
                       {format.solo
                         ? 'One team bats, other bowls'
                         : 'Both teams bat and bowl'
@@ -1723,7 +1839,7 @@ export default function MonoQuickMatch() {
 
                   {/* Innings Format (Gully and Custom) */}
                   <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                       Innings
                     </span>
                     <div className="flex gap-2">
@@ -1750,13 +1866,13 @@ export default function MonoQuickMatch() {
                       <button
                         onClick={() => setShowAdvanced(!showAdvanced)}
                         className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                        style={{ color: '#0066ff', padding: '8px 0', marginBottom: showAdvanced ? 8 : 0 }}
+                        style={{ color: 'var(--primary)', padding: '8px 0', marginBottom: showAdvanced ? 8 : 0 }}
                       >
                         {showAdvanced ? '- Hide advanced options' : '+ Advanced options'}
                       </button>
                       {showAdvanced && (
                         <div>
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                             House rules
                           </span>
                           <div className="flex flex-wrap gap-2">
@@ -1782,7 +1898,7 @@ export default function MonoQuickMatch() {
                               One Tip One Hand
                             </button>
                           </div>
-                          <p className="text-xs mt-2" style={{ color: '#bbb' }}>
+                          <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
                             {format.lastManStands && 'Last batter plays alone \u00B7 '}
                             {format.trialBall && 'First ball doesn\'t count \u00B7 '}
                             {format.oneTipOneHand && 'One-bounce catch = out'}
@@ -1802,7 +1918,7 @@ export default function MonoQuickMatch() {
                   {engine === 'sets' && sportConfig?.config?.setFormats && (
                     <>
                       <div className="mb-6">
-                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                           Format
                         </span>
                         <div className="flex gap-2">
@@ -1826,7 +1942,7 @@ export default function MonoQuickMatch() {
                       {format.type === 'best-of' && (
                         <>
                           <div className="mb-6">
-                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                               Sets
                             </span>
                             <div className="flex gap-2 flex-wrap">
@@ -1844,7 +1960,7 @@ export default function MonoQuickMatch() {
                           </div>
 
                           <div className="mb-6">
-                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                               Points per set
                             </span>
                             <div className="flex gap-2 flex-wrap">
@@ -1865,7 +1981,7 @@ export default function MonoQuickMatch() {
 
                       {format.type === 'single' && (
                         <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                             Points to win
                           </span>
                           <div className="flex gap-2 flex-wrap">
@@ -1889,7 +2005,7 @@ export default function MonoQuickMatch() {
                   {isGoals && (
                     <>
                       <div className="mb-6">
-                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                           How are you playing?
                         </span>
                         <div className="flex gap-2">
@@ -1912,7 +2028,7 @@ export default function MonoQuickMatch() {
 
                       {format.mode === 'timed' && (
                         <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                             Time limit
                           </span>
                           <div className="flex gap-2 flex-wrap">
@@ -1936,7 +2052,7 @@ export default function MonoQuickMatch() {
 
                       {format.mode === 'points' && (
                         <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
+                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                             First to
                           </span>
                           <div className="flex gap-2 flex-wrap">
@@ -1978,13 +2094,13 @@ export default function MonoQuickMatch() {
                   <div className="flex items-start gap-3 min-w-0">
                     <span className="text-2xl">{sportConfig?.icon || '\u{1F3D0}'}</span>
                     <div>
-                      <h2 id="quick-match-rules-heading" className="text-sm font-semibold" style={{ color: '#111' }}>
+                      <h2 id="quick-match-rules-heading" className="text-sm font-semibold" style={{ color: 'var(--se-color-ink)' }}>
                         Match rules
                       </h2>
                       <p className="text-sm mt-1" style={{ color: '#333' }}>
                         {isCricket && selectedCricketFormat ? selectedCricketFormat.name : sportConfig?.name}
                       </p>
-                      <p className="text-xs font-mono mt-1" style={{ color: '#888' }}>
+                      <p className="text-xs font-mono mt-1" style={{ color: 'var(--se-color-ink-muted)' }}>
                         {ruleSummary}
                       </p>
                     </div>
@@ -1994,8 +2110,8 @@ export default function MonoQuickMatch() {
                     className="text-xs bg-transparent cursor-pointer w-full sm:w-auto"
                     style={{
                       minHeight: 44,
-                      border: '1.5px solid #0066ff',
-                      color: '#0066ff',
+                      border: '1.5px solid var(--primary)',
+                      color: 'var(--primary)',
                       padding: '0 12px',
                     }}
                   >
@@ -2006,13 +2122,13 @@ export default function MonoQuickMatch() {
 
               {/* Team names */}
               <fieldset className="mb-8 border-0 p-0">
-                <legend className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: '#888' }}>
+                <legend className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                   Teams
                 </legend>
 
                 {/* Team 1 */}
                 <div ref={team1Ref} className="relative mb-5">
-                  <label htmlFor="quick-team-1" className="text-xs font-semibold mb-2 block" style={{ color: '#555' }}>
+                  <label htmlFor="quick-team-1" className="text-xs font-semibold mb-2 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                     Team A name
                   </label>
                   <input
@@ -2042,8 +2158,8 @@ export default function MonoQuickMatch() {
                           className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
                           style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
                         >
-                          <span className="text-sm" style={{ color: '#111' }}>{t.name}</span>
-                          <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                          <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>{t.name}</span>
+                          <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-faint)' }}>
                             {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
                           </span>
                         </button>
@@ -2054,7 +2170,7 @@ export default function MonoQuickMatch() {
 
                 {/* Team 2 */}
                 <div ref={team2Ref} className="relative">
-                  <label htmlFor="quick-team-2" className="text-xs font-semibold mb-2 block" style={{ color: '#555' }}>
+                  <label htmlFor="quick-team-2" className="text-xs font-semibold mb-2 block" style={{ color: 'var(--se-color-ink-muted)' }}>
                     Team B name
                   </label>
                   <input
@@ -2084,8 +2200,8 @@ export default function MonoQuickMatch() {
                           className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
                           style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
                         >
-                          <span className="text-sm" style={{ color: '#111' }}>{t.name}</span>
-                          <span className="text-xs font-mono" style={{ color: '#bbb' }}>
+                          <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>{t.name}</span>
+                          <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-faint)' }}>
                             {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
                           </span>
                         </button>
@@ -2100,7 +2216,7 @@ export default function MonoQuickMatch() {
                   style={{
                     alignItems: 'center',
                     border: '1.5px solid #dbeafe',
-                    color: '#0066ff',
+                    color: 'var(--primary)',
                     display: 'inline-flex',
                     minHeight: 44,
                     padding: '0 12px',
@@ -2108,14 +2224,14 @@ export default function MonoQuickMatch() {
                 >
                   {showRosterSetup ? 'Hide players' : 'Add players'}
                   {playerCount > 0 && !showRosterSetup && (
-                    <span style={{ color: '#888', marginLeft: 4 }}>({playerCount})</span>
+                    <span style={{ color: 'var(--se-color-ink-muted)', marginLeft: 4 }}>({playerCount})</span>
                   )}
                 </button>
 
                 {showRosterSetup && (
                   <div className="mb-4 grid gap-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
                     <div>
-                      <h3 className="text-xs font-semibold mb-2" style={{ color: '#555' }}>
+                      <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
                         Team A players
                       </h3>
                       <PlayerSearchInput
@@ -2126,7 +2242,7 @@ export default function MonoQuickMatch() {
                       />
                     </div>
                     <div>
-                      <h3 className="text-xs font-semibold mb-2" style={{ color: '#555' }}>
+                      <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
                         Team B players
                       </h3>
                       <PlayerSearchInput
@@ -2150,9 +2266,9 @@ export default function MonoQuickMatch() {
                     type="checkbox"
                     checked={isRefereeing}
                     onChange={e => setIsRefereeing(e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: '#0066ff' }}
+                    style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
                   />
-                  <span className="text-sm" style={{ color: '#111' }}>
+                  <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>
                     I'm refereeing this match
                   </span>
                 </label>
@@ -2173,7 +2289,7 @@ export default function MonoQuickMatch() {
                 {startButtonLabel}
               </button>
               {!teamNamesReady && (
-                <p className="text-xs text-center mt-3" style={{ color: '#dc2626' }}>
+                <p className="text-xs text-center mt-3" style={{ color: 'var(--destructive)' }}>
                   Add both team names to start the match.
                 </p>
               )}
@@ -2188,7 +2304,7 @@ export default function MonoQuickMatch() {
   const timerDisplay = isTimedMode
     ? formatCountdown(remainingSeconds)
     : timer.formatted;
-  const timerColor = isTimeUp ? '#dc2626' : '#888';
+  const timerColor = isTimeUp ? 'var(--destructive)' : 'var(--se-color-ink-muted)';
 
   const quickButtons = sportConfig?.config?.quickButtons;
   const hasQuickButtons = quickButtons && quickButtons.length > 0;
@@ -2212,6 +2328,11 @@ export default function MonoQuickMatch() {
         ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
         : null;
 
+      // CrickHeroes-style derived context (no new storage)
+      const overPips = cricketOverPips(cricketHistory, innings, battingTeam);
+      const crr = currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls) : 0;
+      const projectedScore = (showOvers && format.overs && currentScore.balls > 0) ? Math.round(crr * format.overs) : null;
+
       // Powerplay
       const currentOver = Math.floor(currentScore.balls / 6) + 1;
       const powerplay = showOvers ? getPowerplayPhase(format, currentOver) : null;
@@ -2229,133 +2350,135 @@ export default function MonoQuickMatch() {
         : `${otherScore.balls} balls`;
 
       return (
-        <div className="mono-scorer-screen">
-          <div className="mono-scorer-shell">
+        <div className="mono-scorer-screen mono-arena-screen">
+          <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {saveWarning && (
-              <div className="mono-alert mono-alert-danger mb-4">
-                {saveWarning}
-              </div>
-            )}
+            <ScoringNotice message={saveWarning} />
             {/* Top bar */}
             <div className="mono-scorer-topbar">
-              <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Cricket'}</span>
+              <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Cricket'}</span>
               <div className="mono-scorer-topbar-actions">
                 {presetLabel && <span className="mono-badge">{presetLabel}</span>}
-                <span className="text-xs font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
-                {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
+                <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>{timer.formatted}</span>
+                {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
                 <span className="mono-badge mono-badge-live">Innings {innings}</span>
+                <EndMatchButton onEnd={requestEndMatch} />
               </div>
             </div>
 
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
-              <p className="text-xs text-center mb-2" style={{ color: '#888' }}>One tip one hand active</p>
+              <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
             )}
 
             {/* Trial ball banner */}
             {showTrialBall && (
               <div className="mono-alert mono-alert-info text-center mb-4" style={{ padding: '12px 16px' }}>
-                <p className="text-sm font-medium" style={{ color: '#0066ff' }}>Trial Ball — first delivery doesn't count</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--primary)' }}>Trial Ball — first delivery doesn't count</p>
                 <button
                   onClick={() => setTrialBallUsed(true)}
                   className="mono-btn mt-2"
-                  style={{ padding: '6px 16px', fontSize: '0.75rem', borderColor: '#0066ff', color: '#0066ff' }}
+                  style={{ padding: '6px 16px', fontSize: '0.75rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
                 >
                   Skip (Trial)
                 </button>
               </div>
             )}
 
-            {/* Batting team */}
+            {/* Batting team — hero */}
             <div className="mono-scorer-main-score mono-quick-cricket-score">
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
+              <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
-              <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
-                {currentScore.runs}<span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentScore.wickets}</span>
+              <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '0.06em', color: 'var(--se-color-ink)', margin: 0, lineHeight: 0.95, fontSize: 'clamp(3.5rem, 17vw, 6rem)', fontVariantNumeric: 'tabular-nums' }}>
+                <span>{currentScore.runs}</span>
+                <span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.42em', fontWeight: 700 }}>/{currentScore.wickets}</span>
+                <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.2em', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>({oversDisplay})</span>
               </p>
-              <p className="text-sm font-mono" style={{ color: '#888' }}>
-                {oversDisplay} &middot; RR {currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls).toFixed(2) : '0.00'}
+              <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', marginTop: 6 }}>
+                CRR {crr.toFixed(2)}
+                {projectedScore !== null ? ` · Proj ${projectedScore}` : ''}
+                {target !== null ? ` · Need ${Math.max(0, target + 1 - currentScore.runs)}${totalBalls !== Infinity ? ` (${totalBalls - currentScore.balls} b)` : ''}` : ''}
               </p>
-              {lastAction && (
-                <p className="text-xs mt-1" style={{ color: '#888' }}>{lastAction}</p>
-              )}
 
-              {/* Powerplay indicator */}
-              {powerplay && (
-                <p className="text-xs mt-1" style={{ color: '#0066ff' }}>
-                  {powerplay.label} (Overs {powerplay.start}-{powerplay.end})
-                </p>
-              )}
-
-              {/* Last Man Stands */}
-              {isLastMan && (
-                <p className="text-xs mt-1 font-medium" style={{ color: '#ff6b00' }}>Last Man Batting</p>
-              )}
-
-              {/* Free Hit banner */}
-              {freeHit && (
-                <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
-                  <p className="text-sm font-bold" style={{ color: '#ff6b00' }}>FREE HIT</p>
-                  <p className="text-xs" style={{ color: '#888' }}>Run Out Only</p>
+              {/* This over */}
+              {overPips.length > 0 && (
+                <div className="mono-over-strip" aria-label="This over">
+                  <span className="mono-over-label">Over</span>
+                  {overPips.map((p, i) => (
+                    <span key={`${i}-${p.label}`} className={`mono-over-pip mono-over-pip-${p.kind}`}>{p.label}</span>
+                  ))}
                 </div>
               )}
 
-              {target !== null && (
-                <p className="text-sm mt-2" style={{ color: '#0066ff' }}>
-                  Target: {target + 1} &middot; Need {Math.max(0, target + 1 - currentScore.runs)}
-                  {totalBalls !== Infinity ? ` from ${totalBalls - currentScore.balls} balls` : ''}
-                </p>
+              {/* Status chips (compact, not stacked banners) */}
+              {(powerplay || isLastMan || freeHit) && (
+                <div className="mono-cricket-chips">
+                  {powerplay && <span className="mono-cricket-chip mono-cricket-chip-accent">{powerplay.label}</span>}
+                  {isLastMan && <span className="mono-cricket-chip mono-cricket-chip-warn">Last man</span>}
+                  {freeHit && <span className="mono-cricket-chip mono-cricket-chip-warn">Free hit · run out only</span>}
+                </div>
               )}
             </div>
 
-            {/* Other team score */}
-            <div className="mono-score-mini mono-quick-other-score text-center" style={{ padding: '10px 12px' }}>
-              <p className="text-xs" style={{ color: '#888' }}>
-                {otherName}: {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
+            {/* Other team */}
+            <div className="mono-quick-other-score" style={{ textAlign: 'center', padding: '6px 12px' }}>
+              <p className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)', margin: 0 }}>
+                {otherName} {otherScore.runs}/{otherScore.wickets} ({otherOversDisplay})
               </p>
             </div>
 
-            {/* Run buttons */}
-            <div className="mono-scorer-run-grid">
-              {CRICKET_RUN_VALUES.map(r => (
+            {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
+            <div className="mono-cricket-keypad">
+              <div className="mono-cricket-keys">
+                {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => addRuns(r)}
+                    className={`mono-cricket-key${r === 4 ? ' mono-cricket-key-four' : r === 6 ? ' mono-cricket-key-six' : ''}`}
+                    style={{ touchAction: 'manipulation' }}
+                    aria-label={r === 4 ? 'Four runs' : r === 6 ? 'Six runs' : `${r} run${r === 1 ? '' : 's'}`}
+                  >
+                    <span>{r}</span>
+                    {(r === 4 || r === 6) && <small>{r === 4 ? 'FOUR' : 'SIX'}</small>}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mono-cricket-keys mono-cricket-keys-sec">
+                {CRICKET_RUN_VALUES.filter((v) => v === 5).map((r) => (
+                  <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
+                ))}
+                {[
+                  { type: 'wide', label: 'WD' },
+                  { type: 'noBall', label: 'NB' },
+                  { type: 'bye', label: 'BYE' },
+                  { type: 'legBye', label: 'LB' },
+                ].map((ex) => (
+                  <button key={ex.type} onClick={() => addExtra(ex.type)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }}>
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mono-cricket-out-line-row">
+                <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
+                  {freeHit ? 'Run Out Only' : 'OUT'}
+                </button>
                 <button
-                  key={r}
-                  onClick={() => addRuns(r)}
-                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
+                  type="button"
+                  onClick={undoCricketAction}
+                  disabled={cricketHistory.length === 0}
+                  className="mono-cricket-undo-line"
+                  aria-label="Undo last action"
+                  title="Undo last action"
                   style={{ touchAction: 'manipulation' }}
                 >
-                  {r}
+                  <UndoIcon />
                 </button>
-              ))}
+              </div>
             </div>
-
-            <div className="mono-scorer-extra-row">
-              <button onClick={() => addExtra('wide')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
-                Wide (+1)
-              </button>
-              <button onClick={() => addExtra('noBall')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
-                No Ball (+1)
-              </button>
-            </div>
-
-            <div className="mono-quick-cricket-secondary-row">
-              <button
-                onClick={addWicket}
-                className="mono-btn mono-btn-danger mono-quick-wicket-button"
-                style={{ touchAction: 'manipulation' }}
-              >
-                {freeHit ? 'Run Out Only' : 'Wicket'}
-              </button>
-            </div>
-
-            <ThumbActionBar
-              canUndo={cricketHistory.length > 0}
-              onUndo={undoCricketAction}
-              onEnd={requestEndMatch}
-            />
           </div>
         </div>
       );
@@ -2366,147 +2489,77 @@ export default function MonoQuickMatch() {
     const rightTeam = sidesSwapped ? 1 : 2;
     const leftName = sidesSwapped ? team2Name : team1Name;
     const rightName = sidesSwapped ? team1Name : team2Name;
-    const leftAccent = leftTeam === 1 ? '#0066ff' : '#16a34a';
-    const rightAccent = rightTeam === 1 ? '#0066ff' : '#16a34a';
+    // Accent by state: the team ahead is green; a tie shows both teams brown;
+    // a trailing team is plain ink (black).
+    const teamAccent = (mine, other) =>
+      mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
 
     // Goals-based scoring
     if (isGoals) {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
 
+      const goalHalves = [
+        { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: teamAccent(leftScore, rightScore), leading: leftScore > rightScore },
+        { side: 'right', name: rightName, score: rightScore, team: rightTeam, accent: teamAccent(rightScore, leftScore), leading: rightScore > leftScore },
+      ];
       return (
-        <div className="min-h-screen px-6 py-10">
-          <div className="max-w-2xl mx-auto">
+        <div className="mono-scorer-screen mono-arena-screen">
+          <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {saveWarning && (
-              <div className="mono-alert mono-alert-danger mb-4">
-                {saveWarning}
-              </div>
-            )}
-            {/* Top bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-              <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Match'}</span>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <span className="text-sm font-mono" style={{ color: timerColor }}>
-                  {isTimeUp ? "Time's up!" : timerDisplay}
-                </span>
-                <SwapButton onSwap={handleSideSwap} />
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
-                <span className="mono-badge mono-badge-live">
-                  {isPointsMode ? `First to ${format.target}` : 'Live'}
-                </span>
-              </div>
+            <ScoringNotice message={saveWarning} />
+            {/* Top spine */}
+            <div className="mono-scorer-topbar">
+              <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
+              <span className="text-sm font-mono" style={{ color: timerColor, fontWeight: 700 }}>
+                {isTimeUp ? "Time's up!" : timerDisplay}
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span className="mono-badge mono-badge-live">{isPointsMode ? `First to ${format.target}` : 'Live'}</span>
+              </span>
             </div>
 
-            <ScoringStatusStrip label="Scoring" value={`${leftName} vs ${rightName}`} lastAction={lastAction} />
-
-            {/* Score panels */}
-            <div className="mono-score-grid items-start mb-6">
-              {/* Left team */}
-              <div className="flex-1">
-                <button
-                  type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
-                  onClick={!hasQuickButtons ? () => addGoal(leftTeam) : undefined}
-                  disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
-                  aria-label={hasQuickButtons ? `${leftName} score` : `Add score for ${leftName}`}
-                >
-                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
-                    Left side
-                  </p>
-                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#555' }}>
-                    {leftName}
-                  </p>
-                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                    {leftScore}
-                  </p>
-                  {!hasQuickButtons && (
-                    <p className="text-xs mt-3" style={{ color: '#555' }}>Tap +1</p>
+            {/* Arena: two full-bleed halves; whole half = +1 */}
+            <div className="mono-arena-grid">
+              {goalHalves.map((h) => (
+                <div className="mono-arena-col" key={h.side}>
+                  <button
+                    type="button"
+                    className="mono-arena-half"
+                    data-leading={h.leading ? 'true' : 'false'}
+                    onClick={!hasQuickButtons ? () => addGoal(h.team) : undefined}
+                    disabled={hasQuickButtons}
+                    style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                    aria-label={hasQuickButtons ? `${h.name} score` : `Add 1 to ${h.name}`}
+                  >
+                    <span className="mono-arena-overline" style={{ color: h.accent }}>{h.name}</span>
+                    <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
+                    {!hasQuickButtons && <span className="mono-arena-hint">Tap +1</span>}
+                  </button>
+                  {hasQuickButtons && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
+                      {quickButtons.map((btn) => (
+                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </button>
-                <CorrectionControls
-                  teamName={leftName}
-                  onMinus={() => adjustGoalScore(leftTeam, -1)}
-                  onPlus={() => adjustGoalScore(leftTeam, 1)}
-                />
-              </div>
-
-              {/* Right team */}
-              <div className="flex-1">
-                <button
-                  type="button"
-                  className="w-full h-full flex flex-col items-center justify-center mono-score-pad"
-                  onClick={!hasQuickButtons ? () => addGoal(rightTeam) : undefined}
-                  disabled={hasQuickButtons}
-                  style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': hasQuickButtons ? '180px' : '250px', opacity: 1 }}
-                  aria-label={hasQuickButtons ? `${rightName} score` : `Add score for ${rightName}`}
-                >
-                  <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
-                    Right side
-                  </p>
-                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#555' }}>
-                    {rightName}
-                  </p>
-                  <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                    {rightScore}
-                  </p>
-                  {!hasQuickButtons && (
-                    <p className="text-xs mt-3" style={{ color: '#555' }}>Tap +1</p>
-                  )}
-                </button>
-                <CorrectionControls
-                  teamName={rightName}
-                  onMinus={() => adjustGoalScore(rightTeam, -1)}
-                  onPlus={() => adjustGoalScore(rightTeam, 1)}
-                />
-              </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+                    <CorrectionControls teamName={h.name} onMinus={() => adjustGoalScore(h.team, -1)} />
+                  </div>
+                </div>
+              ))}
             </div>
-
-            {/* Quick buttons per team (for button sports) */}
-            {hasQuickButtons && (
-              <div className="flex gap-4 mb-6">
-                <div className="flex-1 flex flex-wrap gap-2 justify-center">
-                  {quickButtons.map(btn => (
-                    <button
-                      key={`left-${btn.label}`}
-                      onClick={() => addGoal(leftTeam, btn.value)}
-                      className="mono-btn"
-                      style={{ padding: '8px 10px', fontSize: '0.75rem', touchAction: 'manipulation' }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2 justify-center">
-                  {quickButtons.map(btn => (
-                    <button
-                      key={`right-${btn.label}`}
-                      onClick={() => addGoal(rightTeam, btn.value)}
-                      className="mono-btn"
-                      style={{ padding: '8px 10px', fontSize: '0.75rem', touchAction: 'manipulation' }}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <ThumbActionBar
               canUndo={gScoreHistory.length > 0}
               onUndo={undoGoal}
               onSwap={handleSideSwap}
+              onDiscard={discardQuickMatch}
               onEnd={requestEndMatch}
             />
-
-            <p className="text-xs text-center mt-4" style={{ color: '#bbb' }}>
-              {!hasQuickButtons ? `Tap a team to add 1 ${scoringUnit}` : null}
-              {isPointsMode && format.target ? ` · First to ${format.target}` : null}
-            </p>
           </div>
         </div>
       );
@@ -2523,125 +2576,71 @@ export default function MonoQuickMatch() {
       : (sidesSwapped ? vScore1 : vScore2);
     const leftSetScore = rawLeftSetScore;
     const rightSetScore = rawRightSetScore;
+    const setHalves = [
+      { side: 'left', name: leftName, score: leftSetScore, team: leftTeam, accent: teamAccent(leftSetScore, rightSetScore), leading: leftSetScore > rightSetScore, serving: tracksPointWinnerServe && servingTeam === leftTeam },
+      { side: 'right', name: rightName, score: rightSetScore, team: rightTeam, accent: teamAccent(rightSetScore, leftSetScore), leading: rightSetScore > leftSetScore, serving: tracksPointWinnerServe && servingTeam === rightTeam },
+    ];
+    const setsRule = format.type === 'best-of'
+      ? `${format.points || 25} pts · win by 2`
+      : `${format.target} pts · win by 2`;
 
     return (
-      <div className="min-h-screen px-6 py-10">
-        <div className="max-w-2xl mx-auto">
+      <div className="mono-scorer-screen mono-arena-screen">
+        <div className="mono-scorer-shell">
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
-          {saveWarning && (
-            <div className="mono-alert mono-alert-danger mb-4">
-              {saveWarning}
-            </div>
-          )}
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-            <span className="text-sm font-swiss" style={{ color: '#888' }}>{sportConfig?.name || 'Match'}</span>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-sm font-mono" style={{ color: '#888' }}>{timer.formatted}</span>
-              <SwapButton onSwap={handleSideSwap} />
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {isRefereeing && <span className="text-xs" style={{ color: '#888' }}>Referee&nbsp;&middot;</span>}
+          <ScoringNotice message={saveWarning} />
+          {/* Top spine */}
+          <div className="mono-scorer-topbar">
+            <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
+            <span className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700 }}>{timer.formatted}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <span className="mono-badge mono-badge-live">
                 {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
               </span>
-            </div>
+            </span>
           </div>
 
-          <ScoringStatusStrip
-            label={tracksPointWinnerServe ? 'Serving' : 'Scoring'}
-            value={tracksPointWinnerServe ? (servingTeam === leftTeam ? leftName : rightName) : `${leftName} vs ${rightName}`}
-            lastAction={lastAction}
-          />
+          {/* Seam: sets-won tally + rule */}
+          <div className="mono-arena-seam">
+            {format.type === 'best-of' && (
+              <span><b>{leftSetsWon}</b> &ndash; <b>{rightSetsWon}</b> sets</span>
+            )}
+            <span className="mono-arena-seam-rule">{setsRule}</span>
+          </div>
 
-          {/* Sets won (best-of only) */}
-          {format.type === 'best-of' && (
-            <div className="flex justify-center gap-4 mb-4">
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: '#888' }}>{leftName}</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: '#111' }}>
-                  {leftSetsWon}
-                </p>
-                <p className="text-xs" style={{ color: '#bbb' }}>sets</p>
+          {/* Arena: two full-bleed halves; whole half = +1 point */}
+          <div className="mono-arena-grid">
+            {setHalves.map((h) => (
+              <div className="mono-arena-col" key={h.side}>
+                <button
+                  type="button"
+                  className="mono-arena-half"
+                  data-leading={h.leading ? 'true' : 'false'}
+                  onClick={() => addPoint(h.team)}
+                  style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                  aria-label={`Add point for ${h.name}`}
+                >
+                  <span className="mono-arena-overline" style={{ color: h.accent }}>
+                    {h.serving ? '● ' : ''}{h.name}
+                  </span>
+                  <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
+                  <span className="mono-arena-hint">Tap +1</span>
+                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+                  <CorrectionControls teamName={h.name} onMinus={() => adjustSetScore(h.team, -1)} />
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: '#888' }}>{rightName}</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: '#111' }}>
-                  {rightSetsWon}
-                </p>
-                <p className="text-xs" style={{ color: '#bbb' }}>sets</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mono-score-grid items-start mb-8">
-            {/* Left team */}
-            <div className="flex-1">
-              <button
-                type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
-                onClick={() => addPoint(leftTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': leftAccent, '--score-pad-height': '250px' }}
-                aria-label={`Add point for ${leftName}`}
-              >
-                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: leftAccent }}>
-                  Left side
-                </p>
-                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#555' }}>
-                  {leftName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                  {leftSetScore}
-                </p>
-                <p className="text-xs mt-4" style={{ color: '#555' }}>Tap +1</p>
-              </button>
-              <CorrectionControls
-                teamName={leftName}
-                onMinus={() => adjustSetScore(leftTeam, -1)}
-                onPlus={() => adjustSetScore(leftTeam, 1)}
-              />
-            </div>
-
-            {/* Right team */}
-            <div className="flex-1">
-              <button
-                type="button"
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer mono-score-pad"
-                onClick={() => addPoint(rightTeam)}
-                style={{ padding: '24px 16px', touchAction: 'manipulation', '--score-accent': rightAccent, '--score-pad-height': '250px' }}
-                aria-label={`Add point for ${rightName}`}
-              >
-                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: rightAccent }}>
-                  Right side
-                </p>
-                <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#555' }}>
-                  {rightName}
-                </p>
-                <p className="text-6xl font-bold font-mono mono-score" style={{ color: '#111' }}>
-                  {rightSetScore}
-                </p>
-                <p className="text-xs mt-4" style={{ color: '#555' }}>Tap +1</p>
-              </button>
-              <CorrectionControls
-                teamName={rightName}
-                onMinus={() => adjustSetScore(rightTeam, -1)}
-                onPlus={() => adjustSetScore(rightTeam, 1)}
-              />
-            </div>
+            ))}
           </div>
 
           <ThumbActionBar
             canUndo={vScoreHistory.length > 0}
             onUndo={undoPoint}
             onSwap={handleSideSwap}
+            onDiscard={discardQuickMatch}
             onEnd={requestEndMatch}
           />
-
-          <p className="text-xs text-center" style={{ color: '#bbb' }}>
-            {format.type === 'best-of'
-              ? `${format.points || 25} points · Win by 2 at deuce`
-              : `${format.target} points to win · Win by 2 at deuce`}
-          </p>
         </div>
       </div>
     );
@@ -2677,8 +2676,8 @@ export default function MonoQuickMatch() {
           <div
             className={`mono-alert mb-4 ${syncState === 'failed' ? 'mono-alert-danger' : syncState === 'synced' ? 'mono-alert-success' : 'mono-alert-info'}`}
             style={{
-              borderColor: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#16a34a' : '#0066ff',
-              color: syncState === 'failed' ? '#dc2626' : syncState === 'synced' ? '#166534' : '#0066ff',
+              borderColor: syncState === 'failed' ? 'var(--destructive)' : syncState === 'synced' ? 'var(--primary)' : 'var(--primary)',
+              color: syncState === 'failed' ? 'var(--destructive)' : syncState === 'synced' ? 'var(--se-color-action-strong)' : 'var(--primary)',
             }}
           >
             <div className="flex items-center justify-between gap-3">
@@ -2700,21 +2699,21 @@ export default function MonoQuickMatch() {
           </div>
         )}
         <div className="text-center mb-10" style={{ paddingTop: '40px' }}>
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
+          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
             Match Result
           </p>
 
           {isNoWinner ? (
-            <h1 className="text-2xl font-bold" style={{ color: '#111' }}>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--se-color-ink)' }}>
               {isDraw ? 'Match Drawn' : 'Match Tied'}
             </h1>
           ) : (
             <>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: '#111' }}>
+              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--se-color-ink)' }}>
                 {result.winner} Won
               </h1>
               {isCricket && result.team1Score && result.team2Score && (
-                <p className="text-sm" style={{ color: '#888' }}>
+                <p className="text-sm" style={{ color: 'var(--se-color-ink-muted)' }}>
                   by {Math.abs(result.team1Score.runs - result.team2Score.runs)} runs
                 </p>
               )}
@@ -2722,7 +2721,7 @@ export default function MonoQuickMatch() {
           )}
 
           {result?.elapsedSeconds > 0 && (
-            <p className="text-xs font-mono mt-3" style={{ color: '#888' }}>
+            <p className="text-xs font-mono mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>
               Duration: {formatElapsed(result.elapsedSeconds)}
             </p>
           )}
@@ -2739,32 +2738,32 @@ export default function MonoQuickMatch() {
           {isCricket && result.team1Score ? (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium" style={{ color: result.winner === result.team1 ? '#111' : '#888' }}>
+                <span className="text-sm font-medium" style={{ color: result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                   {result.team1}
                 </span>
-                <span className="font-mono font-bold" style={{ color: result.winner === result.team1 ? '#111' : '#888' }}>
+                <span className="font-mono font-bold" style={{ color: result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                   {result.team1Score.runs}/{result.team1Score.wickets} ({ballsToOvers(result.team1Score.balls)} ov)
                 </span>
               </div>
               <hr className="mono-divider" />
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium" style={{ color: result.winner === result.team2 ? '#111' : '#888' }}>
+                <span className="text-sm font-medium" style={{ color: result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                   {result.team2}
                 </span>
-                <span className="font-mono font-bold" style={{ color: result.winner === result.team2 ? '#111' : '#888' }}>
+                <span className="font-mono font-bold" style={{ color: result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                   {result.team2Score.runs}/{result.team2Score.wickets} ({ballsToOvers(result.team2Score.balls)} ov)
                 </span>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team1 ? '#111' : '#888' }}>
+              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                 {result.team1}
               </span>
-              <span className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>
+              <span className="text-2xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
                 {result.score1} - {result.score2}
               </span>
-              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team2 ? '#111' : '#888' }}>
+              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                 {result.team2}
               </span>
             </div>
@@ -2774,10 +2773,10 @@ export default function MonoQuickMatch() {
         {resultSetSummary && (
           <div className="mono-soft-panel mb-8" style={{ padding: '18px 20px' }}>
             <div className="flex items-center justify-between gap-3 mb-4">
-              <p className="text-xs uppercase tracking-widest" style={{ color: '#888', margin: 0 }}>
+              <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--se-color-ink-muted)', margin: 0 }}>
                 Set breakdown
               </p>
-              <span className="text-xs font-mono" style={{ color: '#111' }}>
+              <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink)' }}>
                 {resultSetSummary.text}
               </span>
             </div>
@@ -2789,7 +2788,7 @@ export default function MonoQuickMatch() {
                   style={{ minHeight: 32 }}
                 >
                   <span className="text-xs" style={{ color: '#666' }}>{row.label}</span>
-                  <span className="font-mono font-semibold" style={{ color: '#111' }}>
+                  <span className="font-mono font-semibold" style={{ color: 'var(--se-color-ink)' }}>
                     {row.score1} - {row.score2}
                   </span>
                   <span className="text-xs text-right" style={{ color: '#666', minWidth: 88 }}>
@@ -2825,7 +2824,7 @@ export default function MonoQuickMatch() {
           >
             New Match
           </button>
-          <button onClick={() => navigate('/')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
+          <button onClick={() => navigate('/app')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
             Home
           </button>
         </div>

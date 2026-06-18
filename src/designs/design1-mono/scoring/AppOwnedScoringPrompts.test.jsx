@@ -199,14 +199,21 @@ describe('app-owned scoring prompts', () => {
 
     for (const [componentFile, source] of Object.entries(sourceByComponent)) {
       expect(source, componentFile).toContain('mono-scorer-screen');
-      expect(source, componentFile).toContain('mono-scorer-control-strip');
       expect(source, componentFile).toContain('mono-scorer-score-value');
+      // The cricket Test scorer moves match/ending actions into a top-bar
+      // hamburger menu (no bottom control strip) so the keypad stays in the
+      // thumb zone; every other scorer keeps the bottom control strip.
+      if (componentFile === 'MonoCricketTestLiveScore.jsx') {
+        expect(source, componentFile).toContain('aria-label="Match options"');
+      } else {
+        expect(source, componentFile).toContain('mono-scorer-control-strip');
+      }
     }
 
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-grid');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-grid');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-keypad');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-key');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain('className="max-w-2xl mx-auto text-center"');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(followOnPrompt\)[\s\S]*className="min-h-screen px-6 py-10"/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(matchComplete && matchResult\)[\s\S]*className="min-h-screen px-6 py-10"/);
@@ -214,13 +221,17 @@ describe('app-owned scoring prompts', () => {
     expect(quickMatchSource).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain("background: '#fffbeb'");
-    expect(quickMatchSource).toContain('mono-scorer-run-button-accent');
+    // The quick-match and Test cricket scorers use the line-divided keypad
+    // (mono-cricket-*); the tournament limited-overs scorer still uses the
+    // run-button grid.
+    expect(quickMatchSource).toContain('mono-cricket-keypad');
+    expect(quickMatchSource).toContain('mono-cricket-key-six');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
-    expect(quickMatchSource).toContain('mono-btn-danger mono-quick-wicket-button');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-key-six');
+    expect(quickMatchSource).toContain('mono-cricket-out-line');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-out-line');
     expect(quickMatchSource).not.toContain('autoFocus');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {
@@ -267,7 +278,10 @@ describe('app-owned scoring prompts', () => {
     expect(source).toMatch(/const handleSwapSides = \(\) => \{\s+if \(isInteractionLocked\) return;/);
     expect(source).toMatch(/const handleToggleScoringMode = \(\) => \{\s+if \(isInteractionLocked\) return;/);
     expect(source).toContain('disabled={isInteractionLocked}');
-    expect(source).toContain('tabIndex={canScoreCurrentSet ? 0 : -1}');
+    // Score halves are native <button>s now (arena structure); the locked/redirect
+    // state disables them via canScoreCurrentSet (which includes isInteractionLocked),
+    // which also removes them from the tab order — no manual tabIndex needed.
+    expect(source).toContain('disabled={!canScoreCurrentSet}');
     expect(source).toMatch(/isInteractionLocked\r?\n {4}\? 'Scoring is temporarily locked'/);
     expect(source).toMatch(/isInteractionLocked\r?\n {4}\? 'Scoring locked'/);
   });
@@ -287,15 +301,17 @@ describe('app-owned scoring prompts', () => {
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
   });
 
-  it('pauses timed goal auto-finish before delayed draft redirects', () => {
+  it('guards the timed-goal auto-finish timeout (autosave replaced manual draft redirects)', () => {
     const goalsComponentFile = 'MonoGoalsLiveScore.jsx';
     const source = readFileSync(new URL(goalsComponentFile, import.meta.url), 'utf8');
 
+    // Draft persistence is now a continuous autosave effect — there is no manual
+    // saveDraft / timer.pause redirect. The timed auto-finish is still guarded
+    // against firing while interaction is locked, and its timeout is always cleared,
+    // so navigating away (which unmounts the scorer and stops the timer) is safe.
     expect(source).toContain('const autoFinishTimeoutRef = useRef(null);');
     expect(source).toContain('if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;');
     expect(source).toContain('clearTimeout(autoFinishTimeoutRef.current);');
-    expect(source).toContain('timer.pause();');
-    expect(source).toMatch(/timer\.pause\(\);\s+setHasChanges\(false\);\s+scoringPrompt\.scheduleDraftRedirect\(navigateToTournament\);/);
   });
 
   it('keeps live scoring files free of browser-owned alerts and confirms', () => {

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
-import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch } from '../../../utils/storage';
+import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
 import { ballsToOvers, calculateRunRate, getMaxWickets, getTotalBalls, canEnforceFollowOn, getTestMatchResult } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
@@ -20,6 +20,23 @@ const triggerHaptic = (pattern) => {
 };
 
 const ORDINALS = ['1st', '2nd', '3rd', '4th'];
+
+function UndoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-2" />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  );
+}
 
 export default function MonoCricketTestLiveScore({ storageMode }) {
   const navigate = useNavigate();
@@ -49,6 +66,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
+  const [showActions, setShowActions] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   const scoringPrompt = useAppScoringPrompt();
 
   const lastClickRef = useRef(0);
@@ -324,13 +343,24 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     triggerHaptic(30);
     saveSnapshot();
 
+    // Byes and leg byes are legal deliveries — they consume a ball;
+    // wides and no balls do not.
+    const countsAsBall = type === 'bye' || type === 'legBye';
+
     setInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.runs += 1;
+      if (countsAsBall) inn.balls += 1;
       updated[currentInningsIndex] = inn;
 
-      if (currentInningsIndex >= 2) checkResult(updated);
+      if (countsAsBall && inn.balls >= totalBalls) {
+        if (!checkResult(updated)) {
+          setTimeout(() => advanceInnings(updated), 300);
+        }
+      } else if (currentInningsIndex >= 2) {
+        checkResult(updated);
+      }
       return updated;
     });
   };
@@ -490,9 +520,60 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   };
 
-  const handleCancel = () => {
-    scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
+  const discardAndExit = () => {
+    if (isQuickMatch) {
+      // Discarding a quick match throws it away — remove the record from
+      // se_quickmatches entirely. Writing back a 'pending' shell would leave the
+      // dashboard/app-entry treating the discarded scoreless draft as recent
+      // activity and keep the user stuck in returning-player mode.
+      deleteQuickMatch(match.id);
+    } else if (tournament) {
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        status: Array.isArray(m.innings) && m.innings.some((inn) =>
+          inn.runs || inn.balls || inn.wickets || inn.allOut || inn.declared
+        ) ? m.status : 'pending',
+        draftState: undefined,
+      }));
+      saveSportTournament(storageKey, updatedTournament);
+    }
+    navigateBack();
   };
+
+  const handleDiscard = () => {
+    scoringPrompt.requestPrompt({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      message: 'Your progress will be lost.',
+      title: 'Discard match?',
+      type: 'discard',
+    });
+  };
+
+  const handleFinish = () => navigateBack();
+
+  // Continuous auto-save
+  useEffect(() => {
+    if (!match || !format || matchComplete) return;
+    if (history.length === 0) return;
+    const draftState = {
+      innings: structuredClone(innings),
+      currentInningsIndex,
+      followOnEnforced,
+      history: structuredClone(history.slice(-50)),
+      savedAt: new Date().toISOString(),
+    };
+    if (isQuickMatch) {
+      saveQuickMatch({ ...match, draftState, status: 'in-progress' });
+    } else if (tournament) {
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m, draftState, status: 'in-progress',
+      }));
+      saveSportTournament(storageKey, updatedTournament);
+    }
+  }, [innings, currentInningsIndex, followOnEnforced]);
 
   const confirmPendingPrompt = () => {
     const promptType = scoringPrompt.pendingPrompt?.type;
@@ -508,7 +589,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       return;
     }
 
-    if (promptType === 'discard') navigateBack();
+    if (promptType === 'discard') discardAndExit();
   };
 
   // Keyboard shortcuts
@@ -532,7 +613,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   if (!match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -553,11 +634,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               {saveWarning}
             </div>
           )}
-          <h2 className="text-2xl font-bold mb-4" style={{ color: '#111' }}>Enforce Follow-on?</h2>
-          <p className="text-sm mb-2" style={{ color: '#888' }}>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--se-color-ink)' }}>Enforce Follow-on?</h2>
+          <p className="text-sm mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {team1Name} leads by {lead} runs.
           </p>
-          <p className="text-sm mb-8" style={{ color: '#888' }}>
+          <p className="text-sm mb-8" style={{ color: 'var(--se-color-ink-muted)' }}>
             Force {team2Name} to bat again?
           </p>
           <div className="flex gap-3 justify-center">
@@ -587,20 +668,20 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               {saveWarning}
             </div>
           )}
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>Match Complete</p>
+          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>Match Complete</p>
 
           {winnerName ? (
             <>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: '#111' }}>{winnerName}</h1>
-              <p className="text-sm mb-6" style={{ color: '#0066ff' }}>{matchResult.desc}</p>
+              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--se-color-ink)' }}>{winnerName}</h1>
+              <p className="text-sm mb-6" style={{ color: 'var(--primary)' }}>{matchResult.desc}</p>
             </>
           ) : (
-            <h1 className="text-2xl font-bold mb-6" style={{ color: '#111' }}>{matchResult.desc}</h1>
+            <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--se-color-ink)' }}>{matchResult.desc}</h1>
           )}
 
           {/* Innings summary table */}
           <div className="mono-soft-panel mb-8" style={{ padding: '16px 20px' }}>
-            <div className="flex justify-between text-xs uppercase tracking-widest mb-3" style={{ color: '#888' }}>
+            <div className="flex justify-between text-xs uppercase tracking-widest mb-3" style={{ color: 'var(--se-color-ink-muted)' }}>
               <span>Team</span>
               <div className="flex gap-8">
                 <span>1st Inn.</span>
@@ -612,11 +693,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               const name = getTeamName(teamId);
               const isWinner = matchResult.winner === teamId;
               return (
-                <div key={teamId} className="flex justify-between items-center py-2" style={{ borderTop: '1px solid #eee' }}>
-                  <span className="text-sm font-medium" style={{ color: isWinner ? '#111' : '#888' }}>
+                <div key={teamId} className="flex justify-between items-center py-2" style={{ borderTop: '1px solid var(--se-color-line)' }}>
+                  <span className="text-sm font-medium" style={{ color: isWinner ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                     {isWinner ? '\u2605 ' : ''}{name}
                   </span>
-                  <div className="flex gap-8 font-mono text-sm" style={{ color: isWinner ? '#111' : '#888' }}>
+                  <div className="flex gap-8 font-mono text-sm" style={{ color: isWinner ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
                     {teamInns.map((inn, i) => (
                       <span key={`inn-result-${i}-${inn.runs}-${inn.wickets}`}>
                         {inn.runs > 0 || inn.allOut || inn.declared
@@ -652,7 +733,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const contextLine = getContextLine();
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen mono-arena-screen">
       <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
@@ -661,156 +742,188 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
-        {/* Top bar */}
+        {/* Top bar — match/ending options live in the hamburger menu so the
+            scoring keypad stays low and easy to reach by thumb. */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
             <span className="mono-badge">Test Match</span>
             <span className="mono-badge mono-badge-live">{ORDINALS[currentInningsIndex]} Innings</span>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setShowActions(v => !v)}
+                aria-label="Match options"
+                aria-expanded={showActions}
+                className="mono-btn"
+                style={{ padding: '4px 8px', minHeight: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--se-color-ink)' }}
+              >
+                <MenuIcon />
+              </button>
+              {showActions && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close menu"
+                    onClick={() => setShowActions(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'transparent', border: 'none', cursor: 'default' }}
+                  />
+                  <div
+                    role="menu"
+                    style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50, minWidth: 190, display: 'flex', flexDirection: 'column', gap: 6, padding: 8, background: 'var(--card)', border: '1px solid var(--se-color-ink)', borderRadius: 'calc(var(--radius) + 4px)', boxShadow: 'var(--shadow-hard)' }}
+                  >
+                    {showDeclare && !isInningsOver && (
+                      <button
+                        role="menuitem"
+                        onClick={() => { setShowActions(false); handleDeclare(); }}
+                        disabled={scoringPrompt.isInteractionLocked}
+                        className="mono-btn"
+                        style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                      >
+                        Declare innings
+                      </button>
+                    )}
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleDraw(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      End as draw
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleDiscard(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      Discard match
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleFinish(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      Finish &amp; save
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Batting team score */}
-        <div className="mono-scorer-main-score">
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
+        {/* Batting team — hero */}
+        <div className="mono-scorer-main-score mono-quick-cricket-score">
+          <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
             {battingTeamName} batting
           </p>
-          <p className="mono-scorer-score-value font-bold font-mono mono-score mb-2" style={{ color: '#111' }}>
-            {currentInning.runs}
-            <span style={{ color: '#bbb', fontSize: '0.5em' }}>/{currentInning.wickets}</span>
+          <p className="mono-scorer-score-value font-bold font-mono mono-score" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '0.06em', color: 'var(--se-color-ink)', margin: 0, lineHeight: 0.95, fontSize: 'clamp(3.5rem, 17vw, 6rem)', fontVariantNumeric: 'tabular-nums' }}>
+            <span>{currentInning.runs}</span>
+            <span style={{ color: 'var(--se-color-ink-faint)', fontSize: '0.42em', fontWeight: 700 }}>/{currentInning.wickets}</span>
+            <span style={{ color: 'var(--se-color-ink-muted)', fontSize: '0.2em', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>({ballsToOvers(currentInning.balls)} ov)</span>
           </p>
-          <p className="text-sm font-mono mb-1" style={{ color: '#888' }}>
-            {ballsToOvers(currentInning.balls)} ov &middot; RR {currentInning.balls > 0 ? calculateRunRate(currentInning.runs, currentInning.balls).toFixed(2) : '0.00'}
+          <p className="text-sm font-mono" style={{ color: 'var(--se-color-ink-muted)', marginTop: 6 }}>
+            RR {currentInning.balls > 0 ? calculateRunRate(currentInning.runs, currentInning.balls).toFixed(2) : '0.00'}
           </p>
           {contextLine && (
-            <p className="text-sm mt-1" style={{ color: '#0066ff' }}>{contextLine}</p>
+            <p className="text-sm" style={{ color: 'var(--primary)', marginTop: 2 }}>{contextLine}</p>
           )}
         </div>
 
-        {/* Innings tabs */}
-        <div className="flex gap-1 justify-center mb-4">
-          {innings.map((inn, i) => {
-            const isCurrent = i === currentInningsIndex;
-            const hasData = inn.runs > 0 || inn.allOut || inn.declared;
-            return (
-              <div key={`inn-tab-${i}-${inn.teamId || 'unset'}`} className="text-center" style={{ minWidth: '60px' }}>
-                <span className="text-xs font-medium" style={{ color: isCurrent ? '#0066ff' : hasData ? '#111' : '#ccc' }}>
-                  {ORDINALS[i]}
-                </span>
-              </div>
-            );
-          })}
+        {/* Innings scorecard \u2014 collapsed by default so the keypad sits right
+            under the live score. The current innings is already shown in the
+            top bar and hero; tap to see the full innings breakdown. */}
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => setShowCard(v => !v)}
+            aria-expanded={showCard}
+            className="mono-btn w-full"
+            style={{ padding: '6px', fontSize: '0.75rem', color: 'var(--se-color-ink-muted)', letterSpacing: '0.06em' }}
+          >
+            {showCard ? 'Hide scorecard' : 'Scorecard'}
+          </button>
+          {showCard && (
+            <div className="mono-score-mini mt-2" style={{ padding: '12px 16px' }}>
+              {innings.map((inn, i) => {
+                if (!inn.teamId) return null;
+                const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;
+                const isCurrent = i === currentInningsIndex;
+                return (
+                  <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
+                    <span>{ORDINALS[i]}: {getTeamName(inn.teamId)}</span>
+                    <span className="font-mono">
+                      {hasData
+                        ? `${inn.runs}/${inn.allOut ? 'all' : inn.wickets}${inn.declared ? 'd' : ''}${isCurrent ? '*' : ''} (${ballsToOvers(inn.balls)} ov)`
+                        : '\u2014'
+                      }
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Innings summary cards */}
-        <div className="mono-score-mini mb-6" style={{ padding: '12px 16px' }}>
-          {innings.map((inn, i) => {
-            if (!inn.teamId) return null;
-            const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;
-            const isCurrent = i === currentInningsIndex;
-            return (
-              <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? '#111' : '#888' }}>
-                <span>{ORDINALS[i]}: {getTeamName(inn.teamId)}</span>
-                <span className="font-mono">
-                  {hasData
-                    ? `${inn.runs}/${inn.allOut ? 'all' : inn.wickets}${inn.declared ? 'd' : ''}${isCurrent ? '*' : ''} (${ballsToOvers(inn.balls)} ov)`
-                    : '\u2014'
-                  }
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Scoring controls */}
+        {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
         {!isInningsOver && (
-          <>
-            <div className="mono-scorer-run-grid">
-              {CRICKET_RUN_VALUES.map(r => (
-                <button key={r} onClick={() => addRuns(r)}
-                  disabled={scoringPrompt.isInteractionLocked}
-                  className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
-                  style={{ touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
-                  {r}
+          <div className="mono-cricket-keypad">
+            <div className="mono-cricket-keys">
+              {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => addRuns(r)}
+                  className={`mono-cricket-key${r === 4 ? ' mono-cricket-key-four' : r === 6 ? ' mono-cricket-key-six' : ''}`}
+                  style={{ touchAction: 'manipulation' }}
+                  aria-label={r === 4 ? 'Four runs' : r === 6 ? 'Six runs' : `${r} run${r === 1 ? '' : 's'}`}
+                >
+                  <span>{r}</span>
+                  {(r === 4 || r === 6) && <small>{r === 4 ? 'FOUR' : 'SIX'}</small>}
                 </button>
               ))}
             </div>
 
-            <div className="mono-scorer-extra-row">
-              <button onClick={() => addExtra('wide')} disabled={scoringPrompt.isInteractionLocked} className="mono-btn"
-                style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
-                Wide (+1)
-              </button>
-              <button onClick={() => addExtra('noBall')} disabled={scoringPrompt.isInteractionLocked} className="mono-btn"
-                style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
-                No Ball (+1)
-              </button>
+            <div className="mono-cricket-keys mono-cricket-keys-sec">
+              {CRICKET_RUN_VALUES.filter((v) => v === 5).map((r) => (
+                <button key={`run-${r}`} onClick={() => addRuns(r)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }} aria-label={`${r} runs`}>{r}</button>
+              ))}
+              {[
+                { type: 'wide', label: 'WD' },
+                { type: 'noBall', label: 'NB' },
+                { type: 'bye', label: 'BYE' },
+                { type: 'legBye', label: 'LB' },
+              ].map((ex) => (
+                <button key={ex.type} onClick={() => addExtra(ex.type)} className="mono-cricket-key mono-cricket-key-sec" style={{ touchAction: 'manipulation' }}>
+                  {ex.label}
+                </button>
+              ))}
             </div>
 
-            <button onClick={addWicket} disabled={scoringPrompt.isInteractionLocked} className="mono-btn mono-btn-danger w-full mb-4"
-              style={{ padding: '14px', fontSize: '0.9375rem', touchAction: 'manipulation', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}>
-              Wicket
-            </button>
-          </>
-        )}
-
-        {!isTouchDevice && !isInningsOver && (
-          <p className="text-xs text-center mb-4" style={{ color: '#ccc' }}>
-            Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
-          </p>
-        )}
-
-        {/* Bottom bar */}
-        <div className="mono-scorer-control-strip pt-4">
-          <div className="flex gap-2 mb-3">
-            <button
-              onClick={undo}
-              disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
-            >
-              Undo
-            </button>
-            {showDeclare && !isInningsOver && (
-              <button
-                onClick={handleDeclare}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Declare
+            <div className="mono-cricket-out-line-row">
+              <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
+                OUT
               </button>
-            )}
-            <button
-              onClick={handleDraw}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Draw
-            </button>
-            {hasChanges && (
               <button
-                onClick={saveDraft}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                type="button"
+                onClick={undo}
+                disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
+                className="mono-cricket-undo-line"
+                aria-label="Undo last action"
+                title="Undo last action"
+                style={{ touchAction: 'manipulation' }}
               >
-                Pause
+                <UndoIcon />
               </button>
-            )}
-            <button
-              onClick={handleCancel}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Discard
-            </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

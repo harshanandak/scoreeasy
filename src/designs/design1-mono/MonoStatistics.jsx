@@ -346,7 +346,7 @@ export default function MonoStatistics() {
     <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="mono-page-shell">
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button onClick={() => navigate('/')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
+          <button onClick={() => navigate('/app')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
             <BackArrow /> Home
           </button>
         </nav>
@@ -374,19 +374,26 @@ export default function MonoStatistics() {
         {/* Overview */}
         {tab === 'overview' && (
           <div id="tabpanel-stats-overview" role="tabpanel" aria-label="Overview">
-            <div className="grid grid-cols-3 gap-3 mb-8">
-              <StatCard label="Tournaments" value={totalTournaments} />
-              <StatCard label="Matches" value={totalMatches} />
-              <StatCard label="Teams" value={totalTeams} />
-            </div>
-
-            <div className="mono-stat-insight-grid grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
+            {/* Importance tiers: performance first, records second, library totals last. */}
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Performance</p>
+            <div className="grid grid-cols-3 gap-3 mb-6">
               <InsightCard label="Top team" value={quickInsights.topTeam} />
               <InsightCard label="Last 5 form" value={quickInsights.form} />
               <InsightCard label="Current streak" value={quickInsights.streak} />
+            </div>
+
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Records</p>
+            <div className="mono-stat-insight-grid grid gap-3 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
               <InsightCard label="Head-to-head" value={quickInsights.rivalry} />
               <InsightCard label="Closest match" value={quickInsights.closest} />
               <InsightCard label="Biggest win" value={quickInsights.biggest} />
+            </div>
+
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Totals</p>
+            <div className="mono-stat-insight-grid grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))' }}>
+              <StatCard label="Tournaments" value={totalTournaments} />
+              <StatCard label="Matches" value={totalMatches} />
+              <StatCard label="Teams" value={totalTeams} />
               <InsightCard label="Most played sport" value={quickInsights.topSport} />
               <InsightCard label="Draw rate" value={quickInsights.drawRate} />
               <InsightCard label="Avg margin" value={quickInsights.averageMargin} />

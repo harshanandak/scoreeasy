@@ -79,7 +79,7 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const detailsButton = await screen.findByText('View details');
+    const detailsButton = await screen.findByRole('button', { name: 'View details: Team A vs Team B' });
     fireEvent.click(detailsButton);
 
     expect(screen.getByText('Match details')).toBeInTheDocument();
@@ -173,33 +173,38 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByText('Falcons vs Sharks')).toBeInTheDocument();
-    expect(screen.getByText('Riders vs Kings')).toBeInTheDocument();
-    expect(screen.getByText('City vs United')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details: Riders vs Kings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Find match'), { target: { value: 'riders' } });
-    expect(screen.getByText('Riders vs Kings')).toBeInTheDocument();
-    expect(screen.queryByText('Falcons vs Sharks')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details: Riders vs Kings' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Falcons vs Sharks' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.change(screen.getByLabelText('Filter by sport'), { target: { value: 'Football' } });
-    fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'draw' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sport' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sport options' })).getByRole('button', { name: 'Football' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Draws' }));
 
-    expect(screen.getByText('City vs United')).toBeInTheDocument();
-    expect(screen.queryByText('Riders vs Kings')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.change(screen.getByLabelText('Filter by result'), { target: { value: 'close' } });
-
-    expect(screen.getByText('Falcons vs Sharks')).toBeInTheDocument();
-    expect(screen.queryByText('Riders vs Kings')).not.toBeInTheDocument();
-    expect(screen.queryByText('City vs United')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.change(screen.getByLabelText('Sort by date'), { target: { value: 'oldest' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Close' }));
 
-    const detailLinks = screen.getAllByText('View details');
-    expect(detailLinks[0].closest('.mono-card')).toHaveTextContent('City vs United');
+    expect(screen.getByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: City vs United' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sort options' })).getByRole('button', { name: 'Oldest' }));
+
+    const rows = screen.getAllByRole('button', { name: /^View details:/ });
+    expect(rows[0]).toHaveAccessibleName('View details: City vs United');
   });
 
   it('shows filtered empty recovery and clears discovery filters', async () => {
@@ -207,7 +212,7 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByText('Team A vs Team B')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Find match'), { target: { value: 'missing team' } });
 
@@ -216,28 +221,25 @@ describe('MonoHistory', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
 
-    expect(screen.getByText('Team A vs Team B')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
   });
 
-  it('uses priority sport start actions when history is empty', async () => {
+  it('routes empty history to the sport chooser', async () => {
     renderHistory();
 
     expect(screen.getByText('No match history yet')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Start Match' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
-
-    expect(screen.getByTestId('current-route')).toHaveTextContent('/play?sport=cricket');
-    expect(screen.getByRole('button', { name: 'Start Football' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
-  });
-
-  it('routes empty tournament recovery through the neutral sport chooser', async () => {
-    renderHistory();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Tournament' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Choose a sport' }));
 
     expect(screen.getByTestId('current-route')).toHaveTextContent('/play');
+  });
+
+  it('keeps the empty state to a single neutral recovery action', () => {
+    renderHistory();
+
+    expect(screen.queryByRole('button', { name: /Start Cricket/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tournament' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose a sport' })).toBeInTheDocument();
   });
 
   it('shows only completed quick results and preserves fresh drafts when clearing history', async () => {
@@ -281,11 +283,11 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByText('Real A vs Real B')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'View details: Real A vs Real B' })).toBeInTheDocument();
     const summary = screen.getByLabelText('History summary');
     expect(within(summary).getByText('Quick').parentElement).toHaveTextContent('1');
-    expect(screen.queryByText('Draft A vs Draft B')).not.toBeInTheDocument();
-    expect(screen.queryByText('Ghost A vs Ghost B')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Draft A vs Draft B' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Ghost A vs Ghost B' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
@@ -303,7 +305,7 @@ describe('MonoHistory', () => {
     expect(source).not.toContain("borderColor: '#dc2626'");
     expect(source).not.toContain("border: '1.5px solid #dc2626'");
     expect(source).toContain('mono-muted-text');
-    expect(source).toContain('mono-subtle-text');
-    expect(source).toContain('mono-action-text');
+    expect(source).toContain("var(--muted-foreground)");
+    expect(source).toContain("var(--foreground)");
   });
 });

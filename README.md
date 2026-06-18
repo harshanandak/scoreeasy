@@ -21,6 +21,17 @@ VITE_SENTRY_DSN=https://...
 
 `VITE_SENTRY_DSN` is optional. The app will start without it.
 
+For Vercel Preview deployments, use the Clerk development application and a
+development Convex deployment. The Clerk development issuer currently used for
+Preview auth is:
+
+```bash
+CLERK_JWT_ISSUER_DOMAIN=https://elegant-seahorse-53.clerk.accounts.dev
+```
+
+Set that value on the Convex deployment, not as a Vite client variable. The
+Clerk JWT template must be named exactly `convex`.
+
 ## Scripts
 
 - `bun run dev` - start the local dev server
@@ -46,6 +57,9 @@ Required production environment variables:
 - `VITE_CLERK_PUBLISHABLE_KEY`
 - `VITE_CONVEX_URL`
 - Optional: `VITE_SENTRY_DSN`
+
+Use a `pk_live_...` Clerk key only for `scoreeasy.app` production. Use a
+`pk_test_...` Clerk key for Vercel Preview URLs.
 
 Before shipping, run:
 

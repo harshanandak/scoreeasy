@@ -318,6 +318,17 @@
   box-shadow: var(--shadow-2xs);
 }
 
+/* Stat cards double as filter buttons: the selected card lifts with the stat-card motion. */
+button.mono-stat-card {
+  cursor: pointer;
+}
+
+.mono-stat-card[aria-pressed="true"] {
+  border-color: var(--se-color-action);
+  background: color-mix(in oklch, var(--se-color-action-soft) 14%, var(--se-color-surface));
+  transform: translateY(-2px);
+}
+
 .mono-history-detail {
   box-shadow: none;
   border-radius: var(--se-radius-card);
@@ -550,7 +561,7 @@
   border-radius: var(--se-radius-button);
   background: transparent;
   color: var(--se-color-ink);
-  box-shadow: var(--shadow-2xs);
+  box-shadow: none;
   font-size: 0.875rem;
   font-family: var(--se-font-sans);
   cursor: pointer;
@@ -559,7 +570,36 @@
 
 .mono-btn:hover {
   background: var(--se-color-action-soft);
-  box-shadow: var(--shadow-xs);
+}
+
+/* Quiet inline correction — small, borderless, low-emphasis (the rare -1 action). */
+.mono-correct {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 6px 18px;
+  border: none;
+  border-radius: var(--se-radius-button);
+  background: transparent;
+  color: var(--se-color-ink-muted);
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.mono-correct:hover {
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+}
+
+.mono-correct:active {
+  transform: translateY(1px);
+  background: var(--se-color-action-soft);
+  color: var(--se-color-action-strong);
 }
 
 .mono-btn:active {
@@ -655,12 +695,12 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  font-size: 0.6875rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  border-radius: 2px;
+  font-size: 0.625rem;
+  font-family: var(--se-font-mono);
+  border-radius: var(--radius);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 .mono-badge-live {
@@ -802,61 +842,38 @@
 .mono-score-grid {
   display: flex;
   align-items: stretch;
-  gap: 16px;
+  gap: 0; /* vertical hairline seam (below) replaces the gap — borderless, line-divided */
 }
 
+/* single vertical seam between the two team zones (matches the arena) */
+.mono-score-grid > .flex-1 + .flex-1 {
+  border-left: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+}
+
+/* Open, borderless tap zone — no card, no blue edge; press flashes the accent. */
 .mono-score-pad {
   position: relative;
   min-height: var(--score-pad-height, auto);
-  border: 1px solid color-mix(in oklch, var(--score-accent, var(--se-color-action)) 38%, var(--se-color-line));
-  border-radius: var(--radius);
-  background: color-mix(in oklch, var(--se-color-action-soft) 8%, var(--se-color-surface));
-  box-shadow: var(--shadow-2xs);
-  transition: background var(--se-motion-standard) ease, border-color var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease, transform var(--se-motion-standard) ease;
-}
-
-.mono-score-pad::before,
-.mono-score-pad::after {
-  content: '';
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border: 1px solid var(--score-accent, var(--se-color-action));
-  background: var(--se-color-surface);
-  pointer-events: none;
-}
-
-.mono-score-pad::before {
-  top: 7px;
-  left: 7px;
-}
-
-.mono-score-pad::after {
-  right: 7px;
-  bottom: 7px;
-}
-
-.mono-score-pad:hover {
-  border-color: var(--score-accent, var(--se-color-action));
-  background: color-mix(in oklch, var(--se-color-action-soft) 16%, var(--se-color-surface));
-  box-shadow: var(--shadow-xs);
-  transform: translate(-1px, -1px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: background var(--se-motion-standard) ease;
 }
 
 .mono-score-pad:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-2xs);
+  background: color-mix(in oklch, var(--score-accent, var(--se-color-action-soft)) 10%, var(--se-color-surface));
 }
 
 .mono-score-pad[disabled],
 .mono-score-pad[aria-disabled="true"] {
-  transform: none;
   cursor: default;
+  background: transparent;
 }
 
 .mono-score-pad:focus-visible {
   outline: 2px solid var(--se-color-action);
-  outline-offset: 2px;
+  outline-offset: -3px;
 }
 
 .mono-score-meta {
@@ -870,8 +887,8 @@
 }
 
 .mono-score-mini {
-  border: 1px solid color-mix(in oklch, var(--se-color-line) 48%, var(--se-color-surface));
-  border-radius: var(--radius);
+  border: none;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
 }
@@ -906,14 +923,241 @@
   gap: 8px;
 }
 
+/* Transient "resumed your match" toast — floats in over the top, holds briefly,
+   fades out, then the state auto-clears. Fixed so it never shifts the layout. */
+.mono-scorer-note {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(420px, calc(100% - 24px));
+  margin: 0;
+  padding: 9px 16px;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--se-color-ink);
+  background: var(--se-color-surface);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 32%, var(--se-color-surface));
+  border-radius: 999px;
+  box-shadow: 0 6px 20px -8px color-mix(in oklch, black 28%, transparent);
+  animation: mono-note-toast 3300ms ease forwards;
+}
+
+.mono-scorer-note::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+@keyframes mono-note-toast {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  7% { opacity: 1; transform: translate(-50%, 0); }
+  82% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -8px); }
+}
+
+/* Full-bleed arena: two team halves fill the page; action bar sits at the bottom of the flex column. */
+.mono-arena-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+.mono-arena-screen .mono-scorer-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+}
+
+.mono-arena-grid {
+  display: flex;
+  flex-direction: row; /* tap zones sit side by side — score left/right, never top/bottom */
+  flex: 1;
+  gap: 0; /* one vertical hairline seam (below) divides the two zones */
+  min-height: 0;
+  margin-bottom: 12px;
+}
+
+.mono-arena-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0; /* keep the two zones equal even with a wide score */
+}
+
+/* Single 1px @ ~14% black seam between the two team zones (Mono interior-divider rule). */
+.mono-arena-col + .mono-arena-col {
+  border-left: 1px solid color-mix(in oklch, var(--se-color-line) 14%, var(--se-color-surface));
+}
+
+/* Each half is an open typographic tap zone — NOT a boxed button. */
+.mono-arena-half {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+/* Press feedback = brief accent-tint flash only (no box edge, no transform, no shadow). */
+.mono-arena-half:active {
+  background: color-mix(in oklch, var(--score-accent, var(--se-color-action-soft)) 10%, var(--se-color-surface));
+}
+
+.mono-arena-half:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -3px;
+}
+
+.mono-arena-half:disabled {
+  cursor: default;
+}
+
+.mono-arena-overline {
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mono-arena-num {
+  font-family: var(--se-font-mono);
+  /* fit the score in a ~50vw side-by-side column (portrait) while staying big in
+     a wide landscape half — limited by column width or available height */
+  font-size: clamp(3rem, min(22vh, 26vw), 8rem);
+  font-weight: 900;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Leading team: one short, decisive 2px accent baseline under the numeral.
+   Replaces the box as the "this team is ahead" mark — typographic, not a frame. */
+/* Always reserve the baseline's space so a leading number stays on the SAME
+   vertical level as the other team — only the leader's baseline is coloured. */
+.mono-arena-num::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 2px;
+  margin: 12px auto 0;
+  background: transparent;
+}
+
+.mono-arena-half[data-leading="true"] .mono-arena-num::after {
+  background: var(--score-accent, var(--primary));
+}
+
+/* Landscape / short viewports (e.g. a phone turned sideways): compact the chrome
+   so the two side-by-side tap halves fit with no scroll. Keyed on height, since a
+   landscape phone is wide (>640px) and would otherwise get the desktop spacing. */
+@media (max-height: 540px) {
+  .mono-arena-screen.mono-scorer-screen {
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+  .mono-arena-screen .mono-scorer-shell {
+    min-height: 0;
+  }
+  .mono-arena-screen .mono-scorer-topbar {
+    margin-bottom: 8px;
+  }
+  .mono-arena-seam {
+    padding: 0 0 6px;
+  }
+  .mono-arena-grid {
+    margin-bottom: 8px;
+  }
+  .mono-arena-hint {
+    display: none;
+  }
+  .mono-correct {
+    min-height: 32px;
+  }
+}
+
+.mono-arena-hint {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-faint);
+}
+
+.mono-arena-seam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 0 12px;
+  font-family: var(--se-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-muted);
+}
+
+.mono-arena-seam b {
+  color: var(--se-color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-arena-seam .mono-arena-seam-rule {
+  color: var(--se-color-ink-faint);
+}
+
 .mono-scorer-main-score {
   text-align: center;
   margin-bottom: 32px;
 }
 
+/* Cricket hero is the flex "sink": it absorbs reclaimed vertical space and
+   centers the batting summary so the score breathes (even whitespace above and
+   below) while the capped keypad stays a comfortable size below. */
+.mono-quick-cricket-score {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
 .mono-scorer-score-value {
   font-size: 3.75rem;
   line-height: 1;
+}
+
+/* Scorers that adopt the arena number (tennis, sets, goals) carry BOTH
+   .mono-arena-num and the .mono-scorer-score-value marker. The two-class selector
+   wins on specificity so they get the full arena sizing at every breakpoint,
+   while cricket — which keeps .mono-scorer-score-value alone — is unaffected. */
+.mono-arena-num.mono-scorer-score-value {
+  font-size: clamp(3rem, min(22vh, 26vw), 8rem);
+  line-height: 0.95;
 }
 
 .mono-scorer-score-area {
@@ -978,23 +1222,377 @@
 }
 
 .mono-quick-action-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
 }
 
 .mono-quick-action-row-three {
+  /* legacy 3-up grid (unused by the icon-only bar) */
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Flat, line-divided action tiles — minimal and sleek, not boxed buttons. */
 .mono-quick-action-row .mono-btn {
   min-height: 46px;
   padding: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* A short, centered hairline separates the tiles — sleeker than a full-height edge. */
+.mono-quick-action-row .mono-btn + .mono-btn {
+  position: relative;
+}
+
+.mono-quick-action-row .mono-btn + .mono-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 22px;
+  background: color-mix(in oklch, var(--se-color-line) 24%, var(--se-color-surface));
+}
+
+.mono-quick-action-row .mono-btn:active {
+  background: color-mix(in oklch, var(--se-color-ink) 5%, transparent);
+}
+
+/* Labelled actions (Swap) fill the width beside the compact Undo icon and read
+   as a sleek uppercase-mono label rather than a heavy button. */
+.mono-quick-action-row .mono-btn:not(.mono-quick-undo) {
+  flex: 1 1 0;
+  min-width: 0;
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-muted);
+}
+
+/* CrickHeroes-style "this over" ball strip */
+.mono-over-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mono-over-label {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--se-color-ink-faint);
+  margin-right: 2px;
+}
+
+.mono-over-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 28%, transparent);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-over-pip-four {
+  background: var(--se-color-warning);
+  border-color: var(--se-color-warning);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-six {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-wicket {
+  background: var(--destructive);
+  border-color: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
+.mono-over-pip-extra {
+  background: transparent;
+  border-style: dashed;
+  color: var(--se-color-ink-muted);
+}
+
+/* Undo is a compact icon-only square; End Match lives in a small top chip. */
+.mono-quick-action-row-one {
+  /* cricket: undo only — pin the compact icon left, never stretch it full-width */
+  justify-content: flex-start;
+}
+
+.mono-quick-action-row-two {
+  /* goals/sets: undo icon square + Swap fills the rest */
+  justify-content: flex-start;
+}
+
+.mono-quick-action-row .mono-quick-undo {
+  flex: 0 0 58px;
+  width: 58px;
+  min-width: 58px;
+  height: 46px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.mono-scorer-end-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in oklch, var(--destructive) 38%, transparent);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--destructive);
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.mono-scorer-end-chip:active {
+  background: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
+/* Brutalist-monotone keypad — no tile grid, no box. Structure is carried only by
+   soft fading hairlines that bleed out at the ends; keys sit on the open canvas. */
+.mono-cricket-keypad {
+  --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+  margin-top: 16px;
+  /* edges only: a fading hairline at the top and bottom of the pad */
+  background-image:
+    linear-gradient(to right, transparent, var(--cricket-line), transparent),
+    linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
+}
+
+.mono-cricket-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: clamp(72px, 12vh, 104px);
+  gap: 0;
+  flex: 0 0 auto;
+  min-height: 0;
+  /* two fading column dividers + one fading row divider — no cell borders */
+  background-image:
+    linear-gradient(to bottom, transparent, var(--cricket-line), transparent),
+    linear-gradient(to bottom, transparent, var(--cricket-line), transparent),
+    linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 1px 100%, 1px 100%, 100% 1px;
+  background-position: 33.33% 50%, 66.67% 50%, 50% 50%;
+  background-repeat: no-repeat;
+}
+
+.mono-cricket-keys-sec {
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  grid-auto-rows: auto;
+  flex: 0 0 auto;
+  /* reset the primary 3-col dividers; just a fading top section divider */
+  background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+/* fading vertical divider between the secondary cells (5 · WD · NB · BYE · LB) */
+.mono-cricket-keys-sec .mono-cricket-key-sec:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 56%;
+  background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent);
+}
+
+.mono-cricket-key {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  border: none;
+  background: transparent;
+  color: var(--se-color-ink);
+  font-family: var(--se-font-mono);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.mono-cricket-key:active {
+  background: var(--accent);
+}
+
+.mono-cricket-key small {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--se-color-ink-faint);
+}
+
+/* Boundaries pop by accent TEXT, not a filled box — both share the single
+   green accent so 4 and 6 read as a matched pair, not two different colours. */
+.mono-cricket-key-four { color: var(--primary); }
+.mono-cricket-key-six { color: var(--primary); }
+.mono-cricket-key-four small,
+.mono-cricket-key-six small { color: inherit; opacity: 0.85; }
+
+.mono-cricket-key-sec {
+  min-height: 46px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--se-color-ink-soft);
+}
+
+.mono-cricket-out-line {
+  min-height: 50px;
+  border: none;
+  background: transparent;
+  color: var(--destructive);
+  font-family: var(--se-font-mono);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.mono-cricket-out-line:active {
+  background: var(--destructive);
+  color: var(--se-color-inverse);
+}
+
+/* OUT shares its row with a compact Undo, split by the keypad's 1px hairline so
+   the bottom strip isn't a near-empty band below the pad. */
+.mono-cricket-out-line-row {
+  display: flex;
+  gap: 0;
+  background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent);
+  background-size: 100% 1px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+
+.mono-cricket-out-line-row .mono-cricket-out-line {
+  flex: 1 1 0;
+}
+
+.mono-cricket-undo-line {
+  position: relative;
+  flex: 0 0 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border: none;
+  background: transparent;
+  color: var(--se-color-ink);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.mono-cricket-undo-line:disabled {
+  color: var(--se-color-ink-faint);
+  cursor: default;
+}
+
+.mono-cricket-undo-line:active {
+  background: var(--accent);
+}
+
+/* fading vertical divider between OUT and the Undo icon */
+.mono-cricket-undo-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 56%;
+  background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent);
+}
+
+/* Compact cricket status chips (replace stacked banners) */
+.mono-cricket-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.mono-cricket-chip {
+  font-family: var(--se-font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent);
+  color: var(--se-color-ink-muted);
+}
+
+.mono-cricket-chip-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.mono-cricket-chip-warn {
+  background: var(--se-color-warning-soft);
+  border-color: var(--se-color-warning);
+  color: var(--se-color-warning);
 }
 
 .mono-quick-end-button {
-  border-color: #dc2626;
-  color: #dc2626;
+  border-color: var(--destructive);
+  color: var(--destructive);
 }
 
 /* --- Set completion celebration --- */
@@ -1130,12 +1728,20 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* The toast can't rely on the fade animation here — show it statically and let
+     the JS timeout dismiss it (instant appear/disappear, no motion). */
+  .mono-scorer-note {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, 0);
+  }
 }
 
 @media (max-width: 640px) {
   .mono-scorer-screen {
     min-height: 100dvh;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .mono-scorer-shell {
@@ -1143,9 +1749,9 @@
   }
 
   .mono-scorer-topbar {
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
   }
 
   .mono-scorer-topbar-actions {
@@ -1157,7 +1763,7 @@
   }
 
   .mono-quick-cricket-score {
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
 
   .mono-scorer-score-value {
@@ -1227,9 +1833,11 @@
     z-index: 20;
     margin-right: -12px;
     margin-left: -12px;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-    background: color-mix(in oklch, var(--se-color-canvas) 94%, var(--se-color-surface));
-    box-shadow: 0 -10px 24px color-mix(in oklch, var(--se-color-ink) 10%, transparent);
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    background: color-mix(in oklch, var(--se-color-canvas) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: none;
   }
 
   .mono-scorer-control-strip > .flex {
@@ -1239,14 +1847,13 @@
   }
 
   .mono-scorer-control-strip > .mono-quick-action-row {
-    display: grid;
-  }
-
-  .mono-quick-action-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    display: flex;
+    align-items: stretch;
+    gap: 0;
   }
 
   .mono-quick-action-row-three {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 

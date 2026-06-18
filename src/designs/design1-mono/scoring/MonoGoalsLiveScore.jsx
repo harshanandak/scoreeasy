@@ -288,10 +288,12 @@ export default function MonoGoalsLiveScore() {
     setHistory(prev => prev.slice(0, -1));
   };
 
-  // Save draft (in-progress match)
-  const saveDraft = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
+  // Auto-save the in-progress match to the tournament on every score change, so
+  // leaving the scorer always keeps progress — no manual "Save Draft". "Discard"
+  // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
+  useEffect(() => {
+    if (!tournament || !matchId || scoringPrompt.isInteractionLocked) return;
+    if (history.length === 0) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
@@ -302,22 +304,8 @@ export default function MonoGoalsLiveScore() {
         savedAt: new Date().toISOString(),
       },
     }));
-
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-
-    if (autoFinishTimeoutRef.current) {
-      clearTimeout(autoFinishTimeoutRef.current);
-      autoFinishTimeoutRef.current = null;
-    }
-    timer.pause();
-    setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(navigateToTournament);
-  };
+    saveSportTournament(sportConfig.storageKey, updatedTournament);
+  }, [tournament, matchId, score1, score2, history, sportConfig, scoringPrompt.isInteractionLocked]);
 
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {
@@ -394,12 +382,29 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Cancel and return
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
+  // Discard the in-progress draft for this match (revert to its committed state),
+  // then return to the bracket. Saving is automatic, so plain navigation keeps it.
+  const discardAndExit = () => {
+    if (tournament && matchId) {
+      const reverted = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        draftState: undefined,
+        // A resumed draft carries status 'in-progress'; once it is thrown away the
+        // match has no committed score, so revert it to 'pending' to stop the bracket
+        // advertising a resumable match that no longer has a draft.
+        status: m.score1 || m.score2 || m.winner ? m.status : 'pending',
+      }));
+      saveSportTournament(sportConfig.storageKey, reverted);
+    }
+    navigateToTournament();
+  };
+  const hasDraftToDiscard = hasChanges || Boolean(match?.draftState) || history.length > 0;
+  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-      <p style={{ color: '#888' }}>Loading...</p>
+      <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
   }
 
@@ -418,6 +423,9 @@ export default function MonoGoalsLiveScore() {
   const rightName = sidesSwapped ? team1Name : team2Name;
   const leftScore = sidesSwapped ? score2 : score1;
   const rightScore = sidesSwapped ? score1 : score2;
+  // Score colour follows the lead: ahead = green, tied = brown (both), trailing = ink.
+  const teamAccent = (mine, other) =>
+    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
 
   // Timed mode helpers
   const isTimedMode = effectiveFormat?.mode === 'timed';
@@ -449,7 +457,7 @@ export default function MonoGoalsLiveScore() {
   };
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen mono-arena-screen">
       <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
@@ -460,28 +468,12 @@ export default function MonoGoalsLiveScore() {
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: '#888' }}>
+          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
           </span>
           <div className="mono-scorer-topbar-actions">
-            <button
-              type="button"
-              onClick={() => { setSidesSwapped(s => !s); }}
-              className="mono-btn"
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.75rem',
-                minWidth: 0,
-                touchAction: 'manipulation',
-                borderColor: sidesSwapped ? '#0066ff' : '#ddd',
-                color: sidesSwapped ? '#0066ff' : '#111',
-              }}
-              title="Swap sides"
-            >
-              Swap
-            </button>
             {isTimedMode ? (
-              <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? '#dc2626' : undefined }}>
+              <span className={`mono-badge ${isTimeUp ? 'mono-badge-paused' : 'mono-badge-live'}`} style={{ color: isTimeUp ? 'var(--destructive)' : undefined }}>
                 {overtimePeriod > 0
                   ? `OT ${overtimePeriod}`
                   : footballClockState
@@ -506,26 +498,36 @@ export default function MonoGoalsLiveScore() {
           {leftName}: {leftScore}. {rightName}: {rightScore}.
         </div>
 
-        {/* Score cards - side by side */}
-        <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '280px' }}>
-          {/* Left Team Card */}
-          <div
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            style={{ padding: '24px 16px' }}
-            role="region"
-            aria-label={`${leftName} scoring`}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
-              {leftName}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${leftName} score: ${leftScore}`}>
-              {leftScore}
-            </p>
-
-            {/* Quick buttons or simple +1 */}
-            <div className="flex flex-col gap-2 w-full px-4">
-              {quickButtons ? (
-                quickButtons.map((btn, idx) => (
+        {/* Score halves — same arena layout as the quick scorer. With quick
+            buttons (e.g. basketball +1/+2/+3) the half is a display and the buttons
+            sit below; otherwise the half itself taps to add a point. */}
+        <div className="mono-arena-grid">
+          {/* Left team */}
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={quickButtons ? undefined : () => addScore(leftTeam, 1)}
+              disabled={quickButtons ? true : (isTimeUp || scoringPrompt.isInteractionLocked)}
+              data-leading={leftScore > rightScore ? 'true' : 'false'}
+              aria-label={quickButtons ? `${leftName} score: ${leftScore}` : `Add 1 point to ${leftName}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(leftScore, rightScore), touchAction: 'manipulation' }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(leftScore, rightScore) }}>
+                {leftName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(leftScore, rightScore) }}
+              >
+                {leftScore}
+              </span>
+              {!quickButtons && <span className="mono-arena-hint">Tap +1</span>}
+            </button>
+            {quickButtons && (
+              <div className="flex flex-col gap-2 w-full px-4" style={{ marginTop: 8 }}>
+                {quickButtons.map((btn, idx) => (
                   <button
                     key={`left-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(leftTeam, btn.value)}
@@ -536,39 +538,37 @@ export default function MonoGoalsLiveScore() {
                   >
                     {btn.label}
                   </button>
-                ))
-              ) : (
-                <button
-                  onClick={() => addScore(leftTeam, 1)}
-                  className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
-                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
-                  aria-label={`Add 1 point to ${leftName}`}
-                >
-                  + 1
-                </button>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right Team Card */}
-          <div
-            className="flex-1 flex flex-col items-center justify-center mono-score-pad"
-            style={{ padding: '24px 16px' }}
-            role="region"
-            aria-label={`${rightName} scoring`}
-          >
-            <p className="text-xs uppercase tracking-widest mb-4" style={{ color: '#888' }}>
-              {rightName}
-            </p>
-            <p key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0} className="mono-scorer-score-value font-bold font-mono mono-score mono-score-animate mb-4" style={{ color: '#111' }} aria-label={`${rightName} score: ${rightScore}`}>
-              {rightScore}
-            </p>
-
-            {/* Quick buttons or simple +1 */}
-            <div className="flex flex-col gap-2 w-full px-4">
-              {quickButtons ? (
-                quickButtons.map((btn, idx) => (
+          {/* Right team */}
+          <div className="mono-arena-col">
+            <button
+              type="button"
+              onClick={quickButtons ? undefined : () => addScore(rightTeam, 1)}
+              disabled={quickButtons ? true : (isTimeUp || scoringPrompt.isInteractionLocked)}
+              data-leading={rightScore > leftScore ? 'true' : 'false'}
+              aria-label={quickButtons ? `${rightName} score: ${rightScore}` : `Add 1 point to ${rightName}`}
+              className="mono-arena-half"
+              style={{ '--score-accent': teamAccent(rightScore, leftScore), touchAction: 'manipulation' }}
+            >
+              <span className="mono-arena-overline" style={{ color: teamAccent(rightScore, leftScore) }}>
+                {rightName}
+              </span>
+              <span
+                key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+                className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+                style={{ color: teamAccent(rightScore, leftScore) }}
+              >
+                {rightScore}
+              </span>
+              {!quickButtons && <span className="mono-arena-hint">Tap +1</span>}
+            </button>
+            {quickButtons && (
+              <div className="flex flex-col gap-2 w-full px-4" style={{ marginTop: 8 }}>
+                {quickButtons.map((btn, idx) => (
                   <button
                     key={`right-btn-${btn.label}-${idx}`}
                     onClick={() => addScore(rightTeam, btn.value)}
@@ -579,67 +579,56 @@ export default function MonoGoalsLiveScore() {
                   >
                     {btn.label}
                   </button>
-                ))
-              ) : (
-                <button
-                  onClick={() => addScore(rightTeam, 1)}
-                  className="mono-btn-primary text-lg py-3"
-                  style={{ touchAction: 'manipulation', opacity: isTimeUp || scoringPrompt.isInteractionLocked ? 0.4 : 1 }}
-                  disabled={isTimeUp || scoringPrompt.isInteractionLocked}
-                  aria-label={`Add 1 point to ${rightName}`}
-                >
-                  + 1
-                </button>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Info */}
-        <p className="text-xs text-center mb-2" style={{ color: '#bbb' }}>
+        <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-faint)' }}>
           {isTimedMode ? `${Math.floor(timeLimit / 60)} min match` :
            effectiveFormat?.mode === 'points' ? `First to ${effectiveFormat.target}` : 'Free play'}
           {' · '}
           {sportConfig.config.drawAllowed ? 'Draws allowed' : 'No draws'}
         </p>
         {!isTouchDevice && (
-          <p className="text-xs text-center mb-6" style={{ color: '#ccc' }}>
+          <p className="text-xs text-center mb-6" style={{ color: 'var(--se-color-ink-faint)' }}>
             Keyboard: Q = {leftName} &middot; P = {rightName} &middot; U = Undo
           </p>
         )}
 
-        {/* Bottom bar */}
+        {/* Unified bottom bar — same thin line-divided row as every scorer.
+            Saving is automatic; Save commits & returns, Discard reverts this match. */}
         <div className="mono-control-strip mono-scorer-control-strip pt-4">
-          <button
-            onClick={saveMatch}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn-primary w-full mb-3"
-            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-          >
-            Save &amp; Return
-          </button>
-          <div className="flex gap-2">
+          <div className="mono-quick-action-row">
             <button
               onClick={undo}
               disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
+              className="mono-btn"
+              style={{ opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
             >
               Undo
             </button>
-            <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
-              Cancel
+            <button
+              onClick={() => { setSidesSwapped(s => !s); }}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn"
+              style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+            >
+              Swap
             </button>
-            {hasChanges && (
-              <button
-                onClick={saveDraft}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Save Draft
-              </button>
-            )}
+            <button onClick={handleDiscard} className="mono-btn">
+              Discard
+            </button>
+            <button
+              onClick={saveMatch}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn"
+              style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+            >
+              Finish
+            </button>
           </div>
         </div>
       </div>

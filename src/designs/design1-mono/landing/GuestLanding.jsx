@@ -5,7 +5,7 @@ import SportIcon from './sportIcons';
 import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, experienceStats, trustNotes } from './landingData';
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
-import { getReadableTextColor, getSportAccent, sportsTokens } from '../theme/sportsTokens';
+import { getSportAccent, sportsTokens } from '../theme/sportsTokens';
 
 const heroSportPriority = new Map([
   ['Cricket', 0],
@@ -55,6 +55,7 @@ export default function GuestLanding() {
   const [hoveredSport, setHoveredSport] = useState(null);
   const [hoveredStep, setHoveredStep] = useState(null);
   const [activeHeroSport, setActiveHeroSport] = useState(0);
+  const [ctaSportIndex, setCtaSportIndex] = useState(0);
   const [tickerPaused, setTickerPaused] = useState(false);
   const tickerRef = useRef(null);
   const tickerOffset = useRef(0);
@@ -108,13 +109,44 @@ export default function GuestLanding() {
   const activeCard = orderedHeroScoreCards[activeHeroSport];
   const activeSportId = sportIdByName.get(activeCard.sport);
   const activeAccent = getSportAccent(activeSportId);
-  const activeAccentText = getReadableTextColor(activeAccent.primary);
+  /* Design philosophy: text sitting on a sport-accent fill is always white, not auto-contrast black. */
+  const activeAccentText = sportsTokens.color.inverse;
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
+  /* SIGN IN always enters via the unified /login route; the login/fallback layer decides any signup redirect. */
+  const signinPath = '/login';
+  /* Hero CTA keeps START fixed and rolls the sport word over; clicking lands on the displayed sport's chooser. */
+  const ctaRotationSports = orderedHeroScoreCards.slice(0, 3).map((card) => card.sport);
+  const ctaSport = ctaRotationSports[ctaSportIndex % ctaRotationSports.length] ?? activeCard.sport;
+  const ctaWord = ctaSport.toUpperCase();
   const heroActions = [
-    { label: activeStartLabel, tone: 'primary', to: sportPlayPath(activeCard.sport) },
-    { label: 'CHOOSE SPORT', tone: 'secondary', to: '/play' },
+    {
+      key: 'start',
+      tone: 'primary',
+      to: sportPlayPath(ctaSport),
+      label: (
+        <span style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+          START&nbsp;
+          <span style={{ display: 'inline-flex', overflow: 'hidden', lineHeight: 1 }}>
+            <span key={ctaWord} className="cta-rolling-word" style={{ display: 'inline-block', lineHeight: 1 }}>{ctaWord}</span>
+          </span>
+        </span>
+      ),
+    },
+    { key: 'signin', tone: 'secondary', to: signinPath, label: 'SIGN IN' },
   ];
+  useEffect(() => {
+    if (ctaRotationSports.length <= 1) return undefined;
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return undefined;
+    const id = setInterval(() => {
+      setCtaSportIndex((prev) => (prev + 1) % ctaRotationSports.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, [ctaRotationSports.length]);
+
   const stepActions = [
     { label: 'CHOOSE SPORT', to: '/play' },
     { label: `SET UP ${activeCard.sport.toUpperCase()}`, to: sportPlayPath(activeCard.sport) },
@@ -126,7 +158,7 @@ export default function GuestLanding() {
     return {
       fontFamily: MONO,
       fontSize: compact ? 'clamp(0.5625rem, 2.5vw, 0.6875rem)' : '0.8125rem',
-      fontWeight: 700,
+      fontWeight: primary ? 800 : 700,
       padding: compact ? '12px 14px' : '14px 28px',
       letterSpacing: '0.05em',
       textDecoration: 'none',
@@ -275,7 +307,7 @@ export default function GuestLanding() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 {heroActions.map((action) => (
-                  <Link key={action.label} to={action.to} style={heroActionStyle(action, 'compact')}>
+                  <Link key={action.key} to={action.to} style={heroActionStyle(action, 'compact')}>
                     {action.label}
                   </Link>
                 ))}
@@ -290,9 +322,10 @@ export default function GuestLanding() {
 
             {/* Sport pill selector + dynamic scorecard mockup */}
             <div style={{ marginTop: 20, marginBottom: 24 }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              <div className="hero-pill-row" style={{ display: 'flex', flexWrap: 'nowrap', gap: 6, marginBottom: 10, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {orderedHeroScoreCards.map((card, i) => (
                   <button key={card.sport} {...heroCardHandlers(i)} style={{
+                    flexShrink: 0, whiteSpace: 'nowrap',
                     minHeight: MOBILE_TAP_TARGET, padding: '8px 12px', border: 'none', cursor: 'pointer',
                     fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em',
                     background: activeHeroSport === i ? getSportAccent(sportIdByName.get(card.sport)).primary : t.surface,
@@ -360,7 +393,7 @@ export default function GuestLanding() {
               </p>
               <div style={{ display: 'flex', gap: 12 }}>
                 {heroActions.map((action) => (
-                  <Link key={action.label} to={action.to} style={heroActionStyle(action, 'desktop')}>
+                  <Link key={action.key} to={action.to} style={heroActionStyle(action, 'desktop')}>
                     {action.label}
                   </Link>
                 ))}
@@ -751,6 +784,14 @@ export default function GuestLanding() {
           0% { opacity: 0; transform: translateY(4px); }
           100% { opacity: 1; transform: translateY(0); }
         }
+        .hero-pill-row::-webkit-scrollbar { display: none; }
+        @keyframes cta-word-roll {
+          0% { transform: translateY(110%); opacity: 0; }
+          55% { opacity: 1; }
+          100% { transform: translateY(0); opacity: 1; }
+        }
+        .cta-rolling-word { animation: cta-word-roll 520ms cubic-bezier(0.2, 0, 0, 1); }
+        @media (prefers-reduced-motion: reduce) { .cta-rolling-word { animation: none; } }
         .nav-link:hover { color: ${t.text} !important; }
         .nav-signin:hover { background: ${t.text} !important; color: ${t.bg} !important; }
       `}</style>

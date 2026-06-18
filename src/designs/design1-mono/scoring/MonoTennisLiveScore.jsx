@@ -18,7 +18,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import {
   buildTennisQuickHistoryEntry,
   getTennisQuickDraftKey,
-  getVisibleTennisSetRows,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
@@ -99,8 +98,11 @@ const countSetsWon = (completedSets) => {
     const team1Wins = set.isTiebreak
       ? set.tiebreakPoints1 > set.tiebreakPoints2
       : set.games1 > set.games2;
+    const team2Wins = set.isTiebreak
+      ? set.tiebreakPoints2 > set.tiebreakPoints1
+      : set.games2 > set.games1;
     if (team1Wins) team1Sets++;
-    else team2Sets++;
+    if (team2Wins) team2Sets++;
   });
   return { team1Sets, team2Sets };
 };
@@ -421,12 +423,17 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
   }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.isInteractionLocked]);
 
-  // Save draft
-  const saveDraft = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
+  // Auto-save the in-progress match as a draft on every scoring change, so
+  // leaving the scorer (back button, navigating away, closing the app) always
+  // keeps a resumable draft — no manual "Save Draft" step. Mirrors the volleyball
+  // arena's continuous draft autosave. Skips empty/complete matches so we never
+  // pile up blank drafts, and the draft is cleared on finish/discard. Tournament
+  // matches autosave into the bracket so a resumable in-progress draft survives.
+  useEffect(() => {
+    if (!match || isMatchComplete || history.length === 0) return;
     if (isQuickMatch) {
-      const ok = saveData(quickDraftKey, {
+      if (!quickDraftKey) return;
+      saveData(quickDraftKey, {
         ...match,
         sets,
         status: 'in-progress',
@@ -437,37 +444,23 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           savedAt: new Date().toISOString(),
         },
       });
+    } else if (tournament && matchId) {
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        status: 'in-progress',
+        draftState: {
+          currentSet,
+          sets,
+          history,
+          savedAt: new Date().toISOString(),
+        },
+      }));
+      const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
       }
-      setSaveWarning('');
-      setHasChanges(false);
-      scoringPrompt.scheduleDraftRedirect(navigateBack);
-      return;
     }
-
-    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-      ...m,
-      sets,
-      status: 'in-progress',
-      draftState: {
-        currentSet,
-        sets,
-        history,
-        savedAt: new Date().toISOString(),
-      },
-    }));
-
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    setHasChanges(false);
-    scoringPrompt.scheduleDraftRedirect(navigateBack);
-  };
+  }, [isQuickMatch, quickDraftKey, match, tournament, matchId, sportConfig, isMatchComplete, sets, currentSet, history]);
 
   const saveQuickMatch = () => {
     const completedAt = new Date().toISOString();
@@ -557,9 +550,27 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     navigate(`/${sport}/tournament/${id}`);
   };
 
-  // Cancel and discard changes
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateBack);
+  // Cancel and discard changes — clear the in-progress quick draft so the app
+  // entry stops auto-resuming this match (otherwise you can't leave the scorer).
+  // For tournament matches, drop the resumable draft and reset the match back to
+  // 'pending' when it has no real result yet, so the bracket doesn't leave a
+  // scoreless match stuck in-progress. Keep any partial set progress otherwise.
+  const discardAndExit = () => {
+    if (quickDraftKey) clearData(quickDraftKey);
+    if (tournament) {
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        status: m.winner || (m.sets || []).some(s => s.completed || s.games1 > 0 || s.games2 > 0)
+          ? m.status
+          : 'pending',
+        draftState: undefined,
+      }));
+      saveSportTournament(sportConfig.storageKey, updatedTournament);
+    }
+    navigateBack();
+  };
+  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);
+  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if ((!isQuickMatch && !tournament) || !match) {
     return (
@@ -576,6 +587,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
   const currentSetData = sets[currentSet];
   const isTiebreakMode = currentSetData?.isTiebreak;
+  const { team1Sets, team2Sets } = countSetsWon(sets.filter((s) => s.completed));
+  const leftSetsWon = sidesSwapped ? team2Sets : team1Sets;
+  const rightSetsWon = sidesSwapped ? team1Sets : team2Sets;
 
   // Display score for current game/tiebreak
   const { score1: score1Display, score2: score2Display } = computeScoreDisplay(currentSetData);
@@ -587,6 +601,16 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightGames = sidesSwapped ? currentSetData.games1 : currentSetData.games2;
   const leftTeam = sidesSwapped ? 2 : 1;
   const rightTeam = sidesSwapped ? 1 : 2;
+  // Score colour follows the current-game lead: ahead = green, level (0-0, deuce)
+  // = brown (both), trailing = ink. Compares the underlying point counts.
+  const teamAccent = (mine, other) =>
+    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
+  const leftPoints = isTiebreakMode
+    ? (sidesSwapped ? currentSetData.tiebreakPoints2 : currentSetData.tiebreakPoints1)
+    : (sidesSwapped ? currentSetData.points2 : currentSetData.points1);
+  const rightPoints = isTiebreakMode
+    ? (sidesSwapped ? currentSetData.tiebreakPoints1 : currentSetData.tiebreakPoints2)
+    : (sidesSwapped ? currentSetData.points1 : currentSetData.points2);
   const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked;
   const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
     ? 'Scoring is temporarily locked'
@@ -597,7 +621,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   };
 
   return (
-    <div className="mono-scorer-screen mono-scorer-shell mono-transition mono-visible">
+    <div className="mono-scorer-screen mono-arena-screen mono-transition mono-visible">
+      <div className="mono-scorer-shell">
       <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
       {saveWarning && (
         <div className="mono-alert mono-alert-danger mb-4">
@@ -607,28 +632,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       {scoringPrompt.renderPrompt(confirmPendingPrompt)}
       {/* Top bar */}
       <div className="mono-scorer-topbar">
-        <span className="text-sm font-swiss" style={{ color: '#888' }}>
+        <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
           {sportConfig?.name || 'Match'}
         </span>
         <div className="mono-scorer-topbar-actions">
-          <button
-            type="button"
-            onClick={handleSwapSides}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn"
-            style={{
-              padding: '6px 12px',
-              fontSize: '0.75rem',
-              minWidth: 0,
-              touchAction: 'manipulation',
-              borderColor: sidesSwapped ? '#0066ff' : '#ddd',
-              color: sidesSwapped ? '#0066ff' : '#111',
-              opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1,
-            }}
-            title="Swap sides"
-          >
-            Swap
-          </button>
           <span
             className={`mono-badge ${isTiebreakMode ? 'mono-badge-paused' : 'mono-badge-live'}`}
           >
@@ -646,138 +653,102 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}.
       </output>
 
-      {/* Score cards — S6819: use <button> instead of role="button" div */}
-      <div className="mono-score-grid mono-scorer-score-area" style={{ minHeight: '250px' }}>
-        {/* Left Team */}
-        <button
-          type="button"
-          onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
-          aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
-          disabled={!canScoreCurrentSet}
-          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
-          style={{
-            touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
-            opacity: canScoreCurrentSet ? 1 : 0.6,
-          }}
-        >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
-            {leftName}
-          </p>
-          <p
-            key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
-            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: '#111' }}
-          >
-            {leftScoreDisplay}
-          </p>
-          <p className="text-xs" style={{ color: '#888' }}>
-            Games: {leftGames}
-          </p>
-        </button>
-
-        {/* Right Team */}
-        <button
-          type="button"
-          onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
-          aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
-          disabled={!canScoreCurrentSet}
-          className="flex-1 mono-score-pad flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
-          style={{
-            touchAction: 'manipulation',
-            borderColor: canScoreCurrentSet ? '#0066ff' : '#ddd',
-            opacity: canScoreCurrentSet ? 1 : 0.6,
-          }}
-        >
-          <p className="text-sm uppercase tracking-widest font-normal" style={{ color: '#888' }}>
-            {rightName}
-          </p>
-          <p
-            key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
-            className="mono-scorer-score-value font-bold mono-score mono-score-animate font-mono"
-            style={{ color: '#111' }}
-          >
-            {rightScoreDisplay}
-          </p>
-          <p className="text-xs" style={{ color: '#888' }}>
-            Games: {rightGames}
-          </p>
-        </button>
+      {/* Seam: sets tally + format — matches the arena scorers */}
+      <div className="mono-arena-seam">
+        <span><b>{leftSetsWon}</b> &ndash; <b>{rightSetsWon}</b> sets</span>
+        <span className="mono-arena-seam-rule">{isTiebreakMode ? 'tiebreak' : `best of ${sets.length}`}</span>
       </div>
 
-      {/* Keyboard shortcuts hint (desktop only) */}
-      {!isTouchDevice && (
-        <p className="text-xs text-center mb-6" style={{ color: '#ccc' }}>
-          Keyboard: Q = {leftName} · P = {rightName} · U = Undo
-        </p>
-      )}
+      {/* Score halves — identical structure to the arena scorer (football/volleyball):
+          big tabular number, accent-coloured team name, a 2px "leading" underline, and
+          a subtle pop on each point. Tennis games sit in the arena hint slot.
+          S6819: use <button> instead of role="button" div. */}
+      <div className="mono-arena-grid">
+        {/* Left team */}
+        <div className="mono-arena-col">
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
+            disabled={!canScoreCurrentSet}
+            data-leading={leftPoints > rightPoints ? 'true' : 'false'}
+            aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
+            className="mono-arena-half"
+            style={{ '--score-accent': teamAccent(leftPoints, rightPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+          >
+            <span className="mono-arena-overline" style={{ color: teamAccent(leftPoints, rightPoints) }}>
+              {leftName}
+            </span>
+            <span
+              key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+              style={{ color: teamAccent(leftPoints, rightPoints) }}
+            >
+              {leftScoreDisplay}
+            </span>
+            <span className="mono-arena-hint">{leftGames} {leftGames === 1 ? 'game' : 'games'}</span>
+          </button>
+        </div>
 
-      {/* Set history */}
-      <div className="mb-6">
-        <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-          Match Score
-        </h3>
-        <div className="flex flex-col gap-2">
-          {getVisibleTennisSetRows(sets).map((set, idx) => {
-            const isActive = idx === currentSet;
-            // S6479: use stable key derived from set label, not array index
-            const setLabel = `Set ${idx + 1}`;
-            const scoreDisplay = (set.isTiebreak && set.completed)
-              ? `${set.games1}-${set.games2} (${set.tiebreakPoints1}-${set.tiebreakPoints2})`
-              : `${set.games1}-${set.games2}`;
-
-            return (
-              <div
-                key={setLabel}
-                className="flex items-center justify-between px-4 py-2 mono-row-panel text-sm"
-                style={{
-                  borderColor: isActive ? '#0066ff' : '#eee',
-                  backgroundColor: set.completed ? '#fafafa' : '#fff',
-                }}
-              >
-                <span style={{ color: isActive ? '#0066ff' : '#888' }}>{setLabel}</span>
-                <span className="font-mono font-bold" style={{ color: '#111' }}>
-                  {scoreDisplay}
-                </span>
-              </div>
-            );
-          })}
+        {/* Right team */}
+        <div className="mono-arena-col">
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
+            disabled={!canScoreCurrentSet}
+            data-leading={rightPoints > leftPoints ? 'true' : 'false'}
+            aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
+            className="mono-arena-half"
+            style={{ '--score-accent': teamAccent(rightPoints, leftPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+          >
+            <span className="mono-arena-overline" style={{ color: teamAccent(rightPoints, leftPoints) }}>
+              {rightName}
+            </span>
+            <span
+              key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
+              style={{ color: teamAccent(rightPoints, leftPoints) }}
+            >
+              {rightScoreDisplay}
+            </span>
+            <span className="mono-arena-hint">{rightGames} {rightGames === 1 ? 'game' : 'games'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Bottom bar */}
+      {/* Bottom bar — thin line-divided action row to match the arena scorers.
+          Saving is automatic (see the autosave effect); these are manual controls.
+          "Save" keeps/finishes the match; "Discard" deletes this in-progress match. */}
       <div className="mono-control-strip mono-scorer-control-strip pt-4">
-        <button
-          onClick={saveMatch}
-          disabled={scoringPrompt.isInteractionLocked}
-          className="mono-btn-primary w-full mb-3"
-          style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-        >
-          Save &amp; Return
-        </button>
-        <div className="flex gap-2">
+        <div className="mono-quick-action-row">
           <button
             onClick={undo}
             disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-            className="mono-btn flex-1"
-            style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
+            className="mono-btn"
+            style={{ opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
           >
             Undo
           </button>
-          <button onClick={handleCancel} className="mono-btn flex-1" style={{ padding: '8px', fontSize: '0.8125rem' }}>
-            Cancel
+          <button
+            onClick={handleSwapSides}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn"
+            style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+          >
+            Swap
           </button>
-          {hasChanges && !isMatchComplete && (
-            <button
-              onClick={saveDraft}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Save Draft
-            </button>
-          )}
+          <button onClick={handleCancel} className="mono-btn">
+            Discard
+          </button>
+          <button
+            onClick={saveMatch}
+            disabled={scoringPrompt.isInteractionLocked}
+            className="mono-btn"
+            style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
+          >
+            Finish
+          </button>
         </div>
+      </div>
       </div>
     </div>
   );

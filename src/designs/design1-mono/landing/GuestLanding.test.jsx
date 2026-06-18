@@ -52,6 +52,18 @@ describe('GuestLanding bottom CTA', () => {
     expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', 'https://scoreeasy.app/signup');
   });
 
+  it('always points SIGN IN at the unified /login route, even on local auth builds', () => {
+    renderLanding({ cloudAuthAvailable: false });
+
+    expect(screen.getByRole('link', { name: 'SIGN IN' })).toHaveAttribute('href', '/login');
+  });
+
+  it('keeps the hero START CTA tied to the displayed sport', () => {
+    renderLanding({ cloudAuthAvailable: true });
+
+    expect(screen.getAllByRole('link', { name: 'START CRICKET' }).at(0)).toHaveAttribute('href', '/play?sport=cricket');
+  });
+
   it('keeps the signup CTA visible with cloud auth enabled', () => {
     renderLanding({ cloudAuthAvailable: true });
 

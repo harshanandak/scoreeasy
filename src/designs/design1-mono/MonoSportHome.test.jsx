@@ -11,12 +11,14 @@ function LocationProbe() {
   return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
 }
 
-function renderSportHome() {
+function renderSportHome(initialEntry = '/play') {
   return render(
-    <MemoryRouter initialEntries={['/play']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <LocationProbe />
       <Routes>
         <Route path="/play" element={<MonoSportHome />} />
+        <Route path="/:sport/quick" element={<p>Quick setup</p>} />
+        <Route path="/:sport/tournament" element={<p>Tournament hub</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -24,7 +26,7 @@ function renderSportHome() {
 
 const getChooser = () => screen.getByRole('region', { name: 'Choose sport' });
 
-describe('MonoSportHome priority starts', () => {
+describe('MonoSportHome sport chooser', () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
@@ -51,81 +53,78 @@ describe('MonoSportHome priority starts', () => {
     vi.restoreAllMocks();
   });
 
-  it('keeps cricket prioritized while routing users to cricket format choices', () => {
+  it('renders popular sports first with quick and tournament actions', () => {
     renderSportHome();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Play' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
-
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=cricket');
-    expect(screen.getByRole('tab', { name: 'Cricket' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { name: 'T20' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Quick Match/i })).not.toBeInTheDocument();
+    const chooser = getChooser();
+    expect(within(chooser).getByText('Popular')).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Quick match: Cricket' })).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Tournament: Cricket' })).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Quick match: Football' })).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Quick match: Volleyball' })).toBeInTheDocument();
   });
 
-  it('routes volleyball priority users to the sport card choices instead of a quick match', () => {
+  it('starts a quick match from a sport row', () => {
     renderSportHome();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start Volleyball' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
 
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=volleyball');
-    expect(screen.getByRole('tab', { name: 'Net Sports' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { name: 'Volleyball' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Quick Match/i })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
+    expect(screen.getByText('Quick setup')).toBeInTheDocument();
   });
 
-  it('keeps search and layout controls inside the choose sport section', () => {
+  it('routes the tournament action to the sport tournament hub', () => {
     renderSportHome();
 
-    expect(within(getChooser()).getByLabelText('Search sports')).toBeInTheDocument();
-    expect(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' })).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Search sports')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Tournament: Volleyball' }));
+
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/tournament');
+    expect(screen.getByText('Tournament hub')).toBeInTheDocument();
   });
 
-  it('labels the layout toggle with the actual destination layout', () => {
-    renderSportHome();
-
-    fireEvent.click(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' }));
-
-    expect(within(getChooser()).getByRole('button', { name: 'Switch to tabs layout' })).toBeInTheDocument();
-  });
-
-  it('keeps the unified choose sport controls visible while searching', () => {
+  it('filters rows while keeping the chooser controls visible', () => {
     renderSportHome();
 
     fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'tennis' } });
 
     const chooser = getChooser();
     expect(within(chooser).getByLabelText('Search sports')).toHaveValue('tennis');
-    expect(within(chooser).getByRole('heading', { name: 'Tennis' })).toBeInTheDocument();
+    expect(within(chooser).getByRole('button', { name: 'Quick match: Tennis' })).toBeInTheDocument();
+    expect(within(chooser).queryByRole('button', { name: 'Quick match: Cricket' })).not.toBeInTheDocument();
   });
 
-  it('keeps chooser controls sized and classed for mobile polish', () => {
+  it('shows an empty state for unmatched searches', () => {
     renderSportHome();
 
-    expect(screen.getByRole('tablist', { name: 'Sport categories' })).toHaveClass('mono-category-tabs');
-    expect(screen.getByRole('tab', { name: 'Cricket' })).toHaveClass('mono-category-tab');
-    expect(screen.getByRole('tab', { name: 'Cricket' })).toHaveStyle({ minHeight: '48px' });
+    fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'zzzz' } });
+
+    expect(screen.getByText('No sports found.')).toBeInTheDocument();
+  });
+
+  it('orders groups around the popular games', () => {
+    renderSportHome();
+
+    const text = getChooser().textContent;
+    expect(text.indexOf('Popular')).toBeGreaterThan(-1);
+    expect(text.indexOf('Popular')).toBeLessThan(text.indexOf('Team Sports'));
+    expect(text.indexOf('Team Sports')).toBeLessThan(text.indexOf('Racquet Sports'));
+    // Categories fully covered by the popular tier (Cricket, Net Sports) do not repeat below it.
+    expect(text).not.toContain('Net Sports');
+  });
+
+  it('scrolls the requested sport into view from the sport query param', () => {
+    renderSportHome('/play?sport=volleyball');
+
+    expect(document.getElementById('sport-row-volleyball')).not.toBeNull();
+    expect(scrollSpy).toHaveBeenCalled();
+  });
+
+  it('keeps tap targets sized for mobile', () => {
+    renderSportHome();
+
     expect(screen.getByLabelText('Search sports')).toHaveClass('mono-input');
-    expect(within(getChooser()).getByRole('button', { name: 'Switch to grid layout' })).toHaveStyle({ minHeight: '48px' });
-  });
-
-  it('orders play categories around the priority games', () => {
-    renderSportHome();
-
-    const tabs = within(screen.getByRole('tablist', { name: 'Sport categories' })).getAllByRole('tab');
-
-    expect(tabs.slice(0, 3).map(tab => tab.textContent)).toEqual(['Cricket', 'Team Sports', 'Net Sports']);
-  });
-
-  it('presents priority starts as format-selection entry points', () => {
-    renderSportHome();
-
-    const chooser = getChooser();
-
-    expect(within(chooser).getByRole('button', { name: 'Start Cricket' })).toHaveTextContent('Choose format next');
-    expect(within(chooser).getByRole('button', { name: 'Start Football' })).toHaveTextContent('Choose format next');
-    expect(within(chooser).getByRole('button', { name: 'Start Volleyball' })).toHaveTextContent('Choose format next');
+    expect(screen.getByRole('button', { name: 'Quick match: Cricket' })).toHaveStyle({ minHeight: '44px' });
   });
 });
