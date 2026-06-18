@@ -199,8 +199,15 @@ describe('app-owned scoring prompts', () => {
 
     for (const [componentFile, source] of Object.entries(sourceByComponent)) {
       expect(source, componentFile).toContain('mono-scorer-screen');
-      expect(source, componentFile).toContain('mono-scorer-control-strip');
       expect(source, componentFile).toContain('mono-scorer-score-value');
+      // The cricket Test scorer moves match/ending actions into a top-bar
+      // hamburger menu (no bottom control strip) so the keypad stays in the
+      // thumb zone; every other scorer keeps the bottom control strip.
+      if (componentFile === 'MonoCricketTestLiveScore.jsx') {
+        expect(source, componentFile).toContain('aria-label="Match options"');
+      } else {
+        expect(source, componentFile).toContain('mono-scorer-control-strip');
+      }
     }
 
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-grid');

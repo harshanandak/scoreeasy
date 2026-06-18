@@ -30,6 +30,14 @@ function UndoIcon() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  );
+}
+
 export default function MonoCricketTestLiveScore({ storageMode }) {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
@@ -716,7 +724,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const contextLine = getContextLine();
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen mono-arena-screen">
       <div className="mono-scorer-shell">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
@@ -725,7 +733,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
-        {/* Top bar */}
+        {/* Top bar — match/ending options live in the hamburger menu so the
+            scoring keypad stays low and easy to reach by thumb. */}
         <div className="mono-scorer-topbar">
           <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
             {sportConfig?.name || 'Match'}
@@ -733,6 +742,71 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           <div className="mono-scorer-topbar-actions">
             <span className="mono-badge">Test Match</span>
             <span className="mono-badge mono-badge-live">{ORDINALS[currentInningsIndex]} Innings</span>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setShowActions(v => !v)}
+                aria-label="Match options"
+                aria-expanded={showActions}
+                className="mono-btn"
+                style={{ padding: '4px 8px', minHeight: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--se-color-ink)' }}
+              >
+                <MenuIcon />
+              </button>
+              {showActions && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close menu"
+                    onClick={() => setShowActions(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'transparent', border: 'none', cursor: 'default' }}
+                  />
+                  <div
+                    role="menu"
+                    style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50, minWidth: 190, display: 'flex', flexDirection: 'column', gap: 6, padding: 8, background: 'var(--card)', border: '1px solid var(--se-color-ink)', borderRadius: 'calc(var(--radius) + 4px)', boxShadow: 'var(--shadow-hard)' }}
+                  >
+                    {showDeclare && !isInningsOver && (
+                      <button
+                        role="menuitem"
+                        onClick={() => { setShowActions(false); handleDeclare(); }}
+                        disabled={scoringPrompt.isInteractionLocked}
+                        className="mono-btn"
+                        style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                      >
+                        Declare innings
+                      </button>
+                    )}
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleDraw(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      End as draw
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleDiscard(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      Discard match
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => { setShowActions(false); handleFinish(); }}
+                      disabled={scoringPrompt.isInteractionLocked}
+                      className="mono-btn"
+                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                    >
+                      Finish &amp; save
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -841,59 +915,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             </div>
           </div>
         )}
-
-        {/* Match actions — progressive disclosure keeps the scoring view
-            uncluttered. Auto-save makes none of these urgent, so they sit
-            behind one tap; Undo lives in the keypad's OUT line. */}
-        <div className="mono-scorer-control-strip pt-4">
-          {showActions && (
-            <div className="flex flex-col gap-2 mb-2">
-              {showDeclare && !isInningsOver && (
-                <button
-                  onClick={() => { setShowActions(false); handleDeclare(); }}
-                  disabled={scoringPrompt.isInteractionLocked}
-                  className="mono-btn"
-                  style={{ padding: '10px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-                >
-                  Declare innings
-                </button>
-              )}
-              <button
-                onClick={() => { setShowActions(false); handleDraw(); }}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn"
-                style={{ padding: '10px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                End as draw
-              </button>
-              <button
-                onClick={() => { setShowActions(false); handleDiscard(); }}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn"
-                style={{ padding: '10px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Discard match
-              </button>
-              <button
-                onClick={() => { setShowActions(false); handleFinish(); }}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn"
-                style={{ padding: '10px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Finish &amp; save
-              </button>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowActions(v => !v)}
-            aria-expanded={showActions}
-            className="mono-btn w-full"
-            style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--se-color-ink-muted)', letterSpacing: '0.04em' }}
-          >
-            {showActions ? 'Close' : 'Match options'}
-          </button>
-        </div>
       </div>
     </div>
   );
