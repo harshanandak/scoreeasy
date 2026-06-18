@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
-import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch } from '../../../utils/storage';
+import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
 import { ballsToOvers, calculateRunRate, getMaxWickets, getTotalBalls, canEnforceFollowOn, getTestMatchResult } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
@@ -522,7 +522,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   const discardAndExit = () => {
     if (isQuickMatch) {
-      saveQuickMatch({ ...match, draftState: undefined, status: 'pending' });
+      // Discarding a quick match throws it away — remove the record from
+      // se_quickmatches entirely. Writing back a 'pending' shell would leave the
+      // dashboard/app-entry treating the discarded scoreless draft as recent
+      // activity and keep the user stuck in returning-player mode.
+      deleteQuickMatch(match.id);
     } else if (tournament) {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
