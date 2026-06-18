@@ -205,8 +205,8 @@ describe('app-owned scoring prompts', () => {
 
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-grid');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-grid');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-keypad');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-key');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain('className="max-w-2xl mx-auto text-center"');
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(followOnPrompt\)[\s\S]*className="min-h-screen px-6 py-10"/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toMatch(/if \(matchComplete && matchResult\)[\s\S]*className="min-h-screen px-6 py-10"/);
@@ -214,16 +214,17 @@ describe('app-owned scoring prompts', () => {
     expect(quickMatchSource).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).not.toContain("background: '#fffbeb'");
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).not.toContain("background: '#fffbeb'");
-    // MonoQuickMatch's cricket scorer was redesigned to a line-divided keypad
-    // (mono-cricket-*); the other two surfaces still use the run-button grid.
+    // The quick-match and Test cricket scorers use the line-divided keypad
+    // (mono-cricket-*); the tournament limited-overs scorer still uses the
+    // run-button grid.
     expect(quickMatchSource).toContain('mono-cricket-keypad');
     expect(quickMatchSource).toContain('mono-cricket-key-six');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-scorer-run-button-accent');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-key-six');
     expect(quickMatchSource).toContain('mono-cricket-out-line');
+    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-out-line');
     expect(quickMatchSource).not.toContain('autoFocus');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
-    expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {
