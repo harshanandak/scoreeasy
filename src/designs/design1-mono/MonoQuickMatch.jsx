@@ -153,11 +153,12 @@ function UndoIcon() {
   );
 }
 
-// Frequent action (Undo) stays in the thumb bar; rare End Match moves to a small top chip.
-function ThumbActionBar({ canUndo, onUndo, onSwap }) {
+// One shared bottom bar for every scorer: [Undo · Swap · Discard · Finish].
+// Saving is automatic; Finish ends the match (with confirm), Discard drops it.
+function ThumbActionBar({ canUndo, onUndo, onSwap, onDiscard, onEnd }) {
   return (
     <div className="mono-scorer-control-strip mono-quick-action-strip">
-      <div className={`mono-quick-action-row ${onSwap ? 'mono-quick-action-row-two' : 'mono-quick-action-row-one'}`}>
+      <div className="mono-quick-action-row">
         <button
           type="button"
           onClick={onUndo}
@@ -172,6 +173,16 @@ function ThumbActionBar({ canUndo, onUndo, onSwap }) {
         {onSwap ? (
           <button type="button" onClick={onSwap} className="mono-btn">
             Swap
+          </button>
+        ) : null}
+        {onDiscard ? (
+          <button type="button" onClick={onDiscard} className="mono-btn">
+            Discard
+          </button>
+        ) : null}
+        {onEnd ? (
+          <button type="button" onClick={onEnd} className="mono-btn" style={{ color: 'var(--primary)' }}>
+            Finish
           </button>
         ) : null}
       </div>
@@ -191,6 +202,8 @@ ThumbActionBar.propTypes = {
   canUndo: PropTypes.bool,
   onUndo: PropTypes.func.isRequired,
   onSwap: PropTypes.func,
+  onDiscard: PropTypes.func,
+  onEnd: PropTypes.func,
 };
 
 EndMatchButton.propTypes = {
@@ -739,6 +752,12 @@ export default function MonoQuickMatch() {
     setShowEndConfirm(false);
     endMatchTriggerRef.current = null;
     endMatchManually();
+  };
+
+  // Discard the in-progress quick match: clear its auto-saved draft and go home.
+  const discardQuickMatch = () => {
+    clearData(quickMatchDraftKey);
+    navigate('/app');
   };
 
   const handleSideSwap = () => {
@@ -2495,7 +2514,6 @@ export default function MonoQuickMatch() {
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <span className="mono-badge mono-badge-live">{isPointsMode ? `First to ${format.target}` : 'Live'}</span>
-                <EndMatchButton onEnd={requestEndMatch} />
               </span>
             </div>
 
@@ -2536,6 +2554,8 @@ export default function MonoQuickMatch() {
               canUndo={gScoreHistory.length > 0}
               onUndo={undoGoal}
               onSwap={handleSideSwap}
+              onDiscard={discardQuickMatch}
+              onEnd={requestEndMatch}
             />
           </div>
         </div>
@@ -2575,7 +2595,6 @@ export default function MonoQuickMatch() {
               <span className="mono-badge mono-badge-live">
                 {format.type === 'best-of' ? `Set ${currentSet + 1} of ${format.sets}` : `First to ${format.target}`}
               </span>
-              <EndMatchButton onEnd={requestEndMatch} />
             </span>
           </div>
 
@@ -2616,6 +2635,7 @@ export default function MonoQuickMatch() {
             canUndo={vScoreHistory.length > 0}
             onUndo={undoPoint}
             onSwap={handleSideSwap}
+            onDiscard={discardQuickMatch}
             onEnd={requestEndMatch}
           />
         </div>

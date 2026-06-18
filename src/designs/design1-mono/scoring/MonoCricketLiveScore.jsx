@@ -490,9 +490,47 @@ export default function MonoCricketLiveScore() {
     setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
   };
 
-  // Cancel
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, navigateToTournament);
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(navigateToTournament);
+  const handleDiscard = () => {
+    scoringPrompt.requestPrompt({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      message: 'Your progress will be lost.',
+      title: 'Discard match?',
+      type: 'discard',
+    });
+  };
+
+  const confirmPendingPrompt = () => {
+    scoringPrompt.closePrompt();
+    if (tournament) {
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m, draftState: undefined,
+      }));
+      saveSportTournament(storageKey, updatedTournament);
+    }
+    navigateToTournament();
+  };
+
+  // Continuous auto-save
+  useEffect(() => {
+    if (!tournament || !match || !format || isMatchComplete) return;
+    const storageKey = sportConfig?.storageKey || 'se_cricket';
+    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+      ...m,
+      status: 'in-progress',
+      draftState: {
+        scores: structuredClone(scores),
+        battingTeam,
+        innings,
+        history: structuredClone(history.slice(-50)),
+        freeHit,
+        trialBallUsed,
+        savedAt: new Date().toISOString(),
+      },
+    }));
+    saveSportTournament(storageKey, updatedTournament);
+  }, [scores, battingTeam, innings, history, freeHit, trialBallUsed]);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -808,14 +846,6 @@ export default function MonoCricketLiveScore() {
 
         {/* Bottom bar */}
         <div className="mono-scorer-control-strip pt-4">
-          <button
-            onClick={() => saveMatch()}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn-primary w-full mb-3"
-            style={{ padding: '12px', fontSize: '0.875rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-          >
-            End Match
-          </button>
           <div className="flex gap-2">
             <button
               onClick={undo}
@@ -826,23 +856,21 @@ export default function MonoCricketLiveScore() {
               Undo
             </button>
             <button
-              onClick={handleCancel}
+              onClick={handleDiscard}
               disabled={scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
               style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
             >
-              Cancel
+              Discard
             </button>
-            {hasChanges && (
-              <button
-                onClick={saveDraft}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Pause Match
-              </button>
-            )}
+            <button
+              onClick={() => saveMatch()}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
+              Finish
+            </button>
           </div>
         </div>
       </div>

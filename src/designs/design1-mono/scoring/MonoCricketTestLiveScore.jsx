@@ -490,9 +490,51 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   };
 
-  const handleCancel = () => {
-    scoringPrompt.cancelOrNavigate(hasChanges, navigateBack);
+  const discardAndExit = () => {
+    if (isQuickMatch) {
+      saveQuickMatch({ ...match, draftState: undefined, status: 'pending' });
+    } else if (tournament) {
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m, draftState: undefined,
+      }));
+      saveSportTournament(storageKey, updatedTournament);
+    }
+    navigateBack();
   };
+
+  const handleDiscard = () => {
+    scoringPrompt.requestPrompt({
+      cancelLabel: 'Keep scoring',
+      confirmLabel: 'Discard',
+      message: 'Your progress will be lost.',
+      title: 'Discard match?',
+      type: 'discard',
+    });
+  };
+
+  const handleFinish = () => navigateBack();
+
+  // Continuous auto-save
+  useEffect(() => {
+    if (!match || !format || matchComplete) return;
+    const draftState = {
+      innings: structuredClone(innings),
+      currentInningsIndex,
+      followOnEnforced,
+      history: structuredClone(history.slice(-50)),
+      savedAt: new Date().toISOString(),
+    };
+    if (isQuickMatch) {
+      saveQuickMatch({ ...match, draftState, status: 'in-progress' });
+    } else if (tournament) {
+      const storageKey = sportConfig?.storageKey || 'se_cricket';
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m, draftState, status: 'in-progress',
+      }));
+      saveSportTournament(storageKey, updatedTournament);
+    }
+  }, [innings, currentInningsIndex, followOnEnforced]);
 
   const confirmPendingPrompt = () => {
     const promptType = scoringPrompt.pendingPrompt?.type;
@@ -508,7 +550,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       return;
     }
 
-    if (promptType === 'discard') navigateBack();
+    if (promptType === 'discard') discardAndExit();
   };
 
   // Keyboard shortcuts
@@ -791,23 +833,21 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             >
               Draw
             </button>
-            {hasChanges && (
-              <button
-                onClick={saveDraft}
-                disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-              >
-                Pause
-              </button>
-            )}
             <button
-              onClick={handleCancel}
+              onClick={handleDiscard}
               disabled={scoringPrompt.isInteractionLocked}
               className="mono-btn flex-1"
               style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
             >
               Discard
+            </button>
+            <button
+              onClick={handleFinish}
+              disabled={scoringPrompt.isInteractionLocked}
+              className="mono-btn flex-1"
+              style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+            >
+              Finish
             </button>
           </div>
         </div>
