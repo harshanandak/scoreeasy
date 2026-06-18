@@ -58,6 +58,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
+  const [showActions, setShowActions] = useState(false);
   const scoringPrompt = useAppScoringPrompt();
 
   const lastClickRef = useRef(0);
@@ -846,44 +847,57 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           </p>
         )}
 
-        {/* Bottom bar — Undo lives in the keypad's OUT line (matches quick match) */}
+        {/* Match actions — progressive disclosure keeps the scoring view
+            uncluttered. Auto-save makes none of these urgent, so they sit
+            behind one tap; Undo lives in the keypad's OUT line. */}
         <div className="mono-scorer-control-strip pt-4">
-          <div className="flex gap-2 mb-3">
-            {showDeclare && !isInningsOver && (
+          {showActions && (
+            <div className="flex flex-col gap-2 mb-2">
+              {showDeclare && !isInningsOver && (
+                <button
+                  onClick={() => { setShowActions(false); handleDeclare(); }}
+                  disabled={scoringPrompt.isInteractionLocked}
+                  className="mono-btn"
+                  style={{ padding: '10px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                >
+                  Declare innings
+                </button>
+              )}
               <button
-                onClick={handleDeclare}
+                onClick={() => { setShowActions(false); handleDraw(); }}
                 disabled={scoringPrompt.isInteractionLocked}
-                className="mono-btn flex-1"
-                style={{ padding: '8px', fontSize: '0.8125rem', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+                className="mono-btn"
+                style={{ padding: '10px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
               >
-                Declare
+                End as draw
               </button>
-            )}
-            <button
-              onClick={handleDraw}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Draw
-            </button>
-            <button
-              onClick={handleDiscard}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Discard
-            </button>
-            <button
-              onClick={handleFinish}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Finish
-            </button>
-          </div>
+              <button
+                onClick={() => { setShowActions(false); handleDiscard(); }}
+                disabled={scoringPrompt.isInteractionLocked}
+                className="mono-btn"
+                style={{ padding: '10px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              >
+                Discard match
+              </button>
+              <button
+                onClick={() => { setShowActions(false); handleFinish(); }}
+                disabled={scoringPrompt.isInteractionLocked}
+                className="mono-btn"
+                style={{ padding: '10px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              >
+                Finish &amp; save
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowActions(v => !v)}
+            aria-expanded={showActions}
+            className="mono-btn w-full"
+            style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--se-color-ink-muted)', letterSpacing: '0.04em' }}
+          >
+            {showActions ? 'Close' : 'Match options'}
+          </button>
         </div>
       </div>
     </div>
