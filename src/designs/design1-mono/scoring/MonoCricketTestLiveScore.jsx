@@ -59,6 +59,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [hasChanges, setHasChanges] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
   const [showActions, setShowActions] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   const scoringPrompt = useAppScoringPrompt();
 
   const lastClickRef = useRef(0);
@@ -753,39 +754,39 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           )}
         </div>
 
-        {/* Innings tabs */}
-        <div className="flex gap-1 justify-center mb-4">
-          {innings.map((inn, i) => {
-            const isCurrent = i === currentInningsIndex;
-            const hasData = inn.runs > 0 || inn.allOut || inn.declared;
-            return (
-              <div key={`inn-tab-${i}-${inn.teamId || 'unset'}`} className="text-center" style={{ minWidth: '60px' }}>
-                <span className="text-xs font-medium" style={{ color: isCurrent ? 'var(--primary)' : hasData ? 'var(--se-color-ink)' : 'var(--se-color-ink-faint)' }}>
-                  {ORDINALS[i]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Innings summary cards */}
-        <div className="mono-score-mini mb-6" style={{ padding: '12px 16px' }}>
-          {innings.map((inn, i) => {
-            if (!inn.teamId) return null;
-            const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;
-            const isCurrent = i === currentInningsIndex;
-            return (
-              <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                <span>{ORDINALS[i]}: {getTeamName(inn.teamId)}</span>
-                <span className="font-mono">
-                  {hasData
-                    ? `${inn.runs}/${inn.allOut ? 'all' : inn.wickets}${inn.declared ? 'd' : ''}${isCurrent ? '*' : ''} (${ballsToOvers(inn.balls)} ov)`
-                    : '\u2014'
-                  }
-                </span>
-              </div>
-            );
-          })}
+        {/* Innings scorecard \u2014 collapsed by default so the keypad sits right
+            under the live score. The current innings is already shown in the
+            top bar and hero; tap to see the full innings breakdown. */}
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => setShowCard(v => !v)}
+            aria-expanded={showCard}
+            className="mono-btn w-full"
+            style={{ padding: '6px', fontSize: '0.75rem', color: 'var(--se-color-ink-muted)', letterSpacing: '0.06em' }}
+          >
+            {showCard ? 'Hide scorecard' : 'Scorecard'}
+          </button>
+          {showCard && (
+            <div className="mono-score-mini mt-2" style={{ padding: '12px 16px' }}>
+              {innings.map((inn, i) => {
+                if (!inn.teamId) return null;
+                const hasData = inn.runs > 0 || inn.allOut || inn.declared || inn.balls > 0;
+                const isCurrent = i === currentInningsIndex;
+                return (
+                  <div key={`inn-summary-${i}-${inn.teamId}`} className="flex justify-between py-1 text-xs" style={{ color: isCurrent ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
+                    <span>{ORDINALS[i]}: {getTeamName(inn.teamId)}</span>
+                    <span className="font-mono">
+                      {hasData
+                        ? `${inn.runs}/${inn.allOut ? 'all' : inn.wickets}${inn.declared ? 'd' : ''}${isCurrent ? '*' : ''} (${ballsToOvers(inn.balls)} ov)`
+                        : '\u2014'
+                      }
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
@@ -839,12 +840,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               </button>
             </div>
           </div>
-        )}
-
-        {!isTouchDevice && !isInningsOver && (
-          <p className="text-xs text-center mb-4" style={{ color: 'var(--se-color-ink-faint)' }}>
-            Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
-          </p>
         )}
 
         {/* Match actions — progressive disclosure keeps the scoring view
