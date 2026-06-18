@@ -386,12 +386,20 @@ export default function MonoGoalsLiveScore() {
   // then return to the bracket. Saving is automatic, so plain navigation keeps it.
   const discardAndExit = () => {
     if (tournament && matchId) {
-      const reverted = updateMatchInTournament(tournament, matchId, m => ({ ...m, draftState: undefined }));
+      const reverted = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        draftState: undefined,
+        // A resumed draft carries status 'in-progress'; once it is thrown away the
+        // match has no committed score, so revert it to 'pending' to stop the bracket
+        // advertising a resumable match that no longer has a draft.
+        status: m.score1 || m.score2 || m.winner ? m.status : 'pending',
+      }));
       saveSportTournament(sportConfig.storageKey, reverted);
     }
     navigateToTournament();
   };
-  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);
+  const hasDraftToDiscard = hasChanges || Boolean(match?.draftState) || history.length > 0;
+  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if (!sportConfig || !tournament || !match) {

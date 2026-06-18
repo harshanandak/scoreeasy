@@ -1388,6 +1388,7 @@ button.mono-stat-card {
    soft fading hairlines that bleed out at the ends; keys sit on the open canvas. */
 .mono-cricket-keypad {
   --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent);
+
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;

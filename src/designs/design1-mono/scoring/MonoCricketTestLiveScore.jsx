@@ -526,7 +526,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     } else if (tournament) {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-        ...m, draftState: undefined,
+        ...m,
+        status: Array.isArray(m.innings) && m.innings.some((inn) =>
+          inn.runs || inn.balls || inn.wickets || inn.allOut || inn.declared
+        ) ? m.status : 'pending',
+        draftState: undefined,
       }));
       saveSportTournament(storageKey, updatedTournament);
     }
@@ -548,6 +552,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   // Continuous auto-save
   useEffect(() => {
     if (!match || !format || matchComplete) return;
+    if (history.length === 0) return;
     const draftState = {
       innings: structuredClone(innings),
       currentInningsIndex,

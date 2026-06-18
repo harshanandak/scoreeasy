@@ -568,6 +568,7 @@ function ExistingUserDashboard({
   sessions,
   allTournaments,
   recentMatches,
+  playedCount,
   showAllSports,
   setShowAllSports,
 }) {
@@ -575,16 +576,18 @@ function ExistingUserDashboard({
   const activeTournaments = allTournaments.filter(tr => tr.isActive);
   const displayTournaments = allTournaments.slice(0, 4);
   const displayName = getDashboardDisplayName(user);
-  const playedCount = recentMatches.length;
   const tournamentCount = allTournaments.length;
 
   /* Featured tier: real favourites first; else sports they recently played; else no tier at all. */
   const favoriteIds = user?.favoriteGames || [];
+  const favoriteSports = allSportsList.filter(sp => favoriteIds.includes(sp.id));
   const recentSportIds = [...new Set(recentMatches.map(qm => qm.sport).filter(Boolean))];
-  const featuredSports = favoriteIds.length > 0
-    ? allSportsList.filter(sp => favoriteIds.includes(sp.id))
-    : recentSportIds.map(id => allSportsList.find(sp => sp.id === id)).filter(Boolean).slice(0, 4);
-  const featuredLabel = favoriteIds.length > 0 ? 'Favourites' : 'Recently played';
+  const recentSports = recentSportIds
+    .map(id => allSportsList.find(sp => sp.id === id))
+    .filter(Boolean)
+    .slice(0, 4);
+  const featuredSports = favoriteSports.length > 0 ? favoriteSports : recentSports;
+  const featuredLabel = favoriteSports.length > 0 ? 'Favourites' : 'Recently played';
   const otherSports = allSportsList.filter(sp => !featuredSports.some(f => f.id === sp.id));
   const visibleOthers = showAllSports ? otherSports : otherSports.slice(0, 7);
   return (
@@ -748,15 +751,18 @@ function ExistingUserDashboard({
               </button>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
                 <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
-                <button
-                  type="button"
-                  className="dash-action"
-                  aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
-                  onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
-                  style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
-                >
-                  Rematch &#9656;
-                </button>
+                {/* Only offer Rematch when the stored match resolves to a real sport; legacy id-only records would build /undefined/quick. */}
+                {getSportById(recentMatches[0].sport) && (
+                  <button
+                    type="button"
+                    className="dash-action"
+                    aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
+                    onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
+                    style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+                  >
+                    Rematch &#9656;
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -1006,6 +1012,7 @@ ExistingUserDashboard.propTypes = {
     team2: PropTypes.string,
     winner: PropTypes.string,
   })).isRequired,
+  playedCount: PropTypes.number.isRequired,
   showAllSports: PropTypes.bool.isRequired,
   setShowAllSports: PropTypes.func.isRequired,
 };
@@ -1020,6 +1027,7 @@ export default function DashboardLanding() {
   const [sessions, setSessions] = useState([]);
   const [allTournaments, setAllTournaments] = useState([]);
   const [recentMatches, setRecentMatches] = useState([]);
+  const [playedCount, setPlayedCount] = useState(0);
   const [showAllSports, setShowAllSports] = useState(false);
 
   useEffect(() => {
@@ -1030,6 +1038,7 @@ export default function DashboardLanding() {
 
     const qm = loadData(QM_KEY, []);
     qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
+    setPlayedCount(qm.length);
     setRecentMatches(qm.slice(0, 3));
   }, []);
 
@@ -1052,6 +1061,7 @@ export default function DashboardLanding() {
           sessions={sessions}
           allTournaments={allTournaments}
           recentMatches={recentMatches}
+          playedCount={playedCount}
           showAllSports={showAllSports}
           setShowAllSports={setShowAllSports}
         />

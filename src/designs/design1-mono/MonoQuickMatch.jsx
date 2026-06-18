@@ -953,6 +953,9 @@ export default function MonoQuickMatch() {
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
     const countsAsBall = type === 'bye' || type === 'legBye';
+    // Byes / leg byes are legal deliveries, so a free hit is used up even when no
+    // runs come off the bat. Wides / no-balls don't count as a ball and keep it.
+    if (countsAsBall && freeHit) setFreeHit(false);
     const extraLabel = { wide: 'wide', noBall: 'no ball', bye: 'bye', legBye: 'leg bye' };
     setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);

@@ -98,8 +98,11 @@ const countSetsWon = (completedSets) => {
     const team1Wins = set.isTiebreak
       ? set.tiebreakPoints1 > set.tiebreakPoints2
       : set.games1 > set.games2;
+    const team2Wins = set.isTiebreak
+      ? set.tiebreakPoints2 > set.tiebreakPoints1
+      : set.games2 > set.games1;
     if (team1Wins) team1Sets++;
-    else team2Sets++;
+    if (team2Wins) team2Sets++;
   });
   return { team1Sets, team2Sets };
 };
@@ -420,26 +423,44 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
   }, [currentSet, sets, history, sportConfig, tournament, sidesSwapped, isTouchDevice, scoringPrompt.isInteractionLocked]);
 
-  // Auto-save the in-progress quick match as a draft on every scoring change, so
+  // Auto-save the in-progress match as a draft on every scoring change, so
   // leaving the scorer (back button, navigating away, closing the app) always
   // keeps a resumable draft — no manual "Save Draft" step. Mirrors the volleyball
   // arena's continuous draft autosave. Skips empty/complete matches so we never
-  // pile up blank drafts, and the draft is cleared on finish/discard.
+  // pile up blank drafts, and the draft is cleared on finish/discard. Tournament
+  // matches autosave into the bracket so a resumable in-progress draft survives.
   useEffect(() => {
-    if (!isQuickMatch || !quickDraftKey || !match) return;
-    if (isMatchComplete || history.length === 0) return;
-    saveData(quickDraftKey, {
-      ...match,
-      sets,
-      status: 'in-progress',
-      draftState: {
-        currentSet,
+    if (!match || isMatchComplete || history.length === 0) return;
+    if (isQuickMatch) {
+      if (!quickDraftKey) return;
+      saveData(quickDraftKey, {
+        ...match,
         sets,
-        history,
-        savedAt: new Date().toISOString(),
-      },
-    });
-  }, [isQuickMatch, quickDraftKey, match, isMatchComplete, sets, currentSet, history]);
+        status: 'in-progress',
+        draftState: {
+          currentSet,
+          sets,
+          history,
+          savedAt: new Date().toISOString(),
+        },
+      });
+    } else if (tournament && matchId) {
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        status: 'in-progress',
+        draftState: {
+          currentSet,
+          sets,
+          history,
+          savedAt: new Date().toISOString(),
+        },
+      }));
+      const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+      }
+    }
+  }, [isQuickMatch, quickDraftKey, match, tournament, matchId, sportConfig, isMatchComplete, sets, currentSet, history]);
 
   const saveQuickMatch = () => {
     const completedAt = new Date().toISOString();
@@ -531,8 +552,21 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
   // Cancel and discard changes — clear the in-progress quick draft so the app
   // entry stops auto-resuming this match (otherwise you can't leave the scorer).
+  // For tournament matches, drop the resumable draft and reset the match back to
+  // 'pending' when it has no real result yet, so the bracket doesn't leave a
+  // scoreless match stuck in-progress. Keep any partial set progress otherwise.
   const discardAndExit = () => {
     if (quickDraftKey) clearData(quickDraftKey);
+    if (tournament) {
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        status: m.winner || (m.sets || []).some(s => s.completed || s.games1 > 0 || s.games2 > 0)
+          ? m.status
+          : 'pending',
+        draftState: undefined,
+      }));
+      saveSportTournament(sportConfig.storageKey, updatedTournament);
+    }
     navigateBack();
   };
   const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);

@@ -27,6 +27,7 @@ function renderDashboard() {
         <Route path="/app" element={<DashboardLanding />} />
         <Route path="/:sport/tournament/new" element={<p>New tournament setup</p>} />
         <Route path="/:sport/tournament" element={<p>Tournament hub</p>} />
+        <Route path="/:sport/quick" element={<p>Quick match</p>} />
         <Route path="/play" element={<p>Play hub</p>} />
         <Route path="/login" element={<p>Account entry</p>} />
         <Route path="/profile" element={<p>Profile</p>} />
@@ -151,5 +152,59 @@ describe('DashboardLanding start flow', () => {
     expect(await screen.findByRole('button', { name: 'Tournament' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Find players/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+
+  it('counts the full quick-match history in the Recent stat even when more than three are stored', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify(
+      Array.from({ length: 5 }, (_, i) => ({ id: `recent-${i}`, sport: 'cricket', team1: 'A', team2: 'B' })),
+    ));
+
+    renderDashboard();
+
+    await screen.findByRole('button', { name: 'Tournament' });
+    const recentStat = screen.getByText('Recent').parentElement;
+    expect(recentStat).toHaveTextContent('5');
+  });
+
+  it('falls back to recently played sports when stored favorite ids are stale', async () => {
+    authState = {
+      ...authState,
+      isAuthenticated: true,
+      user: { username: 'harsha', favoriteGames: ['not-a-real-sport'] },
+    };
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    await screen.findByRole('button', { name: 'Tournament' });
+    expect(screen.getByText('Recently played')).toBeInTheDocument();
+    expect(screen.queryByText('Favourites')).not.toBeInTheDocument();
+  });
+
+  it('hides the rematch action when the latest stored match has no resolvable sport', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    expect(await screen.findByRole('heading', { name: /Welcome\s*back/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Rematch:/i })).not.toBeInTheDocument();
+  });
+
+  it('offers the rematch action when the latest stored match has a resolvable sport', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Rematch:/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
+    });
   });
 });

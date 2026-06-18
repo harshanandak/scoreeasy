@@ -505,7 +505,9 @@ export default function MonoCricketLiveScore() {
     if (tournament) {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-        ...m, draftState: undefined,
+        ...m,
+        status: m.team1Score || m.team2Score || m.winner ? m.status : 'pending',
+        draftState: undefined,
       }));
       saveSportTournament(storageKey, updatedTournament);
     }
@@ -515,6 +517,7 @@ export default function MonoCricketLiveScore() {
   // Continuous auto-save
   useEffect(() => {
     if (!tournament || !match || !format || isMatchComplete) return;
+    if (history.length === 0) return;
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
@@ -529,7 +532,10 @@ export default function MonoCricketLiveScore() {
         savedAt: new Date().toISOString(),
       },
     }));
-    saveSportTournament(storageKey, updatedTournament);
+    const ok = saveSportTournament(storageKey, updatedTournament);
+    if (!ok) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+    }
   }, [scores, battingTeam, innings, history, freeHit, trialBallUsed]);
 
   if (!tournament || !match || !format) {

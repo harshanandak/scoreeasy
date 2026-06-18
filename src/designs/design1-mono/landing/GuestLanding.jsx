@@ -113,8 +113,9 @@ export default function GuestLanding() {
   const activeAccentText = sportsTokens.color.inverse;
   const activeStartLabel = `START ${activeCard.sport.toUpperCase()}`;
   const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
-  const signinPath = cloudAuthAvailable ? '/login' : signupPath;
-  /* Hero CTA keeps START fixed and rolls the sport word over; clicking lands on the sport chooser. */
+  /* SIGN IN always enters via the unified /login route; the login/fallback layer decides any signup redirect. */
+  const signinPath = '/login';
+  /* Hero CTA keeps START fixed and rolls the sport word over; clicking lands on the displayed sport's chooser. */
   const ctaRotationSports = orderedHeroScoreCards.slice(0, 3).map((card) => card.sport);
   const ctaSport = ctaRotationSports[ctaSportIndex % ctaRotationSports.length] ?? activeCard.sport;
   const ctaWord = ctaSport.toUpperCase();
@@ -122,7 +123,7 @@ export default function GuestLanding() {
     {
       key: 'start',
       tone: 'primary',
-      to: '/play',
+      to: sportPlayPath(ctaSport),
       label: (
         <span style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
           START&nbsp;
