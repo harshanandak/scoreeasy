@@ -29,8 +29,12 @@ function hasAnyPlayData() {
 }
 
 function readInitialMode() {
-  const saved = globalThis.localStorage?.getItem(PLAY_MODE_KEY);
-  if (saved === 'guided' || saved === 'browse') return saved;
+  try {
+    const saved = globalThis.localStorage?.getItem(PLAY_MODE_KEY);
+    if (saved === 'guided' || saved === 'browse') return saved;
+  } catch {
+    // Ignore storage access failures (private mode / blocked storage); use the derived default.
+  }
   return hasAnyPlayData() ? 'browse' : 'guided';
 }
 
@@ -44,7 +48,11 @@ export default function MonoPlayHub() {
   const [mode, setMode] = useState(readInitialMode);
 
   useEffect(() => {
-    globalThis.localStorage?.setItem(PLAY_MODE_KEY, mode);
+    try {
+      globalThis.localStorage?.setItem(PLAY_MODE_KEY, mode);
+    } catch {
+      // Ignore persistence failures (private mode / quota / blocked storage).
+    }
   }, [mode]);
 
   return (

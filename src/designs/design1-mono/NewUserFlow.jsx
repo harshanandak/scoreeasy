@@ -31,13 +31,9 @@ const bareButton = {
 const allSportsList = getSportsList();
 
 function withStableKeys(values, prefix) {
-  const seen = {};
-  return values.map((value) => {
-    const normalized = String(value || '').trim() || prefix;
-    const count = seen[normalized] || 0;
-    seen[normalized] = count + 1;
-    return { key: `${prefix}-${normalized}-${count}`, value };
-  });
+  // Index-based keys keep editable team-name inputs mounted while the user types
+  // (value-derived keys would remount on each keystroke and drop focus/caret/IME).
+  return values.map((value, index) => ({ key: `${prefix}-${index}`, value }));
 }
 
 function getProgressState(step, state) {
