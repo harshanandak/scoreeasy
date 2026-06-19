@@ -26,7 +26,7 @@ import RouteRecoveryActions from './components/RouteRecoveryActions';
 import './mono.css';
 
 // Lazy-loaded primary app routes (not needed for the initial landing view)
-const MonoSportHome = lazy(() => import('./MonoSportHome'));
+const MonoPlayHub = lazy(() => import('./MonoPlayHub'));
 const DashboardLanding = lazy(() => import('./landing/DashboardLanding'));
 const MonoHistory = lazy(() => import('./MonoHistory'));
 const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
@@ -1517,7 +1517,7 @@ export default function Design1Mono() {
                 <Route path="profile/:username" element={<CloudAuthOnly><ErrorBoundary title="Profile unavailable" message="We could not load this profile. Try again or return home."><MonoProfile /></ErrorBoundary></CloudAuthOnly>} />
                 <Route path="users/search" element={<CloudAuthOnly><MonoUserSearch /></CloudAuthOnly>} />
 
-                <Route path="play" element={<MonoSportHome />} />
+                <Route path="play" element={<MonoPlayHub />} />
                 <Route path="dashboard" element={<Navigate to={APP_ENTRY_PATH} replace />} />
                 <Route path="quick-match" element={<LegacyQuickMatchRoute />} />
                 <Route path="tournament" element={<LegacyTournamentRoute />} />
