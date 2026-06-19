@@ -58,21 +58,30 @@ describe('DashboardLanding start flow', () => {
     globalThis.localStorage.clear();
   });
 
-  it('allows a new-user 2-team tournament to reach tournament setup', async () => {
+  it('renders the calm empty dashboard at zero data instead of the setup wizard', async () => {
     renderDashboard();
 
-    fireEvent.click(await screen.findByRole('button', { name: /Volleyball/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Tournament/i }));
-    fireEvent.change(screen.getByLabelText('TOURNAMENT NAME'), { target: { value: 'Office Cup' } });
-    fireEvent.change(screen.getByPlaceholderText('Team 1'), { target: { value: 'Eagles' } });
-    fireEvent.change(screen.getByPlaceholderText('Team 2'), { target: { value: 'Hawks' } });
+    // Hero CTA + get-started checklist + ghost caption are the Variant A empty state.
+    expect(await screen.findByText('Play your first match.')).toBeInTheDocument();
+    expect(screen.getByText('Play a match')).toBeInTheDocument();
+    expect(screen.getByText('Save the result')).toBeInTheDocument();
+    expect(screen.getByText('See your stats')).toBeInTheDocument();
+    expect(screen.getByText('Your matches will appear here')).toBeInTheDocument();
 
-    fireEvent.click(await screen.findByText('Office Cup'));
+    // The guided wizard no longer lives on the dashboard (it moved to /play).
+    expect(screen.queryByText('PICK A SPORT')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('TOURNAMENT NAME')).not.toBeInTheDocument();
+  });
+
+  it('sends the empty-dashboard hero to the play hub', async () => {
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Play your first match' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/tournament/new');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
     });
-    expect(screen.getByText('New tournament setup')).toBeInTheDocument();
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
   });
 
   it('routes the featured sport Tournament action to that sport tournament hub', async () => {

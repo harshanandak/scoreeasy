@@ -213,6 +213,9 @@ describe('app entry route contract', () => {
   });
 
   it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
+    // The Play hub defaults new users to Guided; Browse (the ledger chooser) is one tap away
+    // and is remembered, so seed it to assert the browse-mode sport list directly.
+    globalThis.localStorage.setItem('se_play_mode', 'browse');
     const { container } = renderApp('/play');
 
     expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
