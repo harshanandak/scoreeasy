@@ -495,7 +495,7 @@ export default function MonoHistory() {
   };
 
   return (
-    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
+    <div className={`min-h-screen px-4 sm:px-6 py-5 sm:py-8 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <div className="mono-page-shell">
         <nav className="mono-page-header flex items-center justify-between" aria-label="History navigation">
           <div className="flex items-center gap-4">
@@ -525,8 +525,8 @@ export default function MonoHistory() {
           )}
         </nav>
 
-        {/* The summary board IS the type filter — stat cards double as buttons. */}
-        <section className="grid grid-cols-3 gap-3 mb-6" aria-label="History summary">
+        {/* The summary board IS the type filter — stat cards double as buttons. Kept compact so the first match row reaches the first mobile viewport. */}
+        <section className="grid grid-cols-3 gap-2 mb-3" aria-label="History summary">
           {[
             { id: 'all', label: 'All matches', value: totalCount },
             { id: 'quick', label: 'Quick', value: quickCount },
@@ -538,10 +538,10 @@ export default function MonoHistory() {
               onClick={() => setFilter(item.id)}
               aria-pressed={filter === item.id}
               className="mono-stat-strip mono-stat-card mono-stat-number-card text-center"
-              style={{ padding: '16px 12px' }}
+              style={{ padding: '8px 10px' }}
             >
-              <p className="text-2xl font-bold font-mono mono-score" style={{ margin: 0, color: 'var(--foreground)' }}>{item.value}</p>
-              <p className="text-xs mt-1 mono-muted-text" style={{ margin: 0 }}>{item.label}</p>
+              <p className="text-lg font-bold font-mono mono-score" style={{ margin: 0, lineHeight: 1.1, color: 'var(--foreground)' }}>{item.value}</p>
+              <p className="text-xs mt-0.5 mono-muted-text" style={{ margin: 0 }}>{item.label}</p>
             </button>
           ))}
         </section>
@@ -633,28 +633,28 @@ export default function MonoHistory() {
           </button>
         )}
 
-        <section className="mb-6">
-          <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
-            Find match
-          </label>
-          <input
-            id="history-search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="mono-input w-full mb-3"
-            style={{ minHeight: 44 }}
-            placeholder="Search team, sport, winner, tournament..."
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowFilters(value => !value)}
-            aria-expanded={showFilters}
-            className="bg-transparent border-none cursor-pointer font-mono"
-            style={{ padding: '10px 0', minHeight: 44, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)' }}
-          >
-            Filters <span aria-hidden="true">{showFilters ? '−' : '+'}</span>
-          </button>
+        <section className="mb-4">
+          {/* Search and the filters toggle share one compact row so the first match stays above the fold on mobile. */}
+          <div className="flex items-center gap-2">
+            <input
+              id="history-search"
+              aria-label="Find match"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="mono-input flex-1"
+              style={{ minHeight: 44 }}
+              placeholder="Search team, sport, winner..."
+            />
+            <button
+              type="button"
+              onClick={() => setShowFilters(value => !value)}
+              aria-expanded={showFilters}
+              className="bg-transparent cursor-pointer font-mono"
+              style={{ flexShrink: 0, padding: '0 12px', minHeight: 44, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)', border: '1px solid color-mix(in oklch, var(--border) 22%, transparent)', borderRadius: 'var(--radius)', background: 'transparent' }}
+            >
+              Filters <span aria-hidden="true">{showFilters ? '−' : '+'}</span>
+            </button>
+          </div>
 
           {showFilters && (
             <div style={{ paddingTop: 4 }}>
