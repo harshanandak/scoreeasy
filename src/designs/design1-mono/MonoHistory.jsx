@@ -657,7 +657,7 @@ export default function MonoHistory() {
           </button>
 
           {showFilters && (
-            <div style={{ paddingTop: 4 }}>
+            <div className="mono-filter-panel" style={{ paddingTop: 4 }}>
               {/* Progressive filtering: pick a dimension, then its options open. */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {[
@@ -788,13 +788,14 @@ export default function MonoHistory() {
             {filteredEntries.map((entry, entryIndex) => (
               <div
                 key={entry.id}
-                className="mono-history-row"
+                className="mono-history-row mono-history-row-enter"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
                   padding: '12px 0',
                   borderBottom: entryIndex < filteredEntries.length - 1 ? '1px solid color-mix(in oklch, var(--border) 14%, transparent)' : 'none',
+                  animationDelay: `${Math.min(entryIndex, 8) * 45}ms`,
                 }}
               >
                 <button
