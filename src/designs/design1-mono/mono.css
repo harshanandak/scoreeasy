@@ -1180,14 +1180,19 @@ button.mono-stat-card {
   font-weight: 700;
 }
 
+/* Boundary (4/6) emphasis — the single documented cricket semantic.
+   All three cricket scorers mark a boundary the SAME way: the run pops in the
+   green accent TEXT (var(--primary)), not a filled box. The keypad scorers
+   (MonoQuickMatch, MonoCricketTestLiveScore) use .mono-cricket-key-four/-six;
+   the run-grid scorer (MonoCricketLiveScore) uses this class. Keeping both on
+   var(--primary) means 4 and 6 read as one matched pair everywhere. */
 .mono-scorer-run-button-accent {
-  border-color: var(--se-color-action);
-  background: color-mix(in oklch, var(--se-color-action-soft) 62%, var(--se-color-surface));
-  color: var(--se-color-action-strong);
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .mono-scorer-run-button-accent:hover {
-  background: color-mix(in oklch, var(--se-color-action-soft) 78%, var(--se-color-surface));
+  border-color: var(--primary);
 }
 
 .mono-scorer-extra-row {
