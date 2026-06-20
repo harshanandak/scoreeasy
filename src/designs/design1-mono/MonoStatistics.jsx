@@ -335,6 +335,9 @@ export default function MonoStatistics() {
 
   // Build tabs dynamically - only show sports with data
   const sportsWithData = Object.values(sportsData).filter(d => d.tournaments > 0);
+  // Action-first Overview: with zero games the zero-value Performance/Records/Totals
+  // grids are noise, so the empty state leads with a CTA instead (I-013).
+  const hasAnyData = sportsWithData.length > 0 || quickMatches.length > 0;
   const hasQuickRecovery = pendingDelete?.deleted || pendingClear?.cleared;
   const tabs = [
     { id: 'overview', label: 'Overview' },
@@ -374,6 +377,16 @@ export default function MonoStatistics() {
         {/* Overview */}
         {tab === 'overview' && (
           <div id="tabpanel-stats-overview" role="tabpanel" aria-label="Overview">
+            {!hasAnyData ? (
+              /* Lead with the CTA — skip the zero-value stat grids entirely (I-013). */
+              <EmptyState
+                icon="📊"
+                label="No game data yet. Finish a quick match or tournament to unlock win rates, streaks, and form."
+                primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
+                secondaryAction={{ label: 'Create tournament', onClick: () => navigate('/volleyball/tournament/new') }}
+              />
+            ) : (
+            <>
             {/* Importance tiers: performance first, records second, library totals last. */}
             <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Performance</p>
             <div className="grid grid-cols-3 gap-3 mb-6">
@@ -435,16 +448,9 @@ export default function MonoStatistics() {
                 </div>
               )}
 
-              {/* Empty state if no data at all */}
-              {sportsWithData.length === 0 && quickMatches.length === 0 && (
-                <EmptyState
-                  icon="📊"
-                  label="No game data yet. Finish a quick match or tournament to unlock win rates, streaks, and form."
-                  primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
-                  secondaryAction={{ label: 'Create tournament', onClick: () => navigate('/volleyball/tournament/new') }}
-                />
-              )}
             </div>
+            </>
+            )}
           </div>
         )}
 
