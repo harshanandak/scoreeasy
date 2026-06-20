@@ -839,6 +839,32 @@ button.mono-stat-card {
   animation: score-pop 0.3s ease;
 }
 
+/* --- History entrance motion --- */
+@keyframes mono-row-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mono-history-row-enter {
+  animation: mono-row-in 320ms ease both;
+}
+
+@keyframes mono-panel-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mono-filter-panel {
+  animation: mono-panel-in 200ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mono-history-row-enter,
+  .mono-filter-panel {
+    animation: none;
+  }
+}
+
 .mono-score-grid {
   display: flex;
   align-items: stretch;
