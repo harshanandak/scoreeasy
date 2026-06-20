@@ -388,21 +388,21 @@ export default function MonoStatistics() {
             ) : (
             <>
             {/* Importance tiers: performance first, records second, library totals last. */}
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Performance</p>
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Performance</p>
             <div className="grid grid-cols-3 gap-3 mb-6">
               <InsightCard label="Top team" value={quickInsights.topTeam} />
               <InsightCard label="Last 5 form" value={quickInsights.form} />
               <InsightCard label="Current streak" value={quickInsights.streak} />
             </div>
 
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Records</p>
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Records</p>
             <div className="mono-stat-insight-grid grid gap-3 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
               <InsightCard label="Head-to-head" value={quickInsights.rivalry} />
               <InsightCard label="Closest match" value={quickInsights.closest} />
               <InsightCard label="Biggest win" value={quickInsights.biggest} />
             </div>
 
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Totals</p>
+            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Totals</p>
             <div className="mono-stat-insight-grid grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))' }}>
               <StatCard label="Tournaments" value={totalTournaments} />
               <StatCard label="Matches" value={totalMatches} />

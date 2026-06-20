@@ -136,7 +136,7 @@ function SportGrid({ selectedSport, pickSport }) {
           <div style={{ marginBottom: 4, display: 'flex', justifyContent: 'center' }}>
             <SportIcon name={sp.name} size={26} color={selectedSport === sp.id ? t.blue : t.text} />
           </div>
-          <div style={{ fontFamily: MONO, fontSize: '0.4375rem', fontWeight: 600, letterSpacing: '0.04em' }}>{sp.name.toUpperCase()}</div>
+          <div style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em' }}>{sp.name.toUpperCase()}</div>
         </button>
       ))}
     </div>
@@ -159,7 +159,7 @@ function ModeCards({ selectedMode, pickMode }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: selectedMode === 'tournament' ? t.blue : t.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, color: selectedMode === 'tournament' ? '#fff' : t.blue }}>T</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 800, color: selectedMode === 'tournament' ? '#fff' : t.blue }}>T</span>
           </div>
           <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Tournament</span>
         </div>
@@ -178,7 +178,7 @@ function ModeCards({ selectedMode, pickMode }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: selectedMode === 'quick' ? t.orange : t.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, color: selectedMode === 'quick' ? '#fff' : t.orange }}>Q</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 800, color: selectedMode === 'quick' ? '#fff' : t.orange }}>Q</span>
           </div>
           <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Quick Match</span>
         </div>
@@ -194,21 +194,21 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
   return (
     <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.r, padding: 20, boxShadow: t.cardShadow }}>
       <div style={{ marginBottom: 20 }}>
-        <label htmlFor="wizard-tourney-name" style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>TOURNAMENT NAME</label>
+        <label htmlFor="wizard-tourney-name" style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>TOURNAMENT NAME</label>
         <input id="wizard-tourney-name" value={tourneyName} onChange={e => setTourneyName(e.target.value)} placeholder="e.g. Office Volleyball Cup"
           style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${tourneyName.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
       </div>
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em' }}>TEAMS ({filledTourneyTeams}/{tourneyTeams.length})</span>
-          <span style={{ fontFamily: MONO, fontSize: '0.5rem', color: filledTourneyTeams >= MIN_TOURNAMENT_TEAMS ? t.green : t.textFaint, letterSpacing: '0.06em' }}>
+          <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.06em' }}>TEAMS ({filledTourneyTeams}/{tourneyTeams.length})</span>
+          <span style={{ fontFamily: MONO, fontSize: '0.6875rem', color: filledTourneyTeams >= MIN_TOURNAMENT_TEAMS ? t.green : t.textFaint, letterSpacing: '0.06em' }}>
             {filledTourneyTeams >= MIN_TOURNAMENT_TEAMS ? 'MIN 2 MET' : `NEED ${MIN_TOURNAMENT_TEAMS - filledTourneyTeams} MORE`}
           </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {keyedTourneyTeams.map(({ key, value: tm }, idx) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: tm.trim() ? t.blue : t.textFaint, width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
+              <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 700, color: tm.trim() ? t.blue : t.textFaint, width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
               <input id={`wizard-team-${idx + 1}`} value={tm} onChange={e => updateTourneyTeam(idx, e.target.value)} placeholder={`Team ${idx + 1}`}
                 style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `2px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
               {tourneyTeams.length > MIN_TOURNAMENT_TEAMS && (
@@ -221,11 +221,11 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
       {tourneyTeams.length < 8 && (
         <button type="button" onClick={addTourneyTeam} style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', border: `1px dashed ${t.border}`, borderRadius: t.r, cursor: 'pointer' }}>
           <span style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.blue, fontWeight: 700 }}>+</span>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textMuted, letterSpacing: '0.04em' }}>ADD TEAM ({tourneyTeams.length}/8)</span>
+          <span style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, letterSpacing: '0.04em' }}>ADD TEAM ({tourneyTeams.length}/8)</span>
         </button>
       )}
       {tourneyTeams.length >= 8 && (
-        <div style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, textAlign: 'center', padding: '8px 0' }}>Maximum 8 teams reached</div>
+        <div style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textAlign: 'center', padding: '8px 0' }}>Maximum 8 teams reached</div>
       )}
     </div>
   );
@@ -236,13 +236,13 @@ function QuickMatchInput({ team1, setTeam1, team2, setTeam2 }) {
     <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.r, padding: 20, boxShadow: t.cardShadow }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
         <div style={{ flex: 1 }}>
-          <label htmlFor="wizard-team1" style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 1</label>
+          <label htmlFor="wizard-team1" style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 1</label>
           <input id="wizard-team1" value={team1} onChange={e => setTeam1(e.target.value)} placeholder="e.g. Eagles"
             style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team1 ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
         </div>
-        <div style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textFaint, fontWeight: 600, padding: '0 8px', alignSelf: 'flex-end', marginBottom: 12 }}>VS</div>
+        <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textFaint, fontWeight: 600, padding: '0 8px', alignSelf: 'flex-end', marginBottom: 12 }}>VS</div>
         <div style={{ flex: 1 }}>
-          <label htmlFor="wizard-team2" style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 2</label>
+          <label htmlFor="wizard-team2" style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 2</label>
           <input id="wizard-team2" value={team2} onChange={e => setTeam2(e.target.value)} placeholder="e.g. Hawks"
             style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team2 ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
         </div>
@@ -260,23 +260,23 @@ function TournamentPreview({ sportIcon, sportName, tourneyName, tourneyTeams }) 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SportIcon name={sportIcon} size={20} color={t.text} />
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>{sportName.toUpperCase()}</span>
+          <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>{sportName.toUpperCase()}</span>
         </div>
-        <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, background: t.blueLight, padding: '3px 10px', borderRadius: 10 }}>TOURNAMENT</span>
+        <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, color: t.blue, background: t.blueLight, padding: '3px 10px', borderRadius: 10 }}>TOURNAMENT</span>
       </div>
       <div style={{ fontFamily: MONO, fontSize: '1rem', fontWeight: 800, color: t.text, marginBottom: 16, letterSpacing: '-0.01em' }}>{tourneyName}</div>
       <div style={{ display: 'flex', gap: 24, marginBottom: 16, paddingBottom: 16, borderBottom: `1px solid ${t.border}` }}>
         {[{ v: teams.length, l: 'teams' }, { v: matchCount, l: 'matches' }, { v: 'Round Robin', l: 'format' }].map(stat => (
           <div key={stat.l}>
             <div style={{ fontFamily: MONO, fontSize: '1.125rem', fontWeight: 800, color: t.text, fontVariantNumeric: 'tabular-nums' }}>{stat.v}</div>
-            <div style={{ fontFamily: MONO, fontSize: '0.5rem', color: t.textMuted, letterSpacing: '0.06em', marginTop: 2 }}>{stat.l.toUpperCase()}</div>
+            <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, letterSpacing: '0.06em', marginTop: 2 }}>{stat.l.toUpperCase()}</div>
           </div>
         ))}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 16 }}>
         {keyedTeams.map(({ key, value: tm }, i) => (
           <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px', background: t.bg, borderRadius: 4, border: `1px solid ${t.border}` }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue }}>{i + 1}</span>
+            <span style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 700, color: t.blue }}>{i + 1}</span>
             <span style={{ fontSize: '0.75rem', fontWeight: 500, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tm}</span>
           </div>
         ))}
@@ -295,18 +295,18 @@ function QuickMatchPreview({ sportIcon, sportName, team1, team2 }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SportIcon name={sportIcon} size={20} color={t.text} />
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>{sportName.toUpperCase()}</span>
+          <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>{sportName.toUpperCase()}</span>
         </div>
-        <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.green, background: t.greenLight, padding: '3px 10px', borderRadius: 10 }}>QUICK MATCH</span>
+        <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, color: t.green, background: t.greenLight, padding: '3px 10px', borderRadius: 10 }}>QUICK MATCH</span>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', margin: '20px 0' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textMuted, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 6 }}>{team1.toUpperCase()}</div>
+          <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 6 }}>{team1.toUpperCase()}</div>
           <div style={{ fontFamily: MONO, fontSize: '2.5rem', fontWeight: 800, color: t.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>0</div>
         </div>
         <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textFaint, fontWeight: 600 }}>vs</div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textMuted, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 6 }}>{team2.toUpperCase()}</div>
+          <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, fontWeight: 600, letterSpacing: '0.06em', marginBottom: 6 }}>{team2.toUpperCase()}</div>
           <div style={{ fontFamily: MONO, fontSize: '2.5rem', fontWeight: 800, color: t.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>0</div>
         </div>
       </div>
@@ -390,14 +390,14 @@ function NewUserFlow({ navigate }) {
           chip={st.selectedSport ? (
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', background: t.blueLight, borderRadius: 20 }}>
               <SportIcon name={st.sportIcon} size={16} color={t.blue} />
-              <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue }}>{st.sportName.toUpperCase()}</span>
+              <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, color: t.blue }}>{st.sportName.toUpperCase()}</span>
             </div>
           ) : null} />
         {!st.selectedSport || showExpanded ? (
           <SportGrid selectedSport={st.selectedSport} pickSport={(id) => { st.pickSport(id); setShowExpanded(false); }} />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button type="button" onClick={() => setShowExpanded(true)} style={{ ...bareButton, fontSize: '0.6875rem', color: t.blue, cursor: 'pointer' }}>Change sport</button>
+            <button type="button" onClick={() => setShowExpanded(true)} style={{ ...bareButton, fontSize: '0.75rem', color: t.blue, cursor: 'pointer' }}>Change sport</button>
           </div>
         )}
       </div>
@@ -409,7 +409,7 @@ function NewUserFlow({ navigate }) {
           active={st.selectedSport && !st.selectedMode} done={!!st.selectedMode}
           chip={st.selectedMode ? (
             <div style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: 20, background: st.isTourney ? t.blueLight : t.orangeLight }}>
-              <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: st.isTourney ? t.blue : t.orange }}>{st.selectedMode.toUpperCase()}</span>
+              <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, color: st.isTourney ? t.blue : t.orange }}>{st.selectedMode.toUpperCase()}</span>
             </div>
           ) : null} />
         <ModeCards selectedMode={st.selectedMode} pickMode={st.pickMode} />
@@ -445,7 +445,7 @@ function NewUserFlow({ navigate }) {
       {/* Reset */}
       {st.selectedSport && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <button type="button" onClick={() => { st.resetAll(); setShowExpanded(false); }} style={{ ...bareButton, fontSize: '0.6875rem', color: t.textMuted, cursor: 'pointer', textDecoration: 'underline' }}>Start over</button>
+          <button type="button" onClick={() => { st.resetAll(); setShowExpanded(false); }} style={{ ...bareButton, fontSize: '0.75rem', color: t.textMuted, cursor: 'pointer', textDecoration: 'underline' }}>Start over</button>
         </div>
       )}
     </div>

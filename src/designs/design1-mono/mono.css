@@ -695,7 +695,8 @@ button.mono-stat-card {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  font-size: 0.625rem;
+  /* uppercase badge label: 0.6875rem decorative floor (I-044) */
+  font-size: 0.6875rem;
   font-family: var(--se-font-mono);
   border-radius: var(--radius);
   text-transform: uppercase;
@@ -1131,7 +1132,8 @@ button.mono-stat-card {
 
 .mono-arena-hint {
   font-family: var(--se-font-mono);
-  font-size: 0.5625rem;
+  /* uppercase micro-label: 0.6875rem decorative floor (I-044) */
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1326,7 +1328,8 @@ button.mono-stat-card {
 
 .mono-over-label {
   font-family: var(--se-font-mono);
-  font-size: 0.5625rem;
+  /* uppercase decorative label: 0.6875rem floor (I-044) */
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1409,7 +1412,8 @@ button.mono-stat-card {
   background: transparent;
   color: var(--destructive);
   font-family: var(--se-font-mono);
-  font-size: 0.5625rem;
+  /* interactive chip control: functional floor 0.75rem (I-044) */
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1505,7 +1509,8 @@ button.mono-stat-card {
 }
 
 .mono-cricket-key small {
-  font-size: 0.5rem;
+  /* uppercase micro-label under the run value: 0.6875rem decorative floor (I-044) */
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--se-color-ink-faint);
@@ -1606,7 +1611,8 @@ button.mono-stat-card {
 
 .mono-cricket-chip {
   font-family: var(--se-font-mono);
-  font-size: 0.5625rem;
+  /* uppercase decorative chip label: 0.6875rem floor (I-044) */
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -490,7 +490,7 @@ export default function MonoTournamentSetup() {
                   style={{
                     width: '24px', height: '24px', borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.6875rem', fontWeight: 600,
+                    fontSize: '0.75rem', fontWeight: 600,
                     background: stepBg,
                     color: isActive || isDone ? '#fff' : '#888',
                   }}
@@ -1759,7 +1759,7 @@ export default function MonoTournamentSetup() {
                               className="bg-transparent border-none cursor-pointer"
                               style={{
                                 color: isCaptain ? '#0066ff' : '#ddd',
-                                fontSize: '0.6875rem',
+                                fontSize: '0.75rem',
                                 padding: '0 2px',
                                 lineHeight: 1,
                               }}
