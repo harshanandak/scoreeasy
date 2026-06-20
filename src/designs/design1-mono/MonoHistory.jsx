@@ -256,7 +256,7 @@ function OptionChips({ label, options, selected, onPick }) {
             style={{
               minHeight: 40,
               padding: '8px 14px',
-              fontSize: '0.625rem',
+              fontSize: '0.75rem',
               fontWeight: 700,
               letterSpacing: '0.04em',
               textTransform: 'uppercase',
@@ -634,7 +634,7 @@ export default function MonoHistory() {
         )}
 
         <section className="mb-6">
-          <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
+          <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
             Find match
           </label>
           <input
@@ -651,7 +651,7 @@ export default function MonoHistory() {
             onClick={() => setShowFilters(value => !value)}
             aria-expanded={showFilters}
             className="bg-transparent border-none cursor-pointer font-mono"
-            style={{ padding: '10px 0', minHeight: 44, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)' }}
+            style={{ padding: '10px 0', minHeight: 44, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)' }}
           >
             Filters <span aria-hidden="true">{showFilters ? '−' : '+'}</span>
           </button>
@@ -678,7 +678,7 @@ export default function MonoHistory() {
                       style={{
                         minHeight: 40,
                         padding: '8px 14px',
-                        fontSize: '0.625rem',
+                        fontSize: '0.75rem',
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                         textTransform: 'uppercase',
@@ -781,7 +781,7 @@ export default function MonoHistory() {
           </section>
         ) : (
           <>
-            <p className="font-mono" style={{ margin: '0 0 2px', fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
+            <p className="font-mono" style={{ margin: '0 0 2px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
               {filter === 'quick' ? 'Quick matches' : filter === 'tournament' ? 'Tournament matches' : 'All matches'}
             </p>
             <div className="mono-history-list flex flex-col">
@@ -854,7 +854,7 @@ export default function MonoHistory() {
 
         {selectedEntry && (
           <div className="mono-table-panel mono-history-detail mt-6" style={{ padding: '16px' }}>
-            <p className="font-mono mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Match details</p>
+            <p className="font-mono mb-2" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Match details</p>
             <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
             </h2>

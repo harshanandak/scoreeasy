@@ -563,7 +563,7 @@ function GlobalNavigation({ requestScoringExit }) {
   const navItems = [
     { label: 'Home', path: '/' },
     { label: 'Play', path: '/play' },
-    { label: 'Matches', path: '/history' },
+    { label: 'History', path: '/history' },
     { label: 'Stats', path: '/statistics' },
   ];
 
@@ -577,7 +577,7 @@ function GlobalNavigation({ requestScoringExit }) {
   const bottomNavItems = [
     { label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
     { label: 'Play', path: '/play', icon: 'play' },
-    { label: 'Matches', path: '/history', icon: 'matches' },
+    { label: 'History', path: '/history', icon: 'matches' },
     { label: 'Stats', path: '/statistics', icon: 'stats' },
     cloudAuthAvailable
       ? {

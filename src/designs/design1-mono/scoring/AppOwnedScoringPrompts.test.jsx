@@ -232,6 +232,20 @@ describe('app-owned scoring prompts', () => {
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toContain('mono-cricket-out-line');
     expect(quickMatchSource).not.toContain('autoFocus');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
+
+    // Goals scorer (football / basketball / kabaddi / rugby):
+    // - quick-button sports show an informational score DISPLAY, not a disabled
+    //   <button> control (I-049): the display half carries mono-arena-half-display
+    //   and its score aria-label, and is no longer a disabled button.
+    const goalsSource = sourceByComponent['MonoGoalsLiveScore.jsx'];
+    expect(goalsSource).toContain('mono-arena-half-display');
+    expect(goalsSource).toContain('score: ${leftScore}');
+    expect(goalsSource).not.toMatch(/disabled=\{quickButtons \? true/);
+    // - the quick-value buttons share one finished, uniform affordance class
+    //   (I-051, I-052) instead of the old ad-hoc sizing + inline opacity hack.
+    expect(goalsSource).toContain('mono-btn mono-arena-action');
+    expect(goalsSource).not.toContain('mono-btn text-sm py-2');
+    expect(goalsSource).not.toMatch(/opacity: isTimeUp \|\| scoringPrompt\.isInteractionLocked \? 0\.4/);
   });
 
   it('locks scorer interaction while the post-save redirect is pending', () => {

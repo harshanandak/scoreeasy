@@ -805,6 +805,9 @@ export default function MonoCricketLiveScore() {
         {!isMatchComplete && (
           <>
             <div className="mono-scorer-run-grid">
+              {/* Boundaries (4/6) carry the single documented green accent-text
+                  emphasis (mono-scorer-run-button-accent), matching the keypad
+                  scorers' mono-cricket-key-four/-six. */}
               {CRICKET_RUN_VALUES.map(r => (
                 <button
                   key={r}

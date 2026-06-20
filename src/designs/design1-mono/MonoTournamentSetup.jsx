@@ -482,7 +482,7 @@ export default function MonoTournamentSetup() {
             const isActive = stepNum === step;
             const isDone = stepNum < step;
             let stepBg = '#eee';
-            if (isActive) stepBg = '#0066ff';
+            if (isActive) stepBg = 'var(--primary)';
             else if (isDone) stepBg = '#111';
             return (
               <div key={label} className="flex flex-col items-center gap-1 text-center">
@@ -490,7 +490,7 @@ export default function MonoTournamentSetup() {
                   style={{
                     width: '24px', height: '24px', borderRadius: '50%',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.6875rem', fontWeight: 600,
+                    fontSize: '0.75rem', fontWeight: 600,
                     background: stepBg,
                     color: isActive || isDone ? '#fff' : '#888',
                   }}
@@ -651,7 +651,7 @@ export default function MonoTournamentSetup() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: '18px', height: '18px', border: '1px solid #ddd',
-                    background: thirdPlaceMatch ? '#0066ff' : '#fff', color: '#fff',
+                    background: thirdPlaceMatch ? 'var(--primary)' : '#fff', color: 'var(--primary-foreground)',
                     fontSize: '11px', flexShrink: 0,
                   }}
                 >
@@ -700,7 +700,7 @@ export default function MonoTournamentSetup() {
                       </span>
                     </p>
                   </div>
-                  <span className="text-xs" style={{ color: '#0066ff' }}>Pre-selected</span>
+                  <span className="text-xs" style={{ color: 'var(--primary)' }}>Pre-selected</span>
                 </div>
               </div>
             )}
@@ -786,7 +786,7 @@ export default function MonoTournamentSetup() {
                         <button
                           onClick={() => setShowFormatGrid(true)}
                           className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                          style={{ color: '#0066ff' }}
+                          style={{ color: 'var(--primary)' }}
                         >
                           Change
                         </button>
@@ -1037,7 +1037,7 @@ export default function MonoTournamentSetup() {
                     <button
                       onClick={() => setShowHouseRules(!showHouseRules)}
                       className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                      style={{ color: '#0066ff', padding: '8px 0', marginBottom: showHouseRules ? 8 : 0 }}
+                      style={{ color: 'var(--primary)', padding: '8px 0', marginBottom: showHouseRules ? 8 : 0 }}
                     >
                       {showHouseRules ? '- Hide house rules' : '+ House rules'}
                     </button>
@@ -1283,7 +1283,7 @@ export default function MonoTournamentSetup() {
 
                 {/* Playoff Configuration */}
                 {winnerMode === 'knockouts' && (
-                  <div className="mb-8" style={{ borderLeft: '2px solid #0066ff', paddingLeft: '16px' }}>
+                  <div className="mb-8" style={{ borderLeft: '2px solid var(--primary)', paddingLeft: '16px' }}>
                     <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                       Playoff spots
                     </span>
@@ -1323,7 +1323,7 @@ export default function MonoTournamentSetup() {
                           style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             width: '18px', height: '18px', border: '1px solid #ddd',
-                            background: thirdPlaceMatch ? '#0066ff' : '#fff', color: '#fff',
+                            background: thirdPlaceMatch ? 'var(--primary)' : '#fff', color: 'var(--primary-foreground)',
                             fontSize: '11px', flexShrink: 0,
                           }}
                         >
@@ -1374,7 +1374,7 @@ export default function MonoTournamentSetup() {
                         style={{
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           width: '18px', height: '18px', border: '1px solid #ddd',
-                          background: knockoutSameFormat ? '#fff' : '#0066ff', color: '#fff',
+                          background: knockoutSameFormat ? '#fff' : 'var(--primary)', color: 'var(--primary-foreground)',
                           fontSize: '11px', flexShrink: 0,
                         }}
                       >
@@ -1748,8 +1748,8 @@ export default function MonoTournamentSetup() {
                             className="flex items-center gap-1"
                             style={{
                               padding: '4px 8px 4px 10px',
-                              background: isCaptain ? '#eff6ff' : '#f4f4f4',
-                              border: isCaptain ? '1px solid #bfdbfe' : '1px solid #eee',
+                              background: isCaptain ? 'var(--accent)' : '#f4f4f4',
+                              border: isCaptain ? '1px solid var(--primary)' : '1px solid #eee',
                               fontSize: '0.8125rem',
                               color: '#111',
                             }}
@@ -1758,8 +1758,8 @@ export default function MonoTournamentSetup() {
                               onClick={() => toggleCaptain(idx, member)}
                               className="bg-transparent border-none cursor-pointer"
                               style={{
-                                color: isCaptain ? '#0066ff' : '#ddd',
-                                fontSize: '0.6875rem',
+                                color: isCaptain ? 'var(--primary)' : 'var(--muted-foreground)',
+                                fontSize: '0.75rem',
                                 padding: '0 2px',
                                 lineHeight: 1,
                               }}
@@ -1770,7 +1770,7 @@ export default function MonoTournamentSetup() {
                             </button>
                             {member}
                             {isCaptain && (
-                              <span className="text-xs" style={{ color: '#0066ff', fontWeight: 600 }}>C</span>
+                              <span className="text-xs" style={{ color: 'var(--primary)', fontWeight: 600 }}>C</span>
                             )}
                             <button
                               onClick={() => removeMember(idx, mIdx)}
