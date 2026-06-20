@@ -208,7 +208,7 @@ describe('app entry route contract', () => {
 
     expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();
-    expect(within(appNav).getByRole('button', { name: 'Matches', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toBeInTheDocument();
     expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
   });
 

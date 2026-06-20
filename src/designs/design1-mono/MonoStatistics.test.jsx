@@ -103,6 +103,24 @@ describe('MonoStatistics', () => {
     expect(within(falconsRow).getByText('2')).toBeInTheDocument();
   });
 
+  it('leads the empty Overview with a CTA and skips the zero-value stat grids', async () => {
+    // No quick matches and no tournaments seeded → no-data state.
+    renderStatistics();
+
+    // Action-first: the CTA is present.
+    expect(
+      await screen.findByRole('button', { name: 'Start quick match' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create tournament' })).toBeInTheDocument();
+
+    // The zero-value Performance/Records/Totals grids must NOT render.
+    expect(screen.queryByText('Performance')).not.toBeInTheDocument();
+    expect(screen.queryByText('Records')).not.toBeInTheDocument();
+    expect(screen.queryByText('Totals')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tournaments')).not.toBeInTheDocument();
+    expect(screen.queryByText('Top team')).not.toBeInTheDocument();
+  });
+
   it('confirms quick stat deletion and clear-all with undo recovery', async () => {
     seedQuickMatches();
 

@@ -21,7 +21,8 @@ const t = {
 
 const eyebrowStyle = {
   fontFamily: MONO,
-  fontSize: '0.625rem',
+  // uppercase eyebrow label: 0.6875rem decorative floor (I-044)
+  fontSize: '0.6875rem',
   fontWeight: 700,
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
@@ -34,7 +35,8 @@ const actionStyle = (color) => ({
   border: 'none',
   margin: 0,
   fontFamily: MONO,
-  fontSize: '0.625rem',
+  // interactive action label: functional floor 0.75rem (I-044)
+  fontSize: '0.75rem',
   fontWeight: 800,
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
@@ -78,7 +80,7 @@ function SportRow({ sport, savedCount, highlighted, isLast, navigate }) {
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: '0.9375rem', fontWeight: 700, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sport.name}</span>
         {savedCount > 0 && (
-          <span style={{ display: 'block', marginTop: 1, fontFamily: MONO, fontSize: '0.625rem', color: t.muted }}>
+          <span style={{ display: 'block', marginTop: 1, fontFamily: MONO, fontSize: '0.75rem', color: t.muted }}>
             {savedCount} saved tournament{savedCount === 1 ? '' : 's'}
           </span>
         )}
