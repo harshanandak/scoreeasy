@@ -35,3 +35,6 @@ npm-debug.log*
 .beads/*.db
 .beads/*.db-*
 .beads-credential-key
+
+# Beads / Dolt files (added by bd init)
+*.db

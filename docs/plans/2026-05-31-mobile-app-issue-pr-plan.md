@@ -6,7 +6,7 @@
 
 **Canonical source:** `.beads/issues.jsonl` and `bd show <id>` are the source of truth for detailed issue descriptions and acceptance criteria. This markdown file is an index of the PR grouping currently exported from Beads.
 
-**Current backlog:** 9 PR parent issues, 71 child issues, 80 Beads records total.
+**Current backlog:** 9 PR parent issues, 75 child issues, 84 Beads records total.
 
 ---
 
@@ -15,10 +15,10 @@
 1. **PR 1 - Build, native tooling, and Capacitor baseline** (`scoreeasy-x7s`, P0, 5 issues)
 2. **PR 2 - Data integrity and persistence foundation** (`scoreeasy-viq`, P0, 10 issues)
 3. **PR 3 - Critical routing, deep-link, and recovery flows** (`scoreeasy-9g4`, P1, 9 issues)
-4. **PR 4 - Dashboard start/resume and first-run flow correctness** (`scoreeasy-nm8`, P1, 4 issues)
+4. **PR 4 - Dashboard start/resume and first-run flow correctness** (`scoreeasy-nm8`, P1, 6 issues)
 5. **PR 5 - Sport scoring logic and tournament flow defects** (`scoreeasy-9ve`, P1, 11 issues)
-6. **PR 9 - Accessibility, auth, and backend session reliability** (`scoreeasy-ngb`, P1, 7 issues)
-7. **PR 6 - Mobile scorer layout and app-shell ergonomics** (`scoreeasy-4ay`, P2, 5 issues)
+6. **PR 9 - Accessibility, auth, and backend session reliability** (`scoreeasy-ngb`, P1, 8 issues)
+7. **PR 6 - Mobile scorer layout and app-shell ergonomics** (`scoreeasy-4ay`, P2, 6 issues)
 8. **PR 7 - Visual system, contrast, and interaction polish** (`scoreeasy-oee`, P2, 15 issues)
 9. **PR 8 - Content, share behavior, and legal completeness** (`scoreeasy-woa`, P2, 5 issues)
 
@@ -89,18 +89,23 @@ Validation gate:
 
 Beads parent: `scoreeasy-nm8`
 Priority: P1
-Target: Make dashboard CTAs and first-run app launch match user intent.
+Target: Make dashboard CTAs, first-run app launch, and returning/authenticated app entry match user intent.
 
 - `scoreeasy-nm8.1` - **I-006: Allow 2-team tournaments from new-user dashboard** (P1 bug)
 - `scoreeasy-nm8.2` - **I-007: Make empty-dashboard New tournament open tournament flow** (P2 bug)
 - `scoreeasy-nm8.3` - **I-028: App boots to marketing page instead of app experience** (P1 task)
 - `scoreeasy-nm8.4` - **I-029: New Match does not reset team names** (P2 bug)
+- `scoreeasy-nm8.5` - **I-072: Missing authenticated returning-player app route** (P1 bug)
+- `scoreeasy-nm8.6` - **I-073: Redesign /app dashboard into a real mobile app home** (P1 task)
 
 Validation gate:
 - New-user dashboard can start a valid 2-team tournament.
 - New tournament opens a tournament-focused flow.
 - Native/mobile launch defaults to an app-first surface.
+- Authenticated or returning players land on a deterministic app-first route instead of the public marketing landing page.
 - New Match starts clean unless the user explicitly chooses a rematch/copy flow.
+- `/app` is not a sparse strip/list; it provides a compact mobile dashboard with clear active-games, start, recent, and account-aware entry sections.
+- `/app` is the returning-user home: it replaces the marketing page after the user has played before, keeps play/resume central, and still nudges guest users toward Sign in/Create account.
 
 ## PR 5: Sport Scoring Logic and Tournament Flow Defects
 
@@ -129,19 +134,28 @@ Validation gate:
 
 Beads parent: `scoreeasy-4ay`
 Priority: P2
-Target: Make active scorer screens usable on phone viewports.
+Target: Make active scorer screens and the mobile app shell usable on phone viewports.
+
+Design research baseline:
+- Mobile should not reuse the desktop/global top navigation as-is. Use screen-level app chrome for title/back/context actions.
+- Bottom navigation should act like app tabs for top-level destinations, not as action buttons or a duplicate of top nav.
+- Bottom navigation should be context-aware: hidden on protected/immersive scoring routes, adaptable to browser safe areas and compact viewports, and optionally collapsible on scroll where it would block content.
 
 - `scoreeasy-4ay.1` - **I-041: Cricket scorer overflows most phone screens** (P2 bug)
 - `scoreeasy-4ay.2` - **I-042: Undo is below the fold during scoring** (P2 bug)
 - `scoreeasy-4ay.3` - **I-043: Resume banner further inflates active scorer height** (P2 task)
 - `scoreeasy-4ay.4` - **I-067: Cricket scorer header is too tall on phones** (P2 bug)
 - `scoreeasy-4ay.5` - **I-065: Inconsistent control order across scorers** (P2 bug)
+- `scoreeasy-4ay.6` - **I-074: Build app-style mobile navigation and context-aware bottom bar** (P2 task)
 
 Validation gate:
 - Primary scorer controls fit common phone widths.
 - Undo remains reachable during scoring.
 - Header/banner chrome is compact.
 - Scorer control order is consistent across sports.
+- Desktop/global top nav is not shown as the primary mobile shell.
+- Bottom navigation is compact, obvious, non-duplicative, and optimized for top-level app routes.
+- Bottom navigation hides or adapts on scoring/immersive pages, small browser viewports, safe-area constrained screens, and pages where it would block primary controls.
 
 ## PR 7: Visual System, Contrast, and Interaction Polish
 
@@ -202,12 +216,15 @@ Target: Make keyboard/screen-reader basics and signed-in backend/account state c
 - `scoreeasy-ngb.5` - **I-061: Convex WebSocket repeatedly drops with 1006** (P1 bug)
 - `scoreeasy-ngb.6` - **I-062: Signed-in UI still shows Sign in and lacks account menu** (P1 bug)
 - `scoreeasy-ngb.7` - **I-071: Scorer lacks a proper h1 or top-level heading** (P1 bug)
+- `scoreeasy-ngb.8` - **I-075: Missing signed-out and guest-play account choices in app shell** (P1 task)
 
 Validation gate:
 - Focus indicators are visible.
 - Scorer routes and non-scorer routes expose a logical heading structure.
 - Disabled controls use proper disabled semantics.
 - Clerk/Convex auth and signed-in UI state are consistent.
+- Signed-out users see clear Sign in/Create account affordances and an intentional Play as guest path instead of the app feeling only game-first.
+- Returning guest users see the dashboard, not marketing, but the dashboard makes account creation/sign-in benefits visible; signed-in users get a lighter account-aware variant rather than the same guest prompts.
 
 ## Execution Rules
 
