@@ -9,8 +9,8 @@ const MIN_TOURNAMENT_TEAMS = 2;
 /* ─── Tokens (CSS variables from the design system in index.css — single source of truth) ─── */
 /* NOTE: the legacy key names blue/blueLight/green/greenLight/orange/orangeLight are intentionally
    retained as aliases so the ~24 call sites stay untouched. Their VALUES already obey the single
-   green-accent system: blue/green resolve to var(--primary)/var(--accent); orange maps to the
-   warning bridge (--se-color-warning) where a usage is semantically a distinct "quick" accent. */
+   green-accent system: every alias (blue/green/orange) resolves to var(--primary)/var(--accent).
+   Quick and tournament modes share the one green accent and stay distinguished by their labels. */
 const t = {
   blue: 'var(--primary)', blueLight: 'var(--accent)',
   bg: 'var(--background)', surface: 'var(--card)', text: 'var(--foreground)',
@@ -19,7 +19,7 @@ const t = {
   /* Interior dividers dissect content softly; pure black is reserved for object edges. */
   divider: 'color-mix(in oklch, var(--border) 14%, transparent)',
   green: 'var(--primary)', greenLight: 'var(--accent)',
-  orange: 'var(--se-color-warning)', orangeLight: 'var(--se-color-warning-soft)',
+  orange: 'var(--primary)', orangeLight: 'var(--accent)',
   cardShadow: 'var(--shadow-2xs)',
   r: 'var(--radius)',
 };
