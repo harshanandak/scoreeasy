@@ -509,6 +509,7 @@ export default function MonoGoalsLiveScore() {
                  below do the scoring), so render an informational element — not a
                  disabled <button>, which reads as a dead control (I-049). */
               <div
+                role="img"
                 data-leading={leftScore > rightScore ? 'true' : 'false'}
                 aria-label={`${leftName} score: ${leftScore}`}
                 className="mono-arena-half mono-arena-half-display"
@@ -571,6 +572,7 @@ export default function MonoGoalsLiveScore() {
             {quickButtons ? (
               /* Informational score display (see left half, I-049). */
               <div
+                role="img"
                 data-leading={rightScore > leftScore ? 'true' : 'false'}
                 aria-label={`${rightName} score: ${rightScore}`}
                 className="mono-arena-half mono-arena-half-display"
