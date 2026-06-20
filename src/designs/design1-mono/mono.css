@@ -1030,6 +1030,39 @@ button.mono-stat-card {
   cursor: default;
 }
 
+/* Score-display variant (quick-button sports): a live readout, not a control —
+   so no pointer cursor and no press tint. Inherits the arena typography. */
+.mono-arena-half-display {
+  cursor: default;
+}
+
+.mono-arena-half-display:active {
+  background: transparent;
+}
+
+/* Shared quick-button affordance (basketball / kabaddi / rugby tap cards).
+   One sizing + press treatment so a row of differing point values (e.g. rugby
+   3 / 5 / 7) reads as a uniform, finished, pressable set (I-051, I-052). */
+.mono-arena-action {
+  min-height: 48px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.1;
+  transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+
+.mono-arena-action:active {
+  transform: translateY(1px);
+  background: var(--se-color-action-soft);
+}
+
+.mono-arena-action:disabled {
+  opacity: 0.4;
+  transform: none;
+}
+
 .mono-arena-overline {
   font-family: var(--se-font-mono);
   font-size: 0.75rem;
