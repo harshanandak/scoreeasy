@@ -7,6 +7,10 @@ import SportIcon from './landing/sportIcons';
 const MIN_TOURNAMENT_TEAMS = 2;
 
 /* ─── Tokens (CSS variables from the design system in index.css — single source of truth) ─── */
+/* NOTE: the legacy key names blue/blueLight/green/greenLight/orange/orangeLight are intentionally
+   retained as aliases so the ~24 call sites stay untouched. Their VALUES already obey the single
+   green-accent system: blue/green resolve to var(--primary)/var(--accent); orange maps to the
+   warning bridge (--se-color-warning) where a usage is semantically a distinct "quick" accent. */
 const t = {
   blue: 'var(--primary)', blueLight: 'var(--accent)',
   bg: 'var(--background)', surface: 'var(--card)', text: 'var(--foreground)',
