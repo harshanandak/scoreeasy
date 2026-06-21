@@ -32,6 +32,11 @@ const authState = vi.hoisted(() => ({
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
   useQuery: () => [],
+  useConvexConnectionState: () => ({
+    isWebSocketConnected: true,
+    hasEverConnected: true,
+    connectionRetries: 0,
+  }),
 }));
 
 vi.mock('../../hooks/useAuth', () => ({

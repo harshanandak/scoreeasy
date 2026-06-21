@@ -14,6 +14,7 @@ import { AuthUserButton } from '../../components/AuthButtons';
 import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
+import ConvexReconnectingFallback from '../../components/ConvexReconnectingFallback';
 import {
   getProtectedScoringBackFallback,
   installNativeBackButtonGuard,
@@ -1293,6 +1294,10 @@ function TournamentDispatcher() {
 export default function Design1Mono() {
   const location = useLocation();
   const navigate = useNavigate();
+  // `authMode === 'cloud'` is set only by CloudAuthProvider, which is nested
+  // inside ConvexProviderWithClerk — so this flag doubles as proof that a
+  // ConvexProvider is present, gating the reconnecting indicator safely.
+  const { authMode } = useAuth();
   const [exitPrompt, setExitPrompt] = useState(null);
   const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
@@ -1493,6 +1498,7 @@ export default function Design1Mono() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
+      {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
       <main id="main-content">
         <Suspense fallback={<LazyFallback />}>
