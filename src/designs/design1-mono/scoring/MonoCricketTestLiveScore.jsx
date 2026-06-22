@@ -206,9 +206,12 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     setHasChanges(true);
   };
 
-  // Check for early result after scoring
+  // Check for early result after scoring.
+  // Only the FINAL innings (index 3) ends the match the instant the batting side passes
+  // the opponent's aggregate (a chase). In the 3rd innings the batting side is usually
+  // already ahead on aggregate and is building a lead — it must NOT end the match there.
   const checkResult = (updatedInnings) => {
-    if (currentInningsIndex < 2) return false;
+    if (currentInningsIndex < 3) return false;
 
     const battingTeamId = updatedInnings[currentInningsIndex].teamId;
     const bowlingTeamId = battingTeamId === team1Id ? team2Id : team1Id;
@@ -234,6 +237,24 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       const t2Runs = updatedInnings[1].runs;
       if (canEnforceFollowOn(t1Runs, t2Runs)) {
         setFollowOnPrompt(true);
+        return;
+      }
+    }
+
+    // End of the 3rd innings: if the side due to bat last already trails on aggregate,
+    // it's an innings victory and the 4th innings is not played.
+    if (currentInningsIndex === 2) {
+      const lastBatTeamId = updatedInnings[3].teamId;
+      const lastBatTotal = updatedInnings
+        .filter(i => i.teamId === lastBatTeamId)
+        .reduce((s, i) => s + i.runs, 0);
+      const oppTotal = updatedInnings
+        .filter(i => i.teamId !== lastBatTeamId)
+        .reduce((s, i) => s + i.runs, 0);
+      if (lastBatTotal > oppTotal) {
+        const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
+        setMatchResult(result);
+        setMatchComplete(true);
         return;
       }
     }
