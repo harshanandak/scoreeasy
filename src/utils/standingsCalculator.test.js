@@ -25,6 +25,35 @@ describe('calculateSetsStandings', () => {
     });
   });
 
+  it('counts a tennis match (mapped score1/score2 incl a 7-6 tiebreak set)', () => {
+    // Shape the tennis tournament save emits after P0-4/P1-9: each set carries
+    // score1/score2 (= games) and a tiebreak-won set reads 7-6, not 6-6.
+    const matches = [
+      {
+        team1Id: 't1',
+        team2Id: 't2',
+        status: 'completed',
+        sets: [
+          { score1: 6, score2: 4, games1: 6, games2: 4 },
+          { score1: 7, score2: 6, games1: 7, games2: 6, isTiebreak: true, tiebreakPoints1: 7, tiebreakPoints2: 5 },
+        ],
+      },
+    ];
+
+    const standings = calculateSetsStandings(teams, matches, {});
+    const t1 = standings.find(s => s.teamId === 't1');
+    const t2 = standings.find(s => s.teamId === 't2');
+
+    expect(t1.setsWon).toBe(2);
+    expect(t1.setsLost).toBe(0);
+    expect(t1.won).toBe(1);
+    expect(t1.pointsFor).toBe(13);
+    expect(t1.pointsAgainst).toBe(10);
+    expect(t1.matchPoints).toBe(2);
+    expect(t2.setsWon).toBe(0);
+    expect(t2.lost).toBe(1);
+  });
+
   it('correctly calculates a single completed match', () => {
     const matches = [
       {

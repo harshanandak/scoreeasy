@@ -18,6 +18,7 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import {
   buildTennisQuickHistoryEntry,
   getTennisQuickDraftKey,
+  mapTennisSetsForQuickHistory,
 } from '../../../utils/tennisQuickMatch';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
@@ -169,6 +170,10 @@ const processTiebreakPoint = (newSets, setIdx, team, team1Name, team2Name, advan
 
   if (isSetComplete(set)) {
     set.completed = true;
+    // Award the tiebreak winner the deciding game so the set reads 7-6 (not 6-6) —
+    // both the per-set display and standings compare games (score1/score2).
+    if (set.tiebreakPoints1 > set.tiebreakPoints2) set.games1 += 1;
+    else set.games2 += 1;
     triggerHaptic([50, 100, 50]);
     const winner = set.tiebreakPoints1 > set.tiebreakPoints2 ? team1Name : team2Name;
     showSetWon(winner, setIdx + 1);
@@ -526,7 +531,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
-      sets,
+      // Persist the shared set contract (score1/score2 = games) so standings + the
+      // bracket UI can read sets. draftState below keeps the raw live shape for resume.
+      sets: mapTennisSetsForQuickHistory(sets),
       status: isMatchComplete ? 'completed' : 'in-progress',
       winner,
       completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
