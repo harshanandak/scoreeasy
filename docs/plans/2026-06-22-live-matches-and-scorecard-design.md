@@ -57,7 +57,7 @@ Convex `useQuery` is a standing reactive subscription over a managed WebSocket �
 **The #1 anti-pattern to avoid:** recomputing the scoreboard from the event log inside the spectator query. That pulls every event into the read set and re-invalidates the subscription on every append. The spectator scoreboard reads the snapshot doc only; the log is read by the (paginated) feed/replay query.
 
 ### 3.3 Single writer = no batching, no conflicts
-One operator per match = single serial writer = zero OCC write conflicts. Points arrive every few seconds. So: **one mutation per point**, doing **two writes in one transaction** — append the `matchEvents` row *and* patch the `liveMatches` snapshot — keyed by a client `idemKey` for idempotent retries. No batching/debounce (that literature is about many concurrent writers; it does not apply).
+One operator per match = single serial writer = zero OCC write conflicts. Points arrive every few seconds. So: **one mutation per point**, doing **two writes in one transaction** — append the `matchEvents` row *and* patch the `liveMatches` snapshot — keyed by a client `idemKey` for idempotent retries. No *conflict*-batching is needed (that literature is about many concurrent writers; it does not apply). **Note:** §12.2 adds a 250 ms **snapshot-push coalescing** for rapid continuous sports — a cost/egress optimization, *not* conflict-batching; the per-point `matchEvents` append stays immediate so replay is never lossy.
 
 ### 3.4 Offline outbox (the part Convex does *not* give us)
 Convex's exactly-once retry queue is **in-memory in `ConvexReactClient` and lost on app-kill/reload** — the common case on mobile. So:
@@ -231,3 +231,80 @@ History read-bridge for past public matches; presence-driven viewer-count; multi
 
 ## 11. Beads epic
 Tracked under the epic **"Live match streaming + mature scorecards"** (`scoreeasy-7ye`) with child issues mapped to §8 phases (see `bd show`). Dependencies: schema → mutations/queries → broadcast wiring → spectator; shared event model → generic scorecard → per-sport; **moderation floor + public feed ship together in Phase 1** (public-by-default), with the heavier moderation stack as a Phase-2 fast-follow.
+
+---
+
+## 12. Cost, efficiency & UX hardening
+
+This section converts the cost/efficiency, data-lifecycle, and UX research into binding decisions for the public-by-default live-match feature. The split-document architecture (`liveMatches` snapshot + `matchEvents` append-only log + token-addressed `getByToken`) is the load-bearing decision everything below defends.
+
+### 12.1 Cost model & dominant drivers
+
+Convex caches query results: when a snapshot doc changes, exactly **one** query re-execution reads the DB and all other current subscribers are served the cached bytes. Consequences:
+
+- **DB bandwidth** scales with `writes × snapshot-size`, **not** with spectator count. Per point ≈ 0.5 KB written (one `matchEvents` row + one snapshot patch).
+- **Spectator fan-out is a function-call + egress story**, not a DB story. Each client's reactive sync is a function call; each cached snapshot result is pushed (egress) to all N subscribers on every change.
+- **Dominant driver #1 — a hot match:** 300 spectators × ~15 updates/min × 120 min ≈ **0.5M function calls** and ~160 MB egress for a *single* match.
+- **Dominant driver #2 — the Watch-Live feed:** a fully-reactive list of all live matches re-pushes to every browsing client whenever *any* listed match changes. At thousands of concurrent matches this invalidates near-continuously. This is the #1 thing to de-reactivate.
+- **Free tier ends on function calls first** (1M/mo — a single hot match or a few thousand matches for ~1 hour exhausts it), then DB bandwidth (~1 GB/mo, ~0.9 GB/hr at 2000 matches). **Decision: Convex Professional ($25/mo; 250M calls, 50 GB I/O, 50 GB egress) is the floor.** Free is dev/demo only; it returns HTTP errors at real traffic.
+
+### 12.2 Efficiency mechanisms (MVP)
+
+| Mechanism | Parameter / value | Tag |
+|---|---|---|
+| **Snapshot field budget** (`liveMatches` hot doc) | ≤ 300 B / ≤ ~12 scalar fields: scores, set scores, sets-won, serving side, status, seq, token. **No names/avatars/log/event arrays.** Enforced by a `getByToken` return validator. | **Both** |
+| **Snapshot patch debounce** (continuous sports) | Coalesce to ≤ 1 patch+push per **250 ms** tick (≤ 4/s/match); localStorage stays authoritative so the scorer's own UI is instant. **Cricket ball-by-ball stays immediate** (discrete, low rate). Never debounce the `matchEvents` append needed for replay. | **Cost** |
+| **Discovery feed: de-reactivated** | Cron-materialized `feedSnapshot` doc rebuilt every **15–30 s** (status=`live`, top N by recency/heat, names+score whitelisted), served by one trivial reactive query. Decouples feed cost from match-mutation rate entirely. | **Cost** |
+| **Feed page size** | `usePaginatedQuery`, **20/page**, bounded to **≤ 50 hottest** live matches, return-validated to `{teamNames, scores, sets, status, token}`. Reactive fallback (if not cron-materialized): `by_feed` index with **status as leading equality** + `.paginate(20)`. | **Both** |
+| **Spectator scoreboard query** | `getByToken`: single `.get()` by indexed token, whitelist ~8 public scalars, no joins, no log read. | **Both** |
+| **Events fetch** | `usePaginatedQuery` initial **50/page** by `[matchId, seq]`, plus `eventsSince(seq)` cursor for the live tail / reconnect deltas. Never recompute the board from the log. | **Both** |
+| **feedRank throttle** | Bucket to ~**30 s** granularity (`floor(now/30000)`); only patch when the bucket rolls over, even though `lastEventAt` patches every point. Stops the feed reordering on every rally. | Cost |
+| **Presence / viewer count** | **Disabled by default.** Heartbeats reintroduce crowd-scaling cost (each = a function call + a shared-counter write → N cached re-reads). If required, use a coarse cron-sampled estimate. | Cost |
+| **Subscription hygiene** | On `visibilitychange`, unsubscribe the scoreboard after **60 s** hidden and pause the feed poll when backgrounded; resubscribe on focus. (Phase 2.) | Cost |
+| **Usage alerts** | Convex dashboard alerts at **60% / 80%** of Pro inclusions on the three movers: function calls, egress, DB bandwidth. | Cost |
+
+### 12.3 Data lifecycle & retention
+
+**Organizing invariant (the drop guard):** granular `matchEvents` rows may be deleted for a match **only when both durable artifacts exist** — (a) the compacted scorecard JSON in `matches.detail`, and (b) for high-event sports, the cold gzip blob in Convex File Storage. The cleanup mutation re-checks this guard per match before deleting.
+
+- **Compaction-on-finalize:** on finalize, write the compacted scorecard to `matches.detail`. Compaction is **lossless for low-event sports** (volleyball/TT/pickleball — set/point aggregate fully reconstructs the board) but **lossy for cricket ball-by-ball**, which therefore **must also** cold-store the raw ordered log as one `gzip(JSON)` blob (`eventBlobId`, `eventCount`, `eventSchemaVersion`) before any row is dropped — one object replaces thousands of indexed rows.
+- **Abandoned-match reaper (cron every 10 min):** query `by_stale [status='live', lastEventAt < cutoff]`, `take(batch)`, run the **same** compaction+archive path as manual finalize, flip status to `final`/`expired`, self-reschedule until drained. Reaped matches must hit the archive path or the drop guard blocks their rows forever.
+- **Per-sport finalize thresholds (mandatory):** a single global threshold wrongly kills paused cricket. Volleyball/TT **2–3 h**; cricket **12–24 h** (innings breaks, rain, multi-day). Feed-hide after **45 min** with no new event (distinct from finalize; a hidden match can resume).
+- **Indexing & pagination:** `matchEvents` → `by_match_seq=[matchId, seq]` (pagination/replay) + `by_match_client=[matchId, clientEventId]` (idempotent `se_outbox` dedupe; the upsert no-ops if `(matchId, clientEventId)` exists → reconnect storms never double-count). `liveMatches` → `by_token`, `by_feed=[status, visibility, moderationStatus, feedRank]`, `by_stale=[status, lastEventAt]`. Paginate/replay by **`seq`, never `_creationTime`**.
+- **Retention numbers:** keep `matchEvents` rows **48 h** post-finalize (late-spectator / re-watch convenience), then delete **only if** the drop guard passes; cold blob kept for the life of the match. **Cleanup sweep cron every 6 h** paginates finalized matches older than 48 h and deletes each match's events in one transaction (a single match < 16,384 rows). Cron runs don't overlap.
+- **Token fallback:** store `token` on both `liveMatches` and `matches` (`by_token` on each); `getByToken` reads the snapshot if present, else the archived match — so snapshots can be reaped aggressively without breaking shared "Watch Live" links.
+
+### 12.4 UX structure & IA decisions
+
+- **Scorer go-live (public-by-default, consent once, never nag):** in the existing `.mono-scorer-topbar-actions` cluster add three persistent affordances next to the badge — (1) an **ambient `LIVE · PUBLIC` pill** (status, not a button; green dot + mono 700), (2) a **visibility control** (sheet with radios **Public (default) / Link-only / Private**), (3) a **Share** button reusing `src/mobile/share.js`. The **only** onboarding gate is a one-time first-run bottom sheet ("Your live scores are public. Only scores and names are shared."), persisted as `localStorage se_live_public_consent=1`; never shown again. No per-match confirmation — the ambient pill is the standing reminder, and the visibility control is present **every** match so opt-out is always one tap.
+- **Spectator page at top-level `/live/:token`:** registered **above** the `:sport/*` routes — `/:sport/live/:matchId` is already taken by `LegacyTennisLiveRoute` (index.jsx L1541) which redirects into the protected scorer. `MonoWatchMatch.jsx` = sticky scorebug (reactive `useQuery(getByToken)`, never recomputed from the log) + a 3-tab strip: **FEED** (point-by-point via `usePaginatedQuery`, newest-first), **SCORECARD** (full breakdown from snapshot), **STATS** (Phase-2 stub — can't be live-accurate from the snapshot). Signed-out by default; **one** dismissable sign-up CTA docked at the bottom ("Save matches — create free account"), never a wall.
+- **Dock / nav decision — do NOT add a 6th dock tab in MVP.** The mobile dock (`bottomNavItems`, index.jsx L578) is already 5 cells (Home/Play/History/Stats/Account) and is the **only** persistent mobile nav (top `global-nav` is `display:none` < 768px). A 6th cell at the 520px max width drops below the 54px touch target. **MVP:** surface Live via a "WATCH LIVE" rail on `DashboardLanding` and a "Watch live" entry atop `MonoPlayHub`, with the full feed at route `/live` (`MonoWatchFeed`). **Phase 2:** merge History+Stats into one sub-tabbed "Matches" destination (both retrospective) to free a cell → dock becomes Home / Play / **LIVE** / Matches / Account.
+- **Feed IA + empty state (`MonoWatchFeed`, `/live`):** sticky horizontal sport-chip filter (reuse `SportIcon`, "All" default, single-select); sort = "Live now" then "Just finished". Card = live dot + sport eyebrow, two team rows (name 700, tabular score right, leader 800), thin status line, whole-card tap → `/live/:token`. **Empty state is never a dead end:** "No public matches right now" + **Start a match** (primary → `/play`) and **Browse recent results** (secondary → `/history`), using `RouteRecoveryActions` language. The feed query is bounded (≤ 50) and field-whitelisted because every browsing client hits it.
+- **Onboarding — Share button IS the funnel:** target ≤ 2 taps from a live point to a shared link. Public-by-default means the `/live/:token` URL exists the moment the match starts (no "publish" step); tap Share → native sheet prefilled with the token URL and "Team A vs Team B — live". Spectators arriving cold need zero onboarding.
+- **Capacitor / accessibility:** `/live` is **not** an app-shell prefix, so by construction it renders no dock, adds no `has-mobile-bottom-nav` body class, and the popstate/native back-button scoring guards (`isProtectedScoringRoute`, `src/mobile/backButton.js`) stay **dormant** — no new guard code. The **one** required wiring: add `/live` to `GUARD_BYPASS_PREFIXES` (index.jsx L161) so a signed-in-but-not-onboarded user following a share link isn't bounced to `/onboarding`. Spectator scorebug uses one **coarse `aria-live="polite"`** region announcing **set/game score changes only** (running point score = atomic/non-announced) to avoid per-rally SR spam; tab strip is a real `role=tablist`; honor `env(safe-area-inset-*)` on `/live` and kiosk.
+
+### 12.5 Explicit cost ↔ UX tradeoffs
+
+- **Names: cost wins — names are NOT in the hot snapshot.** The lifecycle research proposed denormalizing `team1Name/players[]` onto `liveMatches` for a self-contained `getByToken`; **rejected on cost**, because under Convex's full-result-push model those name bytes get re-pushed to every spectator on **every point**. Decision: the hot snapshot carries only scores/sets/serving/status/seq; **names live on a sibling meta doc read once** (invalidates ~never). The spectator still mounts two stable queries with no join — self-containment is preserved, the per-point name re-push is eliminated.
+- **Feed: cron-materialized (chosen) vs reactive.** The 15–30 s `feedSnapshot` cron is the decision; the status-leading index + `.paginate(20)` + return-validator is the complementary reactive fallback (not an unresolved either/or). Cost: the feed lags new matches by up to one interval — acceptable for browsing discovery. The per-match scoreboard stays fully real-time via `getByToken`; only the aggregate feed is throttled.
+- **Debounce vs liveness:** 250 ms snapshot coalescing is invisible (scorer sees instant local UI; spectators within perceptual "instant"). Pushing past ~300–400 ms feels laggy on fast rallies; cricket stays immediate.
+- **48 h raw-row tail vs storage:** keeps re-watch/late-spectator reads hot but delays reclamation; shorten toward 6 h to cut cost at the expense of slower cold-blob replays.
+- **No viewer count vs product expectation:** omitting presence avoids crowd-scaling heartbeat cost; if a count becomes a hard requirement, it is an explicit new cost line (coarse estimate only).
+- **Lossy compaction:** cricket ball-by-ball fidelity lives **only** in the cold blob; if the blob write fails, the drop guard keeps the raw rows — never drop on a half-completed archive.
+
+### 12.6 New / changed beads work
+
+- **Schema + indexes:** add `liveMatches` (`by_token`, `by_feed` status-leading, `by_stale`) and `matchEvents` (`by_match_seq`, `by_match_client`); add `token`/`eventBlobId`/`eventCount`/`finalizedReason` to `matches`. AC: serial per-point mutation = dedupe on `clientEventId` → append with next `seq` → patch snapshot, one transaction.
+- **`getByToken` + snapshot budget:** single indexed `.get()`, return validator whitelists ≤ 8 scalars; **names sourced from a separate meta query**, not the snapshot. AC: snapshot ≤ 300 B, no log read.
+- **Snapshot debounce:** coalesce continuous-sport patches to ≤ 1/250 ms; cricket immediate; `matchEvents` append never debounced.
+- **Watch-Live feed:** cron-materialized `feedSnapshot` (15–30 s, status=`live`, top ≤ 50, field-whitelisted); client reads via `usePaginatedQuery(20)`. AC: feed cost independent of match-mutation rate; no unbounded reactive `.collect()`.
+- **Events delta endpoint:** `eventsSince(seq)` + paginated log (50/page); never recompute board from log.
+- **Compaction-on-finalize + drop guard:** build `matches.detail`; high-event sports gzip raw log to File Storage; events deletable only when both artifacts exist.
+- **Abandoned-match reaper:** 10-min cron, shared finalize path, **per-sport thresholds** (volley 2–3 h, cricket 12–24 h), 45-min feed-hide.
+- **Guarded cleanup sweep:** 6-h cron, 48 h post-finalize retention, per-match single-transaction delete, re-verify guard.
+- **feedRank throttle:** ~30 s bucket; patch only on bucket rollover. (Phase 2.)
+- **Scorer go-live UI:** ambient `LIVE · PUBLIC` pill + visibility control (public/link-only/private) + Share in `.mono-scorer-topbar-actions`; one-time consent sheet (`se_live_public_consent`).
+- **Spectator route `/live/:token`** (`MonoWatchMatch`, scorebug + Feed/Scorecard/Stats tabs) + **full feed `/live`** (`MonoWatchFeed`, sport-chip filter + empty state). AC: registered above `:sport/*`; add `/live` to `GUARD_BYPASS_PREFIXES`.
+- **Watch Live nav placement:** MVP = dashboard rail + Play-hub entry (no dock change); Phase-2 issue = merge History+Stats → "Matches" to free a dock cell (touches `/history` + `/statistics` routes, redirects, and `MonoHistory.test`/`MonoStatistics.test`).
+- **Accessibility/Capacitor verification:** coarse `aria-live="polite"` (set/game score only), `role=tablist` tabs, safe-area insets; confirm `/live` renders no dock and leaves scoring back-button guards dormant.
+- **Plan for Professional plan + usage alerts** at 60/80% of inclusions on function calls / egress / DB bandwidth before launch.
