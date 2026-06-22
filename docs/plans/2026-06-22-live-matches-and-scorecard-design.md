@@ -246,7 +246,9 @@ Convex caches query results: when a snapshot doc changes, exactly **one** query 
 - **Spectator fan-out is a function-call + egress story**, not a DB story. Each client's reactive sync is a function call; each cached snapshot result is pushed (egress) to all N subscribers on every change.
 - **Dominant driver #1 — a hot match:** 300 spectators × ~15 updates/min × 120 min ≈ **0.5M function calls** and ~160 MB egress for a *single* match.
 - **Dominant driver #2 — the Watch-Live feed:** a fully-reactive list of all live matches re-pushes to every browsing client whenever *any* listed match changes. At thousands of concurrent matches this invalidates near-continuously. This is the #1 thing to de-reactivate.
-- **Free tier ends on function calls first** (1M/mo — a single hot match or a few thousand matches for ~1 hour exhausts it), then DB bandwidth (~1 GB/mo, ~0.9 GB/hr at 2000 matches). **Decision: Convex Professional ($25/mo; 250M calls, 50 GB I/O, 50 GB egress) is the floor.** Free is dev/demo only; it returns HTTP errors at real traffic.
+- **Free tier ends on function calls first** (1M/mo — a single hot match or a few thousand matches for ~1 hour exhausts it), then DB bandwidth (~1 GB/mo, ~0.9 GB/hr at 2000 matches), and **hitting the hard cap returns HTTP errors** — the app breaks for everyone, no graceful degrade. **Decision (user, 2026-06-22): launch on Free, upgrade to Pro reactively.** Viable *because* (a) day-1/early traffic is sparse, (b) the §12.2 efficiency mechanisms maximize the free runway, and (c) the two safety rails below ensure "upgrade when hitting limits" never means "the app already errored":
+>   - **Alerts lead the cap:** dashboard usage alerts at **50% / 75% / 90%** of the free inclusions on the three movers (function calls, egress, DB bandwidth), with a **pre-authorized one-click Pro upgrade ($25/mo; 250M calls, 50 GB I/O, 50 GB egress) at ~75%** — *before* 90%, never after the cap.
+>   - **Broadcast kill-switch:** a remote flag that disables the live *push* app-wide **without touching local scoring** (localStorage stays authoritative — scorers keep playing offline-locally; only the public mirror pauses). If costs spike before an upgrade lands, flip it, then upgrade. This backstop is what makes Free-first safe.
 
 ### 12.2 Efficiency mechanisms (MVP)
 
@@ -261,7 +263,8 @@ Convex caches query results: when a snapshot doc changes, exactly **one** query 
 | **feedRank throttle** | Bucket to ~**30 s** granularity (`floor(now/30000)`); only patch when the bucket rolls over, even though `lastEventAt` patches every point. Stops the feed reordering on every rally. | Cost |
 | **Presence / viewer count** | **Disabled by default.** Heartbeats reintroduce crowd-scaling cost (each = a function call + a shared-counter write → N cached re-reads). If required, use a coarse cron-sampled estimate. | Cost |
 | **Subscription hygiene** | On `visibilitychange`, unsubscribe the scoreboard after **60 s** hidden and pause the feed poll when backgrounded; resubscribe on focus. (Phase 2.) | Cost |
-| **Usage alerts** | Convex dashboard alerts at **60% / 80%** of Pro inclusions on the three movers: function calls, egress, DB bandwidth. | Cost |
+| **Free-tier alerts + upgrade trigger** | Launch on **Free**. Dashboard alerts at **50% / 75% / 90%** of *free* inclusions on the three movers (function calls, egress, DB bandwidth); **pre-authorized one-click Pro upgrade at ~75%** — before the hard cap (which returns HTTP errors). | Cost |
+| **Broadcast kill-switch** | Remote flag disables the live *push* app-wide **without touching local scoring** (localStorage authoritative — scorers keep playing; only the public mirror pauses). Backstop for a cost spike before an upgrade lands. | Both |
 
 ### 12.3 Data lifecycle & retention
 
@@ -307,4 +310,4 @@ Convex caches query results: when a snapshot doc changes, exactly **one** query 
 - **Spectator route `/live/:token`** (`MonoWatchMatch`, scorebug + Feed/Scorecard/Stats tabs) + **full feed `/live`** (`MonoWatchFeed`, sport-chip filter + empty state). AC: registered above `:sport/*`; add `/live` to `GUARD_BYPASS_PREFIXES`.
 - **Watch Live nav placement:** MVP = dashboard rail + Play-hub entry (no dock change); Phase-2 issue = merge History+Stats → "Matches" to free a dock cell (touches `/history` + `/statistics` routes, redirects, and `MonoHistory.test`/`MonoStatistics.test`).
 - **Accessibility/Capacitor verification:** coarse `aria-live="polite"` (set/game score only), `role=tablist` tabs, safe-area insets; confirm `/live` renders no dock and leaves scoring back-button guards dormant.
-- **Plan for Professional plan + usage alerts** at 60/80% of inclusions on function calls / egress / DB bandwidth before launch.
+- **Free-tier launch + monitoring + upgrade trigger + kill-switch:** launch on Free; usage alerts at 50/75/90% on function calls / egress / DB bandwidth; pre-authorized one-click Pro upgrade at ~75% (before the hard cap errors the app); plus a **broadcast kill-switch** (disables the public push without touching local scoring) as the cost backstop.
