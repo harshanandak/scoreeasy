@@ -17,16 +17,17 @@ Two intertwined features for Score Easy:
 ### Locked product decisions (from the user, 2026-06-22)
 | Axis | Decision | Consequence |
 |---|---|---|
-| Discovery / visibility | **Per-match visibility choice** — scorer picks "Everyone" (public feed) **or** "People I choose" (private link), per match *(refined 2026-06-22)* | First-class **visibility selector** is a Phase-1 primitive. "People I choose" = link/QR/code (`unlisted`) ships first behind the moderation floor; "Everyone" (`public`) is the opt-in that brings the full Apple 1.2 moderation stack + browse feed (Phase 3, §7–§8). |
+| Discovery / visibility | **Public-live by DEFAULT for every match** — opt-OUT to stop; private share link always available for specific people *(decided 2026-06-22, CricHeroes-style)* | Every match streams to the public *Watch Live* feed by default. Universal public ⇒ the feed **and** a compliant moderation floor are **Phase-1 core**, not deferrable (§7–§8). No "feed later" path exists once default is public. |
+| Public data contract | **Only scores + team names + player names** are ever exposed publicly *(decided 2026-06-22)* | Strict whitelist enforced by Convex **return validators** — no other PII, location, contact, notes, or account data. Scorer sees a persistent **"LIVE — scores are public"** indicator (§7.2). |
 | Spectator auth | **No sign-in; link is enough** | Public, token-gated Convex queries with args **and** return validators; unguessable token, no enumeration (§4.4). |
 | Rollout across scoring screens | **All 4 at once** (generic/sets, tennis, cricket, tournament) | The broadcast layer wires into every live-score screen in Phase 1. (Scorecard *maturity* per sport is still sequenced generic-first — see §6.) |
 | Ball-by-ball log | **Persist for replay** | Append-only `matchEvents` survives into history; powers replay + the scorecard. |
 
-> **Visibility framing (the user's refinement).** Rather than a single global on/off, every match carries a visibility the scorer chooses when going live: **"People I choose"** (a private share link — the default, low-risk, Phase 1) or **"Everyone"** (surfaces in the public *Watch Live* feed — opt-in, gated on the full moderation stack, Phase 3). A match can be flipped between them; it only appears in the browse feed once that feed + moderation ship.
+> **Model = CricHeroes-style universal public.** Like [CricHeroes](https://cricheroes.com/global) (40M+ users; every grassroots match is publicly scored ball-by-ball and discoverable in a live feed), every Score Easy match is **public-live by default**. The scorer can opt a match out (private / link-only) and can always share a private link to specific people. Because public is the default *and* universal, the public feed + a compliant moderation floor are **first-release requirements** (§7–§8), and the public payload is strictly minimized to **scores + team/player names** — nothing else.
 
 ### Non-goals (this initiative)
-- Video streaming (spectator view is a live scoreboard, not video — matches the amateur-app norm).
-- A social follow graph / friends list (sharing is link/code/QR; presence-based popularity is Phase 3+).
+- **Live video streaming** — a future epic (CricHeroes does phone/OBS/VMix video; the user flagged it as a "maybe later"). v1 spectating is a live scoreboard + scorecard, not video.
+- A social follow graph / friends list (presence-based popularity is later).
 - Multi-scorer / co-scoring (breaks the single-writer guarantee — deferred, design spike only; §9).
 
 ---
@@ -132,24 +133,24 @@ matchEvents: defineTable({
 ```
 > Cricket's ball-by-ball deliveries, tennis point kinds, etc. ride in `meta` (or a dedicated `deliveries` projection table if the cricket card needs richer indexing — decided in the cricket issue). The generic engine stores `value` + `type` + running totals so rugby (5/2/3), kabaddi (1/2), and custom (+N) all flow through one model.
 
-### 4.3 Phase-3 moderation tables
-`moderation_reports` (reason enum, signed-out reporter via session token, status), `blocks` (blocker/blocked, enforced both directions in feed query), `hidden_matches` (userId/matchId), `moderation_audit` (append-only). Plus `users.acceptedTermsAt`.
+### 4.3 Visibility / moderation fields & tables
+On `liveMatches`: `visibility` (**`public` default** / `unlisted` / `private`), `isYouthMatch`, `moderationStatus` (`clean`/`held`/`removed`), `publishedAt`, `publicExpiresAt` (auto-expire). **v1-floor table:** `moderation_reports` (reason enum, signed-out reporter via session token, status). **Fast-follow tables (Phase 2/3):** `blocks` (blocker/blocked, enforced both directions), `hidden_matches` (userId/matchId), `moderation_audit` (append-only), `users.acceptedTermsAt`.
 
 ### 4.4 Function surface
 **Operator (authed, `authedMutation`):** `live.create`, `live.scorePoint` (append event + patch snapshot, idempotent), `live.undo`/`live.correct`, `live.setVisibility`, `live.pause`, `live.finalize` (→ archive into `matches`).
-**Public (plain `query`, no auth, token-gated):** `live.getByToken` (single doc; **return validator strips `ownerId`/`_id`/`token`**), `live.listEvents` (`usePaginatedQuery`, ordered by `seq`), `live.eventsSince(seq)`.
-**Public feed (Phase 3, plain `query`):** `live.listPublicFeed` — server-side filter `visibility==='public' AND moderationStatus==='clean' AND publicExpiresAt > now` (+ block/hide for signed-in viewers). **Never** returns secrets; never an enumerable list of private matches.
-**Security invariants:** token is an unguessable `v.string()` (not `_id`); every public function has args **and** return validators; no public enumerate query; rate limiter on the write path (Phase 3).
+**Public (plain `query`, no auth, token-gated):** `live.getByToken` (single doc; **return validator whitelists ONLY `sport`, `status`, scores, team/player names, timestamps** — strips `ownerId`/`_id`/`token` and everything else, §7.2), `live.listEvents` (`usePaginatedQuery`, ordered by `seq`), `live.eventsSince(seq)`.
+**Public feed (Phase 1 — core, plain `query`):** `live.listPublicFeed` — server-side filter `visibility==='public' AND moderationStatus==='clean' AND publicExpiresAt > now`. Same minimized whitelist; never returns secrets; never an enumerable list of private matches.
+**Security invariants:** token is an unguessable `v.string()` (not `_id`); every public function has args **and** return validators enforcing the §7.2 whitelist; no public enumerate query; rate caps on the write/report path (v1 floor).
 
 ---
 
 ## 5. Client architecture
 
 - **`useLiveBroadcast(localMatch)`** — scorer-side hook. Mirrors each local scoring action to `live.scorePoint`; owns the `se_outbox`, optimistic updates, and reconnect replay. Imported by all 4 live-score screens *without altering their localStorage-authoritative loop*.
-- **Scorer UI:** a "Go Live" affordance + **`ShareLiveMatch`** bottom sheet (QR via `qrcode.react`, 6-char code, Capacitor Share / `navigator.share`). Read-only expectation copy: *"Anyone with this can watch. They can't change the score."*
+- **Scorer UI:** matches go **public-live automatically**; a persistent **"LIVE — scores are public"** indicator shows while broadcasting (plus a one-time first-run notice). A **`ShareLiveMatch`** bottom sheet (QR via `qrcode.react`, 6-char code, Capacitor Share / `navigator.share`) shares the spectator link; copy: *"Anyone can watch — scores + names only. They can't change the score."* A **visibility toggle** lets the scorer turn a match private/link-only (opt-out).
 - **Spectator route `/live/:token`** (public, unauthenticated, outside the scoring-exit guard): pinned scorebug + serve indicator + completed-sets ledger + live-pulse flash + 90s stale→`PAUSED` badge + `?kiosk=1` chromeless cast mode. Tabs: **Feed / Scorecard / Stats** (default Feed).
 - **Scorecard component library** (shared by scorer, spectator, and history replay): generic suite + per-sport families (§6).
-- **Discovery `/live` tab** (Phase 3): ledger rows, sport-chip filter, live-pulse, empty/cold-start state. New bottom-nav entry.
+- **Discovery `/live` "Watch Live" tab** (Phase 1 — core): ledger rows, sport-chip filter, live-pulse, empty/early-days state. New bottom-nav entry.
 
 ---
 
@@ -167,41 +168,42 @@ Detailed, directly-implementable specs (element order, column lists, line templa
 
 ---
 
-## 7. Security, privacy & moderation (release-blocking for the public feed)
+## 7. Security, privacy & moderation (public-by-default — the floor is release-blocking)
 
-The global public feed turns every team/player name, title, and note into **publishable UGC reaching strangers** — a materially higher risk tier than link sharing. Per research §3, the following are **App-Store-release-blocking** (Apple Guideline 1.2) and **must ship with the public feed**, not after:
+Because **every match is public-live by default** (§1), the whole app is a public UGC surface from the very first match — there is no pre-public phase to hide behind. The controls below are therefore **first-release requirements** (Apple Guideline 1.2; COPPA) that ship in Phase 1 *with* the feed. The decisive mitigation the user chose is **strict data minimization** (§7.2): the only user content ever exposed is **scores + team names + player names**.
 
-- **Default-private, per-match opt-in** (3-state Private / Link-only / Public). A shared link is `unlisted`; only an explicit choice makes a match appear in the browse feed.
-- **Server-side profanity/slur filter** in the Convex publish mutation (NFKC-normalize, strip zero-width, evasion-resistant) — *never* client-only (the mutation is directly callable).
-- **Report / Block / Hide — three distinct flows**, block enforced both directions in the feed query, **report available to signed-out viewers**, → operator queue + append-only audit.
-- **Youth safeguard** (COPPA): a youth flag forces visibility ≤ `unlisted` and **redacts player names to initials + jersey number** in any public view; server-enforced.
-- **Rate-limit** publish/report/public-text-edits; **AUP acceptance** + reachable contact route; **auto-expire** public visibility (~match end + grace) to keep the feed live-only and bound standing exposure.
+### 7.1 v1 compliant floor (ships WITH the feed) vs fast-follow heavier stack
+- **v1 floor (first release, ships with the public feed):**
+  - **Server-side profanity/slur filter** on the exposed strings (team/player names) in the create/update mutation — NFKC-normalize, strip zero-width, evasion-resistant; **never client-only** (the mutation is directly callable). Block or `held`.
+  - **Report affordance** on the spectator page + feed rows, **usable signed-out** (reason taxonomy → operator queue).
+  - **Youth → initials:** matches flagged youth/under-18 render player names as **initials + jersey number** in every public view (COPPA-safe default; the lightest form of the user's "just names" rule). Server-enforced.
+  - **Auto-expire** public visibility (~match end + grace) so the feed stays live-only and standing exposure is bounded.
+  - **Opt-out:** the scorer can switch any match to `unlisted`/`private` at any time.
+  - **Data-minimization whitelist** (§7.2) + **rate caps** on publish/report.
+- **Fast-follow (Phase 2/3):** Block/Hide flows, operator review queue + audit log, AUP acceptance gate, appeals, ML/phonetic near-miss filtering, reserved/verified club names, DSA transparency counts.
 
-**OWASP / threat notes:** A01 (broken access control) — single-writer enforced server-side, spectators read-only, ownerId never leaves the server; A03 (injection / stored XSS) — all UGC strings are user-rendered text, sanitize + escape, no `dangerouslySetInnerHTML`; enumeration — unguessable token + return validators + no public list of private matches; abuse/DoS — rate limiter on write path; privacy — default-private, youth redaction, auto-expire.
+### 7.2 Public data contract + transparency (the user's data-minimization mandate)
+- **Whitelist, enforced server-side:** the public spectator payload and feed expose **only** `sport`, `status`, scores, team names, player names, and timestamps. Convex **return validators** strip everything else (`ownerId`, account info, location, contact, notes) — public minimization is true *by construction*, not by convention.
+- **Transparency / consent:** while broadcasting, the scorer sees a persistent **"LIVE — scores are public"** indicator, plus a **one-time first-run notice** explaining that scores + names are visible to everyone and how to turn a match off.
+- A leaked field is then a code-review failure, not a config mistake — this contract is *why* public-by-default is defensible.
 
-### 7.1 Phase-1 moderation *floor* vs Phase-3 full stack
-A subtlety: the moment a **signed-out stranger** loads `/live/:token` and sees user-entered team/player names, there is already a (small) public UGC surface — even with no browse feed. So the split is not "moderation = Phase 3, nothing before":
-
-- **Phase 1 floor (ships with the spectator link):** server-side profanity/slur filter on **public-facing strings** (team/player names, match title) in the create/publish path + a **report affordance on the spectator page** (works signed-out). This is the minimum responsible exposure for a stranger-loadable page and avoids carrying "link sharing needs zero moderation" into the build.
-- **Phase 3 full stack (ships with the browse feed):** Block/Hide, operator review queue + audit, youth redaction, AUP gate, auto-expire, rate limiting, visibility controls — the browsable directory is the materially higher risk tier that triggers the full Apple 1.2 obligations.
-
-> **Sequencing consequence:** the headline "share my match to anyone via link" value ships in Phase 1 behind the moderation *floor*; the global browse feed + full moderation stack ship together in Phase 3. See §8.
+**OWASP / threat notes:** A01 (broken access control) — single-writer enforced server-side, spectators read-only, `ownerId` never leaves the server; A03 (injection / stored XSS) — team/player names are user-rendered text: sanitize + escape, no `dangerouslySetInnerHTML`; enumeration — unguessable token + return validators + no public list query of private matches; abuse/DoS — rate caps on the write/report path; privacy — public-by-default bounded by the §7.2 whitelist + youth-initials + auto-expire.
 
 ---
 
 ## 8. Phasing & PR sequence
 
-All three phases are **in scope** (honoring the locked decisions). Sequencing is by dependency and by grouping the release-blocking moderation work with the feed it gates.
+All work is **in scope**. Because public-by-default makes the feed + moderation floor first-release requirements, Phase 1 is larger than a typical MVP; sequencing within it is by dependency.
 
-**Phase 1 — Core live-share + scorecard foundation (link/code/QR sharing, no browse feed)**
-Schema (`liveMatches` + `matchEvents`) → operator mutations (transactional, idempotent) → public token-gated queries (args+return validators) → offline `se_outbox` + reconcile → `useLiveBroadcast` wired into **all 4** scoring screens → ShareLiveMatch sheet → `/live/:token` spectator (no-signin, serve indicator, stale badge, kiosk) → **generic scorecard suite** + **volleyball** scorecard → **moderation floor** (server-side profanity filter on public-facing strings + signed-out report affordance, §7.1) → per-match **visibility selector** ("People I choose" = private link, fully working now; "Everyone" present as opt-in but only becomes *discoverable* once the Phase-3 feed + moderation land).
-> **Phase-1 exit gates (must pass before promising the feature):** (a) a **viewer-scale load test** validating Convex reactive fan-out cost for hundreds of signed-out spectators on a hot rally-every-few-seconds match — this is existential to "share to any number of people," not a footnote; (b) the offline invariant (no data loss across app-kill mid-match); (c) idempotent reconcile (no double-count on outbox replay).
+**Phase 1 — Public live-share + scorecard foundation (public-by-default, WITH the feed + floor)**
+Schema (`liveMatches` + `matchEvents`) → operator mutations (transactional, idempotent) → public token-gated queries **with the §7.2 data-minimization whitelist** → offline `se_outbox` + reconcile → `useLiveBroadcast` into **all 4** scoring screens → `/live/:token` spectator (no-signin, serve indicator, stale badge, kiosk) → **public "Watch Live" feed** (sport filter, live-pulse rows) → **public-by-default visibility + opt-out** + **"LIVE — scores are public" indicator** + **ShareLiveMatch** private link → **moderation floor** (profanity on names + signed-out report + youth-initials + auto-expire + rate caps, §7.1) → **generic scorecard suite** + **volleyball** scorecard.
+> **Phase-1 exit gates:** (a) **viewer-scale load test** (Convex reactive fan-out for hundreds of signed-out spectators on a hot match — existential to public-by-default scale); (b) offline invariant (no loss across app-kill mid-match); (c) idempotent reconcile (no double-count on outbox replay); (d) **App-Store-readiness review** of the moderation floor + §7.2 data contract.
 
-**Phase 2 — Scorecard maturity across all sports**
-Other net sports (config variants) → tennis → cricket → goals/period → live commentary feed + spectator Feed/Scorecard/Stats tabs + live-pulse → history replay of persisted `matchEvents`.
+**Phase 2 — Scorecard maturity + heavier moderation (fast-follow)**
+Other net sports (config variants) → tennis → cricket → goals/period → live commentary feed + spectator Feed/Scorecard/Stats tabs + live-pulse → history replay of persisted `matchEvents`. In parallel: **fast-follow moderation** — Block/Hide + operator review queue + audit + AUP gate + appeals.
 
-**Phase 3 — Global public discovery feed + moderation (release-blocking gates grouped here)**
-Moderation schema + server-side filter → Report/Block/Hide + queue + audit → youth safeguard → AUP + contact + auto-expire + rate limiting → per-match visibility controls → **"Watch Live"** discovery tab (sport filter, live-pulse rows, empty/cold-start). Phase-3+ extras: presence/viewer-count, multi-scorer, sparklines, player box scores.
+**Phase 3 — Depth & reach**
+History read-bridge for past public matches; presence-driven viewer-count; multi-scorer; player box scores; per-unit sparklines; ML/phonetic moderation + DSA transparency; **live video streaming** (CricHeroes-style — new epic).
 
 ---
 
@@ -213,7 +215,8 @@ Moderation schema + server-side filter → Report/Block/Hide + queue + audit →
 5. **Volleyball `competitionLevel` flag** — technical timeouts fire only in FIVB World/Olympic, sets 1-4; default off?
 6. **Two-sided football timeline on ~380px mobile** — collapse to single minute-ordered column? (Design call.)
 7. **Moderation operator staffing** — Apple ~24h / DSA "without undue delay" are real commitments for a small team; profanity-filter sensitivity + allowlist tuning baseline.
-8. **History read-bridge for past public matches.** History today reads **localStorage only**; Convex `matches` is written but never read back. In-match replay covers the *live* match for free, but browsing a *past* public match's scorecard from the discovery feed needs a new Convex read path (and an archived-scorecard read query). Not free — scoped into Phase 3 with the feed.
+8. **History read-bridge for past public matches.** History today reads **localStorage only**; Convex `matches` is written but never read back. The *live* feed + in-match replay are Phase 1, but browsing a *finished* match's scorecard (from a profile or the feed after it ends) needs a new Convex archive read path. Not free — Phase 3.
+9. **Public-by-default scale & abuse load.** Universal public broadcasting means the load test (#1) and the moderation-report volume both scale with adoption from day one; the v1 floor's rate caps + auto-expire are sized assumptions to validate, not finished numbers.
 
 ---
 
@@ -227,4 +230,4 @@ Moderation schema + server-side filter → Report/Block/Hide + queue + audit →
 ---
 
 ## 11. Beads epic
-Tracked under the epic **"Live match streaming + mature scorecards"** with child issues mapped to §8 phases (created alongside this doc; see `bd show` for the epic). Dependencies: schema → mutations/queries → broadcast wiring → spectator; shared event model → generic scorecard → per-sport; moderation stack → public feed.
+Tracked under the epic **"Live match streaming + mature scorecards"** (`scoreeasy-7ye`) with child issues mapped to §8 phases (see `bd show`). Dependencies: schema → mutations/queries → broadcast wiring → spectator; shared event model → generic scorecard → per-sport; **moderation floor + public feed ship together in Phase 1** (public-by-default), with the heavier moderation stack as a Phase-2 fast-follow.
