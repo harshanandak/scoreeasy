@@ -336,7 +336,7 @@ describe("live event reads", () => {
     const t = newClient();
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
-    const { matchId } = await asOwner.mutation(api.live.create, {
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -353,23 +353,30 @@ describe("live event reads", () => {
     }
 
     const since1 = await t.query(api.live.eventsSince, {
-      matchId,
+      token,
       sinceSeq: 1,
     });
     expect(since1.map((e) => e.seq)).toEqual([2, 3]);
 
     const sinceAll = await t.query(api.live.eventsSince, {
-      matchId,
+      token,
       sinceSeq: 3,
     });
     expect(sinceAll).toEqual([]);
+
+    // §7.2: operator-only fields MUST NOT leak in the public event stream.
+    for (const e of since1) {
+      expect(e).not.toHaveProperty("clientEventId");
+      expect(e).not.toHaveProperty("meta");
+      expect(e).not.toHaveProperty("playerId");
+    }
   });
 
   test("listEvents paginates by seq", async () => {
     const t = newClient();
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
-    const { matchId } = await asOwner.mutation(api.live.create, {
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -386,18 +393,127 @@ describe("live event reads", () => {
     }
 
     const page1 = await t.query(api.live.listEvents, {
-      matchId,
+      token,
       paginationOpts: { numItems: 2, cursor: null },
     });
     expect(page1.page.length).toBe(2);
     expect(page1.page.map((e: { seq: number }) => e.seq)).toEqual([1, 2]);
     expect(page1.isDone).toBe(false);
 
+    // §7.2: operator-only fields MUST NOT leak in the paginated event stream.
+    for (const e of page1.page) {
+      expect(e).not.toHaveProperty("clientEventId");
+      expect(e).not.toHaveProperty("meta");
+      expect(e).not.toHaveProperty("playerId");
+    }
+
     const page2 = await t.query(api.live.listEvents, {
-      matchId,
+      token,
       paginationOpts: { numItems: 10, cursor: page1.continueCursor },
     });
     expect(page2.page.map((e: { seq: number }) => e.seq)).toEqual([3, 4, 5]);
     expect(page2.isDone).toBe(true);
+  });
+});
+
+describe("live read gating — private & removed return nothing", () => {
+  test("private match is null/empty from token-gated reads", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-private",
+    });
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "e1",
+      team: "A",
+      at: 1,
+    });
+
+    // Make it private via the owner mutation.
+    await asOwner.mutation(api.live.setVisibility, {
+      matchId,
+      visibility: "private",
+    });
+
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await t.query(api.live.getMeta, { token })).toBeNull();
+    expect(
+      await t.query(api.live.eventsSince, { token, sinceSeq: 0 }),
+    ).toEqual([]);
+    const page = await t.query(api.live.listEvents, {
+      token,
+      paginationOpts: { numItems: 10, cursor: null },
+    });
+    expect(page.page).toEqual([]);
+  });
+
+  test("removed (moderated-out) match is null/empty from token-gated reads", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-removed",
+    });
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "e1",
+      team: "A",
+      at: 1,
+    });
+
+    // No mutation exposes moderation; patch directly.
+    await t.run(async (ctx) =>
+      ctx.db.patch(matchId, { moderationStatus: "removed" }),
+    );
+
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await t.query(api.live.getMeta, { token })).toBeNull();
+    expect(
+      await t.query(api.live.eventsSince, { token, sinceSeq: 0 }),
+    ).toEqual([]);
+    const page = await t.query(api.live.listEvents, {
+      token,
+      paginationOpts: { numItems: 10, cursor: null },
+    });
+    expect(page.page).toEqual([]);
+  });
+});
+
+describe("live.finalize — winner uses sets as primary, points as tiebreaker", () => {
+  test("setsA=1,setsB=2,pointsA=50,pointsB=40 → team B (Hawks) wins", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-finalize-winner",
+    });
+
+    // Drive the snapshot to the tricky state: B has MORE sets but FEWER points.
+    await t.run(async (ctx) =>
+      ctx.db.patch(matchId, {
+        setsA: 1,
+        setsB: 2,
+        pointsA: 50,
+        pointsB: 40,
+      }),
+    );
+
+    const res = await asOwner.mutation(api.live.finalize, { matchId });
+    expect(res.archived).toBe(true);
+
+    const archived = await t.run(async (ctx) => ctx.db.get(res.matchId));
+    // Sets are primary → B (Hawks) wins despite fewer current points.
+    expect(archived?.winner).toBe(TEAMS.teamB.name);
   });
 });

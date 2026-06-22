@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { query, QueryCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 import { authedMutation } from "./lib/functions";
 
 // Coarse 30s time bucket for feed ranking — patched only when the bucket
@@ -183,22 +183,24 @@ export const undo = authedMutation({
       .unique();
     if (prior) return prior;
 
-    // Find the last active point that has not already been undone.
-    const events = await ctx.db
+    // Find the last active point that has not already been undone WITHOUT
+    // collecting the whole log. Walk the seq index DESCENDING: undo events
+    // always have a higher seq than the point they reverse, so by the time we
+    // reach a candidate point we have already seen every undo that could
+    // reverse it. Break on the first still-active point.
+    const undoneSeqs = new Set<number>();
+    let target: Doc<"matchEvents"> | null = null;
+    for await (const e of ctx.db
       .query("matchEvents")
       .withIndex("by_match_seq", (q) => q.eq("matchId", args.matchId))
-      .order("desc")
-      .collect();
-
-    const undoneSeqs = new Set<number>();
-    for (const e of events) {
+      .order("desc")) {
       if (e.type === "undo" && typeof e.meta?.reversesSeq === "number") {
         undoneSeqs.add(e.meta.reversesSeq);
+      } else if (e.type === "point" && !undoneSeqs.has(e.seq)) {
+        target = e;
+        break;
       }
     }
-    const target = events.find(
-      (e) => e.type === "point" && !undoneSeqs.has(e.seq),
-    );
 
     const delta = target ? target.value : 0;
     const reverseTeam = target?.team;
@@ -295,11 +297,16 @@ export const finalize = authedMutation({
       return { matchId: existing._id, archived: false };
     }
 
+    // Sets are PRIMARY; current points break ties only when sets are equal.
     const winner =
-      match.setsA > match.setsB || match.pointsA > match.pointsB
-        ? team1
-        : match.setsB > match.setsA || match.pointsB > match.pointsA
-          ? team2
+      match.setsA !== match.setsB
+        ? match.setsA > match.setsB
+          ? team1
+          : team2
+        : match.pointsA !== match.pointsB
+          ? match.pointsA > match.pointsB
+            ? team1
+            : team2
           : undefined;
 
     const archivedId = await ctx.db.insert("matches", {
@@ -345,14 +352,26 @@ const publicSnapshotValidator = v.object({
   isYouthMatch: v.boolean(),
 });
 
+// Shared token gate (§4.4 / §7.1). Token possession authorizes reads of
+// `public` OR `unlisted` matches (link sharing must work for unlisted), but
+// NEVER `private` matches or `removed` (moderated-out) content. Returns the
+// match doc only when it is readable; otherwise null.
+async function resolveReadableMatch(ctx: QueryCtx, token: string) {
+  const match = await ctx.db
+    .query("liveMatches")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .unique();
+  if (!match) return null;
+  if (match.visibility === "private") return null;
+  if (match.moderationStatus === "removed") return null;
+  return match;
+}
+
 export const getByToken = query({
   args: { token: v.string() },
   returns: v.union(v.null(), publicSnapshotValidator),
   handler: async (ctx, { token }) => {
-    const match = await ctx.db
-      .query("liveMatches")
-      .withIndex("by_token", (q) => q.eq("token", token))
-      .unique();
+    const match = await resolveReadableMatch(ctx, token);
     if (!match) return null;
 
     // Explicit projection — never spread the raw doc.
@@ -376,15 +395,35 @@ export const getByToken = query({
   },
 });
 
+// §7.2 meta whitelist: roster + team labels only. ownerId / token / clientMatchId
+// never appear because we project explicitly from `meta`, not the raw doc.
+const teamMetaValidator = v.object({
+  name: v.string(),
+  color: v.optional(v.string()),
+});
+const playerMetaValidator = v.object({
+  team: v.union(v.literal("A"), v.literal("B")),
+  name: v.string(),
+  jersey: v.optional(v.string()),
+});
+const metaValidator = v.object({
+  sport: v.string(),
+  teamA: teamMetaValidator,
+  teamB: teamMetaValidator,
+  players: v.array(playerMetaValidator),
+  isYouthMatch: v.boolean(),
+});
+
 export const getMeta = query({
-  args: { matchId: v.id("liveMatches") },
-  handler: async (ctx, { matchId }) => {
-    const match = await ctx.db.get(matchId);
+  args: { token: v.string() },
+  returns: v.union(v.null(), metaValidator),
+  handler: async (ctx, { token }) => {
+    const match = await resolveReadableMatch(ctx, token);
     if (!match) return null;
 
     const meta = await ctx.db
       .query("liveMatchMeta")
-      .withIndex("by_match", (q) => q.eq("matchId", matchId))
+      .withIndex("by_match", (q) => q.eq("matchId", match._id))
       .unique();
     if (!meta) return null;
 
@@ -407,26 +446,115 @@ export const getMeta = query({
   },
 });
 
+// §7.2 event-stream whitelist. The raw `matchEvents` doc carries operator-only
+// fields — clientEventId, meta, playerId — that MUST NEVER reach a viewer. We
+// project explicitly into this validator; commentary is included ONLY for
+// non-youth matches (added per-event below). Optional fields mirror the schema:
+// team / servingAfter / commentary are frequently absent at runtime, so they
+// are v.optional or the validator rejects real events.
+const publicEventValidator = v.object({
+  seq: v.number(),
+  type: v.union(
+    v.literal("point"),
+    v.literal("set_end"),
+    v.literal("serve_change"),
+    v.literal("timeout"),
+    v.literal("undo"),
+    v.literal("correction"),
+    v.literal("note"),
+  ),
+  team: v.optional(v.union(v.literal("A"), v.literal("B"))),
+  value: v.number(),
+  runningA: v.number(),
+  runningB: v.number(),
+  setsA: v.number(),
+  setsB: v.number(),
+  servingAfter: v.optional(v.union(v.literal("A"), v.literal("B"))),
+  at: v.number(),
+  commentary: v.optional(v.string()),
+});
+
+function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
+  const out: {
+    seq: number;
+    type: Doc<"matchEvents">["type"];
+    team?: "A" | "B";
+    value: number;
+    runningA: number;
+    runningB: number;
+    setsA: number;
+    setsB: number;
+    servingAfter?: "A" | "B";
+    at: number;
+    commentary?: string;
+  } = {
+    seq: e.seq,
+    type: e.type,
+    team: e.team,
+    value: e.value,
+    runningA: e.runningA,
+    runningB: e.runningB,
+    setsA: e.setsA,
+    setsB: e.setsB,
+    servingAfter: e.servingAfter,
+    at: e.at,
+  };
+  // Commentary is free-text; suppress it entirely for youth matches.
+  if (!isYouthMatch && e.commentary !== undefined) {
+    out.commentary = e.commentary;
+  }
+  return out;
+}
+
 export const listEvents = query({
-  args: { matchId: v.id("liveMatches"), paginationOpts: paginationOptsValidator },
-  handler: async (ctx, { matchId, paginationOpts }) => {
-    return await ctx.db
+  args: {
+    token: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.object({
+    page: v.array(publicEventValidator),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+  }),
+  handler: async (ctx, { token, paginationOpts }) => {
+    const match = await resolveReadableMatch(ctx, token);
+    if (!match) {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+
+    const result = await ctx.db
       .query("matchEvents")
-      .withIndex("by_match_seq", (q) => q.eq("matchId", matchId))
+      .withIndex("by_match_seq", (q) => q.eq("matchId", match._id))
       .order("asc")
       .paginate(paginationOpts);
+
+    // Reconstruct the page object explicitly so the return validator surface is
+    // exactly three keys (no splitCursor / pageStatus leak-through).
+    return {
+      page: result.page.map((e) => projectEvent(e, match.isYouthMatch)),
+      isDone: result.isDone,
+      continueCursor: result.continueCursor,
+    };
   },
 });
 
 export const eventsSince = query({
-  args: { matchId: v.id("liveMatches"), sinceSeq: v.number() },
-  handler: async (ctx, { matchId, sinceSeq }) => {
-    return await ctx.db
+  args: { token: v.string(), sinceSeq: v.number() },
+  returns: v.array(publicEventValidator),
+  handler: async (ctx, { token, sinceSeq }) => {
+    const match = await resolveReadableMatch(ctx, token);
+    if (!match) return [];
+
+    // BOUNDED tail read: .take(200) caps a single call so eventsSince(0) cannot
+    // pull the entire log. The client advances sinceSeq to page the tail.
+    const events = await ctx.db
       .query("matchEvents")
       .withIndex("by_match_seq", (q) =>
-        q.eq("matchId", matchId).gt("seq", sinceSeq),
+        q.eq("matchId", match._id).gt("seq", sinceSeq),
       )
       .order("asc")
-      .collect();
+      .take(200);
+
+    return events.map((e) => projectEvent(e, match.isYouthMatch));
   },
 });
