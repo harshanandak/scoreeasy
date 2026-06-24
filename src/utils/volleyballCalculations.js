@@ -15,7 +15,9 @@ export function validateSingleSetScore(score1, score2, target = 10, winBy = 2, c
   const minScore = Math.min(score1, score2);
   if (score1 === score2) return false;
   if (maxScore < target) return false;
-  // Hard cap (e.g. badminton 30): reaching the cap wins regardless of margin.
+  // Hard cap (e.g. badminton 30): a score above the cap is impossible.
+  if (cap != null && maxScore > cap) return false;
+  // Reaching the cap wins regardless of margin.
   if (cap != null && maxScore >= cap) return true;
   // Otherwise the winner must lead by `winBy` (default 2) — enforces win-by-2 at deuce.
   if (maxScore - minScore < winBy) return false;

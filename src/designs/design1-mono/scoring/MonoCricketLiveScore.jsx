@@ -71,6 +71,10 @@ export default function MonoCricketLiveScore() {
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
+  // Separate debounce for resolving a pending extra: reset to 0 when an extra is
+  // armed so the first (legitimate) follow-up tap always passes, then blocks a
+  // rapid double-tap on the same follow-up button (scoreeasy-awy / CodeRabbit).
+  const lastExtraResolutionRef = useRef(0);
   const isKnockoutRef = useRef(false);
 
   const saveTournamentToConvex = (updatedTournament) => {
@@ -136,6 +140,7 @@ export default function MonoCricketLiveScore() {
       setInnings(foundMatch.draftState.innings);
       setHistory(foundMatch.draftState.history || []);
       setFreeHit(foundMatch.draftState.freeHit || false);
+      setPendingExtra(foundMatch.draftState.pendingExtra || null);
       setTrialBallUsed(foundMatch.draftState.trialBallUsed || false);
     }
   }, [id, matchId, sport]);
@@ -307,14 +312,25 @@ export default function MonoCricketLiveScore() {
     }
 
     // Prompt for runs scored off this delivery (still no legal ball bowled).
+    lastExtraResolutionRef.current = 0;
     setPendingExtra(type);
+  };
+
+  // Allow exactly one resolution per pending extra: blocks a rapid double-tap on
+  // the follow-up run button (which would double-count) without swallowing the
+  // first tap, since addExtra resets the ref to 0 when arming the extra.
+  const canResolvePendingExtra = () => {
+    const now = Date.now();
+    if (now - lastExtraResolutionRef.current < 150) return false;
+    lastExtraResolutionRef.current = now;
+    return true;
   };
 
   // scoreeasy-awy: record runs scored off a wide/no-ball (off the bat or byes)
   // WITHOUT consuming a legal ball and WITHOUT clearing the free hit. The free
   // hit (set by a no-ball) must persist until the next *legal* delivery.
   const addExtraRuns = (extraRuns) => {
-    if (scoringPrompt.isInteractionLocked) return;
+    if (!pendingExtra || scoringPrompt.isInteractionLocked || !canResolvePendingExtra()) return;
 
     if (extraRuns > 0) {
       triggerHaptic(extraRuns === 4 || extraRuns === 6 ? [50, 50, 50] : 50);
@@ -396,16 +412,22 @@ export default function MonoCricketLiveScore() {
   };
 
   const addSuperOverExtra = (type) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 150) return;
+    lastClickRef.current = now;
+
     const key = superOverPhase === 'team1_batting' ? 'team1' : 'team2';
     setSuperOver(prev => ({
       ...prev,
       [key]: { ...prev[key], runs: prev[key].runs + 1 },
     }));
     // scoreeasy-awy: capture runs off the delivery (no legal ball consumed).
+    lastExtraResolutionRef.current = 0;
     setSuperOverPendingExtra(type || 'wide');
   };
 
   const addSuperOverExtraRuns = (extraRuns) => {
+    if (!superOverPendingExtra || !canResolvePendingExtra()) return;
     if (extraRuns > 0) {
       const key = superOverPhase === 'team1_batting' ? 'team1' : 'team2';
       setSuperOver(prev => ({
@@ -430,6 +452,7 @@ export default function MonoCricketLiveScore() {
         innings,
         history: structuredClone(history.slice(-50)),
         freeHit,
+        pendingExtra,
         trialBallUsed,
         savedAt: new Date().toISOString(),
       },
@@ -583,6 +606,7 @@ export default function MonoCricketLiveScore() {
         innings,
         history: structuredClone(history.slice(-50)),
         freeHit,
+        pendingExtra,
         trialBallUsed,
         savedAt: new Date().toISOString(),
       },
@@ -591,7 +615,7 @@ export default function MonoCricketLiveScore() {
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
     }
-  }, [scores, battingTeam, innings, history, freeHit, trialBallUsed]);
+  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed]);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">

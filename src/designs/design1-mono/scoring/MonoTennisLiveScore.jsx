@@ -532,10 +532,14 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       // Persist the shared set contract (score1/score2 = games) so standings + the
-      // bracket UI can read sets. draftState below keeps the raw live shape for resume.
-      sets: mapTennisSetsForQuickHistory(sets),
+      // bracket UI can read sets — but ONLY once the match is complete. An
+      // in-progress save must leave the top-level result fields empty, otherwise
+      // calculateSetsStandings (which skips only pending/empty matches) would count
+      // the unfinished match and award match points. draftState below keeps the raw
+      // live shape for resume.
+      sets: isMatchComplete ? mapTennisSetsForQuickHistory(sets) : [],
       status: isMatchComplete ? 'completed' : 'in-progress',
-      winner,
+      winner: isMatchComplete ? winner : null,
       completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
       draftState: isMatchComplete ? undefined : {
         currentSet,

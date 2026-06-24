@@ -7,6 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 // so this test drives the real component to verify those invariants.
 
 const h = vi.hoisted(() => ({
+  saveSpy: vi.fn(() => true),
   makeTournament: () => ({
     id: 1,
     teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
@@ -33,7 +34,7 @@ vi.mock('react-router-dom', () => ({
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../utils/storage', () => ({
   loadSportTournaments: () => [h.makeTournament()],
-  saveSportTournament: () => true,
+  saveSportTournament: h.saveSpy,
 }));
 
 // The scorer computes isTouchDevice once at module load; force a non-touch
@@ -100,6 +101,20 @@ describe('cricket extras — runs off the delivery (scoreeasy-awy)', () => {
     expect(runs()).toBe('3/0');
     expect(main().textContent).not.toContain('FREE HIT');
     expect(main().textContent).toContain('0 ov');
+  });
+
+  it('persists pendingExtra in the autosaved draft so a reload mid-extra keeps the follow-up row', async () => {
+    h.saveSpy.mockClear();
+    await renderScorer();
+
+    fireEvent.click(screen.getByRole('button', { name: 'No Ball (+1)' }));
+    await screen.findByText('Runs off the no ball (off the bat or byes)');
+
+    // The continuous autosave should round-trip the pending extra in draftState.
+    await vi.waitFor(() => expect(h.saveSpy).toHaveBeenCalled());
+    const savedTournament = h.saveSpy.mock.calls.at(-1)[1];
+    const savedMatch = savedTournament.matches.find((m) => m.id === 'm1');
+    expect(savedMatch.draftState.pendingExtra).toBe('noBall');
   });
 
   it('routes number keys to off-the-delivery runs while an extra is pending (keyboard path)', async () => {
