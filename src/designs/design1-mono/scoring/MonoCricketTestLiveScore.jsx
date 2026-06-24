@@ -241,8 +241,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       }
     }
 
-    // End of the 3rd innings: if the side due to bat last already trails on aggregate,
-    // it's an innings victory and the 4th innings is not played.
+    // End of the 3rd innings: if the side due to bat last already leads on aggregate
+    // (its total exceeds the opponent's across the opponent's extra innings — e.g. a
+    // follow-on win), it's an innings victory and the 4th innings is not played.
     if (currentInningsIndex === 2) {
       const lastBatTeamId = updatedInnings[3].teamId;
       const lastBatTotal = updatedInnings
