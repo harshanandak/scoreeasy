@@ -2,6 +2,20 @@
 
 You are taking over the **live match streaming + mature scorecards** build with fresh context. Everything below is the ground truth; trust it over any stale memory.
 
+## Progress — 2026-06-25 (resume HERE)
+First end-to-end BROADCAST slice shipped (commits 4412193 + ee6353a, pushed):
+- **Keystone built & tested:** `src/hooks/useLiveBroadcast.js` (create → scorePoint/undo/finalize through the outbox, optimistic, additive — a failed push never breaks local scoring; clientEventId `${clientMatchId}:${seq}` with seq persisted in `src/lib/live/liveSession.js` so reload re-attaches, no double-count). Includes the finalize-drain fix (finalize awaits in-flight point sends before archiving, via the now-coalescing `useLiveOutbox.flush`).
+- **Reusable UI:** `src/designs/design1-mono/live/LiveBroadcastBar.jsx` (b0z: public-by-default + one-time consent + LIVE indicator + Stop/visibility) and `ShareLiveMatch.jsx` + `src/lib/live/watchUrl.js` (6fj: QR via `qrcode.react` + canonical link + native/web share). Drop the bar into any scorer + call `live.point/undo/finalize`.
+- **Wired:** `MonoGoalsLiveScore` only (GOALS = flat score → round-trips through the existing backend with ZERO change; chosen as the de-risk slice). 827 tests green; type-check/lint/build green.
+
+**NEXT (in order):**
+1. **USER must runtime-verify goals** (auth-gated, can't be automated): sign in, score a goals match, open `/live/:token` in a browser, confirm it updates live. This GATES the fan-out.
+2. **`87d` backend snapshot extension** (NEW issue): extend `scorePoint` (or sibling) to accept + patch `setsA/setsB/setScores/servingTeam/currentUnit/periodLabel`, and transmit match config (bestOf/pointsPerSet). The `getByToken` validator already exposes these. Required for volleyball/tennis/cricket because `scorePoint` currently only patches flat `pointsA/pointsB` → the spectator PinnedScorebug + StatsPanel are wrong for sets-sports. Also: `at` is ms on the backend (feedRank) but seconds in the engine — pass `meta.periodIndex` explicitly for timed sports. Harden: reject scorePoint/undo on a `final` match.
+3. Wire **volleyball** (`MonoSetsLiveScore`) as the 2nd slice yourself + convex-test the extended mutation (`t.withIdentity`). Freezes the sets-sport contract.
+4. THEN workflow-fan-out tennis/cricket/cricket-test/sets (mechanical; disjoint files; YOU run gate + commit).
+5. Deferred (NOT in "shareable scores" scope): `q7k` moderation, `3ws` public feed, `s5m/obd/4qu/1bc/bx1` infra.
+
+
 ## 0. Where to work
 - **Worktree:** `C:\Users\harsha_befach\Downloads\Volleyball\.worktrees\live-matches`
 - **Branch:** `feat/live-matches` (pushed to `origin/feat/live-matches`). Do NOT merge to master — the feature is not end-to-end yet.
