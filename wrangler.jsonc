@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "scoreeasy",
+  // Same Cloudflare account as Zwapit. Verify in the dashboard if scoreeasy lives
+  // in a different account, and update this id (or move it to a CLOUDFLARE_ACCOUNT_ID
+  // secret consumed by the workflow).
+  "account_id": "3216bc4d5cf3736883b6976853d59a4c",
+  "compatibility_date": "2026-06-25",
+  "workers_dev": true,
+  "preview_urls": true,
+  // Assets-only Worker (no server code): serve the Vite SPA build from ./dist.
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    // SPA fallback — serve index.html (200) for any unmatched client route
+    // (/live/:token, /history, …). Replaces the old vercel.json rewrite.
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": true }
+}
