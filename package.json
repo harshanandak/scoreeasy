@@ -13,7 +13,10 @@
     "mobile:build": "vite build && cap sync",
     "mobile:sync": "cap sync",
     "mobile:android": "vite build && cap sync android",
-    "mobile:ios": "vite build && cap sync ios"
+    "mobile:ios": "vite build && cap sync ios",
+    "cf:deploy": "bun run build && bunx wrangler@4 deploy",
+    "cf:preview": "bun run build && bunx wrangler@4 versions upload",
+    "cf:dry-run": "bun run build && bunx wrangler@4 deploy --dry-run"
   },
   "dependencies": {
     "@capacitor/android": "8.3.4",
