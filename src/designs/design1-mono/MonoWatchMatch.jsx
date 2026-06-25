@@ -325,9 +325,22 @@ FeedPanel.propTypes = {
  * Cricket's batting/bowling card needs per-ball detail the public whitelist
  * intentionally strips, so cricket falls back to the generic stat header.
  */
-function ScorecardPanel({ scorecardKind, events, nameA, nameB }) {
+function ScorecardPanel({ scorecardKind, events, snapshot, nameA, nameB }) {
   if (scorecardKind === 'volleyball') {
-    return <VolleyballScorebug events={events} teamA={nameA} teamB={nameB} />;
+    // Render from the operator-pushed SNAPSHOT, not re-derived events: listEvents
+    // is paginated oldest-first, so `events` is the earliest page (set-1 state)
+    // for any non-trivial match — the snapshot is always current and
+    // config-independent (§87d).
+    const state = {
+      currentSet: snapshot.currentUnit,
+      pointsA: snapshot.pointsA,
+      pointsB: snapshot.pointsB,
+      setsA: snapshot.setsA,
+      setsB: snapshot.setsB,
+      servingTeam: snapshot.servingTeam ?? null,
+      pointState: 'normal',
+    };
+    return <VolleyballScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'tennis') {
     return <TennisScorebug events={events} teamA={nameA} teamB={nameB} />;
@@ -341,6 +354,7 @@ function ScorecardPanel({ scorecardKind, events, nameA, nameB }) {
 ScorecardPanel.propTypes = {
   scorecardKind: PropTypes.string.isRequired,
   events: PropTypes.arrayOf(PropTypes.object).isRequired,
+  snapshot: PropTypes.object.isRequired,
   nameA: PropTypes.string.isRequired,
   nameB: PropTypes.string.isRequired,
 };
@@ -533,11 +547,11 @@ export default function MonoWatchMatch() {
 
       <main style={{ padding: kiosk ? '16px 24px 40px' : '16px 16px 96px', maxWidth: 720, margin: '0 auto' }}>
         {kiosk ? (
-          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} nameA={nameA} nameB={nameB} />
+          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         ) : tab === 'Feed' ? (
           <FeedPanel events={eventRows} nameA={nameA} nameB={nameB} loadMore={loadMore} canLoadMore={canLoadMore} />
         ) : tab === 'Scorecard' ? (
-          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} nameA={nameA} nameB={nameB} />
+          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         ) : (
           <StatsPanel events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         )}

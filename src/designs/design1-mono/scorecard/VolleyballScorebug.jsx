@@ -141,8 +141,12 @@ const POINT_STATE_LABEL = {
   matchPoint: 'MATCH POINT',
 };
 
-export default function VolleyballScorebug({ events, config, teamA, teamB }) {
-  const state = volleyballState(events, config);
+export default function VolleyballScorebug({ events, state: stateProp, config, teamA, teamB }) {
+  // `state` lets a caller (the spectator page) pass the operator-pushed snapshot
+  // directly — authoritative, config-independent, and always current — instead of
+  // re-deriving from a partial/earliest-page event slice. Falls back to deriving
+  // from the event stream (the local scorer path).
+  const state = stateProp ?? volleyballState(events ?? [], config);
   const nameA = sideName('A', teamA, teamB);
   const nameB = sideName('B', teamA, teamB);
   const setLabel = `SET ${state.currentSet}`;
@@ -210,13 +214,25 @@ export default function VolleyballScorebug({ events, config, teamA, teamB }) {
 }
 
 VolleyballScorebug.propTypes = {
-  events: PropTypes.arrayOf(PropTypes.object).isRequired,
+  events: PropTypes.arrayOf(PropTypes.object),
+  // Pre-derived state (operator snapshot). When present, `events` is ignored.
+  state: PropTypes.shape({
+    currentSet: PropTypes.number,
+    pointsA: PropTypes.number,
+    pointsB: PropTypes.number,
+    setsA: PropTypes.number,
+    setsB: PropTypes.number,
+    servingTeam: PropTypes.oneOf(['A', 'B', null]),
+    pointState: PropTypes.string,
+  }),
   config: PropTypes.object,
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
 
 VolleyballScorebug.defaultProps = {
+  events: undefined,
+  state: undefined,
   config: undefined,
   teamA: DEFAULT_TEAM_A,
   teamB: DEFAULT_TEAM_B,

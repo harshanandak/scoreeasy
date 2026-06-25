@@ -9,6 +9,9 @@ import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
+import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+import { getConsent } from '../../../lib/live/liveSession';
+import LiveBroadcastBar from '../live/LiveBroadcastBar';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -42,6 +45,19 @@ export default function MonoSetsLiveScore() {
   const isInteractionLocked = scoringPrompt.isInteractionLocked;
   const [servingTeam, setServingTeam] = useState(1);
   const [scoringMode, setScoringMode] = useState('rally');
+
+  // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
+  // page with the engine-derived snapshot (current-set points + set tally +
+  // serving). Additive — localStorage stays authoritative; gated on consent.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const liveClientMatchId = `${sport}:${id}:${matchId}`;
+  // Records the latest scoring action; its broadcast snapshot is computed from
+  // the COMMITTED state in the effect below (a point can end a set and start the
+  // next, which React applies asynchronously).
+  const broadcastIntentRef = useRef(null);
 
   // Animation state
   const [showSetWon, setShowSetWon] = useState(false);
@@ -222,6 +238,10 @@ export default function MonoSetsLiveScore() {
       return;
     }
 
+    // An actual point is being scored — mark it for broadcast (snapshot built
+    // once the set state settles, see the broadcast effect). team1 -> A.
+    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
+
     setSets(prevSets => {
       const newSets = prevSets.map(s => ({ ...s }));
       const scoreKey = team === 1 ? 'score1' : 'score2';
@@ -282,6 +302,7 @@ export default function MonoSetsLiveScore() {
   const undo = () => {
     if (history.length === 0 || isInteractionLocked) return;
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
     setSets(last.sets);
     setCurrentSet(last.currentSet);
@@ -311,6 +332,33 @@ export default function MonoSetsLiveScore() {
     }));
     saveSportTournament(sportConfig.storageKey, updatedTournament);
   }, [tournament, matchId, isInteractionLocked, sets, currentSet, history, servingTeam, scoringMode, effectiveFormat, sportConfig]);
+
+  // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
+  // point may end a set and open the next, so we read the settled sets/serving
+  // here rather than guessing the post-update score inside addPoint.
+  useEffect(() => {
+    const intent = broadcastIntentRef.current;
+    if (!intent) return;
+    broadcastIntentRef.current = null;
+
+    const completed = sets.filter((s) => s.completed);
+    const showServe = scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
+    const snapshot = {
+      pointsA: sets[currentSet]?.score1 || 0,
+      pointsB: sets[currentSet]?.score2 || 0,
+      setsA: completed.filter((s) => s.score1 > s.score2).length,
+      setsB: completed.filter((s) => s.score2 > s.score1).length,
+      setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
+      servingTeam: showServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+      currentUnit: currentSet + 1,
+      periodLabel: `Set ${currentSet + 1}`,
+    };
+    if (intent.kind === 'undo') {
+      liveRef.current.undo({ at: intent.at, snapshot });
+    } else {
+      liveRef.current.point({ team: intent.team, value: 1, at: intent.at, snapshot });
+    }
+  }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
 
   // Save match and return
   const saveMatch = () => {
@@ -364,6 +412,7 @@ export default function MonoSetsLiveScore() {
     setSaveWarning('');
     if (isMatchComplete) {
       saveTournamentToConvex(updatedTournament);
+      live.finalize();
     }
 
     navigate(`/${sport}/tournament/${id}`);
@@ -510,6 +559,20 @@ export default function MonoSetsLiveScore() {
             )}
           </div>
         </div>
+
+        {/* Live broadcast control (consent / LIVE indicator / share) */}
+        <LiveBroadcastBar
+          broadcast={live}
+          descriptor={{
+            clientMatchId: liveClientMatchId,
+            sport,
+            scorecardKind: 'volleyball',
+            teamA: { name: team1Name },
+            teamB: { name: team2Name },
+          }}
+          enabled={liveEnabled}
+          onEnableChange={setLiveEnabled}
+        />
 
         {/* ARIA live region for score announcements */}
         <div

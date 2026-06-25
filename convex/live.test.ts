@@ -515,5 +515,192 @@ describe("live.finalize — winner uses sets as primary, points as tiebreaker", 
     const archived = await t.run(async (ctx) => ctx.db.get(res.matchId));
     // Sets are primary → B (Hawks) wins despite fewer current points.
     expect(archived?.winner).toBe(TEAMS.teamB.name);
+    // 87d: a set-based match archives its SET tally as the headline score, not
+    // the last-set points (50/40) — so History shows "1–2 sets", consistent
+    // with the sets-primary winner.
+    expect(archived?.score1).toBe(1);
+    expect(archived?.score2).toBe(2);
+  });
+});
+
+describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => {
+  test("a snapshot patches sets/serving/setScores and drives the headline from current-set points", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-snap",
+    });
+
+    const ev = await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "s1",
+      team: "A",
+      at: 1000,
+      snapshot: {
+        pointsA: 1,
+        pointsB: 0,
+        setsA: 1,
+        setsB: 0,
+        setScores: [{ a: 25, b: 20 }],
+        servingTeam: "B",
+        currentUnit: 2,
+        periodLabel: "Set 2",
+      },
+    });
+
+    // Event running totals + sets come from the snapshot, not stale match.*.
+    expect(ev!.runningA).toBe(1);
+    expect(ev!.setsA).toBe(1);
+    expect(ev!.servingAfter).toBe("B");
+
+    const snap = await t.query(api.live.getByToken, { token });
+    expect(snap).toMatchObject({
+      pointsA: 1,
+      pointsB: 0,
+      setsA: 1,
+      setsB: 0,
+      setScores: [{ a: 25, b: 20 }],
+      servingTeam: "B",
+      currentUnit: 2,
+      periodLabel: "Set 2",
+    });
+  });
+
+  test("the snapshot is ABSOLUTE — a set reset lowers the headline points (no cumulative arithmetic)", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-reset",
+    });
+
+    // Mid first set.
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p1",
+      team: "B",
+      at: 1,
+      snapshot: { pointsA: 24, pointsB: 26, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 },
+    });
+    // The set ends (B 26-24) → next set starts 0-0 with B leading 1-0 in sets.
+    const ev2 = await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p2",
+      team: "B",
+      at: 2,
+      snapshot: { pointsA: 0, pointsB: 0, setsA: 0, setsB: 1, setScores: [{ a: 24, b: 26 }], currentUnit: 2 },
+    });
+
+    expect(ev2!.runningA).toBe(0);
+    expect(ev2!.runningB).toBe(0);
+    const snap = await t.query(api.live.getByToken, { token });
+    expect(snap?.pointsA).toBe(0);
+    expect(snap?.pointsB).toBe(0);
+    expect(snap?.setsB).toBe(1);
+    expect(snap?.setScores).toEqual([{ a: 24, b: 26 }]);
+  });
+
+  test("undo accepts a snapshot and restores set-boundary state from it", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-undo-snap",
+    });
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p1",
+      team: "A",
+      at: 1,
+      snapshot: { pointsA: 25, pointsB: 23, setsA: 1, setsB: 0, setScores: [{ a: 25, b: 23 }], currentUnit: 2 },
+    });
+
+    // Undo the set-winning point → back to 24-23, set NOT yet won.
+    const undoEv = await asOwner.mutation(api.live.undo, {
+      matchId,
+      clientEventId: "u1",
+      at: 2,
+      snapshot: { pointsA: 24, pointsB: 23, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 },
+    });
+
+    expect(undoEv!.type).toBe("undo");
+    expect(undoEv!.runningA).toBe(24);
+    const snap = await t.query(api.live.getByToken, { token });
+    expect(snap?.pointsA).toBe(24);
+    expect(snap?.setsA).toBe(0);
+    expect(snap?.setScores).toEqual([]);
+  });
+});
+
+describe("live write guards — reject writes to a finalized match (87d)", () => {
+  test("scorePoint on a final match throws, but a retried clientEventId returns the prior event", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-final-guard",
+    });
+    const p1 = await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p1",
+      team: "A",
+      at: 1,
+    });
+    await asOwner.mutation(api.live.finalize, { matchId });
+
+    // A brand-new event after finalize is rejected.
+    await expect(
+      asOwner.mutation(api.live.scorePoint, {
+        matchId,
+        clientEventId: "after-final",
+        team: "A",
+        at: 2,
+      }),
+    ).rejects.toThrow(/final/i);
+
+    // A retried (already-recorded) event still returns its prior row — replay-safe.
+    const replay = await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p1",
+      team: "A",
+      at: 1,
+    });
+    expect(replay!._id).toBe(p1!._id);
+  });
+
+  test("undo on a final match throws", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-final-undo",
+    });
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "p1",
+      team: "A",
+      at: 1,
+    });
+    await asOwner.mutation(api.live.finalize, { matchId });
+
+    await expect(
+      asOwner.mutation(api.live.undo, { matchId, clientEventId: "u-after", at: 2 }),
+    ).rejects.toThrow(/final/i);
   });
 });

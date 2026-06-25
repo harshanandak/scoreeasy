@@ -139,4 +139,24 @@ describe('VolleyballScorebug', () => {
     expect(within(bug).getByText('31')).toBeInTheDocument();
     expect(within(bug).getByText('30')).toBeInTheDocument();
   });
+
+  it('renders from a pre-derived `state` (operator snapshot) and ignores events', () => {
+    // The spectator path passes the operator snapshot directly. `events` here is
+    // deliberately a stale set-1 slice; the `state` must win (§87d Trap B fix).
+    const staleEvents = interleave(3, 1);
+    render(
+      <VolleyballScorebug
+        events={staleEvents}
+        state={{ currentSet: 3, pointsA: 18, pointsB: 21, setsA: 2, setsB: 1, servingTeam: 'A', pointState: 'normal' }}
+        teamA="Reds"
+        teamB="Blues"
+      />,
+    );
+    const bug = screen.getByRole('region', { name: 'Volleyball scorebug' });
+    expect(within(bug).getByText('18')).toBeInTheDocument();
+    expect(within(bug).getByText('21')).toBeInTheDocument();
+    expect(within(bug).getByText('SET 3')).toBeInTheDocument();
+    // The stale events (3-1) must NOT appear.
+    expect(within(bug).queryByText('3')).not.toBeInTheDocument();
+  });
 });

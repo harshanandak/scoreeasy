@@ -35,6 +35,45 @@ function redactPlayerName(name: string) {
   return parts.map((p) => p[0].toUpperCase()).join(".") + ".";
 }
 
+// Operator-pushed engine-derived snapshot (§87d). For non-flat sports the
+// CLIENT engine is authoritative (localStorage is the source of truth, §3.1):
+// it computes the current-set points, set tally, completed set scores, serving
+// team and period, and hands them to scorePoint/undo to patch onto the match
+// doc. All fields here are ALREADY in the public snapshot whitelist
+// (publicSnapshotValidator) — this is a write-side input only, no new exposure.
+// `pointsA/pointsB` are the CURRENT-set (not cumulative) score.
+const snapshotArgValidator = v.object({
+  pointsA: v.number(),
+  pointsB: v.number(),
+  setsA: v.number(),
+  setsB: v.number(),
+  setScores: v.array(v.object({ a: v.number(), b: v.number() })),
+  servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
+  currentUnit: v.number(),
+  periodLabel: v.optional(v.string()),
+});
+
+// The match-doc fields a snapshot patches (kept in one place so scorePoint and
+// undo stay in lockstep). servingTeam/periodLabel may be undefined → Convex
+// patch clears them, which is correct for sports without serving/periods.
+function snapshotPatch(snap: {
+  setsA: number;
+  setsB: number;
+  setScores: { a: number; b: number }[];
+  servingTeam?: "A" | "B";
+  currentUnit: number;
+  periodLabel?: string;
+}) {
+  return {
+    setsA: snap.setsA,
+    setsB: snap.setsB,
+    setScores: snap.setScores,
+    servingTeam: snap.servingTeam,
+    currentUnit: snap.currentUnit,
+    periodLabel: snap.periodLabel,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
 // ---------------------------------------------------------------------------
@@ -118,6 +157,7 @@ export const scorePoint = authedMutation({
     value: v.optional(v.number()),
     at: v.number(),
     playerId: v.optional(v.string()),
+    snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
@@ -131,9 +171,17 @@ export const scorePoint = authedMutation({
       .unique();
     if (prior) return prior;
 
+    // Reject NEW writes to a finalized match (placed AFTER the idempotency check
+    // so a replayed clientEventId still returns its prior row, §87d hardening).
+    if (match.status === "final") throw new Error("Match is final");
+
+    const snap = args.snapshot;
     const delta = args.value ?? 1;
-    const runningA = match.pointsA + (args.team === "A" ? delta : 0);
-    const runningB = match.pointsB + (args.team === "B" ? delta : 0);
+    // With a snapshot the client engine is authoritative: running totals ARE the
+    // current-set points, and sets/serving come from the snapshot. Without one
+    // (flat sports like goals) we keep cumulative running totals.
+    const runningA = snap ? snap.pointsA : match.pointsA + (args.team === "A" ? delta : 0);
+    const runningB = snap ? snap.pointsB : match.pointsB + (args.team === "B" ? delta : 0);
     const seq = match.lastSeq + 1;
     const bucket = feedBucket(args.at);
 
@@ -147,9 +195,9 @@ export const scorePoint = authedMutation({
       playerId: args.playerId,
       runningA,
       runningB,
-      setsA: match.setsA,
-      setsB: match.setsB,
-      servingAfter: match.servingTeam,
+      setsA: snap ? snap.setsA : match.setsA,
+      setsB: snap ? snap.setsB : match.setsB,
+      servingAfter: snap ? snap.servingTeam : match.servingTeam,
       at: args.at,
     });
 
@@ -158,6 +206,7 @@ export const scorePoint = authedMutation({
       pointsB: runningB,
       lastSeq: seq,
       lastEventAt: args.at,
+      ...(snap ? snapshotPatch(snap) : {}),
       ...(bucket !== match.feedRank ? { feedRank: bucket } : {}),
     });
 
@@ -170,6 +219,7 @@ export const undo = authedMutation({
     matchId: v.id("liveMatches"),
     clientEventId: v.string(),
     at: v.number(),
+    snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
@@ -182,6 +232,9 @@ export const undo = authedMutation({
       )
       .unique();
     if (prior) return prior;
+
+    // Reject undo on a finalized match (after idempotency, §87d hardening).
+    if (match.status === "final") throw new Error("Match is final");
 
     // Find the last active point that has not already been undone WITHOUT
     // collecting the whole log. Walk the seq index DESCENDING: undo events
@@ -202,12 +255,19 @@ export const undo = authedMutation({
       }
     }
 
+    const snap = args.snapshot;
     const delta = target ? target.value : 0;
     const reverseTeam = target?.team;
-    const runningA =
-      match.pointsA - (reverseTeam === "A" ? delta : 0);
-    const runningB =
-      match.pointsB - (reverseTeam === "B" ? delta : 0);
+    // The scan still determines the reversed point (team/value/seq) for the feed
+    // and audit trail, but when a snapshot is present the client engine is
+    // authoritative for the resulting score/sets — undo can cross a set boundary,
+    // which the cumulative subtraction below cannot express.
+    const runningA = snap
+      ? snap.pointsA
+      : match.pointsA - (reverseTeam === "A" ? delta : 0);
+    const runningB = snap
+      ? snap.pointsB
+      : match.pointsB - (reverseTeam === "B" ? delta : 0);
     const seq = match.lastSeq + 1;
     const bucket = feedBucket(args.at);
 
@@ -220,9 +280,9 @@ export const undo = authedMutation({
       value: -delta,
       runningA,
       runningB,
-      setsA: match.setsA,
-      setsB: match.setsB,
-      servingAfter: match.servingTeam,
+      setsA: snap ? snap.setsA : match.setsA,
+      setsB: snap ? snap.setsB : match.setsB,
+      servingAfter: snap ? snap.servingTeam : match.servingTeam,
       meta: target ? { reversesSeq: target.seq } : undefined,
       at: args.at,
     });
@@ -232,6 +292,7 @@ export const undo = authedMutation({
       pointsB: runningB,
       lastSeq: seq,
       lastEventAt: args.at,
+      ...(snap ? snapshotPatch(snap) : {}),
       ...(bucket !== match.feedRank ? { feedRank: bucket } : {}),
     });
 
@@ -309,12 +370,20 @@ export const finalize = authedMutation({
             : team2
           : undefined;
 
+    // A set-based match archives its SET tally as the headline score (so History
+    // reads "3–1 sets", consistent with the sets-primary winner); flat sports
+    // (goals) archive their point total. `pointsA/pointsB` is the last-set score
+    // once snapshots are in play, so it is NOT the right headline for set sports.
+    const isSetSport = match.setsA > 0 || match.setsB > 0;
+    const score1 = isSetSport ? match.setsA : match.pointsA;
+    const score2 = isSetSport ? match.setsB : match.pointsB;
+
     const archivedId = await ctx.db.insert("matches", {
       sport: match.sport,
       team1,
       team2,
-      score1: match.pointsA,
-      score2: match.pointsB,
+      score1,
+      score2,
       winner,
       operatedBy: ctx.user._id,
       date: now,
