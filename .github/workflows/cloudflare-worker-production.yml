@@ -1,0 +1,135 @@
+name: Cloudflare Worker Production
+
+# Production deploy of the scoreeasy Worker (assets-only Vite SPA) on push to
+# master. Modeled on harshanandak/Zwapit. Convex backend is separate; the build
+# only needs the production VITE_* values baked in. The job skips green until the
+# required secrets/vars are configured.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CLOUDFLARE_WORKER_NAME: scoreeasy
+  CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
+  # Production tier: live Clerk instance + production Convex deployment.
+  VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || secrets.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+  VITE_CONVEX_URL: ${{ vars.PRODUCTION_VITE_CONVEX_URL || secrets.PRODUCTION_VITE_CONVEX_URL || vars.VITE_CONVEX_URL || secrets.VITE_CONVEX_URL }}
+  VITE_SENTRY_DSN: ${{ vars.PRODUCTION_VITE_SENTRY_DSN || secrets.PRODUCTION_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
+
+concurrency:
+  group: cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Worker production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+      statuses: write
+    environment:
+      name: cloudflare-production
+    steps:
+      - name: Check credentials
+        id: guard
+        shell: bash
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$CF_API_TOKEN" ] && [ -n "$VITE_CONVEX_URL" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Required secrets (CLOUDFLARE_API_TOKEN, VITE_CONVEX_URL, VITE_CLERK_PUBLISHABLE_KEY) not set — skipping deploy. Add them in repo Settings → Secrets and variables → Actions."
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.ready == 'true'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        if: steps.guard.outputs.ready == 'true'
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        if: steps.guard.outputs.ready == 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Type check
+        if: steps.guard.outputs.ready == 'true'
+        run: bun run type-check
+
+      - name: Test
+        if: steps.guard.outputs.ready == 'true'
+        run: bun run test
+
+      - name: Build
+        if: steps.guard.outputs.ready == 'true'
+        run: bun run build
+
+      - name: Deploy Worker
+        id: deploy
+        if: steps.guard.outputs.ready == 'true'
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -o pipefail
+          out="$(bunx wrangler@4 deploy \
+            --tag "sha-${GITHUB_SHA::7}" \
+            --message "Production deploy for ${GITHUB_SHA}" 2>&1 | tee /dev/stderr)"
+          url="$(printf '%s\n' "$out" | grep -Eo 'https://[A-Za-z0-9._-]+\.workers\.dev[^[:space:]]*' | head -n1)"
+          if [ -z "$url" ]; then
+            url="https://${CLOUDFLARE_WORKER_NAME}.${CLOUDFLARE_WORKERS_SUBDOMAIN}.workers.dev"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Record deployment + status
+        if: steps.guard.outputs.ready == 'true' && steps.deploy.outputs.url != ''
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const url = ${{ toJSON(steps.deploy.outputs.url) }};
+            const { owner, repo } = context.repo;
+            const dep = await github.rest.repos.createDeployment({
+              owner, repo, ref: context.sha,
+              environment: 'production', production_environment: true,
+              auto_merge: false, required_contexts: [],
+              description: 'scoreeasy Worker production',
+            });
+            if (dep.data && dep.data.id) {
+              await github.rest.repos.createDeploymentStatus({
+                owner, repo, deployment_id: dep.data.id,
+                state: 'success', environment_url: url,
+                description: 'Cloudflare Worker production deploy',
+              });
+            }
+            await github.rest.repos.createCommitStatus({
+              owner, repo, sha: context.sha,
+              state: 'success', target_url: url,
+              description: 'Production deployment complete',
+              context: 'Cloudflare Production - scoreeasy',
+            });
+
+      - name: Mark failure
+        if: failure() && steps.guard.outputs.ready == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner, repo: context.repo.repo, sha: context.sha,
+              state: 'failure', target_url: runUrl,
+              description: 'Production deployment failed',
+              context: 'Cloudflare Production - scoreeasy',
+            });
