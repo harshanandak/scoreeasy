@@ -8,12 +8,18 @@ First end-to-end BROADCAST slice shipped (commits 4412193 + ee6353a, pushed):
 - **Reusable UI:** `src/designs/design1-mono/live/LiveBroadcastBar.jsx` (b0z: public-by-default + one-time consent + LIVE indicator + Stop/visibility) and `ShareLiveMatch.jsx` + `src/lib/live/watchUrl.js` (6fj: QR via `qrcode.react` + canonical link + native/web share). Drop the bar into any scorer + call `live.point/undo/finalize`.
 - **Wired:** `MonoGoalsLiveScore` only (GOALS = flat score → round-trips through the existing backend with ZERO change; chosen as the de-risk slice). 827 tests green; type-check/lint/build green.
 
+### Update 2 — 2026-06-25 (87d DONE + volleyball wired; commits 18a89ca)
+- **`87d` backend snapshot extension — DONE (closed), deployed to dev.** `scorePoint`/`undo` take an optional operator `snapshot` (current-set pointsA/B, setsA/B, setScores, servingTeam, currentUnit, periodLabel) patched in ONE mutation (no egress amplification); event rows now carry snapshot-derived sets/serving; **reject writes to a `final` match** (after the idempotency check); `finalize` archives the SET tally for set sports. The snapshot arg validator is in `convex/live.ts`; `convex/live.test.ts` covers it (20 convex tests).
+- **Volleyball/net wired** (`MonoSetsLiveScore`): mirrors point/undo with the engine snapshot via an effect on COMMITTED state (a point can close a set / open the next), finalizes on completion, same `LiveBroadcastBar`. The snapshot is computed from the local `sets[]` structure — no engine re-run.
+- **Watch Trap B fixed:** `ScorecardPanel` renders volleyball from the snapshot (`VolleyballScorebug` gained an optional `state` prop) instead of re-deriving from the earliest-page event slice with default config.
+- **`at` contract:** always epoch ms on the wire (matches feedRank); the engine's seconds interpretation is client-only. Period is explicit via `currentUnit`/`periodLabel`.
+- Full gate green: **833 tests**, type-check, lint, build.
+
 **NEXT (in order):**
-1. **USER must runtime-verify goals** (auth-gated, can't be automated): sign in, score a goals match, open `/live/:token` in a browser, confirm it updates live. This GATES the fan-out.
-2. **`87d` backend snapshot extension** (NEW issue): extend `scorePoint` (or sibling) to accept + patch `setsA/setsB/setScores/servingTeam/currentUnit/periodLabel`, and transmit match config (bestOf/pointsPerSet). The `getByToken` validator already exposes these. Required for volleyball/tennis/cricket because `scorePoint` currently only patches flat `pointsA/pointsB` → the spectator PinnedScorebug + StatsPanel are wrong for sets-sports. Also: `at` is ms on the backend (feedRank) but seconds in the engine — pass `meta.periodIndex` explicitly for timed sports. Harden: reject scorePoint/undo on a `final` match.
-3. Wire **volleyball** (`MonoSetsLiveScore`) as the 2nd slice yourself + convex-test the extended mutation (`t.withIdentity`). Freezes the sets-sport contract.
-4. THEN workflow-fan-out tennis/cricket/cricket-test/sets (mechanical; disjoint files; YOU run gate + commit).
-5. Deferred (NOT in "shareable scores" scope): `q7k` moderation, `3ws` public feed, `s5m/obd/4qu/1bc/bx1` infra.
+1. **USER must runtime-verify goals + volleyball** (auth-gated, can't be automated): sign in, score a match, open `/live/:token` in a browser, confirm headline + scorecard update live. This GATES the fan-out.
+2. **Fan-out the remaining scorers**: `MonoTennisLiveScore`, `MonoCricketLiveScore`, `MonoCricketTestLiveScore`. Pattern = goals/volleyball: add `useLiveBroadcast` + `LiveBroadcastBar` + push an engine-derived snapshot per scoring action + finalize. Tennis maps to sets/games (snapshot pointsA/B = current game/points, setScores = set grid); cricket is the hardest — its snapshot fields (runs as pointsA/B, wickets/overs need a periodLabel or generic header; the public whitelist strips per-ball detail, so cricket falls back to GenericStatHeader on the watch). Workflow-fan-out is fine here (disjoint files; YOU run gate + commit) ONCE goals/volleyball are verified.
+3. For tennis, also give `TennisScorebug` a snapshot `state` path on the watch side (same Trap B fix as volleyball).
+4. Deferred (NOT in "shareable scores" scope): `q7k` moderation, `3ws` public feed, `s5m/obd/4qu/1bc/bx1` infra.
 
 
 ## 0. Where to work
