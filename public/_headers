@@ -1,0 +1,18 @@
+# Cloudflare Pages response headers — ported from the former vercel.json.
+# Lives in public/ so Vite copies it to dist/ (the Pages build output root),
+# which means it applies to production AND every PR preview deployment — not just
+# whatever was configured in the Cloudflare dashboard.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Fingerprinted build assets are immutable — cache hard.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker must never be cached, so updates ship immediately.
+/sw.js
+  Cache-Control: no-store, max-age=0

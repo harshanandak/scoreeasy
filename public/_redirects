@@ -1,0 +1,5 @@
+# SPA fallback for Cloudflare Pages — serve index.html (HTTP 200) for any
+# client-side route (e.g. /live/:token, /history) on direct load / refresh.
+# Replaces the vercel.json `rewrites` rule. Cloudflare Pages serves real static
+# files first, so /assets/* and /sw.js are served directly and never rewritten.
+/*    /index.html    200
