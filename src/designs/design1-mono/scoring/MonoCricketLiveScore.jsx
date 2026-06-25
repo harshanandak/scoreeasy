@@ -49,6 +49,11 @@ export default function MonoCricketLiveScore() {
   // Free hit state
   const [freeHit, setFreeHit] = useState(false);
 
+  // Pending extra (scoreeasy-awy): after a wide/no-ball, capture runs scored
+  // off that delivery (off the bat or byes) without consuming a legal ball.
+  // null | 'wide' | 'noBall'
+  const [pendingExtra, setPendingExtra] = useState(null);
+
   // Trial ball state (gully cricket)
   const [trialBallUsed, setTrialBallUsed] = useState(false);
 
@@ -59,11 +64,17 @@ export default function MonoCricketLiveScore() {
   const [superOverPhase, setSuperOverPhase] = useState('inactive');
   // States: 'inactive' → 'prompt' → 'team1_batting' → 'team2_batting' → 'result' → ('prompt')
   const [superOver, setSuperOver] = useState({ team1: { runs: 0, balls: 0, wickets: 0 }, team2: { runs: 0, balls: 0, wickets: 0 } });
+  // Pending extra for the Super Over (scoreeasy-awy). null | 'wide' | 'noBall'
+  const [superOverPendingExtra, setSuperOverPendingExtra] = useState(null);
   const [saveWarning, setSaveWarning] = useState('');
   const scoringPrompt = useAppScoringPrompt();
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
+  // Separate debounce for resolving a pending extra: reset to 0 when an extra is
+  // armed so the first (legitimate) follow-up tap always passes, then blocks a
+  // rapid double-tap on the same follow-up button (scoreeasy-awy / CodeRabbit).
+  const lastExtraResolutionRef = useRef(0);
   const isKnockoutRef = useRef(false);
 
   const saveTournamentToConvex = (updatedTournament) => {
@@ -129,6 +140,7 @@ export default function MonoCricketLiveScore() {
       setInnings(foundMatch.draftState.innings);
       setHistory(foundMatch.draftState.history || []);
       setFreeHit(foundMatch.draftState.freeHit || false);
+      setPendingExtra(foundMatch.draftState.pendingExtra || null);
       setTrialBallUsed(foundMatch.draftState.trialBallUsed || false);
     }
   }, [id, matchId, sport]);
@@ -274,7 +286,9 @@ export default function MonoCricketLiveScore() {
     });
   };
 
-  // Add extra (wide/no-ball) — bug fix 9d: trigger free hit on no-ball
+  // Add extra (wide/no-ball) — bug fix 9d: trigger free hit on no-ball.
+  // scoreeasy-awy: the +1 penalty does NOT consume a legal ball; runs scored
+  // off the delivery are then captured via the pending-extra follow-up row.
   const addExtra = (type) => {
     if (!tournament || !format || scoringPrompt.isInteractionLocked) return;
 
@@ -296,6 +310,39 @@ export default function MonoCricketLiveScore() {
     if (type === 'noBall' && format.freeHit) {
       setFreeHit(true);
     }
+
+    // Prompt for runs scored off this delivery (still no legal ball bowled).
+    lastExtraResolutionRef.current = 0;
+    setPendingExtra(type);
+  };
+
+  // Allow exactly one resolution per pending extra: blocks a rapid double-tap on
+  // the follow-up run button (which would double-count) without swallowing the
+  // first tap, since addExtra resets the ref to 0 when arming the extra.
+  const canResolvePendingExtra = () => {
+    const now = Date.now();
+    if (now - lastExtraResolutionRef.current < 150) return false;
+    lastExtraResolutionRef.current = now;
+    return true;
+  };
+
+  // scoreeasy-awy: record runs scored off a wide/no-ball (off the bat or byes)
+  // WITHOUT consuming a legal ball and WITHOUT clearing the free hit. The free
+  // hit (set by a no-ball) must persist until the next *legal* delivery.
+  const addExtraRuns = (extraRuns) => {
+    if (!pendingExtra || scoringPrompt.isInteractionLocked || !canResolvePendingExtra()) return;
+
+    if (extraRuns > 0) {
+      triggerHaptic(extraRuns === 4 || extraRuns === 6 ? [50, 50, 50] : 50);
+      saveSnapshot();
+      setScoreAnimKey(k => k + 1);
+      const key = `team${battingTeam}`;
+      setScores(prev => ({
+        ...prev,
+        [key]: { ...prev[key], runs: prev[key].runs + extraRuns },
+      }));
+    }
+    setPendingExtra(null);
   };
 
   // Skip trial ball (gully cricket)
@@ -312,6 +359,7 @@ export default function MonoCricketLiveScore() {
     setBattingTeam(last.battingTeam);
     setInnings(last.innings);
     setFreeHit(last.freeHit || false);
+    setPendingExtra(null);
     setHistory(prev => prev.slice(0, -1));
   };
 
@@ -363,12 +411,31 @@ export default function MonoCricketLiveScore() {
     });
   };
 
-  const addSuperOverExtra = () => {
+  const addSuperOverExtra = (type) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 150) return;
+    lastClickRef.current = now;
+
     const key = superOverPhase === 'team1_batting' ? 'team1' : 'team2';
     setSuperOver(prev => ({
       ...prev,
       [key]: { ...prev[key], runs: prev[key].runs + 1 },
     }));
+    // scoreeasy-awy: capture runs off the delivery (no legal ball consumed).
+    lastExtraResolutionRef.current = 0;
+    setSuperOverPendingExtra(type || 'wide');
+  };
+
+  const addSuperOverExtraRuns = (extraRuns) => {
+    if (!superOverPendingExtra || !canResolvePendingExtra()) return;
+    if (extraRuns > 0) {
+      const key = superOverPhase === 'team1_batting' ? 'team1' : 'team2';
+      setSuperOver(prev => ({
+        ...prev,
+        [key]: { ...prev[key], runs: prev[key].runs + extraRuns },
+      }));
+    }
+    setSuperOverPendingExtra(null);
   };
 
   // Save draft
@@ -385,6 +452,7 @@ export default function MonoCricketLiveScore() {
         innings,
         history: structuredClone(history.slice(-50)),
         freeHit,
+        pendingExtra,
         trialBallUsed,
         savedAt: new Date().toISOString(),
       },
@@ -411,6 +479,16 @@ export default function MonoCricketLiveScore() {
       if (isMatchComplete) return;
 
       const key = e.key.toLowerCase();
+      // While resolving a wide/no-ball, number keys record runs off that
+      // delivery (no legal ball); only Undo is also allowed (scoreeasy-awy).
+      if (pendingExtra) {
+        if (isCricketRunKey(key)) {
+          addExtraRuns(Number.parseInt(key, 10));
+        } else if (key === 'u') {
+          undo();
+        }
+        return;
+      }
       if (isCricketRunKey(key)) {
         addRuns(Number.parseInt(key, 10));
       } else if (key === 'w') {
@@ -424,7 +502,7 @@ export default function MonoCricketLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, scoringPrompt.isInteractionLocked]);
+  }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, pendingExtra, scoringPrompt.isInteractionLocked]);
 
   // Save match (complete)
   const saveMatch = (winnerOverride) => {
@@ -528,6 +606,7 @@ export default function MonoCricketLiveScore() {
         innings,
         history: structuredClone(history.slice(-50)),
         freeHit,
+        pendingExtra,
         trialBallUsed,
         savedAt: new Date().toISOString(),
       },
@@ -536,7 +615,7 @@ export default function MonoCricketLiveScore() {
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
     }
-  }, [scores, battingTeam, innings, history, freeHit, trialBallUsed]);
+  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed]);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -626,6 +705,23 @@ export default function MonoCricketLiveScore() {
           </div>
 
           {!soDone && (
+            superOverPendingExtra ? (
+              /* scoreeasy-awy: runs off the wide/no-ball — no legal ball is bowled */
+              <div className="mb-4">
+                <p className="text-sm text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
+                  Runs off the {superOverPendingExtra === 'noBall' ? 'no ball' : 'wide'} (off the bat or byes)
+                </p>
+                <div className="mono-scorer-run-grid">
+                  {CRICKET_RUN_VALUES.map(r => (
+                    <button key={r} onClick={() => addSuperOverExtraRuns(r)}
+                      className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
+                      style={{ touchAction: 'manipulation' }}>
+                      {r === 0 ? 'None' : `+${r}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
             <>
               <div className="mono-scorer-run-grid">
                 {CRICKET_RUN_VALUES.map(r => (
@@ -637,10 +733,10 @@ export default function MonoCricketLiveScore() {
                 ))}
               </div>
               <div className="mono-scorer-extra-row">
-                <button onClick={addSuperOverExtra} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
+                <button onClick={() => addSuperOverExtra('wide')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
                   Wide (+1)
                 </button>
-                <button onClick={addSuperOverExtra} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
+                <button onClick={() => addSuperOverExtra('noBall')} className="mono-btn" style={{ padding: '10px 16px', fontSize: '0.8125rem', touchAction: 'manipulation' }}>
                   No Ball (+1)
                 </button>
               </div>
@@ -649,6 +745,7 @@ export default function MonoCricketLiveScore() {
                 Wicket
               </button>
             </>
+            )
           )}
         </div>
       </div>
@@ -803,6 +900,27 @@ export default function MonoCricketLiveScore() {
 
         {/* Scoring controls */}
         {!isMatchComplete && (
+          pendingExtra ? (
+            /* scoreeasy-awy: runs off the wide/no-ball — no legal ball is bowled */
+            <div className="mb-4">
+              <p className="text-sm text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
+                Runs off the {pendingExtra === 'noBall' ? 'no ball' : 'wide'} (off the bat or byes)
+              </p>
+              <div className="mono-scorer-run-grid">
+                {CRICKET_RUN_VALUES.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => addExtraRuns(r)}
+                    disabled={scoringPrompt.isInteractionLocked}
+                    className={`mono-btn mono-scorer-run-button${r === 4 || r === 6 ? ' mono-scorer-run-button-accent' : ''}`}
+                    style={{ opacity: scoringPrompt.isInteractionLocked ? 0.5 : 1, touchAction: 'manipulation' }}
+                  >
+                    {r === 0 ? 'None' : `+${r}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
           <>
             <div className="mono-scorer-run-grid">
               {/* Boundaries (4/6) carry the single documented green accent-text
@@ -840,6 +958,7 @@ export default function MonoCricketLiveScore() {
               {freeHit ? 'Run Out Only' : 'Wicket'}
             </button>
           </>
+          )
         )}
 
         {/* Innings complete message */}

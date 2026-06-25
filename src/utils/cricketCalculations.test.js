@@ -9,6 +9,7 @@ import {
   CRICKET_FORMATS,
   OVERS_PRESETS,
   canManuallyCompleteUnlimitedMatch,
+  getTestMatchResult,
 } from './cricketCalculations';
 
 describe('ballsToOvers', () => {
@@ -378,6 +379,56 @@ describe('calculateCricketPointsTable', () => {
     const t1 = table.find(t => t.teamId === 't1');
     // allOut team: ballsFaced should be format.overs * 6 = 60 (not 50)
     expect(t1.ballsFaced).toBe(60);
+  });
+});
+
+describe('getTestMatchResult', () => {
+  it('declares an innings victory when the winner batted once and the loser batted twice', () => {
+    const innings = [
+      { teamId: 'A', runs: 400, allOut: true },
+      { teamId: 'B', runs: 150, allOut: true },
+      { teamId: 'B', runs: 200, allOut: true },
+      { teamId: 'A', runs: 0 },
+    ];
+    const r = getTestMatchResult(innings, 'A', 'B', 10);
+    expect(r.winner).toBe('A');
+    expect(r.desc).toBe('Won by an innings and 50 runs');
+  });
+
+  it('won by runs when the side batting last is all out short of the target', () => {
+    const innings = [
+      { teamId: 'A', runs: 300, allOut: true },
+      { teamId: 'B', runs: 250, allOut: true },
+      { teamId: 'A', runs: 200, allOut: true },
+      { teamId: 'B', runs: 200, allOut: true },
+    ];
+    const r = getTestMatchResult(innings, 'A', 'B', 10);
+    expect(r.winner).toBe('A');
+    expect(r.desc).toBe('Won by 50 runs');
+  });
+
+  it('won by wickets when the side batting last passes the target', () => {
+    const innings = [
+      { teamId: 'A', runs: 300, allOut: true },
+      { teamId: 'B', runs: 250, allOut: true },
+      { teamId: 'A', runs: 200, allOut: true },
+      { teamId: 'B', runs: 251, wickets: 6 },
+    ];
+    const r = getTestMatchResult(innings, 'A', 'B', 10);
+    expect(r.winner).toBe('B');
+    expect(r.desc).toBe('Won by 4 wickets');
+  });
+
+  it('is a tie when aggregates are level after both sides batted twice', () => {
+    const innings = [
+      { teamId: 'A', runs: 300, allOut: true },
+      { teamId: 'B', runs: 250, allOut: true },
+      { teamId: 'A', runs: 200, allOut: true },
+      { teamId: 'B', runs: 250, allOut: true },
+    ];
+    const r = getTestMatchResult(innings, 'A', 'B', 10);
+    expect(r.winner).toBe('tie');
+    expect(r.desc).toBe('Match Tied');
   });
 });
 
