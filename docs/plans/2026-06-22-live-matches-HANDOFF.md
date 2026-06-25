@@ -15,11 +15,17 @@ First end-to-end BROADCAST slice shipped (commits 4412193 + ee6353a, pushed):
 - **`at` contract:** always epoch ms on the wire (matches feedRank); the engine's seconds interpretation is client-only. Period is explicit via `currentUnit`/`periodLabel`.
 - Full gate green: **833 tests**, type-check, lint, build.
 
+### Update 3 — 2026-06-25 (broadcast fan-out COMPLETE; commit 6d05484)
+- **dkt / b0z / 6fj CLOSED.** All FIVE scorers now broadcast: goals, volleyball/net (`MonoSetsLiveScore`), tennis (`MonoTennisLiveScore`, quick + tournament), cricket (`MonoCricketLiveScore`), Test cricket (`MonoCricketTestLiveScore`). Each = `useLiveBroadcast` + `LiveBroadcastBar` + an engine-derived snapshot pushed per action (computed in a post-commit effect) + finalize.
+- **Per-sport snapshot mapping:** goals = flat points; volleyball/tennis = current-set games/points -> pointsA/B, sets -> setsA/B, completed sets -> setScores, tennis game points -> periodLabel ("40-30"); cricket/Test = cumulative team runs -> pointsA/B, innings -> currentUnit, "<team> <runs>/<wkts> (<ov>)" -> periodLabel.
+- **Watch:** VolleyballScorebug + TennisScorebug gained a snapshot `state` path (Trap B fix); cricket uses GenericStatHeader (whitelist strips per-ball detail) but the headline/PinnedScorebug is correct from the snapshot.
+- Cricket scorer was Convex-agent authored then reviewed; Test cricket result logic (checkResult/advanceInnings/guards) left UNTOUCHED (additive only). Full gate green: **834 tests**, type-check, lint, build.
+
 **NEXT (in order):**
-1. **USER must runtime-verify goals + volleyball** (auth-gated, can't be automated): sign in, score a match, open `/live/:token` in a browser, confirm headline + scorecard update live. This GATES the fan-out.
-2. **Fan-out the remaining scorers**: `MonoTennisLiveScore`, `MonoCricketLiveScore`, `MonoCricketTestLiveScore`. Pattern = goals/volleyball: add `useLiveBroadcast` + `LiveBroadcastBar` + push an engine-derived snapshot per scoring action + finalize. Tennis maps to sets/games (snapshot pointsA/B = current game/points, setScores = set grid); cricket is the hardest — its snapshot fields (runs as pointsA/B, wickets/overs need a periodLabel or generic header; the public whitelist strips per-ball detail, so cricket falls back to GenericStatHeader on the watch). Workflow-fan-out is fine here (disjoint files; YOU run gate + commit) ONCE goals/volleyball are verified.
-3. For tennis, also give `TennisScorebug` a snapshot `state` path on the watch side (same Trap B fix as volleyball).
-4. Deferred (NOT in "shareable scores" scope): `q7k` moderation, `3ws` public feed, `s5m/obd/4qu/1bc/bx1` infra.
+1. **USER runtime-verify** (auth-gated): sign in, score a match in EACH family (a goals match, a volleyball/net match, tennis, cricket), open `/live/:token` in a browser, confirm headline + scorecard update live. The full pipe is unit-tested but not yet runtime-proven.
+2. **Then the feature ships** (score → share → watch, all sports). Before merging to master, also land the public-by-default ship-gate: **`q7k` moderation floor** (server-side profanity filter in create; required by Apple 1.2 since matches are public by default).
+3. Deferred (post-launch, NOT in "shareable scores" MVP): `3ws` public Watch feed, `s5m/obd/4qu/1bc/bx1` infra crons, tennis 6-char short-code (needs a backend code->token index).
+4. NOTE: this branch forked from master @0e65c15 (pre-m39); when it rebases on master it picks up the cricket no-ball/wide + m39 Test-result fix (PR #92, merged d17e7f0). The Test scorer's result guards here are the pre-rebase committed values — do not hand-edit.
 
 
 ## 0. Where to work
