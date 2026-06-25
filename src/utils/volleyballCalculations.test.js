@@ -87,8 +87,20 @@ describe('validateSingleSetScore', () => {
     expect(validateSingleSetScore(10, 10)).toBe(false);
   });
 
-  it('valid: 11-10 (deuce resolution with target+1)', () => {
-    expect(validateSingleSetScore(11, 10)).toBe(true);
+  it('invalid: 11-10 (only a 1-point lead — win-by-2 not met)', () => {
+    expect(validateSingleSetScore(11, 10)).toBe(false);
+  });
+
+  it('valid: 12-10 (deuce resolved by a clear 2-point lead)', () => {
+    expect(validateSingleSetScore(12, 10)).toBe(true);
+  });
+
+  it('invalid: 25-24 (reached target but only a 1-point lead)', () => {
+    expect(validateSingleSetScore(25, 24, 25)).toBe(false);
+  });
+
+  it('valid: 30-29 honours a hard cap (badminton) regardless of margin', () => {
+    expect(validateSingleSetScore(30, 29, 21, 2, 30)).toBe(true);
   });
 
   it('invalid: both at or above target but max < target+1 (10-10)', () => {

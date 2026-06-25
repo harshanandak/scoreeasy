@@ -10,13 +10,17 @@ export function validateSetScore(score1, score2, minPoints = 25, isDecider = fal
   return true;
 }
 
-export function validateSingleSetScore(score1, score2, target = 10) {
+export function validateSingleSetScore(score1, score2, target = 10, winBy = 2, cap = null) {
   const maxScore = Math.max(score1, score2);
   const minScore = Math.min(score1, score2);
-  if (maxScore < target) return false;
   if (score1 === score2) return false;
-  // Deuce: both at target or above, winner needs target+1
-  if (minScore >= target && maxScore < target + 1) return false;
+  if (maxScore < target) return false;
+  // Hard cap (e.g. badminton 30): a score above the cap is impossible.
+  if (cap != null && maxScore > cap) return false;
+  // Reaching the cap wins regardless of margin.
+  if (cap != null && maxScore >= cap) return true;
+  // Otherwise the winner must lead by `winBy` (default 2) — enforces win-by-2 at deuce.
+  if (maxScore - minScore < winBy) return false;
   return true;
 }
 

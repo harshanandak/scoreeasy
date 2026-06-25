@@ -1122,6 +1122,8 @@ export default function MonoQuickMatch() {
     } else {
       // Single set format
       const target = format.target;
+      const winBy = sportConfig?.config?.winBy ?? 2;
+      const cap = sportConfig?.config?.maxPoints ?? null;
       const updater = (prev) => prev + 1;
       if (team === 1) {
         setVScore1(updater);
@@ -1132,7 +1134,7 @@ export default function MonoQuickMatch() {
       const newS1 = team === 1 ? vScore1 + 1 : vScore1;
       const newS2 = team === 2 ? vScore2 + 1 : vScore2;
 
-      if (validateSingleSetScore(newS1, newS2, target)) {
+      if (validateSingleSetScore(newS1, newS2, target, winBy, cap)) {
         const winner = newS1 > newS2 ? team1Name : team2Name;
         const r = {
           id: Date.now(), sport,
@@ -1237,7 +1239,7 @@ export default function MonoQuickMatch() {
     setVScore1(newS1);
     setVScore2(newS2);
 
-    if (delta > 0 && validateSingleSetScore(newS1, newS2, format.target)) {
+    if (delta > 0 && validateSingleSetScore(newS1, newS2, format.target, sportConfig?.config?.winBy ?? 2, sportConfig?.config?.maxPoints ?? null)) {
       const winner = newS1 > newS2 ? team1Name : team2Name;
       const r = {
         id: Date.now(), sport,
