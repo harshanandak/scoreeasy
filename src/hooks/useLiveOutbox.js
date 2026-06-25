@@ -18,23 +18,34 @@ import { reconcile } from '../lib/live/outbox';
 export function useLiveOutbox(sendFn, { enabled = true } = {}) {
   const sendFnRef = useRef(sendFn);
   const inFlightRef = useRef(false);
+  const inFlightPromiseRef = useRef(null);
 
   useEffect(() => {
     sendFnRef.current = sendFn;
   }, [sendFn]);
 
-  // Drains the queue once. In-flight guard prevents `online` and
-  // `visibilitychange` firing together from double-draining.
+  // Drains the queue once. Concurrent callers are COALESCED onto the same
+  // in-flight drain (returns its promise) rather than no-op'ing — so a caller
+  // that must wait for the queue to be sent before acting (e.g. finalize racing
+  // a point's optimistic flush) actually awaits the drain instead of racing
+  // ahead. This still guarantees the reconcile loop runs at most once at a time,
+  // so `online` + `visibilitychange` firing together never double-drain.
   const flush = useCallback(async () => {
-    if (!enabled || inFlightRef.current || typeof sendFnRef.current !== 'function') {
-      return null;
+    if (!enabled || typeof sendFnRef.current !== 'function') return null;
+    if (inFlightRef.current && inFlightPromiseRef.current) {
+      return inFlightPromiseRef.current;
     }
     inFlightRef.current = true;
-    try {
-      return await reconcile((item) => sendFnRef.current(item));
-    } finally {
-      inFlightRef.current = false;
-    }
+    const drain = (async () => {
+      try {
+        return await reconcile((item) => sendFnRef.current(item));
+      } finally {
+        inFlightRef.current = false;
+        inFlightPromiseRef.current = null;
+      }
+    })();
+    inFlightPromiseRef.current = drain;
+    return drain;
   }, [enabled]);
 
   useEffect(() => {

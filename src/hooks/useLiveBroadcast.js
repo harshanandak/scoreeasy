@@ -16,7 +16,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { enqueue } from '../lib/live/outbox';
+import { enqueue, size } from '../lib/live/outbox';
 import { useLiveOutbox } from './useLiveOutbox';
 import { loadSession, saveSession } from '../lib/live/liveSession';
 
@@ -151,7 +151,14 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const finalize = useCallback(async () => {
     if (!enabled) return null;
-    await flush(); // make a best effort to drain queued events first
+    // Drain DETERMINISTICALLY before archiving. flush() now AWAITS any in-flight
+    // point() drain (instead of no-op'ing), so finalize cannot race ahead of the
+    // last tap and make the backend archive a final score missing that point.
+    // Stop early on a network error: queued points replay on reconnect.
+    for (let i = 0; i < 10 && size() > 0; i += 1) {
+      const result = await flush();
+      if (result?.error) break;
+    }
     const matchId = matchIdRef.current;
     if (!matchId) return null;
     try {

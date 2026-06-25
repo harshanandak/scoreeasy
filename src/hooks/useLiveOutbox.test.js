@@ -52,7 +52,7 @@ describe('useLiveOutbox', () => {
     expect(load()).toHaveLength(1);
   });
 
-  it('in-flight guard prevents double-drain from concurrent triggers', async () => {
+  it('coalesces concurrent triggers onto a single drain (no double-drain)', async () => {
     queue('m1', 1);
     queue('m1', 2);
     let resolveFirst;
@@ -69,14 +69,15 @@ describe('useLiveOutbox', () => {
 
     await act(async () => {
       const first = result.current.flush();
-      // Second trigger fires while the first is still in flight.
+      // Second trigger fires while the first is still in flight: it awaits the
+      // SAME in-flight drain rather than starting a second one or no-op'ing.
       const second = result.current.flush();
-      expect(await second).toBeNull(); // guarded out
       resolveFirst();
-      await first;
+      const [r1, r2] = await Promise.all([first, second]);
+      expect(r2).toBe(r1); // same drain result, not null
     });
 
-    // Only the first drain ran; it processed both items exactly once each.
+    // Only one drain ran; it processed both items exactly once each.
     expect(sendFn).toHaveBeenCalledTimes(2);
     expect(load()).toEqual([]);
   });
