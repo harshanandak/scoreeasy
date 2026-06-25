@@ -185,8 +185,11 @@ function pressureLabel(state) {
   return null;
 }
 
-export default function TennisScorebug({ events, config, teamA, teamB }) {
-  const state = tennisState(events, config);
+export default function TennisScorebug({ events, state: stateProp, config, teamA, teamB }) {
+  // `state` lets the spectator page pass the operator-pushed snapshot directly —
+  // authoritative and current — instead of re-deriving from an earliest-page
+  // event slice (§87d). Falls back to deriving from events (local scorer path).
+  const state = stateProp ?? tennisState(events ?? [], config);
   const nameA = sideName('A', teamA, teamB);
   const nameB = sideName('B', teamA, teamB);
   const ribbon = pressureLabel(state);
@@ -230,13 +233,17 @@ export default function TennisScorebug({ events, config, teamA, teamB }) {
 }
 
 TennisScorebug.propTypes = {
-  events: PropTypes.arrayOf(PropTypes.object).isRequired,
+  events: PropTypes.arrayOf(PropTypes.object),
+  // Pre-derived tennisState-shaped object (operator snapshot). Wins over events.
+  state: PropTypes.object,
   config: PropTypes.object,
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
 
 TennisScorebug.defaultProps = {
+  events: undefined,
+  state: undefined,
   config: undefined,
   teamA: DEFAULT_TEAM_A,
   teamB: DEFAULT_TEAM_B,

@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+import { getConsent } from '../../../lib/live/liveSession';
+import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -76,6 +79,21 @@ const makeBlankSet = () => ({
 // Build the initial sets array for a match — S7723: use new Array()
 const buildInitialSets = (numSets) =>
   new Array(numSets).fill(null).map(() => makeBlankSet());
+
+// Current-game point labels (15/30/40/AD, or tiebreak integers) for the live
+// broadcast snapshot. Mirrors the standard tennis ladder used by the scorebug.
+const TENNIS_LADDER = ['0', '15', '30', '40'];
+const tennisGameLabels = (set) => {
+  if (!set) return ['0', '0'];
+  if (set.isTiebreak) return [String(set.tiebreakPoints1 ?? 0), String(set.tiebreakPoints2 ?? 0)];
+  const p1 = set.points1 ?? 0;
+  const p2 = set.points2 ?? 0;
+  if (p1 >= 3 && p2 >= 3) {
+    if (p1 === p2) return ['40', '40'];
+    return p1 > p2 ? ['AD', '40'] : ['40', 'AD'];
+  }
+  return [TENNIS_LADDER[Math.min(p1, 3)], TENNIS_LADDER[Math.min(p2, 3)]];
+};
 
 // Check whether a set is complete
 const isSetComplete = (set) => {
@@ -275,6 +293,19 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const [saveWarning, setSaveWarning] = useState('');
   const scoringPrompt = useAppScoringPrompt();
 
+  // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
+  // page. Tennis maps to the generic snapshot as: current-set GAMES -> pointsA/B,
+  // sets won -> setsA/B, completed sets -> setScores, current game points ->
+  // periodLabel ("40-30"). Additive; localStorage authoritative; gated on consent.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const liveClientMatchId = isQuickMatch
+    ? `${sport}:quick:${matchId}`
+    : `${sport}:${id}:${matchId}`;
+  const broadcastIntentRef = useRef(null);
+
   const saveTournamentToConvex = (updatedTournament) => {
     if (!isAuthenticated || !updatedTournament) return;
     const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
@@ -363,6 +394,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     lastClickRef.current = now;
     if (isMatchComplete) return;
 
+    // Mirror this point to the live broadcast (snapshot built post-commit). team1 -> A.
+    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
+
     setHistory(prev => [...prev, {
       timestamp: Date.now(),
       sets: structuredClone(sets),
@@ -395,6 +429,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const undo = () => {
     if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const lastState = history[history.length - 1];
     setSets(lastState.sets);
     setCurrentSet(lastState.currentSet);
@@ -462,6 +497,34 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     }
   }, [isQuickMatch, quickDraftKey, match, tournament, matchId, sportConfig, isMatchComplete, sets, currentSet, history]);
 
+  // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
+  // point can finish a game/set, which React applies asynchronously, so we read
+  // the settled sets here rather than guessing the post-point score in addPoint.
+  useEffect(() => {
+    const intent = broadcastIntentRef.current;
+    if (!intent) return;
+    broadcastIntentRef.current = null;
+
+    const cur = sets[currentSet] || {};
+    const completed = sets.filter((s) => s.completed);
+    const { team1Sets, team2Sets } = countSetsWon(completed);
+    const [labelA, labelB] = tennisGameLabels(cur);
+    const snapshot = {
+      pointsA: cur.games1 || 0,
+      pointsB: cur.games2 || 0,
+      setsA: team1Sets,
+      setsB: team2Sets,
+      setScores: completed.map((s) => ({ a: s.games1 || 0, b: s.games2 || 0 })),
+      currentUnit: currentSet + 1,
+      periodLabel: `${labelA}-${labelB}`,
+    };
+    if (intent.kind === 'undo') {
+      liveRef.current.undo({ at: intent.at, snapshot });
+    } else {
+      liveRef.current.point({ team: intent.team, value: 1, at: intent.at, snapshot });
+    }
+  }, [sets, currentSet]);
+
   const saveQuickMatch = () => {
     const completedAt = new Date().toISOString();
     const entry = buildTennisQuickHistoryEntry({
@@ -509,6 +572,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     if (isMatchComplete) {
       triggerConfetti(TENNIS_CONFETTI);
       triggerHaptic([100, 100, 100, 100, 100]);
+      live.finalize();
     }
 
     if (isQuickMatch) {
@@ -646,6 +710,20 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           )}
         </div>
       </div>
+
+      {/* Live broadcast control (consent / LIVE indicator / share) */}
+      <LiveBroadcastBar
+        broadcast={live}
+        descriptor={{
+          clientMatchId: liveClientMatchId,
+          sport,
+          scorecardKind: 'tennis',
+          teamA: { name: team1Name },
+          teamB: { name: team2Name },
+        }}
+        enabled={liveEnabled}
+        onEnableChange={setLiveEnabled}
+      />
 
       {/* ARIA live region — S6819: use <output> instead of role="status" div */}
       <output aria-live="polite" aria-atomic="true" className="sr-only">

@@ -12,6 +12,9 @@ import { useAuth } from '../../../hooks/useAuth';
 import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+import { getConsent } from '../../../lib/live/liveSession';
+import LiveBroadcastBar from '../live/LiveBroadcastBar';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -65,6 +68,19 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [matchResult, setMatchResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Live broadcast (dkt/b0z/6fj/87d): mirror each ball/undo to the public watch
+  // page. Cricket maps to the generic snapshot as: each team's CUMULATIVE runs ->
+  // pointsA/B, current innings -> currentUnit, batting line -> periodLabel.
+  // Additive — localStorage authoritative; gated on consent, no-ops when off.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const liveClientMatchId = isQuickMatch
+    ? `${sport || 'cricket'}:quick:${matchId}`
+    : `${sport || 'cricket'}:${id}:${matchId}`;
+  const broadcastIntentRef = useRef(null);
   const [saveWarning, setSaveWarning] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -175,6 +191,41 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const team1Name = getTeamName(team1Id);
   const team2Name = getTeamName(team2Id);
 
+  // Broadcast the latest ball/undo AFTER its state commits (§87d snapshot).
+  // pointsA/pointsB are each team's CUMULATIVE runs across innings; currentUnit
+  // is the current innings; periodLabel is the batting side's live line.
+  useEffect(() => {
+    const intent = broadcastIntentRef.current;
+    if (!intent) return;
+    broadcastIntentRef.current = null;
+
+    const sumRuns = (teamId) =>
+      innings.reduce((acc, inn) => acc + (inn.teamId === teamId ? inn.runs : 0), 0);
+    const inn = innings[currentInningsIndex] || { runs: 0, wickets: 0, balls: 0, teamId: null };
+    const battingName = inn.teamId === team2Id ? team2Name : team1Name;
+    const snapshot = {
+      pointsA: sumRuns(team1Id),
+      pointsB: sumRuns(team2Id),
+      setsA: 0,
+      setsB: 0,
+      setScores: [],
+      servingTeam: undefined,
+      currentUnit: currentInningsIndex + 1,
+      periodLabel: `${(battingName || '').slice(0, 18)} ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)`,
+    };
+    if (intent.kind === 'undo') {
+      liveRef.current.undo({ at: intent.at, snapshot });
+    } else {
+      liveRef.current.point({ team: intent.team, value: intent.value, at: intent.at, snapshot });
+    }
+  }, [innings, currentInningsIndex, team1Id, team2Id, team1Name, team2Name]);
+
+  // Finalize the broadcast once the match is decided (completion is detected by
+  // the existing result logic — we only react to it, never change it).
+  useEffect(() => {
+    if (matchComplete) liveRef.current.finalize();
+  }, [matchComplete]);
+
   // Totals
   const getTeamTotal = (teamId) => innings.filter(i => i.teamId === teamId).reduce((s, i) => s + (i.runs || 0), 0);
 
@@ -275,6 +326,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (runs === 4 || runs === 6) triggerHaptic([50, 50, 50]);
     else triggerHaptic(50);
 
+    // Mirror this ball to the live broadcast; snapshot built post-commit.
+    broadcastIntentRef.current = { kind: 'point', team: innings[currentInningsIndex]?.teamId === team2Id ? 'B' : 'A', value: runs, at: Date.now() };
+
     saveSnapshot();
 
     setInnings(prev => {
@@ -305,6 +359,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     lastClickRef.current = now;
 
     triggerHaptic([80, 80, 80]);
+    // A wicket scores 0 runs on the ball.
+    broadcastIntentRef.current = { kind: 'point', team: innings[currentInningsIndex]?.teamId === team2Id ? 'B' : 'A', value: 0, at: Date.now() };
     saveSnapshot();
 
     setInnings(prev => {
@@ -341,6 +397,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     lastClickRef.current = now;
 
     triggerHaptic(30);
+    // An extra adds 1 run on the ball.
+    broadcastIntentRef.current = { kind: 'point', team: innings[currentInningsIndex]?.teamId === team2Id ? 'B' : 'A', value: 1, at: Date.now() };
     saveSnapshot();
 
     // Byes and leg byes are legal deliveries — they consume a ball;
@@ -411,6 +469,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   // Undo
   const undo = () => {
     if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
     setInnings(last.innings);
     setCurrentInningsIndex(last.currentInningsIndex);
@@ -742,6 +801,19 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
+        {/* Live broadcast control (consent / LIVE indicator / share) */}
+        <LiveBroadcastBar
+          broadcast={live}
+          descriptor={{
+            clientMatchId: liveClientMatchId,
+            sport: sport || 'cricket',
+            scorecardKind: 'cricket',
+            teamA: { name: team1Name },
+            teamB: { name: team2Name },
+          }}
+          enabled={liveEnabled}
+          onEnableChange={setLiveEnabled}
+        />
         {/* Top bar — match/ending options live in the hamburger menu so the
             scoring keypad stays low and easy to reach by thumb. */}
         <div className="mono-scorer-topbar">

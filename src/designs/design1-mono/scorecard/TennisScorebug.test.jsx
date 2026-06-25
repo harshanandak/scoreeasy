@@ -124,4 +124,32 @@ describe('TennisScorebug', () => {
     expect(screen.queryByText('SET PT')).not.toBeInTheDocument();
     expect(screen.queryByText('MATCH PT')).not.toBeInTheDocument();
   });
+
+  it('renders from a pre-derived `state` (operator snapshot) and ignores events', () => {
+    // Spectator path: the operator snapshot is authoritative; the stale events
+    // here must not surface (§87d Trap B fix).
+    const staleEvents = point(point([], 'A'), 'A'); // 30-0 in set 1
+    render(
+      <TennisScorebug
+        events={staleEvents}
+        state={{
+          sets: [{ a: 6, b: 4 }],
+          currentSet: { gamesA: 5, gamesB: 3 },
+          currentGame: { labelA: '40', labelB: '30' },
+          server: 'A',
+          isMatchPoint: false,
+          isSetPoint: false,
+          isBreakPoint: false,
+        }}
+        teamA="Alcaraz"
+        teamB="Sinner"
+      />,
+    );
+    const bug = screen.getByRole('region', { name: 'Tennis scorebug' });
+    // Completed set (6), live games (5/3), and current-game points (40/30) show.
+    expect(within(bug).getByText('6')).toBeInTheDocument();
+    expect(within(bug).getByText('5')).toBeInTheDocument();
+    expect(within(bug).getByText('40')).toBeInTheDocument();
+    expect(within(bug).getByText('30')).toBeInTheDocument();
+  });
 });

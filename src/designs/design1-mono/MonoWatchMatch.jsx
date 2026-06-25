@@ -343,7 +343,19 @@ function ScorecardPanel({ scorecardKind, events, snapshot, nameA, nameB }) {
     return <VolleyballScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'tennis') {
-    return <TennisScorebug events={events} teamA={nameA} teamB={nameB} />;
+    // From the snapshot (§87d): games -> currentSet, sets -> setScores, current
+    // game points -> periodLabel ("40-30"), parsed back into the ladder labels.
+    const [labelA = '0', labelB = '0'] = (snapshot.periodLabel || '0-0').split('-');
+    const state = {
+      sets: snapshot.setScores,
+      currentSet: { gamesA: snapshot.pointsA, gamesB: snapshot.pointsB },
+      currentGame: { labelA, labelB },
+      server: snapshot.servingTeam ?? null,
+      isMatchPoint: false,
+      isSetPoint: false,
+      isBreakPoint: false,
+    };
+    return <TennisScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'goals' || scorecardKind === 'lines') {
     return <LineScore events={events} teamA={nameA} teamB={nameB} />;

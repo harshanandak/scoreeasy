@@ -12,6 +12,9 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
+import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+import { getConsent } from '../../../lib/live/liveSession';
+import LiveBroadcastBar from '../live/LiveBroadcastBar';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -65,6 +68,19 @@ export default function MonoCricketLiveScore() {
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
+
+  // Live broadcast (dkt/b0z/6fj/87d): mirror each ball/undo to the public watch
+  // page with the engine-derived snapshot. Additive — localStorage stays
+  // authoritative; gated on consent and no-ops when disabled.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const liveClientMatchId = `${sport || 'cricket'}:${id}:${matchId}`;
+  // Records the latest scoring action; its broadcast snapshot is computed from
+  // the COMMITTED state in the effect below (a ball can end an innings and queue
+  // the innings switch, which React applies asynchronously).
+  const broadcastIntentRef = useRef(null);
 
   const saveTournamentToConvex = (updatedTournament) => {
     if (!isAuthenticated || !updatedTournament) return;
@@ -211,6 +227,10 @@ export default function MonoCricketLiveScore() {
     // Clear free hit after this delivery
     if (freeHit) setFreeHit(false);
 
+    // Mark this ball for broadcast; the snapshot is built from committed state in
+    // the broadcast effect. Batting side -> letter, value = runs scored.
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: runs, at: Date.now() };
+
     const key = `team${battingTeam}`;
     setScores(prev => {
       const team = { ...prev[key] };
@@ -252,6 +272,9 @@ export default function MonoCricketLiveScore() {
     // Clear free hit after this delivery
     if (freeHit) setFreeHit(false);
 
+    // Mark this ball for broadcast; a wicket scores 0 runs on the ball.
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 0, at: Date.now() };
+
     const key = `team${battingTeam}`;
     setScores(prev => {
       const team = { ...prev[key] };
@@ -286,6 +309,9 @@ export default function MonoCricketLiveScore() {
     saveSnapshot();
     setScoreAnimKey(k => k + 1);
 
+    // Mark this extra for broadcast; an extra adds 1 run on the ball.
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 1, at: Date.now() };
+
     const key = `team${battingTeam}`;
     setScores(prev => ({
       ...prev,
@@ -307,6 +333,7 @@ export default function MonoCricketLiveScore() {
   const undo = () => {
     if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
     setScores(last.scores);
     setBattingTeam(last.battingTeam);
@@ -487,6 +514,7 @@ export default function MonoCricketLiveScore() {
     }
     setSaveWarning('');
     saveTournamentToConvex(updatedTournament);
+    live.finalize();
     setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
   };
 
@@ -537,6 +565,39 @@ export default function MonoCricketLiveScore() {
       setSaveWarning('Save failed - storage may be full. Export your data.');
     }
   }, [scores, battingTeam, innings, history, freeHit, trialBallUsed]);
+
+  // Broadcast the latest ball/undo AFTER its state commits (§87d snapshot). A ball
+  // may end an innings (the innings switch is applied in a later effect pass), so
+  // we read the settled scores here. pointsA/pointsB are each team's CUMULATIVE
+  // runs — this scorer stores a single per-team accumulator (no innings array)
+  // and innings only goes 1->2, so scores.team1/team2.runs are always the totals.
+  // currentUnit = current innings; periodLabel is the batting side's live line.
+  useEffect(() => {
+    const intent = broadcastIntentRef.current;
+    if (!intent) return;
+    broadcastIntentRef.current = null;
+
+    const batKey = `team${battingTeam}`;
+    const batScore = scores[batKey] || { runs: 0, balls: 0, wickets: 0 };
+    const batName = battingTeam === 1 ? team1Name : team2Name;
+    const shortName = (batName || '').slice(0, 20);
+    const oversStr = showOvers ? `${ballsToOvers(batScore.balls)} ov` : `${batScore.balls} balls`;
+    const snapshot = {
+      pointsA: scores.team1.runs,
+      pointsB: scores.team2.runs,
+      setsA: 0,
+      setsB: 0,
+      setScores: [],
+      servingTeam: undefined,
+      currentUnit: innings,
+      periodLabel: `${shortName} ${batScore.runs}/${batScore.wickets} (${oversStr})`,
+    };
+    if (intent.kind === 'undo') {
+      liveRef.current.undo({ at: intent.at, snapshot });
+    } else {
+      liveRef.current.point({ team: intent.team, value: intent.value, at: intent.at, snapshot });
+    }
+  }, [scores, battingTeam, innings, team1Name, team2Name, showOvers]);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -725,6 +786,20 @@ export default function MonoCricketLiveScore() {
             </span>
           </div>
         </div>
+
+        {/* Live broadcast control (consent / LIVE indicator / share) */}
+        <LiveBroadcastBar
+          broadcast={live}
+          descriptor={{
+            clientMatchId: liveClientMatchId,
+            sport: sport || 'cricket',
+            scorecardKind: 'cricket',
+            teamA: { name: team1Name },
+            teamB: { name: team2Name },
+          }}
+          enabled={liveEnabled}
+          onEnableChange={setLiveEnabled}
+        />
 
         {/* Gully rule indicators */}
         {format.oneTipOneHand && (
