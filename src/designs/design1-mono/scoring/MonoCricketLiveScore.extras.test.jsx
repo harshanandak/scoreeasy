@@ -35,6 +35,10 @@ vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: fa
 vi.mock('../../../utils/storage', () => ({
   loadSportTournaments: () => [h.makeTournament()],
   saveSportTournament: h.saveSpy,
+  // The live-broadcast path (useLiveBroadcast/outbox + getConsent) reads these;
+  // returning the default keeps consent unset so broadcasting stays OFF in tests.
+  loadData: vi.fn((_key, def) => def),
+  saveData: vi.fn(() => true),
 }));
 
 // The scorer computes isTouchDevice once at module load; force a non-touch
