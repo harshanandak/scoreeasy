@@ -1,0 +1,94 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import LiveBroadcastBar from './LiveBroadcastBar';
+
+beforeEach(() => {
+  localStorage.clear();
+});
+
+function makeBroadcast(overrides = {}) {
+  return {
+    goLive: vi.fn().mockResolvedValue({ token: 'TOK', matchId: 'mid1' }),
+    setVisibility: vi.fn().mockResolvedValue({ ok: true }),
+    isLive: false,
+    token: null,
+    ...overrides,
+  };
+}
+
+const descriptor = {
+  clientMatchId: 'cm1',
+  sport: 'football',
+  scorecardKind: 'goals',
+  teamA: { name: 'Alpha' },
+  teamB: { name: 'Beta' },
+};
+
+describe('LiveBroadcastBar (b0z)', () => {
+  it('shows the one-time consent disclosure when consent is unseen', () => {
+    const broadcast = makeBroadcast();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={() => {}} />);
+    expect(screen.getByText(/Scores and team names will be public/i)).toBeInTheDocument();
+    expect(broadcast.goLive).not.toHaveBeenCalled();
+  });
+
+  it('accepting consent enables broadcasting and persists the choice', () => {
+    const broadcast = makeBroadcast();
+    const onEnableChange = vi.fn();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share live' }));
+
+    expect(onEnableChange).toHaveBeenCalledWith(true);
+    expect(localStorage.getItem('se_live_public_consent')).toContain('accepted');
+  });
+
+  it('declining keeps the match private and never broadcasts', () => {
+    const broadcast = makeBroadcast();
+    const onEnableChange = vi.fn();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep private' }));
+
+    expect(onEnableChange).toHaveBeenCalledWith(false);
+    expect(broadcast.goLive).not.toHaveBeenCalled();
+    expect(localStorage.getItem('se_live_public_consent')).toContain('declined');
+  });
+
+  it('fires goLive exactly once when enabled and consent already accepted', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast();
+    const { rerender } = render(
+      <LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />,
+    );
+
+    expect(broadcast.goLive).toHaveBeenCalledTimes(1);
+    expect(broadcast.goLive).toHaveBeenCalledWith(descriptor);
+
+    rerender(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+    expect(broadcast.goLive).toHaveBeenCalledTimes(1);
+  });
+
+  it('when live, shows LIVE + Share + Stop; Stop flips visibility to private', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
+    const onEnableChange = vi.fn();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={onEnableChange} />);
+
+    expect(screen.getByText(/LIVE/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    expect(broadcast.setVisibility).toHaveBeenCalledWith('private');
+    expect(onEnableChange).toHaveBeenCalledWith(false);
+  });
+
+  it('opens the share sheet from the live state', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    expect(screen.getByRole('dialog', { name: 'Share live match' })).toBeInTheDocument();
+    expect(screen.getByText('https://scoreeasy.app/live/TOK')).toBeInTheDocument();
+  });
+});

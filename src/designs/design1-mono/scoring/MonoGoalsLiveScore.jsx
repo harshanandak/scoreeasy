@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -18,6 +18,9 @@ import {
 } from '../../../utils/goalsScoring';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
+import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+import { getConsent } from '../../../lib/live/liveSession';
+import LiveBroadcastBar from '../live/LiveBroadcastBar';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -58,6 +61,13 @@ export default function MonoGoalsLiveScore() {
   const [overtimePeriod, setOvertimePeriod] = useState(0);
   const scoringPrompt = useAppScoringPrompt();
   const showScoringWarning = scoringPrompt.showWarning;
+
+  // Live broadcast (dkt/b0z/6fj): mirror each scoring action to the public watch
+  // page. Purely additive — localStorage stays authoritative; a failed push never
+  // breaks scoring. Public-by-default but gated on the one-time consent.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveClientMatchId = `${sport}:${id}:${matchId}`;
 
   // Timer for timed mode
   const timer = useTimer();
@@ -184,6 +194,7 @@ export default function MonoGoalsLiveScore() {
         }
         setSaveWarning('');
         saveTournamentToConvex(updatedTournament);
+        live.finalize();
         navigate(`/${sport}/tournament/${id}`);
         autoFinishTimeoutRef.current = null;
       }, 300);
@@ -248,6 +259,9 @@ export default function MonoGoalsLiveScore() {
       setScore2(newScore2);
     }
 
+    // Mirror to the live broadcast (no-op when not broadcasting). team1 -> A.
+    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now() });
+
     // Auto-end in points mode (formatMode already declared above)
     if ((formatMode || 'free') === 'points' && effectiveFormat.target) {
       if (newScore1 >= effectiveFormat.target || newScore2 >= effectiveFormat.target) {
@@ -272,6 +286,7 @@ export default function MonoGoalsLiveScore() {
           }
           setSaveWarning('');
           saveTournamentToConvex(updatedTournament);
+          live.finalize();
           navigate(`/${sport}/tournament/${id}`);
         }, 300);
       }
@@ -286,6 +301,7 @@ export default function MonoGoalsLiveScore() {
     setScore1(last.score1);
     setScore2(last.score2);
     setHistory(prev => prev.slice(0, -1));
+    live.undo({ at: Date.now() });
   };
 
   // Auto-save the in-progress match to the tournament on every score change, so
@@ -374,6 +390,7 @@ export default function MonoGoalsLiveScore() {
     }
     setSaveWarning('');
     saveTournamentToConvex(updatedTournament);
+    live.finalize();
 
     // Delay navigation slightly to show confetti
     setTimeout(() => {
@@ -415,6 +432,14 @@ export default function MonoGoalsLiveScore() {
   const team1Name = getTeamName(match.team1Id);
   const team2Name = getTeamName(match.team2Id);
   const quickButtons = sportConfig.config.quickButtons;
+
+  const liveDescriptor = {
+    clientMatchId: liveClientMatchId,
+    sport,
+    scorecardKind: 'goals',
+    teamA: { name: team1Name },
+    teamB: { name: team2Name },
+  };
 
   // Side swap helpers
   const leftTeam = sidesSwapped ? 2 : 1;
@@ -487,6 +512,14 @@ export default function MonoGoalsLiveScore() {
             )}
           </div>
         </div>
+
+        {/* Live broadcast control (consent / LIVE indicator / share) */}
+        <LiveBroadcastBar
+          broadcast={live}
+          descriptor={liveDescriptor}
+          enabled={liveEnabled}
+          onEnableChange={setLiveEnabled}
+        />
 
         {/* ARIA live region for score announcements */}
         <div
