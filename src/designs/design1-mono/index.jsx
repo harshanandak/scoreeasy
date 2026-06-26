@@ -43,6 +43,9 @@ const MonoQuickMatch = lazy(() => import('./MonoQuickMatch'));
 const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiveScore'));
 const MonoTennisLiveScore = lazy(() => import('./scoring/MonoTennisLiveScore'));
 
+// Public, no-sign-in spectator page (/live/:token). Renders no app dock.
+const MonoWatchMatch = lazy(() => import('./MonoWatchMatch'));
+
 // Lazy-loaded showcase components (rarely visited)
 const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
@@ -164,6 +167,9 @@ const GUARD_BYPASS_PREFIXES = [
   '/signup',
   '/sso-callback',
   '/showcase',
+  // Public spectator links must work for a signed-in-not-onboarded user
+  // following a share link — never bounce them to /onboarding.
+  '/live',
   PUBLIC_MARKETING_PATH,
   '/privacy',
   '/terms',
@@ -1529,6 +1535,10 @@ export default function Design1Mono() {
                 <Route path="tournament" element={<LegacyTournamentRoute />} />
                 <Route path="stats" element={<Navigate to="/statistics" replace />} />
                 <Route path="game/:id" element={<GameResumeRecoveryRoute />} />
+
+                {/* Public spectator page — MUST sit above the :sport/* routes so
+                    "live" is never captured as a sport slug. Renders no app dock. */}
+                <Route path="live/:token" element={<MonoWatchMatch />} />
 
                 <Route path=":sport/tournament" element={<SportRouteGuard><MonoTournamentList /></SportRouteGuard>} />
                 <Route path=":sport/tournament/new" element={<SportRouteGuard><MonoTournamentSetup /></SportRouteGuard>} />
