@@ -56,16 +56,38 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     async (item) => {
       const matchId = matchIdRef.current;
       if (!matchId) throw new Error('live match not created yet');
-      if (item.kind === 'undo') {
-        return undoM({ matchId, clientEventId: item.clientEventId, at: item.at });
+      // Drop events belonging to a DIFFERENT match — the outbox is a single shared
+      // queue, so a stale tail from a prior match must not be mis-delivered to the
+      // current one. Resolving (not throwing) lets reconcile remove it.
+      if (item.clientMatchId && item.clientMatchId !== clientMatchIdRef.current) {
+        return undefined;
       }
-      return scorePointM({
-        matchId,
-        clientEventId: item.clientEventId,
-        team: item.team,
-        value: item.value,
-        at: item.at,
-      });
+      try {
+        if (item.kind === 'undo') {
+          return await undoM({
+            matchId,
+            clientEventId: item.clientEventId,
+            at: item.at,
+            snapshot: item.snapshot,
+          });
+        }
+        return await scorePointM({
+          matchId,
+          clientEventId: item.clientEventId,
+          team: item.team,
+          value: item.value,
+          at: item.at,
+          snapshot: item.snapshot,
+        });
+      } catch (e) {
+        // A finalized match permanently rejects new events; drop the item so it
+        // can't poison-loop the outbox (the match is over; local score stands).
+        // Other (transient/offline) errors propagate so the item stays queued.
+        if (/final/i.test(e instanceof Error ? e.message : String(e))) {
+          return undefined;
+        }
+        throw e;
+      }
     },
     [scorePointM, undoM],
   );
@@ -126,11 +148,14 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const point = useCallback(
-    ({ team, value = 1, at }) => {
+    ({ team, value = 1, at, snapshot }) => {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
-      const clientEventId = `${clientMatchIdRef.current}:${seqRef.current}`;
-      enqueue({ kind: 'point', team, value, at, clientEventId });
+      const clientMatchId = clientMatchIdRef.current;
+      const clientEventId = `${clientMatchId}:${seqRef.current}`;
+      // snapshot (engine-derived sets/serving/period for non-flat sports) + the
+      // owning clientMatchId travel WITH the event through the outbox to the mutation.
+      enqueue({ kind: 'point', team, value, at, snapshot, clientMatchId, clientEventId });
       persistSeq(seqRef.current);
       return flush();
     },
@@ -138,11 +163,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const undo = useCallback(
-    ({ at }) => {
+    ({ at, snapshot }) => {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
-      const clientEventId = `${clientMatchIdRef.current}:${seqRef.current}`;
-      enqueue({ kind: 'undo', at, clientEventId });
+      const clientMatchId = clientMatchIdRef.current;
+      const clientEventId = `${clientMatchId}:${seqRef.current}`;
+      enqueue({ kind: 'undo', at, snapshot, clientMatchId, clientEventId });
       persistSeq(seqRef.current);
       return flush();
     },

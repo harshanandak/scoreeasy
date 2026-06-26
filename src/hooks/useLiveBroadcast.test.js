@@ -37,7 +37,7 @@ vi.mock('convex/react', () => ({
 }));
 
 import { useLiveBroadcast } from './useLiveBroadcast';
-import { load } from '../lib/live/outbox';
+import { load, enqueue } from '../lib/live/outbox';
 
 const GO = {
   clientMatchId: 'cm1',
@@ -243,5 +243,66 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:create']).not.toHaveBeenCalled();
     expect(load()).toEqual([]);
     expect(result.current.isLive).toBe(false);
+  });
+
+  it('forwards the engine snapshot through to scorePoint/undo (non-flat sports)', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockResolvedValue({});
+    h.get('live:undo').mockResolvedValue({});
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+
+    const snap = { pointsA: 25, pointsB: 23, setsA: 1, setsB: 0, setScores: [{ a: 25, b: 23 }], servingTeam: 'B', currentUnit: 2, periodLabel: 'Set 2' };
+    await act(async () => {
+      await result.current.point({ team: 'A', value: 1, at: 1000, snapshot: snap });
+    });
+    expect(h.spies['live:scorePoint']).toHaveBeenCalledWith(
+      expect.objectContaining({ matchId: 'mid1', clientEventId: 'cm1:1', team: 'A', value: 1, at: 1000, snapshot: snap }),
+    );
+
+    const undoSnap = { pointsA: 24, pointsB: 23, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 };
+    await act(async () => {
+      await result.current.undo({ at: 2000, snapshot: undoSnap });
+    });
+    expect(h.spies['live:undo']).toHaveBeenCalledWith(
+      expect.objectContaining({ matchId: 'mid1', clientEventId: 'cm1:2', at: 2000, snapshot: undoSnap }),
+    );
+  });
+
+  it('drops a queued event that belongs to a DIFFERENT match (no cross-match contamination)', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockResolvedValue({});
+    // A stale event from a previous match left in the shared outbox.
+    enqueue({ kind: 'point', team: 'A', value: 1, at: 0, clientMatchId: 'OTHER', clientEventId: 'OTHER:1' });
+
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO); // clientMatchId cm1
+    });
+    await act(async () => {
+      await result.current.point({ team: 'A', value: 1, at: 1 });
+    });
+
+    // The foreign event was dropped, never sent to cm1's matchId.
+    const sentEventIds = h.spies['live:scorePoint'].mock.calls.map((c) => c[0].clientEventId);
+    expect(sentEventIds).toContain('cm1:1');
+    expect(sentEventIds).not.toContain('OTHER:1');
+    expect(load()).toEqual([]); // queue fully drained (foreign dropped, cm1 sent)
+  });
+
+  it('drops (does not re-queue) an event the backend rejects because the match is final', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockRejectedValue(new Error('Match is final'));
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    await act(async () => {
+      await result.current.point({ team: 'A', value: 1, at: 1 });
+    });
+    // Terminal rejection → dropped, not poison-looping in the queue.
+    expect(load()).toEqual([]);
   });
 });
