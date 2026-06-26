@@ -112,7 +112,8 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_feed", ["status", "visibility", "moderationStatus", "feedRank"])
     .index("by_stale", ["status", "lastEventAt"])
-    .index("by_owner", ["ownerId"]),
+    .index("by_owner", ["ownerId"])
+    .index("by_owner_client", ["ownerId", "clientMatchId"]),
 
   liveMatchMeta: defineTable({
     matchId: v.id("liveMatches"),
@@ -157,4 +158,27 @@ export default defineSchema({
   })
     .index("by_match_seq", ["matchId", "seq"])
     .index("by_match_client", ["matchId", "clientEventId"]),
+
+  // Signed-out moderation reports (§7.1 floor). reporterId is an untrusted client
+  // session id used for per-reporter dedup only; never exposed publicly.
+  moderationReports: defineTable({
+    matchId: v.id("liveMatches"),
+    reason: v.union(
+      v.literal("abuse"),
+      v.literal("hate"),
+      v.literal("sexual"),
+      v.literal("spam"),
+      v.literal("other"),
+    ),
+    reporterId: v.string(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("actioned"),
+      v.literal("dismissed"),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_match", ["matchId"])
+    .index("by_match_reporter", ["matchId", "reporterId"])
+    .index("by_reporter", ["reporterId"]),
 });

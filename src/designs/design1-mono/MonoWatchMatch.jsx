@@ -26,6 +26,7 @@ import LineScore from './scorecard/LineScore';
 import GenericStatHeader from './scorecard/GenericStatHeader';
 import GenericTimeline from './scorecard/GenericTimeline';
 import { tabularNums, eyebrowStyle } from './scorecard/scorecardStyles';
+import ReportMatch from './live/ReportMatch';
 
 // A live match with no event in this window reads as PAUSED / DELAY (research
 // §2 "Stale / paused"). 90s mirrors the spec.
@@ -567,6 +568,21 @@ export default function MonoWatchMatch() {
         ) : (
           <StatsPanel events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         )}
+
+        {/* Signed-out moderation report affordance (q7k / Apple 1.2). */}
+        {!kiosk ? (
+          <footer
+            style={{
+              marginTop: 24,
+              paddingTop: 16,
+              borderTop: '1px solid color-mix(in oklch, var(--foreground) 12%, transparent)',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <ReportMatch token={token} />
+          </footer>
+        ) : null}
       </main>
 
       {!kiosk && !ctaDismissed ? (

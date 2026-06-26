@@ -757,3 +757,112 @@ describe("live.finalize — cricket defers archive to the local scorer (6tf)", (
     expect(matches.length).toBe(1);
   });
 });
+
+describe("live moderation floor (q7k)", () => {
+  test("a profane team name holds the match and hides it from public reads", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { token, matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      teamA: { name: "Shit FC" },
+      teamB: { name: "Hawks" },
+      clientMatchId: "cm-profane",
+    });
+
+    const held = await t.run(async (ctx) => ctx.db.get(matchId));
+    expect(held?.moderationStatus).toBe("held");
+    // Hidden from every public reader while held.
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await t.query(api.live.getMeta, { token })).toBeNull();
+  });
+
+  test("a clean match is public", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { token, matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-clean",
+    });
+    expect((await t.run((ctx) => ctx.db.get(matchId)))?.moderationStatus).toBe("clean");
+    expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
+  });
+
+  test("auto-expire hides a finalized match past its grace window", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { token, matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-expire",
+    });
+    expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
+    // Force expiry into the past.
+    await t.run((ctx) => ctx.db.patch(matchId, { publicExpiresAt: Date.now() - 1 }));
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+  });
+
+  test("report auto-holds at the distinct-reporter threshold; dedups per reporter", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-report",
+    });
+
+    // Same reporter spamming counts once → no auto-hold.
+    await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r1" });
+    await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r1" });
+    await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r2" });
+    expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
+
+    // A 3rd DISTINCT reporter crosses the threshold → held → hidden.
+    const res = await t.mutation(api.live.report, { token, reason: "hate", reporterId: "r3" });
+    expect(res.ok).toBe(true);
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+  });
+
+  test("report on an unknown token is uniform and records nothing (no enumeration leak)", async () => {
+    const t = newClient();
+    const res = await t.mutation(api.live.report, {
+      token: "NOPE234567",
+      reason: "spam",
+      reporterId: "r1",
+    });
+    expect(res.ok).toBe(true);
+    const rows = await t.run((ctx) => ctx.db.query("moderationReports").collect());
+    expect(rows.length).toBe(0);
+  });
+
+  test("create is rate-capped per owner", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    // 21 creates succeed (cap is 20 EXISTING before a create is blocked).
+    for (let i = 0; i <= 20; i += 1) {
+      await asOwner.mutation(api.live.create, {
+        sport: "volleyball",
+        scorecardKind: "volleyball",
+        ...TEAMS,
+        clientMatchId: `cap-${i}`,
+      });
+    }
+    await expect(
+      asOwner.mutation(api.live.create, {
+        sport: "volleyball",
+        scorecardKind: "volleyball",
+        ...TEAMS,
+        clientMatchId: "cap-over",
+      }),
+    ).rejects.toThrow(/rate limit/i);
+  });
+});

@@ -20,6 +20,7 @@ vi.mock('convex/react', () => ({
     return undefined;
   },
   usePaginatedQuery: () => mocks.paginated,
+  useMutation: () => vi.fn().mockResolvedValue({ ok: true }), // ReportMatch report
 }));
 
 vi.mock('../../../convex/_generated/api', () => ({
@@ -28,6 +29,7 @@ vi.mock('../../../convex/_generated/api', () => ({
       getByToken: 'live:getByToken',
       getMeta: 'live:getMeta',
       listEvents: 'live:listEvents',
+      report: 'live:report',
     },
   },
 }));

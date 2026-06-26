@@ -1,8 +1,9 @@
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query, QueryCtx } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { authedMutation } from "./lib/functions";
+import { containsProfanity } from "./lib/profanity";
 
 // Coarse 30s time bucket for feed ranking — patched only when the bucket
 // rolls over so the feed does not reorder on every rally (§12.2 feedRank).
@@ -74,6 +75,12 @@ function snapshotPatch(snap: {
   };
 }
 
+// Moderation floor knobs (§7.1). Lightweight, index-counted — no rate-limiter
+// component for v1.
+const CREATE_CAP = 20; // max new live matches per owner per window
+const CREATE_WINDOW_MS = 60 * 60 * 1000; // 1h
+const REPORT_HOLD_THRESHOLD = 3; // distinct reporters that auto-hold a match
+
 // ---------------------------------------------------------------------------
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
 // ---------------------------------------------------------------------------
@@ -91,15 +98,37 @@ export const create = authedMutation({
     clientMatchId: v.string(),
   },
   handler: async (ctx, args) => {
-    // Idempotent create: reuse an existing live match for this owner+clientMatchId.
+    // Idempotent create: reuse an existing live match for this owner+clientMatchId
+    // (compound index, no table scan).
     const existing = await ctx.db
       .query("liveMatches")
-      .withIndex("by_owner", (q) => q.eq("ownerId", ctx.user._id))
-      .filter((q) => q.eq(q.field("clientMatchId"), args.clientMatchId))
-      .first();
+      .withIndex("by_owner_client", (q) =>
+        q.eq("ownerId", ctx.user._id).eq("clientMatchId", args.clientMatchId),
+      )
+      .unique();
     if (existing) {
       return { token: existing.token, matchId: existing._id };
     }
+
+    // Rate cap: bound NEW live matches per owner per window (abuse/DoS, §7.1).
+    const recent = await ctx.db
+      .query("liveMatches")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ctx.user._id))
+      .order("desc")
+      .take(CREATE_CAP + 1);
+    if (
+      recent.length > CREATE_CAP &&
+      recent[CREATE_CAP]._creationTime > Date.now() - CREATE_WINDOW_MS
+    ) {
+      throw new Error("Rate limit exceeded — too many live matches created");
+    }
+
+    // Server-side profanity floor on the PUBLIC team names (§7.1; never
+    // client-only). A hit HOLDS the match: the row persists so the operator keeps
+    // scoring locally (and the idempotent outbox does not loop on a throw), while
+    // resolveReadableMatch hides held matches from every public reader.
+    const flagged =
+      containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name);
 
     const now = Date.now();
     const token = generateToken();
@@ -113,7 +142,7 @@ export const create = authedMutation({
       status: "live",
       visibility: args.visibility ?? "public",
       isYouthMatch: args.isYouthMatch ?? false,
-      moderationStatus: "clean",
+      moderationStatus: flagged ? "held" : "clean",
       pointsA: 0,
       pointsB: 0,
       setsA: 0,
@@ -405,6 +434,69 @@ export const finalize = authedMutation({
   },
 });
 
+// PUBLIC, no-auth report of objectionable content (§7.1 / Apple 1.2). A spectator
+// (signed-out) flags a match by its share token. `reporterId` is an untrusted
+// client session id used ONLY for per-reporter dedup. Returns a UNIFORM
+// { ok: true } for missing / private / removed tokens so it never leaks whether a
+// token exists. At REPORT_HOLD_THRESHOLD distinct reporters the match auto-holds
+// (hidden by resolveReadableMatch). reporterId is spoofable, so the report rate
+// cap + dedup are the real backstop; an operator un-hold queue is fast-follow.
+export const report = mutation({
+  args: {
+    token: v.string(),
+    reason: v.union(
+      v.literal("abuse"),
+      v.literal("hate"),
+      v.literal("sexual"),
+      v.literal("spam"),
+      v.literal("other"),
+    ),
+    reporterId: v.string(),
+  },
+  returns: v.object({ ok: v.boolean() }),
+  handler: async (ctx, { token, reason, reporterId }) => {
+    const match = await ctx.db
+      .query("liveMatches")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .unique();
+    // Uniform response: no enumeration leak for unknown/private/removed tokens.
+    if (!match || match.visibility === "private" || match.moderationStatus === "removed") {
+      return { ok: true };
+    }
+
+    // Dedup per (match, reporter) — a reporter can only count once.
+    const dup = await ctx.db
+      .query("moderationReports")
+      .withIndex("by_match_reporter", (q) =>
+        q.eq("matchId", match._id).eq("reporterId", reporterId),
+      )
+      .first();
+    if (dup) return { ok: true };
+
+    await ctx.db.insert("moderationReports", {
+      matchId: match._id,
+      reason,
+      reporterId,
+      status: "open",
+      createdAt: Date.now(),
+    });
+
+    // Auto-hold at the distinct-reporter threshold. Dedup-at-write means each row
+    // is a distinct reporter, so the bounded .take(N) count is the distinct count.
+    if (match.moderationStatus === "clean") {
+      const rows = await ctx.db
+        .query("moderationReports")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .take(REPORT_HOLD_THRESHOLD);
+      if (rows.length >= REPORT_HOLD_THRESHOLD) {
+        await ctx.db.patch(match._id, { moderationStatus: "held" });
+      }
+    }
+
+    return { ok: true };
+  },
+});
+
 // ---------------------------------------------------------------------------
 // PUBLIC QUERIES — no auth, token-gated, strict return-validator whitelist
 // ---------------------------------------------------------------------------
@@ -441,7 +533,15 @@ async function resolveReadableMatch(ctx: QueryCtx, token: string) {
     .unique();
   if (!match) return null;
   if (match.visibility === "private") return null;
-  if (match.moderationStatus === "removed") return null;
+  // Only `clean` content is publicly readable — `held` (profanity/auto-report)
+  // and `removed` (moderated-out) are hidden from every public reader (§7.1).
+  if (match.moderationStatus !== "clean") return null;
+  // Auto-expire: bound standing public exposure after the match ends + grace.
+  // (Date.now() in a query is non-reactive — the view drops on the next re-run,
+  // not exactly at the deadline; a scheduled status flip is the fast-follow.)
+  if (match.publicExpiresAt != null && Date.now() > match.publicExpiresAt) {
+    return null;
+  }
   return match;
 }
 
