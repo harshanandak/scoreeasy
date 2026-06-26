@@ -21,11 +21,16 @@ First end-to-end BROADCAST slice shipped (commits 4412193 + ee6353a, pushed):
 - **Watch:** VolleyballScorebug + TennisScorebug gained a snapshot `state` path (Trap B fix); cricket uses GenericStatHeader (whitelist strips per-ball detail) but the headline/PinnedScorebug is correct from the snapshot.
 - Cricket scorer was Convex-agent authored then reviewed; Test cricket result logic (checkResult/advanceInnings/guards) left UNTOUCHED (additive only). Full gate green: **834 tests**, type-check, lint, build.
 
-**NEXT (in order):**
-1. **USER runtime-verify** (auth-gated): sign in, score a match in EACH family (a goals match, a volleyball/net match, tennis, cricket), open `/live/:token` in a browser, confirm headline + scorecard update live. The full pipe is unit-tested but not yet runtime-proven.
-2. **Then the feature ships** (score → share → watch, all sports). Before merging to master, also land the public-by-default ship-gate: **`q7k` moderation floor** (server-side profanity filter in create; required by Apple 1.2 since matches are public by default).
-3. Deferred (post-launch, NOT in "shareable scores" MVP): `3ws` public Watch feed, `s5m/obd/4qu/1bc/bx1` infra crons, tennis 6-char short-code (needs a backend code->token index).
-4. NOTE: this branch forked from master @0e65c15 (pre-m39); when it rebases on master it picks up the cricket no-ball/wide + m39 Test-result fix (PR #92, merged d17e7f0). The Test scorer's result guards here are the pre-rebase committed values — do not hand-edit.
+### Update 4 — 2026-06-26 (q7k + 6tf DONE; master merged in; commits 49f93cf, c30ea70, 4997c1d)
+- **Branch synced with master** (merge 46ac5ac) — picks up the m39 Test-result fix + the Cloudflare Worker CI, so **PR #93 now gets its own Cloudflare preview** (`pr-93-scoreeasy.harshananda57.workers.dev`) for the runtime verify below.
+- **`6tf` CLOSED** — `finalize` skips the `matches` archive for cricket (defers to the local scorer; a Test result can't be derived from cumulative runs).
+- **`q7k` CLOSED — moderation floor shipped:** `convex/lib/profanity.ts` (NFKD/leet/spacing-resistant) holds operator team names on a hit; `resolveReadableMatch` (single chokepoint for all 4 public readers) hides `held`/`removed`/expired; public `report` mutation + `moderationReports` table (dedup, uniform/no-enum-leak, **FLAG-for-review via `flaggedAt`, never auto-hide** — reports can't censor); per-owner create rate cap; `by_owner_client` index; watch-page Report affordance (`ReportMatch` + `reporterId`). Advisor-verified. **862 tests; deployed to dev.**
+- **cxr fast-follow gaps recorded** (see `scoreeasy-cxr`): operator un-hold/restore (profanity false-positives like "Scunthorpe" are silent takedowns with no recourse), word-boundary matching, a human review-queue UI over `flaggedAt`, per-reporter report cap, reactive auto-expire.
+
+**NEXT (the ONLY remaining gate before #93 merges):**
+1. **USER runtime-verify** (auth-gated; now possible via the #93 Cloudflare preview): sign in, score a match in EACH family (goals, volleyball/net, tennis, cricket), open the preview's `/live/:token` in a browser, confirm the headline + scorecard update live and Clerk/Convex work. The whole feature is unit-tested (862) but still **0% runtime-proven** — this is the merge gate. "q7k done" does NOT mean "#93 mergeable."
+2. After verify → mark #93 ready + merge.
+3. Deferred (post-launch): `cxr` heavier moderation, `3ws` public Watch feed, `s5m/obd/4qu/1bc/bx1` infra crons, tennis short-code.
 
 
 ## 0. Where to work
