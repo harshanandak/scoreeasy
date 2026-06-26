@@ -525,6 +525,37 @@ describe("live.finalize — winner uses sets as primary, points as tiebreaker", 
   });
 });
 
+describe("live.scorePoint/undo — finalized match rejects with a STRUCTURED error", () => {
+  test("scorePoint after finalize throws ConvexError with data.code=match_final", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-final-reject",
+    });
+    await asOwner.mutation(api.live.finalize, { matchId });
+
+    // The outbox drop logic keys off ConvexError.data.code because production
+    // REDACTS the Error message — so the structured code is the load-bearing
+    // contract, not the human string.
+    let caught: unknown;
+    try {
+      await asOwner.mutation(api.live.scorePoint, {
+        matchId,
+        clientEventId: "after-final",
+        team: "A",
+        at: 1,
+      });
+    } catch (e) {
+      caught = e;
+    }
+    expect((caught as { data?: { code?: string } })?.data?.code).toBe("match_final");
+  });
+});
+
 describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => {
   test("a snapshot patches sets/serving/setScores and drives the headline from current-set points", async () => {
     const t = newClient();

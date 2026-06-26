@@ -82,8 +82,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       } catch (e) {
         // A finalized match permanently rejects new events; drop the item so it
         // can't poison-loop the outbox (the match is over; local score stands).
-        // Other (transient/offline) errors propagate so the item stays queued.
-        if (/final/i.test(e instanceof Error ? e.message : String(e))) {
+        // Convex REDACTS Error messages in production, so we key off the
+        // ConvexError structured `data.code` (which IS delivered to clients);
+        // the message check is only a dev/edge-runtime fallback. Other
+        // (transient/offline) errors propagate so the item stays queued.
+        const code = e && typeof e === 'object' ? e.data?.code : undefined;
+        const msg = e instanceof Error ? e.message : String(e);
+        if (code === 'match_final' || /final/i.test(msg)) {
           return undefined;
         }
         throw e;
@@ -185,6 +190,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       const result = await flush();
       if (result?.error) break;
     }
+    // If the outbox STILL has undrained events (offline / network error broke the
+    // loop above), do NOT archive — finalizing now would persist a final score
+    // missing the queued tail. Leave the match live: the tail replays on
+    // reconnect and the match stales/auto-expires server-side until then. The
+    // local scorer's score stays authoritative regardless.
+    if (size() > 0) return null;
     const matchId = matchIdRef.current;
     if (!matchId) return null;
     try {
@@ -197,7 +208,11 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const setVisibility = useCallback(
     async (visibility) => {
-      if (!enabled) return null;
+      // NOT gated by `enabled`: visibility control must work whenever a match
+      // exists — in particular "Stop" sets enabled=false, so resuming
+      // (setVisibility('public')) would be a silent no-op if gated, leaving the
+      // match live-but-private while the UI says "LIVE · public". The matchId
+      // guard already prevents acting before a match is created.
       const matchId = matchIdRef.current;
       if (!matchId) return null;
       try {
@@ -207,7 +222,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         return null;
       }
     },
-    [enabled, setVisibilityM],
+    [setVisibilityM],
   );
 
   return { isLive, token, error, goLive, point, undo, finalize, setVisibility };

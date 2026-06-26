@@ -12,7 +12,8 @@
 // reactive into the scorebug:
 //   usePaginatedQuery(api.live.listEvents, { token }, { initialNumItems: 30 })
 // (api.live.eventsSince exists and is bounded, but the paginated feed is
-// preferred.) Feed + Scorecard + Stats all read from this one paginated result.
+// preferred.) ONLY the Feed consumes this paginated result; the Scorecard and
+// Stats tabs are driven entirely by the always-current getByToken snapshot.
 // ───────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react';
@@ -354,10 +355,18 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return <TennisScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'goals' || scorecardKind === 'lines') {
-    // Spectators get no period config, so the line score is FINAL-only — take the
+    // Spectators get no period config, so the line score is total-only — take the
     // authoritative totals straight from the snapshot (re-summing a partial event
-    // page would be wrong). Per-period columns: scoreeasy-rvc.
-    return <LineScore totals={{ a: snapshot.pointsA, b: snapshot.pointsB }} teamA={nameA} teamB={nameB} />;
+    // page would be wrong). isFinalResult gates the winner highlight so a LIVE
+    // match isn't shown as decided. Per-period columns: scoreeasy-rvc.
+    return (
+      <LineScore
+        totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
+        isFinalResult={snapshot.status === 'final'}
+        teamA={nameA}
+        teamB={nameB}
+      />
+    );
   }
   return <SnapshotSummary snapshot={snapshot} nameA={nameA} nameB={nameB} />;
 }
@@ -376,31 +385,36 @@ ScorecardPanel.propTypes = {
  * are tracked in scoreeasy-rvc; here we show what is always correct.
  */
 function SnapshotSummary({ snapshot, nameA, nameB }) {
-  const a = snapshot.pointsA;
-  const b = snapshot.pointsB;
-  const leader = a > b ? nameA : b > a ? nameB : null;
-  const margin = Math.abs(a - b);
+  // Per-side score only. We deliberately do NOT render "X leads by N": cricket is
+  // the only real consumer of this fallback, and there pointsA/pointsB are each
+  // side's CUMULATIVE runs — so during the first innings the not-yet-batted side
+  // is structurally 0, and "leads by 150" / a "150–0" margin would be misleading
+  // (a chase is also won by wickets, not the run delta). The periodLabel carries
+  // the authoritative live line ("India 150/3 (25.2 ov)").
+  const rows = [
+    { name: nameA, score: snapshot.pointsA },
+    { name: nameB, score: snapshot.pointsB },
+  ];
   return (
     <section aria-label="Match summary" style={{ borderTop: '2px solid var(--foreground)', paddingTop: 12 }}>
-      <p style={eyebrowStyle}>Score</p>
-      <p
-        className="font-mono"
-        style={{ margin: '2px 0 12px', fontSize: '2rem', fontWeight: 900, color: 'var(--foreground)', ...tabularNums }}
-      >
-        {a}–{b}
-      </p>
-      <p style={eyebrowStyle}>{leader ? 'Leader' : 'Status'}</p>
-      <p style={{ margin: '2px 0 0', fontSize: '1rem', color: 'var(--foreground)' }}>
-        {leader ? (
-          <>
-            <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{leader}</span>
-            <span style={{ color: 'var(--muted-foreground)' }}> leads by </span>
-            <span className="font-mono" style={{ fontWeight: 800, ...tabularNums }}>{margin}</span>
-          </>
-        ) : (
-          <span style={{ fontWeight: 800 }}>Level</span>
-        )}
-      </p>
+      {rows.map((r) => (
+        <div
+          key={r.name}
+          style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '6px 0' }}
+        >
+          <span
+            style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--foreground)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {r.name}
+          </span>
+          <span
+            className="font-mono"
+            style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--foreground)', ...tabularNums }}
+          >
+            {r.score}
+          </span>
+        </div>
+      ))}
       {snapshot.periodLabel ? (
         <p style={{ margin: '8px 0 0', fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>
           {snapshot.periodLabel}

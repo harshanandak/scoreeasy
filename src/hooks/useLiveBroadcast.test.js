@@ -292,9 +292,14 @@ describe('useLiveBroadcast', () => {
     expect(load()).toEqual([]); // queue fully drained (foreign dropped, cm1 sent)
   });
 
-  it('drops (does not re-queue) an event the backend rejects because the match is final', async () => {
+  it('drops a finalized-match rejection even when prod REDACTS the error message', async () => {
     h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
-    h.get('live:scorePoint').mockRejectedValue(new Error('Match is final'));
+    // Simulate Convex production: the Error message is redacted to a generic
+    // "Server Error" + request id, but the ConvexError `data` IS delivered. The
+    // drop MUST key off data.code (the /final/ message check alone would miss it).
+    h.get('live:scorePoint').mockRejectedValue(
+      Object.assign(new Error('[Request ID: 7b3] Server Error'), { data: { code: 'match_final' } }),
+    );
     const { result } = setup();
     await act(async () => {
       await result.current.goLive(GO);
@@ -304,5 +309,57 @@ describe('useLiveBroadcast', () => {
     });
     // Terminal rejection → dropped, not poison-looping in the queue.
     expect(load()).toEqual([]);
+  });
+
+  it('also drops a finalized-match rejection via the message fallback (dev/edge-runtime)', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockRejectedValue(new Error('Match is final'));
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    await act(async () => {
+      await result.current.point({ team: 'A', value: 1, at: 1 });
+    });
+    expect(load()).toEqual([]);
+  });
+
+  it('finalize does NOT archive when the outbox could not fully drain', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    // Transient (non-final) failure: the event stays queued, so the drain can't
+    // complete. finalize must NOT archive a final score missing that tail.
+    h.get('live:scorePoint').mockRejectedValue(new Error('network down'));
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    await act(async () => {
+      await result.current.point({ team: 'A', value: 1, at: 1 });
+    });
+    expect(load().length).toBeGreaterThan(0); // still queued
+
+    await act(async () => {
+      await result.current.finalize();
+    });
+    expect(h.spies['live:finalize']).not.toHaveBeenCalled();
+    expect(load().length).toBeGreaterThan(0); // tail preserved for replay
+  });
+
+  it('setVisibility still works after enabled flips false (resume after Stop)', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:setVisibility').mockResolvedValue({ ok: true });
+    const { result, rerender } = renderHook(({ enabled }) => useLiveBroadcast({ enabled }), {
+      initialProps: { enabled: true },
+    });
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    // Operator pressed "Stop" → the scorer flips enabled off.
+    rerender({ enabled: false });
+    await act(async () => {
+      await result.current.setVisibility('public'); // resume
+    });
+    // Must NOT be a no-op just because enabled is false — a match exists.
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public' });
   });
 });

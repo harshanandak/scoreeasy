@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -202,7 +202,12 @@ export const scorePoint = authedMutation({
 
     // Reject NEW writes to a finalized match (placed AFTER the idempotency check
     // so a replayed clientEventId still returns its prior row, §87d hardening).
-    if (match.status === "final") throw new Error("Match is final");
+    // ConvexError (not plain Error): production REDACTS Error messages, so the
+    // client must key off the structured `data.code` to DROP the event instead of
+    // poison-looping the outbox forever.
+    if (match.status === "final") {
+      throw new ConvexError({ code: "match_final", message: "Match is final" });
+    }
 
     const snap = args.snapshot;
     const delta = args.value ?? 1;
@@ -263,7 +268,11 @@ export const undo = authedMutation({
     if (prior) return prior;
 
     // Reject undo on a finalized match (after idempotency, §87d hardening).
-    if (match.status === "final") throw new Error("Match is final");
+    // ConvexError so the client can DROP it from the outbox (prod redacts Error
+    // messages — see scorePoint above).
+    if (match.status === "final") {
+      throw new ConvexError({ code: "match_final", message: "Match is final" });
+    }
 
     // Find the last active point that has not already been undone WITHOUT
     // collecting the whole log. Walk the seq index DESCENDING: undo events

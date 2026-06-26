@@ -28,8 +28,8 @@ const headCell = {
   textAlign: 'right',
 };
 
-/** One team data row: name (match winner bolded), period cells, FINAL total. */
-function TeamRow({ name, cells, final, isWinner, finalLabel }) {
+/** One team data row: name (match winner bolded), period cells, total. */
+function TeamRow({ name, cells, final, isWinner, scoreWord }) {
   return (
     <tr style={{ borderTop: '1px solid color-mix(in oklch, var(--foreground) 14%, transparent)' }}>
       <th
@@ -52,8 +52,8 @@ function TeamRow({ name, cells, final, isWinner, finalLabel }) {
       <td
         className="font-mono"
         data-winner={isWinner ? 'true' : undefined}
-        aria-label={`${name} final ${final}`}
-        title={finalLabel}
+        aria-label={`${name} ${scoreWord} ${final}`}
+        title={scoreWord}
         style={{
           ...cellBase,
           fontWeight: 900,
@@ -72,10 +72,10 @@ TeamRow.propTypes = {
   cells: PropTypes.arrayOf(PropTypes.object).isRequired,
   final: PropTypes.number.isRequired,
   isWinner: PropTypes.bool.isRequired,
-  finalLabel: PropTypes.string.isRequired,
+  scoreWord: PropTypes.string.isRequired,
 };
 
-export default function LineScore({ events, config, totals, teamA, teamB }) {
+export default function LineScore({ events, config, totals, isFinalResult, teamA, teamB }) {
   // When the caller supplies authoritative totals (e.g. the always-current live
   // snapshot), render the FINAL directly. Spectators have no period config, so the
   // table is FINAL-only anyway, and re-deriving from a partial event page would be
@@ -93,11 +93,14 @@ export default function LineScore({ events, config, totals, teamA, teamB }) {
   const cellsA = columns.map((p) => ({ label: p.label, value: p.a }));
   const cellsB = columns.map((p) => ({ label: p.label, value: p.b }));
 
-  // A clear single leader gets the green FINAL fill; a tie or an all-zero table
-  // has no winner to highlight.
-  const decided = totalA !== totalB && Math.max(totalA, totalB) > 0;
+  // A clear single leader gets the green winner fill — but ONLY when the match is
+  // actually decided (final). On the live snapshot path the match is still in
+  // progress, so highlighting a "winner" (and announcing "<team> final N" to a
+  // screen reader) mid-match would be wrong; gate on isFinalResult.
+  const decided = isFinalResult && totalA !== totalB && Math.max(totalA, totalB) > 0;
   const aWins = decided && totalA > totalB;
   const bWins = decided && totalB > totalA;
+  const scoreWord = isFinalResult ? 'final' : 'total';
 
   return (
     <section aria-label="Line score">
@@ -116,13 +119,13 @@ export default function LineScore({ events, config, totals, teamA, teamB }) {
               </th>
             ))}
             <th scope="col" style={headCell}>
-              Final
+              {isFinalResult ? 'Final' : 'Total'}
             </th>
           </tr>
         </thead>
         <tbody>
-          <TeamRow name={nameA} cells={cellsA} final={totalA} isWinner={aWins} finalLabel="Final" />
-          <TeamRow name={nameB} cells={cellsB} final={totalB} isWinner={bWins} finalLabel="Final" />
+          <TeamRow name={nameA} cells={cellsA} final={totalA} isWinner={aWins} scoreWord={scoreWord} />
+          <TeamRow name={nameB} cells={cellsB} final={totalB} isWinner={bWins} scoreWord={scoreWord} />
         </tbody>
       </table>
     </section>
@@ -133,8 +136,11 @@ LineScore.propTypes = {
   events: PropTypes.arrayOf(PropTypes.object),
   config: PropTypes.object,
   // Authoritative FINAL totals (e.g. from the live snapshot); when set, `events`
-  // is ignored and the table renders FINAL-only.
+  // is ignored and the table renders the total column only.
   totals: PropTypes.shape({ a: PropTypes.number, b: PropTypes.number }),
+  // Whether the match is decided. When false (live), no winner is highlighted and
+  // the total column is labelled "Total", not "Final".
+  isFinalResult: PropTypes.bool,
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
@@ -143,6 +149,7 @@ LineScore.defaultProps = {
   events: [],
   config: undefined,
   totals: undefined,
+  isFinalResult: true,
   teamA: DEFAULT_TEAM_A,
   teamB: DEFAULT_TEAM_B,
 };

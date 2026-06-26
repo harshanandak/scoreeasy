@@ -19,6 +19,10 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   const [consent, setConsentState] = useState(() => getConsent());
   const [shareOpen, setShareOpen] = useState(false);
   const startedRef = useRef(false);
+  // Bumped to force the one-shot effect to re-run after a FAILED go-live (a ref
+  // reset alone doesn't schedule an effect, and onEnableChange(true) is a
+  // same-value no-op when enabled was already true).
+  const [retryNonce, setRetryNonce] = useState(0);
 
   // Fire go-live exactly once per mount when broadcasting is on and consented.
   useEffect(() => {
@@ -26,7 +30,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
       startedRef.current = true;
       void broadcast.goLive(descriptor);
     }
-  }, [enabled, consent, descriptor, broadcast]);
+  }, [enabled, consent, descriptor, broadcast, retryNonce]);
 
   const accept = () => {
     setConsent('accepted');
@@ -48,13 +52,16 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     }
     if (broadcast.isLive) {
       // Already created — "Stop" only flipped us to private, so re-publish.
-      // (Without this, startedRef has latched and the one-shot effect below
-      // would never re-fire, leaving the match live-but-private = nobody sees it.)
+      // setVisibility is NOT enabled-gated in the hook (visibility control works
+      // whenever a match exists), so this runs even though `enabled` is still
+      // false at this instant (onEnableChange(true) below is async).
       void broadcast.setVisibility('public');
     } else {
-      // Never created (declined from the start) or a prior go-live failed:
-      // re-arm the one-shot effect so it can (re)create the match.
+      // Never created (declined from the start) or a prior go-live FAILED:
+      // re-arm + bump the nonce so the one-shot effect actually re-runs and
+      // (re)creates the match (a bare ref reset would not schedule the effect).
       startedRef.current = false;
+      setRetryNonce((n) => n + 1);
     }
     onEnableChange(true);
   };

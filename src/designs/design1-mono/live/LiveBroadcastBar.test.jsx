@@ -108,6 +108,20 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(onEnableChange).toHaveBeenCalledWith(true);
   });
 
+  it('retries a FAILED initial go-live when Go live is tapped (effect re-fires)', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    // A failed go-live: the hook resolves null and isLive stays false (the hook
+    // never rejects). startedRef has latched, so without the retry-nonce bump the
+    // effect would never re-fire and the operator would be stuck.
+    const broadcast = makeBroadcast({ isLive: false });
+    broadcast.goLive.mockResolvedValue(null);
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+
+    expect(broadcast.goLive).toHaveBeenCalledTimes(1); // initial (failed)
+    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
+    expect(broadcast.goLive).toHaveBeenCalledTimes(2); // retried
+  });
+
   it('opens the share sheet from the live state', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });

@@ -53,12 +53,16 @@ const BLOCKLIST: readonly string[] = [
  * Fold a user string to a comparison form that resists common evasion.
  * NFKD width-folds; combining marks + zero-width chars are stripped; everything
  * is lowercased; leet chars are mapped; all non-alphanumerics are dropped (so
- * "f u c k" / "f.u.c.k" collapse); then ANY run of an identical char collapses
- * to one, so single-doubled padding ("fuuck") and long run-padding ("fuuuuck",
- * "sssshit") both fold to the base stem. The blocklist is canonicalized the same
- * way (see CANON_BLOCKLIST) so stems carrying their own doubles ("pussy" →
- * "pusy", "asshole" → "ashole") still match after the input is collapsed.
- * Returns the canonical string.
+ * "f u c k" / "f.u.c.k" collapse); runs of 3+ identical chars collapse to one
+ * (so "fuuuuck"/"sssshit" still match the stem). Returns the canonical string.
+ *
+ * IMPORTANT — why 3+, not 2+: collapsing a SINGLE doubled letter would conflate
+ * slurs with legitimate words that differ by exactly one double — e.g. "nigger"
+ * → "niger", a substring of the COUNTRY "Niger"/"Nigeria" (a false positive on
+ * national teams). The doubled letter is load-bearing, so it is preserved.
+ * Catching one-letter padding ("fuuck") cleanly needs word-boundary/token
+ * matching — the §7.1 fast-follow. Substring matching keeps the accepted
+ * "Scunthorpe" trade-off for the v1 floor (a flagged name is held, not deleted).
  */
 export function canonicalize(input: string): string {
   if (!input) return "";
@@ -71,15 +75,10 @@ export function canonicalize(input: string): string {
     else if (LEET[ch]) out += LEET[ch]; // leet digits/symbols → letters
     // combining marks (from NFKD), zero-width, separators, punct, emoji → dropped
   }
-  // Collapse every run of an identical char to one. Folding the blocklist the
-  // same way (below) keeps matching consistent while killing repeat-padding
-  // evasion of any length ("fuuck", "fuuuuck").
-  return out.replace(/(.)\1+/g, "$1");
+  // Collapse 3+ identical runs to one so run-padding ("fuuuuck", "sssshit")
+  // still matches the base stem, WITHOUT shortening stems by a single double.
+  return out.replace(/(.)\1{2,}/g, "$1");
 }
-
-// Stems folded through the SAME canonicalizer so input and blocklist agree after
-// run-collapse (e.g. typed "pusssy" and the stem "pussy" both become "pusy").
-const CANON_BLOCKLIST: readonly string[] = BLOCKLIST.map(canonicalize);
 
 /**
  * True when `name` contains blocked content after canonicalization.
@@ -88,5 +87,5 @@ const CANON_BLOCKLIST: readonly string[] = BLOCKLIST.map(canonicalize);
 export function containsProfanity(name: string): boolean {
   const c = canonicalize(name);
   if (!c) return false;
-  return CANON_BLOCKLIST.some((stem) => c.includes(stem));
+  return BLOCKLIST.some((stem) => c.includes(stem));
 }

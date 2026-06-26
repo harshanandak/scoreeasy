@@ -89,6 +89,25 @@ const GOALS_SNAPSHOT = {
   isYouthMatch: false,
 };
 
+// A cricket snapshot — 1st innings, India 150/3, opponent not yet batted (0).
+const CRICKET_SNAPSHOT = {
+  sport: 'cricket',
+  status: 'live',
+  scorecardKind: 'cricket',
+  pointsA: 150,
+  pointsB: 0,
+  setsA: 0,
+  setsB: 0,
+  setScores: [],
+  servingTeam: null,
+  currentUnit: 1,
+  periodLabel: 'India 150/3 (25.2 ov)',
+  lastSeq: 30,
+  startedAt: 1000,
+  lastEventAt: 1000,
+  isYouthMatch: false,
+};
+
 function renderAt(token = 'ABC123', search = '') {
   return render(
     <MemoryRouter initialEntries={[`/live/${token}${search}`]}>
@@ -143,10 +162,11 @@ describe('MonoWatchMatch', () => {
     expect(within(feed).getAllByText(/Reds|Blues/).length).toBeGreaterThan(0);
   });
 
-  it('scorecard (goals) renders the FINAL from the snapshot, not the event page', () => {
-    // Snapshot says 3-2; the loaded event page is EMPTY. A correct scorecard must
-    // show the snapshot totals (re-deriving from the partial page would show 0-0).
-    mocks.snapshot = GOALS_SNAPSHOT;
+  it('scorecard (goals) renders the total from the snapshot, no winner mid-match', () => {
+    // Snapshot says 3-2 LIVE; the loaded event page is EMPTY. A correct scorecard
+    // shows the snapshot totals (re-deriving from the partial page would show 0-0)
+    // and must NOT declare a winner while the match is in progress.
+    mocks.snapshot = GOALS_SNAPSHOT; // status 'live'
     mocks.meta = { ...META, sport: 'football' };
     mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
     renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
@@ -154,6 +174,34 @@ describe('MonoWatchMatch', () => {
     const card = screen.getByRole('region', { name: 'Line score' });
     expect(within(card).getByText('3')).toBeInTheDocument();
     expect(within(card).getByText('2')).toBeInTheDocument();
+    // LIVE → no winner highlight, total column labelled "Total" not "Final".
+    expect(card.querySelector('[data-winner]')).toBeNull();
+    expect(within(card).getByText('Total')).toBeInTheDocument();
+    expect(within(card).queryByText('Final')).not.toBeInTheDocument();
+  });
+
+  it('scorecard (goals) DOES highlight the winner once the match is final', () => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final' };
+    mocks.meta = { ...META, sport: 'football' };
+    mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+    renderAt('ABC123', '?kiosk=1');
+
+    const card = screen.getByRole('region', { name: 'Line score' });
+    expect(card.querySelector('[data-winner]')).not.toBeNull(); // A (3) wins
+    expect(within(card).getByText('Final')).toBeInTheDocument();
+  });
+
+  it('scorecard (cricket) shows per-side runs + period line, never a misleading "leads by"', () => {
+    // Innings 1: 150-0. "India leads by 150" / a "150–0 margin" would be wrong.
+    mocks.snapshot = CRICKET_SNAPSHOT;
+    mocks.meta = { ...META, sport: 'cricket' };
+    mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+    renderAt('ABC123', '?kiosk=1');
+
+    const card = screen.getByRole('region', { name: 'Match summary' });
+    expect(within(card).getByText('150')).toBeInTheDocument();
+    expect(within(card).getByText('India 150/3 (25.2 ov)')).toBeInTheDocument(); // authoritative line
+    expect(within(card).queryByText(/leads by/i)).not.toBeInTheDocument();
   });
 
   it('stats tab is driven by the snapshot (points/sets/serving), not the event page', () => {
