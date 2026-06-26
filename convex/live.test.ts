@@ -392,12 +392,13 @@ describe("live event reads", () => {
       });
     }
 
+    // DESC: first page is the NEWEST events (live tail), loadMore pages backward.
     const page1 = await t.query(api.live.listEvents, {
       token,
       paginationOpts: { numItems: 2, cursor: null },
     });
     expect(page1.page.length).toBe(2);
-    expect(page1.page.map((e: { seq: number }) => e.seq)).toEqual([1, 2]);
+    expect(page1.page.map((e: { seq: number }) => e.seq)).toEqual([5, 4]);
     expect(page1.isDone).toBe(false);
 
     // §7.2: operator-only fields MUST NOT leak in the paginated event stream.
@@ -411,7 +412,7 @@ describe("live event reads", () => {
       token,
       paginationOpts: { numItems: 10, cursor: page1.continueCursor },
     });
-    expect(page2.page.map((e: { seq: number }) => e.seq)).toEqual([3, 4, 5]);
+    expect(page2.page.map((e: { seq: number }) => e.seq)).toEqual([3, 2, 1]);
     expect(page2.isDone).toBe(true);
   });
 });

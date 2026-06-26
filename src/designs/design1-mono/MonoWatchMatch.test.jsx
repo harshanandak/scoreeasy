@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import MonoWatchMatch from './MonoWatchMatch';
@@ -61,16 +61,37 @@ const META = {
   isYouthMatch: false,
 };
 
-// A few public event rows in ascending seq order (as listEvents returns).
+// Public event rows in DESCENDING seq order — listEvents is now .order("desc")
+// so the first page is the newest plays (the live tail). FeedPanel renders them
+// as-returned (no client reversal).
 const EVENTS = [
-  { seq: 1, type: 'point', team: 'A', value: 1, runningA: 1, runningB: 0, setsA: 0, setsB: 0, at: 1000 },
-  { seq: 2, type: 'point', team: 'B', value: 1, runningA: 1, runningB: 1, setsA: 0, setsB: 0, at: 2000 },
   { seq: 3, type: 'point', team: 'B', value: 1, runningA: 1, runningB: 2, setsA: 0, setsB: 0, at: 3000 },
+  { seq: 2, type: 'point', team: 'B', value: 1, runningA: 1, runningB: 1, setsA: 0, setsB: 0, at: 2000 },
+  { seq: 1, type: 'point', team: 'A', value: 1, runningA: 1, runningB: 0, setsA: 0, setsB: 0, at: 1000 },
 ];
 
-function renderAt(token = 'ABC123') {
+// A goals snapshot — A leads 3-2. setScores empty (flat-points sport).
+const GOALS_SNAPSHOT = {
+  sport: 'football',
+  status: 'live',
+  scorecardKind: 'goals',
+  pointsA: 3,
+  pointsB: 2,
+  setsA: 0,
+  setsB: 0,
+  setScores: [],
+  servingTeam: null,
+  currentUnit: 1,
+  periodLabel: undefined,
+  lastSeq: 5,
+  startedAt: 1000,
+  lastEventAt: 1000,
+  isYouthMatch: false,
+};
+
+function renderAt(token = 'ABC123', search = '') {
   return render(
-    <MemoryRouter initialEntries={[`/live/${token}`]}>
+    <MemoryRouter initialEntries={[`/live/${token}${search}`]}>
       <Routes>
         <Route path="/live/:token" element={<MonoWatchMatch />} />
       </Routes>
@@ -120,6 +141,33 @@ describe('MonoWatchMatch', () => {
     expect(within(items[0]).getByText('1–2')).toBeInTheDocument();
     // Team names appear in the descriptions.
     expect(within(feed).getAllByText(/Reds|Blues/).length).toBeGreaterThan(0);
+  });
+
+  it('scorecard (goals) renders the FINAL from the snapshot, not the event page', () => {
+    // Snapshot says 3-2; the loaded event page is EMPTY. A correct scorecard must
+    // show the snapshot totals (re-deriving from the partial page would show 0-0).
+    mocks.snapshot = GOALS_SNAPSHOT;
+    mocks.meta = { ...META, sport: 'football' };
+    mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+    renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
+
+    const card = screen.getByRole('region', { name: 'Line score' });
+    expect(within(card).getByText('3')).toBeInTheDocument();
+    expect(within(card).getByText('2')).toBeInTheDocument();
+  });
+
+  it('stats tab is driven by the snapshot (points/sets/serving), not the event page', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT; // 18-21, 1-0 sets, A serving, SET 2
+    mocks.meta = META;
+    mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+    renderAt();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    const stats = screen.getByRole('region', { name: 'Match stats' });
+    expect(within(stats).getByText('18')).toBeInTheDocument();
+    expect(within(stats).getByText('21')).toBeInTheDocument();
+    expect(within(stats).getByText('1–0')).toBeInTheDocument();
+    expect(within(stats).getByText('Reds')).toBeInTheDocument(); // serving team
   });
 
   it('shows the not-available screen when getByToken returns null', () => {

@@ -75,9 +75,14 @@ TeamRow.propTypes = {
   finalLabel: PropTypes.string.isRequired,
 };
 
-export default function LineScore({ events, config, teamA, teamB }) {
-  const { lineScore } = goalsState(events, config);
-  const { periods, totalA, totalB, segmentedBy } = lineScore;
+export default function LineScore({ events, config, totals, teamA, teamB }) {
+  // When the caller supplies authoritative totals (e.g. the always-current live
+  // snapshot), render the FINAL directly. Spectators have no period config, so the
+  // table is FINAL-only anyway, and re-deriving from a partial event page would be
+  // wrong — see scoreeasy-rvc for per-period columns over the full ordered log.
+  const { periods, totalA, totalB, segmentedBy } = totals
+    ? { periods: [], totalA: totals.a, totalB: totals.b, segmentedBy: 'whole' }
+    : goalsState(events, config).lineScore;
 
   // A whole-match bucket equals FINAL itself — render FINAL alone (no duplicate
   // column). Period / count buckets get their own labelled columns.
@@ -125,14 +130,19 @@ export default function LineScore({ events, config, teamA, teamB }) {
 }
 
 LineScore.propTypes = {
-  events: PropTypes.arrayOf(PropTypes.object).isRequired,
+  events: PropTypes.arrayOf(PropTypes.object),
   config: PropTypes.object,
+  // Authoritative FINAL totals (e.g. from the live snapshot); when set, `events`
+  // is ignored and the table renders FINAL-only.
+  totals: PropTypes.shape({ a: PropTypes.number, b: PropTypes.number }),
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
 
 LineScore.defaultProps = {
+  events: [],
   config: undefined,
+  totals: undefined,
   teamA: DEFAULT_TEAM_A,
   teamB: DEFAULT_TEAM_B,
 };

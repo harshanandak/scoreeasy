@@ -15,7 +15,7 @@
 // preferred.) Feed + Scorecard + Stats all read from this one paginated result.
 // ───────────────────────────────────────────────────────────────────────────
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, usePaginatedQuery } from 'convex/react';
@@ -23,7 +23,6 @@ import { api } from '../../../convex/_generated/api';
 import VolleyballScorebug from './scorecard/VolleyballScorebug';
 import TennisScorebug from './scorecard/TennisScorebug';
 import LineScore from './scorecard/LineScore';
-import GenericStatHeader from './scorecard/GenericStatHeader';
 import GenericTimeline from './scorecard/GenericTimeline';
 import { tabularNums, eyebrowStyle } from './scorecard/scorecardStyles';
 import ReportMatch from './live/ReportMatch';
@@ -226,15 +225,13 @@ PinnedScorebug.propTypes = {
  * The Feed: list of public events (timestamp + description + score-after),
  * mapped straight from the paginated public event rows.
  *
- * NOTE ON ORDER (egress constraint): the deployed `api.live.listEvents` is
- * `.order("asc")`, so the first paginated page is the OLDEST events and
- * `loadMore` fetches LATER plays. We reverse the loaded rows to show
- * newest-of-page first, and the load button advances toward newer plays. A
- * true newest-first live feed would require a desc-ordered paginated backend
- * query — out of scope for this frontend page.
+ * NOTE ON ORDER: `api.live.listEvents` is now `.order("desc")`, so the first
+ * paginated page is the NEWEST plays — a spectator lands on the live tail — and
+ * `loadMore` pages BACKWARD into history (older plays appended below). The rows
+ * are rendered as-returned (newest first); no client reversal.
  */
 function FeedPanel({ events, nameA, nameB, loadMore, canLoadMore }) {
-  const rows = useMemo(() => [...events].reverse(), [events]);
+  const rows = events;
 
   if (rows.length === 0) {
     return (
@@ -304,7 +301,7 @@ function FeedPanel({ events, nameA, nameB, loadMore, canLoadMore }) {
             color: 'var(--primary)',
           }}
         >
-          Load more plays
+          Load earlier plays
         </button>
       ) : null}
     </section>
@@ -320,17 +317,16 @@ FeedPanel.propTypes = {
 };
 
 /**
- * The Scorecard tab — reuses the existing per-sport scorecard components,
- * which recompute their full structured view from the paginated event rows.
- * Cricket's batting/bowling card needs per-ball detail the public whitelist
- * intentionally strips, so cricket falls back to the generic stat header.
+ * The Scorecard tab — driven ENTIRELY by the operator-pushed SNAPSHOT, never by
+ * the event log. listEvents is a paginated tail (the feed), so deriving a
+ * scorecard from a single page would show a partial/stale picture; the snapshot
+ * is always current and config-independent (§87d). Per-period line scores and
+ * cricket's batting/bowling card need the complete ORDERED log (which the public
+ * whitelist also strips for cricket) and have no snapshot field yet — tracked in
+ * scoreeasy-rvc.
  */
-function ScorecardPanel({ scorecardKind, events, snapshot, nameA, nameB }) {
+function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
   if (scorecardKind === 'volleyball') {
-    // Render from the operator-pushed SNAPSHOT, not re-derived events: listEvents
-    // is paginated oldest-first, so `events` is the earliest page (set-1 state)
-    // for any non-trivial match — the snapshot is always current and
-    // config-independent (§87d).
     const state = {
       currentSet: snapshot.currentUnit,
       pointsA: snapshot.pointsA,
@@ -358,43 +354,82 @@ function ScorecardPanel({ scorecardKind, events, snapshot, nameA, nameB }) {
     return <TennisScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'goals' || scorecardKind === 'lines') {
-    return <LineScore events={events} teamA={nameA} teamB={nameB} />;
+    // Spectators get no period config, so the line score is FINAL-only — take the
+    // authoritative totals straight from the snapshot (re-summing a partial event
+    // page would be wrong). Per-period columns: scoreeasy-rvc.
+    return <LineScore totals={{ a: snapshot.pointsA, b: snapshot.pointsB }} teamA={nameA} teamB={nameB} />;
   }
-  return <GenericStatHeader events={events} teamA={nameA} teamB={nameB} />;
+  return <SnapshotSummary snapshot={snapshot} nameA={nameA} nameB={nameB} />;
 }
 
 ScorecardPanel.propTypes = {
   scorecardKind: PropTypes.string.isRequired,
-  events: PropTypes.arrayOf(PropTypes.object).isRequired,
   snapshot: PropTypes.object.isRequired,
   nameA: PropTypes.string.isRequired,
   nameB: PropTypes.string.isRequired,
 };
 
-/** Stats tab — simple aggregate counters derived from the loaded event rows. */
-function StatsPanel({ events, snapshot, nameA, nameB }) {
-  const stats = useMemo(() => {
-    let pointsA = 0;
-    let pointsB = 0;
-    let leadChanges = 0;
-    let prevSign = 0;
-    for (const e of events) {
-      if (e.type !== 'point') continue;
-      if (e.team === 'A') pointsA += 1;
-      if (e.team === 'B') pointsB += 1;
-      const sign = e.runningA > e.runningB ? 1 : e.runningA < e.runningB ? -1 : 0;
-      if (sign !== 0 && prevSign !== 0 && sign !== prevSign) leadChanges += 1;
-      if (sign !== 0) prevSign = sign;
-    }
-    return { pointsA, pointsB, leadChanges, loaded: events.length };
-  }, [events]);
+/**
+ * Generic / cricket fallback scorecard: the authoritative snapshot score line.
+ * Cricket's per-ball card + narrative stats (lead changes, biggest run, scoring
+ * rate) need the complete ordered log the public surface doesn't expose — those
+ * are tracked in scoreeasy-rvc; here we show what is always correct.
+ */
+function SnapshotSummary({ snapshot, nameA, nameB }) {
+  const a = snapshot.pointsA;
+  const b = snapshot.pointsB;
+  const leader = a > b ? nameA : b > a ? nameB : null;
+  const margin = Math.abs(a - b);
+  return (
+    <section aria-label="Match summary" style={{ borderTop: '2px solid var(--foreground)', paddingTop: 12 }}>
+      <p style={eyebrowStyle}>Score</p>
+      <p
+        className="font-mono"
+        style={{ margin: '2px 0 12px', fontSize: '2rem', fontWeight: 900, color: 'var(--foreground)', ...tabularNums }}
+      >
+        {a}–{b}
+      </p>
+      <p style={eyebrowStyle}>{leader ? 'Leader' : 'Status'}</p>
+      <p style={{ margin: '2px 0 0', fontSize: '1rem', color: 'var(--foreground)' }}>
+        {leader ? (
+          <>
+            <span style={{ fontWeight: 800, color: 'var(--primary)' }}>{leader}</span>
+            <span style={{ color: 'var(--muted-foreground)' }}> leads by </span>
+            <span className="font-mono" style={{ fontWeight: 800, ...tabularNums }}>{margin}</span>
+          </>
+        ) : (
+          <span style={{ fontWeight: 800 }}>Level</span>
+        )}
+      </p>
+      {snapshot.periodLabel ? (
+        <p style={{ margin: '8px 0 0', fontSize: '0.875rem', color: 'var(--muted-foreground)' }}>
+          {snapshot.periodLabel}
+        </p>
+      ) : null}
+    </section>
+  );
+}
 
+SnapshotSummary.propTypes = {
+  snapshot: PropTypes.object.isRequired,
+  nameA: PropTypes.string.isRequired,
+  nameB: PropTypes.string.isRequired,
+};
+
+/**
+ * Stats tab — authoritative aggregates from the always-current SNAPSHOT (never
+ * the partial event page). Narrative stats that need the full ordered log (lead
+ * changes, biggest run, scoring rate) are tracked in scoreeasy-rvc.
+ */
+function StatsPanel({ snapshot, nameA, nameB }) {
+  const serving =
+    snapshot.servingTeam === 'A' ? nameA : snapshot.servingTeam === 'B' ? nameB : '—';
   const cells = [
-    { label: `${nameA} points`, value: stats.pointsA },
-    { label: `${nameB} points`, value: stats.pointsB },
-    { label: 'Lead changes', value: stats.leadChanges },
+    { label: `${nameA} points`, value: snapshot.pointsA },
+    { label: `${nameB} points`, value: snapshot.pointsB },
     { label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` },
-    { label: 'Events loaded', value: stats.loaded },
+    { label: 'Period', value: snapshot.periodLabel || `#${snapshot.currentUnit}` },
+    { label: 'Serving', value: serving },
   ];
 
   return (
@@ -417,7 +452,6 @@ function StatsPanel({ events, snapshot, nameA, nameB }) {
 }
 
 StatsPanel.propTypes = {
-  events: PropTypes.arrayOf(PropTypes.object).isRequired,
   snapshot: PropTypes.object.isRequired,
   nameA: PropTypes.string.isRequired,
   nameB: PropTypes.string.isRequired,
@@ -561,13 +595,13 @@ export default function MonoWatchMatch() {
 
       <main style={{ padding: kiosk ? '16px 24px 40px' : '16px 16px 96px', maxWidth: 720, margin: '0 auto' }}>
         {kiosk ? (
-          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
+          <ScorecardPanel scorecardKind={snapshot.scorecardKind} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         ) : tab === 'Feed' ? (
           <FeedPanel events={eventRows} nameA={nameA} nameB={nameB} loadMore={loadMore} canLoadMore={canLoadMore} />
         ) : tab === 'Scorecard' ? (
-          <ScorecardPanel scorecardKind={snapshot.scorecardKind} events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
+          <ScorecardPanel scorecardKind={snapshot.scorecardKind} snapshot={snapshot} nameA={nameA} nameB={nameB} />
         ) : (
-          <StatsPanel events={eventRows} snapshot={snapshot} nameA={nameA} nameB={nameB} />
+          <StatsPanel snapshot={snapshot} nameA={nameA} nameB={nameB} />
         )}
 
         {/* Signed-out moderation report affordance (q7k / Apple 1.2). */}

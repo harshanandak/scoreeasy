@@ -706,10 +706,14 @@ export const listEvents = query({
       return { page: [], isDone: true, continueCursor: "" };
     }
 
+    // DESC by seq: the first page is the NEWEST events, so a spectator opening a
+    // live match lands on the live tail (not the start of the match), and
+    // `loadMore` pages backward into history. The feed is the only consumer; the
+    // analytical panels read the always-current snapshot, not this log.
     const result = await ctx.db
       .query("matchEvents")
       .withIndex("by_match_seq", (q) => q.eq("matchId", match._id))
-      .order("asc")
+      .order("desc")
       .paginate(paginationOpts);
 
     // Reconstruct the page object explicitly so the return validator surface is
