@@ -363,6 +363,10 @@ export default function MonoCricketLiveScore() {
       saveSnapshot();
       setScoreAnimKey(k => k + 1);
       const key = `team${battingTeam}`;
+      // Mirror the runs off this wide/no-ball to spectators — without this the
+      // broadcast snapshot (cumulative scores) updates but never re-pushes, so
+      // byes/overthrows off an extra would silently desync the live score.
+      broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: extraRuns, at: Date.now() };
       setScores(prev => ({
         ...prev,
         [key]: { ...prev[key], runs: prev[key].runs + extraRuns },

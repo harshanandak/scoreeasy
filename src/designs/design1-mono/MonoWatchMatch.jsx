@@ -100,9 +100,8 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
     <header
       aria-label="Match scorebug"
       style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
+        // Stickiness is owned by the wrapper in the page body so the scorebug and
+        // the tab bar pin together; this header only paints its own surface.
         background: 'var(--card)',
         borderBottom: '2px solid var(--foreground)',
         padding: kiosk ? '20px 24px' : '12px 16px',
@@ -512,6 +511,10 @@ export default function MonoWatchMatch() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)' }}>
+      {/* Scorebug + tab bar are ONE sticky unit. Previously each stuck to top:0
+          independently, so on scroll the higher-z scorebug overlapped the tab bar
+          and the tabs became unclickable. Wrapping pins them together as a block. */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
       <PinnedScorebug snapshot={snapshot} nameA={nameA} nameB={nameB} kiosk={kiosk} />
 
       {!kiosk ? (
@@ -519,9 +522,6 @@ export default function MonoWatchMatch() {
           role="tablist"
           aria-label="Match views"
           style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 40,
             display: 'flex',
             gap: 16,
             padding: '8px 16px',
@@ -557,6 +557,7 @@ export default function MonoWatchMatch() {
           })}
         </div>
       ) : null}
+      </div>
 
       <main style={{ padding: kiosk ? '16px 24px 40px' : '16px 16px 96px', maxWidth: 720, margin: '0 auto' }}>
         {kiosk ? (

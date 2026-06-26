@@ -9,6 +9,7 @@
  */
 
 import type * as lib_functions from "../lib/functions.js";
+import type * as lib_profanity from "../lib/profanity.js";
 import type * as live from "../live.js";
 import type * as matches from "../matches.js";
 import type * as teams from "../teams.js";
@@ -22,6 +23,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "lib/functions": typeof lib_functions;
+  "lib/profanity": typeof lib_profanity;
   live: typeof live;
   matches: typeof matches;
   teams: typeof teams;

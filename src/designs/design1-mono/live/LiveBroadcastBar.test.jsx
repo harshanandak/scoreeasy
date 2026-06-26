@@ -82,6 +82,32 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(onEnableChange).toHaveBeenCalledWith(false);
   });
 
+  it('resuming after Stop re-publishes the existing match (setVisibility public)', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    // Stopped state: the match was created (isLive) but we flipped to private
+    // (enabled=false). "Go live" must re-publish, not silently no-op.
+    const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
+    const onEnableChange = vi.fn();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
+
+    expect(broadcast.setVisibility).toHaveBeenCalledWith('public');
+    expect(onEnableChange).toHaveBeenCalledWith(true);
+  });
+
+  it('Go live when no match exists yet re-enables without re-publishing', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('declined'));
+    const broadcast = makeBroadcast({ isLive: false });
+    const onEnableChange = vi.fn();
+    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
+
+    expect(broadcast.setVisibility).not.toHaveBeenCalled();
+    expect(onEnableChange).toHaveBeenCalledWith(true);
+  });
+
   it('opens the share sheet from the live state', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });

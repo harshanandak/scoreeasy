@@ -51,11 +51,14 @@ const BLOCKLIST: readonly string[] = [
 
 /**
  * Fold a user string to a comparison form that resists common evasion.
- * NFKC width-folds; combining marks + zero-width chars are stripped; everything
+ * NFKD width-folds; combining marks + zero-width chars are stripped; everything
  * is lowercased; leet chars are mapped; all non-alphanumerics are dropped (so
- * "f u c k" / "f.u.c.k" collapse); 3+ repeats collapse to 2 (so "fuuuuck" →
- * "fuuck", still caught by the "fuck" stem after the run-collapse below maps
- * doubled letters). Returns the canonical string.
+ * "f u c k" / "f.u.c.k" collapse); then ANY run of an identical char collapses
+ * to one, so single-doubled padding ("fuuck") and long run-padding ("fuuuuck",
+ * "sssshit") both fold to the base stem. The blocklist is canonicalized the same
+ * way (see CANON_BLOCKLIST) so stems carrying their own doubles ("pussy" →
+ * "pusy", "asshole" → "ashole") still match after the input is collapsed.
+ * Returns the canonical string.
  */
 export function canonicalize(input: string): string {
   if (!input) return "";
@@ -68,10 +71,15 @@ export function canonicalize(input: string): string {
     else if (LEET[ch]) out += LEET[ch]; // leet digits/symbols → letters
     // combining marks (from NFKD), zero-width, separators, punct, emoji → dropped
   }
-  // Collapse 3+ identical runs to one so run-padding ("fuuuuck", "sssshit")
-  // still matches the base stem.
-  return out.replace(/(.)\1{2,}/g, "$1");
+  // Collapse every run of an identical char to one. Folding the blocklist the
+  // same way (below) keeps matching consistent while killing repeat-padding
+  // evasion of any length ("fuuck", "fuuuuck").
+  return out.replace(/(.)\1+/g, "$1");
 }
+
+// Stems folded through the SAME canonicalizer so input and blocklist agree after
+// run-collapse (e.g. typed "pusssy" and the stem "pussy" both become "pusy").
+const CANON_BLOCKLIST: readonly string[] = BLOCKLIST.map(canonicalize);
 
 /**
  * True when `name` contains blocked content after canonicalization.
@@ -80,5 +88,5 @@ export function canonicalize(input: string): string {
 export function containsProfanity(name: string): boolean {
   const c = canonicalize(name);
   if (!c) return false;
-  return BLOCKLIST.some((stem) => c.includes(stem));
+  return CANON_BLOCKLIST.some((stem) => c.includes(stem));
 }

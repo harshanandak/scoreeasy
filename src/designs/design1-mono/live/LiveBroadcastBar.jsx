@@ -46,6 +46,16 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
       setConsent('accepted');
       setConsentState('accepted');
     }
+    if (broadcast.isLive) {
+      // Already created — "Stop" only flipped us to private, so re-publish.
+      // (Without this, startedRef has latched and the one-shot effect below
+      // would never re-fire, leaving the match live-but-private = nobody sees it.)
+      void broadcast.setVisibility('public');
+    } else {
+      // Never created (declined from the start) or a prior go-live failed:
+      // re-arm the one-shot effect so it can (re)create the match.
+      startedRef.current = false;
+    }
     onEnableChange(true);
   };
 
