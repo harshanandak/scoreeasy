@@ -240,6 +240,9 @@ export const scorePoint = authedMutation({
       pointsB: runningB,
       lastSeq: seq,
       lastEventAt: args.at,
+      // A new event means scoring resumed — clear a stale "paused" status so
+      // spectators stop seeing PAUSED and the match re-enters the live feed.
+      ...(match.status === "paused" ? { status: "live" as const } : {}),
       ...(snap ? snapshotPatch(snap) : {}),
       ...(bucket !== match.feedRank ? { feedRank: bucket } : {}),
     });
@@ -330,6 +333,9 @@ export const undo = authedMutation({
       pointsB: runningB,
       lastSeq: seq,
       lastEventAt: args.at,
+      // A new event means scoring resumed — clear a stale "paused" status so
+      // spectators stop seeing PAUSED and the match re-enters the live feed.
+      ...(match.status === "paused" ? { status: "live" as const } : {}),
       ...(snap ? snapshotPatch(snap) : {}),
       ...(bucket !== match.feedRank ? { feedRank: bucket } : {}),
     });

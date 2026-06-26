@@ -556,6 +556,33 @@ describe("live.scorePoint/undo — finalized match rejects with a STRUCTURED err
   });
 });
 
+describe("live.scorePoint — resuming a paused match clears the paused status", () => {
+  test("a new event after pause flips status back to live", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-pause-resume",
+    });
+
+    await asOwner.mutation(api.live.pause, { matchId });
+    expect((await t.run((ctx) => ctx.db.get(matchId)))?.status).toBe("paused");
+
+    // Resuming (a new point) must clear paused → live so spectators stop seeing
+    // PAUSED and the match re-enters the live feed.
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "resume-1",
+      team: "A",
+      at: 5,
+    });
+    expect((await t.run((ctx) => ctx.db.get(matchId)))?.status).toBe("live");
+  });
+});
+
 describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => {
   test("a snapshot patches sets/serving/setScores and drives the headline from current-set points", async () => {
     const t = newClient();
