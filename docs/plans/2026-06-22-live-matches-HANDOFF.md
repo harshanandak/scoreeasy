@@ -28,7 +28,7 @@ First end-to-end BROADCAST slice shipped (commits 4412193 + ee6353a, pushed):
 - **cxr fast-follow gaps recorded** (see `scoreeasy-cxr`): operator un-hold/restore (profanity false-positives like "Scunthorpe" are silent takedowns with no recourse), word-boundary matching, a human review-queue UI over `flaggedAt`, per-reporter report cap, reactive auto-expire.
 
 **NEXT (the ONLY remaining gate before #93 merges):**
-1. **USER runtime-verify** (auth-gated; now possible via the #93 Cloudflare preview): sign in, score a match in EACH family (goals, volleyball/net, tennis, cricket), open the preview's `/live/:token` in a browser, confirm the headline + scorecard update live and Clerk/Convex work. The whole feature is unit-tested (862) but still **0% runtime-proven** — this is the merge gate. "q7k done" does NOT mean "#93 mergeable."
+1. **USER runtime-verify** (auth-gated; now possible via the #93 Cloudflare preview): sign in, score a match in EACH family (goals, volleyball/net, tennis, cricket, **Test cricket**), open the preview's `/live/:token` in a browser, confirm the headline + scorecard update live and Clerk/Convex work. The whole feature is unit-tested (862) but still **0% runtime-proven** — this is the merge gate. "q7k done" does NOT mean "#93 mergeable."
 2. After verify → mark #93 ready + merge.
 3. Deferred (post-launch): `cxr` heavier moderation, `3ws` public Watch feed, `s5m/obd/4qu/1bc/bx1` infra crons, tennis short-code.
 

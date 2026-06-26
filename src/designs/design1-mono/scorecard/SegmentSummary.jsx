@@ -8,7 +8,12 @@ import { eyebrowStyle, tabularNums } from './scorecardStyles';
 // the winner's TOTAL green-filled. Bucketing + the human caption come straight
 // from `segmentSummary(events, { segments })`.
 
-export default function SegmentSummary({ events, segments, teamA, teamB }) {
+export default function SegmentSummary({
+  events,
+  segments = 4,
+  teamA = DEFAULT_TEAM_A,
+  teamB = DEFAULT_TEAM_B,
+}) {
   const { caption, rows } = segmentSummary(events, { segments });
   const segmentCount = rows[0]?.perSegment.length ?? 0;
   const totals = rows.map((row) => row.total);
@@ -95,9 +100,5 @@ SegmentSummary.propTypes = {
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
-
-SegmentSummary.defaultProps = {
-  segments: 4,
-  teamA: DEFAULT_TEAM_A,
-  teamB: DEFAULT_TEAM_B,
-};
+// Defaults live in the signature — React 18.3 deprecates defaultProps on
+// function components.

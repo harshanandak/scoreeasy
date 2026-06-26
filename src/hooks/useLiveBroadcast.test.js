@@ -285,10 +285,12 @@ describe('useLiveBroadcast', () => {
       await result.current.point({ team: 'A', value: 1, at: 1 });
     });
 
-    // The foreign event was dropped, never sent to cm1's matchId.
+    // The foreign event was DROPPED, never sent to cm1's matchId — assert the
+    // EXACT send set (one call, only cm1:1), so a future rehydrate that re-keys
+    // the stale item with a fresh clientEventId can't slip through unnoticed.
+    expect(h.spies['live:scorePoint']).toHaveBeenCalledTimes(1);
     const sentEventIds = h.spies['live:scorePoint'].mock.calls.map((c) => c[0].clientEventId);
-    expect(sentEventIds).toContain('cm1:1');
-    expect(sentEventIds).not.toContain('OTHER:1');
+    expect(sentEventIds).toEqual(['cm1:1']);
     expect(load()).toEqual([]); // queue fully drained (foreign dropped, cm1 sent)
   });
 

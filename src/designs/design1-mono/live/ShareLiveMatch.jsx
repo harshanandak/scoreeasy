@@ -18,7 +18,12 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
 
   const copyLink = async () => {
     try {
-      await globalThis.navigator?.clipboard?.writeText(url);
+      // Guard explicitly: with optional chaining, a missing Clipboard API (non-secure
+      // context / some native webviews) makes `?.writeText(url)` evaluate to undefined,
+      // and `await undefined` resolves — so we'd flash "Copied ✓" without copying.
+      const clipboard = globalThis.navigator?.clipboard;
+      if (!clipboard?.writeText) throw new Error('clipboard-unavailable');
+      await clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {

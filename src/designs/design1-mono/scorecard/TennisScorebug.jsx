@@ -143,7 +143,10 @@ function PlayerRow({ name, side, state }) {
 
   return (
     <div
-      role="row"
+      // `group` (not `row`): there is no table/grid/rowgroup ancestor here, so a
+      // `row` role would be an invalid orphan. `group` is valid standalone and
+      // still carries the player's accessible name.
+      role="group"
       aria-label={name}
       style={{ display: 'flex', alignItems: 'center', gap: 6 }}
     >

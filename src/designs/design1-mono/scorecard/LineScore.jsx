@@ -75,7 +75,14 @@ TeamRow.propTypes = {
   scoreWord: PropTypes.string.isRequired,
 };
 
-export default function LineScore({ events, config, totals, isFinalResult, teamA, teamB }) {
+export default function LineScore({
+  events = [],
+  config,
+  totals,
+  isFinalResult = true,
+  teamA = DEFAULT_TEAM_A,
+  teamB = DEFAULT_TEAM_B,
+}) {
   // When the caller supplies authoritative totals (e.g. the always-current live
   // snapshot), render the FINAL directly. Spectators have no period config, so the
   // table is FINAL-only anyway, and re-deriving from a partial event page would be
@@ -144,12 +151,5 @@ LineScore.propTypes = {
   teamA: PropTypes.string,
   teamB: PropTypes.string,
 };
-
-LineScore.defaultProps = {
-  events: [],
-  config: undefined,
-  totals: undefined,
-  isFinalResult: true,
-  teamA: DEFAULT_TEAM_A,
-  teamB: DEFAULT_TEAM_B,
-};
+// Defaults are declared as destructuring defaults in the signature — React 18.3
+// deprecates defaultProps on function components.

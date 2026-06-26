@@ -52,7 +52,7 @@ describe('TennisScorebug', () => {
     events = point(events, 'A');
     render(<TennisScorebug events={events} config={{}} teamA="Alcaraz" teamB="Sinner" />);
 
-    const rowA = screen.getByRole('row', { name: 'Alcaraz' });
+    const rowA = screen.getByRole('group', { name: 'Alcaraz' });
     expect(within(rowA).getByText('AD')).toBeInTheDocument();
   });
 
@@ -63,8 +63,8 @@ describe('TennisScorebug', () => {
     events = run(events, 'A');
     render(<TennisScorebug events={events} config={{}} teamA="Alcaraz" teamB="Sinner" />);
 
-    const rowA = screen.getByRole('row', { name: 'Alcaraz' });
-    const rowB = screen.getByRole('row', { name: 'Sinner' });
+    const rowA = screen.getByRole('group', { name: 'Alcaraz' });
+    const rowB = screen.getByRole('group', { name: 'Sinner' });
     const winA = within(rowA).getByText('6');
     expect(winA).toBeInTheDocument();
     expect(winA.style.fontWeight).toBe('800');
@@ -83,7 +83,7 @@ describe('TennisScorebug', () => {
     render(<TennisScorebug events={events} config={{}} teamA="Alcaraz" teamB="Sinner" />);
 
     // Loser's tiebreak mini-score (4) is unique and rendered in a <sup>.
-    const rowB = screen.getByRole('row', { name: 'Sinner' });
+    const rowB = screen.getByRole('group', { name: 'Sinner' });
     const sup = within(rowB).getByText('4');
     expect(sup.tagName).toBe('SUP');
     // The loser's set game count (6) is not bolded (winner-bold proven in 6-4 test).
@@ -99,7 +99,7 @@ describe('TennisScorebug', () => {
     expect(dots).toHaveLength(1);
     expect(dots[0].style.background).toContain('var(--primary)');
     // The serving dot sits on server A's row.
-    const rowA = screen.getByRole('row', { name: 'Alcaraz' });
+    const rowA = screen.getByRole('group', { name: 'Alcaraz' });
     expect(within(rowA).getByRole('img', { name: 'Serving' })).toBeInTheDocument();
   });
 

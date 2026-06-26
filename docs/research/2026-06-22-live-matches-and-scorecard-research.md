@@ -8,6 +8,18 @@ section is expanded in docs/research/2026-06-22-feed-and-commentary-ux.md.
 
 # Live Match Streaming & Realistic Point-by-Point Scorecards — Research Report
 
+> **⚠️ SHIPPED-DELTA NOTE (read first).** This is the original *exploration*; where
+> it differs from the shipped implementation, the design doc
+> (`docs/plans/2026-06-22-live-matches-and-scorecard-design.md`) + code are
+> authoritative. Known deltas:
+> - **Visibility is public-by-default with one-time consent opt-out** (not
+>   default-private). Only **scores + team/player names** are exposed publicly —
+>   there are **no public notes/title UGC** fields.
+> - **`undo` is append-compensating** (it appends an `undo`/`correction` event and
+>   recomputes from the log); it does **not** destructively pop the last event, so
+>   spectators + replay stay consistent.
+> - Table names are `liveMatches` / `matchEvents` / `token` (see §1 naming).
+
 ## 1. Executive Summary
 
 This research backs a two-part feature for Score Easy: (A) a **live match broadcast/spectate system** (one scorer, many signed-out viewers, share-by-link plus an opt-in global "Watch Live" feed) and (B) a **broadcast-grade point-by-point scorecard** layer across every sport family. The conclusions are convergent and actionable:
@@ -18,7 +30,7 @@ This research backs a two-part feature for Score Easy: (A) a **live match broadc
 - **The global public feed is the risk multiplier, not the live link.** Apple Guideline 1.2 (filter + report + block + contact/EULA) is **release-blocking** for any public UGC surface, and youth-sports COPPA exposure (a minor's name on a browsable page is a "disclosure") forces a default-private, link-only-for-youth, name-redaction model. These are MVP gates, not backlog.
 - **Volleyball is the scorecard superset.** Build it completely (rally serving flag, win-by-2 no-cap, technical timeouts, set-5 tie-break with side switch); the other four net sports plus tennis/cricket/goal-sports are then config + presentation variants over a shared event model. The **sport-agnostic generic scorecard** (manufactured line-score + broadcast meta-stats from the event stream) is the highest-leverage single component — it gives "official feel" to *any* +1/+N game, including silly custom ones.
 
-**Canonical naming used throughout this report** (reconciling three findings that named things differently): the snapshot table is `matches`, its public capability is `token`, and the log is `matchEvents`. Where finding text said `liveMatches`/`shareCode`, read `matches`/`token`.
+**Canonical naming** (as SHIPPED — reconciling three findings that named things differently): the live snapshot table is `liveMatches`, its public capability is `token`, and the log is `matchEvents`. Where finding text said `matches`/`shareCode`, read `liveMatches`/`token`.
 
 ---
 
