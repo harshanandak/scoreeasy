@@ -204,6 +204,17 @@ describe('MonoWatchMatch', () => {
     expect(within(card).queryByText(/leads by/i)).not.toBeInTheDocument();
   });
 
+  it('uses stable keys even when both teams share the same name (no dup-key warning)', () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.snapshot = CRICKET_SNAPSHOT;
+    mocks.meta = { ...META, sport: 'cricket', teamA: { name: 'White' }, teamB: { name: 'White' } };
+    mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+    renderAt('ABC123', '?kiosk=1'); // SnapshotSummary renders two same-named rows
+
+    const dupKey = errSpy.mock.calls.some((c) => /same key/i.test(String(c[0])));
+    expect(dupKey).toBe(false);
+  });
+
   it('stats tab is driven by the snapshot (points/sets/serving), not the event page', () => {
     mocks.snapshot = VOLLEY_SNAPSHOT; // 18-21, 1-0 sets, A serving, SET 2
     mocks.meta = META;

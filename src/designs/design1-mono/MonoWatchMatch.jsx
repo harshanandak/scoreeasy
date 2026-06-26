@@ -391,15 +391,17 @@ function SnapshotSummary({ snapshot, nameA, nameB }) {
   // is structurally 0, and "leads by 150" / a "150–0" margin would be misleading
   // (a chase is also won by wickets, not the run delta). The periodLabel carries
   // the authoritative live line ("India 150/3 (25.2 ov)").
+  // Key by SIDE, not name — team names are user data and can legitimately collide
+  // (intra-squad scrimmage, identical placeholders), which would dup the React key.
   const rows = [
-    { name: nameA, score: snapshot.pointsA },
-    { name: nameB, score: snapshot.pointsB },
+    { side: 'A', name: nameA, score: snapshot.pointsA },
+    { side: 'B', name: nameB, score: snapshot.pointsB },
   ];
   return (
     <section aria-label="Match summary" style={{ borderTop: '2px solid var(--foreground)', paddingTop: 12 }}>
       {rows.map((r) => (
         <div
-          key={r.name}
+          key={r.side}
           style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '6px 0' }}
         >
           <span
@@ -438,19 +440,20 @@ SnapshotSummary.propTypes = {
 function StatsPanel({ snapshot, nameA, nameB }) {
   const serving =
     snapshot.servingTeam === 'A' ? nameA : snapshot.servingTeam === 'B' ? nameB : '—';
+  // Stable `id` keys — the labels embed team names, which can collide.
   const cells = [
-    { label: `${nameA} points`, value: snapshot.pointsA },
-    { label: `${nameB} points`, value: snapshot.pointsB },
-    { label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` },
-    { label: 'Period', value: snapshot.periodLabel || `#${snapshot.currentUnit}` },
-    { label: 'Serving', value: serving },
+    { id: 'a-points', label: `${nameA} points`, value: snapshot.pointsA },
+    { id: 'b-points', label: `${nameB} points`, value: snapshot.pointsB },
+    { id: 'sets', label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` },
+    { id: 'period', label: 'Period', value: snapshot.periodLabel || `#${snapshot.currentUnit}` },
+    { id: 'serving', label: 'Serving', value: serving },
   ];
 
   return (
     <section aria-label="Match stats" style={{ borderTop: '2px solid var(--foreground)', paddingTop: 12 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
         {cells.map((c) => (
-          <div key={c.label} style={{ minWidth: 0 }}>
+          <div key={c.id} style={{ minWidth: 0 }}>
             <p style={eyebrowStyle}>{c.label}</p>
             <p
               className="font-mono"
