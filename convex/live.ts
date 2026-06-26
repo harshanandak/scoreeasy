@@ -358,6 +358,15 @@ export const finalize = authedMutation({
       return { matchId: existing._id, archived: false };
     }
 
+    // Cricket finalize does NOT archive into `matches` (scoreeasy-6tf). A cricket
+    // result (Test draw, innings victory, D/L) cannot be derived from the live
+    // snapshot's cumulative runs, so the sets/points winner below would be wrong.
+    // The local cricket scorer writes the authoritative `matches` row under the
+    // same clientMatchId; defer to it rather than racing it with a wrong winner.
+    if (match.scorecardKind === "cricket") {
+      return { matchId: null, archived: false };
+    }
+
     // Sets are PRIMARY; current points break ties only when sets are equal.
     const winner =
       match.setsA !== match.setsB

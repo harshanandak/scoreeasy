@@ -512,7 +512,8 @@ describe("live.finalize — winner uses sets as primary, points as tiebreaker", 
     const res = await asOwner.mutation(api.live.finalize, { matchId });
     expect(res.archived).toBe(true);
 
-    const archived = await t.run(async (ctx) => ctx.db.get(res.matchId));
+    // matchId is non-null for a set sport (cricket is the only skip path, 6tf).
+    const archived = await t.run(async (ctx) => ctx.db.get(res.matchId!));
     // Sets are primary → B (Hawks) wins despite fewer current points.
     expect(archived?.winner).toBe(TEAMS.teamB.name);
     // 87d: a set-based match archives its SET tally as the headline score, not
@@ -702,5 +703,57 @@ describe("live write guards — reject writes to a finalized match (87d)", () =>
     await expect(
       asOwner.mutation(api.live.undo, { matchId, clientEventId: "u-after", at: 2 }),
     ).rejects.toThrow(/final/i);
+  });
+});
+
+describe("live.finalize — cricket defers archive to the local scorer (6tf)", () => {
+  test("a cricket match is NOT archived into matches by finalize", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "cricket",
+      scorecardKind: "cricket",
+      ...TEAMS,
+      clientMatchId: "cm-cricket-final",
+    });
+    await asOwner.mutation(api.live.scorePoint, {
+      matchId,
+      clientEventId: "r1",
+      team: "A",
+      value: 4,
+      at: 1,
+      snapshot: { pointsA: 4, pointsB: 0, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 },
+    });
+
+    const res = await asOwner.mutation(api.live.finalize, { matchId });
+
+    // Skipped the archive — the local cricket scorer owns the matches row.
+    expect(res.archived).toBe(false);
+    expect(res.matchId).toBeNull();
+    const matches = await t.run(async (ctx) => ctx.db.query("matches").collect());
+    expect(matches.length).toBe(0);
+
+    // The live match still finalized (status final) so the spectator view closes.
+    const snap = await t.query(api.live.getByToken, { token });
+    expect(snap?.status).toBe("final");
+  });
+
+  test("a non-cricket (volleyball) match IS still archived by finalize", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-vb-final",
+    });
+    await t.run(async (ctx) => ctx.db.patch(matchId, { setsA: 3, setsB: 1 }));
+
+    const res = await asOwner.mutation(api.live.finalize, { matchId });
+    expect(res.archived).toBe(true);
+    const matches = await t.run(async (ctx) => ctx.db.query("matches").collect());
+    expect(matches.length).toBe(1);
   });
 });
