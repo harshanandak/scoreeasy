@@ -79,7 +79,7 @@ function snapshotPatch(snap: {
 // component for v1.
 const CREATE_CAP = 20; // max new live matches per owner per window
 const CREATE_WINDOW_MS = 60 * 60 * 1000; // 1h
-const REPORT_HOLD_THRESHOLD = 3; // distinct reporters that auto-hold a match
+const REPORT_FLAG_THRESHOLD = 3; // distinct reporters that flag a match for review
 
 // ---------------------------------------------------------------------------
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
@@ -438,9 +438,12 @@ export const finalize = authedMutation({
 // (signed-out) flags a match by its share token. `reporterId` is an untrusted
 // client session id used ONLY for per-reporter dedup. Returns a UNIFORM
 // { ok: true } for missing / private / removed tokens so it never leaks whether a
-// token exists. At REPORT_HOLD_THRESHOLD distinct reporters the match auto-holds
-// (hidden by resolveReadableMatch). reporterId is spoofable, so the report rate
-// cap + dedup are the real backstop; an operator un-hold queue is fast-follow.
+// token exists. At REPORT_FLAG_THRESHOLD distinct reporters the match is FLAGGED
+// for human review (flaggedAt) but stays publicly visible — reports must NOT
+// auto-takedown content (reporterId is forgeable; auto-hide would be a one-call
+// censorship/DoS vector). Removal is a human decision via the cxr review queue
+// (fast-follow). The create-time profanity filter is the only automated hide,
+// and only on the operator's OWN typed names.
 export const report = mutation({
   args: {
     token: v.string(),
@@ -481,15 +484,18 @@ export const report = mutation({
       createdAt: Date.now(),
     });
 
-    // Auto-hold at the distinct-reporter threshold. Dedup-at-write means each row
-    // is a distinct reporter, so the bounded .take(N) count is the distinct count.
-    if (match.moderationStatus === "clean") {
+    // FLAG for review at the distinct-reporter threshold — does NOT hide the match
+    // (see the header: auto-hide on reports would be a censorship vector). Set
+    // flaggedAt once for the human review queue; the match stays public. Dedup-at-
+    // write means each row is a distinct reporter, so the bounded .take(N) count
+    // is the distinct-reporter count.
+    if (match.flaggedAt == null) {
       const rows = await ctx.db
         .query("moderationReports")
         .withIndex("by_match", (q) => q.eq("matchId", match._id))
-        .take(REPORT_HOLD_THRESHOLD);
-      if (rows.length >= REPORT_HOLD_THRESHOLD) {
-        await ctx.db.patch(match._id, { moderationStatus: "held" });
+        .take(REPORT_FLAG_THRESHOLD);
+      if (rows.length >= REPORT_FLAG_THRESHOLD) {
+        await ctx.db.patch(match._id, { flaggedAt: Date.now() });
       }
     }
 

@@ -808,27 +808,37 @@ describe("live moderation floor (q7k)", () => {
     expect(await t.query(api.live.getByToken, { token })).toBeNull();
   });
 
-  test("report auto-holds at the distinct-reporter threshold; dedups per reporter", async () => {
+  test("report FLAGS (never hides) at the distinct-reporter threshold; dedups per reporter", async () => {
     const t = newClient();
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
-    const { token } = await asOwner.mutation(api.live.create, {
+    const { token, matchId } = await asOwner.mutation(api.live.create, {
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
       clientMatchId: "cm-report",
     });
 
-    // Same reporter spamming counts once → no auto-hold.
+    // Same reporter spamming counts once → only 2 distinct reporters so far.
     await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r1" });
     await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r1" });
     await t.mutation(api.live.report, { token, reason: "abuse", reporterId: "r2" });
-    expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
+    expect((await t.run((ctx) => ctx.db.get(matchId)))?.flaggedAt).toBeUndefined();
 
-    // A 3rd DISTINCT reporter crosses the threshold → held → hidden.
+    // A 3rd DISTINCT reporter crosses the threshold → FLAGGED for review, but the
+    // match stays publicly visible (reports must never auto-takedown content).
     const res = await t.mutation(api.live.report, { token, reason: "hate", reporterId: "r3" });
     expect(res.ok).toBe(true);
-    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await t.query(api.live.getByToken, { token })).not.toBeNull(); // still public
+    const flagged = await t.run((ctx) => ctx.db.get(matchId));
+    expect(typeof flagged?.flaggedAt).toBe("number");
+    expect(flagged?.moderationStatus).toBe("clean"); // NOT held
+
+    // Dedup: r1's two reports are one row → 3 rows for r1/r2/r3, not 4.
+    const rows = await t.run((ctx) =>
+      ctx.db.query("moderationReports").withIndex("by_match", (q) => q.eq("matchId", matchId)).collect(),
+    );
+    expect(rows.length).toBe(3);
   });
 
   test("report on an unknown token is uniform and records nothing (no enumeration leak)", async () => {

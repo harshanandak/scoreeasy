@@ -106,6 +106,10 @@ export default defineSchema({
     lastEventAt: v.number(),
     publishedAt: v.optional(v.number()),
     publicExpiresAt: v.optional(v.number()),
+    // Set when reports cross the review threshold (q7k). Marks the match for a
+    // human moderator WITHOUT hiding it — reports must not auto-takedown public
+    // content (reporterId is untrusted; auto-hide would be a censorship vector).
+    flaggedAt: v.optional(v.number()),
     eventBlobId: v.optional(v.id("_storage")),
     eventCount: v.optional(v.number()),
   })
