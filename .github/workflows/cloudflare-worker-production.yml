@@ -1,9 +1,10 @@
 name: Cloudflare Worker Production
 
 # Production deploy of the scoreeasy Worker (assets-only Vite SPA) on push to
-# master. Modeled on harshanandak/Zwapit. Convex backend is separate; the build
-# only needs the production VITE_* values baked in. The job skips green until the
-# required secrets/vars are configured.
+# master. Modeled on harshanandak/Zwapit. The Convex BACKEND is deployed here too
+# (`convex deploy --cmd`) so backend + frontend ship together on every merge — a
+# referenced-but-undeployed function can't reach prod. See docs/DEPLOY.md. The job
+# skips green until the required secrets are configured.
 
 on:
   push:
@@ -16,9 +17,11 @@ permissions:
 env:
   CLOUDFLARE_WORKER_NAME: scoreeasy
   CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
-  # Production tier: live Clerk instance + production Convex deployment.
+  # Production tier: live Clerk instance. VITE_CONVEX_URL is intentionally NOT set
+  # here — `convex deploy --cmd` injects the just-deployed PRODUCTION Convex URL
+  # into the build, so the frontend is never built against a Convex deployment that
+  # lacks the functions it calls.
   VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || secrets.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-  VITE_CONVEX_URL: ${{ vars.PRODUCTION_VITE_CONVEX_URL || secrets.PRODUCTION_VITE_CONVEX_URL || vars.VITE_CONVEX_URL || secrets.VITE_CONVEX_URL }}
   VITE_SENTRY_DSN: ${{ vars.PRODUCTION_VITE_SENTRY_DSN || secrets.PRODUCTION_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
 
 concurrency:
@@ -41,12 +44,13 @@ jobs:
         shell: bash
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: |
-          if [ -n "$CF_API_TOKEN" ] && [ -n "$VITE_CONVEX_URL" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+          if [ -n "$CF_API_TOKEN" ] && [ -n "$CONVEX_DEPLOY_KEY" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Required secrets (CLOUDFLARE_API_TOKEN, VITE_CONVEX_URL, VITE_CLERK_PUBLISHABLE_KEY) not set — skipping deploy. Add them in repo Settings → Secrets and variables → Actions."
+            echo "::notice::Required secrets (CLOUDFLARE_API_TOKEN, CONVEX_DEPLOY_KEY, VITE_CLERK_PUBLISHABLE_KEY) not set — skipping deploy. Add them in repo Settings → Secrets and variables → Actions."
           fi
 
       - name: Checkout
@@ -73,9 +77,16 @@ jobs:
         if: steps.guard.outputs.ready == 'true'
         run: bun run test
 
-      - name: Build
+      # Deploy the Convex BACKEND to production, THEN build the frontend against the
+      # just-deployed deployment (convex injects its URL as VITE_CONVEX_URL). This
+      # runs after tests pass and before the Worker upload, so backend + frontend
+      # ship together and never drift. If the Convex deploy fails, the Worker is
+      # not uploaded.
+      - name: Deploy Convex (production) + build frontend against it
         if: steps.guard.outputs.ready == 'true'
-        run: bun run build
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: bunx convex deploy --yes --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'bun run build'
 
       - name: Deploy Worker
         id: deploy
