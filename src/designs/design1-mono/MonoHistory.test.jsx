@@ -297,6 +297,31 @@ describe('MonoHistory', () => {
     });
   });
 
+  it('merges stats into the same section behind a Stats tab', async () => {
+    seedQuickMatch();
+
+    renderHistory();
+
+    // Default view is the match list.
+    expect(await screen.findByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    const viewTabs = screen.getByRole('tablist', { name: 'History and statistics views' });
+    expect(within(viewTabs).getByRole('tab', { name: 'Matches' })).toBeInTheDocument();
+
+    // Switch to Stats: the aggregate performance view replaces the list.
+    fireEvent.click(within(viewTabs).getByRole('tab', { name: 'Stats' }));
+
+    expect(await screen.findByText('Performance')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
+    expect(screen.getByText('Top team')).toBeInTheDocument();
+    // The match list is hidden while viewing Stats.
+    expect(screen.queryByRole('button', { name: 'View details: Team A vs Team B' })).not.toBeInTheDocument();
+
+    // Switch back to Matches: the list is restored.
+    fireEvent.click(within(viewTabs).getByRole('tab', { name: 'Matches' }));
+    expect(screen.getByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    expect(screen.queryByText('Performance')).not.toBeInTheDocument();
+  });
+
   it('keeps history rows readable instead of disabled-looking', () => {
     const source = readFileSync(`${import.meta.dirname}/MonoHistory.jsx`, 'utf8');
 

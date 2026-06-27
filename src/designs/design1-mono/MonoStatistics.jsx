@@ -10,7 +10,6 @@ import {
 } from '../../utils/storage';
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
-import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
 
 function getMatchDate(match) {
@@ -213,9 +212,12 @@ function recordTeamResult(teamMap, team1, team2, score1, score2) {
   }
 }
 
-export default function MonoStatistics() {
+// The stats body, shell-free, so the merged History page (MonoHistory) hosts it
+// under its own page shell + tab bar. There is no standalone /statistics route any
+// more — /statistics and /stats redirect to /history — so this panel is the only
+// entry point (the former default-export wrapper was unreachable and was removed).
+export function MonoStatisticsPanel() {
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(false);
   const [tab, setTab] = useState('overview');
   const [sportsData, setSportsData] = useState({});
   const [quickMatches, setQuickMatches] = useState([]);
@@ -224,8 +226,6 @@ export default function MonoStatistics() {
   const [statsStatus, setStatsStatus] = useState('');
 
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-
     const qm = loadCompletedQuickMatches();
     qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
     setQuickMatches(qm);
@@ -346,18 +346,7 @@ export default function MonoStatistics() {
   ];
 
   return (
-    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="mono-page-shell">
-        <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button onClick={() => navigate('/app')} className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-muted-text" aria-label="Go back to home">
-            <BackArrow /> Home
-          </button>
-        </nav>
-
-        <h1 className="mono-page-header text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-          Statistics
-        </h1>
-
+    <>
         {/* Tabs */}
         <div className="mono-tabs" role="tablist" aria-label="Statistics categories">
           {tabs.map(t => (
@@ -636,8 +625,7 @@ export default function MonoStatistics() {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 }
 

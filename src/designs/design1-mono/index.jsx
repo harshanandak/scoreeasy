@@ -37,7 +37,6 @@ const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
 const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
 const GenericSetsTournament = lazy(() => import('./GenericSetsTournament'));
 const GenericGoalsTournament = lazy(() => import('./GenericGoalsTournament'));
-const MonoStatistics = lazy(() => import('./MonoStatistics'));
 const MonoTournamentSetup = lazy(() => import('./MonoTournamentSetup'));
 const MonoQuickMatch = lazy(() => import('./MonoQuickMatch'));
 const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiveScore'));
@@ -571,7 +570,6 @@ function GlobalNavigation({ requestScoringExit }) {
     { label: 'Home', path: '/' },
     { label: 'Play', path: '/play' },
     { label: 'History', path: '/history' },
-    { label: 'Stats', path: '/statistics' },
   ];
 
   if (cloudAuthAvailable) {
@@ -585,7 +583,6 @@ function GlobalNavigation({ requestScoringExit }) {
     { label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
     { label: 'Play', path: '/play', icon: 'play' },
     { label: 'History', path: '/history', icon: 'matches' },
-    { label: 'Stats', path: '/statistics', icon: 'stats' },
     cloudAuthAvailable
       ? {
         label: 'Account',
@@ -615,6 +612,14 @@ function GlobalNavigation({ requestScoringExit }) {
       return pathname.startsWith('/profile') ||
         pathname.startsWith('/users/search') ||
         pathname.startsWith('/onboarding');
+    }
+    if (item.path === '/history') {
+      // History now hosts the merged stats view; keep the tab active for the
+      // legacy /statistics and /stats paths while their redirects resolve.
+      return pathname === '/history' ||
+        pathname.startsWith('/history/') ||
+        pathname === '/statistics' ||
+        pathname === '/stats';
     }
     return pathname === item.path || pathname.startsWith(`${item.path}/`);
   };
@@ -1533,7 +1538,7 @@ export default function Design1Mono() {
                 <Route path="dashboard" element={<Navigate to={APP_ENTRY_PATH} replace />} />
                 <Route path="quick-match" element={<LegacyQuickMatchRoute />} />
                 <Route path="tournament" element={<LegacyTournamentRoute />} />
-                <Route path="stats" element={<Navigate to="/statistics" replace />} />
+                <Route path="stats" element={<Navigate to="/history" replace />} />
                 <Route path="game/:id" element={<GameResumeRecoveryRoute />} />
 
                 {/* Public spectator page — MUST sit above the :sport/* routes so
@@ -1550,7 +1555,7 @@ export default function Design1Mono() {
                 <Route path=":sport/quick/live/:matchId" element={<TennisQuickScorerRoute />} />
                 <Route path=":sport/live/:matchId" element={<LegacyTennisLiveRoute />} />
 
-                <Route path="statistics" element={<MonoStatistics />} />
+                <Route path="statistics" element={<Navigate to="/history" replace />} />
 
                 {SHOW_INTERNAL_ROUTES && (
                   <>

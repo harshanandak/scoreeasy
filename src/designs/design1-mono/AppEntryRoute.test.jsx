@@ -203,7 +203,7 @@ describe('app entry route contract', () => {
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveAttribute('aria-label', 'App navigation');
     expect(appNav).toHaveClass('global-bottom-nav-native');
-    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
     const navStyles = Array.from(container.querySelectorAll('style'))
       .map((style) => style.textContent)
       .join('\n');
@@ -213,8 +213,9 @@ describe('app entry route contract', () => {
 
     expect(within(appNav).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toBeInTheDocument();
+    // History and Stats are now one merged section reachable from a single tab.
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toBeInTheDocument();
-    expect(within(appNav).getByRole('button', { name: 'Stats', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).queryByRole('button', { name: 'Stats', hidden: true })).not.toBeInTheDocument();
   });
 
   it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
@@ -226,7 +227,7 @@ describe('app entry route contract', () => {
     expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveClass('global-bottom-nav-native');
-    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
 
     // The /play hub was simplified into a ledger-style chooser: the quick-match
