@@ -6,8 +6,9 @@ name: Cloudflare Worker Preview
 # Previews run the DEVELOPMENT tier end-to-end so Clerk + Convex actually work on
 # the preview origin: Clerk PRODUCTION keys cannot be used on *.workers.dev
 # preview URLs (Clerk constraint), so previews use the Clerk DEV publishable key
-# (pk_test_) + a Convex deployment wired to the Clerk DEV issuer. Set these as
-# PREVIEW_* repo vars/secrets.
+# (pk_test_). Each PR gets its OWN isolated Convex backend via
+# `convex deploy --preview-create pr-<N>` (CONVEX_PREVIEW_DEPLOY_KEY) — so a PR's
+# new functions + schema are always present on its preview. See docs/DEPLOY.md.
 #
 # A single sticky PR comment (marker below) is EDITED IN PLACE through
 # Queued → Building → Ready/Failed, so each push updates one comment rather than
@@ -23,9 +24,10 @@ permissions:
 env:
   CLOUDFLARE_WORKER_NAME: scoreeasy
   CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
-  # Preview tier: Clerk DEV instance (pk_test_) + dev/preview Convex deployment.
+  # Preview tier: Clerk DEV instance (pk_test_). VITE_CONVEX_URL is injected per-PR
+  # by `convex deploy --preview-create` below — each PR's frontend points at its own
+  # isolated Convex backend, not a shared dev one.
   VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || secrets.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-  VITE_CONVEX_URL: ${{ vars.PREVIEW_VITE_CONVEX_URL || secrets.PREVIEW_VITE_CONVEX_URL || vars.VITE_CONVEX_URL || secrets.VITE_CONVEX_URL }}
   VITE_SENTRY_DSN: ${{ vars.PREVIEW_VITE_SENTRY_DSN || secrets.PREVIEW_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
 
 concurrency:
@@ -62,12 +64,13 @@ jobs:
         shell: bash
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CONVEX_PREVIEW_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
         run: |
-          if [ -n "$CF_API_TOKEN" ] && [ -n "$VITE_CONVEX_URL" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+          if [ -n "$CF_API_TOKEN" ] && [ -n "$CONVEX_PREVIEW_DEPLOY_KEY" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Preview secrets (CLOUDFLARE_API_TOKEN, PREVIEW_VITE_CONVEX_URL, PREVIEW_VITE_CLERK_PUBLISHABLE_KEY) not set — skipping preview."
+            echo "::notice::Preview secrets (CLOUDFLARE_API_TOKEN, CONVEX_PREVIEW_DEPLOY_KEY, PREVIEW_VITE_CLERK_PUBLISHABLE_KEY) not set — skipping preview."
           fi
 
       - name: Skipped status (draft / fork)
@@ -135,9 +138,19 @@ jobs:
         if: steps.guard.outputs.ready == 'true'
         run: bun run type-check
 
-      - name: Build
+      # Create/update an ISOLATED Convex preview deployment for this PR (its own
+      # backend with this branch's functions + schema), then build the frontend
+      # against it (convex injects its URL as VITE_CONVEX_URL). Eliminates
+      # "function not found" from a shared dev backend lagging the branch.
+      - name: Deploy Convex preview + build frontend against it
         if: steps.guard.outputs.ready == 'true'
-        run: bun run build
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
+        run: |
+          bunx convex deploy --yes \
+            --preview-create "pr-${{ github.event.pull_request.number }}" \
+            --cmd-url-env-var-name VITE_CONVEX_URL \
+            --cmd 'bun run build'
 
       - name: Upload preview version
         id: preview
@@ -189,7 +202,7 @@ jobs:
               `| **Preview** | ${url} |`,
               `| **Commit** | \`${sha.slice(0, 7)}\` |`,
               '',
-              '_Cloudflare Worker preview (dev Clerk + dev Convex) — refreshed on every push to this PR._',
+              '_Cloudflare Worker preview (dev Clerk + isolated per-PR Convex) — refreshed on every push to this PR._',
             ].join('\n');
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: n, per_page: 100 });
             const existing = comments.find((c) => c.body && c.body.includes(marker));
