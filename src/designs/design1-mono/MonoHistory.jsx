@@ -22,6 +22,7 @@ import BackArrow from './components/BackArrow';
 import SportIcon from './SportIcon';
 import { sportsTokens } from './theme/sportsTokens';
 import { shareText } from '../../mobile/share';
+import { MonoStatisticsPanel } from './MonoStatistics';
 
 const ANY_SPORT = 'all';
 const RESULT_ALL = 'all';
@@ -289,6 +290,7 @@ export default function MonoHistory() {
   const navigate = useNavigate();
   const { history, clearAll: clearLegacyHistory, refresh: refreshLegacyHistory } = useGameHistory();
   const [visible, setVisible] = useState(false);
+  const [view, setView] = useState('matches');
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -508,10 +510,10 @@ export default function MonoHistory() {
               <BackArrow />
             </button>
             <h1 className="text-xl font-semibold" style={{ color: '#111' }}>
-              History
+              History &amp; Stats
             </h1>
           </div>
-          {clearableCount > 0 && (
+          {view === 'matches' && clearableCount > 0 && (
             <button
               onClick={confirmClearMutableHistory}
               className="mono-btn mono-btn-danger font-swiss text-xs"
@@ -525,6 +527,37 @@ export default function MonoHistory() {
           )}
         </nav>
 
+        {/* Top-level view switch: the match list (History) and the aggregate
+            stats (Stats) are one section, two tabs over the same record data. */}
+        <div className="mono-tabs" role="tablist" aria-label="History and statistics views">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'matches'}
+            aria-controls="tabpanel-history-matches"
+            onClick={() => setView('matches')}
+            className={view === 'matches' ? 'mono-tab mono-tab-active' : 'mono-tab'}
+          >
+            Matches
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'stats'}
+            aria-controls="tabpanel-history-stats"
+            onClick={() => setView('stats')}
+            className={view === 'stats' ? 'mono-tab mono-tab-active' : 'mono-tab'}
+          >
+            Stats
+          </button>
+        </div>
+
+        {view === 'stats' ? (
+          <div id="tabpanel-history-stats" role="tabpanel" aria-label="Stats">
+            <MonoStatisticsPanel />
+          </div>
+        ) : (
+        <div id="tabpanel-history-matches" role="tabpanel" aria-label="Matches">
         {/* The summary board IS the type filter — stat cards double as buttons. */}
         <section className="grid grid-cols-3 gap-3 mb-6" aria-label="History summary">
           {[
@@ -891,6 +924,8 @@ export default function MonoHistory() {
               </button>
             </div>
           </div>
+        )}
+        </div>
         )}
       </div>
     </div>

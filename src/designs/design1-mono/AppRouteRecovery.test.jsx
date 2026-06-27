@@ -132,11 +132,19 @@ describe('app route recovery', () => {
     });
   });
 
-  it('redirects legacy stats links to the Statistics route', async () => {
+  it('redirects legacy stats links to the merged History route', async () => {
     renderApp('/stats');
 
     await waitFor(() => {
-      expectCurrentRoute('/statistics');
+      expectCurrentRoute('/history');
+    });
+  });
+
+  it('redirects legacy statistics links to the merged History route', async () => {
+    renderApp('/statistics');
+
+    await waitFor(() => {
+      expectCurrentRoute('/history');
     });
   });
 
