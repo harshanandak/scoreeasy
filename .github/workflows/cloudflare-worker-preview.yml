@@ -147,7 +147,7 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
         run: |
-          bunx convex deploy --yes \
+          bunx convex deploy \
             --preview-create "pr-${{ github.event.pull_request.number }}" \
             --cmd-url-env-var-name VITE_CONVEX_URL \
             --cmd 'bun run build'
