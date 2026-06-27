@@ -86,7 +86,7 @@ jobs:
         if: steps.guard.outputs.ready == 'true'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-        run: bunx convex deploy --yes --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'bun run build'
+        run: bunx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL --cmd 'bun run build'
 
       - name: Deploy Worker
         id: deploy
