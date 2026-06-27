@@ -1546,7 +1546,10 @@ export default function MonoQuickMatch() {
     clearData(quickMatchDraftKey);
     timer.reset();
     startedAtRef.current = null;
-    liveMatchIdRef.current = null;
+    // Mint a fresh live id when going STRAIGHT into scoring (e.g. "play again"),
+    // matching the setup→start path — otherwise a rematch has no clientMatchId and
+    // can't go live. null for setup; the start handler mints there.
+    liveMatchIdRef.current = nextPhase === 'scoring' ? Date.now() : null;
     if (nextPhase === 'scoring') scoringSportRef.current = sport;
   };
 
