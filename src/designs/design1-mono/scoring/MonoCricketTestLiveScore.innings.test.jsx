@@ -33,6 +33,7 @@ vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: 'cricket', id: '1', matchId: 'm1' }),
+  useLocation: () => ({ pathname: '/cricket/1/m1', search: '' }),
 }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../utils/storage', () => ({
