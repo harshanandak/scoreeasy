@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ShareLiveMatch from './ShareLiveMatch';
 import { getConsent, setConsent } from '../../../lib/live/liveSession';
+import { useAuth } from '../../../hooks/useAuth';
 
 // LiveBroadcastBar (issue b0z): the operator-facing live control.
 //
@@ -23,14 +25,18 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // reset alone doesn't schedule an effect, and onEnableChange(true) is a
   // same-value no-op when enabled was already true).
   const [retryNonce, setRetryNonce] = useState(0);
+  const { cloudAuthAvailable, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Fire go-live exactly once per mount when broadcasting is on and consented.
+  // Fire go-live exactly once per mount when broadcasting is on, consented, AND the
+  // user is signed in (create is authed — never fire for a signed-out user).
   useEffect(() => {
-    if (enabled && consent === 'accepted' && descriptor?.clientMatchId && !startedRef.current) {
+    if (isAuthenticated && enabled && consent === 'accepted' && descriptor?.clientMatchId && !startedRef.current) {
       startedRef.current = true;
       void broadcast.goLive(descriptor);
     }
-  }, [enabled, consent, descriptor, broadcast, retryNonce]);
+  }, [isAuthenticated, enabled, consent, descriptor, broadcast, retryNonce]);
 
   const accept = () => {
     setConsent('accepted');
@@ -70,6 +76,30 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     void broadcast.setVisibility('private');
     onEnableChange(false);
   };
+
+  // No cloud backend (offline build) → broadcasting isn't possible; render nothing.
+  if (!cloudAuthAvailable) return null;
+
+  // Going live needs an account (create is an authed mutation). Rather than show a
+  // control that fails silently, route a signed-out user to sign-in.
+  if (!isAuthenticated) {
+    const returnTo = `${location.pathname}${location.search}`;
+    return (
+      <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
+        <button
+          type="button"
+          onClick={() => navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`)}
+          className="mono-btn"
+          style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <span aria-hidden="true" style={{ color: '#dc2626' }}>●</span> Sign in to go live
+        </button>
+        <p style={{ margin: '6px 2px 0', fontSize: '0.75rem', color: 'var(--se-color-ink-muted)' }}>
+          Share the live scoreboard with anyone — needs a free account.
+        </p>
+      </div>
+    );
+  }
 
   // First-ever decision: the one-time disclosure card.
   if (consent === null) {
@@ -133,8 +163,13 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // Consent given but not currently broadcasting (declined, or stopped): offer to go live.
   return (
     <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
-      <button type="button" onClick={goLiveNow} className="mono-btn" style={{ width: '100%' }}>
-        Go live
+      <button
+        type="button"
+        onClick={goLiveNow}
+        className="mono-btn-primary"
+        style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+      >
+        <span aria-hidden="true">●</span> Go live &amp; share
       </button>
     </div>
   );
