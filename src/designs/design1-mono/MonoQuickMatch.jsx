@@ -1542,6 +1542,7 @@ export default function MonoQuickMatch() {
     setResult(null);
     setShareStatus('');
     resetSync();
+    liveRef.current?.reset?.(); // drop the prior live session so the next match starts clean (R2)
     clearData(quickMatchDraftKey);
     timer.reset();
     startedAtRef.current = null;

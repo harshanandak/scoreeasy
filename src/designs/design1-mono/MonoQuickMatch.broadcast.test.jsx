@@ -14,6 +14,7 @@ const live = vi.hoisted(() => ({
   finalize: vi.fn(() => Promise.resolve()),
   goLive: vi.fn(() => Promise.resolve({ token: 'TOK', matchId: 'mid' })),
   setVisibility: vi.fn(() => Promise.resolve()),
+  reset: vi.fn(),
 }));
 
 // Mutable route+draft so one mocked module set can serve every sport. loadData

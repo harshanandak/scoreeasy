@@ -726,9 +726,10 @@ export default function MonoOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [visible, setVisible] = useState(false);
-  // Live-sharing consent, captured ONCE here at sign-in (public-by-default, opt-out)
-  // so the scorer never has to interrupt a match to ask. Persisted on submit.
-  const [liveConsent, setLiveConsent] = useState(true);
+  // Live-sharing consent, captured ONCE here at sign-in (opt-IN: unchecked by
+  // default, so a user must actively choose to make matches public) so the scorer
+  // never has to interrupt a match to ask. Persisted on submit.
+  const [liveConsent, setLiveConsent] = useState(false);
 
   const TOTAL_STEPS = 4;
 

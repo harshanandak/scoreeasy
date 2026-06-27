@@ -25,7 +25,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // reset alone doesn't schedule an effect, and onEnableChange(true) is a
   // same-value no-op when enabled was already true).
   const [retryNonce, setRetryNonce] = useState(0);
-  const { cloudAuthAvailable, isAuthenticated } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, isUserReady } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -81,8 +81,11 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   if (!cloudAuthAvailable) return null;
 
   // Going live needs an account (create is an authed mutation). Rather than show a
-  // control that fails silently, route a signed-out user to sign-in.
+  // control that fails silently, route a signed-out user to sign-in — but only once
+  // auth has RESOLVED, so a logged-in user reloading doesn't flash "Sign in" before
+  // their session hydrates.
   if (!isAuthenticated) {
+    if (!isUserReady) return null;
     const returnTo = `${location.pathname}${location.search}`;
     return (
       <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">

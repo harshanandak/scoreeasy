@@ -8,8 +8,8 @@ import LiveBroadcastBar from './LiveBroadcastBar';
 const nav = vi.hoisted(() => vi.fn());
 vi.mock('react-router-dom', async (orig) => ({ ...(await orig()), useNavigate: () => nav }));
 
-// Auth is mocked per-test; default = signed in with a cloud backend.
-const auth = vi.hoisted(() => ({ cloudAuthAvailable: true, isAuthenticated: true }));
+// Auth is mocked per-test; default = signed in with a cloud backend, resolved.
+const auth = vi.hoisted(() => ({ cloudAuthAvailable: true, isAuthenticated: true, isUserReady: true }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => auth }));
 
 beforeEach(() => {
@@ -17,6 +17,7 @@ beforeEach(() => {
   nav.mockClear();
   auth.cloudAuthAvailable = true;
   auth.isAuthenticated = true;
+  auth.isUserReady = true;
 });
 
 function makeBroadcast(overrides = {}) {
@@ -155,5 +156,14 @@ describe('LiveBroadcastBar (b0z)', () => {
     const broadcast = makeBroadcast();
     const { container } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders nothing while auth is still resolving (no premature sign-in flash)', () => {
+    auth.isAuthenticated = false;
+    auth.isUserReady = false;
+    const broadcast = makeBroadcast();
+    const { container } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole('button', { name: /Sign in to go live/i })).toBeNull();
   });
 });
