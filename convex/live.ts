@@ -15,6 +15,15 @@ function feedBucket(now: number) {
 // Public visibility lifetime after finalize (grace before auto-expire, §7.1).
 const PUBLIC_EXPIRY_GRACE_MS = 1000 * 60 * 60 * 24;
 
+// Discovery-feed freshness: the "live now" home rail (scoreeasy-3ws) drops
+// matches idle longer than this. Generous enough to survive a halftime / set
+// break. Date.now() here is NON-reactive (same caveat as the watch page's
+// PAUSED-by-staleness) — the view refreshes on the next query run, not exactly at
+// the cutoff. FEED_SCAN_CAP bounds the index read (far above any realistic count
+// of concurrent public live matches for an amateur app).
+const FEED_FRESHNESS_MS = 1000 * 60 * 30;
+const FEED_SCAN_CAP = 150;
+
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 // Unguessable, non-enumerable share handle (§4.4). Uses Web Crypto
@@ -642,6 +651,79 @@ export const getMeta = query({
       players: players ?? [],
       isYouthMatch: match.isYouthMatch,
     };
+  },
+});
+
+const publicFeedItemValidator = v.object({
+  token: v.string(),
+  sport: v.string(),
+  scorecardKind: v.string(),
+  pointsA: v.number(),
+  pointsB: v.number(),
+  setsA: v.number(),
+  setsB: v.number(),
+  servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
+  periodLabel: v.optional(v.string()),
+  lastEventAt: v.number(),
+  teamA: teamMetaValidator,
+  teamB: teamMetaValidator,
+});
+
+// PUBLIC discovery feed (scoreeasy-3ws): the live matches anyone can browse.
+// Filters to status=live + visibility=public + moderationStatus=clean via the
+// by_feed index (feedRank desc = most-recent-activity first), drops abandoned
+// (stale) matches, and any youth match. NOTE: nothing at the write layer clamps
+// a youth match to `unlisted` (master has no such coupling), so this `!isYouthMatch`
+// filter is LOAD-BEARING — the sole guarantee a minor's match never surfaces here,
+// not mere defense-in-depth. Each
+// item carries its `token` so the client can link to /live/:token; for a public
+// match that token is the intended public capability. Explicit projection — the
+// raw doc (ownerId / _id / clientMatchId / moderationStatus / feedRank) never leaks.
+export const listLiveFeed = query({
+  args: { limit: v.optional(v.number()) },
+  returns: v.array(publicFeedItemValidator),
+  handler: async (ctx, { limit }) => {
+    const cap = Math.min(Math.max(limit ?? 50, 1), 100);
+    const freshAfter = Date.now() - FEED_FRESHNESS_MS;
+
+    const rows = await ctx.db
+      .query("liveMatches")
+      .withIndex("by_feed", (q) =>
+        q
+          .eq("status", "live")
+          .eq("visibility", "public")
+          .eq("moderationStatus", "clean"),
+      )
+      .order("desc")
+      .take(FEED_SCAN_CAP);
+
+    const fresh = rows
+      .filter((m) => !m.isYouthMatch && m.lastEventAt > freshAfter)
+      .slice(0, cap);
+
+    const items = [];
+    for (const m of fresh) {
+      const meta = await ctx.db
+        .query("liveMatchMeta")
+        .withIndex("by_match", (q) => q.eq("matchId", m._id))
+        .unique();
+      if (!meta) continue;
+      items.push({
+        token: m.token,
+        sport: m.sport,
+        scorecardKind: m.scorecardKind,
+        pointsA: m.pointsA,
+        pointsB: m.pointsB,
+        setsA: m.setsA,
+        setsB: m.setsB,
+        servingTeam: m.servingTeam,
+        periodLabel: m.periodLabel,
+        lastEventAt: m.lastEventAt,
+        teamA: { name: meta.teamA.name, color: meta.teamA.color },
+        teamB: { name: meta.teamB.name, color: meta.teamB.color },
+      });
+    }
+    return items;
   },
 });
 

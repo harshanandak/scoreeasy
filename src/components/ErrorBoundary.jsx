@@ -45,6 +45,11 @@ class ErrorBoundary extends React.Component {
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    // A caller can opt into a custom (or silent `null`) fallback instead of the
+    // full-page panel — used to isolate a non-critical widget (e.g. the home
+    // "Live now" strip) so its failure never takes down the surrounding page.
+    if (this.props.fallback !== undefined) return this.props.fallback;
+
     return (
       <div className="min-h-screen px-6 py-10 flex items-center justify-center">
         <div className="mono-table-panel w-full max-w-lg" style={{ padding: '20px 24px' }}>
@@ -116,6 +121,8 @@ ErrorBoundary.propTypes = {
   children: PropTypes.node,
   title: PropTypes.string,
   message: PropTypes.string,
+  // When provided (including `null`), render this instead of the default panel.
+  fallback: PropTypes.node,
   onError: PropTypes.func,
   captureToSentry: PropTypes.bool,
 };
