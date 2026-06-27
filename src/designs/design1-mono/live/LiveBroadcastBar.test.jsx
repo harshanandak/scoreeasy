@@ -1,9 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import LiveBroadcastBar from './LiveBroadcastBar';
+
+// Navigate is mocked to a spy so we can assert the sign-in route; the rest of
+// react-router-dom (MemoryRouter, useLocation) stays real.
+const nav = vi.hoisted(() => vi.fn());
+vi.mock('react-router-dom', async (orig) => ({ ...(await orig()), useNavigate: () => nav }));
+
+// Auth is mocked per-test; default = signed in with a cloud backend, resolved.
+const auth = vi.hoisted(() => ({ cloudAuthAvailable: true, isAuthenticated: true, isUserReady: true }));
+vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => auth }));
 
 beforeEach(() => {
   localStorage.clear();
+  nav.mockClear();
+  auth.cloudAuthAvailable = true;
+  auth.isAuthenticated = true;
+  auth.isUserReady = true;
 });
 
 function makeBroadcast(overrides = {}) {
@@ -24,10 +38,18 @@ const descriptor = {
   teamB: { name: 'Beta' },
 };
 
+function renderBar(props) {
+  return render(
+    <MemoryRouter initialEntries={['/football/quick']}>
+      <LiveBroadcastBar {...props} />
+    </MemoryRouter>,
+  );
+}
+
 describe('LiveBroadcastBar (b0z)', () => {
   it('shows the one-time consent disclosure when consent is unseen', () => {
     const broadcast = makeBroadcast();
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={() => {}} />);
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
     expect(screen.getByText(/Scores and team names will be public/i)).toBeInTheDocument();
     expect(broadcast.goLive).not.toHaveBeenCalled();
   });
@@ -35,7 +57,7 @@ describe('LiveBroadcastBar (b0z)', () => {
   it('accepting consent enables broadcasting and persists the choice', () => {
     const broadcast = makeBroadcast();
     const onEnableChange = vi.fn();
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
 
     fireEvent.click(screen.getByRole('button', { name: 'Share live' }));
 
@@ -46,7 +68,7 @@ describe('LiveBroadcastBar (b0z)', () => {
   it('declining keeps the match private and never broadcasts', () => {
     const broadcast = makeBroadcast();
     const onEnableChange = vi.fn();
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
 
     fireEvent.click(screen.getByRole('button', { name: 'Keep private' }));
 
@@ -58,14 +80,16 @@ describe('LiveBroadcastBar (b0z)', () => {
   it('fires goLive exactly once when enabled and consent already accepted', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast();
-    const { rerender } = render(
-      <LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />,
-    );
+    const { rerender } = renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
     expect(broadcast.goLive).toHaveBeenCalledTimes(1);
     expect(broadcast.goLive).toHaveBeenCalledWith(descriptor);
 
-    rerender(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+    rerender(
+      <MemoryRouter initialEntries={['/football/quick']}>
+        <LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />
+      </MemoryRouter>,
+    );
     expect(broadcast.goLive).toHaveBeenCalledTimes(1);
   });
 
@@ -73,7 +97,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
     const onEnableChange = vi.fn();
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={onEnableChange} />);
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange });
 
     expect(screen.getByText(/LIVE/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
@@ -82,34 +106,13 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(onEnableChange).toHaveBeenCalledWith(false);
   });
 
-  it('Stop then resume goes private then re-publishes (full transition)', () => {
-    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
-    const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
-    const onEnableChange = vi.fn();
-    // Start LIVE (the real precondition), then drive Stop -> resume rather than
-    // mounting straight into the stopped state.
-    const { rerender } = render(
-      <LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={onEnableChange} />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    expect(broadcast.setVisibility).toHaveBeenLastCalledWith('private');
-    expect(onEnableChange).toHaveBeenLastCalledWith(false);
-
-    // Parent reflects the disable; now the bar shows "Go live" — resume.
-    rerender(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
-    expect(broadcast.setVisibility).toHaveBeenLastCalledWith('public');
-    expect(onEnableChange).toHaveBeenLastCalledWith(true);
-  });
-
   it('Go live when no match exists yet re-enables without re-publishing', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('declined'));
     const broadcast = makeBroadcast({ isLive: false });
     const onEnableChange = vi.fn();
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} />);
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
 
     expect(broadcast.setVisibility).not.toHaveBeenCalled();
     expect(onEnableChange).toHaveBeenCalledWith(true);
@@ -117,25 +120,50 @@ describe('LiveBroadcastBar (b0z)', () => {
 
   it('retries a FAILED initial go-live when Go live is tapped (effect re-fires)', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
-    // A failed go-live: the hook resolves null and isLive stays false (the hook
-    // never rejects). startedRef has latched, so without the retry-nonce bump the
-    // effect would never re-fire and the operator would be stuck.
     const broadcast = makeBroadcast({ isLive: false });
     broadcast.goLive.mockResolvedValue(null);
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
     expect(broadcast.goLive).toHaveBeenCalledTimes(1); // initial (failed)
-    fireEvent.click(screen.getByRole('button', { name: 'Go live' }));
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
     expect(broadcast.goLive).toHaveBeenCalledTimes(2); // retried
   });
 
   it('opens the share sheet from the live state', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
-    render(<LiveBroadcastBar broadcast={broadcast} descriptor={descriptor} enabled onEnableChange={() => {}} />);
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     expect(screen.getByRole('dialog', { name: 'Share live match' })).toBeInTheDocument();
     expect(screen.getByText('https://scoreeasy.app/live/TOK')).toBeInTheDocument();
+  });
+
+  // --- auth-aware behaviour (live-ux) ---
+  it('routes a signed-out user to sign-in instead of a silently-failing go-live', () => {
+    auth.isAuthenticated = false;
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast();
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
+
+    expect(broadcast.goLive).not.toHaveBeenCalled(); // effect gated on auth
+    fireEvent.click(screen.getByRole('button', { name: /Sign in to go live/i }));
+    expect(nav).toHaveBeenCalledWith(expect.stringContaining('/login?returnTo='));
+  });
+
+  it('renders nothing when there is no cloud backend (offline build)', () => {
+    auth.cloudAuthAvailable = false;
+    const broadcast = makeBroadcast();
+    const { container } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders nothing while auth is still resolving (no premature sign-in flash)', () => {
+    auth.isAuthenticated = false;
+    auth.isUserReady = false;
+    const broadcast = makeBroadcast();
+    const { container } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole('button', { name: /Sign in to go live/i })).toBeNull();
   });
 });

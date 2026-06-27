@@ -13,6 +13,9 @@ import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaul
 import { useAuth } from '../../hooks/useAuth';
 import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useLiveBroadcast } from '../../hooks/useLiveBroadcast';
+import { getConsent } from '../../lib/live/liveSession';
+import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
@@ -463,6 +466,21 @@ export default function MonoQuickMatch() {
   const scoringSportRef = useRef(null);
   const quickMatchDraftKey = `se_quickmatch_draft_${sport}`;
 
+  // Live broadcast (dkt/b0z): mirror each point/undo to the public watch page with
+  // the engine-derived snapshot. Additive — localStorage stays authoritative; a
+  // failed/offline broadcast never breaks local scoring. Consent is global.
+  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const live = useLiveBroadcast({ enabled: liveEnabled });
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  // Records the latest scoring action; its broadcast snapshot is computed from the
+  // COMMITTED state in the post-commit effect below (a point can end a set / chase).
+  const broadcastIntentRef = useRef(null);
+  // Stable per-match id (R2): QuickMatch has no matchId during scoring, so we mint a
+  // numeric id when scoring STARTS and persist/restore it in the draft. Null until
+  // then so the bar doesn't fire goLive on the setup screen.
+  const liveMatchIdRef = useRef(null);
+
   // Result state
   const [result, setResult] = useState(null);
   const [shareStatus, setShareStatus] = useState('');
@@ -527,6 +545,9 @@ export default function MonoQuickMatch() {
     if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
     if (typeof draft.servingTeam === 'number') setServingTeam(draft.servingTeam);
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
+    // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
+    // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
+    liveMatchIdRef.current = draft.quickMatchId || Date.now();
     timer.restore(getRestoredTimerElapsed(draft), false);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
@@ -559,11 +580,88 @@ export default function MonoQuickMatch() {
       trialBallUsed,
       servingTeam,
       lastAction,
+      quickMatchId: liveMatchIdRef.current,
       timerElapsed: timer.elapsed,
       startedAt: startedAtRef.current,
       updatedAt: new Date().toISOString(),
     });
   }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+
+  // Whether this sport rotates serve to the point winner (drives the snapshot's
+  // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
+  // effect's dependency array doesn't hit a temporal-dead-zone ReferenceError.
+  const tracksPointWinnerServe = sport === 'volleyball' || sport === 'badminton';
+
+  // Live broadcast: build the latest point/undo snapshot from the COMMITTED state
+  // (a single tap can end a set / chase / open the next unit, which React applies
+  // asynchronously). No-op until the bar has run goLive — point/undo return null
+  // until then. The dependency array lists EVERY score-state variable read below.
+  useEffect(() => {
+    const intent = broadcastIntentRef.current;
+    if (!intent) return;
+    broadcastIntentRef.current = null;
+
+    let snapshot;
+    if (isCricket) {
+      const battingName = battingTeam === 1 ? team1Name : team2Name;
+      const battingScore = battingTeam === 1 ? scores.team1 : scores.team2;
+      snapshot = {
+        pointsA: scores.team1.runs,
+        pointsB: scores.team2.runs,
+        setsA: 0,
+        setsB: 0,
+        setScores: [],
+        servingTeam: undefined,
+        currentUnit: innings,
+        periodLabel: `${battingName} ${battingScore.runs}/${battingScore.wickets} (${ballsToOvers(battingScore.balls)})`,
+      };
+    } else if (isGoals) {
+      snapshot = {
+        pointsA: gScore1,
+        pointsB: gScore2,
+        setsA: 0,
+        setsB: 0,
+        setScores: [],
+        currentUnit: 1,
+      };
+    } else if (format.type === 'best-of') {
+      const completed = sets.filter((s) => s.completed);
+      snapshot = {
+        pointsA: sets[currentSet]?.score1 || 0,
+        pointsB: sets[currentSet]?.score2 || 0,
+        setsA: completed.filter((s) => s.score1 > s.score2).length,
+        setsB: completed.filter((s) => s.score2 > s.score1).length,
+        setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
+        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+        currentUnit: currentSet + 1,
+        periodLabel: `Set ${currentSet + 1}`,
+      };
+    } else {
+      snapshot = {
+        pointsA: vScore1,
+        pointsB: vScore2,
+        setsA: 0,
+        setsB: 0,
+        setScores: [],
+        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+        currentUnit: 1,
+      };
+    }
+
+    if (intent.kind === 'undo') {
+      liveRef.current.undo({ at: intent.at, snapshot });
+    } else {
+      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
+    }
+  }, [scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name]);
+
+  // Finalize ordering (R1): finalizeMatch runs SYNCHRONOUSLY inside the scoring
+  // handlers at auto-completion, so the winning point's broadcast effect runs AFTER
+  // it. A separate effect declared IMMEDIATELY AFTER the snapshot effect runs in
+  // source order — so the last point enqueues BEFORE finalize drains+archives.
+  useEffect(() => {
+    if (phase === 'result') void liveRef.current.finalize();
+  }, [phase]);
 
   // Apply cricket defaults when the quick-match sport route changes.
   useEffect(() => {
@@ -609,7 +707,17 @@ export default function MonoQuickMatch() {
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
-  const tracksPointWinnerServe = sport === 'volleyball' || sport === 'badminton';
+
+  // Live broadcast descriptor (shared across all three sport branches). clientMatchId
+  // stays null until scoring starts (so the bar doesn't fire goLive on setup).
+  const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
+  const liveDescriptor = {
+    clientMatchId: liveMatchIdRef.current ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
+    sport,
+    scorecardKind: liveScorecardKind,
+    teamA: { name: team1Name },
+    teamB: { name: team2Name },
+  };
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -867,6 +975,9 @@ export default function MonoQuickMatch() {
       return;
     }
 
+    // Mint the stable live-broadcast match id (R2) right before scoring begins —
+    // tennis/test-cricket branches above navigate away and never reach this line.
+    liveMatchIdRef.current = Date.now();
     setPhase('scoring');
   };
 
@@ -882,6 +993,7 @@ export default function MonoQuickMatch() {
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
     setLastAction(`${battingName} +${runs} run${runs === 1 ? '' : 's'}`);
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: runs, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit, innings, battingTeam }]);
 
     setScores(prev => {
@@ -922,6 +1034,9 @@ export default function MonoQuickMatch() {
     const key = battingTeam === 1 ? 'team1' : 'team2';
     const battingName = battingTeam === 1 ? team1Name : team2Name;
     setLastAction(`${battingName} wicket`);
+    // A wicket adds no runs; broadcast it as a value-0 point so the public snapshot
+    // (which carries the authoritative score + wicket count) refreshes.
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 0, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit, innings, battingTeam }]);
 
     setScores(prev => {
@@ -958,6 +1073,7 @@ export default function MonoQuickMatch() {
     if (countsAsBall && freeHit) setFreeHit(false);
     const extraLabel = { wide: 'wide', noBall: 'no ball', bye: 'bye', legBye: 'leg bye' };
     setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
+    broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 1, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
     setScores(prev => {
       const team = { ...prev[key], runs: prev[key].runs + 1 };
@@ -993,6 +1109,7 @@ export default function MonoQuickMatch() {
     if (cricketHistory.length === 0) return;
     void correctionImpact();
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = cricketHistory[cricketHistory.length - 1];
     setCricketHistory(prev => prev.slice(0, -1));
     setLastAction('Undid last cricket action');
@@ -1106,6 +1223,8 @@ export default function MonoQuickMatch() {
     if (tracksPointWinnerServe) setServingTeam(team);
     setLastAction(`${getTeamLabel(team)} +1 ${scoringUnit}`);
 
+    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
+
     setVScoreHistory(prev => [...prev, {
       team,
       vScore1,
@@ -1153,6 +1272,7 @@ export default function MonoQuickMatch() {
     if (vScoreHistory.length === 0) return;
     void correctionImpact();
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = vScoreHistory[vScoreHistory.length - 1];
     setVScoreHistory(prev => prev.slice(0, -1));
     setLastAction('Undid last point');
@@ -1193,6 +1313,9 @@ export default function MonoQuickMatch() {
 
     void correctionImpact();
     setLastAction(`${teamName} ${delta > 0 ? '+1' : '-1'} correction`);
+    broadcastIntentRef.current = delta > 0
+      ? { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() }
+      : { kind: 'undo', at: Date.now() };
     setVScoreHistory(prev => [...prev, {
       team,
       vScore1,
@@ -1289,6 +1412,8 @@ export default function MonoQuickMatch() {
     const newS1 = team === 1 ? gScore1 + value : gScore1;
     const newS2 = team === 2 ? gScore2 + value : gScore2;
 
+    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', value, at: Date.now() };
+
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
@@ -1306,6 +1431,7 @@ export default function MonoQuickMatch() {
     if (gScoreHistory.length === 0) return;
     void correctionImpact();
 
+    broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = gScoreHistory[gScoreHistory.length - 1];
     if (last.team === 1) setGScore1(prev => Math.max(0, prev - last.value));
     else setGScore2(prev => Math.max(0, prev - last.value));
@@ -1322,6 +1448,9 @@ export default function MonoQuickMatch() {
     }
 
     void correctionImpact();
+    broadcastIntentRef.current = delta > 0
+      ? { kind: 'point', team: team === 1 ? 'A' : 'B', value: delta, at: Date.now() }
+      : { kind: 'undo', at: Date.now() };
     const newS1 = team === 1 ? Math.max(0, gScore1 + delta) : gScore1;
     const newS2 = team === 2 ? Math.max(0, gScore2 + delta) : gScore2;
     setGScore1(newS1);
@@ -1413,9 +1542,14 @@ export default function MonoQuickMatch() {
     setResult(null);
     setShareStatus('');
     resetSync();
+    liveRef.current?.reset?.(); // drop the prior live session so the next match starts clean (R2)
     clearData(quickMatchDraftKey);
     timer.reset();
     startedAtRef.current = null;
+    // Mint a fresh live id when going STRAIGHT into scoring (e.g. "play again"),
+    // matching the setup→start path — otherwise a rematch has no clientMatchId and
+    // can't go live. null for setup; the start handler mints there.
+    liveMatchIdRef.current = nextPhase === 'scoring' ? Date.now() : null;
     if (nextPhase === 'scoring') scoringSportRef.current = sport;
   };
 
@@ -2369,6 +2503,14 @@ export default function MonoQuickMatch() {
               </div>
             </div>
 
+            {/* Live broadcast control (consent / LIVE indicator / share) */}
+            <LiveBroadcastBar
+              broadcast={live}
+              descriptor={liveDescriptor}
+              enabled={liveEnabled}
+              onEnableChange={setLiveEnabled}
+            />
+
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
               <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
@@ -2522,6 +2664,14 @@ export default function MonoQuickMatch() {
               </span>
             </div>
 
+            {/* Live broadcast control (consent / LIVE indicator / share) */}
+            <LiveBroadcastBar
+              broadcast={live}
+              descriptor={liveDescriptor}
+              enabled={liveEnabled}
+              onEnableChange={setLiveEnabled}
+            />
+
             {/* Arena: two full-bleed halves; whole half = +1 */}
             <div className="mono-arena-grid">
               {goalHalves.map((h) => (
@@ -2602,6 +2752,14 @@ export default function MonoQuickMatch() {
               </span>
             </span>
           </div>
+
+          {/* Live broadcast control (consent / LIVE indicator / share) */}
+          <LiveBroadcastBar
+            broadcast={live}
+            descriptor={liveDescriptor}
+            enabled={liveEnabled}
+            onEnableChange={setLiveEnabled}
+          />
 
           {/* Seam: sets-won tally + rule */}
           <div className="mono-arena-seam">

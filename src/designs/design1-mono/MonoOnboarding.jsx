@@ -7,6 +7,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { useAuth } from "../../hooks/useAuth";
 import { getSportsByCategory } from "../../models/sportRegistry";
 import { getAuthReturnToFromSearch } from "../../utils/authRedirect";
+import { setConsent } from "../../lib/live/liveSession";
 import BackArrow from "./components/BackArrow";
 import SportIcon from "./SportIcon";
 
@@ -555,7 +556,7 @@ StepPreferences.propTypes = {
 // Step 4 — Favorite Games
 // ---------------------------------------------------------------------------
 
-function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, error }) {
+function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, error, liveConsent, onLiveConsentChange }) {
   const categories = getSportsByCategory();
 
   function toggleGame(id) {
@@ -647,7 +648,26 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
         </p>
       )}
 
-      <div className="flex items-center justify-between mt-10 gap-4">
+      {/* Live-sharing consent — captured here so the scorer never interrupts a
+          match to ask. Public-by-default (checked); you can stop any match later. */}
+      <hr className="mono-divider mt-8 mb-5" />
+      <label
+        htmlFor="onboarding-live-consent"
+        style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}
+      >
+        <input
+          id="onboarding-live-consent"
+          type="checkbox"
+          checked={liveConsent}
+          onChange={(e) => onLiveConsentChange(e.target.checked)}
+          style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
+        />
+        <span className="text-sm font-swiss" style={{ color: "#444", lineHeight: 1.45 }}>
+          <strong style={{ color: "#111" }}>Share my matches live.</strong> When you score, anyone with the link can watch the live scoreboard (team names + score). You can stop sharing any match at any time.
+        </span>
+      </label>
+
+      <div className="flex items-center justify-between mt-8 gap-4">
         <button
           type="button"
           onClick={onSubmit}
@@ -676,6 +696,8 @@ StepGames.propTypes = {
   onBack: PropTypes.func.isRequired,
   isSubmitting: PropTypes.bool.isRequired,
   error: PropTypes.string.isRequired,
+  liveConsent: PropTypes.bool.isRequired,
+  onLiveConsentChange: PropTypes.func.isRequired,
 };
 
 // ---------------------------------------------------------------------------
@@ -704,6 +726,10 @@ export default function MonoOnboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [visible, setVisible] = useState(false);
+  // Live-sharing consent, captured ONCE here at sign-in (opt-IN: unchecked by
+  // default, so a user must actively choose to make matches public) so the scorer
+  // never has to interrupt a match to ask. Persisted on submit.
+  const [liveConsent, setLiveConsent] = useState(false);
 
   const TOTAL_STEPS = 4;
 
@@ -793,6 +819,8 @@ export default function MonoOnboarding() {
         favoriteGames: selectedGames,
         playStyle: playStyles,
       });
+      // Record the live-sharing choice now so matches never prompt for it.
+      setConsent(liveConsent ? "accepted" : "declined");
       navigate(returnTo);
     } catch (err) {
       const msg = err?.message || "";
@@ -886,6 +914,8 @@ export default function MonoOnboarding() {
             onBack={goBack}
             isSubmitting={isSubmitting}
             error={error}
+            liveConsent={liveConsent}
+            onLiveConsentChange={setLiveConsent}
           />
         );
       default:

@@ -32,6 +32,7 @@ import { loadSession, saveSession } from '../lib/live/liveSession';
  *   undo: (input: { at: number }) => Promise<unknown>,
  *   finalize: () => Promise<unknown>,
  *   setVisibility: (visibility: 'public'|'unlisted'|'private') => Promise<unknown>,
+ *   reset: () => void,
  * }}
  */
 export function useLiveBroadcast({ enabled = true } = {}) {
@@ -225,5 +226,19 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     [setVisibilityM],
   );
 
-  return { isLive, token, error, goLive, point, undo, finalize, setVisibility };
+  // Drop the current live session so the NEXT goLive starts clean. Needed when one
+  // mounted scorer hosts multiple matches in a row (e.g. quick match): without this
+  // the refs/state retain the prior match's id/token/seq, so a new match could
+  // mis-deliver early events to the old one. Route-based scorers remount instead.
+  const reset = useCallback(() => {
+    matchIdRef.current = null;
+    tokenRef.current = null;
+    clientMatchIdRef.current = null;
+    seqRef.current = 0;
+    setToken(null);
+    setIsLive(false);
+    setError(null);
+  }, []);
+
+  return { isLive, token, error, goLive, point, undo, finalize, setVisibility, reset };
 }
