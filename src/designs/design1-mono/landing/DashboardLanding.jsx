@@ -8,6 +8,8 @@ import { useAuth } from '../../../hooks/useAuth';
 import { isTournamentMatchCompleted } from '../../../utils/tournamentSync';
 import { MONO, SWISS } from './landingTheme';
 import SportIcon from './sportIcons';
+import LiveNowStrip from '../live/LiveNowStrip';
+import ErrorBoundary from '../../../components/ErrorBoundary';
 
 const QM_KEY = 'se_quickmatches';
 
@@ -703,6 +705,14 @@ export default function DashboardLanding() {
     <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}
          className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
       <h1 className="sr-only">Dashboard</h1>
+
+      {/* Public "live now" discovery rail (scoreeasy-3ws) — renders nothing when
+          nothing is live. Isolated in an ErrorBoundary with a SILENT fallback so a
+          backend hiccup (e.g. listLiveFeed not yet deployed during a rollout)
+          degrades to "no strip" instead of crashing the whole home. */}
+      <ErrorBoundary fallback={null} captureToSentry={false}>
+        <LiveNowStrip />
+      </ErrorBoundary>
 
       {hasNoData ? (
         <EmptyDashboard

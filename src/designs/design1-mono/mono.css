@@ -1984,3 +1984,146 @@ button.mono-stat-card {
     min-height: 132px;
   }
 }
+
+/* ── "Live now" home discovery rail (scoreeasy-3ws) ───────────────────────────
+   Compact horizontal rail of public live matches on the dashboard home. Each
+   card links to its token-gated watch page (/live/:token). Renders nothing when
+   nothing is live, so it never adds empty chrome. */
+.live-strip {
+  margin: 0 0 20px;
+}
+
+.live-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.live-strip-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--se-color-ink);
+}
+
+.live-strip-rail {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.live-strip-rail::-webkit-scrollbar {
+  height: 6px;
+}
+.live-strip-rail::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--se-color-line) 70%, var(--se-color-surface));
+  border-radius: 999px;
+}
+
+.live-card {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+  display: block;
+  padding: 12px 14px;
+  background: var(--se-color-surface);
+  border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card);
+  text-decoration: none;
+  color: var(--se-color-ink);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.live-card:hover,
+.live-card:focus-visible {
+  border-color: color-mix(in oklch, var(--se-color-line) 50%, var(--se-color-danger, #dc2626));
+  transform: translateY(-1px);
+}
+
+.live-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.live-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--se-color-danger, #dc2626);
+}
+.live-card-badge > span[aria-hidden] {
+  animation: live-card-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-card-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-card-badge > span[aria-hidden] { animation: none; }
+}
+
+.live-card-sport {
+  font-size: 0.6875rem;
+  color: var(--se-color-ink-muted);
+}
+
+.live-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.live-card-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-card-serve {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--se-color-danger, #dc2626);
+  flex: 0 0 auto;
+}
+
+.live-card-scores {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-card-sets {
+  font-size: 0.75rem;
+  color: var(--se-color-ink-muted);
+}
+
+.live-card-points {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.live-card-period {
+  margin: 6px 0 0;
+  font-size: 0.6875rem;
+  color: var(--se-color-ink-soft);
+}
