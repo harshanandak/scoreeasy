@@ -315,6 +315,16 @@ export default function MonoHistory() {
     setTournamentEntries(buildTournamentEntries());
   }, []);
 
+  // The Stats panel mutates the SAME quick-match store (se_quickmatches) with its
+  // own local copy, so re-read whenever the Matches tab is (re)entered — otherwise a
+  // delete/clear performed under Stats leaves stale rows here until a remount.
+  useEffect(() => {
+    if (view !== 'matches') return;
+    const loadedQuick = loadCompletedQuickMatches();
+    loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
+    setQuickMatches(loadedQuick);
+  }, [view]);
+
   const quickEntries = useMemo(() => {
     return quickMatches.map((qm) => {
       const sportConfig = getSportById(qm.sport);

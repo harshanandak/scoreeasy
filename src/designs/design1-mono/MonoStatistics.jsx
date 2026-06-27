@@ -212,28 +212,10 @@ function recordTeamResult(teamMap, team1, team2, score1, score2) {
   }
 }
 
-export default function MonoStatistics() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
-
-  return (
-    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="mono-page-shell">
-        <h1 className="mono-page-header text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-          Statistics
-        </h1>
-        <MonoStatisticsPanel />
-      </div>
-    </div>
-  );
-}
-
-// The stats body, shell-free, so the merged History page can host it under
-// its own page shell + tab bar. The standalone MonoStatistics wrapper above
-// preserves the legacy /statistics page for direct/deep-link rendering.
+// The stats body, shell-free, so the merged History page (MonoHistory) hosts it
+// under its own page shell + tab bar. There is no standalone /statistics route any
+// more — /statistics and /stats redirect to /history — so this panel is the only
+// entry point (the former default-export wrapper was unreachable and was removed).
 export function MonoStatisticsPanel() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('overview');

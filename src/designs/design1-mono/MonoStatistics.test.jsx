@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import MonoStatistics from './MonoStatistics';
+import { MonoStatisticsPanel } from './MonoStatistics';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
 const FOOTBALL_KEY = 'se_football';
@@ -66,8 +66,8 @@ function readQuickMatches() {
 
 function renderStatistics() {
   return render(
-    <MemoryRouter initialEntries={['/statistics']}>
-      <MonoStatistics />
+    <MemoryRouter initialEntries={['/history']}>
+      <MonoStatisticsPanel />
     </MemoryRouter>,
   );
 }
