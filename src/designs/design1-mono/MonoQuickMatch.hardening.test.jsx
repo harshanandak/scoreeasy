@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 
@@ -8,7 +9,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 
 const nav = vi.hoisted(() => vi.fn());
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, queryResult: undefined }));
-const storageMock = vi.hoisted(() => ({ clearData: vi.fn() }));
+const storageMock = vi.hoisted(() => ({ clearData: vi.fn(), saveQuickMatch: vi.fn(() => true) }));
 const live = vi.hoisted(() => ({
   point: vi.fn(() => Promise.resolve()),
   undo: vi.fn(() => Promise.resolve()),
@@ -41,7 +42,7 @@ vi.mock('../../utils/storage', () => ({
   loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
   saveData: vi.fn(() => true),
   clearData: storageMock.clearData,
-  saveQuickMatch: vi.fn(() => true),
+  saveQuickMatch: storageMock.saveQuickMatch,
   isStaleQuickMatchDraft: () => false,
 }));
 
@@ -65,6 +66,9 @@ function seedVolleyball(extra = {}) {
 beforeEach(() => {
   nav.mockClear();
   storageMock.clearData.mockClear();
+  storageMock.saveQuickMatch.mockClear();
+  live.point.mockClear();
+  live.finalize.mockClear();
   ctx.queryResult = undefined;
 });
 
@@ -139,5 +143,68 @@ describe('MonoQuickMatch hardening (#106)', () => {
     expect(lastActionText).toBeInTheDocument();
     // The strip lives in a polite live region so each action is announced.
     expect(lastActionText.closest('[aria-live="polite"]')).not.toBeNull();
+  });
+
+  // Cricket innings transitions moved from inside the setScores updaters to a single
+  // post-commit effect. StrictMode double-invokes mount effects + updaters, which is
+  // exactly what would surface a double innings-flip / double-finalize regression.
+  it('flips the cricket innings once at innings end without finalizing (StrictMode)', () => {
+    ctx.sport = 'cricket';
+    ctx.draft = {
+      ...base,
+      sport: 'cricket',
+      quickMatchId: 5005,
+      // players: 2 -> maxWickets 1, so a single OUT ends the innings.
+      format: { overs: 5, players: 2 },
+      scores: {
+        team1: { runs: 7, balls: 3, wickets: 0, allOut: false },
+        team2: { runs: 0, balls: 0, wickets: 0, allOut: false },
+      },
+      innings: 1,
+      battingTeam: 1,
+      cricketHistory: [],
+    };
+    render(
+      <StrictMode>
+        <MonoQuickMatch />
+      </StrictMode>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'OUT' }));
+
+    // Innings 1 ending shows the break with the chase target; it never finalizes.
+    const breakDialog = screen.getByRole('dialog', { name: 'Innings break' });
+    expect(breakDialog).toBeInTheDocument();
+    expect(breakDialog).toHaveTextContent('need 8 to win'); // team1's 7 + 1
+    expect(live.finalize).not.toHaveBeenCalled();
+    expect(storageMock.saveQuickMatch).not.toHaveBeenCalled();
+  });
+
+  it('finalizes the cricket match exactly once when the second innings ends (StrictMode)', () => {
+    ctx.sport = 'cricket';
+    ctx.draft = {
+      ...base,
+      sport: 'cricket',
+      quickMatchId: 6006,
+      format: { overs: 5, players: 2 }, // maxWickets 1
+      scores: {
+        team1: { runs: 5, balls: 30, wickets: 0, allOut: false }, // innings 1 total
+        team2: { runs: 5, balls: 12, wickets: 0, allOut: false },  // chasing
+      },
+      innings: 2,
+      battingTeam: 2,
+      cricketHistory: [],
+    };
+    render(
+      <StrictMode>
+        <MonoQuickMatch />
+      </StrictMode>,
+    );
+
+    // OUT all-out ends innings 2 -> finish, persisted exactly once (no double-fire).
+    fireEvent.click(screen.getByRole('button', { name: 'OUT' }));
+
+    expect(storageMock.saveQuickMatch).toHaveBeenCalledTimes(1);
+    expect(live.finalize).toHaveBeenCalledTimes(1);
   });
 });

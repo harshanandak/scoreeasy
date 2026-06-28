@@ -348,6 +348,7 @@ export default function MonoQuickMatch() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [showInningsBreak, setShowInningsBreak] = useState(false);
   const endMatchTriggerRef = useRef(null);
   const [servingTeam, setServingTeam] = useState(1);
   const [lastAction, setLastAction] = useState('');
@@ -980,6 +981,8 @@ export default function MonoQuickMatch() {
     setLastAction('');
     setSidesSwapped(false);
     setShowEndConfirm(false);
+    setShowDiscardConfirm(false);
+    setShowInningsBreak(false);
     timer.reset();
     startedAtRef.current = null;
     scoringSportRef.current = sport;
@@ -1047,29 +1050,13 @@ export default function MonoQuickMatch() {
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: runs, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit, innings, battingTeam }]);
 
+    // Pure updater: compute the new score only. Innings flip / match finish are
+    // handled by a single post-commit effect, so they read committed state and
+    // can't double-fire when React re-invokes the updater (StrictMode/batching).
     setScores(prev => {
       const team = { ...prev[key] };
       team.runs += runs;
       team.balls += 1;
-
-      // Check if innings over
-      if (team.balls >= totalBalls) {
-        if (innings === 1) {
-          setInnings(2);
-          setBattingTeam(battingTeam === 1 ? 2 : 1);
-        } else {
-          finishCricketMatch({ ...prev, [key]: team });
-        }
-      }
-
-      // Check if team 2 chased
-      if (innings === 2) {
-        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
-        if (team.runs > target) {
-          finishCricketMatch({ ...prev, [key]: team });
-        }
-      }
-
       return { ...prev, [key]: team };
     });
   };
@@ -1090,22 +1077,13 @@ export default function MonoQuickMatch() {
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 0, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit, innings, battingTeam }]);
 
+    // Pure updater: compute the new score (incl. all-out flag). Innings flip /
+    // finish are handled by the post-commit transition effect.
     setScores(prev => {
       const team = { ...prev[key] };
       team.wickets += 1;
       team.balls += 1;
-
-      // All out when wickets >= players-1, or overs done
-      if (team.wickets >= maxWickets || team.balls >= totalBalls) {
-        team.allOut = team.wickets >= maxWickets;
-        if (innings === 1) {
-          setInnings(2);
-          setBattingTeam(battingTeam === 1 ? 2 : 1);
-        } else {
-          finishCricketMatch({ ...prev, [key]: team });
-        }
-      }
-
+      if (team.wickets >= maxWickets) team.allOut = true;
       return { ...prev, [key]: team };
     });
   };
@@ -1126,26 +1104,12 @@ export default function MonoQuickMatch() {
     setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 1, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
+    // Pure updater: add the extra run (+ a ball for byes/leg-byes). Innings flip /
+    // chase-complete / finish are handled by the post-commit transition effect.
     setScores(prev => {
       const team = { ...prev[key], runs: prev[key].runs + 1 };
-      // Byes / leg byes are legal deliveries — they consume a ball.
       if (countsAsBall) {
         team.balls += 1;
-        if (team.balls >= totalBalls) {
-          if (innings === 1) {
-            setInnings(2);
-            setBattingTeam(battingTeam === 1 ? 2 : 1);
-          } else {
-            finishCricketMatch({ ...prev, [key]: team });
-          }
-        }
-      }
-      // Chase complete in the second innings (any extra adds a run).
-      if (innings === 2) {
-        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
-        if (team.runs > target) {
-          finishCricketMatch({ ...prev, [key]: team });
-        }
       }
       return { ...prev, [key]: team };
     });
@@ -1211,6 +1175,31 @@ export default function MonoQuickMatch() {
     };
             finalizeMatch(r);
   };
+
+  // Cricket innings flip / match finish as a single POST-COMMIT effect, instead of
+  // side effects inside the setScores updaters (which read stale closure state and
+  // could double-fire when React re-invokes an updater under StrictMode/batching).
+  // It reads the COMMITTED scores. Ordering vs the broadcast/finalize effects is
+  // safe: the boundary ball's broadcast is gated on a one-shot intent ref, so the
+  // innings/battingTeam change here re-runs that effect harmlessly (no new intent →
+  // no re-broadcast); and finishCricketMatch defers setPhase('result') to the next
+  // render, so the winning ball still enqueues before finalize drains (R1).
+  useEffect(() => {
+    if (!isCricket || phase !== 'scoring') return;
+    const key = battingTeam === 1 ? 'team1' : 'team2';
+    const team = scores[key];
+    if (!team) return;
+    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
+    const chaseTarget = battingTeam === 2 ? scores.team1.runs : scores.team2.runs;
+    const chaseDone = innings === 2 && team.runs > chaseTarget;
+    if (innings === 1 && inningsOver) {
+      setShowInningsBreak(true);
+      setInnings(2);
+      setBattingTeam(battingTeam === 1 ? 2 : 1);
+    } else if (innings === 2 && (inningsOver || chaseDone)) {
+      finishCricketMatch(scores);
+    }
+  }, [scores, innings, battingTeam, isCricket, phase, totalBalls, maxWickets]);
 
   const completeSetIfNeeded = (candidateSets, setIndex, activeSetIndex = currentSet) => {
     const update = { nextSets: candidateSets, nextActiveSetIndex: null, result: null };
@@ -2540,6 +2529,41 @@ export default function MonoQuickMatch() {
       const target = innings === 2
         ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
         : null;
+
+      // Innings break: summarise innings 1 and the chase target before innings 2
+      // scoring. Not persisted to the draft, so a reload simply resumes scoring.
+      if (showInningsBreak) {
+        return (
+          <div className="mono-scorer-screen mono-arena-screen">
+            <div className="mono-scorer-shell mono-cricket-shell">
+              <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+              <section
+                className="mono-card"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Innings break"
+                style={{ margin: 'auto', maxWidth: 420, padding: 24, display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'center' }}
+              >
+                <p className="font-swiss" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--se-color-ink-muted)' }}>
+                  Innings break
+                </p>
+                <div>
+                  <p className="text-sm" style={{ color: 'var(--se-color-ink-muted)' }}>{otherName} scored</p>
+                  <p className="mono-score" style={{ fontSize: '2rem', fontWeight: 800 }}>{otherScore.runs}/{otherScore.wickets}</p>
+                  <p className="text-xs" style={{ color: 'var(--se-color-ink-faint)' }}>({ballsToOvers(otherScore.balls)} overs)</p>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--se-color-ink)' }}>
+                  {currentName} need <strong>{(target ?? 0) + 1}</strong> to win
+                  {showOvers && format.overs ? ` from ${format.overs} overs` : ''}.
+                </p>
+                <button type="button" className="mono-btn-primary w-full" style={{ minHeight: 52 }} onClick={() => setShowInningsBreak(false)}>
+                  Start innings 2
+                </button>
+              </section>
+            </div>
+          </div>
+        );
+      }
 
       // CrickHeroes-style derived context (no new storage)
       const overPips = cricketOverPips(cricketHistory, innings, battingTeam);
