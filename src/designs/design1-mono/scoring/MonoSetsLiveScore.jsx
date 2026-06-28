@@ -12,6 +12,7 @@ import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
+import RouteRecoveryActions from '../components/RouteRecoveryActions';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -33,6 +34,10 @@ export default function MonoSetsLiveScore() {
   const [sportConfig, setSportConfig] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [match, setMatch] = useState(null);
+  // Load lifecycle: 'loading' until the effect resolves, then 'ready' (match
+  // found) or 'notfound' (bad sport/tournament/match) so we can show a real
+  // recovery surface instead of a permanent "Loading…" (issue #108).
+  const [loadStatus, setLoadStatus] = useState('loading');
 
   // Scoring state
   const [currentSet, setCurrentSet] = useState(0);
@@ -62,6 +67,11 @@ export default function MonoSetsLiveScore() {
   // Animation state
   const [showSetWon, setShowSetWon] = useState(false);
   const [setWonTeam, setSetWonTeam] = useState('');
+  // The 1-indexed number of the set that JUST completed. Captured at completion
+  // time because `currentSet` increments when the next set opens, so reading it
+  // at render shows the wrong (next) number — and never advances at all on the
+  // match-ending set (issue #108).
+  const [setWonNumber, setSetWonNumber] = useState(0);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
 
   // Debounce ref for rapid clicks
@@ -88,22 +98,23 @@ export default function MonoSetsLiveScore() {
   // Load tournament and match
   useEffect(() => {
     const config = getSportById(sport);
-    if (!config) return;
+    if (!config) { setLoadStatus('notfound'); return; }
 
     const tournaments = loadSportTournaments(config.storageKey);
     const found = tournaments.find(t => t.id === Number(id));
-    if (!found) return;
+    if (!found) { setLoadStatus('notfound'); return; }
 
     let foundMatch = found.matches.find(m => m.id === matchId);
     if (!foundMatch) {
       foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId);
       if (foundMatch) isKnockoutRef.current = true;
     }
-    if (!foundMatch) return;
+    if (!foundMatch) { setLoadStatus('notfound'); return; }
 
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
+    setLoadStatus('ready');
     const supportedModes = config?.config?.scoringModes;
     const defaultScoringMode = (Array.isArray(supportedModes) && supportedModes.includes(config?.config?.defaultScoringMode))
       ? config.config.defaultScoringMode
@@ -195,7 +206,12 @@ export default function MonoSetsLiveScore() {
     }
     const target = getCurrentSetTarget(currentSet, effectiveFormat);
     const totalPoints = (setScore?.score1 || 0) + (setScore?.score2 || 0);
-    const atDeuce = (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
+    // The every-point-at-deuce switch only applies to UNCAPPED formats (e.g.
+    // table tennis). Capped sports (badminton, maxPoints=30) don't use it — and
+    // in fact reach this code path only via rotation===1 (handled above), so the
+    // guard keeps the deuce special-case from ever mis-firing for them (#108).
+    const maxPoints = sportConfig?.config?.maxPoints;
+    const atDeuce = !maxPoints && (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
     if (atDeuce) {
       setServingTeam((prev) => (prev === 1 ? 2 : 1));
       return;
@@ -233,14 +249,19 @@ export default function MonoSetsLiveScore() {
     setScoreAnimKey(prev => ({ ...prev, [team === 1 ? 'left' : 'right']: (prev[team === 1 ? 'left' : 'right'] || 0) + 1 }));
 
     // Side-out scoring: non-serving team tap switches serve without adding a point.
+    // Mirror the side-out to the broadcast like any sibling action: a serve
+    // switch changes no score, so we emit a value:0 "point" whose snapshot
+    // carries the new serving team (the watch reads servingTeam from the patched
+    // snapshot). This is reversed in lockstep by undo (issue #108).
     if (scoringMode === 'side-out' && team !== servingTeam) {
+      broadcastIntentRef.current = { kind: 'serve', team: team === 1 ? 'A' : 'B', value: 0, at: Date.now() };
       setServingTeam(team);
       return;
     }
 
     // An actual point is being scored — mark it for broadcast (snapshot built
     // once the set state settles, see the broadcast effect). team1 -> A.
-    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
+    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', value: 1, at: Date.now() };
 
     setSets(prevSets => {
       const newSets = prevSets.map(s => ({ ...s }));
@@ -263,6 +284,7 @@ export default function MonoSetsLiveScore() {
         const winningTeam = tournament.teams.find(t => t.id === winnerId)?.name;
 
         setSetWonTeam(winningTeam || `Team ${team}`);
+        setSetWonNumber(currentSet + 1); // the set that just completed (1-indexed)
         setShowSetWon(true);
         setTimeout(() => setShowSetWon(false), 1500);
 
@@ -294,6 +316,43 @@ export default function MonoSetsLiveScore() {
         }
       }
 
+      return newSets;
+    });
+  };
+
+  // Per-point correction (-1) for a team — fixes a mis-tap without unwinding the
+  // whole undo stack. Floors at 0 (a no-op when the score is already 0), records
+  // history so it is itself undoable, and never completes a set or rotates serve.
+  // Mirrored to the broadcast as a value:-1 point so spectators stay in sync.
+  const correctPoint = (team) => {
+    if (!sportConfig || !tournament || isInteractionLocked) return;
+
+    const now = Date.now();
+    if (now - lastClickRef.current < 150) return;
+    lastClickRef.current = now;
+
+    if (sets[currentSet]?.completed) return;
+
+    const scoreKey = team === 1 ? 'score1' : 'score2';
+    if ((sets[currentSet]?.[scoreKey] || 0) <= 0) return; // nothing to take away
+
+    triggerHaptic(30);
+
+    setHistory(prev => [...prev, {
+      timestamp: Date.now(),
+      sets: structuredClone(sets),
+      currentSet,
+      servingTeam,
+      scoringMode,
+    }].slice(-100));
+
+    setHasChanges(true);
+
+    broadcastIntentRef.current = { kind: 'correction', team: team === 1 ? 'A' : 'B', value: -1, at: Date.now() };
+
+    setSets(prevSets => {
+      const newSets = prevSets.map(s => ({ ...s }));
+      newSets[currentSet][scoreKey] = Math.max(0, newSets[currentSet][scoreKey] - 1);
       return newSets;
     });
   };
@@ -356,7 +415,10 @@ export default function MonoSetsLiveScore() {
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
-      liveRef.current.point({ team: intent.team, value: 1, at: intent.at, snapshot });
+      // 'point' (value 1), 'serve' switch (value 0) and 'correction' (value -1)
+      // all flow through the same point() surface; the snapshot carries the
+      // settled score/serving so spectators stay in lockstep with undo.
+      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
     }
   }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
 
@@ -466,7 +528,18 @@ export default function MonoSetsLiveScore() {
   const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
-  if (!sportConfig || !tournament || !match) {
+  if (loadStatus === 'notfound') {
+    return (
+      <RouteRecoveryActions
+        eyebrow="Scorer recovery"
+        title="Match not found"
+        message="This scorer link does not match a saved tournament match on this device."
+        sportId={getSportById(sport)?.id}
+      />
+    );
+  }
+
+  if (loadStatus !== 'ready' || !sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
       <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
     </div>;
@@ -494,6 +567,14 @@ export default function MonoSetsLiveScore() {
   const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
   const rightServing = sidesSwapped ? servingTeam === 1 : servingTeam === 2;
   const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally');
+  // Broadcast scorecard kind, derived from the sport's ENGINE rather than
+  // hardcoded (#108). Every sport this scorer drives (volleyball, badminton,
+  // tabletennis, pickleball, squash) is engine 'sets' and renders through the
+  // watch's points-per-set scorebug, whose kind is 'volleyball'. Deriving by
+  // engine — instead of the sport id — avoids regressing the watch to the
+  // generic card (its ScorecardPanel only special-cases 'volleyball'/'tennis').
+  // Tennis routes to its own scorer, so it never reaches here.
+  const liveScorecardKind = sportConfig?.engine === 'sets' ? 'volleyball' : 'generic';
 
   const { pointsPerSet, deciderPoints, winBy } = sportConfig.config;
   const formatType = effectiveFormat.type || 'best-of';
@@ -566,7 +647,7 @@ export default function MonoSetsLiveScore() {
           descriptor={{
             clientMatchId: liveClientMatchId,
             sport,
-            scorecardKind: 'volleyball',
+            scorecardKind: liveScorecardKind,
             teamA: { name: team1Name },
             teamB: { name: team2Name },
           }}
@@ -639,6 +720,31 @@ export default function MonoSetsLiveScore() {
           </div>
         </div>
 
+        {/* Per-team correction (-1) — fix a mis-tap without unwinding undo.
+            Mirrors the left/right side-swap mapping of the arena above. */}
+        <div className="mono-quick-action-row" style={{ marginBottom: '0.75rem' }}>
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && correctPoint(leftTeam)}
+            disabled={!canScoreCurrentSet || leftScore <= 0}
+            aria-label={`Correct ${leftName}: remove one point`}
+            className="mono-btn"
+            style={{ minHeight: 44, opacity: (!canScoreCurrentSet || leftScore <= 0) ? 0.4 : 1, touchAction: 'manipulation' }}
+          >
+            &minus;1 {leftName}
+          </button>
+          <button
+            type="button"
+            onClick={() => canScoreCurrentSet && correctPoint(rightTeam)}
+            disabled={!canScoreCurrentSet || rightScore <= 0}
+            aria-label={`Correct ${rightName}: remove one point`}
+            className="mono-btn"
+            style={{ minHeight: 44, opacity: (!canScoreCurrentSet || rightScore <= 0) ? 0.4 : 1, touchAction: 'manipulation' }}
+          >
+            &minus;1 {rightName}
+          </button>
+        </div>
+
         {/* Rules info */}
         <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-faint)' }}>
           {targetPoints} points to win &middot; Win by {winBy}
@@ -701,7 +807,7 @@ export default function MonoSetsLiveScore() {
       {/* Set Won Notification */}
       {showSetWon && (
         <div className="mono-set-won mono-set-won-animate">
-          {setWonTeam} wins Set {currentSet}!
+          {setWonTeam} wins Set {setWonNumber}!
         </div>
       )}
     </div>
