@@ -168,9 +168,17 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // surface broadcast.error instead of swallowing it — the "Go live & share" button below
   // doubles as the retry. The message is deliberately generic: Convex REDACTS error
   // messages in production (see useLiveBroadcast notes), so the raw message is unreliable.
+  //
+  // GATE on !broadcast.isLive: the hook shares ONE `error` across goLive/setVisibility/
+  // finalize. A failed Stop (setVisibility('private') rejects) leaves isLive=true but
+  // flips enabled=false, so it also lands in this bottom branch — without the gate we'd
+  // mislabel a Stop/finalize failure as "Couldn't go live". `isLive` is true ONLY after a
+  // successful goLive and cleared ONLY by reset() (which also clears error), so
+  // isLive=false && error uniquely identifies a genuine go-live failure.
+  const goLiveFailed = Boolean(broadcast.error) && !broadcast.isLive;
   return (
     <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
-      {broadcast.error && (
+      {goLiveFailed && (
         <p
           role="alert"
           style={{ margin: '0 2px 8px', fontSize: '0.75rem', color: 'var(--destructive)' }}

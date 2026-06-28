@@ -169,6 +169,20 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
+  it('does NOT show the go-live error after a FAILED Stop (isLive stays true, enabled flipped off)', () => {
+    // A failed Stop sets the hook's shared `error` but leaves isLive=true while
+    // enabled=false, so render falls through to the bottom branch. The go-live copy
+    // must NOT appear — that error came from setVisibility/finalize, not go-live.
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, error: new Error('stop failed') });
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText(/Couldn.t go live/i)).toBeNull();
+    // We're still in the bottom (offer-to-go-live) branch, so the button remains.
+    expect(screen.getByRole('button', { name: /Go live/i })).toBeInTheDocument();
+  });
+
   it('explains why an account is needed (free + private-until-live)', () => {
     auth.isAuthenticated = false;
     const broadcast = makeBroadcast();
