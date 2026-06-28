@@ -31,7 +31,19 @@ import {
   warningImpact,
 } from '../../mobile/haptics';
 
-function EndMatchDialog({ onCancel, onConfirm }) {
+// Generic confirm dialog. Defaults reproduce the original "End match?" copy/ids
+// byte-for-byte, so existing end-match usage is unchanged; a distinct idPrefix
+// lets a second instance (e.g. Discard) mount without duplicate DOM ids.
+function ConfirmDialog({
+  onCancel,
+  onConfirm,
+  idPrefix = 'end-match',
+  eyebrow = 'Match control',
+  title = 'End match?',
+  message = 'This will finish the current match and save the result.',
+  cancelLabel = 'Keep scoring',
+  confirmLabel = 'End match',
+}) {
   const cancelButtonRef = useRef(null);
   const onCancelRef = useRef(onCancel);
 
@@ -72,13 +84,13 @@ function EndMatchDialog({ onCancel, onConfirm }) {
         className="app-confirm-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="end-match-title"
-        aria-describedby="end-match-message"
+        aria-labelledby={`${idPrefix}-title`}
+        aria-describedby={`${idPrefix}-message`}
       >
-        <p className="app-confirm-eyebrow">Match control</p>
-        <h2 id="end-match-title" className="app-confirm-title">End match?</h2>
-        <p id="end-match-message" className="app-confirm-message">
-          This will finish the current match and save the result.
+        <p className="app-confirm-eyebrow">{eyebrow}</p>
+        <h2 id={`${idPrefix}-title`} className="app-confirm-title">{title}</h2>
+        <p id={`${idPrefix}-message`} className="app-confirm-message">
+          {message}
         </p>
         <div className="app-confirm-actions">
           <button
@@ -87,14 +99,14 @@ function EndMatchDialog({ onCancel, onConfirm }) {
             onClick={onCancel}
             className="app-confirm-secondary"
           >
-            Keep scoring
+            {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="app-confirm-primary"
           >
-            End match
+            {confirmLabel}
           </button>
         </div>
       </section>
@@ -335,6 +347,7 @@ export default function MonoQuickMatch() {
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const endMatchTriggerRef = useRef(null);
   const [servingTeam, setServingTeam] = useState(1);
   const [lastAction, setLastAction] = useState('');
@@ -398,6 +411,16 @@ export default function MonoQuickMatch() {
   // Sort team results by matchCount descending
   const sortedTeam1 = (team1Results || []).slice().sort((a, b) => b.matchCount - a.matchCount);
   const sortedTeam2 = (team2Results || []).slice().sort((a, b) => b.matchCount - a.matchCount);
+
+  // Convex useQuery returns undefined while in-flight and [] when it finishes with
+  // no matches; both collapsed to "render nothing" before. Split them so the
+  // dropdown can show a "Searching…" affordance and an explicit empty state.
+  const team1Querying = isAuthenticated && showTeam1Suggestions && debouncedTeam1.length >= 2;
+  const team1Loading = team1Querying && team1Results === undefined;
+  const team1Empty = team1Querying && team1Results !== undefined && sortedTeam1.length === 0;
+  const team2Querying = isAuthenticated && showTeam2Suggestions && debouncedTeam2.length >= 2;
+  const team2Loading = team2Querying && team2Results === undefined;
+  const team2Empty = team2Querying && team2Results !== undefined && sortedTeam2.length === 0;
 
   // Close team suggestion dropdowns on outside click
   useEffect(() => {
@@ -585,7 +608,11 @@ export default function MonoQuickMatch() {
       startedAt: startedAtRef.current,
       updatedAt: new Date().toISOString(),
     });
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, timer.elapsed, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+    // `timer.elapsed` is intentionally omitted: it ticks every second, which would
+    // re-serialize and re-save the entire draft each tick. We persist `startedAt`
+    // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
+    // pure churn. The body still snapshots the latest timer value on real changes.
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -862,8 +889,16 @@ export default function MonoQuickMatch() {
     endMatchManually();
   };
 
-  // Discard the in-progress quick match: clear its auto-saved draft and go home.
-  const discardQuickMatch = () => {
+  // Discard the in-progress quick match. Gated behind a confirm dialog so a single
+  // tap can't silently wipe an in-progress match (the actual wipe is in confirm*).
+  const requestDiscardQuickMatch = () => {
+    setShowDiscardConfirm(true);
+  };
+  const cancelDiscardQuickMatch = () => {
+    setShowDiscardConfirm(false);
+  };
+  const confirmDiscardQuickMatch = () => {
+    setShowDiscardConfirm(false);
     clearData(quickMatchDraftKey);
     navigate('/app');
   };
@@ -2277,7 +2312,7 @@ export default function MonoQuickMatch() {
                     onFocus={() => setShowTeam1Suggestions(true)}
                     maxLength={50}
                   />
-                  {showTeam1Suggestions && sortedTeam1.length > 0 && (
+                  {showTeam1Suggestions && (team1Loading || team1Empty || sortedTeam1.length > 0) && (
                     <div
                       className="absolute left-0 right-0"
                       style={{
@@ -2286,6 +2321,12 @@ export default function MonoQuickMatch() {
                         maxHeight: 180, overflowY: 'auto',
                       }}
                     >
+                      {team1Loading && (
+                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>Searching teams…</p>
+                      )}
+                      {team1Empty && (
+                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>No saved teams match “{debouncedTeam1}”.</p>
+                      )}
                       {sortedTeam1.map(t => (
                         <button
                           key={t._id}
@@ -2319,7 +2360,7 @@ export default function MonoQuickMatch() {
                     onFocus={() => setShowTeam2Suggestions(true)}
                     maxLength={50}
                   />
-                  {showTeam2Suggestions && sortedTeam2.length > 0 && (
+                  {showTeam2Suggestions && (team2Loading || team2Empty || sortedTeam2.length > 0) && (
                     <div
                       className="absolute left-0 right-0"
                       style={{
@@ -2328,6 +2369,12 @@ export default function MonoQuickMatch() {
                         maxHeight: 180, overflowY: 'auto',
                       }}
                     >
+                      {team2Loading && (
+                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>Searching teams…</p>
+                      )}
+                      {team2Empty && (
+                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>No saved teams match “{debouncedTeam2}”.</p>
+                      )}
                       {sortedTeam2.map(t => (
                         <button
                           key={t._id}
@@ -2417,15 +2464,14 @@ export default function MonoQuickMatch() {
                   minHeight: 52,
                   padding: '12px',
                   fontSize: '0.9375rem',
-                  opacity: teamNamesReady ? 1 : 0.4,
-                  cursor: teamNamesReady ? 'pointer' : 'not-allowed',
                 }}
-                disabled={!teamNamesReady}
+                aria-disabled={!teamNamesReady}
+                aria-describedby={!teamNamesReady ? 'start-match-hint' : undefined}
               >
                 {startButtonLabel}
               </button>
               {!teamNamesReady && (
-                <p className="text-xs text-center mt-3" style={{ color: 'var(--destructive)' }}>
+                <p id="start-match-hint" role="status" className="text-xs text-center mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>
                   Add both team names to start the match.
                 </p>
               )}
@@ -2450,7 +2496,19 @@ export default function MonoQuickMatch() {
   const formatPreset = isCricket && format?.preset ? getCricketFormat(format.preset) : null;
   const presetLabel = formatPreset?.name || '';
   const endMatchDialog = showEndConfirm ? (
-    <EndMatchDialog onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
+    <ConfirmDialog onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
+  ) : null;
+
+  const discardDialog = showDiscardConfirm ? (
+    <ConfirmDialog
+      idPrefix="discard-match"
+      title="Discard match?"
+      message="This will delete this in-progress match. This can't be undone."
+      confirmLabel="Discard"
+      cancelLabel="Keep scoring"
+      onCancel={cancelDiscardQuickMatch}
+      onConfirm={confirmDiscardQuickMatch}
+    />
   ) : null;
 
   if (phase === 'scoring') {
@@ -2490,7 +2548,9 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
+            {discardDialog}
             <ScoringNotice message={saveWarning} />
+            <ScoringStatusStrip lastAction={lastAction} />
             {/* Top bar */}
             <div className="mono-scorer-topbar">
               <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Cricket'}</span>
@@ -2652,7 +2712,9 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
+            {discardDialog}
             <ScoringNotice message={saveWarning} />
+            <ScoringStatusStrip lastAction={lastAction} />
             {/* Top spine */}
             <div className="mono-scorer-topbar">
               <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
@@ -2676,19 +2738,34 @@ export default function MonoQuickMatch() {
             <div className="mono-arena-grid">
               {goalHalves.map((h) => (
                 <div className="mono-arena-col" key={h.side}>
-                  <button
-                    type="button"
-                    className="mono-arena-half"
-                    data-leading={h.leading ? 'true' : 'false'}
-                    onClick={!hasQuickButtons ? () => addGoal(h.team) : undefined}
-                    disabled={hasQuickButtons}
-                    style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
-                    aria-label={hasQuickButtons ? `${h.name} score` : `Add 1 to ${h.name}`}
-                  >
-                    <span className="mono-arena-overline" style={{ color: h.accent }}>{h.name}</span>
-                    <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
-                    {!hasQuickButtons && <span className="mono-arena-hint">Tap +1</span>}
-                  </button>
+                  {hasQuickButtons ? (
+                    // Quick buttons below own scoring; the half is a pure score
+                    // display. Render a non-interactive element (NOT a disabled
+                    // button, which drops out of the a11y tree) so screen readers
+                    // still announce the team + score.
+                    <div
+                      className="mono-arena-half"
+                      data-leading={h.leading ? 'true' : 'false'}
+                      style={{ '--score-accent': h.accent }}
+                      aria-label={`${h.name}: ${h.score}`}
+                    >
+                      <span className="mono-arena-overline" style={{ color: h.accent }}>{h.name}</span>
+                      <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="mono-arena-half"
+                      data-leading={h.leading ? 'true' : 'false'}
+                      onClick={() => addGoal(h.team)}
+                      style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                      aria-label={`Add 1 to ${h.name}`}
+                    >
+                      <span className="mono-arena-overline" style={{ color: h.accent }}>{h.name}</span>
+                      <span className="mono-arena-num mono-score" style={{ color: h.accent }}>{h.score}</span>
+                      <span className="mono-arena-hint">Tap +1</span>
+                    </button>
+                  )}
                   {hasQuickButtons && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
                       {quickButtons.map((btn) => (
@@ -2709,7 +2786,7 @@ export default function MonoQuickMatch() {
               canUndo={gScoreHistory.length > 0}
               onUndo={undoGoal}
               onSwap={handleSideSwap}
-              onDiscard={discardQuickMatch}
+              onDiscard={requestDiscardQuickMatch}
               onEnd={requestEndMatch}
             />
           </div>
@@ -2732,16 +2809,22 @@ export default function MonoQuickMatch() {
       { side: 'left', name: leftName, score: leftSetScore, team: leftTeam, accent: teamAccent(leftSetScore, rightSetScore), leading: leftSetScore > rightSetScore, serving: tracksPointWinnerServe && servingTeam === leftTeam },
       { side: 'right', name: rightName, score: rightSetScore, team: rightTeam, accent: teamAccent(rightSetScore, leftSetScore), leading: rightSetScore > leftSetScore, serving: tracksPointWinnerServe && servingTeam === rightTeam },
     ];
+    // Derive the win-by margin from the sport config / customization (the same
+    // source completeSetIfNeeded uses) instead of hardcoding "2", so the displayed
+    // rule matches the actual completion rule for sports that win by 1.
+    const { winBy: setsWinBy } = getSetWinRule({ format, sportConfig, currentSet });
     const setsRule = format.type === 'best-of'
-      ? `${format.points || 25} pts · win by 2`
-      : `${format.target} pts · win by 2`;
+      ? `${format.points || 25} pts · win by ${setsWinBy}`
+      : `${format.target} pts · win by ${setsWinBy}`;
 
     return (
       <div className="mono-scorer-screen mono-arena-screen">
         <div className="mono-scorer-shell">
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
+          {discardDialog}
           <ScoringNotice message={saveWarning} />
+          <ScoringStatusStrip lastAction={lastAction} />
           {/* Top spine */}
           <div className="mono-scorer-topbar">
             <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Match'}</span>
@@ -2798,7 +2881,7 @@ export default function MonoQuickMatch() {
             canUndo={vScoreHistory.length > 0}
             onUndo={undoPoint}
             onSwap={handleSideSwap}
-            onDiscard={discardQuickMatch}
+            onDiscard={requestDiscardQuickMatch}
             onEnd={requestEndMatch}
           />
         </div>
