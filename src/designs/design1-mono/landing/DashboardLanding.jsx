@@ -13,6 +13,13 @@ import ErrorBoundary from '../../../components/ErrorBoundary';
 
 const QM_KEY = 'se_quickmatches';
 
+/* Going live is a property of an in-progress match: the LiveBroadcastBar that
+   owns the actual go-live trigger only appears inside a scoring screen. The
+   dashboard itself can only navigate, so the home's "Go live" hero entry is a
+   labelled shortcut into the start-a-match flow (the sport picker), where the
+   broadcast control then becomes available. */
+const GO_LIVE_PATH = '/play';
+
 /* ─── Tokens (CSS variables from the design system in index.css — single source of truth) ─── */
 const t = {
   blue: 'var(--primary)', blueLight: 'var(--accent)',
@@ -328,30 +335,54 @@ function ExistingUserDashboard({
               </button>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
                 <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
-                {/* Only offer Rematch when the stored match resolves to a real sport; legacy id-only records would build /undefined/quick. */}
-                {getSportById(recentMatches[0].sport) && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: -10 }}>
                   <button
                     type="button"
                     className="dash-action"
-                    aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
-                    onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
-                    style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+                    aria-label="Go live"
+                    onClick={() => navigate(GO_LIVE_PATH)}
+                    style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', minHeight: 44 }}
                   >
-                    Rematch &#9656;
+                    <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
                   </button>
-                )}
+                  {/* Only offer Rematch when the stored match resolves to a real sport; legacy id-only records would build /undefined/quick. */}
+                  {getSportById(recentMatches[0].sport) && (
+                    <button
+                      type="button"
+                      className="dash-action"
+                      aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
+                      onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
+                      style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', minHeight: 44 }}
+                    >
+                      Rematch &#9656;
+                    </button>
+                  )}
+                </span>
               </div>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() => navigate('/play')}
-              style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
-            >
-              <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
-              <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Start your first match.</span>
-              <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/play')}
+                style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
+              >
+                <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
+                <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Start your first match.</span>
+                <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
+              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
+                <button
+                  type="button"
+                  className="dash-action"
+                  aria-label="Go live"
+                  onClick={() => navigate(GO_LIVE_PATH)}
+                  style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+                >
+                  <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -600,6 +631,18 @@ function EmptyDashboard({ navigate, isAuthenticated, user }) {
           <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport and you are scoring in seconds.</span>
           <span style={{ display: 'inline-flex', marginTop: 14, ...btnPrimary }}>Start playing &rarr;</span>
         </button>
+        {/* Secondary entry: start a match and broadcast it live to spectators. */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
+          <button
+            type="button"
+            className="dash-action"
+            aria-label="Go live"
+            onClick={() => navigate(GO_LIVE_PATH)}
+            style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
+          >
+            <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
+          </button>
+        </div>
       </div>
 
       {/* ── Ghost recent rows — a preview of where matches will land ── */}
@@ -672,6 +715,26 @@ EmptyDashboard.propTypes = {
   }),
 };
 
+/* Read every persisted slice the dashboard needs in one synchronous pass.
+   Called from lazy useState initializers so the first paint already has real
+   data — no empty→populated flash from a post-mount effect. The underlying
+   storage helpers swallow corrupt JSON and return their defaults, so this stays
+   safe to run during render. */
+function readDashboardState() {
+  const sessions = getActiveSessions();
+  const allTournaments = collectTournamentsBySport(getSportsList());
+
+  const qm = loadData(QM_KEY, []);
+  qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
+
+  return {
+    sessions,
+    allTournaments,
+    playedCount: qm.length,
+    recentMatches: qm.slice(0, 3),
+  };
+}
+
 /* ═══════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════ */
@@ -679,22 +742,14 @@ export default function DashboardLanding() {
   const navigate = useNavigate();
   const { cloudAuthAvailable, isAuthenticated, user } = useAuth();
   const [visible, setVisible] = useState(false);
-  const [sessions, setSessions] = useState([]);
-  const [allTournaments, setAllTournaments] = useState([]);
-  const [recentMatches, setRecentMatches] = useState([]);
-  const [playedCount, setPlayedCount] = useState(0);
+  /* Lazy initializer: read every localStorage slice once, synchronously, before
+     first paint — so the dashboard never flashes empty then re-renders populated. */
+  const [{ sessions, allTournaments, recentMatches, playedCount }] = useState(readDashboardState);
   const [showAllSports, setShowAllSports] = useState(false);
 
   useEffect(() => {
+    /* Mount-only fade-in trigger; data is already loaded via lazy init above. */
     requestAnimationFrame(() => setVisible(true));
-
-    setSessions(getActiveSessions());
-    setAllTournaments(collectTournamentsBySport(getSportsList()));
-
-    const qm = loadData(QM_KEY, []);
-    qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
-    setPlayedCount(qm.length);
-    setRecentMatches(qm.slice(0, 3));
   }, []);
 
   /* Zero data = no tournaments AND no quick matches AND no active sessions.
