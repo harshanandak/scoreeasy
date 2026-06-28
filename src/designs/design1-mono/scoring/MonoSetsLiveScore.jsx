@@ -104,9 +104,17 @@ export default function MonoSetsLiveScore() {
     const found = tournaments.find(t => t.id === Number(id));
     if (!found) { setLoadStatus('notfound'); return; }
 
-    let foundMatch = found.matches.find(m => m.id === matchId);
+    // Match IDs are stored as string or number depending on entry point (see
+    // saveTournamentToConvex above), so normalize before comparing — a strict
+    // string-only match sends numeric IDs into the "not found" path. Also reset
+    // the knockout flag up front so a previously viewed knockout match doesn't
+    // keep applying knockout format when we resolve a regular match next.
+    const isMatchId = (m) => m.id === matchId || m.id === Number(matchId);
+    isKnockoutRef.current = false;
+
+    let foundMatch = (found.matches || []).find(isMatchId);
     if (!foundMatch) {
-      foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId);
+      foundMatch = (found.knockoutMatches || []).find(isMatchId);
       if (foundMatch) isKnockoutRef.current = true;
     }
     if (!foundMatch) { setLoadStatus('notfound'); return; }

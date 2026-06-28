@@ -206,44 +206,67 @@ describe('MonoSetsLiveScore — issue #108', () => {
     return leftServing ? 'A' : 'B';
   }
 
-  async function tapServer() {
-    // Always tap the currently serving half so a point is scored (rally mode),
-    // never a side-out switch. The serving team is whoever has the leading dot.
-    const serving = servingTeamFromDom();
-    const [left, right] = arenaButtons();
-    fireEvent.click(serving === 'A' ? left : right);
-    await wait(160);
+  // In rally mode, tapping a half scores a point for THAT side (left = A, right =
+  // B) — not a side-out switch. Driving each team's score independently lets us
+  // reach an actual deuce (both at target-1) rather than stopping short of it.
+  async function scoreFor(half) {
+    fireEvent.click(half);
+    await wait(160); // clear the 150ms rapid-click guard
   }
 
-  it('table tennis (uncapped) switches serve every 2 points, then every point at deuce', async () => {
+  it('table tennis (uncapped) switches serve every 2 points pre-deuce, then every point at deuce', async () => {
     h.params = { sport: 'tabletennis', id: '1', matchId: 'm1' };
     h.tournaments = [h.makeTournament({
-      format: { type: 'best-of', sets: 5, points: 11 },
+      // points: 3 → deuce at 2-2 (target-1 each), reachable in a few taps; win-by-2
+      // keeps 3-2 / 3-3 from completing the set so deuce stays live to assert on.
+      format: { type: 'best-of', sets: 5, points: 3 },
     })];
     render(<MonoSetsLiveScore />);
     await screen.findByText(/points to win/);
+    const [left, right] = arenaButtons();
 
-    // Pre-deuce: serve changes every 2 points (serviceRotation = 2).
+    // Pre-deuce: serviceRotation = 2 → serve changes every 2 points, NOT every point.
     expect(servingTeamFromDom()).toBe('A');
-    await tapServer(); // total 1 → no switch
+    await scoreFor(left);  // 1-0, total 1 (odd) → no switch
     expect(servingTeamFromDom()).toBe('A');
-    await tapServer(); // total 2 → switch to B
+    await scoreFor(right); // 1-1, total 2 → switch (every-2 cadence)
     expect(servingTeamFromDom()).toBe('B');
+    await scoreFor(left);  // 2-1, total 3 (odd) → no switch, not yet deuce
+    expect(servingTeamFromDom()).toBe('B');
+
+    // At deuce (2-2) the uncapped branch switches serve on EVERY point — including
+    // odd totals where the every-2 rule would NOT. The 3-2 step (total 5, odd) is
+    // the discriminator: it only switches because the deuce branch fired.
+    await scoreFor(right); // 2-2, total 4 → reach deuce → switch
+    expect(servingTeamFromDom()).toBe('A');
+    await scoreFor(left);  // 3-2, total 5 (odd) → deuce switch (every-2 would NOT)
+    expect(servingTeamFromDom()).toBe('B');
+    await scoreFor(right); // 3-3, total 6 → still deuce → switch
+    expect(servingTeamFromDom()).toBe('A');
   });
 
-  it('badminton (capped) never mis-fires the deuce branch — serve still rotates every point', async () => {
+  it('badminton (capped, rotation=1) switches serve every point even at deuce-score — deuce branch never fires', async () => {
     h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
     h.tournaments = [h.makeTournament({
-      format: { type: 'best-of', sets: 3, points: 21 },
+      // points: 3 so we reach the would-be deuce score (2-2) fast. badminton is
+      // capped (maxPoints=30) AND serviceRotation=1, so the deuce special-case must
+      // NEVER engage: serve rotates on every single point, deuce-score included.
+      format: { type: 'best-of', sets: 3, points: 3 },
     })];
     render(<MonoSetsLiveScore />);
     await screen.findByText(/points to win/);
+    const [left, right] = arenaButtons();
 
-    // serviceRotation = 1 → switch on every point regardless of deuce.
     expect(servingTeamFromDom()).toBe('A');
-    await tapServer();
+    await scoreFor(left);  // 1-0 → switch
     expect(servingTeamFromDom()).toBe('B');
-    await tapServer();
+    await scoreFor(right); // 1-1 → switch
     expect(servingTeamFromDom()).toBe('A');
+    await scoreFor(left);  // 2-1 → switch
+    expect(servingTeamFromDom()).toBe('B');
+    await scoreFor(right); // 2-2 (deuce-score) → STILL switches; no special-case
+    expect(servingTeamFromDom()).toBe('A');
+    await scoreFor(left);  // 3-2 (win-by-2: set not won yet) → switch
+    expect(servingTeamFromDom()).toBe('B');
   });
 });
