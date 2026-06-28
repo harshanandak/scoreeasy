@@ -942,6 +942,13 @@ button.mono-stat-card {
   margin-bottom: 24px;
 }
 
+/* Reserve a stable slot for the live-broadcast control so the score below doesn't
+   jump when the bar hydrates from null (auth resolving / pre-go-live) to a control
+   row. Sized to one control row + its spacing. */
+.mono-live-slot {
+  min-height: 56px;
+}
+
 .mono-scorer-topbar-actions {
   display: flex;
   align-items: center;

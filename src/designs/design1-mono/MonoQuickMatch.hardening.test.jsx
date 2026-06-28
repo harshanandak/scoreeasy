@@ -8,7 +8,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 // restore effect lands straight in the 'scoring' phase.
 
 const nav = vi.hoisted(() => vi.fn());
-const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, queryResult: undefined }));
+const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, queryResult: undefined, cloudAuthAvailable: true }));
 const storageMock = vi.hoisted(() => ({ clearData: vi.fn(), saveQuickMatch: vi.fn(() => true) }));
 const live = vi.hoisted(() => ({
   point: vi.fn(() => Promise.resolve()),
@@ -27,7 +27,7 @@ vi.mock('react-router-dom', () => ({
   useSearchParams: () => [new URLSearchParams(''), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({
-  useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: true }),
+  useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: ctx.cloudAuthAvailable }),
 }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({
   useLiveBroadcast: () => ({ ...live, isLive: false, token: null, error: null }),
@@ -70,6 +70,7 @@ beforeEach(() => {
   live.point.mockClear();
   live.finalize.mockClear();
   ctx.queryResult = undefined;
+  ctx.cloudAuthAvailable = true;
 });
 
 describe('MonoQuickMatch hardening (#106)', () => {
@@ -143,6 +144,20 @@ describe('MonoQuickMatch hardening (#106)', () => {
     expect(lastActionText).toBeInTheDocument();
     // The strip lives in a polite live region so each action is announced.
     expect(lastActionText.closest('[aria-live="polite"]')).not.toBeNull();
+  });
+
+  it('reserves a fixed live-broadcast slot when cloud auth is available, and omits it offline', () => {
+    seedVolleyball();
+    const { container, unmount } = render(<MonoQuickMatch />);
+    // The slot holds space even before the bar hydrates, so the score won't jump.
+    expect(container.querySelector('.mono-live-slot')).not.toBeNull();
+    unmount();
+
+    // Offline build (no cloud auth): no permanent empty slot.
+    ctx.cloudAuthAvailable = false;
+    seedVolleyball();
+    const { container: offlineContainer } = render(<MonoQuickMatch />);
+    expect(offlineContainer.querySelector('.mono-live-slot')).toBeNull();
   });
 
   // Cricket innings transitions moved from inside the setScores updaters to a single

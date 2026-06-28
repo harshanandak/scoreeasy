@@ -382,7 +382,7 @@ export default function MonoQuickMatch() {
   }, [saveWarning]);
 
   // Auth + Convex integration for match saving
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, cloudAuthAvailable } = useAuth();
 
   // Referee toggle (only for referee/both roles)
   const showRefereeOption = isAuthenticated && (user?.role === 'referee' || user?.role === 'both');
@@ -2606,13 +2606,20 @@ export default function MonoQuickMatch() {
               </div>
             </div>
 
-            {/* Live broadcast control (consent / LIVE indicator / share) */}
-            <LiveBroadcastBar
-              broadcast={live}
-              descriptor={liveDescriptor}
-              enabled={liveEnabled}
-              onEnableChange={setLiveEnabled}
-            />
+            {/* Live broadcast control, held in a fixed-height slot so the score
+                doesn't jump when the bar hydrates from null -> control. Gated on
+                cloudAuthAvailable so offline builds (bar always null) don't reserve
+                a permanent empty gap. */}
+            {cloudAuthAvailable && (
+              <div className="mono-live-slot">
+                <LiveBroadcastBar
+                  broadcast={live}
+                  descriptor={liveDescriptor}
+                  enabled={liveEnabled}
+                  onEnableChange={setLiveEnabled}
+                />
+              </div>
+            )}
 
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
@@ -2769,13 +2776,20 @@ export default function MonoQuickMatch() {
               </span>
             </div>
 
-            {/* Live broadcast control (consent / LIVE indicator / share) */}
-            <LiveBroadcastBar
-              broadcast={live}
-              descriptor={liveDescriptor}
-              enabled={liveEnabled}
-              onEnableChange={setLiveEnabled}
-            />
+            {/* Live broadcast control, held in a fixed-height slot so the score
+                doesn't jump when the bar hydrates from null -> control. Gated on
+                cloudAuthAvailable so offline builds (bar always null) don't reserve
+                a permanent empty gap. */}
+            {cloudAuthAvailable && (
+              <div className="mono-live-slot">
+                <LiveBroadcastBar
+                  broadcast={live}
+                  descriptor={liveDescriptor}
+                  enabled={liveEnabled}
+                  onEnableChange={setLiveEnabled}
+                />
+              </div>
+            )}
 
             {/* Arena: two full-bleed halves; whole half = +1 */}
             <div className="mono-arena-grid">
@@ -2880,13 +2894,19 @@ export default function MonoQuickMatch() {
             </span>
           </div>
 
-          {/* Live broadcast control (consent / LIVE indicator / share) */}
-          <LiveBroadcastBar
-            broadcast={live}
-            descriptor={liveDescriptor}
-            enabled={liveEnabled}
-            onEnableChange={setLiveEnabled}
-          />
+          {/* Live broadcast control, held in a fixed-height slot so the score
+              doesn't jump when the bar hydrates from null -> control. Gated on
+              cloudAuthAvailable so offline builds don't reserve a permanent gap. */}
+          {cloudAuthAvailable && (
+            <div className="mono-live-slot">
+              <LiveBroadcastBar
+                broadcast={live}
+                descriptor={liveDescriptor}
+                enabled={liveEnabled}
+                onEnableChange={setLiveEnabled}
+              />
+            </div>
+          )}
 
           {/* Seam: sets-won tally + rule */}
           <div className="mono-arena-seam">
