@@ -318,8 +318,67 @@ describe('app entry route contract', () => {
     const navStyles = Array.from(container.querySelectorAll('style'))
       .map((style) => style.textContent)
       .join('\n');
-    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"] {\n            background: var(--se-color-action);');
+    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"]');
+    expect(navStyles).toContain('background: var(--se-color-action);');
     expect(navStyles).not.toContain('var(--se-color-action-soft)');
+  });
+
+  it('paints the account tab active on the profile route with a >=44px tap target', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    const { container } = renderApp('/profile');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+
+    const appNav = container.querySelector('.global-bottom-nav');
+    // With Clerk mounted, the interactive control is the Clerk account button,
+    // so the active cue must live on the account CELL (not the fallback button,
+    // which only renders while Clerk is loading).
+    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
+    expect(accountCell).not.toBeNull();
+    expect(accountCell).toHaveClass('is-active');
+    expect(accountCell).toHaveAttribute('aria-current', 'page');
+
+    // The active cue is driven by the same unified action token as every other
+    // tab, via a selector that includes the account cell.
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
+    // Tap targets meet the >=44px accessibility bar (no leftover 24px controls).
+    expect(navStyles).toContain('min-height: 44px;');
+    expect(navStyles).not.toContain('min-height: 24px;');
+  });
+
+  it('keeps the active cue on the account cell while Clerk is still loading', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    // Clerk chunk not mounted yet -> the cell renders the /profile fallback.
+    renderAuthUserButton = false;
+    const { container } = renderApp('/profile');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+
+    const appNav = container.querySelector('.global-bottom-nav');
+    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
+    expect(accountCell).toHaveClass('is-active');
+    // The loading fallback also exposes the active cue for assistive tech.
+    const fallback = within(appNav).getByRole('button', { name: 'Account', hidden: true });
+    expect(fallback).toHaveAttribute('aria-current', 'page');
   });
 
   it('keeps the nav shell mounted around the lazy route boundary', async () => {

@@ -602,7 +602,15 @@ function BottomNavAccountCell({ item, active, onNavigate }) {
   }, []);
 
   return (
-    <div className="global-bottom-nav-account-cell">
+    // The active "you are here" cue lives on the CELL, not just the fallback
+    // button: when Clerk has mounted, the interactive control is the Clerk
+    // account button (which we cannot decorate with aria-current), so the cell
+    // carries the active state for both the loaded and loading paths. Mirror it
+    // onto `aria-current` so the cue is exposed to assistive tech too.
+    <div
+      className={`global-bottom-nav-account-cell${active ? ' is-active' : ''}`}
+      aria-current={active ? 'page' : undefined}
+    >
       <span
         ref={controlRef}
         className={`global-bottom-nav-account-control${clerkReady ? ' is-ready' : ''}`}
@@ -1381,7 +1389,9 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           /* Account cell: one stacked control (Clerk button or fallback) plus a
-             non-interactive label, laid out to match the other tabs. */
+             non-interactive label, laid out to match the other tabs. The cell
+             itself fills the grid track and carries the active cue + a >=44px
+             tap target (the control/fallback stretch to fill it). */
           .global-bottom-nav-account-cell {
             display: flex;
             align-items: center;
@@ -1389,7 +1399,9 @@ function GlobalNavigation({ requestScoringExit }) {
             flex-direction: column;
             gap: 3px;
             min-height: 54px;
+            width: 100%;
             min-width: 0;
+            border-radius: 10px;
             color: var(--se-color-ink-muted);
           }
 
@@ -1397,8 +1409,23 @@ function GlobalNavigation({ requestScoringExit }) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            min-width: 44px;
+            min-height: 44px;
+          }
+
+          /* Clerk renders its own avatar trigger inside the control wrapper.
+             Sizing only the wrapper leaves the real hit area (Clerk's avatar
+             button) at ~24px, so we expand Clerk's own trigger/avatar box to
+             the 44px target as well. */
+          .global-bottom-nav-account-control .cl-userButtonTrigger,
+          .global-bottom-nav-account-control .cl-userButtonBox {
+            width: 44px;
+            height: 44px;
+          }
+
+          .global-bottom-nav-account-control .cl-userButtonAvatarBox {
+            width: 36px;
+            height: 36px;
           }
 
           .global-bottom-nav-account-fallback {
@@ -1406,7 +1433,7 @@ function GlobalNavigation({ requestScoringExit }) {
             align-items: center;
             justify-content: center;
             width: 100%;
-            min-height: 24px;
+            min-height: 44px;
             border: 0;
             border-radius: 10px;
             background: transparent;
@@ -1415,10 +1442,15 @@ function GlobalNavigation({ requestScoringExit }) {
           }
 
           /* Unified active treatment: every nav surface (header link, mobile
-             sheet item, bottom-nav item) paints the active tab with the same
-             solid action fill + inverse ink, so the "you are here" cue is
-             consistent across the shell. */
-          .global-bottom-nav-item[aria-current="page"] {
+             sheet item, bottom-nav item, account cell) paints the active tab
+             with the same solid action fill + inverse ink, so the "you are
+             here" cue is consistent across the shell. The account cell needs
+             its own selector because its interactive control is the Clerk
+             button (no aria-current of its own) rather than a
+             .global-bottom-nav-item, so the cue is driven by the cell's
+             is-active state. */
+          .global-bottom-nav-item[aria-current="page"],
+          .global-bottom-nav-account-cell.is-active {
             background: var(--se-color-action);
             color: var(--se-color-inverse);
           }
