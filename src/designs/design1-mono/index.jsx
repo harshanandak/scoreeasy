@@ -229,8 +229,10 @@ export function resolveGameResumePath(id) {
 
   // Tennis quick matches persist into their own per-id draft key.
   const tennisDraft = loadData(getTennisQuickDraftKey(id), null);
-  if (tennisDraft && tennisDraft.status !== 'completed' && getSportById(tennisDraft.sport)) {
-    return `/${tennisDraft.sport}/quick/live/${id}`;
+  // This is the tennis-specific draft key, so only recover an actual tennis draft —
+  // stale/corrupt storage with another sport must not redirect to /<sport>/quick/live.
+  if (tennisDraft && tennisDraft.status !== 'completed' && tennisDraft.sport === 'tennis') {
+    return `/tennis/quick/live/${id}`;
   }
 
   return null;
@@ -759,7 +761,7 @@ function GlobalNavigation({ requestScoringExit }) {
     cloudAuthAvailable
       ? {
         tab: accountTab,
-        label: 'Account',
+        label: accountLabel,
         path: accountPath,
         icon: 'account',
       }

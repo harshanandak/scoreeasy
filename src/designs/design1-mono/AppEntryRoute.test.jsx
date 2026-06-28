@@ -352,8 +352,10 @@ describe('app entry route contract', () => {
       .map((style) => style.textContent)
       .join('\n');
     expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
-    // Tap targets meet the >=44px accessibility bar (no leftover 24px controls).
-    expect(navStyles).toContain('min-height: 44px;');
+    // Tap targets meet the >=44px bar — assert Clerk's OWN trigger/avatar box (the
+    // real hit area) is sized to 44px, not just that a 44px rule exists somewhere.
+    expect(navStyles).toContain('.global-bottom-nav-account-control .cl-userButtonTrigger');
+    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 44px;[^}]*height: 44px;/);
     expect(navStyles).not.toContain('min-height: 24px;');
   });
 
