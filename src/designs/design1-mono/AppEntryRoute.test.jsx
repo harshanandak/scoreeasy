@@ -239,7 +239,7 @@ describe('app entry route contract', () => {
     });
   });
 
-  it('exposes a single account control in app bottom navigation', async () => {
+  it('exposes a single account control (the Clerk button) in app bottom navigation', async () => {
     authState = {
       ...authState,
       authMode: 'cloud',
@@ -252,18 +252,15 @@ describe('app entry route contract', () => {
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
 
-    // Single control per cell: one labelled "Account" button that navigates to
-    // the profile screen. The previous invisible Clerk "Account menu" button
-    // overlaid on top has been removed so screen readers see one control.
-    expect(within(appNav).getByText('Account')).toBeInTheDocument();
-    expect(within(appNav).queryByRole('button', { name: 'Account menu', hidden: true })).not.toBeInTheDocument();
-    expect(within(appNav).getByRole('button', { name: 'Account', hidden: true })).toBeInTheDocument();
-
-    fireEvent.click(within(appNav).getByRole('button', { name: 'Account', hidden: true }));
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
-    });
+    // Single control per cell: once the Clerk account button has mounted it is
+    // the ONLY interactive control (the sole sign-out / manage-account surface
+    // on mobile). The previous pattern stacked an invisible Clerk button over a
+    // separate visible nav button — now there is exactly one.
+    expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).queryByRole('button', { name: 'Account', hidden: true })).not.toBeInTheDocument();
+    // Visible label is non-interactive chrome, hidden from assistive tech.
+    const label = within(appNav).getByText('Account');
+    expect(label).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
