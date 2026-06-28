@@ -166,6 +166,32 @@ describe('MonoWatchMatch', () => {
     expect(within(feed).getAllByText(/Reds|Blues/).length).toBeGreaterThan(0);
   });
 
+  it('labels serve switches and corrections instead of rendering "+0" / "+-1"', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    mocks.paginated = {
+      results: [
+        // A correction (value -1) and a serve switch (value 0) must NOT render as
+        // "+-1" / "+0" — they are the exact rows issue spectators saw broken.
+        { seq: 3, type: 'correction', team: 'A', value: -1, runningA: 0, runningB: 1, setsA: 0, setsB: 0, at: 3000 },
+        { seq: 2, type: 'serve_change', team: 'B', value: 0, runningA: 1, runningB: 1, setsA: 0, setsB: 0, servingAfter: 'B', at: 2000 },
+        { seq: 1, type: 'point', team: 'A', value: 1, runningA: 1, runningB: 1, setsA: 0, setsB: 0, at: 1000 },
+      ],
+      status: 'Exhausted',
+      loadMore: vi.fn(),
+      isLoading: false,
+    };
+    renderAt();
+
+    const feed = screen.getByRole('region', { name: 'Commentary feed' });
+    // Serve switch is labelled "Serve → <new server>"; correction names the team.
+    expect(within(feed).getByText(/Serve/)).toBeInTheDocument();
+    expect(within(feed).getByText(/Correction/)).toBeInTheDocument();
+    // The broken labels never appear (the point row is "+1", not "+0").
+    expect(within(feed).queryByText(/\+0/)).not.toBeInTheDocument();
+    expect(within(feed).queryByText(/\+-1/)).not.toBeInTheDocument();
+  });
+
   it('scorecard (goals) renders the total from the snapshot, no winner mid-match', () => {
     // Snapshot says 3-2 LIVE; the loaded event page is EMPTY. A correct scorecard
     // shows the snapshot totals (re-deriving from the partial page would show 0-0)

@@ -193,6 +193,14 @@ export const scorePoint = authedMutation({
     clientEventId: v.string(),
     team: v.union(v.literal("A"), v.literal("B")),
     value: v.optional(v.number()),
+    // The kind of scoring event. Restricted to the three a scorer routes through
+    // point(): a plain point, a serve switch (value 0), or a correction
+    // (value < 0). set_end/undo/timeout/note have their own flows and are
+    // intentionally NOT accepted here. Defaults to "point" for older clients and
+    // queued outbox items that predate this field.
+    type: v.optional(
+      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction")),
+    ),
     at: v.number(),
     playerId: v.optional(v.string()),
     snapshot: v.optional(snapshotArgValidator),
@@ -232,7 +240,11 @@ export const scorePoint = authedMutation({
       matchId: args.matchId,
       seq,
       clientEventId: args.clientEventId,
-      type: "point",
+      // Label the event by its kind so spectators see "Serve → B" / "Correction"
+      // instead of a nonsensical "+0" / "+-1". This is purely a display label:
+      // runningA/runningB (and the patched score below) are snapshot-authoritative
+      // and independent of `type`, so the reduced score is unchanged.
+      type: args.type ?? "point",
       team: args.team,
       value: delta,
       playerId: args.playerId,

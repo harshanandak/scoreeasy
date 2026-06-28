@@ -97,9 +97,30 @@ describe('useLiveBroadcast', () => {
       clientEventId: 'cm1:1',
       team: 'A',
       value: 1,
+      type: 'point',
       at: 1000,
     });
     expect(load()).toEqual([]);
+  });
+
+  it('point() forwards the event type (serve_change / correction) to scorePoint', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockResolvedValue({});
+    const { result } = setup();
+
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    await act(async () => {
+      await result.current.point({ team: 'B', value: 0, at: 1000, type: 'serve_change' });
+    });
+    await act(async () => {
+      await result.current.point({ team: 'A', value: -1, at: 2000, type: 'correction' });
+    });
+
+    const calls = h.spies['live:scorePoint'].mock.calls.map((c) => c[0]);
+    expect(calls[0]).toMatchObject({ team: 'B', value: 0, type: 'serve_change' });
+    expect(calls[1]).toMatchObject({ team: 'A', value: -1, type: 'correction' });
   });
 
   it('keeps the event queued and never throws when the push fails (local scoring unaffected)', async () => {
@@ -226,6 +247,7 @@ describe('useLiveBroadcast', () => {
       clientEventId: 'cm1:2',
       team: 'B',
       value: 1,
+      type: 'point',
       at: 2,
     });
   });

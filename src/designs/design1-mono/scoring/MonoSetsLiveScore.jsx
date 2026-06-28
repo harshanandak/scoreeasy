@@ -425,8 +425,16 @@ export default function MonoSetsLiveScore() {
     } else {
       // 'point' (value 1), 'serve' switch (value 0) and 'correction' (value -1)
       // all flow through the same point() surface; the snapshot carries the
-      // settled score/serving so spectators stay in lockstep with undo.
-      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
+      // settled score/serving so spectators stay in lockstep with undo. Tag the
+      // EVENT type so the spectator feed labels a serve switch / correction
+      // instead of rendering a meaningless "+0" / "+-1" (the snapshot still
+      // owns the score, so the label changes nothing about the running totals).
+      const broadcastType = intent.kind === 'serve'
+        ? 'serve_change'
+        : intent.kind === 'correction'
+          ? 'correction'
+          : 'point';
+      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, type: broadcastType, at: intent.at, snapshot });
     }
   }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
 
