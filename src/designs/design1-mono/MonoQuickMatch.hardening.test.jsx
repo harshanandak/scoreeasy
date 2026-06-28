@@ -136,6 +136,32 @@ describe('MonoQuickMatch hardening (#106)', () => {
     expect(screen.getByRole('button', { name: 'Add 1 to Reds' })).toBeDisabled();
   });
 
+  it('lets a no-draw timed match score the deciding point at full time (no 0-0 dead end)', () => {
+    // basketball: drawAllowed=false. Tied 0-0 at time-up would otherwise be a dead
+    // end (can't score, no undo history, can't end on a tie) — the deciding-score
+    // lever must stay live.
+    ctx.sport = 'basketball';
+    ctx.draft = {
+      ...base,
+      sport: 'basketball',
+      quickMatchId: 7007,
+      gScore1: 0,
+      gScore2: 0,
+      gScoreHistory: [],
+      format: { mode: 'timed', timeLimit: 60 },
+      timerElapsed: 60,
+    };
+    render(<MonoQuickMatch />);
+
+    // The deciding-score control is still enabled at 0-0 time-up.
+    const plusOne = screen.getAllByRole('button', { name: '+1' })[0];
+    expect(plusOne).toBeEnabled();
+    fireEvent.click(plusOne);
+
+    // Now untied (1-0): the match becomes endable and the end prompt appears.
+    expect(screen.getByRole('dialog', { name: /End match/i })).toBeInTheDocument();
+  });
+
   it('announces the last scoring action in an aria-live region inside the scorer', () => {
     seedVolleyball({ lastAction: 'Reds +1' });
     render(<MonoQuickMatch />);

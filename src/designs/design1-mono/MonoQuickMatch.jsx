@@ -115,12 +115,15 @@ function ConfirmDialog({
 }
 
 function ScoringStatusStrip({ label, value, lastAction }) {
-  if (!label && !lastAction) return null;
+  // Always render the polite live region (even when empty) so the FIRST action is
+  // announced — a live region must already be in the DOM before its content
+  // changes. Collapse the visible chrome when there's nothing to show.
+  const hasContent = Boolean(label || lastAction);
 
   return (
     <div
-      className="mono-score-mini mb-4 flex items-center justify-between gap-3"
-      style={{ padding: '10px 12px' }}
+      className={hasContent ? 'mono-score-mini mb-4 flex items-center justify-between gap-3' : undefined}
+      style={hasContent ? { padding: '10px 12px' } : undefined}
       aria-live="polite"
     >
       {label ? (
@@ -735,22 +738,30 @@ export default function MonoQuickMatch() {
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
+  // A no-draw sport tied at full time still needs ONE deciding score, so the
+  // time-up lock must permit exactly that — otherwise 0-0 with no undo history is a
+  // dead end (can't score, can't undo, can't end on a tie). Once the tie breaks,
+  // needsDecidingScore goes false and the lock re-engages.
+  const goalsDrawAllowed = sportConfig?.config?.drawAllowed ?? true;
+  const needsDecidingScore = isTimeUp && !goalsDrawAllowed && gScore1 === gScore2;
+  const scoringLocked = isTimeUp && !needsDecidingScore;
 
-  // Timed mode: when the clock first reaches zero, pause and prompt to end — ONCE
-  // (a ref one-shot, reset whenever the clock isn't up, e.g. a new match). The
-  // prompt reuses the normal end flow, which still blocks ending on a no-draw tie.
-  // Scoring stays locked after time's up regardless of whether the prompt is
-  // dismissed (addGoal guard + disabled controls), so the match can't drift on.
+  // Timed mode: pause when the clock first reaches zero. Open the end prompt ONCE,
+  // but only when the match is actually endable — not while a no-draw tie still
+  // needs a deciding score (so the prompt appears after that decider breaks the
+  // tie). The one-shot ref resets whenever the clock isn't up (e.g. a new match).
   const timeUpPromptedRef = useRef(false);
   useEffect(() => {
-    if (isTimeUp && !timeUpPromptedRef.current) {
-      timeUpPromptedRef.current = true;
-      timer.pause();
-      setShowEndConfirm(true);
-    } else if (!isTimeUp) {
+    if (!isTimeUp) {
       timeUpPromptedRef.current = false;
+      return;
     }
-  }, [isTimeUp]);
+    timer.pause();
+    if (!needsDecidingScore && !timeUpPromptedRef.current) {
+      timeUpPromptedRef.current = true;
+      setShowEndConfirm(true);
+    }
+  }, [isTimeUp, needsDecidingScore]);
 
   // Live broadcast descriptor (shared across all three sport branches). clientMatchId
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
@@ -1444,9 +1455,10 @@ export default function MonoQuickMatch() {
 
   // Goals: Add score for a team
   const addGoal = (team, value = 1) => {
-    // Timed mode: once the clock hits zero scoring is locked. This is the
-    // load-bearing guard; the render also disables the controls (defense in depth).
-    if (isTimeUp) return;
+    // Timed mode: once the clock hits zero scoring is locked — EXCEPT the one
+    // deciding score a no-draw tie still needs (scoringLocked encodes that). This
+    // is the load-bearing guard; the render also disables the controls to match.
+    if (scoringLocked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -2801,7 +2813,7 @@ export default function MonoQuickMatch() {
                     // button, which drops out of the a11y tree) so screen readers
                     // still announce the team + score.
                     <div
-                      className="mono-arena-half"
+                      className="mono-arena-half mono-arena-half-display"
                       data-leading={h.leading ? 'true' : 'false'}
                       style={{ '--score-accent': h.accent }}
                       aria-label={`${h.name}: ${h.score}`}
@@ -2815,7 +2827,7 @@ export default function MonoQuickMatch() {
                       className="mono-arena-half"
                       data-leading={h.leading ? 'true' : 'false'}
                       onClick={() => addGoal(h.team)}
-                      disabled={isTimeUp}
+                      disabled={scoringLocked}
                       style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
                       aria-label={`Add 1 to ${h.name}`}
                     >
@@ -2827,7 +2839,7 @@ export default function MonoQuickMatch() {
                   {hasQuickButtons && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
                       {quickButtons.map((btn) => (
-                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} disabled={isTimeUp} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
+                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} disabled={scoringLocked} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
                           {btn.label}
                         </button>
                       ))}
