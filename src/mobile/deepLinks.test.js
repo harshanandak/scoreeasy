@@ -40,9 +40,13 @@ describe('pathFromAppUrl', () => {
   });
 
   it('canonicalizes legacy native app links before navigation', () => {
-    expect(pathFromAppUrl('https://scoreeasy.app/stats?range=month#totals')).toBe('/statistics?range=month#totals');
+    // Both legacy stats spellings collapse straight to /history in a single hop
+    // (no /stats → /statistics → /history double redirect).
+    expect(pathFromAppUrl('https://scoreeasy.app/stats?range=month#totals')).toBe('/history?range=month#totals');
+    expect(pathFromAppUrl('https://scoreeasy.app/statistics?range=month#totals')).toBe('/history?range=month#totals');
     expect(pathFromAppUrl('https://scoreeasy.app/dashboard')).toBe('/app');
-    expect(pathFromAppUrl('https://scoreeasy.app/stats/')).toBe('/statistics');
+    expect(pathFromAppUrl('https://scoreeasy.app/stats/')).toBe('/history');
+    expect(pathFromAppUrl('https://scoreeasy.app/statistics/')).toBe('/history');
     expect(pathFromAppUrl('https://scoreeasy.app/dashboard/')).toBe('/app');
   });
 
