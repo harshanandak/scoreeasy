@@ -16,10 +16,10 @@
 // Stats tabs are driven entirely by the always-current getByToken snapshot.
 // ───────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery, usePaginatedQuery } from 'convex/react';
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
+import { useQuery, usePaginatedQuery, useConvexConnectionState } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import VolleyballScorebug from './scorecard/VolleyballScorebug';
 import TennisScorebug from './scorecard/TennisScorebug';
@@ -32,7 +32,84 @@ import ReportMatch from './live/ReportMatch';
 // §2 "Stale / paused"). 90s mirrors the spec.
 const STALE_MS = 90000;
 
+// How often we re-render purely so the staleness clock advances. The staleness
+// cue (PAUSED) is derived from `Date.now() - lastEventAt`; without a periodic
+// re-render it would only flip when a NEW snapshot arrives — which by definition
+// never happens once the operator goes quiet. A coarse 15s tick is enough to
+// surface PAUSED within the ~90s window without being a busy loop.
+const STALE_TICK_MS = 15000;
+
 const TABS = ['Feed', 'Scorecard', 'Stats'];
+
+/**
+ * Forces a re-render on a fixed interval so time-derived UI (the PAUSED / stale
+ * cue) updates even when no new data arrives. Returns a monotonically rising
+ * tick the caller can read to keep the value "live"; the value itself is unused
+ * beyond triggering the render. The interval is cleared on unmount.
+ */
+function useStaleTick(intervalMs = STALE_TICK_MS) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return tick;
+}
+
+/**
+ * Derives a coarse connection status from Convex's connectionState() for the
+ * spectator banner. This page is only ever mounted under a ConvexProvider, so
+ * `useConvexConnectionState()` is always safe to call here.
+ *
+ *   'online'        → socket connected (or never-yet-connected first load)
+ *   'reconnecting'  → dropped after connecting, still retrying within bounds
+ *   'offline'       → sustained outage (retries exhausted the calm window)
+ */
+function deriveConnectionStatus(state) {
+  if (!state || state.isWebSocketConnected) return 'online';
+  if (!state.hasEverConnected) return 'online';
+  if (state.connectionRetries > 0 && state.connectionRetries < 8) return 'reconnecting';
+  return 'offline';
+}
+
+/**
+ * Calm banner shown when the spectator's live connection drops. Distinct copy
+ * for the transient reconnecting state vs a sustained offline outage; reuses the
+ * mono.css alert surface. role=status + aria-live=polite so screen readers are
+ * notified without stealing focus.
+ */
+function ConnectionBanner({ status }) {
+  if (status === 'online') return null;
+  const reconnecting = status === 'reconnecting';
+  return (
+    <div
+      className="mono-alert mono-alert-info"
+      role="status"
+      aria-live="polite"
+      style={{ margin: 0, padding: '8px 16px', borderRadius: 0, textAlign: 'center' }}
+    >
+      <p
+        className="font-mono"
+        style={{
+          margin: 0,
+          fontSize: '0.6875rem',
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--muted-foreground)',
+        }}
+      >
+        {reconnecting
+          ? 'Reconnecting to live updates…'
+          : 'You’re offline — scores may be out of date'}
+      </p>
+    </div>
+  );
+}
+
+ConnectionBanner.propTypes = {
+  status: PropTypes.oneOf(['online', 'reconnecting', 'offline']).isRequired,
+};
 
 /** Format an absolute epoch-ms timestamp as a short wall clock (HH:MM). */
 function formatClock(at) {
@@ -82,6 +159,11 @@ PulseDot.propTypes = {
  * hairlines, not shadows).
  */
 function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
+  // Re-render on a timer so the staleness clock advances even when no new
+  // snapshot arrives — otherwise PAUSED would never appear after the operator
+  // goes quiet (see useStaleTick). The tick value itself is intentionally unused.
+  useStaleTick();
+
   const isFinal = snapshot.status === 'final';
   const stale = !isFinal && Date.now() - snapshot.lastEventAt > STALE_MS;
 
@@ -96,6 +178,13 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
 
   const scoreSize = kiosk ? '3.25rem' : '2rem';
 
+  // Single spoken summary of the live score + status, announced politely and
+  // atomically whenever any part changes. The visual score below is built from
+  // many decorative spans (serve dot, en-dash, winner caret) that read poorly
+  // one-by-one, so this dedicated string is the screen-reader source of truth.
+  const statusWord = stale ? 'paused' : eyebrow.toLowerCase();
+  const spokenScore = `${nameA} ${snapshot.pointsA}, ${nameB} ${snapshot.pointsB}. ${periodLine}. ${statusWord}.`;
+
   return (
     <header
       aria-label="Match scorebug"
@@ -107,7 +196,15 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
         padding: kiosk ? '20px 24px' : '12px 16px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      {/* Screen-reader source of truth for the live score + status. Polite +
+          atomic so it re-announces the whole line on every change without
+          interrupting; the visual rows below are aria-hidden to avoid the
+          decorative spans being read out one fragment at a time. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {spokenScore}
+      </p>
+
+      <div aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         {/* Team A */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
           {snapshot.servingTeam === 'A' ? (
@@ -175,8 +272,9 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
         </div>
       </div>
 
-      {/* Status + period summary line */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
+      {/* Status + period summary line (visual only; spoken via the live region
+          above so screen readers get one clean summary, not the badge spans). */}
+      <div aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
         <p style={{ ...eyebrowStyle }}>{periodLine}</p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {stale ? (
@@ -547,6 +645,11 @@ export default function MonoWatchMatch() {
     loadMore,
   } = usePaginatedQuery(api.live.listEvents, { token }, { initialNumItems: 30 });
 
+  // Drive the offline / reconnecting banner from Convex's live socket state.
+  // Called unconditionally before the early returns to satisfy the Rules of
+  // Hooks; this page is always mounted under a ConvexProvider.
+  const connectionStatus = deriveConnectionStatus(useConvexConnectionState());
+
   const [tab, setTab] = useState('Feed');
   const [ctaDismissed, setCtaDismissed] = useState(false);
 
@@ -562,10 +665,68 @@ export default function MonoWatchMatch() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)' }}>
+      {/* Brand / home bar — gives a spectator who landed cold on a share link a
+          way to identify the product and step into the app. Hidden in kiosk mode
+          (a fixed display surface, not a navigable session). */}
+      {!kiosk ? (
+        <nav
+          aria-label="Site"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '8px 16px',
+            background: 'var(--background)',
+            borderBottom: '1px solid color-mix(in oklch, var(--foreground) 12%, transparent)',
+          }}
+        >
+          <Link
+            to="/"
+            aria-label="Score Easy home"
+            className="cursor-pointer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: 44,
+              padding: '0 4px',
+              fontWeight: 900,
+              fontSize: '1rem',
+              letterSpacing: '-0.02em',
+              color: 'var(--foreground)',
+              textDecoration: 'none',
+            }}
+          >
+            Score Easy
+          </Link>
+          <Link
+            to="/"
+            className="font-mono cursor-pointer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: 44,
+              padding: '0 14px',
+              background: 'var(--primary)',
+              color: 'var(--primary-foreground)',
+              borderRadius: 'var(--radius)',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            Open app
+          </Link>
+        </nav>
+      ) : null}
+
       {/* Scorebug + tab bar are ONE sticky unit. Previously each stuck to top:0
           independently, so on scroll the higher-z scorebug overlapped the tab bar
           and the tabs became unclickable. Wrapping pins them together as a block. */}
       <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+      <ConnectionBanner status={connectionStatus} />
       <PinnedScorebug snapshot={snapshot} nameA={nameA} nameB={nameB} kiosk={kiosk} />
 
       {!kiosk ? (
@@ -575,7 +736,7 @@ export default function MonoWatchMatch() {
           style={{
             display: 'flex',
             gap: 16,
-            padding: '8px 16px',
+            padding: '0 16px',
             background: 'var(--background)',
             borderBottom: '1px solid color-mix(in oklch, var(--foreground) 14%, transparent)',
           }}
@@ -591,10 +752,16 @@ export default function MonoWatchMatch() {
                 onClick={() => setTab(label)}
                 className="font-mono cursor-pointer"
                 style={{
+                  // >=44px touch target (WCAG 2.5.5 / mobile-first): the visible
+                  // underline still sits at the bottom edge, but the hit area now
+                  // fills a full 44px-tall tap zone instead of ~28px.
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: 44,
                   background: 'transparent',
                   border: 0,
                   borderBottom: selected ? '2px solid var(--primary)' : '2px solid transparent',
-                  padding: '6px 2px',
+                  padding: '6px 4px',
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   letterSpacing: '0.08em',
