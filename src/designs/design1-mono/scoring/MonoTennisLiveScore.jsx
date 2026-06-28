@@ -430,6 +430,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     lastClickRef.current = now;
     if (isMatchComplete) return;
 
+    // A new point supersedes any milestone toast still showing — clear it first so
+    // the aria-atomic live region doesn't re-announce the stale "wins Game/Set" text
+    // alongside the new score.
+    setMilestone(null);
+
     // Mirror this point to the live broadcast (snapshot built post-commit). team1 -> A.
     broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
 
@@ -451,7 +456,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     setSets(prevSets => {
       const newSets = prevSets.map(s => ({ ...s }));
       const set = newSets[currentSet];
-      if (set.completed) return prevSets;
+      if (!set || set.completed) return prevSets;
 
       triggerHaptic([50]);
 
@@ -752,7 +757,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightPoints = isTiebreakMode
     ? (sidesSwapped ? currentSetData.tiebreakPoints1 : currentSetData.tiebreakPoints2)
     : (sidesSwapped ? currentSetData.points1 : currentSetData.points2);
-  const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked;
+  // Require the REAL set (not the makeBlankSet fallback) — when sets[currentSet] is
+  // missing the controls must disable, or a tap reaches the missing set and crashes.
+  const canScoreCurrentSet = Boolean(sets[currentSet]) && !currentSetData.completed && !scoringPrompt.isInteractionLocked;
   const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
     ? 'Scoring is temporarily locked'
     : 'Press Enter or click to add point';
