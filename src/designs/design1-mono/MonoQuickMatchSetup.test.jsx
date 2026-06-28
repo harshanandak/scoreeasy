@@ -66,17 +66,25 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(screen.queryByText('Format Mode')).not.toBeInTheDocument();
   });
 
-  it('uses a non-interactive cursor on disabled start controls', async () => {
+  it('keeps the start control focusable + aria-disabled with linked guidance when names are missing', async () => {
     renderQuickMatch();
 
     fireEvent.change(await screen.findByRole('textbox', { name: 'Team B name' }), {
       target: { value: '' },
     });
 
-    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toHaveStyle({
-      cursor: 'not-allowed',
-    });
+    const start = screen.getByRole('button', { name: 'Start Volleyball' });
+    // Not hard-disabled — it stays focusable/tappable so a tap can surface guidance
+    // and screen readers announce it, but it is flagged aria-disabled and described
+    // by the hint.
+    expect(start).toBeEnabled();
+    expect(start).toHaveAttribute('aria-disabled', 'true');
+    expect(start).toHaveAttribute('aria-describedby', 'start-match-hint');
+    expect(screen.getByText('Add both team names to start the match.')).toHaveAttribute('id', 'start-match-hint');
+
+    // Tapping it with a missing name must NOT start the match (startMatch self-guards).
+    fireEvent.click(start);
+    expect(screen.getByRole('textbox', { name: 'Team A name' })).toBeInTheDocument();
   });
 
   it('uses the selected sport name in the setup start action', async () => {
