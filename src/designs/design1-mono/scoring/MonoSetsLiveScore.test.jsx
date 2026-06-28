@@ -158,11 +158,13 @@ describe('MonoSetsLiveScore — issue #108', () => {
     const [, right] = arenaButtons();
     fireEvent.click(right);
 
-    // A serve switch broadcasts a value:0 point for team B.
+    // A serve switch broadcasts a value:0 event TAGGED serve_change (so the
+    // spectator feed labels it "Serve → …" instead of a meaningless "+0").
     expect(broadcast.point).toHaveBeenCalledTimes(1);
     const arg = broadcast.point.mock.calls[0][0];
     expect(arg.team).toBe('B');
     expect(arg.value).toBe(0);
+    expect(arg.type).toBe('serve_change');
     // Score did NOT change.
     expect(arg.snapshot.pointsA).toBe(0);
     expect(arg.snapshot.pointsB).toBe(0);
@@ -191,6 +193,7 @@ describe('MonoSetsLiveScore — issue #108', () => {
     const correctionCall = broadcast.point.mock.calls.find((c) => c[0].value === -1);
     expect(correctionCall).toBeTruthy();
     expect(correctionCall[0].team).toBe('A');
+    expect(correctionCall[0].type).toBe('correction');
     expect(correctionCall[0].snapshot.pointsA).toBe(0);
 
     // At 0 the button is disabled (floors at 0, no negative scores).

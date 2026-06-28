@@ -28,7 +28,7 @@ import { loadSession, saveSession } from '../lib/live/liveSession';
  *   token: string|null,
  *   error: Error|null,
  *   goLive: (opts: object) => Promise<{token: string, matchId: string}|null>,
- *   point: (input: { team: 'A'|'B', value?: number, at: number }) => Promise<unknown>,
+ *   point: (input: { team: 'A'|'B', value?: number, at: number, type?: 'point'|'serve_change'|'correction' }) => Promise<unknown>,
  *   undo: (input: { at: number }) => Promise<unknown>,
  *   finalize: () => Promise<unknown>,
  *   setVisibility: (visibility: 'public'|'unlisted'|'private') => Promise<unknown>,
@@ -77,6 +77,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           clientEventId: item.clientEventId,
           team: item.team,
           value: item.value,
+          // Older queued items have no `type`; the mutation defaults it to "point".
+          type: item.type,
           at: item.at,
           snapshot: item.snapshot,
         });
@@ -154,14 +156,17 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const point = useCallback(
-    ({ team, value = 1, at, snapshot }) => {
+    ({ team, value = 1, at, snapshot, type = 'point' }) => {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
       const clientEventId = `${clientMatchId}:${seqRef.current}`;
       // snapshot (engine-derived sets/serving/period for non-flat sports) + the
       // owning clientMatchId travel WITH the event through the outbox to the mutation.
-      enqueue({ kind: 'point', team, value, at, snapshot, clientMatchId, clientEventId });
+      // `kind` stays 'point' (the outbox routing discriminator vs 'undo'); `type` is
+      // the public EVENT type (point | serve_change | correction) the spectator feed
+      // labels by. Both ride along so a queued event keeps its label while offline.
+      enqueue({ kind: 'point', type, team, value, at, snapshot, clientMatchId, clientEventId });
       persistSeq(seqRef.current);
       return flush();
     },

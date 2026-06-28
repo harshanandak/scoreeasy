@@ -121,6 +121,44 @@ describe("live.scorePoint", () => {
     expect(snap?.lastSeq).toBe(2);
   });
 
+  test("tags serve_change / correction events without disturbing the score", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      ...TEAMS,
+      clientMatchId: "cm-types",
+    });
+
+    // No `type` arg → defaults to "point".
+    const p = await asOwner.mutation(api.live.scorePoint, {
+      matchId, clientEventId: "p1", team: "A", at: 1000,
+    });
+    expect(p!.type).toBe("point");
+    expect(p!.runningA).toBe(1);
+
+    // Serve switch: value 0, tagged serve_change — the score must NOT move.
+    const sc = await asOwner.mutation(api.live.scorePoint, {
+      matchId, clientEventId: "s1", team: "B", value: 0, type: "serve_change", at: 2000,
+    });
+    expect(sc!.type).toBe("serve_change");
+    expect(sc!.runningA).toBe(1);
+    expect(sc!.runningB).toBe(0);
+
+    // Correction: value -1, tagged correction — the score decrements by one.
+    const co = await asOwner.mutation(api.live.scorePoint, {
+      matchId, clientEventId: "c1", team: "A", value: -1, type: "correction", at: 3000,
+    });
+    expect(co!.type).toBe("correction");
+    expect(co!.runningA).toBe(0);
+
+    const snap = await t.query(api.live.getByToken, { token });
+    expect(snap?.pointsA).toBe(0);
+    expect(snap?.pointsB).toBe(0);
+  });
+
   test("supports a custom point value", async () => {
     const t = newClient();
     await seedUser(t, "owner|1");

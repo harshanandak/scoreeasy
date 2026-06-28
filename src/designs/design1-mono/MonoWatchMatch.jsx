@@ -345,12 +345,19 @@ function FeedPanel({ events, nameA, nameB, loadMore, canLoadMore }) {
       <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         {rows.map((e) => {
           const team = e.team === 'A' ? nameA : e.team === 'B' ? nameB : null;
+          // servingAfter names the team holding serve once this event settled.
+          const server = e.servingAfter === 'A' ? nameA : e.servingAfter === 'B' ? nameB : null;
           const description =
-            e.type === 'point'
-              ? `${team ?? 'Point'} +${e.value}`
-              : e.type === 'undo'
-                ? 'Correction (undo)'
-                : e.type.replace(/_/g, ' ');
+            e.type === 'serve_change'
+              ? `Serve → ${server ?? team ?? 'next server'}`
+              : e.type === 'correction'
+                // value is the signed adjustment (e.g. -1); show its magnitude.
+                ? `Correction · ${team ?? 'point'} −${Math.abs(Number(e.value) || 0)}`
+                : e.type === 'point'
+                  ? `${team ?? 'Point'} +${e.value}`
+                  : e.type === 'undo'
+                    ? 'Correction (undo)'
+                    : e.type.replace(/_/g, ' ');
           return (
             <li
               key={e.seq}
