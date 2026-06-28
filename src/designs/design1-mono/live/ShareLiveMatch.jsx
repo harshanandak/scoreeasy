@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { QRCodeSVG } from 'qrcode.react';
 import { watchUrl } from '../../../lib/live/watchUrl';
@@ -16,6 +16,25 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
 
   const title = teamA && teamB ? `${teamA} vs ${teamB} — live` : 'Live match';
 
+  // Shared confirmation flash so BOTH the copy button and the share→clipboard
+  // fallback surface "Copied ✓" identically. Hold the timer in a ref so rapid
+  // re-copies clear the prior timeout (instead of stacking N timers that each
+  // race to flip `copied` off), and so we can clean it up on unmount.
+  const copyTimerRef = useRef(null);
+  const flashCopied = () => {
+    setShareNote('');
+    setCopied(true);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => {
+      copyTimerRef.current = null;
+      setCopied(false);
+    }, 1600);
+  };
+
+  useEffect(() => () => {
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+  }, []);
+
   const copyLink = async () => {
     try {
       // Guard explicitly: with optional chaining, a missing Clipboard API (non-secure
@@ -24,8 +43,7 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
       const clipboard = globalThis.navigator?.clipboard;
       if (!clipboard?.writeText) throw new Error('clipboard-unavailable');
       await clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      flashCopied();
     } catch {
       setShareNote('Copy failed — long-press the link to copy.');
     }
@@ -33,7 +51,12 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
 
   const share = async () => {
     const res = await shareText({ title, text: `Watch ${title}`, url, dialogTitle: 'Share live match' });
-    if (!res.shared && res.method !== 'web-share-cancelled') {
+    if (res.shared && res.method === 'clipboard') {
+      // No OS share sheet — shareText silently copied to the clipboard. That path
+      // gave NO feedback before; confirm it the same way the Copy button does so a
+      // clipboard-only share isn't mistaken for a no-op.
+      flashCopied();
+    } else if (!res.shared && res.method !== 'web-share-cancelled') {
       // Fall back to copy if the OS share sheet was unavailable.
       await copyLink();
     }
