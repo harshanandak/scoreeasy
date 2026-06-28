@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { QRCodeSVG } from 'qrcode.react';
 import { watchUrl } from '../../../lib/live/watchUrl';
@@ -17,12 +17,23 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
   const title = teamA && teamB ? `${teamA} vs ${teamB} — live` : 'Live match';
 
   // Shared confirmation flash so BOTH the copy button and the share→clipboard
-  // fallback surface "Copied ✓" identically.
+  // fallback surface "Copied ✓" identically. Hold the timer in a ref so rapid
+  // re-copies clear the prior timeout (instead of stacking N timers that each
+  // race to flip `copied` off), and so we can clean it up on unmount.
+  const copyTimerRef = useRef(null);
   const flashCopied = () => {
     setShareNote('');
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => {
+      copyTimerRef.current = null;
+      setCopied(false);
+    }, 1600);
   };
+
+  useEffect(() => () => {
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+  }, []);
 
   const copyLink = async () => {
     try {
