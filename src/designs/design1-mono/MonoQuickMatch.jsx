@@ -735,6 +735,22 @@ export default function MonoQuickMatch() {
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
 
+  // Timed mode: when the clock first reaches zero, pause and prompt to end — ONCE
+  // (a ref one-shot, reset whenever the clock isn't up, e.g. a new match). The
+  // prompt reuses the normal end flow, which still blocks ending on a no-draw tie.
+  // Scoring stays locked after time's up regardless of whether the prompt is
+  // dismissed (addGoal guard + disabled controls), so the match can't drift on.
+  const timeUpPromptedRef = useRef(false);
+  useEffect(() => {
+    if (isTimeUp && !timeUpPromptedRef.current) {
+      timeUpPromptedRef.current = true;
+      timer.pause();
+      setShowEndConfirm(true);
+    } else if (!isTimeUp) {
+      timeUpPromptedRef.current = false;
+    }
+  }, [isTimeUp]);
+
   // Live broadcast descriptor (shared across all three sport branches). clientMatchId
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
   const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
@@ -1439,6 +1455,9 @@ export default function MonoQuickMatch() {
 
   // Goals: Add score for a team
   const addGoal = (team, value = 1) => {
+    // Timed mode: once the clock hits zero scoring is locked. This is the
+    // load-bearing guard; the render also disables the controls (defense in depth).
+    if (isTimeUp) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -2758,6 +2777,7 @@ export default function MonoQuickMatch() {
                       className="mono-arena-half"
                       data-leading={h.leading ? 'true' : 'false'}
                       onClick={() => addGoal(h.team)}
+                      disabled={isTimeUp}
                       style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
                       aria-label={`Add 1 to ${h.name}`}
                     >
@@ -2769,7 +2789,7 @@ export default function MonoQuickMatch() {
                   {hasQuickButtons && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
                       {quickButtons.map((btn) => (
-                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
+                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} disabled={isTimeUp} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
                           {btn.label}
                         </button>
                       ))}

@@ -109,6 +109,28 @@ describe('MonoQuickMatch hardening (#106)', () => {
     expect(screen.queryByText(/win by 2/)).not.toBeInTheDocument();
   });
 
+  it('locks scoring and prompts to end when a timed goals match runs out', async () => {
+    // Seed a timed match restored exactly at its limit (timerElapsed === timeLimit,
+    // no updatedAt so elapsed isn't advanced) → isTimeUp is true on mount.
+    ctx.sport = 'football';
+    ctx.draft = {
+      ...base,
+      sport: 'football',
+      quickMatchId: 4004,
+      gScore1: 1,
+      gScore2: 0,
+      gScoreHistory: [{ team: 1, value: 1 }],
+      format: { mode: 'timed', timeLimit: 60 },
+      timerElapsed: 60,
+    };
+    render(<MonoQuickMatch />);
+
+    // The end prompt appears automatically once time is up.
+    expect(await screen.findByRole('dialog', { name: /End match/i })).toBeInTheDocument();
+    // Scoring is locked: the half control is disabled.
+    expect(screen.getByRole('button', { name: 'Add 1 to Reds' })).toBeDisabled();
+  });
+
   it('announces the last scoring action in an aria-live region inside the scorer', () => {
     seedVolleyball({ lastAction: 'Reds +1' });
     render(<MonoQuickMatch />);
