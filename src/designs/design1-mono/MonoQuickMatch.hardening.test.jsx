@@ -69,6 +69,7 @@ beforeEach(() => {
   storageMock.saveQuickMatch.mockClear();
   live.point.mockClear();
   live.finalize.mockClear();
+  live.reset.mockClear();
   ctx.queryResult = undefined;
   ctx.cloudAuthAvailable = true;
 });
@@ -85,9 +86,11 @@ describe('MonoQuickMatch hardening (#106)', () => {
     expect(storageMock.clearData).not.toHaveBeenCalled();
     expect(nav).not.toHaveBeenCalled();
 
-    // Confirming inside the dialog performs the wipe + navigates home.
+    // Confirming inside the dialog performs the wipe, tears down the live session,
+    // and navigates home.
     fireEvent.click(within(dialog).getByRole('button', { name: 'Discard' }));
     expect(storageMock.clearData).toHaveBeenCalled();
+    expect(live.reset).toHaveBeenCalled();
     expect(nav).toHaveBeenCalledWith('/app');
   });
 

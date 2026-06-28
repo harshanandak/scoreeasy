@@ -927,6 +927,9 @@ export default function MonoQuickMatch() {
   };
   const confirmDiscardQuickMatch = () => {
     setShowDiscardConfirm(false);
+    // Tear down any in-flight live broadcast so a discarded match doesn't leave an
+    // orphaned live session streaming to spectators.
+    liveRef.current?.reset?.();
     clearData(quickMatchDraftKey);
     navigate('/app');
   };
@@ -2603,7 +2606,8 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {discardDialog}
+            {/* Cricket ends via EndMatchButton + keypad (no ThumbActionBar), so it
+                has no Discard trigger — no discardDialog rendered here. */}
             <ScoringNotice message={saveWarning} />
             <ScoringStatusStrip lastAction={lastAction} />
             {/* Top bar */}
