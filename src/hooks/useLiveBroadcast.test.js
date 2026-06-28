@@ -123,6 +123,33 @@ describe('useLiveBroadcast', () => {
     expect(calls[1]).toMatchObject({ team: 'A', value: -1, type: 'correction' });
   });
 
+  it('replays a legacy queued item that predates the `type` field (forwards undefined -> mutation defaults to point)', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:scorePoint').mockResolvedValue({});
+
+    // A pre-PR outbox item has NO `type` field. Seed it directly, then go live and
+    // drain: sendFn must forward `type: undefined` (the backend defaults it to
+    // "point") rather than crashing or dropping the legacy event. Use seq 0 so it
+    // can't collide with the live point() below (which derives cm1:1).
+    enqueue({ kind: 'point', team: 'A', value: 1, at: 1, clientMatchId: 'cm1', clientEventId: 'cm1:0' });
+
+    const { result } = setup();
+    await act(async () => {
+      await result.current.goLive(GO);
+    });
+    await act(async () => {
+      await result.current.point({ team: 'B', value: 1, at: 2, type: 'point' });
+    });
+
+    const legacy = h.spies['live:scorePoint'].mock.calls
+      .map((c) => c[0])
+      .find((c) => c.clientEventId === 'cm1:0');
+    expect(legacy).toBeTruthy();
+    expect(legacy.type).toBeUndefined();
+    expect(legacy).toMatchObject({ team: 'A', value: 1 });
+    expect(load()).toEqual([]); // both the legacy item and the live point drained
+  });
+
   it('keeps the event queued and never throws when the push fails (local scoring unaffected)', async () => {
     h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
     h.get('live:scorePoint').mockRejectedValue(new Error('offline'));
