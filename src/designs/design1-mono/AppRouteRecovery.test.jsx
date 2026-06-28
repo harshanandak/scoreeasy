@@ -67,6 +67,7 @@ function expectCurrentRoute(route) {
 
 describe('app route recovery', () => {
   beforeEach(() => {
+    globalThis.localStorage?.clear();
     authState.current = {
       authMode: 'local',
       cloudAuthAvailable: false,
@@ -203,9 +204,54 @@ describe('app route recovery', () => {
   it('recovers dead dashboard game resume links without generic not found', async () => {
     renderApp('/game/stale-draft');
 
-    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Find matches to resume' })).toBeInTheDocument();
+    const heading = await screen.findByRole('heading', { name: 'Resume link unavailable' });
+    const recoveryPanel = heading.closest('.max-w-2xl');
+    expect(within(recoveryPanel).getByRole('button', { name: 'Find matches to resume' })).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+  });
+
+  it('resolves a legacy game resume link against a saved tennis quick draft', async () => {
+    globalThis.localStorage.setItem('se_tennis_quick_draft_resume-1', JSON.stringify({
+      id: 'resume-1',
+      sport: 'tennis',
+      status: 'in-progress',
+    }));
+
+    renderApp('/game/resume-1');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/resume-1');
+    });
+    expect(screen.queryByRole('heading', { name: 'Resume link unavailable' })).not.toBeInTheDocument();
+  });
+
+  it('resolves a legacy game resume link against a saved cricket Test quick match', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+      id: 'test-resume-1',
+      sport: 'cricket',
+      status: 'in-progress',
+      format: { totalInnings: 4 },
+    }]));
+
+    renderApp('/game/test-resume-1');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/test-resume-1');
+    });
+    expect(screen.queryByRole('heading', { name: 'Resume link unavailable' })).not.toBeInTheDocument();
+  });
+
+  it('falls back to recovery when a saved draft is already completed', async () => {
+    globalThis.localStorage.setItem('se_tennis_quick_draft_done-1', JSON.stringify({
+      id: 'done-1',
+      sport: 'tennis',
+      status: 'completed',
+    }));
+
+    renderApp('/game/done-1');
+
+    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
   });
 
   it('shows actionable recovery for missing tournament scorer deep links', async () => {
@@ -242,13 +288,29 @@ describe('app route recovery', () => {
   it('preserves sport context in bad sport-scoped route recovery', async () => {
     renderApp('/badminton/not-a-route');
 
-    expect(await screen.findByRole('heading', { name: 'This Badminton screen is not available' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
+    const heading = await screen.findByRole('heading', { name: 'This Badminton screen is not available' });
+    const recoveryPanel = heading.closest('.max-w-2xl');
+    expect(within(recoveryPanel).getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
+    // Sport-scoped 404s previously dead-ended without a Home escape.
+    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Choose another sport' }));
+    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Choose another sport' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+    });
+  });
+
+  it('offers a Home escape from sport-scoped 404s', async () => {
+    renderApp('/badminton/not-a-route');
+
+    const heading = await screen.findByRole('heading', { name: 'This Badminton screen is not available' });
+    const recoveryPanel = heading.closest('.max-w-2xl');
+
+    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Home' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
     });
   });
 });

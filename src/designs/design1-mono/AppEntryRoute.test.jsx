@@ -239,7 +239,7 @@ describe('app entry route contract', () => {
     });
   });
 
-  it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
+  it('exposes a single account control (the Clerk button) in app bottom navigation', async () => {
     authState = {
       ...authState,
       authMode: 'cloud',
@@ -252,8 +252,15 @@ describe('app entry route contract', () => {
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
 
-    expect(within(appNav).getByText('Account')).toBeInTheDocument();
+    // Single control per cell: once the Clerk account button has mounted it is
+    // the ONLY interactive control (the sole sign-out / manage-account surface
+    // on mobile). The previous pattern stacked an invisible Clerk button over a
+    // separate visible nav button — now there is exactly one.
     expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).queryByRole('button', { name: 'Account', hidden: true })).not.toBeInTheDocument();
+    // Visible label is non-interactive chrome, hidden from assistive tech.
+    const label = within(appNav).getByText('Account');
+    expect(label).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
@@ -276,6 +283,115 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
     });
     expect(screen.getByText('Profile screen')).toBeInTheDocument();
+  });
+
+  it('gives the brand button an accessible label without leaking the line break', async () => {
+    const { container } = renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const brand = container.querySelector('.global-nav-brand');
+    expect(brand).toHaveAttribute('aria-label', 'Score Easy home');
+    // The visible SCORE/EASY wordmark (with its <br/>) must not pollute the
+    // accessible name — it is hidden from assistive tech.
+    expect(brand.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+    expect(within(container).getByRole('button', { name: 'Score Easy home', hidden: true })).toBe(brand);
+  });
+
+  it('marks the active tab consistently across header and bottom navigation', async () => {
+    const { container } = renderApp('/history');
+
+    // History route renders MonoHistory; assert via the location probe so the
+    // test does not depend on that screen's internals.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/history');
+    });
+
+    const headerHistory = within(container.querySelector('.global-nav-links'))
+      .getByRole('button', { name: 'History', hidden: true });
+    const bottomHistory = within(container.querySelector('.global-bottom-nav'))
+      .getByRole('button', { name: 'History', hidden: true });
+
+    expect(headerHistory).toHaveAttribute('aria-current', 'page');
+    expect(bottomHistory).toHaveAttribute('aria-current', 'page');
+
+    // Both surfaces drive the active cue off the same unified action token.
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"]');
+    expect(navStyles).toContain('background: var(--se-color-action);');
+    expect(navStyles).not.toContain('var(--se-color-action-soft)');
+  });
+
+  it('paints the account tab active on the profile route with a >=44px tap target', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    const { container } = renderApp('/profile');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+
+    const appNav = container.querySelector('.global-bottom-nav');
+    // With Clerk mounted, the interactive control is the Clerk account button,
+    // so the active cue must live on the account CELL (not the fallback button,
+    // which only renders while Clerk is loading).
+    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
+    expect(accountCell).not.toBeNull();
+    expect(accountCell).toHaveClass('is-active');
+    expect(accountCell).toHaveAttribute('aria-current', 'page');
+
+    // The active cue is driven by the same unified action token as every other
+    // tab, via a selector that includes the account cell.
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
+    // Tap targets meet the >=44px bar — assert Clerk's OWN trigger/avatar box (the
+    // real hit area) is sized to 44px, not just that a 44px rule exists somewhere.
+    expect(navStyles).toContain('.global-bottom-nav-account-control .cl-userButtonTrigger');
+    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 44px;[^}]*height: 44px;/);
+    expect(navStyles).not.toContain('min-height: 24px;');
+  });
+
+  it('keeps the active cue on the account cell while Clerk is still loading', async () => {
+    authState = {
+      ...authState,
+      authMode: 'cloud',
+      cloudAuthAvailable: true,
+      isAuthenticated: true,
+      user: { username: 'harsha' },
+    };
+    // Clerk chunk not mounted yet -> the cell renders the /profile fallback.
+    renderAuthUserButton = false;
+    const { container } = renderApp('/profile');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
+
+    const appNav = container.querySelector('.global-bottom-nav');
+    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
+    expect(accountCell).toHaveClass('is-active');
+    // The loading fallback also exposes the active cue for assistive tech.
+    const fallback = within(appNav).getByRole('button', { name: 'Account', hidden: true });
+    expect(fallback).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('keeps the nav shell mounted around the lazy route boundary', async () => {
+    const { container } = renderApp('/app');
+
+    // The nav shell lives OUTSIDE the route <Suspense>, so it is present both
+    // during and after the lazy chunk load — chunk swaps never tear down the
+    // header/brand.
+    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
   });
 
   it('does not show app bottom navigation on the public marketing route', async () => {
