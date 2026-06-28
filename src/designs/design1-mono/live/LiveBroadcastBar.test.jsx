@@ -151,6 +151,32 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(nav).toHaveBeenCalledWith(expect.stringContaining('/login?returnTo='));
   });
 
+  it('surfaces a failed go-live error instead of swallowing it (Go live doubles as retry)', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('declined'));
+    const broadcast = makeBroadcast({ isLive: false, error: new Error('boom') });
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent(/Couldn.t go live/i);
+    // The retry control is the existing Go live button, not a second one.
+    expect(screen.getByRole('button', { name: /Go live/i })).toBeInTheDocument();
+  });
+
+  it('does not show an error alert when go-live has not failed', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('declined'));
+    const broadcast = makeBroadcast({ isLive: false });
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('explains why an account is needed (free + private-until-live)', () => {
+    auth.isAuthenticated = false;
+    const broadcast = makeBroadcast();
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
+    expect(screen.getByText(/free account/i)).toBeInTheDocument();
+    expect(screen.getByText(/stay private until you go live/i)).toBeInTheDocument();
+  });
+
   it('renders nothing when there is no cloud backend (offline build)', () => {
     auth.cloudAuthAvailable = false;
     const broadcast = makeBroadcast();

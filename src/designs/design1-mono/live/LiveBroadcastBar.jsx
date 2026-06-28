@@ -98,7 +98,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
           <span aria-hidden="true" style={{ color: '#dc2626' }}>●</span> Sign in to go live
         </button>
         <p style={{ margin: '6px 2px 0', fontSize: '0.75rem', color: 'var(--se-color-ink-muted)' }}>
-          Share the live scoreboard with anyone — needs a free account.
+          A free account lets you share the live scoreboard — your matches stay private until you go live.
         </p>
       </div>
     );
@@ -164,8 +164,20 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   }
 
   // Consent given but not currently broadcasting (declined, or stopped): offer to go live.
+  // A FAILED go-live lands here too (goLive rejects → error set, isLive stays false), so
+  // surface broadcast.error instead of swallowing it — the "Go live & share" button below
+  // doubles as the retry. The message is deliberately generic: Convex REDACTS error
+  // messages in production (see useLiveBroadcast notes), so the raw message is unreliable.
   return (
     <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
+      {broadcast.error && (
+        <p
+          role="alert"
+          style={{ margin: '0 2px 8px', fontSize: '0.75rem', color: 'var(--destructive)' }}
+        >
+          Couldn’t go live — check your connection and try again.
+        </p>
+      )}
       <button
         type="button"
         onClick={goLiveNow}
@@ -184,6 +196,7 @@ LiveBroadcastBar.propTypes = {
     setVisibility: PropTypes.func.isRequired,
     isLive: PropTypes.bool,
     token: PropTypes.string,
+    error: PropTypes.instanceOf(Error),
   }).isRequired,
   descriptor: PropTypes.shape({
     clientMatchId: PropTypes.string,
