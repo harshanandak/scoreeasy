@@ -398,7 +398,7 @@ function StepUsername({ username, onChange, onNext, onBack }) {
           placeholder="username"
           value={username}
           onChange={(e) =>
-            onChange("username", e.target.value.toLowerCase().replaceAll(/\s/g, ""))
+            onChange("username", e.target.value.toLowerCase().replaceAll(/[^a-z0-9_.]/g, ""))
           }
           autoComplete="off"
           maxLength={20}
@@ -829,14 +829,16 @@ export default function MonoOnboarding() {
     if (!clerkUser) return;
     didInitStep.current = true;
     const hasName = Boolean(clerkUser.firstName || clerkUser.lastName);
-    if (hasName && step === 0) {
+    // Only auto-skip when the name step is still untouched — if clerkUser resolves
+    // AFTER the user has started typing, don't yank them off the step.
+    if (hasName && step === 0 && !firstName && !lastName) {
       // Prefill so the resolved name carries through, then jump straight to the
       // gamertag step without the slide animation.
       if (clerkUser.firstName) setFirstName((prev) => prev || clerkUser.firstName);
       if (clerkUser.lastName) setLastName((prev) => prev || clerkUser.lastName);
       setStep(1);
     }
-  }, [clerkUser, isLoading, step]);
+  }, [clerkUser, isLoading, step, firstName, lastName]);
 
   // --- Field change handler ---
   const handleChange = useCallback((field, value) => {
