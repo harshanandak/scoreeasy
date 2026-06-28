@@ -216,4 +216,47 @@ describe('DashboardLanding start flow', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
     });
   });
+
+  it('offers a hero Go live entry on the empty dashboard that leads into the play hub', async () => {
+    renderDashboard();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Go live' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+    });
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
+  });
+
+  it('offers a hero Go live entry on the returning dashboard that leads into the play hub', async () => {
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    // The hero Go live action sits alongside Rematch and routes to the sport picker.
+    fireEvent.click(await screen.findByRole('button', { name: 'Go live' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+    });
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
+  });
+
+  it('renders stored data on the first paint without an empty-then-populated flash', () => {
+    // No fake requestAnimationFrame here: a synchronous-first-render assertion proves
+    // the data comes from lazy useState initializers, not a post-mount effect.
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'recent-1', sport: 'cricket', team1: 'A', team2: 'B' },
+    ]));
+
+    renderDashboard();
+
+    // Returning-user content is present immediately (no findBy / waitFor needed).
+    expect(screen.getByRole('heading', { name: /Welcome\s*back/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tournament' })).toBeInTheDocument();
+    // The empty-state caption must never appear when data exists.
+    expect(screen.queryByText('Your matches will appear here')).not.toBeInTheDocument();
+  });
 });

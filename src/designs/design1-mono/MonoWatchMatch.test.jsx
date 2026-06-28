@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import MonoWatchMatch from './MonoWatchMatch';
@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   snapshot: undefined,
   meta: undefined,
   paginated: { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false },
+  // Convex connectionState() shape. Default = healthy connected socket.
+  connection: { isWebSocketConnected: true, hasEverConnected: true, connectionRetries: 0 },
 }));
 
 vi.mock('convex/react', () => ({
@@ -20,6 +22,7 @@ vi.mock('convex/react', () => ({
     return undefined;
   },
   usePaginatedQuery: () => mocks.paginated,
+  useConvexConnectionState: () => mocks.connection,
   useMutation: () => vi.fn().mockResolvedValue({ ok: true }), // ReportMatch report
 }));
 
@@ -122,6 +125,7 @@ beforeEach(() => {
   mocks.snapshot = undefined;
   mocks.meta = undefined;
   mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
+  mocks.connection = { isWebSocketConnected: true, hasEverConnected: true, connectionRetries: 0 };
   vi.spyOn(Date, 'now').mockReturnValue(1000);
 });
 
@@ -252,5 +256,113 @@ describe('MonoWatchMatch', () => {
     mocks.snapshot = undefined;
     renderAt();
     expect(screen.getByLabelText('Loading match')).toBeInTheDocument();
+  });
+
+  // ── Wave 1 spectator UX (issue #101) ──────────────────────────────────────
+
+  it('gives spectators a brand/home link and a clear CTA back into the app', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    renderAt();
+
+    const siteNav = screen.getByRole('navigation', { name: 'Site' });
+    const home = within(siteNav).getByRole('link', { name: 'Score Easy home' });
+    expect(home).toHaveAttribute('href', '/');
+    const cta = within(siteNav).getByRole('link', { name: /open app/i });
+    expect(cta).toHaveAttribute('href', '/');
+  });
+
+  it('does not render the brand bar in kiosk mode', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    renderAt('ABC123', '?kiosk=1');
+    expect(screen.queryByRole('navigation', { name: 'Site' })).not.toBeInTheDocument();
+  });
+
+  it('exposes the live score + status to screen readers via a polite atomic region', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT; // Reds 18, Blues 21, LIVE
+    mocks.meta = META;
+    renderAt();
+
+    const bug = screen.getByRole('banner', { name: 'Match scorebug' });
+    const live = bug.querySelector('[aria-live="polite"]');
+    expect(live).not.toBeNull();
+    expect(live).toHaveAttribute('aria-atomic', 'true');
+    expect(live.textContent).toMatch(/Reds 18/);
+    expect(live.textContent).toMatch(/Blues 21/);
+    expect(live.textContent).toMatch(/live/i);
+  });
+
+  it('the spoken status flips to paused when the snapshot goes stale', () => {
+    Date.now.mockReturnValue(VOLLEY_SNAPSHOT.lastEventAt + 91000);
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    renderAt();
+
+    const bug = screen.getByRole('banner', { name: 'Match scorebug' });
+    const live = bug.querySelector('[aria-live="polite"]');
+    expect(live.textContent).toMatch(/paused/i);
+  });
+
+  it('drives a timer re-render so the PAUSED cue appears even with no new data', () => {
+    // Use fake timers with a real system clock so both Date.now() AND the
+    // component's setInterval advance together. (vi.useFakeTimers replaces the
+    // Date.now spy from beforeEach, so we drive time via setSystemTime here.)
+    vi.useFakeTimers();
+    try {
+      // Fresh at render time: NOT stale yet.
+      vi.setSystemTime(VOLLEY_SNAPSHOT.lastEventAt + 1000);
+      mocks.snapshot = VOLLEY_SNAPSHOT;
+      mocks.meta = META;
+      renderAt();
+
+      const bug = screen.getByRole('banner', { name: 'Match scorebug' });
+      expect(within(bug).queryByText('PAUSED')).not.toBeInTheDocument();
+
+      // Wall clock advances past the stale window, but NO new snapshot arrives.
+      // Only the internal interval tick can surface PAUSED.
+      vi.setSystemTime(VOLLEY_SNAPSHOT.lastEventAt + 95000);
+      act(() => {
+        vi.advanceTimersByTime(20000);
+      });
+
+      expect(within(bug).getByText('PAUSED')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows no connection banner while the socket is healthy', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    mocks.connection = { isWebSocketConnected: true, hasEverConnected: true, connectionRetries: 0 };
+    renderAt();
+    expect(screen.queryByText(/reconnecting|offline/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a reconnecting banner when the socket drops and is retrying', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    mocks.connection = { isWebSocketConnected: false, hasEverConnected: true, connectionRetries: 2 };
+    renderAt();
+    const banner = screen.getByRole('status');
+    expect(banner).toHaveAttribute('aria-live', 'polite');
+    expect(banner.textContent).toMatch(/reconnecting/i);
+  });
+
+  it('shows an offline banner once retries exhaust the calm window', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    mocks.connection = { isWebSocketConnected: false, hasEverConnected: true, connectionRetries: 12 };
+    renderAt();
+    expect(screen.getByText(/offline/i)).toBeInTheDocument();
+  });
+
+  it('gives the view tabs a >=44px touch target', () => {
+    mocks.snapshot = VOLLEY_SNAPSHOT;
+    mocks.meta = META;
+    renderAt();
+    const feedTab = screen.getByRole('tab', { name: 'Feed' });
+    expect(feedTab.style.minHeight).toBe('44px');
   });
 });
