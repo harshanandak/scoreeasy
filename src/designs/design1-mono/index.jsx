@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
 import { getSportById } from '../../models/sportRegistry';
+import { loadData, loadQuickMatch } from '../../utils/storage';
+import { getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
 import { useAuth } from '../../hooks/useAuth';
 import {
   APP_ENTRY_PATH,
@@ -11,7 +13,6 @@ import {
   loadAppEntryState,
 } from '../../utils/appEntry';
 import { AuthUserButton } from '../../components/AuthButtons';
-import AppLoading from '../../components/AppLoading';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import OfflineFallback from '../../components/OfflineFallback';
 import ConvexReconnectingFallback from '../../components/ConvexReconnectingFallback';
@@ -62,8 +63,73 @@ const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
 
 const SHOW_INTERNAL_ROUTES = import.meta.env.DEV || import.meta.env.VITE_SHOW_INTERNAL_ROUTES === 'true';
 
-function LazyFallback() {
-  return <AppLoading compact />;
+// Lightweight inline skeleton shown while a lazy route chunk loads. The nav
+// shell (header + bottom nav) lives OUTSIDE the route <Suspense>, so chunk loads
+// no longer flash the full branded splash — only this content placeholder swaps
+// in, keeping the surrounding shell stable. Exported for direct unit testing.
+export function LazyFallback() {
+  return (
+    <div className="route-skeleton" role="status" aria-live="polite" aria-busy="true">
+      <span className="route-skeleton-label">Loading…</span>
+      <div className="route-skeleton-block route-skeleton-title" aria-hidden="true" />
+      <div className="route-skeleton-block route-skeleton-line" aria-hidden="true" />
+      <div className="route-skeleton-block route-skeleton-line route-skeleton-line-short" aria-hidden="true" />
+      <div className="route-skeleton-block route-skeleton-card" aria-hidden="true" />
+      <style>{`
+        .route-skeleton {
+          box-sizing: border-box;
+          width: 100%;
+          max-width: 720px;
+          margin: 0 auto;
+          padding: 24px 20px 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .route-skeleton-label {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        .route-skeleton-block {
+          border-radius: var(--se-radius-button);
+          background: linear-gradient(
+            90deg,
+            color-mix(in oklch, var(--se-color-line) 16%, var(--se-color-surface)) 25%,
+            color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface)) 37%,
+            color-mix(in oklch, var(--se-color-line) 16%, var(--se-color-surface)) 63%
+          );
+          background-size: 400% 100%;
+          animation: route-skeleton-shimmer 1.4s ease-in-out infinite;
+        }
+
+        .route-skeleton-title { height: 28px; width: 60%; }
+        .route-skeleton-line { height: 14px; width: 100%; }
+        .route-skeleton-line-short { width: 80%; }
+        .route-skeleton-card { height: 180px; width: 100%; margin-top: 6px; border-radius: var(--se-radius-card); }
+
+        @keyframes route-skeleton-shimmer {
+          0% { background-position: 100% 0; }
+          100% { background-position: 0 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .route-skeleton-block {
+            animation: none;
+            background: color-mix(in oklch, var(--se-color-line) 18%, var(--se-color-surface));
+          }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 function NotFoundRoute() {
@@ -147,7 +213,37 @@ function SignInAliasRedirect() {
   return <Navigate to={`/login${location.search}${location.hash}`} replace />;
 }
 
+// Resolves a legacy /game/:id resume link against saved on-device drafts.
+// Returns the canonical live scorer path when an in-progress draft is found,
+// otherwise null so the caller can render the recovery screen.
+export function resolveGameResumePath(id) {
+  if (!id) return null;
+
+  // Cricket Test matches persist into the shared quick-match store.
+  const quickMatch = loadQuickMatch(id);
+  if (quickMatch && quickMatch.status !== 'completed' && getSportById(quickMatch.sport)) {
+    if (quickMatch.sport === 'cricket' && quickMatch.format?.totalInnings === 4) {
+      return `/${quickMatch.sport}/quick/test-match/${id}`;
+    }
+  }
+
+  // Tennis quick matches persist into their own per-id draft key.
+  const tennisDraft = loadData(getTennisQuickDraftKey(id), null);
+  if (tennisDraft && tennisDraft.status !== 'completed' && getSportById(tennisDraft.sport)) {
+    return `/${tennisDraft.sport}/quick/live/${id}`;
+  }
+
+  return null;
+}
+
 function GameResumeRecoveryRoute() {
+  const { id } = useParams();
+  const resumePath = resolveGameResumePath(id);
+
+  if (resumePath) {
+    return <Navigate to={resumePath} replace />;
+  }
+
   return (
     <RouteRecoveryActions
       eyebrow="Resume recovery"
@@ -566,71 +662,79 @@ function GlobalNavigation({ requestScoringExit }) {
     setOpen(false);
   };
 
+  // Each surface (header, mobile sheet, bottom nav) shares a single logical
+  // `tab` id so active styling is computed identically everywhere. Previously
+  // the header Home used path "/" (which matched every route via startsWith)
+  // while the bottom nav used APP_ENTRY_PATH, so the active tab disagreed across
+  // surfaces. Keying off `tab` removes that drift.
+  const accountTab = isAuthenticated ? 'account' : 'signin';
+  const accountPath = isAuthenticated ? '/profile' : '/login';
+  const accountLabel = isAuthenticated ? 'Account' : 'Sign in';
+
   const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Play', path: '/play' },
-    { label: 'History', path: '/history' },
+    { tab: 'home', label: 'Home', path: '/' },
+    { tab: 'play', label: 'Play', path: '/play' },
+    { tab: 'history', label: 'History', path: '/history' },
   ];
 
   if (cloudAuthAvailable) {
-    navItems.push({
-      label: isAuthenticated ? 'Account' : 'Sign in',
-      path: isAuthenticated ? '/profile' : '/login',
-    });
+    navItems.push({ tab: accountTab, label: accountLabel, path: accountPath });
   }
 
   const bottomNavItems = [
-    { label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
-    { label: 'Play', path: '/play', icon: 'play' },
-    { label: 'History', path: '/history', icon: 'matches' },
+    { tab: 'home', label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
+    { tab: 'play', label: 'Play', path: '/play', icon: 'play' },
+    { tab: 'history', label: 'History', path: '/history', icon: 'matches' },
     cloudAuthAvailable
       ? {
+        tab: accountTab,
         label: 'Account',
-        path: isAuthenticated ? '/profile' : '/login',
+        path: accountPath,
         icon: 'account',
-        kind: isAuthenticated ? 'accountMenu' : 'link',
       }
       : null,
   ].filter(Boolean);
 
-  const isActive = (item) => {
-    if (item.path === APP_ENTRY_PATH) {
-      return pathname === '/' ||
-        pathname === APP_ENTRY_PATH ||
-        pathname === '/dashboard';
+  const isTabActive = (tab) => {
+    switch (tab) {
+      case 'home':
+        return pathname === '/' || pathname === APP_ENTRY_PATH || pathname === '/dashboard';
+      case 'play':
+        return pathname === '/play' || /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
+      case 'history':
+        // History now hosts the merged stats view; keep the tab active for the
+        // legacy /statistics and /stats paths while their redirects resolve.
+        return pathname === '/history' ||
+          pathname.startsWith('/history/') ||
+          pathname === '/statistics' ||
+          pathname === '/stats';
+      case 'signin':
+        return pathname.startsWith('/login') ||
+          pathname.startsWith('/signup') ||
+          pathname.startsWith('/onboarding');
+      case 'account':
+        return pathname.startsWith('/profile') ||
+          pathname.startsWith('/users/search') ||
+          pathname.startsWith('/onboarding');
+      default:
+        return false;
     }
-    if (item.path === '/play') {
-      return pathname === '/play' ||
-        /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
-    }
-    if (item.path === '/login') {
-      return pathname.startsWith('/login') ||
-        pathname.startsWith('/signup') ||
-        pathname.startsWith('/onboarding');
-    }
-    if (item.path === '/profile') {
-      return pathname.startsWith('/profile') ||
-        pathname.startsWith('/users/search') ||
-        pathname.startsWith('/onboarding');
-    }
-    if (item.path === '/history') {
-      // History now hosts the merged stats view; keep the tab active for the
-      // legacy /statistics and /stats paths while their redirects resolve.
-      return pathname === '/history' ||
-        pathname.startsWith('/history/') ||
-        pathname === '/statistics' ||
-        pathname === '/stats';
-    }
-    return pathname === item.path || pathname.startsWith(`${item.path}/`);
   };
+
+  const isActive = (item) => isTabActive(item.tab);
 
   const currentItem = navItems.find(isActive);
 
   return (
     <>
       <header className="global-nav">
-        <button type="button" className="global-nav-brand" onClick={() => go('/')}>
-          SCORE<br />EASY
+        <button
+          type="button"
+          className="global-nav-brand"
+          aria-label="Score Easy home"
+          onClick={() => go('/')}
+        >
+          <span aria-hidden="true">SCORE<br />EASY</span>
         </button>
 
         <nav className="global-nav-links" aria-label="Primary navigation">
@@ -721,30 +825,11 @@ function GlobalNavigation({ requestScoringExit }) {
           style={{ '--bottom-nav-count': bottomNavItems.length }}
         >
           {bottomNavItems.map((item) => {
-            if (item.kind === 'accountMenu') {
-              return (
-                <div
-                  key={item.path}
-                  className="global-bottom-nav-account-shell"
-                >
-                  <button
-                    type="button"
-                    onClick={() => go(item.path)}
-                    className="global-bottom-nav-item global-bottom-nav-account-item"
-                    aria-current={isActive(item) ? 'page' : undefined}
-                  >
-                    <span className="global-bottom-nav-icon">
-                      <NavIcon name={item.icon} />
-                    </span>
-                    <span className="global-bottom-nav-account-label">{item.label}</span>
-                  </button>
-                  <span className="global-bottom-nav-account-menu">
-                    <AuthUserButton aria-label="Account menu" />
-                  </span>
-                </div>
-              );
-            }
-
+            // Single control per cell. The account tab is a plain navigation
+            // button to the profile screen — no invisible Clerk UserButton
+            // overlaid on top (that double-control confused screen readers and
+            // made the visible icon/label a dead tap target). The Clerk account
+            // popover stays reachable from the header on larger screens.
             return (
               <button
                 key={item.path}
@@ -1199,18 +1284,6 @@ function GlobalNavigation({ requestScoringExit }) {
             position: relative;
           }
 
-          .global-bottom-nav-account-shell {
-            position: relative;
-            min-width: 0;
-            min-height: 54px;
-          }
-
-          .global-bottom-nav-account-item {
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-          }
-
           .global-bottom-nav-icon {
             display: inline-flex;
             align-items: center;
@@ -1226,34 +1299,17 @@ function GlobalNavigation({ requestScoringExit }) {
             height: 22px;
           }
 
-          .global-bottom-nav-label,
-          .global-bottom-nav-account-label {
+          .global-bottom-nav-label {
             line-height: 1;
           }
 
-          .global-bottom-nav-account-menu {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: stretch;
-            justify-content: stretch;
-            pointer-events: none;
-          }
-
-          .global-bottom-nav-account-menu > *,
-          .global-bottom-nav-account-menu button {
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-          }
-
-          .global-bottom-nav-account-menu button {
-            pointer-events: auto;
-          }
-
+          /* Unified active treatment: every nav surface (header link, mobile
+             sheet item, bottom-nav item) paints the active tab with the same
+             solid action fill + inverse ink, so the "you are here" cue is
+             consistent across the shell. */
           .global-bottom-nav-item[aria-current="page"] {
-            background: var(--se-color-action-soft);
-            color: var(--se-color-action-strong);
+            background: var(--se-color-action);
+            color: var(--se-color-inverse);
           }
 
           body.has-mobile-input-focus .global-bottom-nav {

@@ -4,7 +4,17 @@ import { hasNativePlugin, isNativeMobile } from './platform';
 export const APP_LINK_HOST = 'scoreeasy.app';
 
 export function canonicalizeAppPath(pathname = '/') {
-  if (pathname === '/stats' || pathname === '/stats/') return '/statistics';
+  // Stats links are merged into History. Map both legacy spellings straight to
+  // /history so native deep links resolve in a single hop (no /stats →
+  // /statistics → /history double-redirect).
+  if (
+    pathname === '/stats' ||
+    pathname === '/stats/' ||
+    pathname === '/statistics' ||
+    pathname === '/statistics/'
+  ) {
+    return '/history';
+  }
   if (pathname === '/dashboard' || pathname === '/dashboard/') return '/app';
   return pathname || '/';
 }

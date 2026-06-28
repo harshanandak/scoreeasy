@@ -239,7 +239,7 @@ describe('app entry route contract', () => {
     });
   });
 
-  it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
+  it('exposes a single account control in app bottom navigation', async () => {
     authState = {
       ...authState,
       authMode: 'cloud',
@@ -252,8 +252,18 @@ describe('app entry route contract', () => {
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
 
+    // Single control per cell: one labelled "Account" button that navigates to
+    // the profile screen. The previous invisible Clerk "Account menu" button
+    // overlaid on top has been removed so screen readers see one control.
     expect(within(appNav).getByText('Account')).toBeInTheDocument();
-    expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
+    expect(within(appNav).queryByRole('button', { name: 'Account menu', hidden: true })).not.toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Account', hidden: true })).toBeInTheDocument();
+
+    fireEvent.click(within(appNav).getByRole('button', { name: 'Account', hidden: true }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+    });
   });
 
   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
@@ -276,6 +286,54 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
     });
     expect(screen.getByText('Profile screen')).toBeInTheDocument();
+  });
+
+  it('gives the brand button an accessible label without leaking the line break', async () => {
+    const { container } = renderApp('/app');
+
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    const brand = container.querySelector('.global-nav-brand');
+    expect(brand).toHaveAttribute('aria-label', 'Score Easy home');
+    // The visible SCORE/EASY wordmark (with its <br/>) must not pollute the
+    // accessible name — it is hidden from assistive tech.
+    expect(brand.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+    expect(within(container).getByRole('button', { name: 'Score Easy home', hidden: true })).toBe(brand);
+  });
+
+  it('marks the active tab consistently across header and bottom navigation', async () => {
+    const { container } = renderApp('/history');
+
+    // History route renders MonoHistory; assert via the location probe so the
+    // test does not depend on that screen's internals.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/history');
+    });
+
+    const headerHistory = within(container.querySelector('.global-nav-links'))
+      .getByRole('button', { name: 'History', hidden: true });
+    const bottomHistory = within(container.querySelector('.global-bottom-nav'))
+      .getByRole('button', { name: 'History', hidden: true });
+
+    expect(headerHistory).toHaveAttribute('aria-current', 'page');
+    expect(bottomHistory).toHaveAttribute('aria-current', 'page');
+
+    // Both surfaces drive the active cue off the same unified action token.
+    const navStyles = Array.from(container.querySelectorAll('style'))
+      .map((style) => style.textContent)
+      .join('\n');
+    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"] {\n            background: var(--se-color-action);');
+    expect(navStyles).not.toContain('var(--se-color-action-soft)');
+  });
+
+  it('keeps the nav shell mounted around the lazy route boundary', async () => {
+    const { container } = renderApp('/app');
+
+    // The nav shell lives OUTSIDE the route <Suspense>, so it is present both
+    // during and after the lazy chunk load — chunk swaps never tear down the
+    // header/brand.
+    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
   });
 
   it('does not show app bottom navigation on the public marketing route', async () => {
