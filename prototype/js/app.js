@@ -100,19 +100,40 @@
     ));
   });
 
-  /* ---------- Sport picker ---------- */
+  /* ---------- shared board-dialect bits (match the ported fragment idiom) ---------- */
+  function iconBtn(content, onclick) {
+    return h('div', {
+      style: 'width:32px;height:32px;border-radius:11px;background:#fff;box-shadow:0 1px 2px rgba(20,40,30,.08);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;flex:none',
+      onclick: onclick,
+    }, content);
+  }
+  function boardHeader(title, sub, backHash) {
+    return h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 13px 8px' },
+      iconBtn('‹', function () { SE.nav(backHash || '#/home'); }),
+      h('div', { style: 'text-align:center' },
+        h('div', { style: 'font-size:13px;font-weight:700' }, title),
+        sub ? h('div', { style: "font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;color:#6b7a72;margin-top:1px" }, sub) : null
+      ),
+      h('div', { style: 'width:32px' })
+    );
+  }
+  function microlabel(text) {
+    return h('div', { style: "font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:#9aa8a0;text-transform:uppercase" }, text);
+  }
+
+  /* ---------- Sport picker (board dialect) ---------- */
   SE.registerScreen('pick', function (root) {
-    root.appendChild(h('div', { class: 'screen' },
-      SE.topbar({ title: 'Pick a sport', sub: 'What are we playing?' }),
-      h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:10px' },
+    root.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
+      boardHeader('Pick a sport', 'WHAT ARE WE PLAYING?'),
+      h('div', { style: 'flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 13px calc(14px + env(safe-area-inset-bottom));align-content:start' },
         SE.sportList().map(function (def) {
-          return h('button', {
-            class: 'tapzone', style: 'padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;border-width:1px;font-family:inherit',
+          return h('div', {
+            style: 'background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(20,40,30,.07);padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent',
             onclick: function () { SE.nav('#/setup/' + def.key); }
           },
-            h('div', { style: 'font-size:34px' }, def.icon),
-            h('div', { style: 'font-weight:700;font-size:15px' }, def.label),
-            def.tagline ? h('div', { class: 'mono muted', style: 'font-size:10px' }, def.tagline) : null
+            h('div', { style: 'font-size:26px' }, def.icon),
+            h('div', { style: 'font-size:12px;font-weight:700' }, def.label),
+            def.tagline ? h('div', { style: "font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;color:#9aa8a0;text-transform:uppercase" }, def.tagline) : null
           );
         })
       )
@@ -126,50 +147,62 @@
     var cfg = JSON.parse(JSON.stringify(def.defaultConfig || {}));
     var names = [def.sampleTeams ? def.sampleTeams[0] : 'Team A', def.sampleTeams ? def.sampleTeams[1] : 'Team B'];
 
-    var fieldsWrap = h('div', { style: 'display:flex;flex-direction:column;gap:12px' });
+    var PILL_OFF = 'flex:1;height:32px;border-radius:11px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#46554d;cursor:pointer';
+    var PILL_ON = 'flex:1;height:32px;border-radius:11px;border:1.5px solid #12936a;background:#12936a;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 8px 14px -9px rgba(18,147,106,.7)';
+    var fieldsWrap = h('div', { style: 'display:flex;flex-direction:column;gap:10px' });
     (def.setupFields || []).forEach(function (f) {
       if (f.type === 'choice') {
-        var seg = h('div', { class: 'seg' });
+        var seg = h('div', { style: 'display:flex;gap:6px' });
         f.options.forEach(function (opt) {
-          var b = h('button', { class: cfg[f.key] === opt.value ? 'on' : '', onclick: function () {
+          var b = h('div', { style: cfg[f.key] === opt.value ? PILL_ON : PILL_OFF, onclick: function () {
             cfg[f.key] = opt.value;
-            Array.prototype.forEach.call(seg.children, function (c) { c.className = ''; });
-            b.className = 'on';
+            Array.prototype.forEach.call(seg.children, function (c) { c.style.cssText = PILL_OFF; });
+            b.style.cssText = PILL_ON;
           } }, opt.label);
           seg.appendChild(b);
         });
-        fieldsWrap.appendChild(h('div', { class: 'field' }, h('label', null, f.label), seg));
+        fieldsWrap.appendChild(h('div', { style: 'display:flex;flex-direction:column;gap:6px' },
+          h('div', { style: 'font-size:11px;font-weight:600;color:#46554d' }, f.label), seg));
       } else if (f.type === 'number') {
-        fieldsWrap.appendChild(h('div', { class: 'field' },
-          h('label', null, f.label),
+        fieldsWrap.appendChild(h('div', { style: 'display:flex;flex-direction:column;gap:6px' },
+          h('div', { style: 'font-size:11px;font-weight:600;color:#46554d' }, f.label),
           h('input', { type: 'number', value: cfg[f.key], min: f.min || 1, max: f.max || 999,
+            style: "width:100%;box-sizing:border-box;font-family:'DM Mono',monospace;font-size:13px;padding:9px 11px;border:1.5px solid #e4e9e5;border-radius:12px;background:#fff;color:#14201a;outline:none",
             oninput: function (e) { cfg[f.key] = +e.target.value; } })
         ));
       }
     });
 
-    var in1 = h('input', { value: names[0], oninput: function (e) { names[0] = e.target.value; } });
-    var in2 = h('input', { value: names[1], oninput: function (e) { names[1] = e.target.value; } });
+    var inputStyle = "width:100%;box-sizing:border-box;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:10px 11px;border:1.5px solid #e4e9e5;border-radius:12px;background:#fff;color:#14201a;outline:none";
+    var in1 = h('input', { style: inputStyle, value: names[0], oninput: function (e) { names[0] = e.target.value; } });
+    var in2 = h('input', { style: inputStyle, value: names[1], oninput: function (e) { names[1] = e.target.value; } });
 
-    root.appendChild(h('div', { class: 'screen' },
-      SE.topbar({ title: def.label + ' setup', sub: 'Two taps to play', back: '#/pick' }),
-      h('div', { class: 'card', style: 'display:flex;flex-direction:column;gap:12px' },
-        h('div', { class: 'field' }, h('label', null, 'Team 1'), in1),
-        h('div', { class: 'center microlabel' }, 'VS'),
-        h('div', { class: 'field' }, h('label', null, 'Team 2'), in2)
+    root.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
+      boardHeader(def.icon + ' ' + def.label, 'TWO TAPS TO PLAY', '#/pick'),
+      h('div', { style: 'flex:1;display:flex;flex-direction:column;gap:10px;padding:4px 13px 0' },
+        h('div', { style: 'background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(20,40,30,.07);padding:13px;display:flex;flex-direction:column;gap:9px' },
+          microlabel('TEAMS'),
+          in1,
+          h('div', { style: "text-align:center;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:#9aa8a0" }, 'VS'),
+          in2
+        ),
+        fieldsWrap.children.length ? h('div', { style: 'background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(20,40,30,.07);padding:13px;display:flex;flex-direction:column;gap:10px' },
+          microlabel('FORMAT'),
+          fieldsWrap
+        ) : null
       ),
-      fieldsWrap.children.length ? h('div', { class: 'card' },
-        h('div', { class: 'microlabel', style: 'margin-bottom:10px' }, 'FORMAT'),
-        fieldsWrap
-      ) : null,
-      h('div', { class: 'spacer', style: 'flex:1' }),
-      h('button', { class: 'btn primary big block', onclick: function () {
-        var id = SE.newMatch(def.key, [
-          { name: in1.value.trim() || 'Team A' },
-          { name: in2.value.trim() || 'Team B' }
-        ], cfg);
-        SE.nav('#/score/' + id);
-      } }, 'Start scoring →')
+      h('div', { style: 'flex:none;padding:10px 13px calc(14px + env(safe-area-inset-bottom))' },
+        h('div', {
+          style: 'height:44px;border-radius:14px;background:#12936a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 10px 18px -10px rgba(18,147,106,.7);cursor:pointer',
+          onclick: function () {
+            var id = SE.newMatch(def.key, [
+              { name: in1.value.trim() || 'Team A' },
+              { name: in2.value.trim() || 'Team B' }
+            ], cfg);
+            SE.nav('#/score/' + id);
+          }
+        }, 'Start scoring →')
+      )
     ));
   });
 

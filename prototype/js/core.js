@@ -176,6 +176,26 @@
   window.addEventListener('DOMContentLoaded', render);
   SE.render = render;
 
+  /* ---------- design-scale layout ----------
+     The HiFi board is designed at 300px with fixed px sizes. Rendering wider
+     dilutes its density, so the app renders at 300px logical width and scales
+     up to the viewport — every screen keeps the board's exact proportions. */
+  function applyScale() {
+    var root = document.getElementById('app');
+    if (!root) return;
+    var w = Math.min(window.innerWidth, 430);
+    var s = w / 300;
+    root.style.width = '300px';
+    root.style.maxWidth = 'none';
+    root.style.transformOrigin = 'top center';
+    root.style.transform = 'scale(' + s + ')';
+    root.style.minHeight = (window.innerHeight / s) + 'px';
+    document.body.style.height = window.innerHeight + 'px';
+    document.body.style.overflow = 'hidden auto';
+  }
+  window.addEventListener('resize', applyScale);
+  window.addEventListener('DOMContentLoaded', applyScale);
+
   /* ---------- Shared UI bits ---------- */
   SE.topbar = function (opts) {
     return SE.h('div', { class: 'topbar' },
