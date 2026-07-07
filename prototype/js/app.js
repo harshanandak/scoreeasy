@@ -4,83 +4,101 @@
   'use strict';
   var h = SE.h;
 
-  /* ---------- Home ---------- */
+  /* ---------- Home — 1:1 port of fragment 4c (home with upcoming) ---------- */
   SE.registerScreen('home', function (root) {
     var live = SE.liveMatches();
-    var done = SE.doneMatches().slice(0, 4);
-    var sched = SE.store.get().scheduled.slice(0, 3);
+    var sched = SE.store.get().scheduled;
+    var hero = sched.filter(function (g) { return g.when; })[0];
+    var rest = sched.filter(function (g) { return g !== hero; });
 
-    root.appendChild(h('div', { class: 'screen' },
-      h('div', { class: 'row', style: 'padding:6px 2px' },
-        h('div', null,
-          h('div', { class: 'microlabel' }, 'SCOREEASY'),
-          h('div', { style: 'font-weight:800;font-size:22px;letter-spacing:-0.02em' }, 'Game day')
+    function microlabel(text) {
+      return h('div', { style: 'font-size:11px;font-weight:700;letter-spacing:.06em;color:#9aa8a0;text-transform:uppercase;margin-top:2px' }, text);
+    }
+    function tabItem(label, active, href) {
+      return h('a', { href: href, style: 'display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;text-decoration:none;color:' + (active ? '#12936a' : '#b3bdb6') },
+        h('div', { style: 'width:18px;height:18px;border-radius:6px;border:2px solid currentColor;' + (active ? 'background:#e7f4ee' : '') }),
+        label
+      );
+    }
+
+    root.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
+      h('div', { style: 'flex:1;display:flex;flex-direction:column;padding:10px 15px;gap:11px' },
+
+        h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
+          h('div', { style: 'font-size:19px;font-weight:800;letter-spacing:-.02em' }, 'Score', h('span', { style: 'color:#12936a' }, 'Easy')),
+          h('div', { style: 'width:32px;height:32px;border-radius:50%;background:#dfe7e1;cursor:pointer', onclick: function () { SE.nav('#/board'); } })
         ),
-        h('div', { class: 'spacer' }),
-        h('a', { class: 'chip', href: '#/records' }, '🏆 Records'),
-        h('a', { class: 'chip', href: '#/board' }, '≣')
+
+        (hero || rest.length) ? microlabel('Upcoming') : null,
+
+        hero ? (function () {
+          var def = SE.sports[hero.sport] || { icon: '🏟', label: hero.sport };
+          return h('div', { style: 'background:#14201a;color:#fff;border-radius:18px;padding:13px 15px;display:flex;flex-direction:column;gap:9px' },
+            h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
+              h('span', { style: 'font-size:14px;font-weight:700' }, hero.title),
+              h('span', { class: 'mono', style: 'font-size:10px;color:#3fd598' }, hero.when.toUpperCase())
+            ),
+            h('div', { style: 'font-size:11px;color:rgba(255,255,255,.6)' }, def.label + ' · tap start when ready'),
+            h('div', { style: 'display:flex;gap:8px;margin-top:2px' },
+              h('span', { style: 'flex:1;background:#12936a;border-radius:11px;padding:9px 0;text-align:center;font-size:12px;font-weight:700;cursor:pointer', onclick: function () { SE.nav('#/setup/' + hero.sport); } }, 'Start now'),
+              h('span', { style: 'width:74px;background:rgba(255,255,255,.12);border-radius:11px;padding:9px 0;text-align:center;font-size:12px;font-weight:600;cursor:pointer', onclick: function () { SE.nav('#/schedule'); } }, 'Edit')
+            )
+          );
+        })() : null,
+
+        rest.map(function (g) {
+          var def = SE.sports[g.sport] || { icon: '🏟', label: g.sport };
+          return h('div', { style: 'background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 1px 3px rgba(20,40,30,.07);display:flex;align-items:center;gap:10px' },
+            h('span', { style: 'font-size:15px' }, def.icon),
+            h('div', { style: 'flex:1' },
+              h('div', { style: 'font-size:13px;font-weight:700' }, g.title),
+              h('div', { style: 'font-size:11px;color:#6b7a72' }, g.when ? g.when : 'No fixed time — start when ready')
+            ),
+            h('span', { style: 'background:#e7f4ee;color:#12936a;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer', onclick: function () { SE.nav('#/setup/' + g.sport); } }, 'Start')
+          );
+        }),
+
+        !hero && !rest.length ? h('a', { style: 'background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 1px 3px rgba(20,40,30,.07);display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit', href: '#/schedule' },
+          h('span', { style: 'font-size:15px' }, '🗓'),
+          h('div', { style: 'flex:1' },
+            h('div', { style: 'font-size:13px;font-weight:700' }, 'Schedule a game'),
+            h('div', { style: 'font-size:11px;color:#6b7a72' }, 'Time optional — just pick teams')
+          ),
+          h('span', { style: 'color:#9aa8a0' }, '›')
+        ) : null,
+
+        live.length ? microlabel('Active') : null,
+        live.map(function (m) {
+          var def = SE.sports[m.sport];
+          return h('a', { style: 'background:#fff;border-radius:16px;padding:13px;box-shadow:0 1px 3px rgba(20,40,30,.07);display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit', href: '#/score/' + m.id },
+            h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
+              h('span', { style: 'font-size:14px;font-weight:700' }, m.teams[0].name + ' vs ' + m.teams[1].name),
+              h('span', { style: 'display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#d64f43' },
+                h('span', { style: 'width:6px;height:6px;border-radius:50%;background:#d64f43;animation:se-pulse 1.4s infinite' }), 'LIVE')
+            ),
+            h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
+              h('span', { style: 'font-size:12px;color:#6b7a72' }, def.icon + ' ' + def.label),
+              h('span', { class: 'mono', style: 'font-size:20px;font-weight:500' }, def.headline ? def.headline(m) : 'in play')
+            )
+          );
+        }),
+
+        h('div', { style: 'flex:1' }),
+
+        h('div', {
+          style: 'background:#12936a;color:#fff;border-radius:16px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 12px 22px -12px rgba(18,147,106,.7);cursor:pointer',
+          onclick: function () { SE.nav('#/pick'); }
+        }, h('span', { style: 'font-size:15px;font-weight:700' }, '＋ New game'), h('span', { style: 'font-size:17px' }, '›'))
       ),
 
-      h('button', { class: 'btn primary big block', onclick: function () { SE.nav('#/pick'); } }, '+ Start a match'),
-
-      live.length ? section('LIVE NOW', live.map(function (m) {
-        var def = SE.sports[m.sport];
-        return h('div', { class: 'card row', style: 'padding:12px' },
-          h('div', { style: 'font-size:22px' }, def.icon),
-          h('div', { class: 'grow' },
-            h('div', { style: 'font-weight:700' }, m.teams[0].name + ' vs ' + m.teams[1].name),
-            h('div', { class: 'sub mono muted', style: 'font-size:11px' }, def.label + ' · ' + (def.headline ? def.headline(m) : 'in play'))
-          ),
-          h('span', { class: 'chip live' }, 'LIVE'),
-          h('a', { class: 'btn', style: 'padding:8px 12px', href: '#/score/' + m.id }, 'Score'),
-          h('a', { class: 'btn ghost', style: 'padding:8px 10px', href: '#/watch/' + m.id }, '👁')
-        );
-      })) : null,
-
-      sched.length ? section('UPCOMING', sched.map(function (g, i) {
-        var def = SE.sports[g.sport] || { icon: '🏟', label: g.sport };
-        return h('div', { class: 'card row', style: 'padding:12px' },
-          h('div', { style: 'font-size:20px' }, def.icon),
-          h('div', { class: 'grow' },
-            h('div', { style: 'font-weight:700' }, g.title),
-            h('div', { class: 'mono muted', style: 'font-size:11px' }, g.when || 'time TBD')
-          ),
-          h('button', {
-            class: 'btn', style: 'padding:8px 12px',
-            onclick: function () { SE.nav('#/setup/' + g.sport); }
-          }, 'Play now')
-        );
-      })) : null,
-
-      h('a', { class: 'card row', href: '#/schedule', style: 'padding:12px;text-decoration:none;color:inherit' },
-        h('div', { style: 'font-size:20px' }, '🗓'),
-        h('div', { class: 'grow' },
-          h('div', { style: 'font-weight:700' }, 'Schedule a game'),
-          h('div', { class: 'muted', style: 'font-size:12px' }, 'Time optional — just pick teams')
-        ),
-        h('div', { class: 'muted' }, '›')
-      ),
-
-      done.length ? section('RECENT', done.map(function (m) {
-        var def = SE.sports[m.sport];
-        return h('a', { class: 'card row', href: '#/result/' + m.id, style: 'padding:12px;text-decoration:none;color:inherit' },
-          h('div', { style: 'font-size:20px' }, def.icon),
-          h('div', { class: 'grow' },
-            h('div', { style: 'font-weight:700;font-size:14px' }, m.teams[0].name + ' vs ' + m.teams[1].name),
-            h('div', { class: 'mono muted', style: 'font-size:11px' }, (m.result && m.result.summary) || 'finished')
-          ),
-          h('div', { class: 'muted' }, '›')
-        );
-      })) : null
+      h('div', { style: 'height:50px;flex:none;border-top:1px solid #e7ebe7;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);align-items:center' },
+        tabItem('Home', true, '#/home'),
+        tabItem('Play', false, '#/pick'),
+        tabItem('History', false, '#/records'),
+        tabItem('More', false, '#/board')
+      )
     ));
   });
-
-  function section(label, children) {
-    return h('div', { style: 'display:flex;flex-direction:column;gap:8px' },
-      h('div', { class: 'microlabel', style: 'padding:2px 4px' }, label),
-      children
-    );
-  }
 
   /* ---------- Sport picker ---------- */
   SE.registerScreen('pick', function (root) {

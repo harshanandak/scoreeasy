@@ -52,6 +52,29 @@ SE.registerSport({
 });
 ```
 
+## FIDELITY V2 (supersedes anything above that conflicts)
+
+The first build pass was functionally correct but visually skeletal. This pass is about
+1:1 visual fidelity to the reference fragments. Rules:
+
+- **Port the fragment's DOM structure and inline styles nearly verbatim.** Open your
+  reference fragment and translate each element to `SE.h(...)` keeping the exact inline
+  styles (colors, px sizes, gaps, radii, shadows, DM Mono letter-spacing). The fragments
+  are flow-layout (flex) — they port directly.
+- **`prototype/sports/volleyball.js` `renderScorer` is the exemplar.** Read it first and
+  match its porting style exactly (full-bleed root `style="flex:1;display:flex;
+  flex-direction:column;background:#f4f6f3"` — NOT class="screen"; header with 32px white
+  icon buttons; inline `<style>` tag via `h('style',{html:...})` for the fragment's
+  keyframes like geP/geGlow; `env(safe-area-inset-bottom)` padding on the footer).
+- **Skip only the iPhone status bar row** (9:41 + battery). Everything else in the
+  fragment must exist on screen.
+- **Every visible control must do something.** Map to a real reducer when natural; for
+  soft actions (Timeout, Rotate, Swap ends, …) add a pure no-op reducer that returns the
+  same snap with a good `label` so it lands in the event feed. Never render dead UI.
+- Decorative live-ish numbers (viewer counts) may derive from `match.events.length`.
+- Keep your existing rules/reducers intact — extend, don't regress. Undo must keep working.
+- Scorer AND spectator both get this treatment (5x and 6x fragments).
+
 ## Definition of done
 
 - File loads with zero console errors when opened via `prototype/index.html`.
