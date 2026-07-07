@@ -68,6 +68,15 @@
   };
 
   /* ---------- Match engine (event-sourced) ---------- */
+  // Reducers/isOver never see team names (pure snapshot+config), so sports emit
+  // ordinal tokens like 'Team 1' / 'Side 1'. Substitute real names at write time.
+  function nameify(m, str) {
+    if (!str) return str;
+    return String(str)
+      .replace(/\b(?:Team|Side) ?1\b/g, m.teams[0].name)
+      .replace(/\b(?:Team|Side) ?2\b/g, m.teams[1].name);
+  }
+
   SE.newMatch = function (sportKey, teams, config) {
     var def = SE.sports[sportKey];
     var id = 'm' + Math.random().toString(36).slice(2, 8);
@@ -99,9 +108,12 @@
       var def = SE.sports[m.sport];
       var out = def.actions[action](m.snapshot, m.config, payload);
       m.snapshot = out.snap;
-      m.events.push({ action: action, payload: payload == null ? null : payload, label: out.label || action, ts: Date.now() });
+      m.events.push({ action: action, payload: payload == null ? null : payload, label: nameify(m, out.label || action), ts: Date.now() });
       var res = def.isOver(m.snapshot, m.config);
-      if (res) { m.status = 'done'; m.endedAt = Date.now(); m.result = res; ended = res; }
+      if (res) {
+        res.summary = nameify(m, res.summary);
+        m.status = 'done'; m.endedAt = Date.now(); m.result = res; ended = res;
+      }
     });
     return ended;
   };
@@ -123,6 +135,7 @@
       m.status = 'done';
       m.endedAt = Date.now();
       m.result = result || { summary: 'Match ended', winnerIndex: null };
+      m.result.summary = nameify(m, m.result.summary);
     });
   };
 
