@@ -80,7 +80,7 @@
         }),
 
         h('div', {
-          class: 'fl-primary', style: 'margin-top:6px;display:flex;align-items:center;justify-content:space-between;padding:15px 16px',
+          class: 'fl-primary', style: 'flex:none;margin-top:6px;display:flex;align-items:center;justify-content:space-between;padding:15px 16px',
           onclick: function () { SE.nav('#/pick'); }
         }, h('span', null, '＋ New game'), h('span', { style: 'font-size:17px' }, '›'))
       ),
