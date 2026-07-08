@@ -12,53 +12,61 @@
     var hero = sched.filter(function (g) { return g.when; })[0];
     var rest = sched.filter(function (g) { return g !== hero; });
 
-    function tabItem(label, glyph, active, href) {
-      return h('a', { class: 'fl-tab' + (active ? ' on' : ''), href: href },
-        h('span', { class: 'g' }, glyph), label);
+    function sportMark(key, size) {
+      return SE.hasIcon(key)
+        ? h('span', { style: 'display:inline-flex;color:var(--fl-ink)' }, SE.icon(key, size || 26))
+        : h('span', { style: 'font-size:' + (size || 22) + 'px' }, (SE.sports[key] || {}).icon || '🏟');
     }
 
     root.appendChild(ui.screen(
-      h('div', { class: 'fl-scroll', style: 'display:flex;flex-direction:column;gap:12px;padding:24px 18px 14px' },
+      h('div', { class: 'fl-scroll', style: 'display:flex;flex-direction:column;gap:12px;padding:22px 18px 14px' },
 
+        // logo + wordmark
         h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-          h('div', { style: 'font-size:22px;font-weight:600;letter-spacing:.02em;text-transform:uppercase' },
-            'Score', h('span', { style: 'color:var(--fl-amber)' }, 'Easy')),
-          ui.iconBtn('≣', function () { SE.nav('#/board'); })
+          h('div', { style: 'display:flex;align-items:center;gap:9px' },
+            h('span', { style: 'display:inline-grid;place-items:center;width:38px;height:38px;border:1.5px solid var(--fl-line-2);border-radius:10px;background:var(--fl-amber);color:#fff;box-shadow:var(--fl-shadow-sm)' }, SE.logoMark(24)),
+            h('div', { style: 'font-size:21px;font-weight:800;letter-spacing:-.01em;text-transform:uppercase' },
+              'Score', h('span', { style: 'color:var(--fl-amber)' }, 'Easy'))
+          ),
+          ui.iconBtn(SE.icon('more', 20), function () { SE.nav('#/board'); })
         ),
 
         (hero || rest.length) ? ui.microlabel('Upcoming') : null,
 
         hero ? (function () {
-          var def = SE.sports[hero.sport] || { icon: '🏟', label: hero.sport };
-          return h('div', { style: 'background:linear-gradient(150deg,var(--fl-panel-2),var(--fl-bg-0));border:1px solid var(--fl-line);border-radius:var(--fl-r-lg);padding:14px 16px;display:flex;flex-direction:column;gap:10px' },
-            h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-              h('span', { style: 'font-size:15px;font-weight:600;letter-spacing:.02em' }, hero.title),
-              h('span', { style: 'font-family:var(--fl-data);font-size:10px;color:var(--fl-amber)' }, hero.when.toUpperCase())
+          var def = SE.sports[hero.sport] || { label: hero.sport };
+          return h('div', { class: 'fl-card', style: 'padding:14px 16px;display:flex;flex-direction:column;gap:10px' },
+            h('div', { style: 'display:flex;align-items:center;gap:10px' },
+              sportMark(hero.sport, 26),
+              h('div', { style: 'flex:1' },
+                h('div', { style: 'font-size:15px;font-weight:700;letter-spacing:-.01em' }, hero.title),
+                h('div', { style: 'font-size:11px;color:var(--fl-ink-dim)' }, def.label + ' · tap start when ready')
+              ),
+              h('span', { style: 'font-family:var(--fl-data);font-size:10px;color:var(--fl-amber);font-weight:600' }, hero.when.toUpperCase())
             ),
-            h('div', { style: 'font-size:11px;color:var(--fl-ink-dim)' }, def.label + ' · tap start when ready'),
             h('div', { style: 'display:flex;gap:8px' },
               h('span', { class: 'fl-primary', style: 'flex:1;padding:11px 0;font-size:13px', onclick: function () { SE.nav('#/setup/' + hero.sport); } }, 'Start now'),
-              h('span', { class: 'fl-primary ghost', style: 'width:80px;padding:11px 0;font-size:13px', onclick: function () { SE.nav('#/schedule'); } }, 'Edit')
+              h('span', { class: 'fl-primary ghost', style: 'width:84px;padding:11px 0;font-size:13px', onclick: function () { SE.nav('#/schedule'); } }, 'Edit')
             )
           );
         })() : null,
 
         rest.map(function (g) {
-          var def = SE.sports[g.sport] || { icon: '🏟', label: g.sport };
+          var def = SE.sports[g.sport] || { label: g.sport };
           return h('div', { class: 'fl-card', style: 'padding:12px 14px;display:flex;align-items:center;gap:11px' },
-            h('span', { style: 'font-size:16px' }, def.icon),
+            sportMark(g.sport, 24),
             h('div', { style: 'flex:1' },
-              h('div', { style: 'font-size:13px;font-weight:600;letter-spacing:.02em' }, g.title),
+              h('div', { style: 'font-size:13px;font-weight:700;letter-spacing:-.01em' }, g.title),
               h('div', { style: 'font-size:11px;color:var(--fl-ink-faint)' }, g.when ? g.when : 'No fixed time — start when ready')
             ),
             h('span', { class: 'fl-btn', style: 'flex:none;padding:8px 14px', onclick: function () { SE.nav('#/setup/' + g.sport); } }, 'Start')
           );
         }),
 
-        !hero && !rest.length ? h('a', { class: 'fl-card', style: 'padding:12px 14px;display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit', href: '#/schedule' },
-          h('span', { style: 'font-size:16px' }, '🗓'),
+        !hero && !rest.length ? h('a', { class: 'fl-card', style: 'padding:14px;display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit', href: '#/schedule' },
+          h('span', { style: 'display:inline-flex;color:var(--fl-ink)' }, SE.icon('history', 24)),
           h('div', { style: 'flex:1' },
-            h('div', { style: 'font-size:13px;font-weight:600' }, 'Schedule a game'),
+            h('div', { style: 'font-size:13px;font-weight:700' }, 'Schedule a game'),
             h('div', { style: 'font-size:11px;color:var(--fl-ink-faint)' }, 'Time optional — just pick teams')
           ),
           h('span', { style: 'color:var(--fl-ink-faint)' }, '›')
@@ -68,13 +76,14 @@
         live.map(function (m) {
           var def = SE.sports[m.sport];
           return h('a', { class: 'fl-card', style: 'padding:13px 14px;display:flex;flex-direction:column;gap:9px;text-decoration:none;color:inherit', href: '#/score/' + m.id },
-            h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-              h('span', { style: 'font-size:14px;font-weight:600;letter-spacing:.02em' }, m.teams[0].name + ' vs ' + m.teams[1].name),
+            h('div', { style: 'display:flex;align-items:center;gap:9px' },
+              sportMark(m.sport, 22),
+              h('span', { style: 'flex:1;font-size:14px;font-weight:700;letter-spacing:-.01em' }, m.teams[0].name + ' vs ' + m.teams[1].name),
               ui.liveChip(true)
             ),
             h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-              h('span', { style: 'font-size:12px;color:var(--fl-ink-dim)' }, def.icon + ' ' + def.label),
-              h('span', { style: 'font-family:var(--fl-num);font-size:26px;font-weight:500;color:var(--fl-amber)' }, def.headline ? def.headline(m) : 'in play')
+              h('span', { style: 'font-size:12px;color:var(--fl-ink-dim)' }, def.label),
+              h('span', { style: 'font-family:var(--fl-num);font-size:22px;font-weight:800;color:var(--fl-amber);letter-spacing:-.02em' }, def.headline ? def.headline(m) : 'in play')
             )
           );
         }),
@@ -86,10 +95,10 @@
       ),
 
       h('div', { class: 'fl-tabs' },
-        tabItem('Home', '⌂', true, '#/home'),
-        tabItem('Play', '＋', false, '#/pick'),
-        tabItem('History', '≣', false, '#/records'),
-        tabItem('More', '⋯', false, '#/board')
+        h('a', { class: 'fl-tab on', href: '#/home' }, SE.icon('home', 21), 'Home'),
+        h('a', { class: 'fl-tab play', href: '#/pick' }, h('span', { class: 'pbtn' }, SE.icon('play', 22)), 'Play'),
+        h('a', { class: 'fl-tab', href: '#/records' }, SE.icon('history', 21), 'History'),
+        h('a', { class: 'fl-tab', href: '#/board' }, SE.icon('more', 21), 'More')
       )
     ));
   });
@@ -102,12 +111,12 @@
       h('div', { class: 'fl-scroll', style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 16px calc(16px + env(safe-area-inset-bottom));align-content:start' },
         SE.sportList().map(function (def) {
           return h('div', {
-            class: 'fl-card', style: 'padding:18px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent',
+            class: 'fl-card', style: 'padding:18px 8px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;-webkit-tap-highlight-color:transparent',
             onclick: function () { SE.nav('#/setup/' + def.key); }
           },
-            h('div', { style: 'font-size:28px' }, def.icon),
-            h('div', { style: 'font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase' }, def.label),
-            def.tagline ? h('div', { class: 'fl-microlabel', style: 'font-size:8px' }, def.tagline) : null
+            SE.hasIcon(def.key) ? h('span', { style: 'display:inline-flex;color:var(--fl-ink)' }, SE.icon(def.key, 34)) : h('div', { style: 'font-size:30px' }, def.icon),
+            h('div', { style: 'font-family:var(--fl-data);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase' }, def.label),
+            def.tagline ? h('div', { class: 'fl-microlabel', style: 'font-size:8px;color:var(--fl-ink-faint)' }, def.tagline) : null
           );
         })
       )
