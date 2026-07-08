@@ -21,13 +21,10 @@
     root.appendChild(ui.screen(
       h('div', { class: 'fl-scroll', style: 'display:flex;flex-direction:column;gap:12px;padding:22px 18px 14px' },
 
-        // logo + wordmark
+        // wordmark (clean, no mark)
         h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-          h('div', { style: 'display:flex;align-items:center;gap:9px' },
-            h('span', { style: 'display:inline-grid;place-items:center;width:38px;height:38px;border:1.5px solid var(--fl-line-2);border-radius:10px;background:var(--fl-amber);color:#fff;box-shadow:var(--fl-shadow-sm)' }, SE.logoMark(24)),
-            h('div', { style: 'font-size:21px;font-weight:800;letter-spacing:-.01em;text-transform:uppercase' },
-              'Score', h('span', { style: 'color:var(--fl-amber)' }, 'Easy'))
-          ),
+          h('div', { style: 'font-size:20px;font-weight:800;letter-spacing:-.01em;text-transform:uppercase' },
+            'Score', h('span', { style: 'color:var(--fl-amber)' }, 'Easy')),
           ui.iconBtn(SE.icon('more', 20), function () { SE.nav('#/board'); })
         ),
 

@@ -1,45 +1,46 @@
 /* ============================================================================
    MONO × HiFi — ScoreEasy design system
-   The public scoreeasy.app language (cream paper, heavy Inter display, one green,
-   JetBrains Mono labels, black borders + hard offset shadows, boxy cards) applied
-   to the HiFi scorer layouts. Single source of visual truth; every screen builds
-   from these tokens + the SE.ui components in js/ui.js.
-   (Class names keep the fl- prefix from the earlier iteration — cosmetic only.)
+   Language from the live scoreeasy.app: cream paper, heavy Inter display, one
+   toned-down green, JetBrains Mono labels. BALANCE = minimalism across (flat
+   surfaces, quiet hairlines), brutalism ONLY as a key toward CTAs / interaction
+   (hard offset shadow + strong border on the things you press). Single source of
+   visual truth; every screen builds from these tokens + the SE.ui components.
    ============================================================================ */
 
 :root {
   /* surfaces */
-  --fl-bg-1: #f3f1e8;             /* cream canvas */
-  --fl-glow: transparent;
-  --fl-panel: #ffffff;           /* white card */
-  --fl-panel-2: #fbfaf5;
-  --fl-line: rgba(20,21,15,.14);
-  --fl-line-2: rgba(20,21,15,.9); /* the signature near-black hairline/border */
+  --fl-bg-1: #f4f2ea;            /* cream canvas */
+  --fl-panel: #ffffff;          /* white surface */
+  --fl-panel-2: #faf8f1;
+
+  /* lines: quiet hairline for passive surfaces, strong near-black for CTAs */
+  --fl-line: rgba(24,25,18,.13);
+  --fl-line-strong: #1b1c15;
 
   /* ink */
-  --fl-ink: #16180f;             /* near-black */
-  --fl-ink-dim: #5f6356;         /* mono label grey */
-  --fl-ink-faint: #8b8f80;
-  --fl-lose: #b9bcae;            /* trailing numeral */
+  --fl-ink: #1b1c15;
+  --fl-ink-dim: #63665a;
+  --fl-ink-faint: #999c8e;
+  --fl-lose: #c3c5ba;
 
-  /* accent — the one confident green */
-  --fl-amber: #1c9b4e;           /* (name kept; value is green) */
-  --fl-amber-deep: #157a3c;
-  --fl-amber-ink: #ffffff;       /* text on green */
-  --fl-live: #1c9b4e;
+  /* accent — one toned-down green, used sparingly */
+  --fl-amber: #1f8a4c;
+  --fl-amber-deep: #17703c;
+  --fl-amber-soft: rgba(31,138,76,.09);
+  --fl-amber-ink: #ffffff;
+  --fl-live: #1f8a4c;
 
   /* type */
-  --fl-num: 'Inter', system-ui, sans-serif;   /* heavy display numerals */
+  --fl-num: 'Inter', system-ui, sans-serif;
   --fl-ui: 'Inter', system-ui, sans-serif;
   --fl-data: 'JetBrains Mono', ui-monospace, monospace;
 
-  --fl-r: 6px;
-  --fl-r-lg: 8px;
-  --fl-shadow: 3px 3px 0 var(--fl-line-2);
-  --fl-shadow-sm: 2px 2px 0 var(--fl-line-2);
+  --fl-r: 8px;
+  --fl-r-lg: 10px;
+  --fl-shadow: 3px 3px 0 var(--fl-line-strong);   /* the brutalist key — CTAs only */
 }
 
-body { background: #e8e5da; }
+body { background: #eae7dd; }
 #app {
   background: var(--fl-bg-1);
   color: var(--fl-ink);
@@ -48,98 +49,96 @@ body { background: #e8e5da; }
 
 .fl { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
-/* ---- header ---- */
-.fl-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 20px 16px 12px; }
+/* ---- header (flat, minimal) ---- */
+.fl-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 20px 18px 14px; }
 .fl-ic {
-  width: 36px; height: 36px; flex: none; border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r);
+  width: 36px; height: 36px; flex: none; border: 1px solid var(--fl-line); border-radius: var(--fl-r);
   display: grid; place-items: center; color: var(--fl-ink); font-size: 18px; cursor: pointer;
-  background: var(--fl-panel); box-shadow: var(--fl-shadow-sm); -webkit-tap-highlight-color: transparent;
+  background: var(--fl-panel); -webkit-tap-highlight-color: transparent;
 }
-.fl-ic:active { box-shadow: none; transform: translate(2px,2px); }
+.fl-ic:active { background: var(--fl-panel-2); }
 .fl-title { text-align: center; min-width: 0; }
 .fl-title b { font-weight: 800; font-size: 16px; letter-spacing: -.01em; text-transform: uppercase; display: block; }
 .fl-title span { display: block; font-family: var(--fl-data); font-size: 10px; letter-spacing: .1em; color: var(--fl-ink-dim); margin-top: 3px; text-transform: uppercase; }
 
-/* ---- banner (set / break / match point) — solid green, boxed ---- */
+/* ---- banner (informational — quiet, not brutalist) ---- */
 .fl-banner {
-  flex: none; margin: 4px 16px 0; text-align: center; font-family: var(--fl-data); font-size: 12px; font-weight: 500;
-  letter-spacing: .22em; text-transform: uppercase; color: var(--fl-amber-ink);
-  background: var(--fl-amber); border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r);
-  padding: 9px 0; box-shadow: var(--fl-shadow);
+  flex: none; margin: 6px 18px 0; text-align: center; font-family: var(--fl-data); font-size: 11px; font-weight: 500;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--fl-amber-deep);
+  background: var(--fl-amber-soft); border-radius: var(--fl-r); padding: 8px 0;
 }
 
-/* ---- score board: two heavy halves ---- */
-.fl-board { flex: 1; display: flex; min-height: 0; margin: 12px 16px 0; border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r-lg); background: var(--fl-panel); box-shadow: var(--fl-shadow); overflow: hidden; }
+/* ---- score board: flat, quiet frame; the halves are the interaction ---- */
+.fl-board { flex: 1; display: flex; min-height: 0; margin: 14px 18px 0; border: 1px solid var(--fl-line); border-radius: var(--fl-r-lg); background: var(--fl-panel); overflow: hidden; }
 .fl-side {
   flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 3px; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; position: relative; padding: 18px 8px;
 }
-.fl-side.l { border-right: 1.5px solid var(--fl-line-2); }
-.fl-side.serving { background: rgba(28,155,78,.06); }
-.fl-side:active { background: rgba(28,155,78,.12); }
-.fl-side .fl-team { font-family: var(--fl-data); font-size: 12px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--fl-ink-dim); }
+.fl-side.l { border-right: 1px solid var(--fl-line); }
+.fl-side.serving { background: var(--fl-amber-soft); }
+.fl-side:active { background: rgba(31,138,76,.16); }
+.fl-side .fl-team { font-family: var(--fl-data); font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--fl-ink-dim); }
 .fl-side.serving .fl-team { color: var(--fl-amber); }
-.fl-side .fl-num { font-family: var(--fl-num); font-weight: 800; font-size: 108px; line-height: .84; font-variant-numeric: tabular-nums; letter-spacing: -.04em; color: var(--fl-ink); }
-.fl-side.lead .fl-num { color: var(--fl-ink); }
+.fl-side .fl-num { font-family: var(--fl-num); font-weight: 800; font-size: 104px; line-height: .84; font-variant-numeric: tabular-nums; letter-spacing: -.04em; color: var(--fl-ink); }
 .fl-side.trail .fl-num { color: var(--fl-lose); }
-.fl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fl-amber); margin-bottom: 4px; }
-.fl-cue { font-family: var(--fl-data); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-ink-faint); margin-top: 4px; }
+.fl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fl-amber); margin-bottom: 4px; }
+.fl-cue { font-family: var(--fl-data); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--fl-ink-faint); margin-top: 5px; }
 
 /* ---- mono chip row ---- */
-.fl-chips { flex: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 12px 16px 2px; font-family: var(--fl-data); font-size: 11px; letter-spacing: .04em; color: var(--fl-ink-faint); }
+.fl-chips { flex: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 14px 16px 2px; font-family: var(--fl-data); font-size: 11px; letter-spacing: .03em; color: var(--fl-ink-faint); }
 .fl-chips b { color: var(--fl-ink); font-weight: 600; }
 
-/* ---- boxy action buttons ---- */
-.fl-acts { flex: none; display: flex; gap: 8px; padding: 12px 16px 0; }
+/* ---- secondary action buttons (flat, minimal) ---- */
+.fl-acts { flex: none; display: flex; gap: 8px; padding: 12px 18px 0; }
 .fl-acts.scroll { overflow-x: auto; scrollbar-width: none; }
 .fl-acts.scroll::-webkit-scrollbar { display: none; }
 .fl-btn {
-  flex: 1; text-align: center; border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r); padding: 10px 10px;
-  font-family: var(--fl-data); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-ink);
-  background: var(--fl-panel); cursor: pointer; white-space: nowrap; box-shadow: var(--fl-shadow-sm); -webkit-tap-highlight-color: transparent;
+  flex: 1; text-align: center; border: 1px solid var(--fl-line); border-radius: var(--fl-r); padding: 10px 10px;
+  font-family: var(--fl-data); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--fl-ink-dim);
+  background: var(--fl-panel); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
 }
-.fl-btn:active { box-shadow: none; transform: translate(2px,2px); }
-.fl-btn.on { background: var(--fl-amber); color: #fff; }
+.fl-btn:active { background: var(--fl-panel-2); }
+.fl-btn.on { background: var(--fl-amber); color: #fff; border-color: transparent; }
 
-/* ---- footer: undo + green primary ---- */
-.fl-foot { flex: none; display: flex; gap: 8px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
-.fl-undo { width: 54px; flex: none; border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r); display: grid; place-items: center; color: var(--fl-ink); font-size: 18px; cursor: pointer; background: var(--fl-panel); box-shadow: var(--fl-shadow-sm); }
-.fl-undo:active { box-shadow: none; transform: translate(2px,2px); }
+/* ---- footer: undo (minimal) + primary CTA (brutalist key) ---- */
+.fl-foot { flex: none; display: flex; gap: 8px; padding: 12px 18px calc(16px + env(safe-area-inset-bottom)); }
+.fl-undo { width: 54px; flex: none; border: 1px solid var(--fl-line); border-radius: var(--fl-r); display: grid; place-items: center; color: var(--fl-ink); font-size: 18px; cursor: pointer; background: var(--fl-panel); }
+.fl-undo:active { background: var(--fl-panel-2); }
+/* THE brutalist element: primary CTA gets the strong border + hard offset shadow */
 .fl-primary {
   flex: 1; text-align: center; padding: 14px 0; border-radius: var(--fl-r); background: var(--fl-amber); color: #fff;
-  font-weight: 700; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; cursor: pointer;
-  border: 1.5px solid var(--fl-line-2); box-shadow: var(--fl-shadow);
+  font-weight: 700; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; cursor: pointer;
+  border: 1.5px solid var(--fl-line-strong); box-shadow: var(--fl-shadow);
 }
 .fl-primary:active { box-shadow: none; transform: translate(3px,3px); }
-.fl-primary.ghost { background: var(--fl-panel); color: var(--fl-ink); }
+.fl-primary.ghost { background: var(--fl-panel); color: var(--fl-ink); box-shadow: none; border: 1px solid var(--fl-line); }
 
 /* ---- footer meta line ---- */
-.fl-meta { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 18px calc(14px + env(safe-area-inset-bottom)); font-family: var(--fl-data); font-size: 11px; color: var(--fl-ink-faint); }
+.fl-meta { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 20px calc(14px + env(safe-area-inset-bottom)); font-family: var(--fl-data); font-size: 11px; color: var(--fl-ink-faint); }
 .fl-meta a, .fl-meta .lnk { color: var(--fl-amber); text-decoration: none; cursor: pointer; font-weight: 500; }
 
-/* ---- generic surfaces ---- */
-.fl-card { background: var(--fl-panel); border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r-lg); box-shadow: var(--fl-shadow); }
+/* ---- generic surfaces (flat, minimal) ---- */
+.fl-card { background: var(--fl-panel); border: 1px solid var(--fl-line); border-radius: var(--fl-r-lg); }
 .fl-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .fl-scroll::-webkit-scrollbar { display: none; }
 .fl-microlabel { font-family: var(--fl-data); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--fl-ink-dim); }
 
-.fl-livechip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--fl-data); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--fl-live); }
-.fl-livechip .d { width: 7px; height: 7px; border-radius: 50%; background: var(--fl-live); animation: fl-pulse 1.4s infinite; }
+.fl-livechip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--fl-data); font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-live); }
+.fl-livechip .d { width: 6px; height: 6px; border-radius: 50%; background: var(--fl-live); animation: fl-pulse 1.4s infinite; }
 @keyframes fl-pulse { 50% { opacity: .35; } }
 
-/* spectator scoreboard — dark inverted card for contrast, hard-shadowed */
-.fl-scoreboard { background: var(--fl-ink); color: #fff; border: 1.5px solid var(--fl-line-2); border-radius: var(--fl-r-lg); padding: 16px 18px; box-shadow: var(--fl-shadow); }
+/* spectator scoreboard — inverted, flat (no heavy shadow) */
+.fl-scoreboard { background: var(--fl-ink); color: #fff; border-radius: var(--fl-r-lg); padding: 16px 18px; }
 
-/* bottom tab bar (dock) */
-.fl-tabs { height: 64px; flex: none; border-top: 1.5px solid var(--fl-line-2); background: var(--fl-panel); display: grid; grid-template-columns: repeat(4,1fr); align-items: center; padding-bottom: env(safe-area-inset-bottom); }
-.fl-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-family: var(--fl-data); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--fl-ink-faint); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* bottom tab bar (dock) — flat bar; only the Play button carries brutalism */
+.fl-tabs { height: 64px; flex: none; border-top: 1px solid var(--fl-line); background: var(--fl-panel); display: grid; grid-template-columns: repeat(4,1fr); align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+.fl-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-family: var(--fl-data); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-ink-faint); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .fl-tab.on { color: var(--fl-ink); }
 .fl-tab svg { width: 21px; height: 21px; display: block; }
-/* prominent green Play button in the dock */
 .fl-tab.play { color: var(--fl-amber); font-weight: 600; }
 .fl-tab.play .pbtn {
-  width: 46px; height: 46px; border-radius: 13px; background: var(--fl-amber); border: 1.5px solid var(--fl-line-2);
-  box-shadow: var(--fl-shadow-sm); display: grid; place-items: center; color: #fff; margin-top: -14px;
+  width: 46px; height: 46px; border-radius: 12px; background: var(--fl-amber); border: 1.5px solid var(--fl-line-strong);
+  box-shadow: var(--fl-shadow); display: grid; place-items: center; color: #fff; margin-top: -14px;
 }
-.fl-tab.play .pbtn:active { box-shadow: none; transform: translate(2px,2px); }
+.fl-tab.play .pbtn:active { box-shadow: none; transform: translate(3px,3px); }
 .fl-tab.play .pbtn svg { width: 22px; height: 22px; }
