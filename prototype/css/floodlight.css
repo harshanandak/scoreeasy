@@ -135,10 +135,5 @@ body { background: #eae7dd; }
 .fl-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-family: var(--fl-data); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-ink-faint); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .fl-tab.on { color: var(--fl-ink); }
 .fl-tab svg { width: 21px; height: 21px; display: block; }
-.fl-tab.play { color: var(--fl-amber); font-weight: 600; }
-.fl-tab.play .pbtn {
-  width: 46px; height: 46px; border-radius: 12px; background: var(--fl-amber); border: 1.5px solid var(--fl-line-strong);
-  box-shadow: var(--fl-shadow); display: grid; place-items: center; color: #fff; margin-top: -14px;
-}
-.fl-tab.play .pbtn:active { box-shadow: none; transform: translate(3px,3px); }
-.fl-tab.play .pbtn svg { width: 22px; height: 22px; }
+/* Play tab: subtly green, sits flat in the bar — no pop-out */
+.fl-tab.play { color: var(--fl-amber); }

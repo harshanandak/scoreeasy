@@ -93,7 +93,7 @@
 
       h('div', { class: 'fl-tabs' },
         h('a', { class: 'fl-tab on', href: '#/home' }, SE.icon('home', 21), 'Home'),
-        h('a', { class: 'fl-tab play', href: '#/pick' }, h('span', { class: 'pbtn' }, SE.icon('play', 22)), 'Play'),
+        h('a', { class: 'fl-tab play', href: '#/pick' }, SE.icon('play', 21), 'Play'),
         h('a', { class: 'fl-tab', href: '#/records' }, SE.icon('history', 21), 'History'),
         h('a', { class: 'fl-tab', href: '#/board' }, SE.icon('more', 21), 'More')
       )
