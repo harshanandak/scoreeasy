@@ -1,0 +1,140 @@
+/* ============================================================================
+   FLOODLIGHT — ScoreEasy design system
+   A stadium jumbotron in your hand. Near-black, one electric amber, monumental
+   condensed numerals. Every screen is built from these tokens + the SE.ui
+   components in js/ui.js — this file is the single source of visual truth.
+   ============================================================================ */
+
+:root {
+  /* surfaces */
+  --fl-bg-0: #070b0f;             /* deepest */
+  --fl-bg-1: #0b1116;             /* app base */
+  --fl-glow: #10202b;             /* top radial glow */
+  --fl-panel: #121a22;            /* raised card */
+  --fl-panel-2: #172029;          /* card hover / nested */
+  --fl-line: rgba(255,255,255,.07);
+  --fl-line-2: rgba(255,255,255,.13);
+
+  /* ink */
+  --fl-ink: #f2f5f8;
+  --fl-ink-dim: #8ea1b2;
+  --fl-ink-faint: #5f7285;
+  --fl-lose: #46586a;             /* trailing team numeral */
+
+  /* accent — the one electric colour */
+  --fl-amber: #ffc300;
+  --fl-amber-deep: #f0a500;
+  --fl-amber-ink: #0a0f14;        /* text on amber */
+  --fl-live: #ff4d3d;             /* live-red, used sparingly for LIVE dot */
+
+  /* type */
+  --fl-num: 'Teko', sans-serif;         /* monumental numerals */
+  --fl-ui: 'Oswald', sans-serif;        /* labels, buttons, titles */
+  --fl-data: 'DM Mono', monospace;      /* micro data, sets, clocks */
+
+  --fl-r: 12px;                   /* standard radius (restrained, not pill) */
+  --fl-r-lg: 16px;
+}
+
+/* app shell background — the floodlit arena */
+body { background: var(--fl-bg-0); }
+#app {
+  background:
+    radial-gradient(130% 70% at 50% -12%, var(--fl-glow) 0%, transparent 62%),
+    var(--fl-bg-1);
+  color: var(--fl-ink);
+  font-family: var(--fl-ui);
+}
+
+/* ---- root screen container ---- */
+.fl { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+/* ---- header ---- */
+.fl-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 24px 20px 12px; }
+.fl-ic {
+  width: 34px; height: 34px; flex: none; border: 1px solid var(--fl-line-2); border-radius: 9px;
+  display: grid; place-items: center; color: var(--fl-ink-dim); font-size: 19px; cursor: pointer;
+  background: transparent; -webkit-tap-highlight-color: transparent;
+}
+.fl-ic:active { background: var(--fl-panel); }
+.fl-title { text-align: center; min-width: 0; }
+.fl-title b { font-weight: 600; font-size: 16px; letter-spacing: .07em; text-transform: uppercase; display: block; }
+.fl-title span { display: block; font-family: var(--fl-data); font-size: 9.5px; letter-spacing: .22em; color: var(--fl-ink-faint); margin-top: 3px; text-transform: uppercase; }
+
+/* ---- banner (set point / break point / big moment) ---- */
+.fl-banner {
+  flex: none; margin: 6px 20px 0; text-align: center; font-size: 13px; font-weight: 500;
+  letter-spacing: .34em; text-transform: uppercase; color: var(--fl-amber);
+  padding: 9px 0; border-top: 1px solid rgba(255,195,0,.16); border-bottom: 1px solid rgba(255,195,0,.16);
+  text-shadow: 0 0 20px rgba(255,195,0,.4);
+  animation: fl-glow 2s ease-in-out infinite;
+}
+@keyframes fl-glow { 50% { text-shadow: 0 0 30px rgba(255,195,0,.7); } }
+
+/* ---- score board: two monumental halves ---- */
+.fl-board { flex: 1; display: flex; min-height: 0; }
+.fl-side {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; position: relative;
+}
+.fl-side.l { border-right: 1px solid var(--fl-line); }
+.fl-side:active { background: rgba(255,255,255,.02); }
+.fl-side .fl-team { font-size: 15px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--fl-ink-dim); }
+.fl-side.serving .fl-team { color: var(--fl-amber); }
+.fl-side .fl-num { font-family: var(--fl-num); font-weight: 600; font-size: 148px; line-height: .78; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.fl-side.lead .fl-num { color: #fff; text-shadow: 0 0 42px rgba(255,255,255,.22); }
+.fl-side.trail .fl-num { color: var(--fl-lose); }
+.fl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fl-amber); box-shadow: 0 0 14px var(--fl-amber); margin-bottom: 4px; }
+.fl-cue { font-size: 11px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--fl-ink-faint); margin-top: 4px; }
+
+/* ---- mono chip row (sets, stats) ---- */
+.fl-chips { flex: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; padding: 14px 16px 2px; font-family: var(--fl-data); font-size: 11px; letter-spacing: .08em; color: var(--fl-ink-faint); }
+.fl-chips b { color: var(--fl-ink); font-weight: 500; }
+.fl-chips .sep { color: var(--fl-line-2); }
+
+/* ---- outlined action buttons ---- */
+.fl-acts { flex: none; display: flex; gap: 8px; padding: 10px 18px 0; }
+.fl-acts.scroll { overflow-x: auto; scrollbar-width: none; }
+.fl-acts.scroll::-webkit-scrollbar { display: none; }
+.fl-btn {
+  flex: 1; text-align: center; border: 1px solid var(--fl-line-2); border-radius: 10px; padding: 11px 12px;
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--fl-ink-dim);
+  background: transparent; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent;
+}
+.fl-btn:active { background: var(--fl-panel); }
+.fl-btn.on { border-color: var(--fl-amber); color: var(--fl-amber); }
+
+/* ---- footer: undo + amber primary ---- */
+.fl-foot { flex: none; display: flex; gap: 8px; padding: 10px 18px calc(20px + env(safe-area-inset-bottom)); }
+.fl-undo { width: 52px; flex: none; border: 1px solid var(--fl-line-2); border-radius: 12px; display: grid; place-items: center; color: var(--fl-ink-dim); font-size: 18px; cursor: pointer; background: transparent; }
+.fl-undo:active { background: var(--fl-panel); }
+.fl-primary {
+  flex: 1; text-align: center; padding: 15px 0; border-radius: 12px; background: var(--fl-amber); color: var(--fl-amber-ink);
+  font-weight: 600; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; border: none;
+  box-shadow: 0 12px 30px -10px rgba(255,195,0,.5);
+}
+.fl-primary:active { background: var(--fl-amber-deep); }
+.fl-primary.ghost { background: transparent; color: var(--fl-ink-dim); border: 1px solid var(--fl-line-2); box-shadow: none; }
+
+/* ---- footer meta line (share / viewers) ---- */
+.fl-meta { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 4px 20px calc(12px + env(safe-area-inset-bottom)); font-family: var(--fl-data); font-size: 11px; color: var(--fl-ink-faint); }
+.fl-meta a, .fl-meta .lnk { color: var(--fl-amber); text-decoration: none; cursor: pointer; letter-spacing: .04em; }
+
+/* ---- generic surfaces for lists / home / flows ---- */
+.fl-card { background: var(--fl-panel); border: 1px solid var(--fl-line); border-radius: var(--fl-r-lg); }
+.fl-scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.fl-scroll::-webkit-scrollbar { display: none; }
+.fl-microlabel { font-family: var(--fl-data); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--fl-ink-faint); }
+
+.fl-livechip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fl-live); }
+.fl-livechip .d { width: 6px; height: 6px; border-radius: 50%; background: var(--fl-live); animation: fl-pulse 1.4s infinite; }
+@keyframes fl-pulse { 50% { opacity: .3; } }
+
+/* spectator dark scoreboard block sits on an even deeper panel */
+.fl-scoreboard { background: linear-gradient(160deg, var(--fl-panel-2), var(--fl-bg-0)); border: 1px solid var(--fl-line); border-radius: var(--fl-r-lg); padding: 16px 18px; }
+
+/* bottom tab bar (home) */
+.fl-tabs { height: 54px; flex: none; border-top: 1px solid var(--fl-line); background: rgba(7,11,15,.6); display: grid; grid-template-columns: repeat(4,1fr); }
+.fl-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--fl-ink-faint); text-decoration: none; cursor: pointer; }
+.fl-tab.on { color: var(--fl-amber); }
+.fl-tab .g { font-size: 15px; }

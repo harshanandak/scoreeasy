@@ -153,240 +153,146 @@
       return txt;
     },
 
-    /* ---------- scorer: 1:1 port of fragment 5d ---------- */
+    /* ---------- scorer: Floodlight (SE.ui components) ---------- */
     renderScorer: function (el, match, api) {
+      var ui = SE.ui;
       var snap = match.snapshot, cfg = match.config;
       var st = pointStatus(snap, cfg);
       var wins = setsWon(snap);
       var target = setTarget(snap.setIndex, cfg);
       var stats = statTotals(match);
       var names = [match.teams[0].name, match.teams[1].name];
+      var order = snap.swapped ? [1, 0] : [0, 1];
 
-      // fragment 5d's keyframes (geP serve pulse, geGlow banner glow)
-      var kf = h('style', { html:
-        '@keyframes geP{0%,100%{opacity:1}50%{opacity:.35}}' +
-        '@keyframes geGlow{0%,100%{box-shadow:0 8px 16px -10px rgba(18,147,106,.7)}50%{box-shadow:0 8px 22px -8px rgba(18,147,106,.95)}}'
-      });
-
-      function iconBtn(content, onclick, size) {
-        return h('div', {
-          style: 'width:32px;height:32px;border-radius:11px;background:#fff;box-shadow:0 1px 2px rgba(20,40,30,.08);display:flex;align-items:center;justify-content:center;font-size:' + (size || 16) + 'px;cursor:pointer',
-          onclick: onclick,
-        }, content);
-      }
-
-      // one big score half — exact styles from the fragment
-      function half(idx) {
+      function half(idx, sideCls) {
         var serving = snap.server === idx;
+        var lead = snap.scores[idx] > snap.scores[1 - idx] ? true : snap.scores[idx] < snap.scores[1 - idx] ? false : null;
         function statChip(txt, onTap) {
           return h('span', {
-            style: 'font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.08em;color:#6b7a72;border:1px solid #e4e9e5;background:#fff;border-radius:999px;padding:2px 7px;cursor:pointer',
+            style: 'font-family:var(--fl-data);font-size:9px;letter-spacing:.08em;color:var(--fl-ink-faint);border:1px solid var(--fl-line-2);border-radius:6px;padding:2px 7px;cursor:pointer',
             onclick: function (e) { e.stopPropagation(); onTap(); },
           }, txt);
         }
         return h('div', {
-          style: 'flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;'
-            + (idx === (snap.swapped ? 1 : 0) ? 'border-right:1px solid rgba(20,32,26,.1);' : '')
-            + (serving ? 'background:linear-gradient(180deg,rgba(18,147,106,.07),rgba(18,147,106,0));' : ''),
+          class: 'fl-side ' + sideCls + (serving ? ' serving' : '') + (lead === true ? ' lead' : lead === false ? ' trail' : ''),
           onclick: function () { api.dispatch('point', { team: idx, name: names[idx] }); },
         },
-          h('span', { style: 'display:inline-flex;align-items:center;gap:6px;font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.14em;color:#6b7a72' },
-            serving ? h('span', { style: 'width:7px;height:7px;border-radius:50%;background:#12936a;animation:geP 1.2s infinite' }) : null,
-            names[idx].toUpperCase()
-          ),
-          h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:84px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums' }, String(snap.scores[idx])),
-          h('span', { style: 'width:44px;height:3px;background:#12936a;border-radius:2px' }),
-          h('span', { style: 'font-size:10px;font-weight:600;color:#9aa8a0' }, serving ? 'serving · tap +1' : 'tap +1'),
-          h('div', { style: 'display:flex;gap:5px;margin-top:4px' },
+          serving ? h('div', { class: 'fl-dot' }) : null,
+          h('div', { class: 'fl-team' }, names[idx]),
+          h('div', { class: 'fl-num' }, String(snap.scores[idx])),
+          h('div', { class: 'fl-cue' }, serving ? 'serving · tap' : 'tap +1'),
+          h('div', { style: 'display:flex;gap:5px;margin-top:7px' },
             statChip('ACE', function () { api.dispatch('point', { team: idx, name: names[idx], kind: 'ace' }); }),
-            statChip('BLOCK', function () { api.dispatch('point', { team: idx, name: names[idx], kind: 'block' }); }),
+            statChip('BLK', function () { api.dispatch('point', { team: idx, name: names[idx], kind: 'block' }); }),
             statChip('ERR', function () { api.dispatch('point', { team: 1 - idx, name: names[1 - idx], kind: 'err', errBy: names[idx] }); })
           )
         );
       }
 
-      function pill(label, onclick) {
-        return h('div', {
-          style: 'flex:1;height:36px;border-radius:12px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#46554d;cursor:pointer;user-select:none',
-          onclick: onclick,
-        }, label);
-      }
+      var chipItems = snap.setHistory.map(function (s, i) { return { label: 'SET ' + (i + 1), value: s.a + '–' + s.b }; });
+      chipItems.push({ label: 'ACES', value: stats.ace[0] + stats.ace[1] });
+      chipItems.push({ label: 'BLK', value: stats.block[0] + stats.block[1] });
+      chipItems.push({ label: 'ERR', value: stats.err[0] + stats.err[1] });
 
-      var order = snap.swapped ? [1, 0] : [0, 1];
-
-      el.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
-        kf,
-        // header: back · title/sub · watch
-        h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 13px 8px' },
-          iconBtn('‹', function () { api.nav('#/home'); }),
-          h('div', { style: 'text-align:center' },
-            h('div', { style: 'font-size:13px;font-weight:700' }, names[0] + ' vs ' + names[1]),
-            h('div', { style: 'font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.08em;color:#6b7a72;margin-top:1px' },
-              'SET ' + (snap.setIndex + 1) + ' · SETS ' + wins[0] + '–' + wins[1] + ' · TO ' + target)
-          ),
-          iconBtn('👁', function () { api.nav('#/watch/' + match.id); }, 13)
-        ),
-        // set/match point banner
-        st ? h('div', { style: 'flex:none;margin:0 13px;background:' + (st.kind === 'match' ? '#0d6b4e' : '#12936a') + ';color:#fff;text-align:center;padding:8px 0;border-radius:12px;font-family:\'DM Mono\',monospace;font-size:11px;letter-spacing:.16em;box-shadow:0 8px 16px -10px rgba(18,147,106,.7);animation:geGlow 1.8s infinite' },
-          (st.kind === 'match' ? 'MATCH POINT' : 'SET POINT') + ' · ' + names[st.leaderIdx].toUpperCase()
-        ) : null,
-        // the two giant tap halves
-        h('div', { style: 'flex:1;min-height:0;display:flex;border-bottom:1px solid rgba(20,32,26,.1);margin-top:' + (st ? '8px' : '0') },
-          half(order[0]), half(order[1])
-        ),
-        // set history + stat totals row
-        h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 14px 0;font-family:\'DM Mono\',monospace;font-size:10px;color:#9aa8a0;flex-wrap:wrap' },
-          snap.setHistory.map(function (s, i) {
-            return h('span', null, 'SET ' + (i + 1) + ' ', h('span', { style: 'color:#14201a' }, s.a + '–' + s.b));
-          }),
-          snap.setHistory.length ? h('span', { style: 'color:#dfe7e1' }, '|') : null,
-          h('span', null, 'ACES ' + (stats.ace[0] + stats.ace[1])),
-          h('span', null, 'BLOCKS ', h('span', { style: 'color:#12936a' }, String(stats.block[0] + stats.block[1]))),
-          h('span', null, 'ERR ' + (stats.err[0] + stats.err[1]))
-        ),
-        // action pills: Timeout · Sides · Rotate · Libero
-        h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
-          pill('Timeout', function () { api.dispatch('timeout'); }),
-          pill('⇄ Sides', function () { api.dispatch('swapSides'); }),
-          pill('Rotate', function () { api.dispatch('rotate'); }),
-          pill('Libero', function () { api.dispatch('libero'); })
-        ),
-        // undo + end set
-        h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
-          h('div', { style: 'width:64px;height:44px;border-radius:14px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:16px;color:#46554d;cursor:pointer', onclick: function () { api.undo(); } }, '↩'),
-          h('div', { style: 'flex:1;height:44px;border-radius:14px;background:#12936a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 10px 18px -10px rgba(18,147,106,.7);cursor:pointer', onclick: function () { api.dispatch('endSet', { names: names }); } }, 'End set ✓')
-        ),
-        // footer: set history link · share live
-        h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:space-between;padding:7px 15px calc(10px + env(safe-area-inset-bottom));font-size:11px;font-weight:700;color:#12936a' },
-          h('span', { style: 'cursor:pointer', onclick: function () { api.nav('#/watch/' + match.id); } }, 'Set history ›'),
-          h('span', { style: 'color:#6b7a72;font-weight:600;cursor:pointer', onclick: function () { api.nav('#/watch/' + match.id); } },
-            '👁 ' + (3 + match.events.length % 9) + ' · Share live ', h('span', { style: 'color:#12936a' }, '↗'))
-        )
+      el.appendChild(ui.screen(
+        ui.header({
+          title: names[0] + ' vs ' + names[1],
+          sub: 'SET ' + (snap.setIndex + 1) + ' · SETS ' + wins[0] + '–' + wins[1] + ' · TO ' + target,
+          onBack: function () { api.nav('#/home'); },
+          right: ui.iconBtn('👁', function () { api.nav('#/watch/' + match.id); }),
+        }),
+        st ? ui.banner((st.kind === 'match' ? 'Match Point' : 'Set Point') + ' · ' + names[st.leaderIdx]) : null,
+        ui.board(half(order[0], 'l'), half(order[1], 'r')),
+        ui.chips(chipItems),
+        ui.actions([
+          { label: 'Time', onTap: function () { api.dispatch('timeout'); } },
+          { label: 'Sides', onTap: function () { api.dispatch('swapSides'); } },
+          { label: 'Rotate', onTap: function () { api.dispatch('rotate'); } },
+          { label: 'Libero', onTap: function () { api.dispatch('libero'); } },
+        ]),
+        ui.footer({ onUndo: function () { api.undo(); }, primaryLabel: 'End Set', onPrimary: function () { api.dispatch('endSet', { names: names }); } }),
+        ui.meta({ left: 'Set history', leftTap: function () { api.nav('#/watch/' + match.id); }, viewers: 3 + match.events.length % 9, onShare: function () { api.nav('#/watch/' + match.id); } })
       ));
     },
 
-    /* ---------- spectator: 1:1 port of fragment 6d ---------- */
+    /* ---------- spectator: Floodlight ---------- */
     renderSpectator: function (el, match) {
+      var ui = SE.ui;
       var snap = match.snapshot, cfg = match.config;
       var st = pointStatus(snap, cfg);
       var activity = currentSetActivity(match);
       var names = [match.teams[0].name, match.teams[1].name];
       var live = match.status === 'live';
 
-      // fragment 6d's keyframes (geP live-dot pulse, geGlow banner glow)
-      var kf = h('style', { html:
-        '@keyframes geP{0%,100%{opacity:1}50%{opacity:.35}}' +
-        '@keyframes geGlow{0%,100%{box-shadow:0 8px 16px -10px rgba(18,147,106,.7)}50%{box-shadow:0 8px 22px -8px rgba(18,147,106,.95)}}'
-      });
-
-      // 32px white icon button; decorative (no href) unless it navigates somewhere real
-      function iconBtn(content, href, size) {
-        var style = 'width:32px;height:32px;border-radius:11px;background:#fff;box-shadow:0 1px 2px rgba(20,40,30,.08);display:flex;align-items:center;justify-content:center;font-size:' + (size || 16) + 'px;text-decoration:none;color:#14201a';
-        return href ? h('a', { href: href, style: style }, content) : h('div', { style: style }, content);
-      }
-
-      // biggest scoring run still standing in the set in progress
       var biggestIdx = -1, biggestCount = 0;
       activity.runs.forEach(function (r, i) { if (r.count > biggestCount) { biggestCount = r.count; biggestIdx = i; } });
 
-      // bold the scoring-kind keyword in a feed line, e.g. "Hawks ace +1" -> "Hawks **ace** +1"
       function moment(f, dim) {
         var m = /(ace|block|error)/i.exec(f.text);
         var body = m
-          ? [f.text.slice(0, m.index), h('b', { style: 'color:#12936a' }, m[0]), f.text.slice(m.index + m[0].length)]
+          ? [f.text.slice(0, m.index), h('b', { style: 'color:var(--fl-amber)' }, m[0]), f.text.slice(m.index + m[0].length)]
           : f.text;
-        return h('div', { style: 'background:#fff;border-radius:13px;padding:9px 12px;box-shadow:0 1px 3px rgba(20,40,30,.06);display:flex;gap:9px;align-items:center' + (dim ? ';opacity:.65' : '') },
-          h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:9px;color:#9aa8a0;width:30px;flex:none' }, f.score),
-          h('span', { style: 'font-size:12px' }, body)
+        return h('div', { class: 'fl-card', style: 'padding:9px 12px;display:flex;gap:9px;align-items:center' + (dim ? ';opacity:.6' : '') },
+          h('span', { style: 'font-family:var(--fl-data);font-size:9px;color:var(--fl-ink-faint);width:32px;flex:none' }, f.score),
+          h('span', { style: 'font-size:12px;color:var(--fl-ink)' }, body)
+        );
+      }
+
+      function scoreCell(idx, alignRight) {
+        var serving = snap.server === idx;
+        return h('div', { style: alignRight ? 'text-align:right' : '' },
+          h('div', { class: 'fl-microlabel', style: 'color:var(--fl-ink-dim)' + (serving ? ';color:var(--fl-amber)' : '') }, names[idx].toUpperCase()),
+          h('div', { style: 'font-family:var(--fl-num);font-size:44px;line-height:.9;font-weight:600;color:' + (serving ? 'var(--fl-amber)' : 'var(--fl-ink)') }, String(snap.scores[idx]))
         );
       }
 
       var moments = activity.feed.slice(-4).reverse();
-      // decorative live-ish counters, derived from real match activity (not random, stays stable across re-renders)
       var viewers = 3 + match.events.length % 14;
-      var fires = 5 + match.events.length % 12;
-      var claps = 2 + match.events.length % 9;
 
-      el.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
-        kf,
-        // header: back · title + LIVE/FINAL · share
-        h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 13px 8px' },
-          iconBtn('‹', '#/home'),
-          h('div', { style: 'display:flex;align-items:center;gap:7px' },
-            h('span', { style: 'font-size:13px;font-weight:700' }, names[0] + ' vs ' + names[1]),
-            live
-              ? h('span', { style: 'display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:#d64f43' },
-                  h('span', { style: 'width:5px;height:5px;border-radius:50%;background:#d64f43;animation:geP 1.4s infinite' }), 'LIVE')
-              : h('span', { style: 'font-size:9px;font-weight:700;color:#9aa8a0' }, 'FINAL')
-          ),
-          iconBtn('↗', null, 13)
-        ),
-        // Live / Scorecard / Graphs segmented control (decorative — only Live view exists)
-        h('div', { style: 'flex:none;display:flex;background:#e7ece8;border-radius:12px;padding:2px;margin:0 13px' },
-          h('span', { style: 'flex:1;text-align:center;padding:6px 0;border-radius:10px;background:#fff;font-size:11.5px;font-weight:700;box-shadow:0 1px 2px rgba(20,40,30,.08)' }, 'Live'),
-          h('span', { style: 'flex:1;text-align:center;padding:6px 0;font-size:11.5px;font-weight:600;color:#9aa8a0' }, 'Scorecard'),
-          h('span', { style: 'flex:1;text-align:center;padding:6px 0;font-size:11.5px;font-weight:600;color:#9aa8a0' }, 'Graphs')
-        ),
-        h('div', { style: 'flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 13px 0;gap:8px;overflow:auto' },
-          // dark scoreboard card
-          h('div', { style: 'background:#14201a;color:#fff;border-radius:18px;padding:12px 14px' },
+      el.appendChild(ui.screen(
+        ui.header({
+          title: names[0] + ' vs ' + names[1],
+          sub: live ? 'LIVE · SET ' + (snap.setIndex + 1) : 'FINAL',
+          onBack: function () { SE.nav('#/home'); },
+          right: ui.iconBtn('↗', function () {}),
+        }),
+        h('div', { class: 'fl-scroll', style: 'display:flex;flex-direction:column;gap:12px;padding:8px 16px 16px' },
+          // dark scoreboard
+          h('div', { class: 'fl-scoreboard' },
             h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-              h('div', null,
-                h('div', { style: 'font-size:10px;color:rgba(255,255,255,.6);font-weight:600' },
-                  names[0].toUpperCase(), snap.server === 0 ? h('span', { style: 'display:inline-block;width:5px;height:5px;border-radius:50%;background:#3fd598;margin-left:3px' }) : null),
-                h('div', { style: 'font-family:\'DM Mono\',monospace;font-size:28px;font-weight:500;color:' + (snap.server === 0 ? '#3fd598' : '#fff') }, String(snap.scores[0]))
-              ),
+              scoreCell(0),
               h('div', { style: 'text-align:center' },
-                h('div', { style: 'font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.5)' }, 'SET ' + (snap.setIndex + 1)),
-                h('div', { style: 'font-family:\'DM Mono\',monospace;font-size:9px;color:rgba(255,255,255,.5);margin-top:3px' },
-                  snap.setHistory.length ? snap.setHistory.map(function (s) { return s.a + '·' + s.b; }).join(' | ') : '—')
+                h('div', { class: 'fl-microlabel' }, 'SET ' + (snap.setIndex + 1)),
+                h('div', { style: 'font-family:var(--fl-data);font-size:9px;color:var(--fl-ink-faint);margin-top:4px' },
+                  snap.setHistory.length ? snap.setHistory.map(function (s) { return s.a + '·' + s.b; }).join('  ') : '—')
               ),
-              h('div', { style: 'text-align:right' },
-                h('div', { style: 'font-size:10px;color:rgba(255,255,255,.6);font-weight:600' },
-                  names[1].toUpperCase(), snap.server === 1 ? h('span', { style: 'display:inline-block;width:5px;height:5px;border-radius:50%;background:#3fd598;margin-left:3px' }) : null),
-                h('div', { style: 'font-family:\'DM Mono\',monospace;font-size:28px;font-weight:500;color:' + (snap.server === 1 ? '#3fd598' : '#fff') }, String(snap.scores[1]))
-              )
+              scoreCell(1, true)
             ),
-            st ? h('div', { style: 'margin-top:7px;text-align:center;font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.16em;color:#3fd598;animation:geGlow 1.6s infinite' },
+            st ? h('div', { style: 'margin-top:9px;text-align:center;font-family:var(--fl-data);font-size:10px;letter-spacing:.18em;color:var(--fl-amber);text-shadow:0 0 16px rgba(255,195,0,.5)' },
               (st.kind === 'match' ? 'MATCH POINT' : 'SET POINT') + ' · ' + names[st.leaderIdx].toUpperCase()
             ) : null
           ),
           // scoring runs
           h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-            h('span', { style: 'font-size:11px;font-weight:700;letter-spacing:.06em;color:#9aa8a0;text-transform:uppercase' }, 'Scoring runs · set ' + (snap.setIndex + 1)),
-            biggestIdx >= 0 ? h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:10px;color:#12936a' }, 'BIGGEST: ' + biggestCount + '–0') : null
+            ui.microlabel('Scoring runs · set ' + (snap.setIndex + 1)),
+            biggestIdx >= 0 ? h('span', { style: 'font-family:var(--fl-data);font-size:10px;color:var(--fl-amber)' }, 'BIGGEST ' + biggestCount + '–0') : null
           ),
           activity.runs.length
             ? h('div', { style: 'display:flex;gap:3px;align-items:center' },
-                activity.runs.map(function (r, i) {
-                  var isBiggest = i === biggestIdx, isLast = i === activity.runs.length - 1;
-                  return h('span', {
-                    style: 'height:15px;border-radius:4px;flex:' + r.count + ';background:' + (r.team === 0 ? '#12936a' : '#b8862e')
-                      + (isBiggest ? ';color:#fff;font-family:\'DM Mono\',monospace;font-size:9px;display:inline-flex;align-items:center;justify-content:center' : '')
-                      + (isLast ? ';animation:geP 1.4s infinite' : ''),
-                  }, isBiggest ? (r.count + '–0') : null);
+                activity.runs.map(function (r) {
+                  return h('span', { style: 'height:15px;border-radius:4px;flex:' + r.count + ';background:' + (r.team === 0 ? 'var(--fl-amber)' : 'var(--fl-lose)') });
                 })
               )
-            : h('div', { style: 'font-size:12px;color:#9aa8a0' }, 'No points yet this set'),
-          // key moments (real event feed, most recent first, older entries dimmed)
-          h('div', { style: 'display:flex;align-items:center;justify-content:space-between' },
-            h('span', { style: 'font-size:11px;font-weight:700;letter-spacing:.06em;color:#9aa8a0;text-transform:uppercase' }, 'Key moments'),
-            h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:10px;color:#12936a' })
-          ),
+            : h('div', { style: 'font-size:12px;color:var(--fl-ink-faint)' }, 'No points yet this set'),
+          // key moments
+          ui.microlabel('Key moments'),
           moments.length ? moments.map(function (f, i) { return moment(f, i > 0); })
-            : h('div', { style: 'font-size:12px;color:#9aa8a0' }, 'No key moments yet'),
-          h('div', { style: 'flex:1' }),
-          match.status === 'done' && match.result ? h('div', { style: 'background:#12936a;color:#fff;border-radius:13px;padding:10px 12px;text-align:center;font-size:12px;font-weight:700' }, match.result.summary) : null
+            : h('div', { style: 'font-size:12px;color:var(--fl-ink-faint)' }, 'No key moments yet'),
+          match.status === 'done' && match.result
+            ? h('div', { style: 'background:var(--fl-amber);color:var(--fl-amber-ink);border-radius:12px;padding:11px 12px;text-align:center;font-weight:600;letter-spacing:.06em' }, match.result.summary)
+            : null
         ),
-        // footer: viewers · reactions · follow
-        h('div', { style: 'flex:none;display:flex;align-items:center;gap:8px;padding:8px 13px calc(14px + env(safe-area-inset-bottom))' },
-          h('span', { style: 'font-size:10px;color:#9aa8a0;font-weight:600;flex:none' }, '👁 ' + viewers),
-          h('div', { style: 'flex:1;display:flex;gap:6px' },
-            h('span', { style: 'background:#fff;border-radius:99px;padding:6px 12px;font-size:12px;box-shadow:0 1px 3px rgba(20,40,30,.08)' }, '🔥 ', h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:10px;color:#6b7a72' }, String(fires))),
-            h('span', { style: 'background:#fff;border-radius:99px;padding:6px 12px;font-size:12px;box-shadow:0 1px 3px rgba(20,40,30,.08)' }, '👏 ', h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:10px;color:#6b7a72' }, String(claps)))
-          ),
-          h('span', { style: 'background:#12936a;color:#fff;border-radius:99px;padding:6px 14px;font-size:11px;font-weight:700;flex:none' }, 'Following ✓')
-        )
+        ui.meta({ viewers: viewers, onShare: function () {} })
       ));
     },
   });
