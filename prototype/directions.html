@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy — design directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --gap:34px; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 20% -10%, #22303f 0%, transparent 60%),
+      #14181d;
+    color:#e7ecf1; min-height:100vh; padding:44px 24px 80px;
+  }
+  .head{ max-width:1180px; margin:0 auto 40px; }
+  .head .kicker{ font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.4em; text-transform:uppercase; color:#7d8a97; }
+  .head h1{ font-size:30px; font-weight:600; letter-spacing:-.02em; margin-top:8px; }
+  .head p{ color:#9aa7b2; max-width:640px; margin-top:12px; line-height:1.5; font-size:15px; }
+  .grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
+  @media(max-width:1080px){ .grid{ grid-template-columns:1fr; justify-items:center; } }
+  .col{ display:flex; flex-direction:column; gap:16px; align-items:center; }
+  .meta{ text-align:center; max-width:340px; }
+  .meta .num{ font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.3em; color:#6f7c88; }
+  .meta .name{ font-size:20px; font-weight:600; margin-top:4px; letter-spacing:-.01em; }
+  .meta .desc{ font-size:13px; color:#93a0ab; margin-top:7px; line-height:1.5; }
+  .phone{ width:340px; height:720px; border-radius:40px; overflow:hidden; position:relative;
+          box-shadow:0 40px 80px -30px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.05); }
+  .scr{ position:absolute; inset:0; display:flex; flex-direction:column; }
+
+  /* ============================================================
+     A · FLOODLIGHT  — stadium jumbotron. dark, amber, condensed.
+     ============================================================ */
+  .A{ background:radial-gradient(120% 80% at 50% -20%, #10202b 0%, #070b0f 70%); color:#f2f5f8;
+      font-family:'Oswald',sans-serif; padding:0; }
+  .A .top{ display:flex; align-items:center; justify-content:space-between; padding:26px 22px 12px; }
+  .A .glyph{ width:34px;height:34px;border:1px solid #2a3b49;border-radius:9px;display:grid;place-items:center;color:#9fb3c4;font-size:20px; }
+  .A .title{ text-align:center; }
+  .A .title b{ font-weight:600; font-size:16px; letter-spacing:.08em; text-transform:uppercase; }
+  .A .title span{ display:block; font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.24em; color:#5f7285; margin-top:3px; }
+  .A .sp{ margin:6px 22px 0; text-align:center; font-size:13px; font-weight:500; letter-spacing:.4em;
+          text-transform:uppercase; color:#ffc300; padding:9px 0; border-top:1px solid #ffc30022; border-bottom:1px solid #ffc30022;
+          text-shadow:0 0 22px #ffc30066; }
+  .A .board{ flex:1; display:flex; }
+  .A .side{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; }
+  .A .side.l{ border-right:1px solid #ffffff10; }
+  .A .side .team{ font-size:15px; font-weight:500; letter-spacing:.26em; text-transform:uppercase; color:#8ea1b2; }
+  .A .side .serve{ color:#ffc300; }
+  .A .side .num{ font-family:'Teko',sans-serif; font-weight:600; font-size:160px; line-height:.8; font-variant-numeric:tabular-nums; }
+  .A .side.l .num{ color:#fff; text-shadow:0 0 40px #ffffff30; }
+  .A .side.r .num{ color:#42505d; }
+  .A .side .dot{ width:8px;height:8px;border-radius:50%;background:#ffc300;box-shadow:0 0 14px #ffc300;margin-bottom:6px; }
+  .A .sets{ display:flex; justify-content:center; gap:20px; padding:14px 0 4px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:#5f7285; }
+  .A .sets b{ color:#c9d6e1; font-weight:500; }
+  .A .acts{ display:flex; gap:8px; padding:10px 18px 0; }
+  .A .acts .btn{ flex:1; text-align:center; border:1px solid #2a3b49; border-radius:10px; padding:11px 0; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#9fb3c4; }
+  .A .foot{ display:flex; gap:8px; padding:10px 18px 22px; }
+  .A .foot .u{ width:52px; border:1px solid #2a3b49; border-radius:12px; display:grid; place-items:center; color:#9fb3c4; font-size:18px; }
+  .A .foot .end{ flex:1; text-align:center; padding:14px 0; border-radius:12px; background:#ffc300; color:#0a0f14;
+                 font-weight:600; font-size:14px; letter-spacing:.14em; text-transform:uppercase; box-shadow:0 12px 30px -10px #ffc30070; }
+
+  /* ============================================================
+     B · LEDGER — cricket scorebook / red-margin register. paper, ink, serif.
+     ============================================================ */
+  .B{ background:#efe7d4; color:#23252b; font-family:'Spectral',serif;
+      background-image:repeating-linear-gradient(#efe7d4 0 30px, #e3dac4 30px 31px); }
+  .B::before{ content:''; position:absolute; top:0; bottom:0; left:44px; width:1.5px; background:#bf3b32; opacity:.55; }
+  .B .top{ padding:24px 22px 6px 60px; display:flex; align-items:baseline; justify-content:space-between; }
+  .B .brand{ font-family:'Playfair Display',serif; font-weight:900; font-size:21px; letter-spacing:-.01em; }
+  .B .brand i{ color:#bf3b32; font-style:normal; }
+  .B .folio{ font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; color:#8a7f68; }
+  .B .match{ padding:2px 22px 0 60px; }
+  .B .match h2{ font-family:'Playfair Display',serif; font-weight:700; font-size:26px; line-height:1.1; }
+  .B .match .sub{ font-size:13px; font-style:italic; color:#75705f; margin-top:2px; }
+  .B .rule{ margin:12px 22px 6px 60px; border-bottom:2px solid #23252b; }
+  .B .sp{ margin:4px 22px 0 60px; font-style:italic; font-size:15px; color:#bf3b32; letter-spacing:.02em; }
+  .B .sp b{ font-style:normal; font-weight:700; letter-spacing:.06em; text-transform:uppercase; font-size:13px; }
+  .B .board{ flex:1; padding:6px 22px 0 60px; }
+  .B .line{ display:flex; align-items:flex-end; justify-content:space-between; padding:14px 0 8px; border-bottom:1px solid #cabfa4; }
+  .B .line .team{ font-family:'Playfair Display',serif; font-size:24px; font-weight:500; }
+  .B .line .team .s{ display:block; font-family:'Spectral',serif; font-style:italic; font-size:12px; color:#857a63; margin-top:2px; }
+  .B .line .num{ font-family:'Playfair Display',serif; font-size:62px; font-weight:900; line-height:.8; font-variant-numeric:tabular-nums; }
+  .B .line.win .num{ color:#bf3b32; }
+  .B .hist{ padding:12px 0 0; font-family:'DM Mono',monospace; font-size:11px; color:#75705f; letter-spacing:.04em; display:flex; flex-direction:column; gap:5px; }
+  .B .hist .h{ display:flex; justify-content:space-between; }
+  .B .hist .h b{ color:#23252b; font-weight:500; }
+  .B .foot{ margin-top:auto; padding:14px 22px 24px 60px; display:flex; align-items:center; gap:14px; }
+  .B .foot .u{ font-size:14px; font-style:italic; text-decoration:underline; text-underline-offset:3px; color:#5b5647; }
+  .B .foot .end{ margin-left:auto; font-family:'Playfair Display',serif; font-weight:700; font-size:15px; color:#efe7d4; background:#23252b; padding:11px 20px; letter-spacing:.02em; }
+  .B .foot .end::after{ content:' ✓'; color:#e0b84a; }
+
+  /* ============================================================
+     C · COURT — bold, youthful, color-blocked. thick frames, flat ink.
+     ============================================================ */
+  .C{ background:#f7f4ec; color:#141414; font-family:'Archivo',sans-serif; padding:0; }
+  .C .top{ display:flex; align-items:center; gap:12px; padding:20px 18px 14px; }
+  .C .glyph{ width:36px;height:36px;border:2.5px solid #141414;border-radius:0;display:grid;place-items:center;font-size:18px;font-weight:900;background:#fff; }
+  .C .title b{ font-weight:900; font-size:17px; letter-spacing:-.02em; text-transform:uppercase; display:block; }
+  .C .title span{ font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:#6b6b6b; }
+  .C .sp{ margin:0 18px; background:#141414; color:#f7f4ec; text-align:center; font-weight:900; font-size:13px;
+          letter-spacing:.18em; text-transform:uppercase; padding:10px 0; }
+  .C .board{ flex:1; display:flex; flex-direction:column; padding:14px 18px; gap:12px; }
+  .C .card{ flex:1; border:2.5px solid #141414; position:relative; display:flex; flex-direction:column; justify-content:center; padding:20px 22px; }
+  .C .card.h{ background:#e4572e; color:#fff; box-shadow:7px 7px 0 #141414; }
+  .C .card.w{ background:#fff; color:#141414; box-shadow:7px 7px 0 #141414; }
+  .C .card .team{ font-weight:900; font-size:20px; letter-spacing:-.01em; text-transform:uppercase; display:flex; align-items:center; gap:9px; }
+  .C .card .team .tag{ font-family:'DM Mono',monospace; font-size:10px; font-weight:400; letter-spacing:.08em; padding:2px 7px; border:1.5px solid currentColor; }
+  .C .card .num{ font-weight:900; font-size:108px; line-height:.82; letter-spacing:-.04em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .C .card .cue{ font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.06em; position:absolute; right:20px; bottom:18px; opacity:.7; }
+  .C .sets{ display:flex; gap:8px; padding:0 18px; }
+  .C .sets .s{ flex:1; border:2px solid #141414; padding:7px 0; text-align:center; font-family:'DM Mono',monospace; font-size:11px; font-weight:500; background:#fff; }
+  .C .foot{ display:flex; gap:10px; padding:14px 18px 22px; }
+  .C .foot .u{ width:54px; border:2.5px solid #141414; background:#fff; display:grid; place-items:center; font-size:18px; }
+  .C .foot .end{ flex:1; text-align:center; padding:15px 0; background:#2d3a8c; color:#fff; font-weight:900; font-size:14px;
+                 letter-spacing:.12em; text-transform:uppercase; border:2.5px solid #141414; box-shadow:5px 5px 0 #141414; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="kicker">ScoreEasy · design directions</div>
+  <h1>Three ways out of the AI look</h1>
+  <p>Same screen — volleyball scorer, Hawks vs Wolves at set point — in three original design languages. None lean on the soft-green rounded-card template. Pick one (or parts of each) and I'll build the whole app in it.</p>
+</div>
+
+<div class="grid">
+
+  <!-- A -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION A</div>
+      <div class="name">Floodlight</div>
+      <div class="desc">A stadium jumbotron in your hand. Near-black, one electric amber, monumental condensed numerals (Teko). Reads across a noisy court from arm's length — built for the person actually scoring.</div>
+    </div>
+    <div class="phone"><div class="scr A">
+      <div class="top">
+        <div class="glyph">‹</div>
+        <div class="title"><b>Hawks · Wolves</b><span>SET 3 — SETS 1·1 — TO 25</span></div>
+        <div class="glyph">≣</div>
+      </div>
+      <div class="sp">Set Point — Hawks</div>
+      <div class="board">
+        <div class="side l">
+          <div class="dot"></div>
+          <div class="team serve">Hawks</div>
+          <div class="num">24</div>
+        </div>
+        <div class="side r">
+          <div class="team">Wolves</div>
+          <div class="num">23</div>
+        </div>
+      </div>
+      <div class="sets"><span>SET 1 <b>25·19</b></span><span>SET 2 <b>21·25</b></span><span>ACES <b>04</b></span></div>
+      <div class="acts"><div class="btn">Time</div><div class="btn">Sides</div><div class="btn">Rotate</div></div>
+      <div class="foot"><div class="u">↩</div><div class="end">End Set</div></div>
+    </div></div>
+  </div>
+
+  <!-- B -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION B</div>
+      <div class="name">Ledger</div>
+      <div class="desc">The cricket scorebook every Indian school already owns — cream paper, the red margin rule of a ruled register, Playfair ink serifs. Warm, credible, unmistakably ours. A record, not an app screen.</div>
+    </div>
+    <div class="phone"><div class="scr B">
+      <div class="top"><div class="brand">Score<i>Easy</i></div><div class="folio">FOL. 03 · SET III</div></div>
+      <div class="match"><h2>Hawks <i>v</i> Wolves</h2><div class="sub">Best of five · playing to 25 · sets 1–1</div></div>
+      <div class="rule"></div>
+      <div class="sp"><b>Set Point</b> — Hawks to serve</div>
+      <div class="board">
+        <div class="line win">
+          <div class="team">Hawks<span class="s">serving · to win the set</span></div>
+          <div class="num">24</div>
+        </div>
+        <div class="line">
+          <div class="team">Wolves<span class="s">receiving</span></div>
+          <div class="num">23</div>
+        </div>
+        <div class="hist">
+          <div class="h"><span>First set</span><b>25 – 19</b></div>
+          <div class="h"><span>Second set</span><b>21 – 25</b></div>
+          <div class="h"><span>Aces · blocks · errors</span><b>4 · 6 · 3</b></div>
+        </div>
+      </div>
+      <div class="foot"><div class="u">undo last</div><div class="end">Close set</div></div>
+    </div></div>
+  </div>
+
+  <!-- C -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION C</div>
+      <div class="name">Court</div>
+      <div class="desc">Loud and young. Each team owns a saturated colour block, thick black frames, hard offset shadows, chunky Archivo. Feels like a sticker on a college notice board — energetic, but disciplined, not chaotic.</div>
+    </div>
+    <div class="phone"><div class="scr C">
+      <div class="top">
+        <div class="glyph">‹</div>
+        <div class="title"><b>Hawks vs Wolves</b><span>SET 3 · SETS 1–1 · TO 25</span></div>
+      </div>
+      <div class="sp">▲ Set Point — Hawks</div>
+      <div class="board">
+        <div class="card h">
+          <div class="team">Hawks <span class="tag">SERVING</span></div>
+          <div class="num">24</div>
+          <div class="cue">tap to score →</div>
+        </div>
+        <div class="card w">
+          <div class="team">Wolves</div>
+          <div class="num">23</div>
+          <div class="cue">tap to score →</div>
+        </div>
+      </div>
+      <div class="sets"><div class="s">S1 · 25–19</div><div class="s">S2 · 21–25</div><div class="s">ACE 4</div></div>
+      <div class="foot"><div class="u">↩</div><div class="end">End Set ✓</div></div>
+    </div></div>
+  </div>
+
+</div>
+</body>
+</html>
