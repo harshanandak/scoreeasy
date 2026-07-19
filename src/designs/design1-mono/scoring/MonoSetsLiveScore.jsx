@@ -13,6 +13,7 @@ import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -25,6 +26,7 @@ const triggerHaptic = (pattern) => {
 
 export default function MonoSetsLiveScore() {
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
@@ -492,9 +494,16 @@ export default function MonoSetsLiveScore() {
       saveTournamentToConvex(updatedTournament);
       live.finalize();
       // Reference wiring (kernel 42f06561): a completed match lands on the
-      // FULL-TIME result screen. Replace history so back returns to the bracket,
-      // never into the frozen, completed scorer.
-      navigate(`/${sport}/tournament/${id}/match/${matchId}/result`, { replace: true });
+      // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
+      // guard entry through the app-owned seam so Back from Result returns to the
+      // bracket, never the frozen completed scorer (PR #128). A plain replace only
+      // drops the guard entry, orphaning the scorer entry underneath.
+      const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
+      if (completeProtectedScoring) {
+        completeProtectedScoring(resultPath);
+      } else {
+        navigate(resultPath, { replace: true });
+      }
       return;
     }
 

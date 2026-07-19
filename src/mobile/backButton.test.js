@@ -23,6 +23,7 @@ import {
   getProtectedScoringBackFallback,
   installNativeBackButtonGuard,
   isProtectedScoringRoute,
+  resolveProtectedScoringCompletion,
 } from './backButton';
 
 beforeEach(() => {
@@ -108,6 +109,55 @@ describe('getProtectedScoringBackFallback', () => {
     expect(getProtectedScoringBackFallback('/history')).toBeNull();
     expect(getProtectedScoringBackFallback('/profile/quick')).toBeNull();
     expect(getProtectedScoringBackFallback('/madeupsport/tournament/cup/match/game/score')).toBeNull();
+  });
+});
+
+describe('resolveProtectedScoringCompletion', () => {
+  // Stack while actively scoring a tournament match the user opened from the
+  // tournament dashboard (idx P): [dashboard@P, scorer@P+1, guard@P+1]. The guard
+  // entry keeps the scorer idx (pushState spreads history.state), and the guard
+  // effect records baseHistoryIndex = scorerIdx - 1 = P (the pre-scorer route).
+  it('unwinds BOTH the guard entry and the scorer entry back to the pre-scorer route', () => {
+    const P = 4;
+    const result = resolveProtectedScoringCompletion({
+      currentHistoryIndex: P + 1, // guard entry, keeps the scorer idx
+      baseHistoryIndex: P,        // the dashboard the user came from
+      guardDepth: 1,
+    });
+    // Back-from-Result target: backDelta counts BROWSER positions to pop — the
+    // scorer entry (1) plus every guard entry (guardDepth) — so history.go(-2)
+    // lands on the dashboard and Back from Result never hits the scorer.
+    expect(result.shouldUnwind).toBe(true);
+    expect(result.backDelta).toBe(2);
+    expect(result.backDelta).toBe(1 + 1); // 1 scorer position + 1 guard position
+  });
+
+  it('accounts for stacked guard entries when the user bounced on Back mid-game', () => {
+    const result = resolveProtectedScoringCompletion({
+      currentHistoryIndex: 6,
+      baseHistoryIndex: 5,
+      guardDepth: 3, // three gameProtection entries pushed
+    });
+    expect(result.shouldUnwind).toBe(true);
+    expect(result.backDelta).toBe(4); // 1 (scorer) + 3 (guards)
+  });
+
+  it('does not unwind a deep-linked scorer with no prior route (replace instead)', () => {
+    const result = resolveProtectedScoringCompletion({
+      currentHistoryIndex: 0,
+      baseHistoryIndex: -1, // NO_PRIOR_ROUTE_INDEX sentinel
+      guardDepth: 1,
+    });
+    expect(result.shouldUnwind).toBe(false);
+    expect(result.backDelta).toBe(0);
+  });
+
+  it('does not unwind when history indices are unavailable', () => {
+    expect(resolveProtectedScoringCompletion({
+      currentHistoryIndex: undefined,
+      baseHistoryIndex: undefined,
+      guardDepth: 1,
+    })).toEqual({ shouldUnwind: false, backDelta: 0 });
   });
 });
 

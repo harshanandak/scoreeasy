@@ -20,7 +20,9 @@ import {
   getProtectedScoringBackFallback,
   installNativeBackButtonGuard,
   isProtectedScoringRoute,
+  resolveProtectedScoringCompletion,
 } from '../../mobile/backButton';
+import { ScoringCompletionContext } from './scoring/scoringCompletionContext';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
@@ -1706,6 +1708,43 @@ export default function Design1Mono() {
     };
   }, [location.pathname, location.search, navigate, requestScoringExit]);
 
+  // Finish a protected scorer: land on the FULL-TIME result screen while unwinding
+  // the scorer entry AND its protection guard entries, so Back from Result returns
+  // to the pre-scorer route rather than the frozen, completed scorer (PR #128).
+  // Reuses the guard's history bookkeeping + one-shot pop allowance, so no exit
+  // dialog fires while we pop back past the guard entries.
+  const completeProtectedScoring = useCallback((resultPath) => {
+    const { shouldUnwind, backDelta } = resolveProtectedScoringCompletion({
+      currentHistoryIndex: globalThis.history.state?.idx,
+      baseHistoryIndex: protectedRouteHistoryIndexRef.current,
+      guardDepth: protectedGuardDepthRef.current,
+      noPriorRouteIndex: NO_PRIOR_ROUTE_INDEX,
+    });
+
+    if (!shouldUnwind) {
+      // No recoverable prior route (deep link / no history idx) — best effort.
+      navigate(resultPath, { replace: true });
+      return;
+    }
+
+    allowNextProtectedPopRef.current = true;
+    let settled = false;
+    let fallbackTimeoutId = null;
+    const finish = (useReplace) => {
+      if (settled) return;
+      settled = true;
+      if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
+      globalThis.removeEventListener('popstate', onUnwound);
+      // On a successful unwind we sit on the pre-scorer route, so push Result on
+      // top (Back -> pre-scorer route). If the pop never landed, replace instead.
+      navigate(resultPath, useReplace ? { replace: true } : undefined);
+    };
+    const onUnwound = () => finish(false);
+    globalThis.addEventListener('popstate', onUnwound, { once: true });
+    globalThis.history.go(-backDelta);
+    fallbackTimeoutId = globalThis.setTimeout(() => finish(true), 300);
+  }, [navigate]);
+
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -1714,6 +1753,7 @@ export default function Design1Mono() {
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
       <main id="main-content">
+        <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
             <OnboardingGuard>
@@ -1775,6 +1815,7 @@ export default function Design1Mono() {
             </OnboardingGuard>
           </ErrorBoundary>
         </Suspense>
+        </ScoringCompletionContext.Provider>
       </main>
       <AppConfirmDialog
         prompt={exitPrompt}

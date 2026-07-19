@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { ScoringCompletionContext } from './scoringCompletionContext';
 
 // Issue #108 — MonoSetsLiveScore UX fixes. There is no existing render harness
 // for this scorer, so these tests drive the real component to verify:
@@ -271,5 +272,38 @@ describe('MonoSetsLiveScore — issue #108', () => {
     expect(servingTeamFromDom()).toBe('A');
     await scoreFor(left);  // 3-2 (win-by-2: set not won yet) → switch
     expect(servingTeamFromDom()).toBe('B');
+  });
+});
+
+describe('MonoSetsLiveScore — PR #128 completion back-stack', () => {
+  it('finishes a completed match through the app completion seam so Back skips the scorer', async () => {
+    // The active-scoring guard pushes an extra history entry on top of the scorer,
+    // so finishing with a plain replace only drops that guard entry and orphans
+    // the scorer entry — Back from Result then returns to the frozen scorer. The
+    // scorer must instead route completion through the app-owned seam that unwinds
+    // BOTH entries and lands Result on the pre-scorer route.
+    const completeProtectedScoring = vi.fn();
+    h.tournaments = [h.makeTournament({
+      format: { type: 'single', sets: 1, points: 1, scoringModes: ['rally'] },
+    })];
+    render(
+      <ScoringCompletionContext.Provider value={completeProtectedScoring}>
+        <MonoSetsLiveScore />
+      </ScoringCompletionContext.Provider>,
+    );
+    await screen.findByText(/points to win/);
+
+    // Win the single set 2-0 (target 1, win-by-2) to complete the match.
+    const [left] = arenaButtons();
+    fireEvent.click(left);
+    await wait(160);
+    fireEvent.click(left);
+    await screen.findByText(/wins Set 1!/);
+
+    const finishBtn = screen.getByText('Finish').closest('button');
+    await waitFor(() => expect(finishBtn.disabled).toBe(false));
+    fireEvent.click(finishBtn);
+
+    expect(completeProtectedScoring).toHaveBeenCalledWith('/volleyball/tournament/1/match/m1/result');
   });
 });
