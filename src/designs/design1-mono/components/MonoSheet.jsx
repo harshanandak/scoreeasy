@@ -71,7 +71,10 @@ export default function MonoSheet({
     const [firstControl] = getTrappableControls(sheetRef.current);
     (firstControl || sheetRef.current)?.focus?.();
 
-    const handleKeyDown = (event) => {
+    // Capture phase (runs before the event reaches any control): own Escape and
+    // Tab. These are the sheet's, not the content's — close and focus-trap — so
+    // we consume them here and stop them reaching the scorer behind the sheet.
+    const handleKeyDownCapture = (event) => {
       if (!isTopmostModalSurface(sheetRef.current)) return;
 
       if (event.key === 'Escape') {
@@ -84,25 +87,30 @@ export default function MonoSheet({
       if (event.key === 'Tab') {
         handleModalTabTrap(event, sheetRef.current);
         event.stopPropagation();
-        return;
       }
+      // Every other key is intentionally left to flow through the full
+      // capture -> target -> bubble path so the focused control and React's
+      // delegated onKeyDown handlers inside the sheet still receive it. The
+      // leak to the scorer is closed in the bubble phase below.
+    };
 
-      // Every other key is stopped here in the capture phase so global scorer
-      // hotkeys (q/p/u/w/e, number keys) can't mutate the match behind the open
-      // sheet. stopPropagation does not preventDefault, so controls inside the
-      // sheet still work normally: focused fields still receive typed
-      // characters and Enter/Space still activate the focused control (both are
-      // default actions), and React change events (fired on 'input', not
-      // 'keydown') are unaffected. We must stop even for keys aimed at editable
-      // fields — otherwise they bubble on to the scorer's document listeners
-      // after the field handles them. Scorers listen on keydown only.
+    // Bubble phase on document — which sits between the sheet content and the
+    // window. Scorers listen on window in the bubble phase, so by the time the
+    // event reaches document it has already been delivered to the focused
+    // control and React's handlers; stopping it here blocks the scorer's global
+    // hotkeys (q/p/u/w/e, number keys) without swallowing the sheet's own
+    // keyboard-driven controls. Scorers listen on keydown only.
+    const handleKeyDownBubble = (event) => {
+      if (!isTopmostModalSurface(sheetRef.current)) return;
       event.stopPropagation();
     };
 
-    globalThis.addEventListener('keydown', handleKeyDown, true);
+    globalThis.addEventListener('keydown', handleKeyDownCapture, true);
+    document.addEventListener('keydown', handleKeyDownBubble);
 
     return () => {
-      globalThis.removeEventListener('keydown', handleKeyDown, true);
+      globalThis.removeEventListener('keydown', handleKeyDownCapture, true);
+      document.removeEventListener('keydown', handleKeyDownBubble);
       releaseBodyScrollLock();
       const trigger = triggerRef.current;
       triggerRef.current = null;

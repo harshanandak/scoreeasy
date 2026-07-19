@@ -305,6 +305,34 @@ describe('MonoSheet bottom-sheet primitive', () => {
     globalThis.removeEventListener('keydown', hotkeyListener);
   });
 
+  it('lets keyboard-driven controls inside the sheet receive keys while still blocking scorer hotkeys', () => {
+    const controlKeyDown = vi.fn();
+    const scorerHotkey = vi.fn();
+    // Scorers attach on the window in the bubble phase (verified in the scoring
+    // components); mirror that here.
+    globalThis.addEventListener('keydown', scorerHotkey);
+
+    render(
+      <MonoSheet open onClose={vi.fn()} title="Options">
+        <button type="button" onKeyDown={controlKeyDown}>Keyboard menu</button>
+      </MonoSheet>,
+    );
+
+    const menu = screen.getByRole('button', { name: 'Keyboard menu' });
+    menu.focus();
+
+    fireEvent.keyDown(menu, { key: 'ArrowDown' });
+    fireEvent.keyDown(menu, { key: 'q' });
+
+    // The sheet's own control (and React's delegated onKeyDown) still receives
+    // every key it needs...
+    expect(controlKeyDown).toHaveBeenCalledTimes(2);
+    // ...while none of those keys leak to the scorer's global hotkey listener.
+    expect(scorerHotkey).not.toHaveBeenCalled();
+
+    globalThis.removeEventListener('keydown', scorerHotkey);
+  });
+
   it('keeps the shared sheet shell brutalist-framed, soft-topped and mobile-safe', () => {
     const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
     const confirmUtils = readFileSync(`${import.meta.dirname}/appConfirmUtils.js`, 'utf8');
