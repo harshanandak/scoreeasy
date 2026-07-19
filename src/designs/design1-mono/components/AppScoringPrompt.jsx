@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { handleAppConfirmKeyDown } from './appConfirmUtils';
 
 const DEFAULT_DRAFT_SAVED_MESSAGE = 'Draft saved. You can resume this match later.';
@@ -146,7 +147,11 @@ export function AppScoringConfirmDialog({
 
   if (!isOpen) return null;
 
-  return (
+  // Portal to the document body so the confirm always stacks above open modal
+  // surfaces (e.g. a MonoSheet it was raised from): being last in the body makes
+  // it the topmost modal surface for stacking-aware Escape/Tab handling, and its
+  // higher z-tier (see .app-confirm-backdrop) keeps it painted on top.
+  return createPortal(
     <div className="app-confirm-backdrop" role="presentation">
       <button type="button" className="app-confirm-backdrop-button" aria-label="Cancel prompt" onClick={onCancel} tabIndex={-1} />
       <section
@@ -169,7 +174,8 @@ export function AppScoringConfirmDialog({
           </button>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
