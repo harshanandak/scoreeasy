@@ -112,6 +112,80 @@ describe('matchVerdict — cricket engine', () => {
   });
 });
 
+describe('matchVerdict — cricket shape (derived totals)', () => {
+  // Regression: the cricket engines persist team1Score/team2Score (runs) — NOT a
+  // duplicated score1/score2. When winnerSide is absent the verdict must be
+  // inferred from the innings runs, and the aria/score line must report those
+  // runs. Reading score1/score2 alone yields 0–0 → a wrong draw/undecided verdict
+  // for a 142–100 win. (CodeRabbit #128, matchVerdict.js resolveWinner/ariaSummary.)
+  it('infers the winner from innings runs when winnerSide is omitted (limited overs)', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'Lions',
+      team2: 'Tigers',
+      team1Score: { runs: 142, wickets: 6, balls: 120 },
+      team2Score: { runs: 100, wickets: 10, balls: 98 },
+    });
+    expect(v.winnerSide).toBe('team1');
+    expect(v.winnerName).toBe('Lions');
+    expect(v.isDecided).toBe(true);
+    expect(v.isDraw).toBe(false);
+    expect(v.headline).toBe('Lions won by 42 runs');
+    expect(v.scoreLine).toBe('142 – 100');
+  });
+
+  it('reports the real innings runs in the aria summary, never 0–0', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'Lions',
+      team2: 'Tigers',
+      team1Score: { runs: 142, wickets: 6, balls: 120 },
+      team2Score: { runs: 100, wickets: 10, balls: 98 },
+      winnerSide: 'team1',
+      winDesc: 'by 42 runs',
+    });
+    expect(v.ariaSummary).toContain('Lions 142');
+    expect(v.ariaSummary).toContain('Tigers 100');
+    expect(v.ariaSummary).not.toContain('Lions 0');
+    expect(v.ariaSummary).not.toContain('Tigers 0');
+  });
+
+  it('infers a team2 chase win from innings runs', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'Lions',
+      team2: 'Tigers',
+      team1Score: { runs: 100, wickets: 10, balls: 120 },
+      team2Score: { runs: 101, wickets: 4, balls: 118 },
+    });
+    expect(v.winnerSide).toBe('team2');
+    expect(v.winnerName).toBe('Tigers');
+    expect(v.headline).toBe('Tigers won by 1 runs');
+  });
+
+  it('aggregates a test-cricket innings array (keyed by teamId) into a verdict', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'England',
+      team2: 'Australia',
+      team1Id: 't1',
+      team2Id: 't2',
+      innings: [
+        { teamId: 't1', runs: 300, wickets: 10, balls: 540 },
+        { teamId: 't2', runs: 250, wickets: 10, balls: 500 },
+        { teamId: 't1', runs: 180, wickets: 6, balls: 300 },
+        { teamId: 't2', runs: 150, wickets: 10, balls: 400 },
+      ],
+      winDesc: 'by 80 runs',
+    });
+    expect(v.winnerSide).toBe('team1');
+    expect(v.winnerName).toBe('England');
+    expect(v.scoreLine).toBe('480 – 400');
+    expect(v.ariaSummary).toContain('England 480');
+    expect(v.ariaSummary).toContain('Australia 400');
+  });
+});
+
 describe('matchVerdict — edge states', () => {
   it('reports an abandoned match', () => {
     const v = matchVerdict({ team1: 'A', team2: 'B', status: 'abandoned' });

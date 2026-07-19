@@ -63,14 +63,65 @@ function cricketInnings(name, score) {
   return `${name} ${runs}/${wickets}`;
 }
 
+// Sum a test-cricket innings array into a single team's run total, matched by
+// teamId (the shape MonoCricketTestLiveScore persists: [{ teamId, runs, ... }]).
+function inningsRuns(innings, teamId) {
+  if (!Array.isArray(innings)) return 0;
+  return innings
+    .filter((i) => i && i.teamId === teamId)
+    .reduce((acc, i) => acc + num(i.runs), 0);
+}
+
+// Sum a test-cricket innings array into a single team's wicket total.
+function inningsWickets(innings, teamId) {
+  if (!Array.isArray(innings)) return 0;
+  return innings
+    .filter((i) => i && i.teamId === teamId)
+    .reduce((acc, i) => acc + num(i.wickets), 0);
+}
+
+// Per-team "Name runs/wickets" summary rows for the cricket line score, built
+// from whichever shape the engine persisted (innings object, innings[] array,
+// or a bare score1/score2 aggregate).
+function cricketLineScore(m, team1, team2, s1, s2) {
+  if (m.team1Score || m.team2Score) {
+    return [cricketInnings(team1, m.team1Score), cricketInnings(team2, m.team2Score)];
+  }
+  if (Array.isArray(m.innings)) {
+    return [
+      `${team1} ${s1}/${inningsWickets(m.innings, m.team1Id)}`,
+      `${team2} ${s2}/${inningsWickets(m.innings, m.team2Id)}`,
+    ];
+  }
+  return [`${team1} ${s1}`, `${team2} ${s2}`];
+}
+
+// Resolve the two primary run tallies for a cricket match from whichever shape
+// the engine actually persisted, in priority order:
+//   1. team1Score/team2Score innings objects — MonoCricketLiveScore (limited overs)
+//   2. an innings[] array keyed by teamId    — MonoCricketTestLiveScore (test)
+//   3. an explicit score1/score2 aggregate   — cricket quick-match / generic
+// The engines do NOT duplicate runs into score1/score2, so reading those alone
+// gives 0–0 and a wrong verdict — this is the bug this helper fixes.
+function cricketTotals(m) {
+  if (m.team1Score || m.team2Score) {
+    return [num(m.team1Score?.runs), num(m.team2Score?.runs)];
+  }
+  if (Array.isArray(m.innings)) {
+    return [inningsRuns(m.innings, m.team1Id), inningsRuns(m.innings, m.team2Id)];
+  }
+  return [num(m.score1), num(m.score2)];
+}
+
 export function matchVerdict(match) {
   const m = match || {};
   const team1 = m.team1 || 'Team 1';
   const team2 = m.team2 || 'Team 2';
   const status = m.status === 'abandoned' ? 'abandoned' : 'completed';
   const kind = m.kind;
-  const s1 = num(m.score1);
-  const s2 = num(m.score2);
+  // Cricket derives its primary tallies from the innings runs the engine
+  // persisted; every other engine uses the primary score1/score2 tally.
+  const [s1, s2] = kind === 'cricket' ? cricketTotals(m) : [num(m.score1), num(m.score2)];
   const detailLabel = m.unit || UNIT_BY_KIND[kind] || null;
 
   // Abandoned matches have no verdict regardless of any score present.
@@ -85,7 +136,7 @@ export function matchVerdict(match) {
       scoreLine: `${s1} ${EN_DASH} ${s2}`,
       detailLabel,
       lineScore: kind === 'cricket'
-        ? [cricketInnings(team1, m.team1Score), cricketInnings(team2, m.team2Score)]
+        ? cricketLineScore(m, team1, team2, s1, s2)
         : completedSetsLineScore(m.sets),
       ariaSummary: 'Match abandoned.',
     };
@@ -100,13 +151,11 @@ export function matchVerdict(match) {
 
   // Line score: per-set strings for sets engine, innings summary for cricket.
   const lineScore = kind === 'cricket'
-    ? [cricketInnings(team1, m.team1Score), cricketInnings(team2, m.team2Score)]
+    ? cricketLineScore(m, team1, team2, s1, s2)
     : completedSetsLineScore(m.sets);
 
-  // Cricket primary line prefers the innings runs when available.
-  const scoreLine = kind === 'cricket' && (m.team1Score || m.team2Score)
-    ? `${num(m.team1Score?.runs)} ${EN_DASH} ${num(m.team2Score?.runs)}`
-    : `${s1} ${EN_DASH} ${s2}`;
+  // Primary line: s1/s2 already hold the cricket innings runs when applicable.
+  const scoreLine = `${s1} ${EN_DASH} ${s2}`;
 
   let headline;
   if (isTie) {
@@ -124,7 +173,7 @@ export function matchVerdict(match) {
   } else if (kind === 'goals') {
     headline = `${winnerName} win by ${Math.abs(s1 - s2)}`;
   } else if (kind === 'cricket') {
-    const runsMargin = Math.abs(num(m.team1Score?.runs) - num(m.team2Score?.runs));
+    const runsMargin = Math.abs(s1 - s2);
     headline = `${winnerName} won by ${runsMargin} runs`;
   } else {
     headline = `${winnerName} win`;
