@@ -110,6 +110,61 @@ describe('matchVerdict — cricket engine', () => {
     expect(v.scoreLine).toBe('142 – 100');
     expect(v.lineScore).toEqual(['Lions 142/6', 'Tigers 100/10']);
   });
+
+  // The engines persist winDesc as a FULL phrase ("Won by 42 runs" from
+  // getLimitedOversResult / getTestMatchResult) — NOT the bare "by 42 runs"
+  // fragment. Composing "<winner> won <winDesc>" naively double-wraps to
+  // "Lions won Won by 42 runs". The headline must read "Lions won by 42 runs".
+  it('does not double-wrap a full "Won by ..." win description (limited overs)', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'Lions',
+      team2: 'Tigers',
+      team1Score: { runs: 142, wickets: 6, balls: 120 },
+      team2Score: { runs: 100, wickets: 10, balls: 98 },
+      winnerSide: 'team1',
+      winDesc: 'Won by 42 runs',
+    });
+    expect(v.headline).toBe('Lions won by 42 runs');
+    expect(v.headline).not.toContain('won Won');
+  });
+
+  it('handles a "Won by N wickets" chase description', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'Lions',
+      team2: 'Tigers',
+      team1Score: { runs: 100, wickets: 10, balls: 120 },
+      team2Score: { runs: 101, wickets: 4, balls: 90 },
+      winnerSide: 'team2',
+      winDesc: 'Won by 6 wickets',
+    });
+    expect(v.headline).toBe('Tigers won by 6 wickets');
+  });
+
+  it('handles a "Won by an innings and N runs" test description', () => {
+    const v = matchVerdict({
+      kind: 'cricket',
+      team1: 'England',
+      team2: 'Australia',
+      team1Id: 't1',
+      team2Id: 't2',
+      innings: [
+        { teamId: 't1', runs: 500, wickets: 10, balls: 900 },
+        { teamId: 't2', runs: 200, wickets: 10, balls: 500 },
+        { teamId: 't2', runs: 220, wickets: 10, balls: 520 },
+      ],
+      winnerSide: 'team1',
+      winDesc: 'Won by an innings and 80 runs',
+    });
+    expect(v.headline).toBe('England won by an innings and 80 runs');
+    expect(v.headline).not.toContain('won Won');
+  });
+
+  it('still composes a headline from a bare fragment win description', () => {
+    const v = matchVerdict({ ...cricket, winDesc: 'by 42 runs' });
+    expect(v.headline).toBe('Lions won by 42 runs');
+  });
 });
 
 describe('matchVerdict — cricket shape (derived totals)', () => {

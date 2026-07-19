@@ -185,10 +185,19 @@ describe('MonoMatchResult — Sets container wiring', () => {
     expect(screen.getByText(/25–20/)).toBeInTheDocument();
   });
 
-  it('routes Done to the tournament bracket', () => {
+  it('routes Done to the tournament bracket, REPLACING the Result entry', () => {
+    // Result is pushed on top of the pre-scorer route (the unwind fix), so leaving
+    // it must replace the Result entry — otherwise Back after Done re-enters a
+    // stale Result screen. The stack contract must hold in both directions.
     render(<MonoMatchResult />);
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
-    expect(rt.navigate).toHaveBeenCalledWith('/volleyball/tournament/1');
+    expect(rt.navigate).toHaveBeenCalledWith('/volleyball/tournament/1', { replace: true });
+  });
+
+  it('routes Rematch to a fresh quick match, REPLACING the Result entry', () => {
+    render(<MonoMatchResult />);
+    fireEvent.click(screen.getByRole('button', { name: /rematch/i }));
+    expect(rt.navigate).toHaveBeenCalledWith('/volleyball/quick', { replace: true });
   });
 
   it('falls back to a safe recovery surface when the match is missing', () => {

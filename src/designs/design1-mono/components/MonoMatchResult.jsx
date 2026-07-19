@@ -236,8 +236,8 @@ export default function MonoMatchResult() {
       team1Name={team1Name}
       team2Name={team2Name}
       isSignedIn={isAuthenticated}
-      onDone={() => navigate(`/${sport}/tournament/${id}`)}
-      onRematch={() => navigate(`/${sport}/quick`)}
+      onDone={() => navigate(`/${sport}/tournament/${id}`, { replace: true })}
+      onRematch={() => navigate(`/${sport}/quick`, { replace: true })}
       onScorecard={() => {}}
       onShare={() => {}}
       onSignIn={() => navigate('/login')}

@@ -63,6 +63,14 @@ function cricketInnings(name, score) {
   return `${name} ${runs}/${wickets}`;
 }
 
+// The cricket engines persist winDesc as a full phrase ("Won by 42 runs",
+// "Won by 3 wickets", "Won by an innings and 20 runs"). The headline composes
+// "<winner> won <phrase>", so strip a leading "won " to avoid the double-wrapped
+// "<winner> won Won by ..."; a bare fragment ("by 42 runs") passes through.
+function cricketWinPhrase(winDesc) {
+  return String(winDesc).replace(/^won\s+/i, '');
+}
+
 // Sum a test-cricket innings array into a single team's run total, matched by
 // teamId (the shape MonoCricketTestLiveScore persists: [{ teamId, runs, ... }]).
 function inningsRuns(innings, teamId) {
@@ -165,7 +173,7 @@ export function matchVerdict(match) {
   } else if (!isDecided) {
     headline = 'Full time';
   } else if (kind === 'cricket' && m.winDesc) {
-    headline = `${winnerName} won ${m.winDesc}`;
+    headline = `${winnerName} won ${cricketWinPhrase(m.winDesc)}`;
   } else if (kind === 'sets') {
     const winScore = Math.max(s1, s2);
     const loseScore = Math.min(s1, s2);
