@@ -159,6 +159,58 @@ describe('MonoSheet bottom-sheet primitive', () => {
     expect(lowerClose).not.toHaveBeenCalled();
   });
 
+  it('blocks global scorer hotkeys from leaking behind the open sheet, keeps Escape/Tab working, then stops blocking once closed', () => {
+    // Simulate a scorer's document-level hotkey listener (q/p/u/w/e + numbers
+    // mutate the match) sitting behind the sheet.
+    const hotkeyListener = vi.fn();
+    globalThis.addEventListener('keydown', hotkeyListener);
+
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <MonoSheet
+        open
+        onClose={onClose}
+        title="Match options"
+        primaryAction={{ label: 'Confirm', onClick: vi.fn() }}
+      >
+        <button type="button">Share match</button>
+      </MonoSheet>,
+    );
+
+    const shareButton = screen.getByRole('button', { name: 'Share match' });
+    const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+
+    // Scorer hotkeys pressed while a control inside the sheet is focused must
+    // NOT reach the document listener behind the modal.
+    fireEvent.keyDown(shareButton, { key: 'q' });
+    fireEvent.keyDown(shareButton, { key: '1' });
+    fireEvent.keyDown(confirmButton, { key: 'w' });
+    fireEvent.keyDown(confirmButton, { key: 'p' });
+    expect(hotkeyListener).not.toHaveBeenCalled();
+
+    // Tab still cycles focus inside the sheet.
+    confirmButton.focus();
+    fireEvent.keyDown(confirmButton, { key: 'Tab' });
+    expect(document.activeElement).toBe(shareButton);
+
+    // Escape still dismisses without leaking to the scorer.
+    fireEvent.keyDown(shareButton, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(hotkeyListener).not.toHaveBeenCalled();
+
+    // Once closed, the document listener receives keys normally again.
+    rerender(
+      <MonoSheet open={false} onClose={onClose} title="Match options">
+        <button type="button">Share match</button>
+      </MonoSheet>,
+    );
+
+    fireEvent.keyDown(globalThis, { key: 'q' });
+    expect(hotkeyListener).toHaveBeenCalledTimes(1);
+
+    globalThis.removeEventListener('keydown', hotkeyListener);
+  });
+
   it('keeps the shared sheet shell brutalist-framed, soft-topped and mobile-safe', () => {
     const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
     const confirmUtils = readFileSync(`${import.meta.dirname}/appConfirmUtils.js`, 'utf8');

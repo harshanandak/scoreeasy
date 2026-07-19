@@ -9,6 +9,18 @@ const actionShape = PropTypes.shape({
   tone: PropTypes.oneOf(['primary', 'danger']),
 });
 
+// Keys that must reach controls inside the sheet: Enter/Space activate the
+// focused control. (Escape/Tab are handled explicitly before this check.)
+const SHEET_ACTIVATION_KEYS = new Set(['Enter', ' ', 'Spacebar']);
+
+// True when the key press belongs to an editable field inside the sheet, so
+// typing is never swallowed by the propagation guard.
+function isEditableTarget(target) {
+  if (!target || typeof target.tagName !== 'string') return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable === true;
+}
+
 /**
  * MonoSheet — the shared bottom-sheet host for the mono design.
  *
@@ -57,7 +69,24 @@ export default function MonoSheet({
         return;
       }
 
-      handleModalTabTrap(event, sheetRef.current);
+      if (event.key === 'Tab') {
+        handleModalTabTrap(event, sheetRef.current);
+        event.stopPropagation();
+        return;
+      }
+
+      // Everything else: let controls inside the sheet receive the keys they
+      // actually need (typing in fields, Enter/Space activating the focused
+      // control), and stop every other key here in the capture phase so global
+      // scorer hotkeys (q/p/u/w/e, number keys) can't mutate the match behind
+      // the open sheet. Scorers listen on keydown only, so keydown is enough.
+      const { target } = event;
+      const sheetNeedsKey =
+        sheetRef.current?.contains(target) &&
+        (isEditableTarget(target) || SHEET_ACTIVATION_KEYS.has(event.key));
+      if (sheetNeedsKey) return;
+
+      event.stopPropagation();
     };
 
     globalThis.addEventListener('keydown', handleKeyDown, true);
