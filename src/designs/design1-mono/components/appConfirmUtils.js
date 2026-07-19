@@ -29,7 +29,14 @@ export function handleModalTabTrap(event, container) {
   if (event.key !== 'Tab') return;
 
   const controls = getTrappableControls(container);
-  if (controls.length === 0) return;
+  if (controls.length === 0) {
+    // Nothing tabbable inside a static / read-only modal: keep focus pinned to
+    // the container itself (which carries tabIndex=-1) so Tab and Shift+Tab
+    // can't walk out to the page behind the modal.
+    event.preventDefault();
+    container?.focus?.();
+    return;
+  }
 
   const first = controls[0];
   const last = controls[controls.length - 1];

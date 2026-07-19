@@ -9,16 +9,29 @@ const actionShape = PropTypes.shape({
   tone: PropTypes.oneOf(['primary', 'danger']),
 });
 
-// Keys that must reach controls inside the sheet: Enter/Space activate the
-// focused control. (Escape/Tab are handled explicitly before this check.)
-const SHEET_ACTIVATION_KEYS = new Set(['Enter', ' ', 'Spacebar']);
+// Ref-counted body scroll-lock shared across every open MonoSheet. Saving and
+// restoring document.body.style.overflow per-sheet is not concurrency-safe:
+// when two sheets close in the same render, the later one restores the earlier
+// one's already-locked 'hidden' value and the lock leaks. Instead the first
+// sheet to open captures the real previous overflow and only the last sheet to
+// close restores it.
+let sheetScrollLockCount = 0;
+let sheetScrollLockPreviousOverflow = '';
 
-// True when the key press belongs to an editable field inside the sheet, so
-// typing is never swallowed by the propagation guard.
-function isEditableTarget(target) {
-  if (!target || typeof target.tagName !== 'string') return false;
-  const tag = target.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable === true;
+function acquireBodyScrollLock() {
+  if (sheetScrollLockCount === 0) {
+    sheetScrollLockPreviousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  sheetScrollLockCount += 1;
+}
+
+function releaseBodyScrollLock() {
+  if (sheetScrollLockCount === 0) return;
+  sheetScrollLockCount -= 1;
+  if (sheetScrollLockCount === 0) {
+    document.body.style.overflow = sheetScrollLockPreviousOverflow;
+  }
 }
 
 /**
@@ -52,8 +65,7 @@ export default function MonoSheet({
   useEffect(() => {
     if (!open) return undefined;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    acquireBodyScrollLock();
 
     triggerRef.current = document.activeElement;
     const [firstControl] = getTrappableControls(sheetRef.current);
@@ -75,17 +87,15 @@ export default function MonoSheet({
         return;
       }
 
-      // Everything else: let controls inside the sheet receive the keys they
-      // actually need (typing in fields, Enter/Space activating the focused
-      // control), and stop every other key here in the capture phase so global
-      // scorer hotkeys (q/p/u/w/e, number keys) can't mutate the match behind
-      // the open sheet. Scorers listen on keydown only, so keydown is enough.
-      const { target } = event;
-      const sheetNeedsKey =
-        sheetRef.current?.contains(target) &&
-        (isEditableTarget(target) || SHEET_ACTIVATION_KEYS.has(event.key));
-      if (sheetNeedsKey) return;
-
+      // Every other key is stopped here in the capture phase so global scorer
+      // hotkeys (q/p/u/w/e, number keys) can't mutate the match behind the open
+      // sheet. stopPropagation does not preventDefault, so controls inside the
+      // sheet still work normally: focused fields still receive typed
+      // characters and Enter/Space still activate the focused control (both are
+      // default actions), and React change events (fired on 'input', not
+      // 'keydown') are unaffected. We must stop even for keys aimed at editable
+      // fields — otherwise they bubble on to the scorer's document listeners
+      // after the field handles them. Scorers listen on keydown only.
       event.stopPropagation();
     };
 
@@ -93,7 +103,7 @@ export default function MonoSheet({
 
     return () => {
       globalThis.removeEventListener('keydown', handleKeyDown, true);
-      document.body.style.overflow = previousOverflow;
+      releaseBodyScrollLock();
       const trigger = triggerRef.current;
       triggerRef.current = null;
       trigger?.focus?.();

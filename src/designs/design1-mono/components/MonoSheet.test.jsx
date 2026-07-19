@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import MonoSheet from './MonoSheet';
 
 afterEach(() => {
@@ -207,6 +207,100 @@ describe('MonoSheet bottom-sheet primitive', () => {
 
     fireEvent.keyDown(globalThis, { key: 'q' });
     expect(hotkeyListener).toHaveBeenCalledTimes(1);
+
+    globalThis.removeEventListener('keydown', hotkeyListener);
+  });
+
+  it('traps Tab on the container when the sheet has zero tabbable controls', () => {
+    render(
+      <MonoSheet open onClose={vi.fn()} title="Match info">
+        <p>Read-only details, nothing tabbable here.</p>
+      </MonoSheet>,
+    );
+
+    const dialog = screen.getByRole('dialog', { name: 'Match info' });
+    // With nothing focusable inside, focus falls to the container itself.
+    expect(document.activeElement).toBe(dialog);
+
+    const tabEvent = createEvent.keyDown(dialog, { key: 'Tab' });
+    fireEvent(dialog, tabEvent);
+
+    // Tab must be swallowed so focus can't walk out of the modal.
+    expect(tabEvent.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(dialog);
+  });
+
+  it('keeps a static, control-less sheet from letting Tab escape to the page behind it', () => {
+    render(
+      <>
+        <button type="button" data-testid="behind">Behind the sheet</button>
+        <MonoSheet open onClose={vi.fn()} title="Read only">
+          <p>Static content.</p>
+        </MonoSheet>
+      </>,
+    );
+
+    const dialog = screen.getByRole('dialog', { name: 'Read only' });
+    const behind = screen.getByTestId('behind');
+    expect(document.activeElement).toBe(dialog);
+
+    const tabEvent = createEvent.keyDown(dialog, { key: 'Tab' });
+    fireEvent(dialog, tabEvent);
+    expect(tabEvent.defaultPrevented).toBe(true);
+
+    const shiftTabEvent = createEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+    fireEvent(dialog, shiftTabEvent);
+    expect(shiftTabEvent.defaultPrevented).toBe(true);
+
+    // Focus never lands on the control behind the modal.
+    expect(document.activeElement).toBe(dialog);
+    expect(document.activeElement).not.toBe(behind);
+  });
+
+  it('ref-counts the body scroll-lock so stacked sheets restore overflow exactly once', () => {
+    function Stack({ open }) {
+      return (
+        <>
+          <MonoSheet open={open} onClose={vi.fn()} title="Lower">
+            <button type="button">Lower</button>
+          </MonoSheet>
+          <MonoSheet open={open} onClose={vi.fn()} title="Upper">
+            <button type="button">Upper</button>
+          </MonoSheet>
+        </>
+      );
+    }
+
+    const { rerender } = render(<Stack open={false} />);
+    expect(document.body.style.overflow).toBe('');
+
+    rerender(<Stack open />);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    // Both sheets close in the same render — overflow must return to its
+    // pre-lock value, not stay stuck on 'hidden'.
+    rerender(<Stack open={false} />);
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('does not leak keys typed inside a sheet input to scorer hotkey listeners', () => {
+    const hotkeyListener = vi.fn();
+    globalThis.addEventListener('keydown', hotkeyListener);
+
+    render(
+      <MonoSheet open onClose={vi.fn()} title="Rename team">
+        <input type="text" aria-label="Team name" />
+      </MonoSheet>,
+    );
+
+    const input = screen.getByLabelText('Team name');
+    input.focus();
+
+    // Letters/numbers typed into a field inside the sheet must not reach the
+    // scorer's global hotkey listener behind the modal.
+    fireEvent.keyDown(input, { key: 'q' });
+    fireEvent.keyDown(input, { key: '1' });
+    expect(hotkeyListener).not.toHaveBeenCalled();
 
     globalThis.removeEventListener('keydown', hotkeyListener);
   });
