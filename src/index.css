@@ -82,6 +82,52 @@
   --se-shadow-card: var(--shadow-xs);
   --se-shadow-hard: var(--shadow);
   --se-motion-standard: 250ms;
+
+  /* ============================================================================
+     HiFi-BLEND TOKEN LAYER  ·  M1 foundation  ·  FROZEN API (blend-8a30cb91)
+     ----------------------------------------------------------------------------
+     Additive only. These rounded/soft/gold/live properties sit ON TOP of the
+     brutalist Mono tokens above (pure-black ink & borders, hard `3px 3px 0`
+     zero-blur shadow, tight 4-8px radii, Inter/JetBrains Mono) — none of which
+     change. Downstream screens opt into blend; they never lose the hard shell.
+
+     ── BLEND-GOVERNANCE CONTRACT (full text: BLEND-GOVERNANCE.md) ──────────────
+     1. GREEN is for LEAD / LIVE only — the leading team, a live badge, an
+        active/primary CTA. Never decorative, never a resting-state fill.
+     2. GOLD is ONE milestone accent PER SCREEN — a single moment (match won,
+        record, podium). Two golds on a screen is a bug.
+     3. CAPSULES & CIRCLES are for INTERACTIVE elements only (buttons, chips,
+        toggles, avatars). Never round a container/section/card body with them.
+     4. HARD SHELL / SOFT CONTENT — the outer frame keeps the brutalist border +
+        hard shadow; softness (green wash, soft radius, soft shadow) lives on the
+        content INSIDE. Don't soften the shell.
+     5. BREATHING PULSE is a LIVE-STATE signal only (a match in progress) and is
+        ALWAYS reduced-motion gated. Never use it for idle/decorative emphasis.
+     6. PER-SCREEN SOFT-ELEMENT BUDGET — cap soft-styled elements per screen (see
+        doc); overuse dissolves the brutalist backbone the blend depends on.
+     ========================================================================== */
+
+  /* Rounded radius scale — interactive elements only (contract §3) */
+  --se-blend-radius-capsule: 999px;
+  --se-blend-radius-circle: 50%;
+  --se-blend-radius-soft-sm: 10px;
+  --se-blend-radius-soft: 12px;
+  --se-blend-radius-soft-lg: 16px;
+
+  /* Soft green wash — lead/live surfaces only (contract §1) */
+  --se-blend-green-wash: #e7f4ee;
+  --se-blend-green-wash-strong: #d6ecdf;
+
+  /* Warm-green-black soft shadow (content), colored CTA glow (primary action) */
+  --se-blend-shadow-soft: 0 6px 20px -8px rgba(20, 40, 30, 0.28);
+  --se-blend-shadow-cta: 0 8px 24px -6px rgba(35, 120, 75, 0.42);
+
+  /* Gold milestone accent — ONE per screen (contract §2) */
+  --se-blend-gold: #b8862e;
+  --se-blend-gold-bright: #e8b64c;
+
+  /* LIVE breathing pulse timing (helper class + reduced-motion gate below) */
+  --se-blend-pulse-duration: 2.4s;
 }
 
 @theme inline {
@@ -166,6 +212,28 @@
   0% { transform: scale(1); }
   50% { transform: scale(1.08); }
   100% { transform: scale(1); }
+}
+
+/* HiFi-blend LIVE breathing pulse — live-state signal ONLY (contract §5).
+   A slow, subtle glow-breath applied to a live indicator; never decorative. */
+@keyframes se-blend-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(35, 120, 75, 0.42);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(35, 120, 75, 0);
+  }
+}
+
+.se-blend-pulse {
+  animation: se-blend-pulse var(--se-blend-pulse-duration) ease-in-out infinite;
+}
+
+/* Contract §5: the breathing pulse is always reduced-motion gated. */
+@media (prefers-reduced-motion: reduce) {
+  .se-blend-pulse {
+    animation: none;
+  }
 }
 
 body {
