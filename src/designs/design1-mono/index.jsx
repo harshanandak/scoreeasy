@@ -33,6 +33,7 @@ const DashboardLanding = lazy(() => import('./landing/DashboardLanding'));
 const MonoHistory = lazy(() => import('./MonoHistory'));
 const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
 const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
+const MonoMatchResult = lazy(() => import('./components/MonoMatchResult'));
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
 const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
@@ -1750,6 +1751,7 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/new" element={<SportRouteGuard><MonoTournamentSetup /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
+                <Route path=":sport/tournament/:id/match/:matchId/result" element={<SportRouteGuard><MonoMatchResult /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
                 <Route path=":sport/quick/test/:matchId" element={<LegacyCricketQuickTestRoute />} />
                 <Route path=":sport/quick/test-match/:matchId" element={<CricketQuickTestScorerRoute />} />

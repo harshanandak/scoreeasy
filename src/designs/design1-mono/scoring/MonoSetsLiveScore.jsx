@@ -491,6 +491,11 @@ export default function MonoSetsLiveScore() {
     if (isMatchComplete) {
       saveTournamentToConvex(updatedTournament);
       live.finalize();
+      // Reference wiring (kernel 42f06561): a completed match lands on the
+      // FULL-TIME result screen. Replace history so back returns to the bracket,
+      // never into the frozen, completed scorer.
+      navigate(`/${sport}/tournament/${id}/match/${matchId}/result`, { replace: true });
+      return;
     }
 
     navigate(`/${sport}/tournament/${id}`);

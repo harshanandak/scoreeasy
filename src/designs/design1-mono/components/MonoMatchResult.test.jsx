@@ -1,11 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MonoMatchResultView } from './MonoMatchResult';
+import MonoMatchResult, { MonoMatchResultView } from './MonoMatchResult';
 
 // Confetti is a DOM/side-effect; stub it so the pure view tests stay hermetic
 // and we can assert the one-shot fire + dedupe.
 const confetti = vi.hoisted(() => ({ triggerConfetti: vi.fn() }));
 vi.mock('../utils/confetti', () => confetti);
+
+// --- Container wiring fixtures (Sets reference wiring) ---
+const rt = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  params: { sport: 'volleyball', id: '1', matchId: 'm1' },
+  tournaments: [],
+}));
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => rt.navigate,
+  useParams: () => rt.params,
+}));
+vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
+vi.mock('../../../models/sportRegistry', () => ({
+  getSportById: (id) => (id === 'volleyball' ? { id: 'volleyball', name: 'Volleyball', storageKey: 'vb' } : null),
+}));
+vi.mock('../../../utils/storage', () => ({ loadSportTournaments: () => rt.tournaments }));
+
+const completedTournament = {
+  id: 1,
+  teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
+  matches: [{
+    id: 'm1', team1Id: 1, team2Id: 2, status: 'completed', winner: 1,
+    setsWon1: 3, setsWon2: 1,
+    sets: [
+      { score1: 25, score2: 20, completed: true },
+      { score1: 20, score2: 25, completed: true },
+      { score1: 25, score2: 18, completed: true },
+      { score1: 25, score2: 22, completed: true },
+    ],
+  }],
+  knockoutMatches: [],
+};
 
 const decided = {
   verdict: {
@@ -137,5 +169,41 @@ describe('MonoMatchResultView — edge states', () => {
     const { container } = render(<MonoMatchResultView {...abandoned} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Match abandoned');
     expect(container.querySelector('.mono-result-medallion')).toBeNull();
+  });
+});
+
+describe('MonoMatchResult — Sets container wiring', () => {
+  beforeEach(() => {
+    rt.navigate.mockClear();
+    rt.tournaments = [completedTournament];
+    rt.params = { sport: 'volleyball', id: '1', matchId: 'm1' };
+  });
+
+  it('builds the verdict from a completed Sets match in storage', () => {
+    render(<MonoMatchResult />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Alpha win 3–1');
+    expect(screen.getByText(/25–20/)).toBeInTheDocument();
+  });
+
+  it('routes Done to the tournament bracket', () => {
+    render(<MonoMatchResult />);
+    fireEvent.click(screen.getByRole('button', { name: /done/i }));
+    expect(rt.navigate).toHaveBeenCalledWith('/volleyball/tournament/1');
+  });
+
+  it('falls back to a safe recovery surface when the match is missing', () => {
+    rt.tournaments = [];
+    render(<MonoMatchResult />);
+    expect(screen.getByText(/result unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /win/i })).toBeNull();
+  });
+
+  it('does not render a result for an in-progress match', () => {
+    rt.tournaments = [{
+      ...completedTournament,
+      matches: [{ ...completedTournament.matches[0], status: 'in-progress', winner: null }],
+    }];
+    render(<MonoMatchResult />);
+    expect(screen.getByText(/result unavailable/i)).toBeInTheDocument();
   });
 });
