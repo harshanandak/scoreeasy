@@ -31,7 +31,13 @@ import {
   warningImpact,
 } from '../../mobile/haptics';
 
-function EndMatchDialog({ onCancel, onConfirm }) {
+function EndMatchDialog({
+  onCancel,
+  onConfirm,
+  title = 'End match?',
+  message = 'This will finish the current match and save the result.',
+  confirmLabel = 'End match',
+}) {
   const cancelButtonRef = useRef(null);
   const onCancelRef = useRef(onCancel);
 
@@ -76,9 +82,9 @@ function EndMatchDialog({ onCancel, onConfirm }) {
         aria-describedby="end-match-message"
       >
         <p className="app-confirm-eyebrow">Match control</p>
-        <h2 id="end-match-title" className="app-confirm-title">End match?</h2>
+        <h2 id="end-match-title" className="app-confirm-title">{title}</h2>
         <p id="end-match-message" className="app-confirm-message">
-          This will finish the current match and save the result.
+          {message}
         </p>
         <div className="app-confirm-actions">
           <button
@@ -94,7 +100,7 @@ function EndMatchDialog({ onCancel, onConfirm }) {
             onClick={onConfirm}
             className="app-confirm-primary"
           >
-            End match
+            {confirmLabel}
           </button>
         </div>
       </section>
@@ -336,6 +342,8 @@ export default function MonoQuickMatch() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const endMatchTriggerRef = useRef(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const discardTriggerRef = useRef(null);
   const [servingTeam, setServingTeam] = useState(1);
   const [lastAction, setLastAction] = useState('');
 
@@ -834,9 +842,11 @@ export default function MonoQuickMatch() {
 
   const getTeamLabel = (team) => (team === 1 ? team1Name : team2Name);
 
-  const restoreEndMatchTriggerFocus = () => {
-    const trigger = endMatchTriggerRef.current;
-    endMatchTriggerRef.current = null;
+  // Return focus to whichever control opened a match-control dialog (end/discard)
+  // once it closes, so keyboard/AT users are not dropped at the top of the page.
+  const restoreTriggerFocus = (ref) => {
+    const trigger = ref.current;
+    ref.current = null;
     if (!trigger || typeof trigger.focus !== 'function') return;
 
     if (typeof globalThis.requestAnimationFrame === 'function') {
@@ -853,7 +863,7 @@ export default function MonoQuickMatch() {
 
   const cancelEndMatch = () => {
     setShowEndConfirm(false);
-    restoreEndMatchTriggerFocus();
+    restoreTriggerFocus(endMatchTriggerRef);
   };
 
   const confirmEndMatch = () => {
@@ -866,6 +876,32 @@ export default function MonoQuickMatch() {
   const discardQuickMatch = () => {
     clearData(quickMatchDraftKey);
     navigate('/app');
+  };
+
+  // Confirm-on-discard guard (hotfix eb98882b): a single stray tap on Discard must
+  // not throw away an in-progress match. Require an explicit confirm when there is
+  // scoring progress; an empty match discards straight away (nothing to lose).
+  const quickMatchHasProgress = () =>
+    vScoreHistory.length > 0 || gScoreHistory.length > 0 || cricketHistory.length > 0;
+
+  const requestDiscardMatch = (event) => {
+    discardTriggerRef.current = event?.currentTarget || null;
+    if (quickMatchHasProgress()) {
+      setShowDiscardConfirm(true);
+      return;
+    }
+    discardQuickMatch();
+  };
+
+  const cancelDiscardMatch = () => {
+    setShowDiscardConfirm(false);
+    restoreTriggerFocus(discardTriggerRef);
+  };
+
+  const confirmDiscardMatch = () => {
+    setShowDiscardConfirm(false);
+    discardTriggerRef.current = null;
+    discardQuickMatch();
   };
 
   const handleSideSwap = () => {
@@ -2452,6 +2488,15 @@ export default function MonoQuickMatch() {
   const endMatchDialog = showEndConfirm ? (
     <EndMatchDialog onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
   ) : null;
+  const discardMatchDialog = showDiscardConfirm ? (
+    <EndMatchDialog
+      onCancel={cancelDiscardMatch}
+      onConfirm={confirmDiscardMatch}
+      title="Discard match?"
+      message="This will delete the in-progress match. This can't be undone."
+      confirmLabel="Discard match"
+    />
+  ) : null;
 
   if (phase === 'scoring') {
     if (isCricket) {
@@ -2490,6 +2535,7 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell mono-cricket-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
+            {discardMatchDialog}
             <ScoringNotice message={saveWarning} />
             {/* Top bar */}
             <div className="mono-scorer-topbar">
@@ -2652,6 +2698,7 @@ export default function MonoQuickMatch() {
           <div className="mono-scorer-shell">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
+            {discardMatchDialog}
             <ScoringNotice message={saveWarning} />
             {/* Top spine */}
             <div className="mono-scorer-topbar">
@@ -2709,7 +2756,7 @@ export default function MonoQuickMatch() {
               canUndo={gScoreHistory.length > 0}
               onUndo={undoGoal}
               onSwap={handleSideSwap}
-              onDiscard={discardQuickMatch}
+              onDiscard={requestDiscardMatch}
               onEnd={requestEndMatch}
             />
           </div>
@@ -2741,6 +2788,7 @@ export default function MonoQuickMatch() {
         <div className="mono-scorer-shell">
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {endMatchDialog}
+          {discardMatchDialog}
           <ScoringNotice message={saveWarning} />
           {/* Top spine */}
           <div className="mono-scorer-topbar">
@@ -2798,7 +2846,7 @@ export default function MonoQuickMatch() {
             canUndo={vScoreHistory.length > 0}
             onUndo={undoPoint}
             onSwap={handleSideSwap}
-            onDiscard={discardQuickMatch}
+            onDiscard={requestDiscardMatch}
             onEnd={requestEndMatch}
           />
         </div>
