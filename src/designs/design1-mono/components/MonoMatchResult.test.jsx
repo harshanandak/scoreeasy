@@ -131,12 +131,16 @@ describe('MonoMatchResultView — actions', () => {
     expect(decided.onShare).toHaveBeenCalledTimes(1);
   });
 
-  it('offers Sign in to save for guests only', () => {
+  it('offers an honest Sign in CTA for guests only (no promise to save THIS match)', () => {
     const { rerender } = render(<MonoMatchResultView {...decided} isSignedIn={false} />);
-    fireEvent.click(screen.getByRole('button', { name: /sign in to save/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
     expect(decided.onSignIn).toHaveBeenCalledTimes(1);
+    // Guest matches persist locally regardless of auth; signing in does NOT
+    // upload this already-completed match (guest -> cloud sync is a separate M1
+    // issue), so the CTA must not promise to "save" it.
+    expect(screen.queryByRole('button', { name: /save/i })).toBeNull();
     rerender(<MonoMatchResultView {...decided} isSignedIn />);
-    expect(screen.queryByRole('button', { name: /sign in to save/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /sign in/i })).toBeNull();
   });
 });
 

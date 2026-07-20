@@ -142,9 +142,13 @@ export function MonoMatchResultView({
           >
             Share
           </button>
+          {/* This match is already saved locally; signing in does NOT upload
+              this completed guest match (guest -> cloud sync is a separate M1
+              issue). Keep the CTA an honest account benefit, not a promise to
+              save THIS match. */}
           {!isSignedIn && (
             <button type="button" className="mono-result-signin" onClick={onSignIn}>
-              Sign in to save
+              Sign in
             </button>
           )}
         </div>
