@@ -39,6 +39,7 @@ export function MonoMatchResultView({
   team1Name = 'Team 1',
   team2Name = 'Team 2',
   isSignedIn = false,
+  cloudAuthAvailable = true,
   scorecardReady = false,
   shareReady = false,
   reduceMotion,
@@ -145,8 +146,9 @@ export function MonoMatchResultView({
           {/* This match is already saved locally; signing in does NOT upload
               this completed guest match (guest -> cloud sync is a separate M1
               issue). Keep the CTA an honest account benefit, not a promise to
-              save THIS match. */}
-          {!isSignedIn && (
+              save THIS match. Hidden entirely in local/offline auth mode where
+              cloudAuthAvailable is false — there is no cloud to sign into. */}
+          {!isSignedIn && cloudAuthAvailable && (
             <button type="button" className="mono-result-signin" onClick={onSignIn}>
               Sign in
             </button>
@@ -173,6 +175,7 @@ MonoMatchResultView.propTypes = {
   team1Name: PropTypes.string,
   team2Name: PropTypes.string,
   isSignedIn: PropTypes.bool,
+  cloudAuthAvailable: PropTypes.bool,
   scorecardReady: PropTypes.bool,
   shareReady: PropTypes.bool,
   reduceMotion: PropTypes.bool,
@@ -192,7 +195,7 @@ MonoMatchResultView.propTypes = {
 export default function MonoMatchResult() {
   const navigate = useNavigate();
   const { sport, id, matchId } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, cloudAuthAvailable } = useAuth();
 
   const config = getSportById(sport);
   const tournaments = config ? loadSportTournaments(config.storageKey) : [];
@@ -240,6 +243,7 @@ export default function MonoMatchResult() {
       team1Name={team1Name}
       team2Name={team2Name}
       isSignedIn={isAuthenticated}
+      cloudAuthAvailable={cloudAuthAvailable}
       onDone={() => navigate(`/${sport}/tournament/${id}`, { replace: true })}
       onRematch={() => navigate(`/${sport}/quick`, { replace: true })}
       onScorecard={() => {}}

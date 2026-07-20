@@ -12,12 +12,13 @@ const rt = vi.hoisted(() => ({
   navigate: vi.fn(),
   params: { sport: 'volleyball', id: '1', matchId: 'm1' },
   tournaments: [],
+  auth: { isAuthenticated: false, cloudAuthAvailable: true },
 }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => rt.navigate,
   useParams: () => rt.params,
 }));
-vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
+vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => rt.auth }));
 vi.mock('../../../models/sportRegistry', () => ({
   getSportById: (id) => (id === 'volleyball' ? { id: 'volleyball', name: 'Volleyball', storageKey: 'vb' } : null),
 }));
@@ -142,6 +143,18 @@ describe('MonoMatchResultView — actions', () => {
     rerender(<MonoMatchResultView {...decided} isSignedIn />);
     expect(screen.queryByRole('button', { name: /sign in/i })).toBeNull();
   });
+
+  it('hides the Sign in CTA when cloud auth is unavailable (local/offline mode)', () => {
+    // In local/offline auth there is no cloud to sign into, so the CTA would send
+    // the guest to a dead sign-in route. It must not render at all.
+    render(<MonoMatchResultView {...decided} isSignedIn={false} cloudAuthAvailable={false} />);
+    expect(screen.queryByRole('button', { name: /sign in/i })).toBeNull();
+  });
+
+  it('shows the Sign in CTA for a guest when cloud auth is available', () => {
+    render(<MonoMatchResultView {...decided} isSignedIn={false} cloudAuthAvailable />);
+    expect(screen.getByRole('button', { name: /^sign in$/i })).toBeInTheDocument();
+  });
 });
 
 describe('MonoMatchResultView — edge states', () => {
@@ -181,6 +194,19 @@ describe('MonoMatchResult — Sets container wiring', () => {
     rt.navigate.mockClear();
     rt.tournaments = [completedTournament];
     rt.params = { sport: 'volleyball', id: '1', matchId: 'm1' };
+    rt.auth = { isAuthenticated: false, cloudAuthAvailable: true };
+  });
+
+  it('hides the Sign in CTA when the auth context has no cloud auth available', () => {
+    rt.auth = { isAuthenticated: false, cloudAuthAvailable: false };
+    render(<MonoMatchResult />);
+    expect(screen.queryByRole('button', { name: /sign in/i })).toBeNull();
+  });
+
+  it('shows the Sign in CTA when cloud auth is available and the user is a guest', () => {
+    rt.auth = { isAuthenticated: false, cloudAuthAvailable: true };
+    render(<MonoMatchResult />);
+    expect(screen.getByRole('button', { name: /^sign in$/i })).toBeInTheDocument();
   });
 
   it('builds the verdict from a completed Sets match in storage', () => {
