@@ -1,4 +1,5 @@
 import { useCallback, useEffect, Suspense, lazy, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
@@ -451,7 +452,11 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
 
   if (!prompt) return null;
 
-  return (
+  // Portal to the document body so this confirm always stacks above open modal
+  // surfaces (e.g. a MonoSheet the prompt was raised from): last in the body =
+  // topmost modal surface for Escape/Tab handling, and its higher z-tier keeps
+  // it painted on top.
+  return createPortal(
     <div className="app-confirm-backdrop" role="presentation">
       <button
         type="button"
@@ -495,7 +500,8 @@ function AppConfirmDialog({ prompt, onCancel, onConfirm }) {
           </button>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -1013,7 +1019,7 @@ function GlobalNavigation({ requestScoringExit }) {
         .app-confirm-backdrop {
           position: fixed;
           inset: 0;
-          z-index: 260;
+          z-index: 300;
           display: flex;
           align-items: center;
           justify-content: center;

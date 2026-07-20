@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { AppScoringConfirmDialog, AppScoringNotice, useAppScoringPrompt } from '../components/AppScoringPrompt';
+import { isTopmostModalSurface } from '../components/appConfirmUtils';
+import MonoSheet from '../components/MonoSheet';
 
 const scoringComponents = [
   'MonoCricketLiveScore.jsx',
@@ -159,6 +161,65 @@ describe('app-owned scoring prompts', () => {
 
     expect(topCancel).toHaveBeenCalledTimes(1);
     expect(lowerCancel).not.toHaveBeenCalled();
+  });
+
+  it('raises an app confirm above an open MonoSheet and gives it topmost interaction', () => {
+    const sheetClose = vi.fn();
+    const confirmCancel = vi.fn();
+
+    // A destructive/route confirm raised from within an open bottom sheet.
+    render(
+      <>
+        <MonoSheet open onClose={sheetClose} title="Match options">
+          <button type="button">Share match</button>
+        </MonoSheet>
+        <AppScoringConfirmDialog
+          cancelLabel="Keep scoring"
+          confirmLabel="Discard"
+          message="Your unsaved scoring changes will be lost."
+          onCancel={confirmCancel}
+          onConfirm={vi.fn()}
+          title="Discard changes?"
+        />
+      </>,
+    );
+
+    const confirmDialog = screen.getByRole('dialog', { name: 'Discard changes?' });
+    const sheetDialog = screen.getByRole('dialog', { name: 'Match options' });
+
+    // The confirm — raised last — must be the topmost modal surface, not the
+    // sheet behind it (both must be portaled to the body so DOM order reflects
+    // stacking order).
+    expect(isTopmostModalSurface(confirmDialog)).toBe(true);
+    expect(isTopmostModalSurface(sheetDialog)).toBe(false);
+    // Confirm stacks after the sheet in the document body.
+    expect(sheetDialog.compareDocumentPosition(confirmDialog) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+
+    // The confirm owns focus and interaction...
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep scoring' }));
+
+    // ...and Escape dismisses the confirm, never the sheet behind it.
+    fireEvent.keyDown(globalThis, { key: 'Escape' });
+    expect(confirmCancel).toHaveBeenCalledTimes(1);
+    expect(sheetClose).not.toHaveBeenCalled();
+  });
+
+  it('layers the app confirm backdrop above the mono sheet backdrop', () => {
+    const indexSource = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
+    const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
+
+    const confirmZ = Number(
+      /\.app-confirm-backdrop\s*\{[^}]*z-index:\s*(\d+)/.exec(indexSource)?.[1],
+    );
+    const sheetZ = Number(
+      /\.mono-sheet-backdrop\s*\{[^}]*z-index:\s*(\d+)/.exec(monoCss)?.[1],
+    );
+
+    expect(Number.isNaN(confirmZ)).toBe(false);
+    expect(Number.isNaN(sheetZ)).toBe(false);
+    // App confirms sit on a strictly higher tier than open sheets.
+    expect(confirmZ).toBeGreaterThan(sheetZ);
   });
 
   it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {

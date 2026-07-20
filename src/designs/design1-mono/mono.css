@@ -2332,3 +2332,133 @@ button.mono-stat-card {
   font-weight: 600;
   cursor: pointer;
 }
+/* ------------------------------------------------------------------ */
+/* MonoSheet — shared bottom-sheet primitive                          */
+/* Hard brutalist shell (hairline top border + hard offset shadow)    */
+/* with HiFi soft top radii; slide-up is reduced-motion gated.        */
+/* Shares the z-260 backdrop stacking baseline with .app-confirm.     */
+/* ------------------------------------------------------------------ */
+.mono-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.mono-sheet-backdrop-button {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mono-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  border: var(--se-border-standard) solid var(--se-color-line-strong);
+  border-top-left-radius: var(--se-blend-radius-soft-lg);
+  border-top-right-radius: var(--se-blend-radius-soft-lg);
+  background: var(--se-color-surface);
+  color: var(--se-color-ink-strong);
+  box-shadow: var(--se-shadow-hard);
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  animation: mono-sheet-rise var(--se-motion-standard, 250ms) ease;
+}
+
+.mono-sheet-handle {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: var(--se-blend-radius-capsule);
+  background: var(--se-color-line-strong);
+}
+
+.mono-sheet-title {
+  color: var(--se-color-ink-strong);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 12px;
+}
+
+.mono-sheet-body {
+  color: var(--se-color-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.mono-sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.mono-sheet-primary,
+.mono-sheet-secondary {
+  min-height: 48px;
+  border: var(--se-border-standard) solid var(--se-color-line-strong);
+  border-radius: var(--se-radius-button);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 12px 18px;
+  touch-action: manipulation;
+}
+
+.mono-sheet-primary {
+  background: var(--se-color-action);
+  color: var(--se-color-inverse);
+}
+
+.mono-sheet-danger {
+  background: var(--se-color-ink-strong);
+  color: var(--se-color-inverse);
+}
+
+.mono-sheet-secondary {
+  background: var(--se-color-surface);
+  color: var(--se-color-ink-strong);
+}
+
+@keyframes mono-sheet-rise {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .mono-sheet {
+    width: 100%;
+  }
+
+  .mono-sheet-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .mono-sheet-primary,
+  .mono-sheet-secondary {
+    width: 100%;
+    min-height: 50px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mono-sheet {
+    animation: none;
+  }
+}
