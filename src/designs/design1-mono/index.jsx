@@ -1721,28 +1721,36 @@ export default function Design1Mono() {
       noPriorRouteIndex: NO_PRIOR_ROUTE_INDEX,
     });
 
-    if (!shouldUnwind) {
-      // No recoverable prior route (deep link / no history idx) — best effort.
-      navigate(resultPath, { replace: true });
+    // shouldUnwind: pop `backDelta` back to the pre-scorer route, then PUSH
+    // Result (Back -> pre-scorer route). Otherwise (deep link / reload — the
+    // scorer is the first entry) pop `backDelta` guard entries to land back on
+    // the scorer, then REPLACE the scorer entry with Result so Back exits rather
+    // than returning to the dead, completed scorer.
+    const replaceAtEnd = !shouldUnwind;
+
+    if (backDelta <= 0) {
+      // Nothing to pop (no guard entry / indices unavailable) — best effort.
+      navigate(resultPath, replaceAtEnd ? { replace: true } : undefined);
       return;
     }
 
     allowNextProtectedPopRef.current = true;
     let settled = false;
     let fallbackTimeoutId = null;
-    const finish = (useReplace) => {
+    const finish = (popLanded) => {
       if (settled) return;
       settled = true;
       if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
       globalThis.removeEventListener('popstate', onUnwound);
-      // On a successful unwind we sit on the pre-scorer route, so push Result on
-      // top (Back -> pre-scorer route). If the pop never landed, replace instead.
-      navigate(resultPath, useReplace ? { replace: true } : undefined);
+      // Pop landed: sit on the target entry, then push (unwind) or replace
+      // (deep-link fallback) per plan. If the pop never landed, replace the
+      // current entry so the completed scorer is never left reachable.
+      navigate(resultPath, (replaceAtEnd || !popLanded) ? { replace: true } : undefined);
     };
-    const onUnwound = () => finish(false);
+    const onUnwound = () => finish(true);
     globalThis.addEventListener('popstate', onUnwound, { once: true });
     globalThis.history.go(-backDelta);
-    fallbackTimeoutId = globalThis.setTimeout(() => finish(true), 300);
+    fallbackTimeoutId = globalThis.setTimeout(() => finish(false), 300);
   }, [navigate]);
 
   return (

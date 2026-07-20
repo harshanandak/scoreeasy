@@ -40,23 +40,29 @@ export function getProtectedScoringBackFallback(pathname) {
 // Given the guard's history bookkeeping, this resolves how to leave the scorer so
 // Result sits directly on the route the user was on BEFORE scoring:
 //   - shouldUnwind + backDelta: pop `backDelta` entries (clearing every guard
-//     entry AND the scorer entry) back to the pre-scorer route, then push Result;
-//   - !shouldUnwind: no recoverable prior route (deep link / no history idx) —
-//     the caller should replace the current entry with Result as a best effort.
+//     entry AND the scorer entry) back to the pre-scorer route, then PUSH Result;
+//   - !shouldUnwind: no recoverable prior route (deep link / page reload — the
+//     scorer is the FIRST history entry). The guard entries still sit on top of
+//     the scorer, so the caller pops `backDelta` (= guardDepth) guard entries to
+//     land back on the scorer, then REPLACES the scorer entry with Result — Back
+//     from Result then exits rather than returning to the dead, completed scorer.
+//     When history indices are missing entirely we cannot pop, so backDelta is 0
+//     and the caller just replaces the current entry as a best effort.
 export function resolveProtectedScoringCompletion({
   currentHistoryIndex,
   baseHistoryIndex,
   guardDepth = 0,
   noPriorRouteIndex = -1,
 } = {}) {
+  const hasCurrentIndex = typeof currentHistoryIndex === 'number';
   const canUnwind =
-    typeof currentHistoryIndex === 'number' &&
+    hasCurrentIndex &&
     typeof baseHistoryIndex === 'number' &&
     baseHistoryIndex !== noPriorRouteIndex &&
     currentHistoryIndex > baseHistoryIndex;
 
   if (!canUnwind) {
-    return { shouldUnwind: false, backDelta: 0 };
+    return { shouldUnwind: false, backDelta: hasCurrentIndex ? guardDepth : 0 };
   }
 
   return {

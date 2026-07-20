@@ -142,17 +142,34 @@ describe('resolveProtectedScoringCompletion', () => {
     expect(result.backDelta).toBe(4); // 1 (scorer) + 3 (guards)
   });
 
-  it('does not unwind a deep-linked scorer with no prior route (replace instead)', () => {
+  // Deep link / page reload: the scorer is the FIRST history entry, so there is
+  // no pre-scorer route to return to. The guard effect still pushed its
+  // gameProtection entry on top of the scorer, so a plain replace only drops
+  // that guard entry and leaves the frozen, completed scorer reachable via Back.
+  // The caller must instead pop the guard entries to land back on the scorer,
+  // then REPLACE the scorer entry with Result (Back -> exit, never the scorer).
+  it('pops the guard entries off a deep-linked scorer so Result replaces the scorer, not the guard', () => {
     const result = resolveProtectedScoringCompletion({
       currentHistoryIndex: 0,
       baseHistoryIndex: -1, // NO_PRIOR_ROUTE_INDEX sentinel
       guardDepth: 1,
     });
     expect(result.shouldUnwind).toBe(false);
-    expect(result.backDelta).toBe(0);
+    // One guard position to pop; caller then replaces the scorer entry itself.
+    expect(result.backDelta).toBe(1);
   });
 
-  it('does not unwind when history indices are unavailable', () => {
+  it('pops every stacked guard entry off a deep-linked scorer before replacing it', () => {
+    const result = resolveProtectedScoringCompletion({
+      currentHistoryIndex: 0,
+      baseHistoryIndex: -1,
+      guardDepth: 3, // user bounced on Back before finishing the deep-linked match
+    });
+    expect(result.shouldUnwind).toBe(false);
+    expect(result.backDelta).toBe(3);
+  });
+
+  it('does not pop when history indices are unavailable (replace current as best effort)', () => {
     expect(resolveProtectedScoringCompletion({
       currentHistoryIndex: undefined,
       baseHistoryIndex: undefined,
