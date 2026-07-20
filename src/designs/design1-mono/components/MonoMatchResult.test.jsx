@@ -211,6 +211,17 @@ describe('MonoMatchResult — Sets container wiring', () => {
     expect(screen.queryByRole('heading', { name: /win/i })).toBeNull();
   });
 
+  it('resolves a completed tournament stored under a STRING id', () => {
+    // Tournament ids may be non-numeric (e.g. 'cup-1'); every other mono loader
+    // matches both Number(id) and the raw string, so the result screen must too —
+    // otherwise a valid stored tournament opens everywhere except its result.
+    rt.tournaments = [{ ...completedTournament, id: 'cup-1' }];
+    rt.params = { sport: 'volleyball', id: 'cup-1', matchId: 'm1' };
+    render(<MonoMatchResult />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Alpha win 3–1');
+    expect(screen.queryByText(/result unavailable/i)).toBeNull();
+  });
+
   it('does not render a result for an in-progress match', () => {
     rt.tournaments = [{
       ...completedTournament,

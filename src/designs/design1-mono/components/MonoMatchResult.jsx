@@ -196,7 +196,7 @@ export default function MonoMatchResult() {
 
   const config = getSportById(sport);
   const tournaments = config ? loadSportTournaments(config.storageKey) : [];
-  const tournament = tournaments.find((t) => t.id === Number(id));
+  const tournament = tournaments.find((t) => t.id === Number(id) || t.id === id);
   const isMatchId = (m) => m.id === matchId || m.id === Number(matchId);
   const match = tournament
     ? [...(tournament.matches || []), ...(tournament.knockoutMatches || [])].find(isMatchId)
