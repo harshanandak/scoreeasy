@@ -17,6 +17,8 @@
  *     score1,      // primary numeric tally for team1 (sets won / goals / runs)
  *     score2,      // primary numeric tally for team2
  *     sets,        // [{ score1, score2, completed }] for the per-set line score
+ *     setsWon1,    // explicit sets-won tally for team1 (sets engines)
+ *     setsWon2,    // explicit sets-won tally for team2 (sets engines)
  *     team1Score,  // cricket innings { runs, wickets, balls }
  *     team2Score,  // cricket innings { runs, wickets, balls }
  *     winDesc,     // cricket win description e.g. 'by 42 runs'
@@ -121,15 +123,64 @@ function cricketTotals(m) {
   return [num(m.score1), num(m.score2)];
 }
 
+// Decide a single persisted set. Engines compare the set's primary score (games
+// for tennis, points for volleyball/badminton); a tiebreak set that is still
+// level on games is decided by its tiebreak points.
+function setWinner(set) {
+  const a = num(set.score1 ?? set.games1);
+  const b = num(set.score2 ?? set.games2);
+  if (a !== b) return a > b ? 1 : 2;
+  if (!set.isTiebreak) return 0;
+  const t1 = num(set.tiebreakPoints1);
+  const t2 = num(set.tiebreakPoints2);
+  if (t1 === t2) return 0;
+  return t1 > t2 ? 1 : 2;
+}
+
+function countSetsWon(sets) {
+  let won1 = 0;
+  let won2 = 0;
+  for (const set of sets) {
+    if (!set || set.completed === false) continue;
+    const side = setWinner(set);
+    if (side === 1) won1 += 1;
+    else if (side === 2) won2 += 1;
+  }
+  return [won1, won2];
+}
+
+// Resolve the two sets-won tallies for a sets match from whichever shape the
+// engine actually persisted, in priority order:
+//   1. an explicit setsWon1/setsWon2 tally — MonoSetsLiveScore, quick match
+//   2. a count of the sets[] entries      — MonoTennisLiveScore (tournament)
+//   3. an explicit score1/score2 tally    — generic / already-normalized input
+// The tennis tournament save persists only sets[] + winner, so reading the
+// primary tally alone gives 0–0 and a wrong verdict — this is the bug this
+// helper fixes, mirroring cricketTotals above.
+function setsTotals(m) {
+  if (Number.isFinite(m.setsWon1) || Number.isFinite(m.setsWon2)) {
+    return [num(m.setsWon1), num(m.setsWon2)];
+  }
+  if (Array.isArray(m.sets) && m.sets.length > 0) {
+    return countSetsWon(m.sets);
+  }
+  return [num(m.score1), num(m.score2)];
+}
+
 export function matchVerdict(match) {
   const m = match || {};
   const team1 = m.team1 || 'Team 1';
   const team2 = m.team2 || 'Team 2';
   const status = m.status === 'abandoned' ? 'abandoned' : 'completed';
   const kind = m.kind;
-  // Cricket derives its primary tallies from the innings runs the engine
-  // persisted; every other engine uses the primary score1/score2 tally.
-  const [s1, s2] = kind === 'cricket' ? cricketTotals(m) : [num(m.score1), num(m.score2)];
+  // Cricket and sets derive their primary tallies from the shape the engine
+  // actually persisted (innings runs / sets won); every other engine uses the
+  // primary score1/score2 tally directly.
+  let s1;
+  let s2;
+  if (kind === 'cricket') [s1, s2] = cricketTotals(m);
+  else if (kind === 'sets') [s1, s2] = setsTotals(m);
+  else [s1, s2] = [num(m.score1), num(m.score2)];
   const detailLabel = m.unit || UNIT_BY_KIND[kind] || null;
 
   // Abandoned matches have no verdict regardless of any score present.

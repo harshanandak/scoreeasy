@@ -62,6 +62,86 @@ describe('matchVerdict — sets engine', () => {
   });
 });
 
+describe('matchVerdict — sets shape (derived totals)', () => {
+  // Regression: MonoTennisLiveScore's tournament save path persists ONLY
+  // sets[] + winner + status for a completed match — no setsWon1/setsWon2 and no
+  // score1/score2 (MonoTennisLiveScore.jsx, updateMatchInTournament). Reading the
+  // primary tally alone yields 0–0, so a real 2–1 win renders a "0–0" headline and
+  // aria summary while the set line below shows the true per-set scores. The same
+  // sets[]-only shape is what MonoHistory/MonoStatistics already fall back to
+  // counting. (Codex #128, MonoMatchResult.jsx passing setsWon1 ?? 0.)
+  const tennisSets = [
+    { score1: 6, score2: 4, games1: 6, games2: 4, completed: true },
+    { score1: 3, score2: 6, games1: 3, games2: 6, completed: true },
+    { score1: 7, score2: 6, games1: 7, games2: 6, tiebreakPoints1: 7, tiebreakPoints2: 5, completed: true, isTiebreak: true },
+  ];
+
+  it('counts sets won from sets[] when no setsWon/score tally was persisted', () => {
+    const v = matchVerdict({ kind: 'sets', team1: 'Alpha', team2: 'Beta', winnerSide: 'team1', sets: tennisSets });
+    expect(v.headline).toBe('Alpha win 2–1');
+    expect(v.scoreLine).toBe('2 – 1');
+    expect(v.ariaSummary).toContain('Alpha 2');
+    expect(v.ariaSummary).toContain('Beta 1');
+    expect(v.ariaSummary).not.toContain('Alpha 0');
+  });
+
+  it('infers the winner from sets[] when winnerSide is also absent', () => {
+    const v = matchVerdict({ kind: 'sets', team1: 'Alpha', team2: 'Beta', sets: tennisSets });
+    expect(v.winnerSide).toBe('team1');
+    expect(v.winnerName).toBe('Alpha');
+    expect(v.isDecided).toBe(true);
+    expect(v.headline).toBe('Alpha win 2–1');
+  });
+
+  it('decides a games-level set on the tiebreak points', () => {
+    const v = matchVerdict({
+      kind: 'sets',
+      team1: 'Alpha',
+      team2: 'Beta',
+      sets: [
+        { score1: 6, score2: 4, completed: true },
+        { score1: 6, score2: 6, tiebreakPoints1: 5, tiebreakPoints2: 7, completed: true, isTiebreak: true },
+        { score1: 4, score2: 6, completed: true },
+      ],
+    });
+    expect(v.winnerSide).toBe('team2');
+    expect(v.headline).toBe('Beta win 2–1');
+  });
+
+  it('ignores sets that are not yet played', () => {
+    const v = matchVerdict({
+      kind: 'sets',
+      team1: 'Alpha',
+      team2: 'Beta',
+      sets: [
+        { score1: 25, score2: 20, completed: true },
+        { score1: 25, score2: 18, completed: true },
+        { score1: 0, score2: 0, completed: false },
+      ],
+    });
+    expect(v.headline).toBe('Alpha win 2–0');
+  });
+
+  it('prefers an explicitly persisted setsWon tally over the sets[] count', () => {
+    // MonoSetsLiveScore persists setsWon1/setsWon2 — that tally is authoritative.
+    const v = matchVerdict({
+      kind: 'sets',
+      team1: 'Alpha',
+      team2: 'Beta',
+      setsWon1: 3,
+      setsWon2: 1,
+      sets: [{ score1: 25, score2: 20, completed: true }],
+    });
+    expect(v.headline).toBe('Alpha win 3–1');
+    expect(v.scoreLine).toBe('3 – 1');
+  });
+
+  it('still falls back to score1/score2 when no sets[] was persisted', () => {
+    const v = matchVerdict({ kind: 'sets', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 0 });
+    expect(v.headline).toBe('Alpha win 2–0');
+  });
+});
+
 describe('matchVerdict — goals engine', () => {
   it('phrases a win by margin', () => {
     const v = matchVerdict({ kind: 'goals', team1: 'Reds', team2: 'Blues', score1: 21, score2: 7, winnerSide: 'team1' });

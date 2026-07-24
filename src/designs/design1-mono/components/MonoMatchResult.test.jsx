@@ -215,6 +215,26 @@ describe('MonoMatchResult — Sets container wiring', () => {
     expect(screen.getByText(/25–20/)).toBeInTheDocument();
   });
 
+  // MonoTennisLiveScore's tournament save persists sets[] + winner and NO
+  // setsWon1/setsWon2, so the container must derive the tally rather than default
+  // it to 0 — otherwise a real 2–1 win headlines "0–0" above its own set scores.
+  it('derives the verdict for a stored match that has only sets[]', () => {
+    rt.tournaments = [{
+      ...completedTournament,
+      matches: [{
+        id: 'm1', team1Id: 1, team2Id: 2, status: 'completed', winner: 1,
+        sets: [
+          { score1: 6, score2: 4, completed: true },
+          { score1: 3, score2: 6, completed: true },
+          { score1: 7, score2: 6, tiebreakPoints1: 7, tiebreakPoints2: 5, completed: true, isTiebreak: true },
+        ],
+      }],
+    }];
+    render(<MonoMatchResult />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Alpha win 2–1');
+    expect(screen.getByText(/7–6/)).toBeInTheDocument();
+  });
+
   it('routes Done to the tournament bracket, REPLACING the Result entry', () => {
     // Result is pushed on top of the pre-scorer route (the unwind fix), so leaving
     // it must replace the Result entry — otherwise Back after Done re-enters a
