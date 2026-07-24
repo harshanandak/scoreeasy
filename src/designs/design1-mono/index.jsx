@@ -21,7 +21,9 @@ import {
   getProtectedScoringBackFallback,
   installNativeBackButtonGuard,
   isProtectedScoringRoute,
+  resolveProtectedScoringCompletion,
 } from '../../mobile/backButton';
+import { ScoringCompletionContext } from './scoring/scoringCompletionContext';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
@@ -34,6 +36,7 @@ const DashboardLanding = lazy(() => import('./landing/DashboardLanding'));
 const MonoHistory = lazy(() => import('./MonoHistory'));
 const MonoTournamentList = lazy(() => import('./MonoTournamentList'));
 const MonoTournamentLiveScore = lazy(() => import('./MonoTournamentLiveScore'));
+const MonoMatchResult = lazy(() => import('./components/MonoMatchResult'));
 
 // Lazy-loaded tournament components (loaded on demand per sport type)
 const MonoCricketTournament = lazy(() => import('./MonoCricketTournament'));
@@ -1711,6 +1714,51 @@ export default function Design1Mono() {
     };
   }, [location.pathname, location.search, navigate, requestScoringExit]);
 
+  // Finish a protected scorer: land on the FULL-TIME result screen while unwinding
+  // the scorer entry AND its protection guard entries, so Back from Result returns
+  // to the pre-scorer route rather than the frozen, completed scorer (PR #128).
+  // Reuses the guard's history bookkeeping + one-shot pop allowance, so no exit
+  // dialog fires while we pop back past the guard entries.
+  const completeProtectedScoring = useCallback((resultPath) => {
+    const { shouldUnwind, backDelta } = resolveProtectedScoringCompletion({
+      currentHistoryIndex: globalThis.history.state?.idx,
+      baseHistoryIndex: protectedRouteHistoryIndexRef.current,
+      guardDepth: protectedGuardDepthRef.current,
+      noPriorRouteIndex: NO_PRIOR_ROUTE_INDEX,
+    });
+
+    // shouldUnwind: pop `backDelta` back to the pre-scorer route, then PUSH
+    // Result (Back -> pre-scorer route). Otherwise (deep link / reload — the
+    // scorer is the first entry) pop `backDelta` guard entries to land back on
+    // the scorer, then REPLACE the scorer entry with Result so Back exits rather
+    // than returning to the dead, completed scorer.
+    const replaceAtEnd = !shouldUnwind;
+
+    if (backDelta <= 0) {
+      // Nothing to pop (no guard entry / indices unavailable) — best effort.
+      navigate(resultPath, replaceAtEnd ? { replace: true } : undefined);
+      return;
+    }
+
+    allowNextProtectedPopRef.current = true;
+    let settled = false;
+    let fallbackTimeoutId = null;
+    const finish = (popLanded) => {
+      if (settled) return;
+      settled = true;
+      if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
+      globalThis.removeEventListener('popstate', onUnwound);
+      // Pop landed: sit on the target entry, then push (unwind) or replace
+      // (deep-link fallback) per plan. If the pop never landed, replace the
+      // current entry so the completed scorer is never left reachable.
+      navigate(resultPath, (replaceAtEnd || !popLanded) ? { replace: true } : undefined);
+    };
+    const onUnwound = () => finish(true);
+    globalThis.addEventListener('popstate', onUnwound, { once: true });
+    globalThis.history.go(-backDelta);
+    fallbackTimeoutId = globalThis.setTimeout(() => finish(false), 300);
+  }, [navigate]);
+
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
@@ -1719,6 +1767,7 @@ export default function Design1Mono() {
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
       <main id="main-content">
+        <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
             <OnboardingGuard>
@@ -1756,6 +1805,7 @@ export default function Design1Mono() {
                 <Route path=":sport/tournament/new" element={<SportRouteGuard><MonoTournamentSetup /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id" element={<SportRouteGuard><TournamentDispatcher /></SportRouteGuard>} />
                 <Route path=":sport/tournament/:id/match/:matchId/score" element={<SportRouteGuard><MonoTournamentLiveScore /></SportRouteGuard>} />
+                <Route path=":sport/tournament/:id/match/:matchId/result" element={<SportRouteGuard><MonoMatchResult /></SportRouteGuard>} />
                 <Route path=":sport/quick" element={<SportRouteGuard><MonoQuickMatch /></SportRouteGuard>} />
                 <Route path=":sport/quick/test/:matchId" element={<LegacyCricketQuickTestRoute />} />
                 <Route path=":sport/quick/test-match/:matchId" element={<CricketQuickTestScorerRoute />} />
@@ -1779,6 +1829,7 @@ export default function Design1Mono() {
             </OnboardingGuard>
           </ErrorBoundary>
         </Suspense>
+        </ScoringCompletionContext.Provider>
       </main>
       <AppConfirmDialog
         prompt={exitPrompt}
