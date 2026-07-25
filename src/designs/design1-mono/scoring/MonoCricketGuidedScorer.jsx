@@ -4,15 +4,20 @@ import {
   createInnings,
   makeDelivery,
   applyDelivery,
+  editDelivery,
   undo as undoInnings,
   changeStrike,
   applyRetire,
+  retiredBatters,
   changeBowler,
+  canBowl,
   deriveInnings,
   deriveChase,
   oversString,
   isLegalDelivery,
 } from '../../../utils/cricketEngine.js';
+import WicketSheet from './WicketSheet.jsx';
+import PlayerPickerSheet from './PlayerPickerSheet.jsx';
 
 // C3/C4 Guided cricket scorer. Pure component: the live innings is engine state
 // held in React; EVERY stat is derived from deriveInnings/deriveChase — nothing is
@@ -46,14 +51,6 @@ function pipFor(d) {
   return { label: bye > 0 ? `${r}${suffix}` : String(r), cls: '' };
 }
 
-const HOW_OUT = [
-  { type: 'bowled', label: 'Bowled' },
-  { type: 'caught', label: 'Caught' },
-  { type: 'lbw', label: 'LBW' },
-  { type: 'run-out', label: 'Run out' },
-  { type: 'stumped', label: 'Stumped' },
-];
-
 export default function MonoCricketGuidedScorer({
   format,
   striker,
@@ -61,6 +58,7 @@ export default function MonoCricketGuidedScorer({
   bowler,
   target = null,
   initialInnings = null,
+  squad = null,
   onStateChange,
   onComplete,
 }) {
@@ -85,15 +83,29 @@ export default function MonoCricketGuidedScorer({
   );
 
   const [mode, setMode] = useState('guided'); // 'guided' | 'power'
-  const [howOutOpen, setHowOutOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Name lookup for the three seeded pointers (incoming batters fall back to id/—).
+  // C6 sheet state.
+  const [wicketOpen, setWicketOpen] = useState(false);
+  // batterPicker: { ctx:'wicket'|'mankad'|'retire', index?, batter?, mode? } | null
+  const [batterPicker, setBatterPicker] = useState(null);
+  const [bowlerOpen, setBowlerOpen] = useState(false);
+  const [retireCfg, setRetireCfg] = useState(null); // { end, mode } | null
+  const [penaltyN, setPenaltyN] = useState(5);
+  const [toast, setToast] = useState('');
+  // Names learned from picks (incoming batters / new bowlers) so the UI can label
+  // ids that were never in the seeded trio.
+  const [extraNames, setExtraNames] = useState({});
+  // Highest completed-over index we've already prompted a bowler change for.
+  const overPrompted = useRef(0);
+
+  // Name lookup for the three seeded pointers + anyone picked later.
   const nameMap = useMemo(
     () => ({ [s0.id]: s0.name, [ns0.id]: ns0.name, [b0.id]: b0.name }),
     [s0, ns0, b0]
   );
-  const nameOf = (id) => nameMap[id] ?? id ?? '—';
+  const nameOf = (id) => nameMap[id] ?? extraNames[id] ?? id ?? '—';
+  const learnName = (p) => setExtraNames((m) => ({ ...m, [p.id]: p.name ?? p.id }));
 
   const der = useMemo(() => deriveInnings(innings, fmt), [innings, fmt]);
   const chase = useMemo(() => deriveChase(innings, fmt), [innings, fmt]);
@@ -121,50 +133,195 @@ export default function MonoCricketGuidedScorer({
     }
   }, [der.wkts, der.legalBalls, der.runs]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-dismiss the inline toast.
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(''), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   // ---- engine actions ----
-  const apply = (delivery) => {
-    setInnings((prev) => {
-      try {
-        return applyDelivery(prev, delivery, fmt);
-      } catch (e) {
-        console.warn('applyDelivery rejected:', e.message);
-        return prev;
-      }
-    });
-    setHowOutOpen(false);
+  // Open the quota-aware bowler picker when a legal ball has just closed an over.
+  const maybePromptBowler = (nextInn) => {
+    const lb = deriveInnings(nextInn, fmt).legalBalls;
+    const co = Math.floor(lb / bpo);
+    if (lb > 0 && lb % bpo === 0 && overPrompted.current < co && !completed.current) {
+      overPrompted.current = co;
+      setBowlerOpen(true);
+    }
+  };
+
+  // Commit a normal delivery from the live innings; surface a rejection as a toast
+  // (the engine THROWS on illegal dismissals) instead of only console.warn.
+  const apply = (delivery, { overPrompt = true } = {}) => {
+    let next;
+    try {
+      next = applyDelivery(innings, delivery, fmt);
+    } catch (e) {
+      setToast(e.message);
+      return null;
+    }
+    setInnings(next);
+    if (overPrompt) maybePromptBowler(next);
+    return next;
   };
 
   const scoreRuns = (n) => apply(makeDelivery({ batsmanRuns: n }));
   const scoreExtra = (type, runs = 1) => apply(makeDelivery({ extras: [{ type, runs }] }));
 
-  const scoreWicket = (type) => {
-    const w = { type, out: innings.striker, bowler: innings.bowler };
-    if (type === 'run-out') {
-      w.end = 'striker';
-      w.completedRuns = 0;
+  const playersPerSide = innings.playersPerSide || 11;
+
+  // Batter-picker options: squad batters not already batting / out; retire also
+  // offers resumable (retired-hurt/rotate) batters up top.
+  const batterOptions = (ctx) => {
+    const onField = new Set([innings.striker, innings.nonStriker].filter(Boolean));
+    const outIds = new Set(
+      Object.entries(der.batters).filter(([, b]) => b.out).map(([id]) => id)
+    );
+    const base = (squad?.batting || [])
+      .map(normPlayer)
+      .filter((p) => !onField.has(p.id) && !outIds.has(p.id));
+    if (ctx === 'retire') {
+      const resume = retiredBatters(innings).map((r) => ({
+        id: r.batter,
+        name: `Resume ${nameOf(r.batter)}`,
+      }));
+      return [...resume, ...base.filter((p) => !resume.some((r) => r.id === p.id))];
     }
-    if (type === 'caught') w.crossed = false;
-    apply(makeDelivery({ wicket: w }));
+    return base;
+  };
+
+  // Bowler-picker options: squad bowlers (or those already seen), each flagged with
+  // canBowl — over-quota shows "quota", consecutive-over shows "consec.".
+  const bowlerOptions = () => {
+    const seen = new Set(Object.keys(der.bowlers));
+    seen.add(b0.id);
+    const list = squad?.bowling?.length
+      ? squad.bowling.map(normPlayer)
+      : [...seen].map((id) => ({ id, name: nameOf(id) }));
+    return list.map((p) => {
+      const ok = canBowl(innings, p.id, fmt);
+      let reason = '';
+      if (!ok) {
+        const balls = innings.deliveries.reduce(
+          (n, d) => n + (isLegalDelivery(d) && d.bowler === p.id ? 1 : 0), 0);
+        const overs = Math.floor(balls / bpo);
+        reason = fmt.maxOversPerBowler != null && overs >= fmt.maxOversPerBowler
+          ? 'quota' : 'consec.';
+      }
+      return { id: p.id, name: p.name, disabled: !ok, reason };
+    });
+  };
+
+  // Wicket: apply immediately with incoming=null (so the wkt lands now), then open
+  // the new-batter picker unless the innings is all out; the pick is injected back
+  // into the just-applied delivery via editDelivery.
+  const onWicketConfirm = (w) => {
+    setWicketOpen(false);
+    const wicket = { ...w, bowler: innings.bowler, incoming: null, onFreeHit: innings.freeHit };
+    let next;
+    try {
+      next = applyDelivery(innings, makeDelivery({ wicket }), fmt);
+    } catch (e) {
+      setToast(e.message);
+      return;
+    }
+    setInnings(next);
+    const idx = next.deliveries.length - 1;
+    const wkts = deriveInnings(next, fmt).wkts;
+    if (wkts < playersPerSide - 1) {
+      setBatterPicker({ ctx: 'wicket', index: idx });
+    } else {
+      maybePromptBowler(next); // last wkt could still close an over
+    }
+  };
+
+  // Mankad: run out the non-striker before the ball; same apply-then-inject flow.
+  const doMankad = () => {
+    setSheetOpen(false);
+    const wicket = { type: 'mankad', out: innings.nonStriker, bowler: innings.bowler, incoming: null };
+    let next;
+    try {
+      next = applyDelivery(innings, makeDelivery({ wicket }), fmt);
+    } catch (e) {
+      setToast(e.message);
+      return;
+    }
+    setInnings(next);
+    const idx = next.deliveries.length - 1;
+    if (deriveInnings(next, fmt).wkts < playersPerSide - 1) {
+      setBatterPicker({ ctx: 'mankad', index: idx });
+    }
+  };
+
+  const onBatterPick = (player) => {
+    const ctx = batterPicker;
+    setBatterPicker(null);
+    learnName(player);
+    if (!ctx) return;
+    if (ctx.ctx === 'retire') {
+      try {
+        setInnings(applyRetire(innings, { batter: ctx.batter, mode: ctx.mode, incoming: player.id }, fmt));
+      } catch (e) {
+        setToast(e.message);
+      }
+      return;
+    }
+    // wicket / mankad: inject the incoming batter into the stored delivery + replay.
+    const orig = innings.deliveries[ctx.index];
+    try {
+      const { diff, ...ni } = editDelivery(
+        innings, ctx.index, { wicket: { ...orig.wicket, incoming: player.id } }, fmt
+      );
+      setInnings(ni);
+      maybePromptBowler(ni);
+    } catch (e) {
+      setToast(e.message);
+    }
+  };
+
+  const onBowlerPick = (player) => {
+    setBowlerOpen(false);
+    if (!canBowl(innings, player.id, fmt)) {
+      setToast('Bowler not eligible (quota / consecutive over)');
+      return;
+    }
+    setInnings(changeBowler(innings, player.id));
+    learnName(player);
   };
 
   const doUndo = () => {
     completed.current = false;
-    setInnings((prev) => undoInnings(prev));
-    setHowOutOpen(false);
+    const next = undoInnings(innings);
+    setInnings(next);
+    const co = Math.floor(deriveInnings(next, fmt).legalBalls / bpo);
+    if (co < overPrompted.current) overPrompted.current = co;
+    setWicketOpen(false);
   };
 
   // SWAP: engine-authoritative ball-free strike change (a correction, not a ball).
   const swapStrike = () => setInnings((prev) => changeStrike(prev));
 
   // ⋯More sheet actions
-  const retireStriker = () => {
-    setInnings((prev) => applyRetire(prev, { batter: prev.striker, mode: 'out', incoming: null }, fmt));
+  const doDeadBall = () => {
     setSheetOpen(false);
+    apply(makeDelivery({ deadBall: true }), { overPrompt: false });
   };
-  const cycleBowler = () => {
-    // No new-bowler picker in this slice; wire the real engine op as a no-op swap.
-    setInnings((prev) => changeBowler(prev, prev.bowler));
+  const doPenalty = (n = penaltyN) => {
     setSheetOpen(false);
+    apply(makeDelivery({ extras: [{ type: 'penalty', runs: Number(n) || 0 }] }));
+  };
+  const startRetirePick = () => {
+    const end = retireCfg?.end || 'striker';
+    const batter = end === 'striker' ? innings.striker : innings.nonStriker;
+    const mode = retireCfg?.mode || 'hurt';
+    setRetireCfg(null);
+    setSheetOpen(false);
+    setBatterPicker({ ctx: 'retire', batter, mode });
+  };
+  const openBowlerPicker = () => {
+    setSheetOpen(false);
+    setBowlerOpen(true);
   };
   const endInnings = () => {
     setSheetOpen(false);
@@ -243,7 +400,12 @@ export default function MonoCricketGuidedScorer({
               </span>
               <span className="ck-hero-ov">({der.overs})</span>
             </div>
-            <span className="ck-hero-crr">CRR {chase.CRR.toFixed(2)}</span>
+            <span className="ck-hero-crr">
+              {innings.freeHit ? (
+                <span className="ck-freehit" data-testid="freehit-badge">FREE HIT</span>
+              ) : null}
+              CRR {chase.CRR.toFixed(2)}
+            </span>
           </div>
           <div className="ck-hero-bar"><i style={{ width: `${progressPct}%` }} /></div>
           {hasTarget ? (
@@ -328,26 +490,11 @@ export default function MonoCricketGuidedScorer({
                   type="button"
                   className="big5-key big5-key-wicket"
                   aria-label="Wicket"
-                  aria-expanded={howOutOpen}
-                  onClick={() => setHowOutOpen((v) => !v)}
+                  aria-expanded={wicketOpen}
+                  onClick={() => setWicketOpen(true)}
                 >
                   W<small>WICKET</small>
                 </button>
-                {howOutOpen ? (
-                  <div className="howout" data-testid="howout">
-                    <span className="howout-lbl">How out?</span>
-                    {HOW_OUT.map((h) => (
-                      <button
-                        key={h.type}
-                        type="button"
-                        className="ho-pill"
-                        onClick={() => scoreWicket(h.type)}
-                      >
-                        {h.label}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             </div>
 
@@ -405,21 +552,136 @@ export default function MonoCricketGuidedScorer({
             <div className="sheet-grab" />
             <div className="sheet-head">
               <span className="sheet-title">Match options</span>
-              <button type="button" className="sheet-x" aria-label="Close" onClick={() => setSheetOpen(false)}>
+              <button
+                type="button"
+                className="sheet-x"
+                aria-label="Close"
+                onClick={() => { setRetireCfg(null); setSheetOpen(false); }}
+              >
                 {'✕'}
               </button>
             </div>
-            <div className="menu-row">
-              <button type="button" className="pill" onClick={doUndo}>Correct last ball</button>
-              <button type="button" className="pill" onClick={cycleBowler}>Change bowler</button>
-              <button type="button" className="pill" onClick={retireStriker}>Retire</button>
-            </div>
-            <div className="menu-actions">
-              <button type="button" className="menu-end" onClick={endInnings}>End innings</button>
-              <button type="button" className="menu-end danger" onClick={endMatch}>End match</button>
-            </div>
+
+            {retireCfg ? (
+              <div className="menu-retire" data-testid="retire-config">
+                <span className="sec-lbl">Retire — who?</span>
+                <div className="menu-row">
+                  {['striker', 'non-striker'].map((end) => (
+                    <button
+                      key={end}
+                      type="button"
+                      className={`pill${retireCfg.end === end ? ' on' : ''}`}
+                      aria-pressed={retireCfg.end === end}
+                      onClick={() => setRetireCfg((c) => ({ ...c, end }))}
+                      disabled={end === 'non-striker' && innings.nonStriker == null}
+                    >
+                      {end === 'striker' ? nameOf(innings.striker) : nameOf(innings.nonStriker)}
+                    </button>
+                  ))}
+                </div>
+                <span className="sec-lbl">Mode</span>
+                <div className="menu-row">
+                  {[
+                    ['hurt', 'Retired hurt'],
+                    ['out', 'Retired out'],
+                    ['rotate', 'Rotate'],
+                  ].map(([m, lbl]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`pill${retireCfg.mode === m ? ' on' : ''}`}
+                      aria-pressed={retireCfg.mode === m}
+                      onClick={() => setRetireCfg((c) => ({ ...c, mode: m }))}
+                    >
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+                <div className="menu-actions">
+                  <button type="button" className="menu-end" onClick={startRetirePick}>
+                    Continue
+                  </button>
+                  <button type="button" className="menu-end danger" onClick={() => setRetireCfg(null)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="menu-row">
+                  <button type="button" className="pill" onClick={doDeadBall}>Dead ball</button>
+                  <button type="button" className="pill" onClick={doMankad}>Mankad</button>
+                  <button type="button" className="pill" onClick={() => doPenalty(5)}>Penalty +5</button>
+                  <button type="button" className="pill" onClick={openBowlerPicker}>Change bowler</button>
+                  <button
+                    type="button"
+                    className="pill"
+                    onClick={() => setRetireCfg({ end: 'striker', mode: 'hurt' })}
+                  >
+                    Retire
+                  </button>
+                  <button type="button" className="pill" onClick={doUndo}>Correct last ball</button>
+                </div>
+                <div className="menu-penalty">
+                  <label className="sec-lbl" htmlFor="ck-penalty-n">Penalty runs</label>
+                  <div className="pick-custom">
+                    <input
+                      id="ck-penalty-n"
+                      type="number"
+                      min="1"
+                      className="pick-input"
+                      aria-label="Penalty runs"
+                      value={penaltyN}
+                      onChange={(e) => setPenaltyN(e.target.value)}
+                    />
+                    <button type="button" className="pill" onClick={() => doPenalty(penaltyN)}>
+                      Add penalty
+                    </button>
+                  </div>
+                </div>
+                <div className="menu-actions">
+                  <button type="button" className="menu-end" onClick={endInnings}>End innings</button>
+                  <button type="button" className="menu-end danger" onClick={endMatch}>End match</button>
+                </div>
+              </>
+            )}
           </div>
         </>
+      ) : null}
+
+      {/* C6 how-out sheet — replaces the inline flow */}
+      <WicketSheet
+        open={wicketOpen}
+        onClose={() => setWicketOpen(false)}
+        inn={innings}
+        format={fmt}
+        onConfirm={onWicketConfirm}
+      />
+
+      {/* New-batter picker (wicket / mankad / retire incoming) */}
+      <PlayerPickerSheet
+        open={!!batterPicker}
+        onClose={() => setBatterPicker(null)}
+        title="New batter"
+        options={batterPicker ? batterOptions(batterPicker.ctx) : []}
+        onPick={onBatterPick}
+        allowCustom
+      />
+
+      {/* Quota-aware bowler picker (over end / manual change) */}
+      <PlayerPickerSheet
+        open={bowlerOpen}
+        onClose={() => setBowlerOpen(false)}
+        title="New bowler"
+        options={bowlerOptions()}
+        onPick={onBowlerPick}
+        allowCustom
+      />
+
+      {toast ? (
+        <div className="ck-toast" role="alert" data-testid="scorer-toast" onClick={() => setToast('')}>
+          {toast}
+        </div>
       ) : null}
     </div>
   );
@@ -533,6 +795,34 @@ const STYLES = `
 .menu-actions { display: flex; gap: 8px; margin-top: 2px; }
 .menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
+
+.ck-freehit { display: inline-flex; align-items: center; padding: 1px 7px; margin-right: 8px; border-radius: 999px; background: var(--primary); color: var(--se-color-inverse); font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Shared sheet content (rendered into MonoSheet portals; global styles apply) */
+.wk-sheet, .pick-sheet { display: flex; flex-direction: column; gap: 10px; }
+.wk-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.wk-note { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-danger); margin: 0; }
+.wk-step { display: flex; flex-direction: column; gap: 8px; }
+.wk-q { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.ho-pill.on { background: var(--se-color-action); border-color: var(--se-color-action); color: var(--se-color-inverse); }
+.wk-more { color: var(--se-color-ink-muted); }
+.wk-confirm { align-self: flex-start; margin-top: 2px; }
+
+.pick-list { display: flex; flex-direction: column; gap: 6px; }
+.pick-opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 8px 14px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 10px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; text-align: left; }
+.pick-opt:active { background: var(--accent); }
+.pick-opt:disabled { opacity: 0.45; cursor: not-allowed; }
+.pick-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-reason { flex: none; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-danger); }
+.pick-custom { display: flex; gap: 7px; }
+.pick-input { flex: 1; min-width: 0; min-height: 40px; padding: 8px 12px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-sans); font-size: 0.8125rem; }
+.pick-custom .pill { flex: none; }
+
+.menu-retire, .menu-penalty { display: flex; flex-direction: column; gap: 6px; }
+.menu-penalty { margin-top: 2px; }
+.menu-row .pill.on { background: var(--se-color-action); border-color: var(--se-color-action); color: var(--se-color-inverse); }
+
+.ck-toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; max-width: 360px; padding: 10px 16px; border-radius: 10px; background: var(--se-color-ink); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; box-shadow: 0 6px 20px color-mix(in oklch, black 30%, transparent); cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

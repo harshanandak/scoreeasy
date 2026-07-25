@@ -185,7 +185,8 @@ export function isLegalDelivery(d) {
   if (d.retire) return false;
   if (d.wicket && d.wicket.type === 'mankad') return false;
   const extras = d.extras || [];
-  return !extras.some(e => e.type === 'wide' || e.type === 'no-ball');
+  // penalty runs are awarded between balls — no ball is bowled/faced.
+  return !extras.some(e => e.type === 'wide' || e.type === 'no-ball' || e.type === 'penalty');
 }
 
 export function hasNoBall(d) {

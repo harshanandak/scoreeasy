@@ -411,6 +411,21 @@ describe('changeStrike', () => {
   });
 });
 
+describe('penalty runs', () => {
+  const fmt = makeFormat({});
+  it('non-counting: team +runs, no legal ball, no B faced, no strike swap, bowler not charged', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    inn = applyDelivery(inn, makeDelivery({ extras: [{ type: 'penalty', runs: 5 }] }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.runs).toBe(5);
+    expect(d.extrasBreakdown.pen).toBe(5);
+    expect(d.legalBalls).toBe(0);
+    expect(d.batters['s'].B).toBe(0);
+    expect(inn.striker).toBe('s');
+    expect(d.bowlers['b1'].R).toBe(0);
+  });
+});
+
 describe('immutability', () => {
   const fmt = makeFormat();
   it('applyDelivery never mutates the input innings', () => {
