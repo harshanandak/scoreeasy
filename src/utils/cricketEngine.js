@@ -408,6 +408,18 @@ export function undo(innings) {
   };
 }
 
+/**
+ * Manual strike swap (a correction, not a ball) — swaps the striker/nonStriker
+ * pointers without appending a delivery. No-op when there is no non-striker
+ * (last-man-stands). Engine-authoritative so callers never reach into the model.
+ * @param {Innings} innings
+ * @returns {Innings}
+ */
+export function changeStrike(innings) {
+  if (innings.nonStriker == null) return { ...innings };
+  return { ...innings, striker: innings.nonStriker, nonStriker: innings.striker };
+}
+
 // ==========================================
 // C1b behavioral actions
 // ==========================================

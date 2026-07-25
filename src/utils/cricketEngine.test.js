@@ -16,6 +16,7 @@ import {
   applyRetire,
   retiredBatters,
   changeBowler,
+  changeStrike,
   editDelivery,
 } from './cricketEngine.js';
 
@@ -393,6 +394,20 @@ describe('undo', () => {
   it('undo on empty innings is a no-op', () => {
     const inn = createInnings();
     expect(undo(inn).deliveries.length).toBe(0);
+  });
+});
+
+describe('changeStrike', () => {
+  it('swaps striker/nonStriker without appending a delivery', () => {
+    const inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    const sw = changeStrike(inn);
+    expect(sw.striker).toBe('ns');
+    expect(sw.nonStriker).toBe('s');
+    expect(sw.deliveries.length).toBe(0);
+  });
+  it('is a no-op when there is no non-striker (last man)', () => {
+    const inn = { ...createInnings({ striker: 's' }), nonStriker: null };
+    expect(changeStrike(inn).striker).toBe('s');
   });
 });
 
