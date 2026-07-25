@@ -175,8 +175,15 @@ const ALL_WICKET_TYPES = new Set([
   'mankad', 'obstructing', 'hit-twice', 'timed-out', 'retired-out',
 ]);
 
-/** Illegal (re-bowl) if any wide/no-ball component present. */
+/**
+ * A "legal ball" is one that advances the over. Illegal (re-bowl / not counted) if:
+ * any wide/no-ball component present, OR it is a dead ball, OR a between-balls retire
+ * marker, OR a Mankad (run-out of the non-striker before the ball is delivered).
+ */
 export function isLegalDelivery(d) {
+  if (d.deadBall) return false;
+  if (d.retire) return false;
+  if (d.wicket && d.wicket.type === 'mankad') return false;
   const extras = d.extras || [];
   return !extras.some(e => e.type === 'wide' || e.type === 'no-ball');
 }
@@ -199,6 +206,12 @@ export function wideValue(d) {
     .reduce((s, e) => s + e.runs, 0);
 }
 
+/** Short-run adjustment: subtract 1 (or N) completed runs. truthy => 1, number => N. */
+function shortRunOf(d) {
+  if (!d.shortRun) return 0;
+  return typeof d.shortRun === 'number' ? d.shortRun : 1;
+}
+
 /** Balls physically RUN by the batsmen — drives strike-rotation parity. */
 function runningRuns(d) {
   if (d.overthrow) {
@@ -211,7 +224,8 @@ function runningRuns(d) {
     if (e.type === 'bye' || e.type === 'leg-bye') r += e.runs;
     else if (e.type === 'wide') r += Math.max(0, e.runs - 1); // total wide − penalty
   }
-  return r;
+  // Parity is computed on the CORRECTED (short-run adjusted) count.
+  return Math.max(0, r - shortRunOf(d));
 }
 
 /** Crossings for a wicket delivery (for new-batter / survivor end derivation). */
@@ -225,7 +239,8 @@ function crossingsOf(d) {
 
 /** Runs charged to the bowler: bat + overthrows + wides + no-ball penalty. Byes/leg-byes/penalty excluded. */
 function bowlerConceded(d) {
-  const bat = d.overthrow ? (d.overthrow.batRuns || 0) : (d.batsmanRuns || 0);
+  const short = d.overthrow ? 0 : shortRunOf(d);
+  const bat = d.overthrow ? (d.overthrow.batRuns || 0) : Math.max(0, (d.batsmanRuns || 0) - short);
   const otr = d.overthrow ? (d.overthrow.overthrowRuns || 0) : 0;
   let r = bat + otr;
   for (const e of d.extras || []) {
@@ -257,6 +272,27 @@ export function oversString(legalBalls, ballsPerOver) {
 export function applyDelivery(innings, delivery, format) {
   const bpo = format.ballsPerOver || 6;
   const hr = format.houseRules || {};
+
+  // ---- dead ball: nothing happens. Not counted, no credit, pointers + free hit frozen. ----
+  if (delivery.deadBall) {
+    const legalBefore = innings.deliveries.reduce((n, d) => n + (isLegalDelivery(d) ? 1 : 0), 0);
+    const stamped = {
+      ...makeDelivery(delivery),
+      ...delivery,
+      legal: false,
+      striker: innings.striker,
+      nonStriker: innings.nonStriker,
+      bowler: innings.bowler,
+      freeHit: innings.freeHit || false,
+      overNo: Math.floor(legalBefore / bpo) + 1,
+      ballInOver: (legalBefore % bpo) + 1,
+    };
+    return {
+      ...innings,
+      deliveries: [...innings.deliveries, stamped],
+      freeHit: innings.freeHit || false, // dead ball does NOT consume the free hit
+    };
+  }
 
   // ---- validation: house rules & free hit ----
   if (delivery.wicket) {
@@ -373,6 +409,136 @@ export function undo(innings) {
 }
 
 // ==========================================
+// C1b behavioral actions
+// ==========================================
+
+/**
+ * Retire a batter between balls. Three modes:
+ *   'hurt'   — not out, NO wicket, batter is resumable later.
+ *   'out'    — a dismissal (retired-out): wkts+1, no bowler credit.
+ *   'rotate' — gully forced-rotate: batter leaves, NO wicket, re-enters at end of order.
+ * Appends a non-counting marker delivery (legal=false, no runs) so undo/edit see it,
+ * and places `incoming` at the retiring batter's end. The free hit is preserved.
+ * @param {Innings} innings
+ * @param {{batter:string, mode:'hurt'|'out'|'rotate', incoming?:string|null}} opts
+ * @param {Format} format
+ * @returns {Innings}
+ */
+export function applyRetire(innings, { batter, mode, incoming = null }, format) {
+  const bpo = format.ballsPerOver || 6;
+  const legalBefore = innings.deliveries.reduce((n, d) => n + (isLegalDelivery(d) ? 1 : 0), 0);
+
+  // The retiring batter leaves their end; incoming takes it. Strike otherwise frozen.
+  let sEnd = innings.striker;
+  let nEnd = innings.nonStriker;
+  if (sEnd === batter) sEnd = incoming;
+  else if (nEnd === batter) nEnd = incoming;
+
+  const wicket = mode === 'out'
+    ? { type: 'retired-out', out: batter, incoming }
+    : null;
+
+  const stamped = {
+    ...makeDelivery({}),
+    retire: { batter, mode, incoming },
+    wicket,
+    legal: false,
+    striker: innings.striker,
+    nonStriker: innings.nonStriker,
+    bowler: innings.bowler,
+    freeHit: innings.freeHit || false,
+    overNo: Math.floor(legalBefore / bpo) + 1,
+    ballInOver: (legalBefore % bpo) + 1,
+  };
+
+  return {
+    ...innings,
+    deliveries: [...innings.deliveries, stamped],
+    striker: sEnd,
+    nonStriker: nEnd,
+    freeHit: innings.freeHit || false, // retirement does not consume a free hit
+  };
+}
+
+/**
+ * Batters who retired hurt/rotate and are NOT currently on the field — i.e. available
+ * to resume as an incoming batter. Once they re-enter (striker/nonStriker), they drop off.
+ * @param {Innings} innings
+ * @returns {Array<{batter:string, mode:'hurt'|'rotate'}>}
+ */
+export function retiredBatters(innings) {
+  const seen = new Set();
+  const out = [];
+  for (const d of innings.deliveries) {
+    const r = d.retire;
+    if (r && (r.mode === 'hurt' || r.mode === 'rotate') && !seen.has(r.batter)) {
+      seen.add(r.batter);
+      out.push({ batter: r.batter, mode: r.mode });
+    }
+  }
+  return out.filter(r => r.batter !== innings.striker && r.batter !== innings.nonStriker);
+}
+
+/**
+ * Mid-over bowler change (injury/light). Bowler is an innings pointer, so subsequent
+ * balls stamp the new bowler; deriveInnings then splits the over's ball-credit between
+ * both bowlers (each shows a partial over). Pure — returns a new innings.
+ * @param {Innings} innings
+ * @param {string} bowlerId
+ * @returns {Innings}
+ */
+export function changeBowler(innings, bowlerId) {
+  return { ...innings, bowler: bowlerId };
+}
+
+/**
+ * Edit a past delivery, then REPLAY forward. delivery[index] is replaced by
+ * {...original, ...newFields} and everything from index→head is re-derived by replaying
+ * applyDelivery (strike, pointers, freeHit, legal-ball count recomputed). Distinct from
+ * LIFO undo: downstream per-delivery snapshots are recomputed, never trusted. Each tail
+ * delivery keeps its own bowler (so mid-over changes survive). Returns the new innings
+ * with an attached `diff` {before,after} summary. Pure — input innings untouched.
+ * @param {Innings} innings
+ * @param {number} index
+ * @param {Partial<Delivery>} newFields
+ * @param {Format} format
+ * @returns {Innings & {diff:{before:{runs:number,wkts:number,striker:string},
+ *   after:{runs:number,wkts:number,striker:string}}}}
+ */
+export function editDelivery(innings, index, newFields, format) {
+  if (index < 0 || index >= innings.deliveries.length) {
+    throw new Error(`editDelivery: index ${index} out of range (have ${innings.deliveries.length})`);
+  }
+  const beforeD = deriveInnings(innings, format);
+  const before = { runs: beforeD.runs, wkts: beforeD.wkts, striker: innings.striker };
+
+  const at = innings.deliveries[index];
+  const prefix = innings.deliveries.slice(0, index);
+  const tail = innings.deliveries.slice(index + 1);
+  const edited = { ...at, ...newFields };
+
+  // Rewind to the state that existed BEFORE delivery[index] (its stored snapshot).
+  let state = {
+    ...innings,
+    deliveries: prefix,
+    striker: at.striker,
+    nonStriker: at.nonStriker,
+    bowler: at.bowler,
+    freeHit: at.freeHit || false,
+  };
+  state = applyDelivery(state, edited, format);
+  // Replay the tail from raw fields; restore each ball's own bowler snapshot first.
+  for (const d of tail) {
+    state = { ...state, bowler: d.bowler };
+    state = applyDelivery(state, d, format);
+  }
+
+  const afterD = deriveInnings(state, format);
+  const after = { runs: afterD.runs, wkts: afterD.wkts, striker: state.striker };
+  return { ...state, diff: { before, after } };
+}
+
+// ==========================================
 // deriveInnings
 // ==========================================
 
@@ -401,8 +567,10 @@ export function deriveInnings(innings, format) {
   const bowlerRec = (id) => (bowlers[id] ??= { balls: 0, R: 0, W: 0, wd: 0, nb: 0, maidens: 0 });
 
   for (const d of innings.deliveries) {
+    if (d.deadBall) continue; // dead ball: no runs, no ball, no credit to anyone
     const legal = isLegalDelivery(d);
-    const bat = d.overthrow ? (d.overthrow.batRuns || 0) : (d.batsmanRuns || 0);
+    const short = d.overthrow ? 0 : shortRunOf(d);
+    const bat = d.overthrow ? (d.overthrow.batRuns || 0) : Math.max(0, (d.batsmanRuns || 0) - short);
     const otr = d.overthrow ? (d.overthrow.overthrowRuns || 0) : 0;
     const overthrowToBat = d.overthrow && d.overthrow.offBatOrExtra === 'bat';
 
@@ -482,6 +650,7 @@ export function deriveInnings(innings, format) {
       '4s': b.fours,
       '6s': b.sixes,
       SR: b.B ? +((b.R * 100) / b.B).toFixed(2) : 0,
+      out: b.out,
     };
   }
   const bowlersOut = {};

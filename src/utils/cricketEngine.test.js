@@ -13,6 +13,10 @@ import {
   deriveInnings,
   deriveChase,
   canBowl,
+  applyRetire,
+  retiredBatters,
+  changeBowler,
+  editDelivery,
 } from './cricketEngine.js';
 
 // Convenience: play a sequence of raw delivery partials onto a fresh innings.
@@ -489,5 +493,161 @@ describe('deriveChase — sole rate producer', () => {
     const c = deriveChase(inn, fmt);
     expect(c.runsNeeded).toBe(0);
     expect(c.winProb.value).toBe(1);
+  });
+});
+
+// ==========================================
+// C1b — behavioral actions
+// ==========================================
+
+describe('dead ball', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('not counted: legalBalls unchanged, over not advanced, no runs, striker unchanged', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 1 }), fmt); // swap -> ns
+    expect(inn.striker).toBe('ns');
+    inn = applyDelivery(inn, makeDelivery({ deadBall: true, batsmanRuns: 3 }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.legalBalls).toBe(1);          // dead ball not a legal ball
+    expect(d.runs).toBe(1);                // no run credited from the dead ball
+    expect(inn.striker).toBe('ns');        // striker unchanged
+    expect(d.bowlers['b1'].balls).toBeUndefined(); // no ball credited (O only in output)
+    expect(d.bowlers['b1'].O).toBe('0.1'); // only the 1 legal ball
+  });
+
+  it('dead ball does NOT consume an armed free hit', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyDelivery(inn, makeDelivery({ extras: [{ type: 'no-ball', runs: 1 }] }), fmt);
+    expect(inn.freeHit).toBe(true);
+    inn = applyDelivery(inn, makeDelivery({ deadBall: true }), fmt);
+    expect(inn.freeHit).toBe(true); // still armed
+  });
+});
+
+describe('mankad', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('wkts+1, over not advanced, no bowler credit, non-striker is out, striker unchanged', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyDelivery(inn, makeDelivery({
+      wicket: { type: 'mankad', out: 'ns', incoming: 'new' },
+    }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.wkts).toBe(1);
+    expect(d.legalBalls).toBe(0);          // over does NOT advance (legal=false)
+    expect(d.bowlers['b1'].W).toBe(0);     // no bowler wicket credit
+    expect(d.fow[0].batter).toBe('ns');    // non-striker is out
+    expect(inn.striker).toBe('s');         // striker unchanged
+    expect(inn.nonStriker).toBe('new');    // incoming replaces non-striker
+    expect(isLegalDelivery(inn.deliveries[0])).toBe(false);
+  });
+});
+
+describe('short run', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('3 completed - short = 2 counted; parity uses 2 (even, no swap) not 3', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 3, shortRun: true }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.runs).toBe(2);                 // 3 - 1 short
+    expect(d.batters['s'].R).toBe(2);       // batter credited corrected runs
+    expect(d.bowlers['b1'].R).toBe(2);      // bowler conceded corrected runs
+    expect(inn.striker).toBe('s');          // parity on 2 (even) => no swap
+  });
+
+  it('control: same 3 runs WITHOUT short swaps strike (parity on 3)', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 3 }), fmt);
+    expect(inn.striker).toBe('ns');
+  });
+});
+
+describe('retire — three modes + resume', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('retire hurt: no wkt, batter replaced and resumable', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyRetire(inn, { batter: 's', mode: 'hurt', incoming: 'x' }, fmt);
+    expect(deriveInnings(inn, fmt).wkts).toBe(0);   // NO wicket
+    expect(inn.striker).toBe('x');                  // incoming took the end
+    expect(retiredBatters(inn)).toEqual([{ batter: 's', mode: 'hurt' }]);
+  });
+
+  it('retire out: wkt+1, dismissal recorded, no bowler credit', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyRetire(inn, { batter: 's', mode: 'out', incoming: 'new' }, fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.wkts).toBe(1);
+    expect(d.fow[0].batter).toBe('s');
+    expect(inn.striker).toBe('new');
+    expect(retiredBatters(inn)).toEqual([]);        // 'out' is not resumable
+  });
+
+  it('retire rotate: no wkt; batter re-enters later at end of order', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = applyRetire(inn, { batter: 's', mode: 'rotate', incoming: 'x' }, fmt);
+    expect(deriveInnings(inn, fmt).wkts).toBe(0);
+    expect(retiredBatters(inn).map(r => r.batter)).toContain('s');
+    // later a wicket falls and the rotated batter comes back in as incoming
+    inn = applyDelivery(inn, makeDelivery({
+      wicket: { type: 'bowled', out: 'x', completedRuns: 0, incoming: 's' },
+    }), fmt);
+    expect(inn.striker).toBe('s');                  // resumed
+    expect(retiredBatters(inn)).toEqual([]);        // back on field => no longer resumable
+  });
+});
+
+describe('mid-over bowler change', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('over credit splits across two bowlers; neither charged a full over', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    for (let i = 0; i < 3; i++) inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 0 }), fmt);
+    inn = changeBowler(inn, 'b2');
+    for (let i = 0; i < 3; i++) inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 0 }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.legalBalls).toBe(6);           // full over of balls
+    expect(d.bowlers['b1'].O).toBe('0.3');  // partial, NOT '1'
+    expect(d.bowlers['b2'].O).toBe('0.3');  // partial, NOT '1'
+    expect(d.overs).toBe('1');              // one full over across the two
+  });
+});
+
+describe('edit-past = replay-forward', () => {
+  const fmt = makeFormat({ oversPerInnings: 5 });
+
+  it('editing an early single to a dot re-derives strike downstream + diff run delta', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns' });
+    inn = play(inn, fmt, [
+      { batsmanRuns: 1 }, // ball0: single -> swap to ns
+      { batsmanRuns: 0 }, // ball1: dot     -> ns stays
+      { batsmanRuns: 1 }, // ball2: single -> swap back to s
+    ]);
+    expect(inn.striker).toBe('s');
+    expect(inn.deliveries[2].striker).toBe('ns'); // ns faced ball2 originally
+
+    const res = editDelivery(inn, 0, { batsmanRuns: 0 }, fmt);
+    // downstream strike re-derived from scratch
+    expect(res.deliveries[2].striker).toBe('s');  // now s faces ball2 (flipped)
+    expect(res.striker).toBe('ns');               // final striker flipped
+    // diff summary reflects the run delta (2 singles -> 1 single)
+    expect(res.diff.before.runs).toBe(2);
+    expect(res.diff.after.runs).toBe(1);
+    expect(res.diff.before.striker).toBe('s');
+    expect(res.diff.after.striker).toBe('ns');
+    // original innings untouched (pure)
+    expect(inn.deliveries[2].striker).toBe('ns');
+  });
+
+  it('editing preserves a downstream mid-over bowler change', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 2 }), fmt);
+    inn = changeBowler(inn, 'b2');
+    inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 1 }), fmt);
+    const res = editDelivery(inn, 0, { batsmanRuns: 4 }, fmt);
+    expect(res.deliveries[1].bowler).toBe('b2');  // downstream bowler preserved
+    expect(res.diff.after.runs).toBe(5);          // 4 + 1
   });
 });
