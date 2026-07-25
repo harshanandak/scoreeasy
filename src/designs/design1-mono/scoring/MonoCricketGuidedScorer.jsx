@@ -60,6 +60,7 @@ export default function MonoCricketGuidedScorer({
   nonStriker,
   bowler,
   target = null,
+  initialInnings = null,
   onStateChange,
   onComplete,
 }) {
@@ -70,7 +71,10 @@ export default function MonoCricketGuidedScorer({
   const ns0 = useMemo(() => normPlayer(nonStriker), [nonStriker]);
   const b0 = useMemo(() => normPlayer(bowler), [bowler]);
 
+  // Rehydrate a saved innings when provided (route persistence bridge); otherwise
+  // start a fresh innings from the seeded openers/format.
   const [innings, setInnings] = useState(() =>
+    initialInnings ??
     createInnings({
       striker: s0.id,
       nonStriker: ns0.id,
