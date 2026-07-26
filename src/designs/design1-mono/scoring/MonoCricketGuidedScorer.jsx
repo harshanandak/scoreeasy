@@ -358,11 +358,39 @@ export default function MonoCricketGuidedScorer({
   const legalInOver = overDeliveries.filter(isLegalDelivery).length;
   const emptySlots = Math.max(0, bpo - legalInOver);
 
-  const sBat = der.batters[innings.striker] || { R: 0, B: 0 };
-  const nsBat = der.batters[innings.nonStriker] || { R: 0, B: 0 };
-  const bowlFig = der.bowlers[innings.bowler] || { O: '0', M: 0, R: 0, W: 0 };
+  const sBat = der.batters[innings.striker] || { R: 0, B: 0, SR: 0 };
+  const nsBat = der.batters[innings.nonStriker] || { R: 0, B: 0, SR: 0 };
+  const bowlFig = der.bowlers[innings.bowler] || { O: '0', M: 0, R: 0, W: 0, Econ: 0 };
+
+  // C5 enrichments — every figure engine-derived (SR/Econ come straight off
+  // deriveInnings; partnership balls are folded from the deliveries, matching the
+  // engine's runs-reset-on-wicket rule).
+  const loneBatter = innings.nonStriker == null; // last-man-stands: single card
+
+  // Current (unbeaten) partnership: engine gives runs; count legal balls since the
+  // last wicket the same way the engine resets partnershipRuns.
+  const curPship = der.partnerships[der.partnerships.length - 1] || { runs: 0 };
+  let pshipBalls = 0;
+  for (const d of innings.deliveries) {
+    if (d.deadBall) continue;
+    if (isLegalDelivery(d)) pshipBalls++;
+    if (d.wicket) pshipBalls = 0;
+  }
+
+  // Bowler over-quota: legal balls by the current bowler → completed overs vs cap.
+  const bowlerBalls = innings.deliveries.reduce(
+    (n, d) => n + (isLegalDelivery(d) && d.bowler === innings.bowler ? 1 : 0), 0);
+  const bowlerOvers = Math.floor(bowlerBalls / bpo);
+  const overCap = fmt.maxOversPerBowler; // null => no quota, no warning
+  const atQuota = overCap != null && bowlerOvers >= overCap;
 
   const hasTarget = innings.target != null;
+  // Overs remaining in the innings (only meaningful when NOT chasing — the hero
+  // already shows OFF <ballsLeft> for a chase).
+  const totalBalls = (fmt.oversPerInnings || 0) * bpo;
+  const oversLeft = totalBalls > 0
+    ? oversString(Math.max(0, totalBalls - der.legalBalls), bpo)
+    : null;
   const progressPct = hasTarget
     ? Math.min(100, (der.runs / Math.max(1, innings.target)) * 100)
     : Math.min(100, ((fmt.oversPerInnings || 0) * bpo ? der.legalBalls / ((fmt.oversPerInnings || 0) * bpo) : 0) * 100);
@@ -381,7 +409,11 @@ export default function MonoCricketGuidedScorer({
               <div className="ck-topbar-title">{fmt.name ? fmt.name.toUpperCase() : 'Match'}</div>
               <div className="ck-topbar-sub">
                 Over {oversString(der.legalBalls, bpo)}
-                {hasTarget ? ` · Chasing ${innings.target}` : ''}
+                {hasTarget
+                  ? ` · Chasing ${innings.target}`
+                  : oversLeft != null
+                  ? ` · ${oversLeft} ov left`
+                  : ''}
               </div>
             </div>
           </div>
@@ -442,27 +474,52 @@ export default function MonoCricketGuidedScorer({
           </div>
         ) : (
           <>
-            {/* PLAYERS — striker | non-striker | bowler */}
-            <div className="ck-players">
+            {/* PLAYERS — striker | non-striker | bowler (non-striker hidden when lone) */}
+            <div className={`ck-players${loneBatter ? ' ck-players-lone' : ''}`}>
               <div className="ck-player">
                 <div className="ck-player-name" data-testid="striker-name">
                   <span className="dot">{'●'}</span>{nameOf(innings.striker)}
+                  {loneBatter ? (
+                    <span className="ck-lastman" data-testid="lastman">Last man</span>
+                  ) : null}
                 </div>
-                <div className="ck-player-fig">{sBat.R} ({sBat.B})</div>
-              </div>
-              <div className="ck-player">
-                <div className="ck-player-name sub" data-testid="nonstriker-name">
-                  {nameOf(innings.nonStriker)}
+                <div className="ck-player-fig" data-testid="striker-fig">
+                  {sBat.R} ({sBat.B}){sBat.B ? ` · SR ${Math.round(sBat.SR)}` : ''}
                 </div>
-                <div className="ck-player-fig">{nsBat.R} ({nsBat.B})</div>
               </div>
+              {loneBatter ? null : (
+                <div className="ck-player">
+                  <div className="ck-player-name sub" data-testid="nonstriker-name">
+                    {nameOf(innings.nonStriker)}
+                  </div>
+                  <div className="ck-player-fig">
+                    {nsBat.R} ({nsBat.B}){nsBat.B ? ` · SR ${Math.round(nsBat.SR)}` : ''}
+                  </div>
+                </div>
+              )}
               <div className="ck-player">
                 <div className="ck-player-name sub">{nameOf(innings.bowler)} {'◢'}</div>
-                <div className="ck-player-fig">
+                <div className="ck-player-fig" data-testid="bowler-fig">
                   {bowlFig.O}-{bowlFig.M}-{bowlFig.R}-{bowlFig.W}
+                  {bowlerBalls ? ` · ${bowlFig.Econ.toFixed(1)}` : ''}
                 </div>
+                {overCap != null ? (
+                  <div
+                    className={`ck-quota${atQuota ? ' ck-quota-max' : ''}`}
+                    data-testid="bowler-quota"
+                  >
+                    {bowlerOvers}/{overCap} ov{atQuota ? ' · max' : ''}
+                  </div>
+                ) : null}
               </div>
             </div>
+
+            {/* Current partnership (hidden when a lone batter stands) */}
+            {loneBatter ? null : (
+              <div className="ck-pship" data-testid="partnership">
+                P'ship {curPship.runs} ({pshipBalls})
+              </div>
+            )}
 
             {/* THIS OVER — pip per ball + dashed slots for the rest */}
             <div className="ck-over-row">
@@ -741,7 +798,12 @@ const STYLES = `
 .ck-player-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ck-player-name.sub { color: var(--se-color-ink-muted); }
 .ck-player-name .dot { color: var(--primary); margin-right: 3px; }
-.ck-player-fig { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ck-player-fig { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-top: 2px; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.ck-players-lone { grid-template-columns: repeat(2, 1fr); }
+.ck-lastman { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--primary); color: var(--se-color-inverse); font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; }
+.ck-quota { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-top: 2px; }
+.ck-quota-max { color: var(--se-color-danger); font-weight: 800; }
+.ck-pship { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 6px; padding: 0 2px; font-variant-numeric: tabular-nums; }
 
 .ck-over-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .mono-over-strip { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
