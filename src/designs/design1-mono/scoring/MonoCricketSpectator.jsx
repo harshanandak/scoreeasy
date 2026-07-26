@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import {
   deriveInnings,
   deriveChase,
-  oversString,
 } from '../../../utils/cricketEngine.js';
 
 // C7 — READ-ONLY cricket SPECTATOR live view (design source:
@@ -36,12 +35,33 @@ function overLabel(d) {
   return `${(d.overNo || 1) - 1}.${d.ballInOver || 0}`;
 }
 
-/** Sum of every run component on a delivery (bat + all extras + overthrow). */
+/** A between-balls penalty event (no faced ball) — matches the engine's rule. */
+function isPenalty(d) {
+  return (d.extras || []).some((e) => e.type === 'penalty');
+}
+
+/** Short-run adjustment (truthy => 1, number => N); never applied with an overthrow. */
+function shortRunOf(d) {
+  if (d.overthrow || !d.shortRun) return 0;
+  return typeof d.shortRun === 'number' ? d.shortRun : 1;
+}
+
+/** Runs credited to the STRIKER — mirrors deriveInnings (overthrow uses batRuns). */
+function batterRunsOf(d) {
+  if (d.overthrow) {
+    const bat = d.overthrow.batRuns || 0;
+    return bat + (d.overthrow.offBatOrExtra === 'bat' ? (d.overthrow.overthrowRuns || 0) : 0);
+  }
+  return Math.max(0, (d.batsmanRuns || 0) - shortRunOf(d));
+}
+
+/** Total TEAM runs on a delivery — mirrors deriveInnings (overthrow batRuns + short-run). */
 function deliveryTotal(d) {
-  let r = d.batsmanRuns || 0;
-  for (const e of d.extras || []) r += e.runs || 0;
-  if (d.overthrow) r += d.overthrow.overthrowRuns || 0;
-  return r;
+  const bat = d.overthrow ? (d.overthrow.batRuns || 0) : Math.max(0, (d.batsmanRuns || 0) - shortRunOf(d));
+  const otr = d.overthrow ? (d.overthrow.overthrowRuns || 0) : 0;
+  let extras = 0;
+  for (const e of d.extras || []) extras += e.runs || 0;
+  return bat + otr + extras;
 }
 
 /** One THIS-OVER pip: label + kind (dot | run | four | six | wkt | extra). */
@@ -61,7 +81,7 @@ function pipOf(d) {
 /** Live deliveries of the most-recent over (skips dead-ball / retire markers). */
 function thisOverPips(innings) {
   const dels = innings.deliveries || [];
-  const real = dels.filter((d) => !d.deadBall && !d.retire);
+  const real = dels.filter((d) => !d.deadBall && !d.retire && !isPenalty(d));
   if (!real.length) return [];
   const lastOver = real[real.length - 1].overNo;
   return real.filter((d) => d.overNo === lastOver).map(pipOf);
@@ -71,7 +91,7 @@ function thisOverPips(innings) {
 function runsPerOver(innings) {
   const buckets = new Map();
   for (const d of innings.deliveries || []) {
-    if (d.deadBall || d.retire) continue;
+    if (d.deadBall || d.retire || isPenalty(d)) continue;
     const on = d.overNo || 1;
     const b = buckets.get(on) || { runs: 0, wkt: false };
     b.runs += deliveryTotal(d);
@@ -89,11 +109,11 @@ function keyMoments(innings) {
   const out = [];
   const totals = {};
   for (const d of innings.deliveries || []) {
-    if (d.deadBall || d.retire) continue;
+    if (d.deadBall || d.retire || isPenalty(d)) continue;
     const at = overLabel(d);
     const striker = d.striker;
     const before = totals[striker] || 0;
-    const after = before + (d.batsmanRuns || 0);
+    const after = before + batterRunsOf(d);
     totals[striker] = after;
 
     if (d.wicket) {
