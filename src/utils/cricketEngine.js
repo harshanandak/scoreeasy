@@ -270,6 +270,20 @@ export function oversString(legalBalls, ballsPerOver) {
  * @param {Format} format
  * @returns {Innings}
  */
+/**
+ * Collapse a vacated striker end onto the surviving batter so a lone batter is
+ * always encoded as `nonStriker == null` (the canonical loneBatter marker).
+ * When the striker end is empty (incoming was null) but a batter survives at the
+ * non-striker end, move that survivor to the striker end and null the other end.
+ * @param {string|null} sEnd striker-end id (may be null)
+ * @param {string|null} nEnd non-striker-end id (may be null)
+ * @returns {[string|null, string|null]}
+ */
+function normalizeLoneEnds(sEnd, nEnd) {
+  if (sEnd == null && nEnd != null) return [nEnd, null];
+  return [sEnd, nEnd];
+}
+
 export function applyDelivery(innings, delivery, format) {
   const bpo = format.ballsPerOver || 6;
   const hr = format.houseRules || {};
@@ -337,6 +351,9 @@ export function applyDelivery(innings, delivery, format) {
     else outEnd = delivery.wicket.end === 'non-striker' ? 'nonStriker' : 'striker';
     if (outEnd === 'striker') sEnd = incoming;
     else nEnd = incoming;
+    // Lone/last-man: if the dismissed end is now empty but a batter survives at
+    // the other end, collapse the survivor onto the striker end.
+    [sEnd, nEnd] = normalizeLoneEnds(sEnd, nEnd);
   } else {
     // Non-wicket: parity swap from physical running runs.
     if (!suppressRotation && runningRuns(delivery) % 2 === 1) {
@@ -446,6 +463,9 @@ export function applyRetire(innings, { batter, mode, incoming = null }, format) 
   let nEnd = innings.nonStriker;
   if (sEnd === batter) sEnd = incoming;
   else if (nEnd === batter) nEnd = incoming;
+  // Same lone-batter normalization as the wicket path: a vacated striker end with
+  // a survivor at the non-striker end collapses to a single striker.
+  [sEnd, nEnd] = normalizeLoneEnds(sEnd, nEnd);
 
   const wicket = mode === 'out'
     ? { type: 'retired-out', out: batter, incoming }
@@ -622,7 +642,8 @@ export function deriveInnings(innings, format) {
     // --- over buckets for maidens ---
     const on = d.overNo;
     if (on != null) {
-      const bkt = (overBuckets[on] ??= { bowler: d.bowler, conceded: 0, legal: 0 });
+      const bkt = (overBuckets[on] ??= { bowlers: new Set(), conceded: 0, legal: 0 });
+      bkt.bowlers.add(d.bowler);
       bkt.conceded += bowlerConceded(d);
       if (legal) bkt.legal++;
     }
@@ -630,7 +651,9 @@ export function deriveInnings(innings, format) {
     // --- wicket ---
     if (d.wicket) {
       wkts++;
-      if (batters[d.wicket.out]) batters[d.wicket.out].out = true;
+      // Create the record if absent so a batter dismissed for 0 (or run-out at the
+      // non-striker end without facing a ball) still appears on the card as out.
+      if (d.wicket.out != null) batterRec(d.wicket.out).out = true;
       if (BOWLER_CREDIT.has(d.wicket.type)) bw.W++;
       fow.push({
         wkts,
@@ -651,7 +674,11 @@ export function deriveInnings(innings, format) {
   // Maidens: a completed over with 0 runs charged to the bowler.
   for (const on of Object.keys(overBuckets)) {
     const bkt = overBuckets[on];
-    if (bkt.legal >= bpo && bkt.conceded === 0) bowlerRec(bkt.bowler).maidens++;
+    // Only a single bowler owning ALL legal balls of the over can earn a maiden;
+    // a split (mid-over change) over is never credited to the first bowler.
+    if (bkt.legal >= bpo && bkt.conceded === 0 && bkt.bowlers.size === 1) {
+      bowlerRec([...bkt.bowlers][0]).maidens++;
+    }
   }
 
   // --- shape outputs ---

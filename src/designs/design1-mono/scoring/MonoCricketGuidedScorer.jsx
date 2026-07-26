@@ -18,6 +18,7 @@ import {
 } from '../../../utils/cricketEngine.js';
 import WicketSheet from './WicketSheet.jsx';
 import PlayerPickerSheet from './PlayerPickerSheet.jsx';
+import MonoSheet from '../components/MonoSheet.jsx';
 
 // C3/C4 Guided cricket scorer. Pure component: the live innings is engine state
 // held in React; EVERY stat is derived from deriveInnings/deriveChase — nothing is
@@ -39,7 +40,12 @@ function pipFor(d) {
   const wide = extras.filter((e) => e.type === 'wide').reduce((s, e) => s + e.runs, 0);
   const nb = extras.filter((e) => e.type === 'no-ball').reduce((s, e) => s + e.runs, 0);
   if (wide) return { label: wide > 1 ? `${wide}wd` : 'wd', cls: '' };
-  if (nb) return { label: nb > 1 ? `${nb}nb` : 'nb', cls: '' };
+  if (nb) {
+    // A no-ball hit for runs must show the batter's runs (e.g. 4nb), not bare "nb".
+    const bat = d.batsmanRuns || 0;
+    const cls = bat === 4 ? 'mono-over-pip-four' : bat === 6 ? 'mono-over-pip-six' : '';
+    return { label: bat ? `${bat}nb` : nb > 1 ? `${nb}nb` : 'nb', cls };
+  }
   if (d.batsmanRuns === 4) return { label: '4', cls: 'mono-over-pip-four' };
   if (d.batsmanRuns === 6) return { label: '6', cls: 'mono-over-pip-six' };
   const bye = extras
@@ -297,6 +303,10 @@ export default function MonoCricketGuidedScorer({
     const co = Math.floor(deriveInnings(next, fmt).legalBalls / bpo);
     if (co < overPrompted.current) overPrompted.current = co;
     setWicketOpen(false);
+    // Clear pending pickers whose index/context refers to the just-popped delivery,
+    // so a subsequent pick can't editDelivery with a stale/out-of-range index.
+    setBatterPicker(null);
+    setBowlerOpen(false);
   };
 
   // SWAP: engine-authoritative ball-free strike change (a correction, not a ball).
@@ -308,8 +318,14 @@ export default function MonoCricketGuidedScorer({
     apply(makeDelivery({ deadBall: true }), { overPrompt: false });
   };
   const doPenalty = (n = penaltyN) => {
+    // Clamp to a positive integer: a blank or negative input must not reach the engine.
+    const runs = Math.max(0, Math.floor(Number(n) || 0));
+    if (!runs) {
+      setToast('Enter a penalty of 1 or more runs');
+      return;
+    }
     setSheetOpen(false);
-    apply(makeDelivery({ extras: [{ type: 'penalty', runs: Number(n) || 0 }] }));
+    apply(makeDelivery({ extras: [{ type: 'penalty', runs }] }));
   };
   const startRetirePick = () => {
     const end = retireCfg?.end || 'striker';
@@ -325,10 +341,12 @@ export default function MonoCricketGuidedScorer({
   };
   const endInnings = () => {
     setSheetOpen(false);
+    completed.current = true; // latch so the effect can't fire a second completion
     onComplete?.({ innings, ...der, reason: 'manual-innings' });
   };
   const endMatch = () => {
     setSheetOpen(false);
+    completed.current = true; // latch so the effect can't fire a second completion
     onComplete?.({ innings, ...der, reason: 'manual-match' });
   };
 
@@ -544,24 +562,13 @@ export default function MonoCricketGuidedScorer({
         )}
       </div>
 
-      {/* ⋯More bottom-sheet */}
-      {sheetOpen ? (
-        <>
-          <div className="sheet-backdrop open" onClick={() => setSheetOpen(false)} aria-hidden="true" />
-          <div className="menu-panel open" role="menu" data-testid="more-sheet">
-            <div className="sheet-grab" />
-            <div className="sheet-head">
-              <span className="sheet-title">Match options</span>
-              <button
-                type="button"
-                className="sheet-x"
-                aria-label="Close"
-                onClick={() => { setRetireCfg(null); setSheetOpen(false); }}
-              >
-                {'✕'}
-              </button>
-            </div>
-
+      {/* ⋯More bottom-sheet — reuses MonoSheet for dialog role, Escape + focus trap */}
+      <MonoSheet
+        open={sheetOpen}
+        onClose={() => { setRetireCfg(null); setSheetOpen(false); }}
+        title="Match options"
+      >
+        <div className="menu-panel-body" data-testid="more-sheet">
             {retireCfg ? (
               <div className="menu-retire" data-testid="retire-config">
                 <span className="sec-lbl">Retire — who?</span>
@@ -645,9 +652,8 @@ export default function MonoCricketGuidedScorer({
                 </div>
               </>
             )}
-          </div>
-        </>
-      ) : null}
+        </div>
+      </MonoSheet>
 
       {/* C6 how-out sheet — replaces the inline flow */}
       <WicketSheet
@@ -705,7 +711,9 @@ const STYLES = `
 .mono-scorer-topbar-actions { display: flex; align-items: center; gap: 8px; }
 .ck-topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; }
 .ck-topbar-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
-.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); font-size: 1rem; flex: none; }
+/* Decorative back glyph only — no back action is wired here, so it carries no
+   button frame/affordance that would read as tappable (aria-hidden in markup). */
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; font-size: 1rem; flex: none; color: var(--se-color-ink-muted); }
 .mono-badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 0.6875rem; font-family: var(--se-font-mono); border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .mono-badge-live { background: var(--se-color-action-soft); color: var(--se-color-action); }
 
@@ -780,7 +788,7 @@ const STYLES = `
 .ck-more { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 8px 16px; }
 
 .ck-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; padding-top: 2px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
-.ck-footer .left { color: var(--primary); font-weight: 700; cursor: pointer; }
+.ck-footer .left { color: var(--primary); font-weight: 700; }
 .ck-footer .right { color: var(--se-color-ink-muted); font-weight: 600; }
 .ck-footer .right .go { color: var(--primary); }
 

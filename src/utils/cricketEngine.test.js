@@ -426,6 +426,43 @@ describe('penalty runs', () => {
   });
 });
 
+describe('CodeRabbit #129 correctness fixes', () => {
+  const fmt = makeFormat({ ballsPerOver: 6 });
+
+  it('#1 wicket with null incoming (last man) collapses survivor to lone striker (nonStriker null)', () => {
+    const f = makeFormat({ houseRules: { lastManStands: true } });
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    inn = applyDelivery(inn, makeDelivery({ wicket: { type: 'bowled', out: 's', bowler: 'b1', incoming: null } }), f);
+    expect(inn.striker).toBe('ns');
+    expect(inn.nonStriker).toBe(null);
+  });
+
+  it('#2 a batter dismissed for 0 without facing still appears on the card as out', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    inn = applyDelivery(inn, makeDelivery({ wicket: { type: 'run-out', out: 'ns', end: 'non-striker', completedRuns: 0, incoming: 'x' } }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.batters['ns']).toBeDefined();
+    expect(d.batters['ns'].out).toBe(true);
+    expect(d.batters['ns'].R).toBe(0);
+  });
+
+  it('#3 a mid-over bowler-change over is NOT credited as a maiden', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    for (let i = 0; i < 3; i++) inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 0 }), fmt);
+    inn = changeBowler(inn, 'b2');
+    for (let i = 0; i < 3; i++) inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 0 }), fmt);
+    const d = deriveInnings(inn, fmt);
+    expect(d.bowlers['b1'].M).toBe(0);
+    expect(d.bowlers['b2'].M).toBe(0);
+  });
+
+  it('#3 a single-bowler maiden over IS still credited (no regression)', () => {
+    let inn = createInnings({ striker: 's', nonStriker: 'ns', bowler: 'b1' });
+    for (let i = 0; i < 6; i++) inn = applyDelivery(inn, makeDelivery({ batsmanRuns: 0 }), fmt);
+    expect(deriveInnings(inn, fmt).bowlers['b1'].M).toBe(1);
+  });
+});
+
 describe('immutability', () => {
   const fmt = makeFormat();
   it('applyDelivery never mutates the input innings', () => {

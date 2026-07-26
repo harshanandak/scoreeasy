@@ -141,6 +141,10 @@ export default function MonoCricketGuidedScorerRoute() {
     );
   }
 
+  // A completed match redirects via the effect above; render nothing meanwhile so
+  // the active-scoring setup screen never flashes for one frame before the bounce.
+  if (match.status === 'completed') return null;
+
   const fmt = migrateCricketFormat(
     match.format || tournament?.knockoutConfig?.format || tournament?.format
   );
