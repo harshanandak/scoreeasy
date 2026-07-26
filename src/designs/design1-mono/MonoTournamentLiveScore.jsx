@@ -7,6 +7,7 @@ import MonoSetsLiveScore from './scoring/MonoSetsLiveScore';
 import MonoGoalsLiveScore from './scoring/MonoGoalsLiveScore';
 import MonoCricketLiveScore from './scoring/MonoCricketLiveScore';
 import MonoCricketTestLiveScore from './scoring/MonoCricketTestLiveScore';
+import MonoCricketGuidedScorerRoute from './scoring/MonoCricketGuidedScorerRoute';
 import MonoTennisLiveScore from './scoring/MonoTennisLiveScore';
 import RouteRecoveryActions from './components/RouteRecoveryActions';
 
@@ -36,9 +37,14 @@ export default function MonoTournamentLiveScore() {
   if (sport === 'cricket' || getSportById(sport)?.engine === 'custom-cricket') {
     const format = migrateCricketFormat(match?.format || tournament?.knockoutConfig?.format || tournament?.format);
 
-    scorer = format?.totalInnings === 4
-      ? <MonoCricketTestLiveScore />
-      : <MonoCricketLiveScore />;
+    // Opt-in guided scorer (C3/C4). Flag absent on all existing matches -> old path.
+    if (format?.guided === true) {
+      scorer = <MonoCricketGuidedScorerRoute />;
+    } else {
+      scorer = format?.totalInnings === 4
+        ? <MonoCricketTestLiveScore />
+        : <MonoCricketLiveScore />;
+    }
   } else if (sport === 'tennis') {
     scorer = <MonoTennisLiveScore />;
   } else {
