@@ -1,0 +1,59 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vite-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "vite-preview",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4173
+    },
+    {
+      "name": "pr86-shell",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "x",
+        "vite",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/pr11-native-app-shell",
+        "--config",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/pr11-native-app-shell/vite.config.js",
+        "--port",
+        "5173"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "master",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "x",
+        "vite",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/master",
+        "--config",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/master/vite.config.js",
+        "--port",
+        "5174"
+      ],
+      "port": 5174
+    },
+    {
+      "name": "play-hub",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "x",
+        "vite",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/play-hub-empty-dashboard",
+        "--config",
+        "C:/Users/harsha_befach/.config/superpowers/worktrees/Volleyball/play-hub-empty-dashboard/vite.config.js",
+        "--port",
+        "5175"
+      ],
+      "port": 5175
+    }
+  ]
+}
