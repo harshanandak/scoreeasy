@@ -3,6 +3,8 @@
 Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
 Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
 
+**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
+
 ## Convex functions
 
 **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
