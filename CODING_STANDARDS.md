@@ -51,8 +51,10 @@ Reach for a Convex component when a feature is self-contained and reusable with 
 
 Prefer generated types (`Doc<"matches">`, `Id<"matches">`, `api`/`internal` references) over hand-written shapes. Avoid `any`; where a type is genuinely unknown use `unknown` and narrow.
 
-Note the actual repo state: `tsconfig.json` has `strict: false` and `checkJs: false`, and `src/` is JSX/JS with zero `.ts` files. Turning strict on is a decision, not a standard — do not assume it is already true.
+Note the actual repo state: `tsconfig.json` has `strict: true` and `checkJs: false`, and `src/` is JSX/JS with zero `.ts` files. Because `checkJs` is off, `strict` only governs the TypeScript under `convex/` — it costs zero errors there and must stay green. Turning `checkJs` on is a separate decision: it currently surfaces 1114 errors across 55 JS files, so do not assume JS is type-checked.
 
 ## Lint
 
-`bun run lint` runs ESLint with `eslint-plugin-react-hooks` over `**/*.{js,jsx}`. The `@convex-dev/eslint-plugin` is **not** installed, so no Convex-specific rule (floating promises, `.filter()`, auth) is machine-enforced — these standards are enforced by review only.
+`bun run lint` runs ESLint with `eslint-plugin-react-hooks` over `**/*.{js,jsx}`, plus `@convex-dev/eslint-plugin` over `convex/**/*.ts` (parsed by `@typescript-eslint/parser`).
+
+Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-validator`, `no-schema-import-cycle`. Warnings: `no-filter-in-query`, `no-top-of-hour-crons`, and `explicit-table-ids` (a warning only until the 5 existing `db.get`/`db.patch` call sites in `matches.ts` and `users.ts` pass an explicit table name). Everything else in this file is enforced by review.

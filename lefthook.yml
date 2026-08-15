@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: lint
+      run: bun run lint
+    - name: type-check
+      run: bun run type-check
+    - name: agent-config-sync
+      run: bun run sync:agents -- --check
+
+pre-push:
+  parallel: false
+  jobs:
+    - name: test
+      run: bun run test
+    - name: build
+      run: bun run build

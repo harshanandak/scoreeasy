@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
+    "sync:agents": "node scripts/sync-agent-config.mjs",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "mobile:build": "vite build && cap sync",
     "mobile:sync": "cap sync",
@@ -38,11 +39,14 @@
     "react-router-dom": "^7.15.0"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
     "@capacitor/cli": "8.3.4",
+    "@convex-dev/eslint-plugin": "^4.0.0",
     "@edge-runtime/vm": "^5.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.5.0",
     "convex-test": "^0.0.53",
