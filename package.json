@@ -39,7 +39,6 @@
     "react-router-dom": "^7.15.0"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.1",
     "@capacitor/cli": "8.3.4",
     "@convex-dev/eslint-plugin": "^4.0.0",
     "@edge-runtime/vm": "^5.0.0",
