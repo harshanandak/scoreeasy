@@ -56,6 +56,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
 - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
 - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
 
+## Shipping regime (pre-user)
+
+Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
+
+- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
+- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+
 ## Non-interactive shell
 
 `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
@@ -70,6 +79,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
 
 Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
 Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+
+**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
 
 ## Convex functions
 
