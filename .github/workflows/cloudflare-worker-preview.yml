@@ -36,6 +36,7 @@ concurrency:
 
 jobs:
   preview:
+    timeout-minutes: 30
     name: Cloudflare Preview
     runs-on: ubuntu-latest
     permissions:
