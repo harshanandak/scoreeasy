@@ -16,6 +16,10 @@ on:
       - "vite.config.js"
   pull_request:
 
+concurrency:
+  group: android-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android-debug-build:
     name: Build Android APK and AAB

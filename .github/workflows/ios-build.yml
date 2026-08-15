@@ -16,6 +16,10 @@ on:
       - "vite.config.js"
   pull_request:
 
+concurrency:
+  group: ios-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ios-simulator-build:
     name: Build iOS Simulator App

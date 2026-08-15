@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   request-review:
+    timeout-minutes: 10
     name: Request CodeRabbit review
     runs-on: ubuntu-latest
     concurrency:
