@@ -249,7 +249,10 @@ Do NOT declare /verify complete until:
 
 ## Rules
 
-- **Never commits** — this command is read-only
+- **Never commits, never pushes, never merges** — it does not touch repository history.
+  It is *not* read-only, though: Steps 6-8 remove the feature worktree, force-delete the
+  local branch, close beads issues on success, and create one on failure. Do not invoke
+  it expecting observation only.
 - **Never creates PRs** — if fixes are needed, that's a new /dev cycle
 - **Runs after user confirms merge** — not before
 - **Reports honestly** — if CI is broken on main, say so clearly

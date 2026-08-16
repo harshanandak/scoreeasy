@@ -311,11 +311,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
 - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
 
 **Comprehensive workflow guide:**
-- This file (AGENTS.md) is the single source of truth for the complete workflow
-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
-
-**Load these files when you need detailed instructions for a specific stage.**
+- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
+  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
+  into the harness mirrors.
+- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
+  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
+  were sent here looking for them, they never existed.
 
 ## Descriptive Context Convention
 

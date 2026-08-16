@@ -76,16 +76,13 @@ Check each of the following and update if the feature affects it. Be selective �
 **D. Architecture docs** (if structural changes):
 - `docs/architecture/` diagrams, decision records (ADRs)
 
-**E. `CLAUDE.md` — USER section only** (if project conventions changed):
-```
-<!-- USER:START - Add project-specific learnings here as you work -->
-...update only between these markers...
-<!-- USER:END -->
-```
-⚠️  NEVER touch other managed blocks (e.g., `<!-- AGENT:START/END -->`).
+**E. `AGENTS.md`** — the canonical agent file, and the only one you edit. Put project
+conventions, agent capabilities, and cross-agent workflow changes here.
 
-**F. `AGENTS.md`** (if agent config, skills, or cross-agent workflow changed):
-- Update relevant sections describing agent capabilities or workflow
+⚠️  `CLAUDE.md` is a 12-byte `@AGENTS.md` pointer. It has no USER markers, no AGENT
+markers, and no managed blocks — never edit it, and never write conventions into it.
+Regenerate the other harness mirrors with `bun run sync:agents` instead of hand-editing
+them.
 
 **Commit doc updates to feature branch**:
 

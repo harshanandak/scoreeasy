@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
 > **Note:** Three things share the "validate" name in Forge:
 > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
 > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
-> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — runs the same lint, type-check, agent-config-sync, test and build jobs CI runs (does NOT rebase; assumes branch is already current with the base branch)
+> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — lint, type-check, agent-config-sync, test, build (does NOT rebase; assumes branch is already current with the base branch). CI (`ci.yml`) runs build, test, lint and type-check but **not** `sync:agents --check` — that one is local-only, so a commit made with `--no-verify`, through the GitHub web UI, or by automation can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
 
 Run comprehensive validation including type checking, linting, code review, security review, and tests.
 
