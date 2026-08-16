@@ -92,15 +92,18 @@ This shows:
    - Read the comment carefully
    - Check the file and line number
 
-2. **Categorize the comment**:
-   - **Valid**: Should be implemented (security issue, bug, clear improvement)
-   - **Invalid**: Greptile misunderstood context
-   - **Conflicting**: Contradicts research decisions with good reason
-   - **Out of scope**: Valid but not for this PR
+2. **Categorize the comment** (bot feedback is advisory — AGENTS.md "Shipping regime"):
+   - **Fix here**: secrets, injection, a broken build, or documentation asserting
+     something the code does not do. Only this class changes the PR.
+   - **Valid but advisory**: a real improvement that is not in the class above —
+     file a follow-up issue, do not expand this PR.
+   - **Invalid**: the bot misunderstood the context.
+   - **Conflicting**: contradicts a research decision with good reason.
 
-3. **Fix the issue** (if valid)
-   - Make code changes
-   - Commit with clear message
+3. **Act on it**
+   - **Fix here** → make the code change, commit with a clear message.
+   - **Valid but advisory** → `bd create` the follow-up and note the id in the reply.
+   - **Invalid / conflicting** → change nothing; the reply carries the reason.
 
 4. **Reply and resolve** (for ALL comments, even invalid ones)
    ```bash

@@ -56,8 +56,16 @@ Check if the project has a deployment target:
 # Check deployment status from latest run
 gh run list --branch master --limit 1
 
-# Check Vercel deployments for the merged PR (use number from Step 2)
-gh pr view <number> --json deployments
+# Cloudflare deployments for this ref. `gh pr view` has no `deployments` field —
+# the deployments REST API is the supported surface.
+DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" --jq '.[0].id')
+
+if [ -n "$DEPLOY_ID" ] && [ "$DEPLOY_ID" != "null" ]; then
+  gh api "repos/{owner}/{repo}/deployments/$DEPLOY_ID/statuses?per_page=1" \
+    --jq '.[0] | "state=\(.state) url=\(.environment_url)"'
+else
+  echo "Deployments: none recorded for this ref"
+fi
 ```
 
 If deployments exist:
@@ -125,13 +133,23 @@ fi
 
 If no worktree is found for that branch, skip gracefully with a note: "Worktree: not found (already removed or never created)".
 
-Delete the local branch (safe delete only):
+Delete the local branch. We squash-merge, so the feature tip is **not** an ancestor of
+`master` and `git branch -d` always refuses — the merge has to be proven from the PR,
+then the branch force-deleted:
 
 ```bash
-git branch -d <branch> 2>/dev/null || echo "Branch: already deleted — skipping"
+if ! git show-ref --verify --quiet "refs/heads/<branch>"; then
+  echo "Branch: <branch> already gone — skipping"
+elif [ "$(gh pr view <number> --json state --jq .state)" = "MERGED" ]; then
+  # -D, not -d: a squash merge leaves the tip unreachable from master.
+  git branch -D "<branch>" && echo "Branch: <branch> deleted ✓"
+else
+  echo "Branch: <branch> KEPT — PR <number> is not merged"
+fi
 ```
 
-The `|| echo` fallback handles the case where the branch is already gone (e.g., deleted by a previous run or the remote), so the command never fails the verify step.
+Never swallow the failure with `|| echo "already deleted"` — that reports success while
+leaving the branch behind, which is how every verified branch accumulated locally.
 
 Report cleanup in output:
 ```

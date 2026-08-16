@@ -168,7 +168,9 @@ After you merge, run /verify
 
 ## Rules
 
-- **NEVER run `gh pr merge`** — blocked by PreToolUse hook in `.claude/settings.json`
+- **NEVER run `gh pr merge`** — merging is the user's, by hand. This is a rule you
+  follow, not something the harness enforces: `.claude/settings.json` ships no
+  PreToolUse guard today.
 - **CLAUDE.md USER section only** — never touch other managed blocks
 - **Warn if branch is behind** — tell user to rebase before doc updates
 - **Re-check CI after doc push** — doc commits re-trigger full CI pipeline
