@@ -1,0 +1,310 @@
+---
+description: Post-merge health check — confirm merge landed, CI is clean, deployments are up
+---
+
+Verify that the merge landed correctly and everything is running properly after merge.
+
+# Verify
+
+This command runs AFTER the user has merged the PR. It checks system health — not documentation (that was handled in `/premerge`).
+
+## Usage
+
+```bash
+/verify
+```
+
+## What This Command Does
+
+### Step 1: Switch to Main and Pull
+
+`/verify` usually runs from the feature worktree, where `git checkout master` is
+refused — the primary worktree already holds it. Move to the worktree that has
+`master` instead of switching branches:
+
+```bash
+MAIN_WT=$(git worktree list --porcelain | awk '/^worktree /{wt=$2} /^branch refs\/heads\/(master|main)$/{print wt; exit}')
+cd "$MAIN_WT" || { echo "No worktree holds master — stop and tell the user"; exit 1; }
+git pull
+```
+
+Confirm the merge actually landed on main. If the PR isn't merged yet, stop and tell the user to merge first.
+
+### Step 2: Confirm PR Is Merged
+
+Verify **the PR you are verifying**, by number. Never take "the most recently merged
+PR" — if anything else merged in between, the cleanup steps below would delete the
+wrong worktree and branch and close unrelated issues.
+
+```bash
+# <number> comes from the invocation. If it wasn't given, resolve it from HEAD
+# rather than from a recency list:
+#   gh pr list --state merged --search "$(git rev-parse HEAD)" --json number
+gh pr view <number> --json number,state,mergedAt,mergedBy,headRefName
+```
+
+- `state` should be `MERGED`
+- If no PR found: the merge may not have landed yet — stop and tell the user to merge first
+- If the wrong PR appears: user can specify the number directly with `gh pr view <number> --json state,mergedAt,mergedBy`
+
+### Step 3: Check CI on Main After Merge
+
+Scope this to **the merge commit you are verifying**, not the branch. A branch query
+mixes in runs from other commits, and an unrelated green run must never be what lets
+Step 6 delete a worktree and close issues.
+
+```bash
+MERGE_SHA=$(gh pr view <number> --json mergeCommit --jq .mergeCommit.oid)
+gh run list --commit "$MERGE_SHA" --json name,status,conclusion
+```
+
+Every run on that commit must be `status=completed` **and** `conclusion=success`:
+- `in_progress` is not healthy — it is unfinished. Wait for it, do not proceed to cleanup.
+- If any failed: identify which workflow and what failed. Failed CI on main after merge
+  may need a hotfix PR — and do not clean up the branch you may need to fix from.
+
+### Step 4: Check Deployments (if applicable)
+
+Check if the project has a deployment target:
+
+Use the same `$MERGE_SHA` resolved in Step 3 — never `HEAD`. If another commit reached
+`master` after the merge you are verifying, `HEAD` is that other commit and you would
+clear cleanup on an unrelated deployment.
+
+```bash
+# Cloudflare deployments for the verified merge commit. `gh pr view` has no
+# `deployments` field — the deployments REST API is the supported surface.
+DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$MERGE_SHA&per_page=1" --jq '.[0].id')
+
+if [ -n "$DEPLOY_ID" ] && [ "$DEPLOY_ID" != "null" ]; then
+  gh api "repos/{owner}/{repo}/deployments/$DEPLOY_ID/statuses?per_page=1" \
+    --jq '.[0] | "state=\(.state) url=\(.environment_url)"'
+else
+  echo "Deployments: none recorded for this ref"
+fi
+```
+
+If deployments exist:
+- Are they showing as successful?
+- Is the production/preview URL responding?
+
+### Step 5: Report Status
+
+**If everything is clean**:
+```
+✅ Merge verified — everything is healthy
+
+  PR: #<number> merged by <user> at <time>
+  CI on master: ✓ All passing
+  Deployments: ✓ Up (if applicable)
+
+  Ready for next feature → run /status
+```
+
+**If issues found**:
+```
+⚠️  Post-merge issues detected
+
+  PR: #<number> merged ✓
+  CI on master: ✗ <workflow-name> failing
+    - Error: <description>
+    - Action needed: <hotfix or investigation>
+
+  Deployments: ✗ <deployment> not responding
+
+  Next: Create hotfix branch or investigate root cause
+```
+
+### Step 6: Clean Up Worktree and Branch
+
+Only run this step after CI is confirmed healthy (Step 3 passed).
+
+Get the merged branch name:
+
+```bash
+gh pr view <number> --json headRefName --jq '.headRefName'
+```
+
+If the branch name cannot be determined (empty output or error), skip cleanup and tell the user to run `git worktree list` and clean up manually.
+
+Find and remove the matching worktree (if it exists):
+
+```bash
+# Get the worktree path for this exact branch
+WORKTREE_PATH=$(git worktree list --porcelain \
+  | awk -v branch="refs/heads/<branch>" '
+      /^worktree / { path=substr($0, 10) }
+      $0 == "branch " branch { print path }
+    ')
+
+if [ -n "$WORKTREE_PATH" ]; then
+  # No --force: a worktree with uncommitted changes must not be silently discarded.
+  # If this fails, stop and ask before removing anything.
+  git worktree remove "$WORKTREE_PATH"
+  echo "Worktree: removed ✓ ($WORKTREE_PATH)"
+else
+  echo "Worktree: not found (already removed or never created) — skipping"
+fi
+```
+
+If no worktree is found for that branch, skip gracefully with a note: "Worktree: not found (already removed or never created)".
+
+Delete the local branch. We squash-merge, so the feature tip is **not** an ancestor of
+`master` and `git branch -d` always refuses — the merge has to be proven from the PR,
+then the branch force-deleted:
+
+```bash
+if ! git show-ref --verify --quiet "refs/heads/<branch>"; then
+  echo "Branch: <branch> already gone — skipping"
+elif [ "$(gh pr view <number> --json state --jq .state)" = "MERGED" ]; then
+  # -D, not -d: a squash merge leaves the tip unreachable from master.
+  git branch -D "<branch>" && echo "Branch: <branch> deleted ✓"
+else
+  echo "Branch: <branch> KEPT — PR <number> is not merged"
+fi
+```
+
+Never swallow the failure with `|| echo "already deleted"` — that reports success while
+leaving the branch behind, which is how every verified branch accumulated locally.
+
+Report cleanup in output:
+```
+Worktree: removed ✓
+Branch: <branch-name> deleted ✓
+```
+
+### Step 7: If Issues Found — Create Beads Issue
+
+**Never commit inline.** If something is wrong, create a tracking issue:
+
+```bash
+bd create --title="Post-merge: <description of issue>" --type=bug --priority=1
+```
+
+### Step 8: Close Beads Issues (if healthy)
+
+If everything is clean, close all Beads issues referenced in the merged PR.
+
+**Auto-detect beads issues from PR body and branch name:**
+
+```bash
+# Get PR body and branch name
+PR_BODY=$(gh pr view <number> --json body --jq '.body')
+PR_BRANCH=$(gh pr view <number> --json headRefName --jq '.headRefName')
+
+# Extract beads IDs from PR body (matches "Closes beads-xxx", "closes forge-xxx", etc.)
+# Patterns: "Closes <prefix>-<id>", "Fixes <prefix>-<id>", "Resolves <prefix>-<id>"
+BEADS_IDS=$(echo "$PR_BODY" | grep -oiE '(closes|fixes|resolves):?\s+[a-z]+-[a-z0-9]+' | grep -oiE '[a-z]+-[a-z0-9]{3,6}$')
+
+# Validate each ID exists in beads
+VALID_IDS=""
+for id in $BEADS_IDS; do
+  if bd show "$id" >/dev/null 2>&1; then
+    VALID_IDS="$VALID_IDS $id"
+  fi
+done
+BEADS_IDS="$VALID_IDS"
+
+# Also check branch name for beads ID — extract segment after last /
+# then validate with bd show to avoid false matches like "pr-templa"
+BRANCH_SLUG=$(echo "$PR_BRANCH" | sed 's|.*/||')
+BRANCH_ID=$(echo "$BRANCH_SLUG" | grep -oE '[a-z]+-[a-z0-9]{3,6}' | head -1)
+if [ -n "$BRANCH_ID" ] && ! bd show "$BRANCH_ID" >/dev/null 2>&1; then
+  BRANCH_ID=""  # Not a valid beads ID — discard
+fi
+```
+
+**Close each matched issue:**
+
+```bash
+# Close issues found in PR body
+for id in $BEADS_IDS; do
+  bd close "$id" --reason="Merged and verified on master (PR #<number>)" 2>&1 || echo "Warning: could not close $id"
+done
+
+# If no issues found in body, try branch name match (skip if already closed above)
+if [ -z "$BEADS_IDS" ] && [ -n "$BRANCH_ID" ]; then
+  bd close "$BRANCH_ID" --reason="Merged and verified on master (PR #<number>)" 2>&1 || echo "Warning: could not close $BRANCH_ID"
+elif [ -n "$BRANCH_ID" ] && ! echo "$BEADS_IDS" | grep -qw "$BRANCH_ID"; then
+  bd close "$BRANCH_ID" --reason="Merged and verified on master (PR #<number>)" 2>&1 || echo "Warning: could not close $BRANCH_ID"
+fi
+```
+
+**If no beads issues detected at all**, prompt the user:
+```
+⚠ No beads issue ID found in PR body or branch name.
+  If this PR closes a beads issue, run: bd close <id> --reason="Merged and verified on master (PR #<number>)"
+```
+
+```
+<HARD-GATE: /verify exit>
+Do NOT declare /verify complete until:
+1. gh run list --commit "$MERGE_SHA" shows actual CI output (not "should be fine"),
+   and every run on that commit is completed + success. A branch-wide listing does
+   not count — it can be green on some other commit entirely.
+2. If healthy: Beads issues extracted from PR body/branch and closed (bd close run and confirmed)
+   - If no beads ID found: user was warned and given manual close command
+3. If issues found: Beads tracking issue created for every problem
+4. Worktree removed (or confirmed already gone) — OR Step 6 was intentionally skipped because CI was unhealthy; if skipped, state explicitly: "cleanup deferred, CI was not healthy"
+"It should be fine" is not evidence. Run the command. Show the output.
+</HARD-GATE>
+```
+
+## Rules
+
+- **Never commits, never pushes, never merges** — it does not touch repository history.
+  It is *not* read-only, though: Steps 6-8 remove the feature worktree, force-delete the
+  local branch, close beads issues on success, and create one on failure. Do not invoke
+  it expecting observation only.
+- **Never creates PRs** — if fixes are needed, that's a new /dev cycle
+- **Runs after user confirms merge** — not before
+- **Reports honestly** — if CI is broken on main, say so clearly
+
+## Example Output (Healthy)
+
+```
+✅ Merge verified — everything is healthy
+
+  PR: #89 merged by harshanandak at 2026-02-24T14:30:00Z
+  Branch: feat/auth-refresh deleted ✓
+  CI on master:
+    ✓ Test Suite (ubuntu, node 20): passing
+    ✓ Test Suite (windows, node 22): passing
+    ✓ ESLint: passing
+    ✓ SonarCloud: passing
+    ✓ CodeQL: passing
+  Deployments: N/A (no deployment configured)
+
+  Ready for next feature → run /status
+```
+
+## Example Output (Issues Found)
+
+```
+⚠️  Post-merge issues detected
+
+  PR: #89 merged ✓
+  CI on master:
+    ✓ Test Suite: passing
+    ✗ SonarCloud: quality gate failing
+      - 2 new code smells introduced
+      - Action: investigate or create hotfix
+
+  Created Beads issue: forge-xyz
+  "Post-merge: SonarCloud quality gate failing on master after PR #89"
+
+  Run /status to assess next steps
+```
+
+## Integration with Workflow
+
+```
+Utility: /status     → Understand current context before starting
+Stage 1: /plan       → Design intent → research → branch + worktree + task list
+Stage 2: /dev        → Implement each task with subagent-driven TDD
+Stage 3: /validate      → Type check, lint, tests, security — all fresh output
+Stage 4: /ship       → Push + create PR
+Stage 5: /review     → Address GitHub Actions, Greptile, SonarCloud
+Stage 6: /premerge   → Update docs, hand off PR to user
+Stage 7: /verify     → Post-merge CI check on main (you are here) ✓
+```

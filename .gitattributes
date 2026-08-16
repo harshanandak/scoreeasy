@@ -1,1 +1,12 @@
 *.bat text eol=crlf
+
+# Agent config: scripts/sync-agent-config.mjs writes LF, so these must check
+# out as LF or `sync:agents --check` reports drift on a CRLF clone.
+AGENTS.md text eol=lf
+CODING_STANDARDS.md text eol=lf
+docs/agents/*.md text eol=lf
+.clinerules text eol=lf
+.cursorrules text eol=lf
+.roorules text eol=lf
+.cursor/rules/*.mdc text eol=lf
+.github/copilot-instructions.md text eol=lf

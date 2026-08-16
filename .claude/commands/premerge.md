@@ -1,0 +1,194 @@
+---
+description: Complete all doc updates on feature branch, then hand off PR to user for merge
+---
+
+Prepare the pull request for merge by completing ALL documentation updates on the feature branch, then hand off to the user.
+
+# Premerge
+
+**The actual merge is always done by the user in the GitHub UI — never by this command.**
+
+This command makes the PR 100% complete: code + tests + docs in one unit. After this, the user merges once and there are no follow-up doc PRs needed.
+
+## Usage
+
+```bash
+/premerge <pr-number>
+```
+
+## What This Command Does
+
+### Step 1: Verify All CI Checks Pass
+
+```bash
+gh pr checks <pr-number>
+```
+
+All checks must be green before proceeding. If any fail, run `/review <pr-number>` first.
+
+### Step 2: Warn If Branch Is Behind Master
+
+`git status` reports the branch against its own upstream (`origin/<feature>`), which
+says nothing about `master` — it would report "up to date" while master has moved on.
+Count the commits explicitly:
+
+```bash
+gh pr view <pr-number> --json baseRefName,headRefName
+git fetch origin master
+BEHIND=$(git rev-list --count HEAD..origin/master)
+echo "behind master by $BEHIND commit(s)"
+```
+
+If `$BEHIND` is greater than 0, tell the user to rebase first:
+
+```
+⚠️  Branch is behind master — rebase before updating docs to avoid conflicts:
+    git rebase origin/master
+    git push --force-with-lease
+```
+
+### Step 3: Update ALL Relevant Documentation (on feature branch)
+
+Check each of the following and update if the feature affects it. Be selective — only update what genuinely changed.
+
+**A. `CHANGELOG.md`** (always):
+- Add entry under `## [Unreleased]` heading (create heading if not present)
+- Use [Keep a Changelog](https://keepachangelog.com/) categories:
+  - **Added**: New features
+  - **Changed**: Changes to existing functionality
+  - **Fixed**: Bug fixes
+  - **Removed**: Removed features
+- Include: feature name, PR number, Beads ID
+- Example:
+  ```markdown
+  ## [Unreleased]
+
+  ### Added
+  - Authentication refresh tokens (PR #89, forge-a3f8)
+  ```
+
+**B. `README.md`** (if user-facing changes):
+- Features list, configuration options, usage examples
+
+**C. `docs/reference/API_REFERENCE.md`** (if API changes):
+- New endpoints, request/response schemas, authentication
+
+**D. Architecture docs** (if structural changes):
+- `docs/architecture/` diagrams, decision records (ADRs)
+
+**E. `AGENTS.md`** — the canonical agent file, and the only one you edit. Put project
+conventions, agent capabilities, and cross-agent workflow changes here.
+
+⚠️  `CLAUDE.md` is a 12-byte `@AGENTS.md` pointer. It has no USER markers, no AGENT
+markers, and no managed blocks — never edit it, and never write conventions into it.
+Regenerate the other harness mirrors with `bun run sync:agents` instead of hand-editing
+them.
+
+**Commit doc updates to feature branch**:
+
+```bash
+git add CHANGELOG.md README.md docs/ AGENTS.md CLAUDE.md
+git commit -m "docs: update documentation for <feature-name>
+
+- Updated: [list files changed]
+- Reason: [brief explanation]"
+
+git push
+```
+
+⚠️  **After pushing**: CI will re-trigger (Greptile, SonarCloud, etc.). Poll for up to 60 seconds. If checks are still pending after that, stop and ask the user to return to `/premerge <pr-number>` later. If new Greptile comments appear on the doc changes, run `/review <pr-number>` again.
+
+### Step 4: Sync Beads
+
+```bash
+bd sync
+```
+
+### Step 5: Hand Off — STOP HERE
+
+**DO NOT run `gh pr merge`.** Present the PR and wait for the user to merge.
+
+Output:
+
+```
+✅ PR #<number> is ready to merge
+
+  All checks: ✓ passing
+  Documentation: ✓ updated on feature branch
+  Beads: ✓ synced
+
+  👉 Please merge in the GitHub UI:
+     https://github.com/<owner>/<repo>/pull/<number>
+
+  Recommended: Squash and merge (keeps main history clean)
+
+After you merge, run /verify to confirm everything landed correctly.
+```
+
+### Step 6: Record Stage Transition
+
+```bash
+forge issue comment <id> "stage: premerge -> verify
+summary: <docs updated, CI green, PR ready>
+artifacts: <updated doc files, PR URL>
+next: <merge instructions for user>"
+```
+
+Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
+carries a summary.
+
+```
+<HARD-GATE: /premerge exit>
+Do NOT run gh pr merge, or any other command that merges the PR. Merging is the
+user's action, in the GitHub UI, always.
+DO hand off: output the PR URL and status and ask the user to squash-and-merge.
+Asking is the point of this command; doing it yourself is the violation.
+/premerge ends here. Wait for user.
+
+"After you merge, run /verify to confirm everything landed correctly."
+</HARD-GATE>
+```
+
+## Example Output
+
+```
+✓ CI checks: All passing
+✓ Branch: Up to date with master
+✓ Documentation updated:
+  - CHANGELOG.md: Entry added under [Unreleased]
+  - README.md: Features list updated
+  - CLAUDE.md: USER section updated with new pattern
+  - Committed: docs: update documentation for auth-refresh
+✓ CI re-triggered after doc push — checks passed within the 60 second poll window
+✓ Beads synced
+
+✅ PR #89 is ready to merge
+
+  👉 Please merge in the GitHub UI:
+     https://github.com/harshanandak/forge/pull/89
+
+After you merge, run /verify
+```
+
+## Rules
+
+- **NEVER run `gh pr merge`** — merging is the user's, by hand. This is a rule you
+  follow, not something the harness enforces: `.claude/settings.json` ships no
+  PreToolUse guard today.
+- **CLAUDE.md USER section only** — never touch other managed blocks
+- **Warn if branch is behind** — tell user to rebase before doc updates
+- **Re-check CI after doc push** — doc commits re-trigger full CI pipeline
+- **One PR, complete** — code + tests + docs merged together, no follow-up doc PRs
+
+## Integration with Workflow
+
+```
+Utility: /status     → Understand current context before starting
+Stage 1: /plan       → Design intent → research → branch + worktree + task list
+Stage 2: /dev        → Implement each task with subagent-driven TDD
+Stage 3: /validate      → Type check, lint, tests, security — all fresh output
+Stage 4: /ship       → Push + create PR
+Stage 5: /review     → Address GitHub Actions, Greptile, SonarCloud
+Stage 6: /premerge   → Update docs, hand off PR to user (you are here)
+Stage 7: /verify     → Post-merge CI check on main
+```
