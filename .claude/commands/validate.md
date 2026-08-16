@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
 > **Note:** Three things share the "validate" name in Forge:
 > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
 > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
-> - `bun run check` (scripts/validate.sh): Local quality gate — runs type/lint/test/security checks only (does NOT rebase; assumes branch is already current with the base branch)
+> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — runs the same lint, type-check, agent-config-sync, test and build jobs CI runs (does NOT rebase; assumes branch is already current with the base branch)
 
 Run comprehensive validation including type checking, linting, code review, security review, and tests.
 
@@ -22,8 +22,9 @@ This command validates all code before creating a pull request.
 Or use the validation script (checks only — no rebase):
 
 ```bash
-bun run check    # Runs lint/test/security checks only. Does NOT rebase onto the base branch.
-                 # Use /validate for the full workflow (rebase + checks).
+lefthook run pre-commit   # lint + type-check + agent-config-sync
+lefthook run pre-push     # test + build
+                          # Neither rebases. Use /validate for the full workflow (rebase + checks).
 ```
 
 ```
@@ -67,12 +68,11 @@ reflect the true state of what will be merged.
 
 ## What This Command Does
 
-**Quick Start**: Run `bun run check` to execute the full validation pipeline (implemented in `scripts/validate.sh`). The npm script is named `check`; the workflow command is `/validate`. See individual steps below for details.
+**Quick Start**: Run `lefthook run pre-commit && lefthook run pre-push` to execute the same pipeline CI runs (`lefthook.yml`). The workflow command is `/validate`. See individual steps below for details.
 
 ### Step 1: Type Check
 ```bash
-# Run your project's type check command
-bun run typecheck    # or: npm run typecheck, tsc, etc.
+bun run type-check
 ```
 - Verify all TypeScript types are valid
 - No `any` types allowed

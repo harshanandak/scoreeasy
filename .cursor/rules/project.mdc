@@ -341,8 +341,12 @@ Every stage transition should carry structured context so the next stage (or a n
 Run at each stage exit to check for missing context:
 
 ```bash
-bash scripts/beads-context.sh validate <beads-issue-id>
+bd show <beads-issue-id>
 ```
+
+Check by eye that: (1) the issue has a description, (2) at least one stage-transition
+comment exists, (3) the most recent transition carries a summary, (4) design metadata is
+set if the issue is past the plan stage.
 
 This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
 
@@ -355,16 +359,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
 
 ### Usage in Stage Transitions
 
-```bash
-# Basic (backward compatible)
-bash scripts/beads-context.sh stage-transition <id> dev validate
+Record the transition as a comment on the issue:
 
-# With context fields (recommended)
-bash scripts/beads-context.sh stage-transition <id> dev validate \
-  --summary "All 5 tasks done, 0 gates fired" \
-  --decisions "Used approach A per design doc" \
-  --artifacts "lib/foo.js test/foo.test.js" \
-  --next "Run type check and lint"
+```bash
+bd comments add <id> "stage: dev -> validate
+summary: All 5 tasks done, 0 gates fired
+decisions: Used approach A per design doc
+artifacts: lib/foo.js test/foo.test.js
+next: Run type check and lint"
 ```
 
 ### Enforcement Level

@@ -114,7 +114,9 @@ WORKTREE_PATH=$(git worktree list --porcelain \
     ')
 
 if [ -n "$WORKTREE_PATH" ]; then
-  git worktree remove "$WORKTREE_PATH" --force
+  # No --force: a worktree with uncommitted changes must not be silently discarded.
+  # If this fails, stop and ask before removing anything.
+  git worktree remove "$WORKTREE_PATH"
   echo "Worktree: removed ✓ ($WORKTREE_PATH)"
 else
   echo "Worktree: not found (already removed or never created) — skipping"
