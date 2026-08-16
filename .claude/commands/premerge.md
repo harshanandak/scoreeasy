@@ -28,13 +28,18 @@ All checks must be green before proceeding. If any fail, run `/review <pr-number
 
 ### Step 2: Warn If Branch Is Behind Master
 
+`git status` reports the branch against its own upstream (`origin/<feature>`), which
+says nothing about `master` — it would report "up to date" while master has moved on.
+Count the commits explicitly:
+
 ```bash
 gh pr view <pr-number> --json baseRefName,headRefName
 git fetch origin master
-git status
+BEHIND=$(git rev-list --count HEAD..origin/master)
+echo "behind master by $BEHIND commit(s)"
 ```
 
-If the feature branch is behind `master`, tell the user to rebase first:
+If `$BEHIND` is greater than 0, tell the user to rebase first:
 
 ```
 ⚠️  Branch is behind master — rebase before updating docs to avoid conflicts:

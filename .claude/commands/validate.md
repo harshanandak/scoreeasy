@@ -113,6 +113,9 @@ bun run lint    # or: npm run lint, eslint ., etc.
 ```bash
 # This project is bun-only — there is no package-lock.json, so `npm audit`
 # exits ENOLOCK and will try to talk you into creating one. Don't.
+# `bun audit` needs Bun >= 1.2.15; older Bun reports `Script not found "audit"`.
+# package.json pins packageManager bun@1.3.13 (what CI uses) — match it.
+bun --version
 bun audit
 ```
 

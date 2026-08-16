@@ -49,14 +49,19 @@ gh pr view <number> --json number,state,mergedAt,mergedBy,headRefName
 
 ### Step 3: Check CI on Main After Merge
 
+Scope this to **the merge commit you are verifying**, not the branch. A branch query
+mixes in runs from other commits, and an unrelated green run must never be what lets
+Step 6 delete a worktree and close issues.
+
 ```bash
-gh run list --branch master --limit 5
+MERGE_SHA=$(gh pr view <number> --json mergeCommit --jq .mergeCommit.oid)
+gh run list --commit "$MERGE_SHA" --json name,status,conclusion
 ```
 
-Check the most recent workflow runs on `master`:
-- All should be passing or in progress
-- If any failed: identify which workflow and what failed
-- Failed CI on main after merge may need a hotfix PR
+Every run on that commit must be `status=completed` **and** `conclusion=success`:
+- `in_progress` is not healthy — it is unfinished. Wait for it, do not proceed to cleanup.
+- If any failed: identify which workflow and what failed. Failed CI on main after merge
+  may need a hotfix PR — and do not clean up the branch you may need to fix from.
 
 ### Step 4: Check Deployments (if applicable)
 
