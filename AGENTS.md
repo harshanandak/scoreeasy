@@ -59,7 +59,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 
 - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
 - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
+- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
 - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
 
 ## Non-interactive shell

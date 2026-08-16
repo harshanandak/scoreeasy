@@ -63,13 +63,7 @@ If conflicts are reported:
 - If `rebase`: rebase onto `origin/$BASE`, re-run `/validate`, then return here
 - If `proceed`: log the override via `forge issue comment <id> "Ship override: creating PR despite merge conflicts"`, then continue
 
-### Step 3: Update Beads
-```bash
-bd update <id> --status done
-bd sync
-```
-
-### Step 4: Push Branch
+### Step 3: Push Branch
 
 Use `--force-with-lease` because `/validate` may have rebased the branch, rewriting history. This is safe: it only forces the push if the remote branch hasn't been updated by someone else since the last fetch.
 
@@ -150,7 +144,21 @@ Rules for the PR body:
 - **Check applicable checkboxes** — `[x]` for items that apply, `[ ]` for items that don't
 - **Include "Closes beads-xxx"** in the Beads section (required for auto-close in /verify)
 
-### Step 6: Record Stage Transition
+### Step 6: Update Beads — only now that the PR exists
+
+Do this **after** `gh pr create` succeeds, never before the push. If the push or the
+PR creation fails and the issue is already `done`, no PR exists, and re-running
+`/ship` is refused by its own entry gate, which requires `in_progress`.
+
+```bash
+bd update <id> --status done
+bd sync
+```
+
+If a later step fails after this point, put it back with
+`bd update <id> --status in_progress` before you stop.
+
+### Step 7: Record Stage Transition
 ```bash
 forge issue comment <id> "stage: ship -> review
 summary: <PR created, checks pending>

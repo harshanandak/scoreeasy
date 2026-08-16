@@ -137,9 +137,11 @@ carries a summary.
 
 ```
 <HARD-GATE: /premerge exit>
-Do NOT run gh pr merge.
-Do NOT suggest merging.
-/premerge ends here. Output the PR URL and status. Wait for user.
+Do NOT run gh pr merge, or any other command that merges the PR. Merging is the
+user's action, in the GitHub UI, always.
+DO hand off: output the PR URL and status and ask the user to squash-and-merge.
+Asking is the point of this command; doing it yourself is the violation.
+/premerge ends here. Wait for user.
 
 "After you merge, run /verify to confirm everything landed correctly."
 </HARD-GATE>
