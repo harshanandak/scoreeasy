@@ -141,9 +141,16 @@ Rollback complete!
 
 **Use when**: Need to revert an entire merged pull request
 
-**How it works**:
+**How it works**: we squash-merge, so a merged PR is an ordinary one-parent commit and
+`git revert -m 1` fails on it ("mainline was specified but commit is not a merge").
+Check the parent count first:
+
 ```bash
-git revert -m 1 <merge-commit-hash> --no-edit
+if [ "$(git rev-list --parents -n 1 <sha> | wc -w)" -gt 2 ]; then
+  git revert -m 1 <sha> --no-edit    # true merge commit (rare here)
+else
+  git revert <sha> --no-edit         # the normal squash case
+fi
 ```
 
 **Example**:

@@ -18,8 +18,13 @@ This command runs AFTER the user has merged the PR. It checks system health — 
 
 ### Step 1: Switch to Main and Pull
 
+`/verify` usually runs from the feature worktree, where `git checkout master` is
+refused — the primary worktree already holds it. Move to the worktree that has
+`master` instead of switching branches:
+
 ```bash
-git checkout master
+MAIN_WT=$(git worktree list --porcelain | awk '/^worktree /{wt=$2} /^branch refs\/heads\/(master|main)$/{print wt; exit}')
+cd "$MAIN_WT" || { echo "No worktree holds master — stop and tell the user"; exit 1; }
 git pull
 ```
 
@@ -27,10 +32,15 @@ Confirm the merge actually landed on main. If the PR isn't merged yet, stop and 
 
 ### Step 2: Confirm PR Is Merged
 
-Detect the most recently merged PR from the current HEAD commit:
+Verify **the PR you are verifying**, by number. Never take "the most recently merged
+PR" — if anything else merged in between, the cleanup steps below would delete the
+wrong worktree and branch and close unrelated issues.
 
 ```bash
-gh pr list --state merged --base master --limit 1 --json number,state,mergedAt,mergedBy
+# <number> comes from the invocation. If it wasn't given, resolve it from HEAD
+# rather than from a recency list:
+#   gh pr list --state merged --search "$(git rev-parse HEAD)" --json number
+gh pr view <number> --json number,state,mergedAt,mergedBy,headRefName
 ```
 
 - `state` should be `MERGED`
