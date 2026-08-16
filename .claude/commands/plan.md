@@ -14,6 +14,12 @@ This command runs in **3 phases**. Each phase ends with a HARD-GATE. Do not skip
 <HARD-GATE: /plan entry — worktree isolation>
 Before ANY planning work begins:
 
+0. If invoked as `/plan <slug> --continue`, this gate does NOT apply. The worktree
+   already exists from the first run. Resume it instead of building a new one:
+   a. cd .worktrees/<slug>   (if it is gone: bd worktree create .worktrees/<slug> --branch feat/<slug>)
+   b. git checkout feat/<slug>   — the proposal branch was a detour; Phase 2+3 run on the feature branch
+   c. git pull --rebase origin master   — pick up the merged proposal
+   d. Skip to Phase 2. Do not re-run steps 1-5 and do not re-create the branch or the epic.
 1. Run: git branch --show-current
 2. If the current branch is NOT master/main:
    - STOP. Do not begin Phase 1.
@@ -161,7 +167,11 @@ gh pr create --title "Design: <feature-name>" \
 ```
 
 **STOP here.** Present the PR URL. Wait for the user to merge the proposal PR.
-After merge, run `/plan <slug> --continue` to proceed to Phase 2 + 3.
+
+After merge, run `/plan <slug> --continue` **from inside `.worktrees/<slug>`**. Step 0
+of the entry gate handles it: it switches back off `feat/<slug>-proposal` onto
+`feat/<slug>`, rebases on master, and resumes at Phase 2 without re-creating the
+worktree, branch, or epic.
 
 ---
 

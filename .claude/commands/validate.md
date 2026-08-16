@@ -111,8 +111,9 @@ bun run lint    # or: npm run lint, eslint ., etc.
 
 **Automated Security Scan**:
 ```bash
-# Run your project's security scan
-npm audit    # or: bun audit, snyk test, etc.
+# This project is bun-only — there is no package-lock.json, so `npm audit`
+# exits ENOLOCK and will try to talk you into creating one. Don't.
+bun audit
 ```
 
 **Manual Review**:
@@ -221,7 +222,10 @@ Do NOT output any variation of "check complete", "ready to ship", or proceed to 
 until ALL FOUR show fresh output in this session:
 
 1. Type check: [command run] → [actual output] → exit 0 confirmed
-2. Lint: [command run] → [actual output] → 0 errors, 0 warnings confirmed
+2. Lint: [command run] → [actual output] → exit 0 and 0 errors confirmed.
+   Warnings are a known baseline (`explicit-table-ids` and two other Convex rules
+   are configured `warn` in eslint.config.js; CODING_STANDARDS.md records why).
+   Do not add new ones — say the count and whether your change moved it.
 3. Tests: [command run] → [actual output] → N/N passing confirmed
 4. Security scan: [command run] → [actual output] → no critical issues confirmed
 

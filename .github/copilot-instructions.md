@@ -185,7 +185,9 @@ When the user requests work, **you MUST automatically classify** the change type
 ### Docs (Documentation-only workflow)
 **Triggers:** Documentation updates, README changes, comment improvements
 **Example:** "Update README", "Add API documentation"
-**Workflow:** verify → ship
+**Workflow:** validate → ship
+(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
+base branch, so it can never run before `/ship`.)
 
 ### Refactor (5-stage workflow for safe cleanup)
 **Triggers:** Code cleanup, performance optimization, technical debt reduction
@@ -283,14 +285,11 @@ Task 2: Validation logic
 
 ## Git Hooks (Automatic Enforcement)
 
-**Pre-commit hook enforces TDD:**
-- Blocks commits if source code modified without test files
-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
-- No AI decision required - automatic validation
+**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
+It does **not** compare changed source against changed tests — there is no automatic
+TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
 
-**Pre-push hook validates tests:**
-- All tests must pass before push
-- Can skip for hotfixes with documentation
+**Pre-push hook** runs the full test suite and the build. Both must pass.
 
 ## Documentation Index (Context Pointers)
 

@@ -108,10 +108,23 @@ If a PR template exists:
 3. **Do NOT remove any sections** — fill them all, even if "N/A"
 4. **Do NOT restructure the template** — keep the project's chosen format
 
-If no PR template exists, use this minimal fallback:
+There is no PR template in this repo today, so this fallback is what every `/ship`
+actually uses. It carries the merge artifact AGENTS.md requires — a phone-viewport
+demo plus the acceptance checklist walked item by item. **Do not open the PR with
+either of those two sections empty** for feature work; for a docs-only or tooling PR,
+write "N/A — no user-visible surface" and say why.
+
 ```
 ## Summary
-[1-3 sentences: what this PR does and why]
+[Lead with the problem, then the change — 1-3 sentences]
+
+## Demo
+[Recording or screenshots of the change on a phone viewport. Required for anything
+user-visible. N/A only for docs/tooling, with a reason.]
+
+## Acceptance checklist
+[Every state and transition the plan named, including undo and the reverse path,
+each one ticked and walked out loud. Completeness gates the merge, size does not.]
 
 ## Changes
 [Bulleted list of key changes]
