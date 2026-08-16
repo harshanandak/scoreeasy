@@ -162,7 +162,8 @@ bunx forge rollback
 ✓ Validating commit hash...
 ✓ Working directory is clean
 ✓ Extracting USER sections...
-✓ Executing: git revert -m 1 def456 --no-edit
+✓ Squash merge detected (1 parent) — using plain revert
+✓ Executing: git revert def456 --no-edit
 ✓ Restoring USER sections...
 ✓ Amended commit to preserve USER content
 ✓ Beads integration: Issue #123 marked as 'reverted'
@@ -638,7 +639,8 @@ bunx forge rollback
 # ✓ Validating commit hash...
 # ✓ Working directory is clean
 # ✓ Extracting USER sections...
-# ✓ Executing: git revert -m 1 merge789 --no-edit
+# ✓ Squash merge detected (1 parent) — using plain revert
+# ✓ Executing: git revert merge789 --no-edit
 # ✓ Restoring USER sections...
 # ✓ Beads: Issue #123 → status: reverted
 # ✓ Rollback complete!

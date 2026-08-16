@@ -67,13 +67,14 @@ Every run on that commit must be `status=completed` **and** `conclusion=success`
 
 Check if the project has a deployment target:
 
-```bash
-# Check deployment status from latest run
-gh run list --branch master --limit 1
+Use the same `$MERGE_SHA` resolved in Step 3 — never `HEAD`. If another commit reached
+`master` after the merge you are verifying, `HEAD` is that other commit and you would
+clear cleanup on an unrelated deployment.
 
-# Cloudflare deployments for this ref. `gh pr view` has no `deployments` field —
-# the deployments REST API is the supported surface.
-DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" --jq '.[0].id')
+```bash
+# Cloudflare deployments for the verified merge commit. `gh pr view` has no
+# `deployments` field — the deployments REST API is the supported surface.
+DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$MERGE_SHA&per_page=1" --jq '.[0].id')
 
 if [ -n "$DEPLOY_ID" ] && [ "$DEPLOY_ID" != "null" ]; then
   gh api "repos/{owner}/{repo}/deployments/$DEPLOY_ID/statuses?per_page=1" \
@@ -238,7 +239,9 @@ fi
 ```
 <HARD-GATE: /verify exit>
 Do NOT declare /verify complete until:
-1. gh run list --branch master --limit 3 shows actual CI output (not "should be fine")
+1. gh run list --commit "$MERGE_SHA" shows actual CI output (not "should be fine"),
+   and every run on that commit is completed + success. A branch-wide listing does
+   not count — it can be green on some other commit entirely.
 2. If healthy: Beads issues extracted from PR body/branch and closed (bd close run and confirmed)
    - If no beads ID found: user was warned and given manual close command
 3. If issues found: Beads tracking issue created for every problem

@@ -255,7 +255,15 @@ cmd_list() {
 
         echo -e "  ${BLUE}Thread ID:${NC} $thread_id"
         echo -e "  ${BLUE}Comment ID:${NC} $comment_id"
-        echo -e "  ${BLUE}Author:${NC} $author"
+        # `list` deliberately shows EVERY unresolved thread, not just Greptile's —
+        # you need the full count to know the PR is clear. But a thread that is not
+        # Greptile's is someone else's conversation: read and answer it on its own
+        # terms, never bulk-resolve it as bot feedback.
+        if [[ "$author" == "greptile-apps"* ]]; then
+            echo -e "  ${BLUE}Author:${NC} $author"
+        else
+            echo -e "  ${BLUE}Author:${NC} $author  ${RED}<- NOT Greptile: answer individually${NC}"
+        fi
 
         # Extract title from body (first line)
         local title

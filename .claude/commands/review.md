@@ -88,8 +88,14 @@ This shows:
 
 **Step 2: For EACH unresolved thread:**
 
+⚠️ The listing includes **every** unresolved thread, not only Greptile's — humans and
+other review bots appear too, flagged `<- NOT Greptile` in the output. The categories
+below are for bot feedback. Never apply them, and never bulk-resolve, on a human or
+other-bot thread: read it, answer it on its own terms, and only resolve once the person
+who opened it is actually answered.
+
 1. **Understand the issue**
-   - Read the comment carefully
+   - Check the author first, then read the comment carefully
    - Check the file and line number
 
 2. **Categorize the comment** (bot feedback is advisory — AGENTS.md "Shipping regime"):
@@ -170,10 +176,15 @@ The summary typically includes:
 - Code coverage changes
 - Technical debt added
 
-**Prioritize issues**:
-1. **Blocker/Critical**: Must fix before merge
-2. **Major**: Should fix if valid
-3. **Minor/Info**: Optional improvements
+**Prioritize issues** — severity ranks urgency, it does not decide who fixes it when.
+Route every finding, whatever Sonar labelled it, through the same four-class test in
+Step 2: secrets, injection, a broken build, or documentation asserting something the
+code does not do get fixed here; everything else is filed.
+
+1. **Blocker/Critical**: fix here if it lands in one of the four classes (a real build
+   break, an injection, a leaked secret) — otherwise file it as a P1 follow-up.
+2. **Major**: file, unless it is one of the four classes.
+3. **Minor/Info**: file or skip with a reason.
 
 ### Step 5: Check Other CI/CD Tools
 
