@@ -123,15 +123,17 @@ Output:
 After you merge, run /verify to confirm everything landed correctly.
 ```
 
-### Step 6: Validate Context and Record Stage Transition
+### Step 6: Record Stage Transition
 
 ```bash
-bash scripts/beads-context.sh validate <id>
-bash scripts/beads-context.sh stage-transition <id> premerge verify \
-  --summary "<docs updated, CI green, PR ready>" \
-  --artifacts "<updated doc files, PR URL>" \
-  --next "<merge instructions for user>"
+forge issue comment <id> "stage: premerge -> verify
+summary: <docs updated, CI green, PR ready>
+artifacts: <updated doc files, PR URL>
+next: <merge instructions for user>"
 ```
+
+Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
+carries a summary.
 
 ```
 <HARD-GATE: /premerge exit>

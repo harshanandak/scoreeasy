@@ -23,14 +23,23 @@ This command helps you understand the current state of the project before starti
 forge sync || true
 ```
 
-### Step 1: Smart Status (ranked issues with conflict detection)
+### Step 1: Read the real state
+
+Read the three surfaces that actually hold state — the issue tracker, the working tree, and open PRs:
 
 ```bash
-bash scripts/smart-status.sh
-```
-This command dynamically computes and displays all issues ranked by composite score (priority, dependency impact, type, staleness, epic proximity). Output includes active sessions, conflict risk annotations, and grouped categories. No manual querying needed.
+# Ready work, ranked by the kernel (unblocked issues first)
+forge ready
 
-For full context on any issue: `bd show <id>`
+# What is in flight locally
+git status -sb
+git worktree list
+
+# What is in flight on the remote
+gh pr list --state open
+```
+
+For full context on any issue: `forge show <id>`
 
 ### Step 1b: Reconcile stale in-progress issues
 

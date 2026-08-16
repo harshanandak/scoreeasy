@@ -64,28 +64,20 @@ Do NOT write any code until ALL confirmed:
 ---
 
 
-### Multi-developer conflict check (soft block)
+### Worktree isolation check
 
-Before starting the per-task loop, check for cross-developer conflicts:
+ScoreEasy is a solo project — there is no cross-developer conflict surface. What matters is
+that you are implementing in your own worktree and not in someone else's (or the primary
+checkout while another agent holds it):
 
 ```bash
-# Auto-sync to get latest team state (non-blocking)
 forge sync || true
-
-# Check for conflicts with the current beads issue
-bash scripts/conflict-detect.sh --issue <beads-id>
+git worktree list
+git status -sb
 ```
 
-If exit code 2 (validation error): show error message, abort — do not show conflict prompt.
-
-If exit code 1 (conflicts found):
-- Display the conflict output to the developer
-- Ask: "Other developers are working in overlapping areas. Proceed anyway? (y/n)"
-- If `n`: exit cleanly, no side effects
-- If `y`: log override via `bd comments add <id> "Conflict override: proceeding despite overlap with <conflicting-issues>"`, then continue to Per-Task Loop
-- Audit: record conflict override per OWASP A09
-
-If exit code 0: proceed silently to Per-Task Loop.
+If the current worktree has uncommitted changes that are not yours, STOP and say so rather
+than editing over them. Otherwise proceed to the Per-Task Loop.
 
 ---
 
@@ -211,7 +203,9 @@ Do NOT mark task complete or move to next task until ALL confirmed in this sessi
 4. Run it fresh — show the actual output. "Last run was fine" is not evidence.
 5. Tests run fresh — actual output shows passing.
 6. Implementer has committed (git log shows the commit).
-7. `bash scripts/beads-context.sh update-progress <id> <task-num> <total> "<title>" <commit-sha> <test-count> <gate-count>` ran successfully (exit code 0). If it fails: STOP. Show error. Do not proceed to next task.
+7. Progress recorded on the issue — run and confirm it exits 0:
+   `forge issue comment <id> "task <task-num>/<total>: <title> — commit <commit-sha>, <test-count> tests, <gate-count> decision gates"`
+   If it fails: STOP. Show error. Do not proceed to next task.
 
 Forbidden phrases (these are not evidence):
 - "should pass"
@@ -272,16 +266,18 @@ Do NOT declare /dev complete until:
 </HARD-GATE>
 ```
 
-### Beads update
+### Issue update
 
 ```bash
-bash scripts/beads-context.sh validate <id>
-bash scripts/beads-context.sh stage-transition <id> dev validate \
-  --summary "<N tasks done, M decision gates fired>" \
-  --decisions "<key spec gaps and how they were resolved>" \
-  --artifacts "<changed source files and test files>" \
-  --next "<validation priorities — lint issues, type concerns>"
+forge issue comment <id> "stage: dev -> validate
+summary: <N tasks done, M decision gates fired>
+decisions: <key spec gaps and how they were resolved>
+artifacts: <changed source files and test files>
+next: <validation priorities — lint issues, type concerns>"
 ```
+
+Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
+carries a summary.
 
 ---
 

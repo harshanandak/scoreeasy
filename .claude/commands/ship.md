@@ -46,35 +46,22 @@ BEHIND=$(git rev-list --count HEAD..origin/"$BASE")
 
 This is NOT a full rebase — just a check. The rebase happens in /validate where the full test suite runs afterward.
 
-### Parallel PR coordination (soft block)
+### Merge readiness (soft block)
 
-Before creating the PR, check merge readiness:
+Before creating the PR, confirm the branch actually merges into the base cleanly. `git
+merge-tree` does this without touching the working tree:
 
 ```bash
-# Run merge simulation against base branch
-bash scripts/pr-coordinator.sh merge-sim "$(git branch --show-current)" 2>&1
-
-# Show recommended merge order
-bash scripts/pr-coordinator.sh merge-order 2>&1 || true
-
-# Auto-label the PR after creation (called after gh pr create below)
-# bash scripts/pr-coordinator.sh auto-label <issue-id>
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's|refs/remotes/origin/||')
+git merge-tree --write-tree "origin/$BASE" HEAD >/dev/null && echo "clean merge" \
+  || echo "CONFLICTS with origin/$BASE"
 ```
 
-If merge simulation finds conflicts:
-- Display conflicted files
-- Ask: "Merge conflicts detected with base branch. These PRs should merge first: [list]. Proceed with PR creation anyway? (y/n)"
-- If `n`: exit cleanly
-- If `y`: log override via `bd comments add <id> "Ship override: creating PR despite merge conflicts"`, then continue
-
-After PR creation completes:
-```bash
-# Auto-label the newly created PR
-bash scripts/pr-coordinator.sh auto-label <issue-id>
-
-# Check for stale worktrees (informational)
-bash scripts/pr-coordinator.sh stale-worktrees 2>&1 || true
-```
+If conflicts are reported:
+- Show the conflicted paths (`git merge-tree --write-tree --name-only "origin/$BASE" HEAD`)
+- Ask: "Merge conflicts with the base branch. Rebase now, or create the PR anyway? (rebase/proceed)"
+- If `rebase`: rebase onto `origin/$BASE`, re-run `/validate`, then return here
+- If `proceed`: log the override via `forge issue comment <id> "Ship override: creating PR despite merge conflicts"`, then continue
 
 ### Step 3: Update Beads
 ```bash
@@ -150,15 +137,17 @@ Rules for the PR body:
 - **Check applicable checkboxes** — `[x]` for items that apply, `[ ]` for items that don't
 - **Include "Closes beads-xxx"** in the Beads section (required for auto-close in /verify)
 
-### Step 6: Validate Context and Record Stage Transition
+### Step 6: Record Stage Transition
 ```bash
-bash scripts/beads-context.sh validate <id>
-bash scripts/beads-context.sh stage-transition <id> ship review \
-  --summary "<PR created, checks pending>" \
-  --decisions "<template sections filled, beads linked>" \
-  --artifacts "<PR URL, branch name>" \
-  --next "<review focus areas>"
+forge issue comment <id> "stage: ship -> review
+summary: <PR created, checks pending>
+decisions: <template sections filled, issue linked>
+artifacts: <PR URL, branch name>
+next: <review focus areas>"
 ```
+
+Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
+carries a summary.
 
 ### Team sync after PR
 

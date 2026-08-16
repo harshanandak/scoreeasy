@@ -228,13 +228,14 @@ until ALL FOUR show fresh output in this session:
 "Should pass", "was passing earlier", and "I'm confident" are not evidence.
 Run the commands. Show the output. THEN declare done.
 
-5. Context check: Run `bash scripts/beads-context.sh validate <id>` and address any warnings
+5. Context check: Run `forge issue show <id>` and confirm by eye that the issue has a
+   description, at least one stage-transition comment, and that the latest one carries a summary
 6. Stage transition: Run the following → exit 0 confirmed:
-   bash scripts/beads-context.sh stage-transition <id> validate ship \
-     --summary "<all checks pass/fail summary>" \
-     --decisions "<any failures diagnosed and fixed>" \
-     --artifacts "<scripts and commands run>" \
-     --next "<ship readiness notes>"
+   forge issue comment <id> "stage: validate -> ship
+   summary: <all checks pass/fail summary>
+   decisions: <any failures diagnosed and fixed>
+   artifacts: <commands run>
+   next: <ship readiness notes>"
 </HARD-GATE>
 ```
 

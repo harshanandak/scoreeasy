@@ -27,7 +27,7 @@ Before ANY planning work begins:
    ```bash
    bd create --title="<feature-name>" --type=epic
    bd update <id> --status=in_progress
-   bash scripts/beads-context.sh stage-transition <id> none plan
+   forge issue comment <id> "stage: none -> plan"
    ```
 6. ONLY THEN begin Phase 1.
 
@@ -51,54 +51,27 @@ between parallel features or sessions.
 ---
 
 
-### Multi-developer conflict check (soft block)
+### In-flight work check (advisory)
 
-Before proceeding to Phase 1, check for cross-developer conflicts:
+ScoreEasy is a solo project — there is no cross-developer conflict surface. What can still
+bite is your own parallel work: another worktree or an open PR already touching these files.
 
 ```bash
-# Auto-sync to get latest team state
+# Refresh issue state
 forge sync || true
 
-# Check for conflicts with this issue's planned work area
-bash scripts/conflict-detect.sh --issue <beads-id>
+# Your own in-flight branches and worktrees
+git worktree list
+
+# Open PRs — anything overlapping this feature's area?
+gh pr list --state open
 ```
 
-If exit code 2 (validation error): show error message, abort — do not show conflict prompt.
+If an open PR or another worktree already touches the area you are about to plan, say so and
+ask whether to plan on top of it, wait for it to merge, or scope this feature to avoid it.
+If nothing overlaps, proceed silently to Phase 1.
 
-If exit code 1 (conflicts found):
-- Display the conflict output to the developer
-- Ask: "Other developers are working in overlapping areas. Proceed anyway? (y/n)"
-- If `n`: exit cleanly, no side effects
-- If `y`: log override via `bd comments add <id> "Conflict override: proceeding despite overlap with <conflicting-issues>"`, then continue to Phase 1
-- Audit: record conflict override per OWASP A09
-
-If exit code 0: proceed silently to Phase 1.
-
----
-
-### Parallel PR coordination check (soft block)
-
-Before proceeding to Phase 1, check for merge conflicts and dependency issues with in-flight PRs:
-
-```bash
-# Run merge simulation if on a feature branch
-current_branch="$(git branch --show-current)"
-if [[ "$current_branch" != "master" ]] && [[ "$current_branch" != "main" ]]; then
-  bash scripts/pr-coordinator.sh merge-sim "$current_branch" 2>&1 || true
-fi
-
-# Show current merge queue
-bash scripts/pr-coordinator.sh merge-order 2>&1 || true
-
-# Check for stale worktrees (informational)
-bash scripts/pr-coordinator.sh stale-worktrees 2>&1 || true
-```
-
-If merge conflicts or unmet dependencies are found:
-- Display the findings to the developer
-- Ask: "In-flight PRs have potential conflicts. Proceed with planning anyway? (y/n)"
-- If `n`: exit cleanly, no side effects
-- If `y`: log override via `bd comments add <id> "PR coordination override: proceeding despite in-flight conflicts"`, then continue to Phase 1
+This is advisory — proceed to Phase 1 either way once the user has chosen.
 
 ---
 
@@ -118,61 +91,19 @@ If verify reports issues, address them before proceeding (the output will includ
 
 **Goal**: Capture WHAT to build — purpose, constraints, success criteria, edge cases, approach.
 
-### Step 0: Dependency ripple check (advisory)
+### Step 0: Open work check (advisory)
 
-Before exploring context or asking questions, check for potential conflicts with in-flight work:
+Before exploring context or asking questions, see what else is already open:
 
 ```bash
-# If a Beads issue ID is known (e.g., from /status or bd ready):
-bash scripts/dep-guard.sh check-ripple <beads-issue-id>
-
-# If no issue exists yet (first-time plan):
-bd list --status=open,in_progress
+forge issue list --status open
+forge issue list --status in_progress
 ```
 
-Review the output. If overlaps are detected:
-- Consider whether the overlapping issue should be a dependency
+Review the output. If another open issue covers overlapping ground:
+- Consider whether it should be a dependency (`forge issue dep add <issue-id> <blocks-issue-id>`)
 - Note any shared areas for the design Q&A
 - This check is **advisory only** — always proceed to Step 1 regardless of findings
-
-#### Ripple Analyst Agent (spawned when contract overlaps found)
-
-When `check-ripple` detects overlapping issues AND contract metadata is available, spawn a Ripple Analyst subagent with this prompt:
-
-**Input to agent**:
-- Current issue's contract changes (from `extract-contracts` output)
-- Consumer code snippets (from `find-consumers` output for each changed contract)
-- Overlapping issue's title, description, and contract metadata
-
-**Agent instructions**:
-1. For each overlapping contract, imagine 2-3 concrete break scenarios:
-   - "If [contract X] changes [specific behavior], then [consumer Y] will [specific failure]"
-2. Rate overall impact as one of:
-   - **NONE**: No real conflict despite keyword overlap
-   - **LOW**: Consumers need trivial adjustment (add parameter, rename call)
-   - **HIGH**: Consumer needs significant rework (parsing logic, data handling changes)
-   - **CRITICAL**: Consumer is in an active in_progress issue's task list
-3. **When uncertain, default to HIGH** — conservative over permissive
-4. Recommend one action:
-   - Add dependency (`bd dep add <source> <target>`)
-   - Coordinate with other issue's developer
-   - Scope down current feature to avoid overlap
-   - Proceed as-is (no real conflict)
-
-**Output format**:
-```
-Impact: [NONE|LOW|HIGH|CRITICAL]
-Confidence: [high|medium|low]
-
-Break scenarios:
-1. [scenario description]
-2. [scenario description]
-
-Recommendation: [action]
-Reason: [why this action]
-```
-
-This agent is advisory only. The developer always makes the final decision.
 
 ### Step 1: Explore project context
 
@@ -252,7 +183,7 @@ Do NOT begin Phase 2 (web research) until:
 
 Record the phase transition before starting research:
 ```bash
-bash scripts/beads-context.sh stage-transition <id> plan research
+forge issue comment <id> "stage: plan -> research"
 ```
 
 Run these in parallel:
@@ -349,7 +280,7 @@ Do NOT begin Phase 3 (setup) until:
 
 Record the phase transition before starting setup:
 ```bash
-bash scripts/beads-context.sh stage-transition <id> research setup
+forge issue comment <id> "stage: research -> setup"
 ```
 
 ### Step 1: Link child issues to the epic
@@ -439,51 +370,21 @@ For each task, confirm it maps to a specific requirement, success criterion, or 
 
 Save to `docs/plans/YYYY-MM-DD-<slug>-tasks.md`.
 
-### Step 5b: Beads context
+### Step 5b: Attach design context to the issue
 
-After saving the task list, attach design context and acceptance criteria to the Beads issue so downstream stages (`/dev`, `/validate`, `/review`) can retrieve it without re-reading the design doc.
-
-```bash
-# Link design metadata (task count + task file path) to the Beads issue
-bash scripts/beads-context.sh set-design <id> <task-count> docs/plans/YYYY-MM-DD-<slug>-tasks.md
-
-# Record the success criteria from the design doc on the issue
-bash scripts/beads-context.sh set-acceptance <id> "<success-criteria from design doc>"
-```
-
-Both commands must exit with code 0. If either fails, investigate (wrong issue ID? missing script?) before continuing.
-
-### Step 5c: Contract extraction and logic-level dependency review
-
-After saving the task list and Beads context, extract and store contract metadata, then run the logic-level Phase 3 dependency review:
+After saving the task list, record the design context and acceptance criteria on the issue so
+downstream stages (`/dev`, `/validate`, `/review`) can retrieve it without re-reading the design doc.
 
 ```bash
-# Extract contracts — only call store-contracts if extract succeeds (exit 0)
-if bash scripts/dep-guard.sh extract-contracts docs/plans/YYYY-MM-DD-<slug>-tasks.md > /tmp/contracts.txt; then
-  bash scripts/dep-guard.sh store-contracts <id> "$(cat /tmp/contracts.txt)"
-else
-  echo "No contracts found — skipping store-contracts"
-fi
-
-# Re-run ripple check using Beads JSON + logic-level analysis
-bash scripts/dep-guard.sh check-ripple <id>
+forge issue comment <id> "design: docs/plans/YYYY-MM-DD-<slug>-tasks.md (<task-count> tasks)
+acceptance: <success criteria, copied verbatim from the design doc>"
 ```
 
-`extract-contracts` exits 1 when no contracts are found (not an error — just nothing to store). `store-contracts` must exit 0 if called.
-
-`check-ripple` is now advisory but logic-aware. It should:
-- read Beads issue data via JSON
-- analyze import/call-chain, contract, and behavioral dependency signals
-- show rubric score, confidence, issue pairs, and proposed dependency updates with pros/cons
-- stop for user approval whenever a dependency mutation is proposed
-
-If the user approves a dependency mutation, apply it explicitly:
+Then re-read it back and confirm the comment landed:
 
 ```bash
-bash scripts/dep-guard.sh apply-decision <id> <dependent-id> <depends-on-id> "<approval rationale>"
+forge issue show <id>
 ```
-
-That approval step must validate with `bd dep cycles`, show `bd graph`, summarize `bd ready`, and persist the decision via `bd set-state` plus `bd comments`. Beads remains the canonical machine-readable decision record; the plan docs hold only the concise summary.
 
 ### Step 6: User review
 
@@ -500,23 +401,22 @@ Do NOT proceed to /dev until ALL are confirmed:
 4. Beads issue is created with status=in_progress
 5. Task list exists at docs/plans/YYYY-MM-DD-<slug>-tasks.md
 6. User has confirmed task list is correct
-7. `beads-context.sh set-design` ran successfully (exit code 0)
-8. `beads-context.sh set-acceptance` ran successfully (exit code 0)
-9. `dep-guard.sh store-contracts` ran successfully (exit code 0) — or skipped if no contracts found
-10. `dep-guard.sh check-ripple` ran successfully and any proposed dependency mutation was reviewed with the user before calling `apply-decision`
+7. `forge issue show <id>` shows the design + acceptance comment from Step 5b
 </HARD-GATE>
 ```
 
-After all HARD-GATE items pass, validate context and record the stage transition:
+After all HARD-GATE items pass, record the stage transition:
 
 ```bash
-bash scripts/beads-context.sh validate <id>
-bash scripts/beads-context.sh stage-transition <id> plan dev \
-  --summary "<design approach chosen, task count>" \
-  --decisions "<key trade-offs resolved during Q&A>" \
-  --artifacts "docs/plans/YYYY-MM-DD-<slug>-design.md docs/plans/YYYY-MM-DD-<slug>-tasks.md" \
-  --next "<first dev task focus area>"
+forge issue comment <id> "stage: plan -> dev
+summary: <design approach chosen, task count>
+decisions: <key trade-offs resolved during Q&A>
+artifacts: docs/plans/YYYY-MM-DD-<slug>-design.md docs/plans/YYYY-MM-DD-<slug>-tasks.md
+next: <first dev task focus area>"
 ```
+
+Re-read with `forge issue show <id>` and confirm by eye that the issue has a description, the
+transition comment is present, and it carries a summary.
 
 ---
 
