@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+tone_instructions: >-
+  Be concise and evidence-based. Treat feedback as advisory except secrets,
+  injection, broken builds, or docs claiming behavior the code does not implement.
+  Do not expand scope; call unrelated valid work a follow-up.
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  review_status: true
+  review_progress: false
+  commit_status: true
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
