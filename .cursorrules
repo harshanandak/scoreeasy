@@ -82,7 +82,7 @@ When this file contradicts what the code plainly does, the code wins — then sa
 Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
 Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
 
-**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. The reviewer-bot policy is versioned in `.coderabbit.yaml`; its request-changes workflow is disabled so this advisory rule remains authoritative, and this paragraph must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
+**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. The reviewer-bot policy is versioned in `.coderabbit.yaml`; its request-changes workflow is disabled so this advisory rule remains authoritative.)
 
 Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
 
