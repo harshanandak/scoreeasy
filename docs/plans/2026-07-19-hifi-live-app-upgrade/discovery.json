@@ -1,0 +1,650 @@
+{
+  "brutalistIdentity": "Pure-black ink used for foreground AND borders AND inputs (#000) — the defining move. Hard offset drop-shadow: `3px 3px 0px 0.5px` solid black, ZERO blur (`--shadow-x/y:3px`, `--shadow-blur:0px`). Thin (1–1.5px) hard black hairlines everywhere (`--se-color-line`). Boxy near-square radius (`--radius:4px`, card 8px). Type: Inter (sans) + JetBrains Mono (mono) + Merriweather (serif); signature = UPPERCASE mono micro-labels with wide tracking (0.08–0.12em) and heavy 700–900 weights. Big score numerals via `clamp(3rem, min(22vh,26vw), 8rem)`. Open borderless typographic tap-zones for scoring (no card, press flashes accent — `.mono-arena-half`, `.mono-scorer-run-button`). Off-white faint-green canvas `#F1F4EF`; green reserved strictly for lead/emphasis, not decoration. Tokens flow oklch → `--se-*` semantic aliases → CSS classes (src/index.css :root, mono.css).",
+  "hifiTraits": "Everything rounded — 99px capsule/pill buttons, 50% circular tap targets, 10–16px soft cards, no square corners. Circular/capsule scoring controls (tap a big soft target, not tiny +/- steppers). Plain-language micro-copy prompts on every scorer (\"Tap a side to score\", \"Tap who won the rally\", \"Tap the point winner\") — the UI asks a question. Big friendly celebratory numerals (60–104px). Soft green warmth: green-tint washes (`#e7f4ee`), warm-green-black shadows (`rgba(20,40,30,…)` never pure black), gold (`#b8862e`/`#e8b64c`) for wins/MVP/milestones. Green glow colored shadows on primary CTAs. Gentle breathing LIVE pulse animations (opacity/glow, 1.2–1.8s) instead of harsh blink. Contextual coaching caption chips (\"break point\", \"set point soon\", \"Need 73 off 44\", \"RRR\", \"BONUS\"). Post-event attribution bottom-sheets (who/how) each with Skip + Confirm. Undo-last-ball affordance. Share-live QR sheet. Dedicated read-only spectator views + match graphs/momentum. Designed empty/first-run states. Bottom tab nav (Home · Play · History · Friends/More).",
+  "screens": [
+    {
+      "name": "Guest landing / marketing",
+      "group": "onboarding/home",
+      "route": "/",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoLanding.jsx",
+        "src/designs/design1-mono/landing/GuestLanding.jsx"
+      ],
+      "hifiRef": "Home",
+      "notes": "Hero + sport grid for signed-out users."
+    },
+    {
+      "name": "Dashboard / signed-in home",
+      "group": "onboarding/home",
+      "route": "/dashboard",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/landing/DashboardLanding.jsx"
+      ],
+      "hifiRef": "Home",
+      "notes": "Signed-in home. HiFi wants a live/upcoming feed + Activity — not present yet."
+    },
+    {
+      "name": "Home first-run (empty state)",
+      "group": "onboarding/home",
+      "route": "/dashboard (empty variant)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Home · first run (empty)",
+      "notes": "Explicit empty-state home before any games. Band 13 HiFi; no dedicated empty design shipped."
+    },
+    {
+      "name": "Onboarding first-run",
+      "group": "onboarding/home",
+      "route": "/onboarding",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoOnboarding.jsx"
+      ],
+      "hifiRef": "Onboarding · first run → Home",
+      "notes": "922 ln. HiFi onboarding = Continue with Google/Apple/phone → Home."
+    },
+    {
+      "name": "Login",
+      "group": "onboarding/home",
+      "route": "/login",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoLogin (via CloudAuthOnly)"
+      ],
+      "hifiRef": "Onboarding · first run",
+      "notes": "Cloud auth."
+    },
+    {
+      "name": "Signup",
+      "group": "onboarding/home",
+      "route": "/signup",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoSignUp",
+        "SSOCallback"
+      ],
+      "hifiRef": "Onboarding · first run",
+      "notes": "/sso-callback included."
+    },
+    {
+      "name": "Play hub (pick a sport)",
+      "group": "pick",
+      "route": "/play",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoPlayHub.jsx"
+      ],
+      "hifiRef": "Start · Browse",
+      "notes": "Pick sport → quick/tournament."
+    },
+    {
+      "name": "Sport home (per-sport entry)",
+      "group": "pick",
+      "route": "(within /play)",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoSportHome.jsx",
+        "src/designs/design1-mono/MonoSportHome_TABBED.jsx"
+      ],
+      "hifiRef": "Start · Guided",
+      "notes": "Two variants exist; _TABBED is an alternate not wired into router."
+    },
+    {
+      "name": "Match setup (quick)",
+      "group": "setup",
+      "route": ":sport/quick",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoQuickMatch.jsx"
+      ],
+      "hifiRef": "Setup",
+      "notes": "2850 ln monolith — setup + dispatch + multiple start flows conflated (I-085). HiFi wants a clean Setup screen."
+    },
+    {
+      "name": "Customize & rules (from Setup)",
+      "group": "setup",
+      "route": "(within setup)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoQuickMatch.jsx"
+      ],
+      "hifiRef": "Customize & rules (from Setup)",
+      "notes": "HiFi has a dedicated rules-customization step; embedded/implicit in QuickMatch today."
+    },
+    {
+      "name": "Cricket toss (Setup → Live)",
+      "group": "setup",
+      "route": "(cricket start flow)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoQuickMatch.jsx"
+      ],
+      "hifiRef": "Toss · Setup → Live (cricket)",
+      "notes": "HiFi Band 11 connective screen; unclear if a distinct toss screen exists."
+    },
+    {
+      "name": "Cricket scorer (limited overs)",
+      "group": "scorer",
+      "route": "(dispatched from :sport/quick)",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx"
+      ],
+      "hifiRef": "Cricket · live",
+      "notes": "1007 ln. Ball-by-ball. Carries I-068 ad-hoc green 4/6 accent."
+    },
+    {
+      "name": "Cricket scorer (test / multi-innings)",
+      "group": "scorer",
+      "route": ":sport/quick/test-match/:matchId",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx"
+      ],
+      "hifiRef": "Cricket · live",
+      "notes": "956 ln. Second cricket entry path (feeds I-085 duplication)."
+    },
+    {
+      "name": "Tennis scorer",
+      "group": "scorer",
+      "route": ":sport/quick/live/:matchId",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx"
+      ],
+      "hifiRef": "Tennis · live",
+      "notes": "766 ln. Games/sets/tiebreak. HiFi adds 'Tap the point winner' + credit-point sheet."
+    },
+    {
+      "name": "Sets scorer (volleyball/badminton/TT/pickleball/squash)",
+      "group": "scorer",
+      "route": "(dispatched)",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx"
+      ],
+      "hifiRef": "Volleyball · live (sets) / Badminton · live (sets)",
+      "notes": "646 ln, one engine for 6 sports (tennis separate). HiFi adds per-set strip + 'Tap who won the rally'."
+    },
+    {
+      "name": "Goals scorer (football/basketball/hockey/handball/futsal/kabaddi/rugby)",
+      "group": "scorer",
+      "route": "(dispatched)",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx"
+      ],
+      "hifiRef": "Football · live / Basketball · live / Hockey · live (goals)",
+      "notes": "683 ln, one engine for 7 sports. Carries I-049/I-051/I-052 debt. HiFi has distinct big-score football, quarter-based basketball, goal hockey layouts."
+    },
+    {
+      "name": "Generic live game view",
+      "group": "scorer",
+      "route": "—",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoLiveGame.jsx"
+      ],
+      "hifiRef": "Match · live",
+      "notes": "309 ln generic; unclear routing role."
+    },
+    {
+      "name": "In-match ⋯ menu",
+      "group": "scorer",
+      "route": "(overlay from live)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "In-match ⋯ menu (from Live)",
+      "notes": "HiFi Band 11: in-match overlay (edit setup, share, end match). Not a distinct surface today."
+    },
+    {
+      "name": "Attribution mini-flows (who scored / how out / credit point / new batter)",
+      "group": "scorer",
+      "route": "(bottom-sheet from scorer)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/components/AppScoringPrompt (AppOwnedScoringPrompts)"
+      ],
+      "hifiRef": "Football · who scored? / Cricket · how out? / Tennis·Volleyball·Badminton · credit the point / Cricket · new batter in",
+      "notes": "AppScoringPrompt component exists (a11y-tested). HiFi wants full Assist/OwnGoal/dismissal-type/winner-vs-unforced sheets each with Skip+Confirm feeding player stats."
+    },
+    {
+      "name": "Team-only scorer variants (no player names)",
+      "group": "scorer",
+      "route": "(mode toggle)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Cricket live · team-only / Cricket spectator · team-only / Football spectator · team-only",
+      "notes": "HiFi Band 8 anonymous/casual mode dropping rosters. Not present."
+    },
+    {
+      "name": "Undo last ball / correction affordance",
+      "group": "scorer",
+      "route": "(in scorer)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/scoring/*"
+      ],
+      "hifiRef": "Undo last ball",
+      "notes": "Some scorers have undo; verify uniform 'Undo last ball' + edit affordances across all engines."
+    },
+    {
+      "name": "Spectator — cricket",
+      "group": "spectator",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [
+        ".claude/worktrees/wf_* live/ only"
+      ],
+      "hifiRef": "Spectator · cricket",
+      "notes": "Read-only live view. Live components (LiveMatchCard, ShareLiveMatch, convex/live.ts) exist ONLY in a worktree branch, not production."
+    },
+    {
+      "name": "Spectator — football",
+      "group": "spectator",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Spectator · football",
+      "notes": "Missing from production."
+    },
+    {
+      "name": "Spectator — tennis",
+      "group": "spectator",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Spectator · tennis",
+      "notes": "Missing."
+    },
+    {
+      "name": "Spectator — other sports (basketball/hockey/volleyball/badminton)",
+      "group": "spectator",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Spectator · basketball/hockey/volleyball/badminton",
+      "notes": "Per-sport spectator variants; none shipped."
+    },
+    {
+      "name": "Spectator graphs / momentum / point-by-point / box score",
+      "group": "spectator",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Spectator · cricket Graphs / Match · graphs / Basketball · box score",
+      "notes": "Momentum/worm-style visualizations for spectators. No charts in app at all."
+    },
+    {
+      "name": "Share live link (QR)",
+      "group": "spectator",
+      "route": "(sheet)",
+      "currentState": "missing",
+      "sourceFiles": [
+        ".claude/worktrees/wf_* ShareLiveMatch only"
+      ],
+      "hifiRef": "Share live link (→ Spectator)",
+      "notes": "Public link + Copy + QR 'Scan to watch' + WhatsApp/Messages. Only in worktree. Needs Auto-share default in Settings too."
+    },
+    {
+      "name": "Result (FULL TIME)",
+      "group": "result",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Result",
+      "notes": "HiFi: FULL TIME, 'Reds win by 14', line scores, Done / Share card / Scorecard / Rematch. No dedicated result screen shipped."
+    },
+    {
+      "name": "Scorecard (post-match detail)",
+      "group": "result",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Scorecard",
+      "notes": "Detailed post-match scorecard. Missing as a distinct screen."
+    },
+    {
+      "name": "Share result card",
+      "group": "result",
+      "route": "(from Result)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Result → Share card",
+      "notes": "Shareable graphic of final result."
+    },
+    {
+      "name": "History (past matches)",
+      "group": "history-stats",
+      "route": "/history",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoHistory.jsx"
+      ],
+      "hifiRef": "History · games",
+      "notes": "899 ln. I-086 filters dominate mobile; I-053 perpetual-loading risk; hardcoded hex inline styles."
+    },
+    {
+      "name": "History empty state",
+      "group": "history-stats",
+      "route": "/history (empty)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "History · empty",
+      "notes": "HiFi Band 13 explicit empty state."
+    },
+    {
+      "name": "Match detail (from history)",
+      "group": "history-stats",
+      "route": "(from /history)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoHistory.jsx"
+      ],
+      "hifiRef": "Match detail (from history)",
+      "notes": "HiFi has a distinct match-detail + Match·graphs; verify a dedicated detail screen vs inline expand."
+    },
+    {
+      "name": "Statistics overview + per-sport",
+      "group": "history-stats",
+      "route": "/statistics",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoStatistics.jsx"
+      ],
+      "hifiRef": "Players · leaderboard",
+      "notes": "891 ln. I-013 CTA-first for empty; I-066 nav says 'Stats' vs title 'Statistics'; no charts/trends/head-to-head."
+    },
+    {
+      "name": "Players leaderboard",
+      "group": "history-stats",
+      "route": "(within /statistics)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoStatistics.jsx"
+      ],
+      "hifiRef": "Players · leaderboard",
+      "notes": "Table-based; HiFi wants ranked leaderboard with MVP/Win%."
+    },
+    {
+      "name": "Player profile (career records/milestones)",
+      "group": "history-stats",
+      "route": "/profile/:username",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoProfile.jsx"
+      ],
+      "hifiRef": "Player profile / Player profile (public · add friend)",
+      "notes": "Profile exists; HiFi wants career milestones ('50 career wickets'), MVP count, Win%, cups, and public add-friend variant."
+    },
+    {
+      "name": "Team stats",
+      "group": "history-stats",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Team stats",
+      "notes": "Per-team aggregate stats screen. Not shipped."
+    },
+    {
+      "name": "Match graphs / momentum viz",
+      "group": "history-stats",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Match · graphs",
+      "notes": "No visualization layer anywhere in app."
+    },
+    {
+      "name": "Tournament list",
+      "group": "tournament-schedule",
+      "route": ":sport/tournament",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoTournamentList.jsx"
+      ],
+      "hifiRef": "Fixtures",
+      "notes": "312 ln."
+    },
+    {
+      "name": "Tournament setup / create",
+      "group": "tournament-schedule",
+      "route": ":sport/tournament/new",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoTournamentSetup.jsx"
+      ],
+      "hifiRef": "Create tournament (→ Fixtures)",
+      "notes": "1838 ln monolith. Bracket/round-robin."
+    },
+    {
+      "name": "Tournament dispatch (per-engine)",
+      "group": "tournament-schedule",
+      "route": ":sport/tournament/:id",
+      "currentState": "built",
+      "sourceFiles": [
+        "index.jsx TournamentDispatcher",
+        "MonoCricketTournament",
+        "GenericSetsTournament",
+        "GenericGoalsTournament"
+      ],
+      "hifiRef": "Fixtures / Bracket",
+      "notes": "Engine-selected."
+    },
+    {
+      "name": "Tournament match score",
+      "group": "scorer",
+      "route": ":sport/tournament/:id/match/:matchId/score",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoTournamentLiveScore.jsx"
+      ],
+      "hifiRef": "Cricket/Football · live",
+      "notes": "Scores a fixture within a tournament."
+    },
+    {
+      "name": "Standings",
+      "group": "tournament-schedule",
+      "route": "(within tournament)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/models/sportRegistry.js standingsColumns"
+      ],
+      "hifiRef": "Standings",
+      "notes": "standingsColumns config exists per sport; verify a rendered standings table matches HiFi."
+    },
+    {
+      "name": "Bracket",
+      "group": "tournament-schedule",
+      "route": "(within tournament)",
+      "currentState": "partial",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoTournamentSetup.jsx",
+        "TournamentDispatcher"
+      ],
+      "hifiRef": "Bracket",
+      "notes": "Bracket concept present in setup; HiFi shows semifinals/final bracket view."
+    },
+    {
+      "name": "Schedule / fixtures calendar",
+      "group": "tournament-schedule",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Fixtures",
+      "notes": "No standalone schedule/calendar screen beyond tournament list."
+    },
+    {
+      "name": "Your profile (account)",
+      "group": "settings-account",
+      "route": "/profile",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoProfile.jsx"
+      ],
+      "hifiRef": "Your profile (account)",
+      "notes": "394 ln. Only account surface; no settings. HiFi profile shows friends/teams/cups + Games/Win%/MVPs."
+    },
+    {
+      "name": "Settings / More",
+      "group": "settings-account",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "More · settings",
+      "notes": "No settings route. HiFi: Sign-in-to-sync, Scoring defaults (default sport, Confirm wicket/goal toggle), Sharing (Auto-share live link), Appearance/dark-mode, Data (Export history, Clear all data). A .dark theme exists in index.css but is unused."
+    },
+    {
+      "name": "User search / find friends",
+      "group": "settings-account",
+      "route": "/users/search",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoUserSearch.jsx"
+      ],
+      "hifiRef": "Find & invite friends",
+      "notes": "189 ln. Closest existing surface to HiFi social; lacks invite flow."
+    },
+    {
+      "name": "Activity feed (social / live)",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Activity feed (social)",
+      "notes": "'Eagles vs Hawks is live · 3 friends watching · Watch'. Whole social layer absent."
+    },
+    {
+      "name": "Friends list",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Friends list",
+      "notes": "Missing."
+    },
+    {
+      "name": "Notifications",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Notifications",
+      "notes": "Friend requests, match invites, live alerts, milestones. Missing."
+    },
+    {
+      "name": "My teams (grouped)",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "My teams · grouped",
+      "notes": "Team management flow entirely absent (Convex teams exist but no UI). HiFi Band 5/9."
+    },
+    {
+      "name": "Create team (limits)",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Create team · limits",
+      "notes": "Missing."
+    },
+    {
+      "name": "Add players (sources)",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Add players · sources",
+      "notes": "Missing."
+    },
+    {
+      "name": "Roster (squad & bench)",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Roster · squad & bench",
+      "notes": "Missing."
+    },
+    {
+      "name": "Teams empty state",
+      "group": "other",
+      "route": "(missing)",
+      "currentState": "missing",
+      "sourceFiles": [],
+      "hifiRef": "Teams · empty",
+      "notes": "HiFi Band 13 empty state."
+    },
+    {
+      "name": "Legal (privacy/terms/contact)",
+      "group": "other",
+      "route": "/privacy, /terms, /contact",
+      "currentState": "built",
+      "sourceFiles": [
+        "src/designs/design1-mono/landing/LegalPage.jsx"
+      ],
+      "hifiRef": "—",
+      "notes": "Static; no HiFi counterpart."
+    },
+    {
+      "name": "Dev showcases",
+      "group": "other",
+      "route": "/showcase/*",
+      "currentState": "stub",
+      "sourceFiles": [
+        "MonoMatchCardShowcase",
+        "MonoSetDisplayShowcase",
+        "BrutalistColorShowcase",
+        "DashboardShowcase"
+      ],
+      "hifiRef": "One system → every sport",
+      "notes": "Internal, gated by SHOW_INTERNAL_ROUTES. HiFi has a design-system explainer frame."
+    },
+    {
+      "name": "Route recovery / 404",
+      "group": "other",
+      "route": "* , /game/:id",
+      "currentState": "built",
+      "sourceFiles": [
+        "RouteRecoveryActions",
+        "NotFoundRoute"
+      ],
+      "hifiRef": "—",
+      "notes": "Fallbacks."
+    },
+    {
+      "name": "Legacy orphans (unwired)",
+      "group": "other",
+      "route": "(none)",
+      "currentState": "stub",
+      "sourceFiles": [
+        "src/designs/design1-mono/MonoHome.jsx",
+        "src/designs/design1-mono/MonoSetup.jsx",
+        "src/designs/design1-mono/NewUserFlow.jsx",
+        "src/designs/design1-mono/MonoSportHome_TABBED.jsx"
+      ],
+      "hifiRef": "—",
+      "notes": "Not referenced by router; reconcile/delete during upgrade."
+    }
+  ],
+  "gaps": [
+    "Shared token + component layer: styling is a 3-way hybrid (mono.css semantic classes + inline Tailwind v4 utilities + one-off inline styles with hardcoded hex like color:'#111'/'#'). Need a single token system that bridges the brutalist oklch tokens with the HiFi friendly-mode traits (rounded radii scale, pill/circle controls, soft green washes, gold, colored/glow shadows) so both aesthetics compose instead of fighting. This is the foundation everything else sits on.",
+    "Real-time / live / spectator infrastructure is MISSING from production — LiveBroadcastBar, LiveMatchCard, LiveNowStrip, ShareLiveMatch, ReportMatch and convex/live.ts exist ONLY in a .claude/worktrees/wf_* branch. Spectator mode, share-live-link+QR, and the live social feed all depend on landing this backend + UI in src/ and convex/ first.",
+    "No Result / Scorecard / Share-card surface — the entire match-end flow (FULL TIME → Done/Rematch/Share/Scorecard) is absent; scorers currently have no designed terminal state.",
+    "Post-event attribution depth — AppScoringPrompt exists but the full HiFi sheets (assist/own-goal, dismissal type, winner vs forced vs unforced vs double-fault) with Skip+Confirm are not built, and there is no stats pipeline consuming them into player/team records.",
+    "No visualization layer at all — match graphs, momentum/worm, box score, per-sport spectator graphs, statistics trends/head-to-head. Statistics is table-only.",
+    "No Settings screen and dark mode declared-but-unused — scoring defaults (incl. Confirm wicket/goal toggle), auto-share default, appearance/dark toggle, data export/clear all have nowhere to live.",
+    "Entire social layer missing — Activity feed, Friends list, Find & invite, Notifications, public player profiles with add-friend, friend/mutual counts.",
+    "Entire teams-management flow missing (My teams / Create team / Add players / Roster) despite Convex teams tables existing.",
+    "Empty / first-run states undesigned — HiFi explicitly designs Home-empty, Teams-empty, History-empty; app renders zero-grids or perpetual-loading (I-053) instead.",
+    "Team-only (anonymous, no-roster) casual mode not supported by any scorer.",
+    "Monolith decomposition — MonoQuickMatch.jsx (2850 ln) and MonoTournamentSetup.jsx (1838 ln) conflate setup+scoring+dispatch, driving I-085 duplicate cricket start paths; must be split before clean HiFi Setup/Toss/Customize screens can be built.",
+    "Legacy orphan reconciliation — MonoHome, MonoSetup, NewUserFlow, MonoSportHome_TABBED are unwired dead-weight to delete/merge.",
+    "Bottom-nav information architecture — current tabs are Play/History/Stats (with I-066 Stats-vs-Statistics label mismatch); HiFi tab model is Home · Play · History · Friends/More, which requires the new Home, Friends and Settings surfaces to exist.",
+    "Design-debt cleanup carried in-code (I-044 tiny fonts, I-047 uneven CTA tap feedback, I-049 disabled-looking controls, I-051/I-052 non-uniform score buttons, I-068 ad-hoc green 4/6 accent, I-086 filter-heavy mobile history) — verify open status in kernel before re-fixing; several already have fix-comments shipped."
+  ]
+}

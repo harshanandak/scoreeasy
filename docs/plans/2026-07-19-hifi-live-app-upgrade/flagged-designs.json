@@ -1,0 +1,715 @@
+[
+  {
+    "screen": "Dashboard / signed-in home",
+    "group": "onboarding/home",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Identity: PRESERVED and disciplined. The design confines round/green-wash/capsule/green-glow strictly to the new live band and explicitly keeps sports/recent/tournaments/hero as naked hairline-brutalist rows with the 4px zero-blur offset + CardCross marks. The two-shadow-language split (hard-offset=static, green-glow=actionable) is a deliberate system, not generic softening. This is the strongest part of the design.",
+      "Real UX win exists but is narrow: only the SELF active-session restyle (breathing pulse replacing the static LIVE badge on the existing dark card, capsule Resume CTA, gold milestone chip) is a genuine, data-backed improvement. getActiveSessions() already supplies this data. Everything else is speculative.",
+      "SCOPE — too big as written. It bundles surfaces whose backends do not exist on main: no /spectator route (Watch has nowhere to go), no /activity route or friends/social layer (ActivityTeaser + friends'-live are dead links / fabricated rows), no Share-QR bottom-sheet component. Feature-flagging these does not make them shippable — it ships hollow UI and hardcoded sample copy ('Riya won vs Arjun').",
+      "Coaching-caption chip is not a Dashboard-local change. Session objects carry no derived status string; 'match point'/'set point soon'/'2 sets all' require a shared per-sport selector across the scoring engines (which the design itself lists as an unbuilt dependency). Including the chip in THIS card forces either that cross-cutting selector into scope, or a fabricated string that drifts from the live scorer. Cut it from PR-1.",
+      "RECOMMENDED SPLIT: PR-1 (self-live band, effort M) = index.css tokens (--se-shadow-glow-green, --se-color-live-wash, --se-color-gold[-soft]); mono.css @keyframes se-live-breathe + .mono-live-card/.mono-capsule-cta/.mono-gold-chip; restyle existing self active-session cards into LiveNowFeed with breathing pulse + capsule Resume + gold milestone chip; designed empty state; tests. NO ActivityTeaser, NO friends-live, NO Watch, NO Share, NO coaching chip. PR-2 (dependent follow-up, after /activity+/spectator+social land) = ActivityTeaser, friends'-live merge in liveFeed.js, Watch routing, Share-QR, coaching selector.",
+      "liveFeed.js as specified ('merge self-live with friends'-live from social layer') collapses to getActiveSessions() + a stub in PR-1 since the social layer is absent — build it as a thin self-only helper now, add the merge seam later; do not pretend the merge exists.",
+      "Palette prose overstates reality: the design asserts a reserved-green brutalist identity, but the current token map aliases green->var(--primary) and the hero/dark-card offset shadow uses t.blue. Confirm --primary's actual hue in index.css before writing copy that leans on 'green for emphasis' — the accent may read blue today.",
+      "prefers-reduced-motion: the breathing pulse keyframe must be gated behind @media (prefers-reduced-motion: reduce) — not mentioned in the design."
+    ]
+  },
+  {
+    "screen": "Play hub (pick a sport)",
+    "group": "pick",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": false,
+    "scope": "ok",
+    "issues": [
+      "UX win is thin/cosmetic: the plain-language prompts the design leans on ('What are you scoring today?' line 393, 'How do you want to play X?' line 58) ALREADY exist in code — this is a restyle into chips, not new guidance. The remaining delta (capsules, circular badges, green glow) is visual warmth, which the design itself concedes ('warmth NOT color'). Genuine functional gains are modest (larger tap targets, reserved-green hierarchy, more prominent primary CTA). Strengthen or trim the UX justification rather than presenting it as a real HiFi UX win.",
+      "StepHead 'green only on done' is under-specified: t.blue and t.green BOTH resolve to var(--primary) (lines 15/21), so active and done render identically green today. Reserving green for done requires introducing a NEW non-green active color that the design never defines — otherwise the active step just loses its fill or stays green.",
+      "Mischaracterized preservation: the hard 3px 3px 0 offset shadow is being INTRODUCED, not 'kept'. Current tiles use soft cardShadow (var(--shadow-2xs), line 137) and previews use blurred '0 4px 20px rgba(0,0,0,.08)' (lines 263/298). Fine to add, but verify the hard offset reads coherently against the existing soft-shadow system instead of clashing.",
+      "Shared-primitive + token extraction is the only real scope risk: defining --se-wash-green/--se-glow-green/--radius-pill in index.css and extracting CapsuleToggle/CaptionChip 'for every other screen' collides with eval-app's index.css token ownership (self-flagged dependency). For a one-screen PR, either land tokens in coordination first or inline the primitives and extract when a second consumer exists — avoids merge conflicts and review-scope creep.",
+      "Responsive risk confirmed: 4-col SportGrid (line 125) uses gap 6 with tiles at padding '14px 8px'; a 48px circular badge inside leaves ~64px minimum, tight on ~360px mobile. Needs a responsive badge-shrink, not just a 'check'.",
+      "Naming clarity: MonoPlayHub MODES are 'guided'/'browse' (line 41-44); NewUserFlow ModeCards are a separate 'tournament'/'quick' control (lines 150-193). Ensure the capsule-toggle restyle targets the play-mode toggle only and doesn't bleed styling into ModeCards, which the design also touches."
+    ]
+  },
+  {
+    "screen": "Sport home (per-sport entry)",
+    "group": "pick",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Baseline misdescribed: keepsBrutalist claims the current MonoSportHome is already brutalist, but mono.css line 3 calls it 'Clean, light, professional Swiss design'. Dividers are faint 14% (color-mix var(--border) 14%), not hard black --se-color-line; the search .mono-input is rounded (var(--se-radius-button)) with soft shadow-2xs, not a 4px hard box; the Tournament button is a plain transparent text action with no box/shadow. So 'keep the boxy input/hard-shadow Tournament as-is' actually means CHANGE them. Rewrite the spec to own the spine-brutalization as real work, not preservation.",
+      "Hidden scope: the PR silently brutalizes the category-list spine (black hairlines, 4px hard input, new boxy hard-shadow Tournament button) on top of the HiFi additions, contradicting the 'two changes only' framing. Account for it explicitly.",
+      "Split BottomTabNav out: the design itself states it is cross-cutting across Home/Play/History/More and must be coordinated with other screens' agents. Building a shared nav inside a per-screen PR risks forking from the other tabs. Move it to its own jointly-owned issue; removing it makes this a clean single-screen M.",
+      "prioritySports is only 3 (['cricket','football','volleyball'] in theme/sportsTokens.js). A 'horizontally-scrolling rail' won't scroll with 3 circles — the overflow affordance is oversold; build a simple centered row, not a scroll rail.",
+      "Token inconsistency: new tokens are hex (#e7f4ee green-wash, #b8862e gold) while the system is oklch (sportsTokens.js). Align to oklch and coordinate --se-color-green-wash/--se-color-gold/--shadow-green-glow naming with eval-app/eval-hifi so scorers/Result/MVP don't duplicate them.",
+      "_TABBED deletion is correct and cheap to bundle: it is a dead duplicate default export using off-palette #0066ff and hardcoded #111/#888/#bbb hex; removing it clears the double-MonoSportHome import ambiguity.",
+      "SportIcon-in-circle needs verification: dependency notes flag it, and the 50%-crop centering across all sports must be checked at 60px before committing to the circular rail."
+    ]
+  },
+  {
+    "screen": "Match setup (quick)",
+    "group": "setup",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVER-SCOPE: bundles four independently-reviewable workstreams — (a) I-085 setup extraction from a 2850-line monolith, (b) cross-cutting shared MonoSheet primitive, (c) cricket Toss connective, (d) brutalist×HiFi restyle. Split into separate PRs.",
+      "MonoSheet is a shared primitive the design itself flags as reused by attribution/share-QR/in-match menu and warns 'align first, don't fork.' It must NOT be born in this setup PR — land it in its own cross-cutting PR and consume it here as a dependency.",
+      "Cricket Toss sheet (item 9) has separate ownership per the design's own dependencies ('coordinate with Cricket-live owner; may become its own route'). Carve it into a cricket-coordinated PR, not this one.",
+      "The high-risk extraction and the visual restyle must be sequenced, not combined: PR1 = pure lift into MonoQuickSetup.jsx with props/callbacks and ZERO visual change (screenshot-verify resume + cricket + volleyball + goals draft paths against effects at ~488-566 and cricket-preset effect ~569-578); PR2 = restyle on the extracted component.",
+      "Bottom-nav 'Play' tab is a listed dependency 'not owned here' — the app-shell coupling should be excluded from this screen's PR entirely.",
+      "Partial-duplication risk: team-suggestion state (showTeam1Suggestions, team1Ref) and setupStep already exist in the code, so items (8) and (10) are partly built — the extract must reuse, not re-implement, these to avoid regressing existing suggestions/step logic.",
+      "Effort marked L undersells the multi-owner coordination surface (shared sheet + cricket-live + bottom-nav). As a single PR it is effectively XL; each split piece is M."
+    ]
+  },
+  {
+    "screen": "Cricket scorer (limited overs)",
+    "group": "scorer",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "FALSE PREMISE: brief says 'KEEP the 3px 3px 0 hard offset shadow' on run buttons, but .mono-scorer-run-button (mono.css:1236) has no box-shadow and grep finds no '3px 3px 0' anywhere in mono.css. The shadow does NOT exist today. Adding it to sell the circle is a NEW brutalist flourish, not preservation — the circle-on-ink-shadow signature is invented, not kept. Verify visually before committing to circles; a 50% circle under a hard offset shadow reads asymmetric (the brief itself flags this).",
+      "OVER-SCOPE — SPLIT INTO 3 PRs. The bundle is 6 moves + 3 new components + a host refactor + cross-cutting tokens that must coordinate with eval-app (I-068) + a settings toggle living in a separate More/settings screen + mirroring across 4 run-grid branches + an unresolved data-model question (ball-log). Not one focused PR. Suggested split: (A/M) visual blend — circular keypad + micro-copy prompt + coaching chips + gold/free-hit token + live pulse (one CSS surface, no behavior change); (B/L) attribution bottom-sheet + host picker variant + addWicket refactor + confirm-wicket settings toggle, built cross-sport reusable; (C/S-M) this-over timeline, gated on a real ball-log.",
+      "DUPLICATION UNDERSTATED: the run-grid appears in 4 render branches (main 925, pending-extra 909, super-over 726, super-over-pending-extra 714), not 3. Circular buttons, chips, and prompt line must be mirrored in all 4 or branches diverge.",
+      "OVER-TIMELINE IS LOSSY-BY-CONSTRUCTION: history snapshots (saveSnapshot 195) are full-score clones; addExtra also snapshots and a wide+follow-up yields TWO snapshots for ONE delivery, while byes/free-hits add runs with no ball increment. A per-ball worm derived from deltas will mis-attribute. Cut from this PR or gate behind adding a lightweight ball-log — an inaccurate strip in a scoring app is worse than none.",
+      "ATTRIBUTION SHEET IS NOT A CHEAP 'VARIANT': AppScoringPromptHost (176) only renders notice + a single confirm dialog. A two-step How-out?→New-batter picker with selection state is a new dialog type, and addWicket (253) mutates state synchronously — deferring it behind a sheet requires refactoring the wicket flow and honoring keyboard 'w' + isInteractionLocked. Real work; own PR; build genuinely cross-sport (Football who-scored, Tennis/Volleyball credit-point) as noted, not cricket-only.",
+      "CHANGE-FOR-ITS-OWN-SAKE risk on two moves: reshaping the 0-6 keypad to circles and the 1.4s pulse are largely aesthetic — the 56px square is already a fine tap target, and circularizing the PRIMARY brutalist control surface is the biggest dilution risk in the whole set. The genuine HiFi wins are the attribution capture (data not captured today at all), the NEED-X-OFF-Y chase chip, and the over strip — keep those, weigh the keypad reshape skeptically.",
+      "GREEN-OVERUSE guard is correctly identified and necessary: 4/6 already use var(--primary) accent text (mono.css:1250), so coaching chips MUST stay neutral ink and gold must be a distinct new --se-color-gold token, or green stops meaning 'lead'. Also tokenize free-hit #ff6b00/#fff8f0 (inline at MonoCricketLiveScore 867/872/873) carefully to avoid visual regression."
+    ]
+  },
+  {
+    "screen": "Cricket scorer (test / multi-innings)",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Wrong file path: AppScoringPrompt is at src/designs/design1-mono/components/AppScoringPrompt.jsx, not scoring/components/ as filesToChange claims.",
+      "AppScoringPrompt is a SHARED all-scorer component (pendingPrompt PropTypes + useAppScoringPrompt consumed by tennis/sets/goals/cricket). Extending it to a capsule multi-option attribution list is cross-cutting with blast radius across every scorer and must regress AppOwnedScoringPrompts.test.jsx — its own PR.",
+      "Shared CricketContextChips extraction forces editing MonoQuickMatch too (it already renders .mono-cricket-chips inline) plus cross-agent coordination; not containable in a single Test-screen PR.",
+      "The 'Confirm wicket' Settings toggle does not exist yet — an unbuilt dependency gating the entire dismissal sheet.",
+      "Match-complete Share-card/Scorecard/Spectator actions link to screens that may not exist (design marks them out of scope) — dead-link risk; stub or defer.",
+      "Dismissal sheet adds a tap per wicket and must reconcile with setTimeout(300) advanceInnings, the 150ms debounce, and isInteractionLocked in addWicket — real integration risk favoring isolation.",
+      "'NEW BALL DUE' chip needs an 80-over threshold; test format totalBalls is Infinity, so the logic must derive from innings.balls (new logic, verify).",
+      "Effort 'M' is understated; realistic scope is L. Recommend split: PR1 tokens + shared CricketContextChips adopted by both cricket scorers (resolves I-085); PR2 AppScoringPrompt capsule extension + Confirm-wicket toggle + CricketDismissalSheet with timing reconciliation; PR3 this screen's pure visual reskin (boundary wash, breathing pulse, caption, follow-on/complete reskins, circular undo)."
+    ]
+  },
+  {
+    "screen": "Tennis scorer",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Over-scope: MonoCreditPointSheet is explicitly shared infra (Volleyball + Badminton), touches the undo/history data model, and depends on a 'Confirm point' toggle on a Settings/More screen that does not exist yet. It cannot ship inside a single tennis-screen PR — carve it into its own coordinated shared-component PR.",
+      "Over-scope: MonoShareLiveSheet / Share-live QR requires Convex live sync the app lacks (localStorage-only draft, confirmed). A stubbed Share trigger is a dead affordance and UX debt. Defer the whole thing; do not ship the trigger this PR.",
+      "LIVE-pulse contradiction: JSX line 651 makes the badge 'mono-badge-paused' (not green/live) during tiebreak, so a green breathing 'Set/Tiebreak' LIVE pulse conflicts with the paused styling in the tiebreak case. Scope the pulse to the non-tiebreak live state only.",
+      "No match-won toast exists in the code: showSetWon fires per set, but match completion (saveMatch, lines 514-517) only sets a badge + confetti. The gold 'match-won moment' hairline has no existing toast to reshade — a new match-won toast must be built, which the design treats as free.",
+      "Chip derivation is undersold: 'SET POINT'/'MATCH POINT' require look-ahead over games + deuce/advantage + tiebreak + sets-to-win. Labelling it 'derived from existing rule state' hides a non-trivial, must-be-tested helper that is the real work of this feature.",
+      "Multiple green sources risk: chip green-tint (advantage) + teamAccent green (lead) + LIVE pulse green could co-fire; reconcile against the 'green reserved strictly for lead/live/advantage' rule so the screen doesn't read multi-green.",
+      "Recommended split: Part A (prompt line + coaching chip + press-ring + toast reshading + scoped LIVE pulse) is a clean focused M for THIS screen; ship it alone. Parts B (credit-point sheet) and C (share-live) are cross-cutting and must be separate coordinated PRs."
+    ]
+  },
+  {
+    "screen": "Sets scorer (volleyball/badminton/TT/pickleball/squash)",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Over-scope: split insertion 4 (credit-the-point bottom sheet) into its own PR. It is cross-cutting (shared point-reason model co-designed with the separate Tennis engine, a settings toggle that lives on the More/Settings screen, and persistence for unbuilt stats/spectator consumers) and carries the entire tap-interception/debounce/side-out-collision risk. Insertions 1-3 (prompt chip, per-set strip, coaching caption) + serve-dot + tokens are cohesive and ship cleanly as one focused M-sized PR.",
+      "Inaccurate reuse claim: AppScoringPrompt.jsx renders a CENTERED modal (app-confirm-dialog / app-confirm-backdrop), NOT a bottom-sheet. MonoCreditPointSheet needs net-new bottom-sheet markup + CSS; the 'reuses bottom-sheet infra' framing understates the effort. The single pendingPrompt state does give free mutual-exclusion with the discard prompt, which is the one real reuse.",
+      "sportConfig.config has no 'target' field (verified src/models/sportRegistry.js). Target is derived: pointsPerSet or format.points, deciderPoints on the decider, single-set uses format.points (see getCurrentSetTarget, MonoSetsLiveScore L164). setsCoaching.js must reuse that derivation via the effectiveFormat arg, not read config.target, or captions will be wrong.",
+      "Serve-switch collision: the side-out early return (L220-223) fires AFTER history.push (L208) and setHasChanges (L216), so a serve-switch tap logs a history entry with no score change. The credit sheet must trigger on an actual score delta, not on tap/history-push, and must also skip completed-set and single-set-over taps.",
+      "Sport-count inconsistency: title lists 5 sports (volleyball/badminton/TT/pickleball/squash) but says 'one engine for 6 sports'. Tennis is engine:'sets' in the registry yet routes to a separate MonoTennisLiveScore.jsx. Clarify the exact set this screen serves.",
+      "--se-color-gold and --se-color-green-wash do not exist in index.css yet (verified); they are declared cross-cutting with every HiFi-blend screen, so token naming must be coordinated once before adding."
+    ]
+  },
+  {
+    "screen": "Goals scorer (football/basketball/hockey/handball/futsal/kabaddi/rugby)",
+    "group": "scorer",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "placeholder"
+    ]
+  },
+  {
+    "screen": "In-match ⋯ menu",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "BLOCKED CORE VALUE: 2 of 4 menu rows can't ship. 'Share live link' depends on a Band 11 QR screen that does not exist yet; 'Edit setup' mid-match needs an unresolved product decision (session may not allow format/team changes after points are scored). As specified, the menu launches with half its unique content stubbed or broken.",
+      "SELF-CONTRADICTING PREMISE: with Share/Edit stubbed, the only live rows are Swap sides and End match, both of which duplicate the existing inline bottom-strip actions (Swap + Finish verified in MonoSetsLiveScore.jsx:610-629). The design's own rule is 'menu hosts only rarely-tapped actions, does NOT duplicate the inline strip' — so the shippable slice violates it and creates two competing End/Finish paths.",
+      "Z-INDEX STACKING HAZARD (confirmed real): backdrop is z-260 (index.jsx:830), confetti z-9999 (mono.css:1700). The nested End-match confirm reuses the same app-confirm-* host at z-260 as the sheet's own backdrop, so stacking the confirm ABOVE the sheet relies on render order, not an explicit layer. Needs a dedicated intermediate layer (sheet ~250, confirm 260) or the double-gate can render behind the sheet.",
+      "BLAST RADIUS: trigger + sheet host must be threaded into 5 scorer files, not 6 (MonoLiveGame.jsx is the wrapper). Real divergence risk unless MonoScorerMenuButton is genuinely shared — the 'optional' MonoScorerTopBar extraction is what actually prevents 5-way drift, so treating it as optional undersells the risk.",
+      "BRUTALIST-CONTENT DILUTION (borderline): grabber pill + 34px circular icon chips + 99px capsule Close + green/red tint washes make the sheet CONTENT read as a generic friendly iOS sheet; brutalist identity rests entirely on the frame, mono eyebrow, and hard shadow. Passes only if the UPPERCASE mono eyebrow and hairline row dividers stay load-bearing inside the content, not just the outer frame.",
+      "MINOR: hook API mismatch — design says 'mirroring useAppScoringPrompt ... renderSheet', but the real hook exposes renderPrompt/isInteractionLocked (AppScoringPrompt.jsx:80-83). Align the names.",
+      "RECOMMENDED DESCOPE TO MAKE IT ONE PR (M): ship MonoScorerMenuButton + MonoMatchMenuSheet + hook + CSS + shared topbar; wire End match (reuse existing danger confirm) and Edit setup limited to SAFE fields (match name/notes) only; render Share as an explicit coming-soon stub. Defer to follow-ups: (a) Edit-setup mid-match format/team editing after the product decision — that alone is L; (b) the Share row when the Band 11 QR screen lands. Attempting mid-match format editing + the Share screen + topbar extraction together pushes this to L."
+    ]
+  },
+  {
+    "screen": "Attribution mini-flows (who scored / how out / credit point / new batter)",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "BLOCKER — the stat sink does not exist. Verified: MonoCricketLiveScore/MonoGoalsLiveScore track only team scores and match-`winner` (a team id); grep for roster/batter/striker/playerStats in scoring/ returns nothing. There is no goals/assists, no dismissal+fielder, no winners/unforced-errors model to increment. 'Attribution feeds player stats' means building an entire stats/model layer from scratch — that alone is not an M, and it is a prerequisite, not a co-deliverable.",
+      "BLOCKER — no roster in scoring state. who-scored / new-batter-in pickers need named squads; the live scorers have none. So 'team-only mode must degrade to Skip-only' is not an edge case — it is the CURRENT default for every match, meaning the flagship circular-avatar picker would render Skip-only everywhere until roster plumbing lands separately.",
+      "Over-scope: one PR bundles a new bottom-sheet primitive + a11y focus-trap + THREE sport-specific variants wired into goals(683)/cricket(1007)/sets(646)-line screens + shared PlayerPickerRow + attributionOptions config + the stats model + the undo-last-ball revert cross-cut + a Settings toggle. Split into: (a) player-stats + roster-in-scoring model layer, (b) sheet primitive + AppScoringPromptHost variant:'sheet' + ONE sport (goals who-scored), (c) remaining sports + undo-revert + Settings toggle.",
+      "a11y-parity caveat is understated: appConfirmUtils.isTopmostAppConfirmDialog and the Tab focus-trap both hard-select '.app-confirm-dialog'. A rounded bottom-sheet is a different element, so 'reuse appConfirmUtils focus-trap' requires either the sheet to also carry .app-confirm-dialog or the util to be generalized — otherwise the desktop/landscape keydown-parity claim is unmet. Note APP_CONFIRM_BLOCKED_KEYS also swallows 0-6/e/p/q/u/w, fine for tap-only options.",
+      "Effort M is optimistic. With the model layer + roster plumbing + 3-sport wiring + undo cross-cut, this is L and closer to an epic; the design should be re-filed as a parent with the split above."
+    ]
+  },
+  {
+    "screen": "Team-only scorer variants (no player names)",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVERSELLS its headline win against source reality. Verified: NO player-attribution / who-scored UI exists in any scorer. Every requestPrompt in goals + both cricket files is a discard/declare/draw confirm, never 'who scored'. The Goals/Sets/Tennis scorers are ALREADY one-tap = one point with zero follow-up sheet. So 'auto-confirm: attribution bottom-sheets fully suppressed' suppresses a feature that doesn't exist (design itself calls it Band-10 unbuilt). Today the AppScoringPrompt 'team-only guard' guards nothing. The genuine shipping wins are the modest ones: hide roster-tagging clutter in setup, the mode-choice capsule, and the plain-language prompt caption. Reframe the design around those, not around suppressing a non-existent sheet.",
+      "OVER-SCOPE / not one PR. The design bundles MonoTeamOnlySpectator + team momentum graph + share-live QR, then contradicts itself: its own risks + dependencies say the spectator is BLOCKED on an unbuilt base spectator screen and 'don't promise it in the same slice.' Split it: PR1 (the coherent, shippable slice) = teamOnly flag + threading across scorers + useTeamOnlyMode gate-seam + hide rosters in MonoQuickMatch + MonoModeToggle capsule + TEAM ONLY badge + per-sport prompt caption + AppScoringPrompt no-op guard. PR2 (sequence AFTER base spectator exists) = MonoTeamOnlySpectator + momentum graph + QR + mono-team-card. The M effort applies only after this cut.",
+      "Cricket 'team-card readout instead of player rows' is misdescribed — there are no player rows in MonoCricketLiveScore to replace (verified: no striker/batter/player-row code, wickets tracked as counts). It is really just restyling the existing runs/wkts/overs readout into rounded cards — cosmetic. Fold into PR1 or drop; don't frame as removing a table that isn't there.",
+      "Some listed files/components are near-empty edits today and inflate the blast radius: AppScoringPrompt 'team-only guard' is a no-op with nothing to gate; the 6 scorer edits reduce to (read flag) + (add badge) + (add caption). Real code is the hook + capsule component + CSS + roster-hide conditional. Keep the useTeamOnlyMode single-source-of-truth gate (good: the design correctly picks the explicit flag over 'rosters empty' and the players-per-side/all-out note is verified sound) so future Band-10 attribution shares ONE off-switch — that seam is the main lasting value.",
+      "Brutalist identity is genuinely preserved, not diluted: scorer shell unchanged, badge is UPPERCASE mono, and the only friendly elements (99px capsule with hairline+offset+inverted-fill, rounded spectator/team cards, circular ripple inside a square borderless half) are tightly scoped, with warm-green-black soft shadow explicitly kept OFF the scorer chrome. This discipline is a strength — keep it as a hard constraint in PR1."
+    ]
+  },
+  {
+    "screen": "Spectator — cricket",
+    "group": "spectator",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "BRUTALIST: PRESERVED, with a caveat. The keepsBrutalist list is concrete and grounded in real code — the slab keeps its hard 2px var(--foreground) bottom border, JetBrains-Mono clamp() numerals, tabular-nums, UPPERCASE wide-tracked eyebrow, hairline pinned tab bar, and sr-only/aria-live contract (all verified in PinnedScorebug, MonoWatchMatch.jsx ~L161-315). Soft chips/cards are correctly quarantined BELOW the slab. Not dilution.",
+      "HIFI WIN: REAL, not change-for-its-own-sake. Cricket currently has NO dedicated watch rendering — ScorecardPanel has no cricket case and the generic PinnedScorebug renders pointsA-pointsB, which is simply wrong for cricket (84/3, 14.2 ov, chase math). Making it read RUNS/WICKETS + 'Need 73 off 44' is genuine legibility, not decoration. The Momentum graph tab is the weakest/most speculative part (gold-plating risk).",
+      "NOT ONE PR - blocking prerequisite. The entire live stack (MonoWatchMatch, convex/live.ts, live/ components) exists ONLY in worktrees; main src/designs/design1-mono has no live/ dir and no MonoWatchMatch.jsx. It must be landed to production as its own PR before any cricket spectator work. The design itself flags this as BLOCKING — which by definition means this cannot be a single focused PR.",
+      "SPLIT the backend contract into its own PR. publicSnapshotValidator (live.ts:549) has zero cricket fields; adding runs/wickets/overs/target/striker+bowler names/CRR/RRR requires schema + validator + explicit projection (live.ts:592-614) + scorer emission moving in LOCKSTEP (the validator rejects extra fields). Adding striker/bowler NAMES genuinely widens the §7.2 data-minimization surface and collides with the youth-match name-hiding contract (isYouthMatch, live.ts:564/651) — needs product sign-off, so it cannot ride in the same PR as UI.",
+      "SPLIT the Momentum tab into its own PR. Worm + manhattan + RRR/CRR gauge dial fed by paginated listEvents aggregation is a substantial standalone feature, unrelated to the scorebug/chase-chip work. It also rests on an UNVERIFIED precondition the design itself admits ('verify cricket events carry per-ball runs/wicket' in matchEvents) — if per-ball data is absent, the whole tab is dead on arrival.",
+      "BLAST-RADIUS creep. The design pairs a cricket feature with a 'fully sport-aware PinnedScorebug/ScorecardPanel refactor' that it admits ALSO changes football + tennis spectator screens. That cross-cutting refactor should be its own scoped change; do not smuggle a 3-sport refactor into a cricket PR. Reconcile cricket-awareness by reading pre-computed snapshot fields ONLY — never recompute from the event log, per the existing egress contract.",
+      "UNDER-VERIFIED reuse claim. 'Reuse existing CricketScorebug/BattingCard/BowlingCard/RunIndicator' — these exist but are unused on the watch page (built for the scorer/local context). They likely expect operator-side props absent from the minimized public snapshot; verify prop compatibility before assuming drop-in reuse.",
+      "CANONICAL-WORKTREE ambiguity is real and must be resolved first: both .worktrees/live-matches and .claude/worktrees/wf_5fe79697 exist. Editing the wrong one wastes the whole effort.",
+      "Recommended split: PR1 land live stack to prod; PR2 backend cricket snapshot fields + scorer emission + youth-privacy sign-off; PR3 cricket-aware scorebug + ChaseChips + ThisOverStrip + ScorecardPanel cricket case; PR4 Momentum tab. Only PR3 (and maybe PR4) is 'the design'; effort L holds for the visible-UI slice but the full described bundle is effectively XL."
+    ]
+  },
+  {
+    "screen": "Spectator — football",
+    "group": "spectator",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "VERIFIED brutalist core: reuses mono-arena-half-display (mono.css:1062, cursor:default + transparent :active = genuinely read-only borderless variant), mono-arena-num with the exact clamp(3rem,min(22vh,26vw),8rem) cited, and data-leading green baseline. Identity is preserved, not diluted — square/brutalist score core, soft/circular elements confined to live-readout zones. This part is accurate.",
+      "SEVERE DATA-MODEL GAP: the football scorer's history stores ONLY {timestamp, score1, score2} (MonoGoalsLiveScore.jsx:231-234). There is NO per-goal scorer name, NO goal minute, NO team attribution, and NO possession %. THREE of the six layout items — possession bar (item 3), goal timeline 'Patel 23'/'Roy 61'' (item 4), and momentum worm (item 5) — have literally no source. Half the screen's HiFi content rests on data that does not exist. This is UI ahead of the data model.",
+      "The goal-scorer attribution feed is billed as the signature HiFi win ('the friendly attribution readout the brutalist scorer omits') but the scorer never captures who-scored/minute. Delivering it requires FIRST adding a Band-10 'who scored?' capture flow to the scorer — a separate write-side PR. As a read-only spectator PR it can only ship an empty state, which guts the headline feature.",
+      "MISSING DEPENDENCY: the src/designs/design1-mono/live/ directory does not exist in this checkout — ShareLiveMatch.jsx, LiveBroadcastBar.jsx, LiveMatchCard.jsx are absent. The Share/QR bottom-sheet AND the live data channel the design leans on are not available. The design explicitly says NOT to re-invent them, so the PR is blocked on an out-of-tree sibling workstream — it cannot be self-contained.",
+      "NO LIVE-MIRROR MECHANISM: the scorer writes to localStorage only on save/draft events, not continuously; no polling or Convex subscription exists. 'Mirrors score, clock and goals without mutation' is aspirational — the plumbing decision ('poll localStorage OR subscribe to a Convex live channel') is unmade and is itself a cross-cutting workstream, not a screen-level task.",
+      "SPLIT RECOMMENDATION: the genuinely buildable one-PR slice is the read-only shell only — top bar (breathing LIVE + getFootballClockState clock + share-button placeholder), read-only score row via mono-arena-half-display, 'You're watching live' footer, and honest empty states for possession/goals/momentum. That slice is real effort M (arguably S). Carve possession, goal-timeline+scorer-capture, momentum, and share/QR+live-channel into their own issues gated on the data model and the live/ workstream. As written the full design is L and spans 3+ workstreams.",
+      "The revisedEffort L reflects the FULL spec as written (data-model capture + absent sibling live/ dependency + live-channel decision). The M estimate is only defensible for the honest read-only-shell slice with empty states.",
+      "Public unguarded /watch route is low-risk and feasible (isProtectedScoringRoute exists in index.jsx; adding an unguarded route is straightforward). The 'never writes draftState' guard is easy to honor for the shell. This is the least risky part."
+    ]
+  },
+  {
+    "screen": "Spectator — tennis",
+    "group": "spectator",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Refactor safety claim is false: there is NO MonoTennisLiveScore.test.jsx. The inlined helpers being extracted (applyDeuceLogic, processTiebreakPoint, processRegularPoint, countSetsWon, computeScoreDisplay at component lines 40-234) are entirely untested. tennisScoring.test.js only covers formatTennisPointScore. Characterization tests must be written first — added scope and the true regression risk.",
+      "QR 'Scan to watch' is an unbudgeted dependency: no qrcode package in package.json. Requires adding a dep or hand-rolling QR encoding inside MonoShareLiveSheet.",
+      "PR bundles cross-cutting infra (MonoShareLiveSheet+QR, MonoMomentumStrip — explicitly shared across all sports) with a tennis-specific screen. Should be built once in a separate PR.",
+      "Under-delivers the core promise: Convex live-sync is deferred to localStorage polling, so this PR does not actually deliver cross-device 'watch a friend's match' — same-device mirror only.",
+      "Recommended split: PR-A = tennisScore.js + deriveTennisContext() with characterization tests (pure logic, gated); PR-B = MonoTennisSpectator screen + CSS + route + guard exclusion; PR-C = shared MonoShareLiveSheet/QR + MonoMomentumStrip infra. Convex live-query is a separate backend track.",
+      "Confirmed-correct claims: route guard (isProtectedScoringRoute, index.jsx:21/209) exists and must be excluded for the read-only watch route; brutalist CSS furniture (mono-arena-grid/num/seam, mono-badge-final) exists and is reused verbatim; helpers are genuinely inlined+unexported as claimed."
+    ]
+  },
+  {
+    "screen": "Spectator — other sports (basketball/hockey/volleyball/badminton)",
+    "group": "spectator",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "PRESERVES BRUTALIST: Confirmed. Every keepsBrutalist claim maps to real code — mono-arena-half-display (role=img, MonoGoalsLiveScore.jsx:515), teamAccent lead rule (:427), --se-color-line + 3px hard shadow (mono.css), clamp() numerals, mono-arena-overline. Circular/soft elements are correctly quarantined to chrome + captions; score halves stay strictly boxy. No dilution — the score identity is protected by explicit rule, not just intent.",
+      "REAL HiFi WIN: Confirmed. A dedicated read-only spectator surface + share-live + N-watching + plain-language status captions ('Hawks lead by 3', 'Q3 4:12') replacing 'Tap to score' is substantive UX, not decoration. Breathing LIVE pulse is minor but harmless. This is a genuine new capability.",
+      "TOO BIG — split required. This is not one screen: it defines FOUR cross-cutting shared components (SpectatorLiveBadge, ShareLiveSheet w/ QR+token, MomentumGraph, SpectatorCaptionChip) explicitly meant to be reused by the cricket/football/tennis spectator screens, PLUS two full rendering engines (SETS + GOALS incl. basketball quarters/OT/BONUS/clock branch), PLUS a guarded public route, PLUS backend live-read, PLUS bottom tab nav taken from 'the broader HiFi app upgrade'. Building the shared foundation inline here is exactly the duplication the design's own risks warn against.",
+      "BLOCKING DEPENDENCY (backend, not UI): No per-match public query exists in convex/matches.ts (only user-scoped + username-recent/stats queries). The spectator route /:sport/watch/:id/:matchId needs a NEW public getByMatchId query + share-token guard against authedMutation-written draftState. This is backend scope that must land in its own PR before the screen can read live data.",
+      "GOOD NEWS on freshness risk: the design over-states 'Convex commits only on Finish' — MonoSetsLiveScore already writes draftState to Convex continuously (save at :66, draftState at :303/:349). The transport gap is the READ query, not the write cadence. Reframe the risk accordingly.",
+      "DATA GAP for MomentumGraph: draftState carries completed set scores + an undo `history` stack, but no timestamped per-point log. 'set-by-set' sparkline is buildable; 'points-over-time' likely has no source data and is aspirational unless a point timeline is added. Scope the graph to set-by-set / period-by-period for v1.",
+      "MINOR: SETS body 'mirrors MonoSetsLiveScore' but that scorer uses the button `mono-arena-half` (:536/:561), NOT the display variant — only MonoGoalsLiveScore has mono-arena-half-display. Reusing the display class for the sets body is fine (it's just CSS) but means slightly more net-new markup than 'mirrors' implies.",
+      "SUGGESTED SPLIT: (PR1) backend — public single-match query + share-token guard; (PR2) shared spectator primitives SpectatorLiveBadge/ShareLiveSheet/MomentumGraph/SpectatorCaptionChip + mono.css keyframes, built once for all sports; (PR3, this screen, effort M) MonoSpectatorOtherSports consuming the primitives + SETS/GOALS branch + route. Bottom tab nav is a separate app-upgrade PR, not owned here. Effort L is honest for the whole bundle — which is itself the signal to split; the residual per-screen PR is M."
+    ]
+  },
+  {
+    "screen": "Spectator graphs / momentum / point-by-point / box score",
+    "group": "spectator",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "BLOCKING data gap, verified worse than stated: completed matches wipe draftState (storage.js:152, MonoSetsLiveScore.jsx:349), so ZERO per-point data persists for finished matches. Live matches keep only a snapshot undo stack capped at slice(-50) (MonoSetsLiveScore.jsx:306/352) with no who/how attribution. MomentumChart, PointByPointStrip, and the attribution bottom-sheet have nothing to render until a NEW persisted semantic event log lands. That data-model change is its own PR and must ship first.",
+      "Over-scope / must split: the spec bundles 4 independently-shippable concerns its own 'dependencies' list flags as prerequisites. Split into a stack — PR1: persisted per-rally event log (scoring engine + storage); PR2: /watch/:matchId spectator route + public read-only-on-load match source; PR3: the 3 viz components + mono.css additions (MomentumChart, PointByPointStrip, BoxScoreTable, .mono-seg, .mono-chart-*, LIVE pulse, .mono-share-fab); PR4 (optional/deferred): live 'X watching' viewer count + real-time refresh. As one PR this is XL, not L.",
+      "Live 'X watching' viewer count needs real-time infra the app lacks: it is local-storage-first and useMatchSync.js has no spectator/subscribe path. The spec softens the first cut to read-only-on-load + manual refresh, which is right — but the viewer count should be cut from the first cut entirely (deferred to PR4), not merely softened, since it cannot be satisfied read-only-on-load.",
+      "Shared chart primitive coupling: MomentumChart must be co-built in a shared location and reused by the existing 'Match graphs (from history)' screen, or the two will fork. The spec notes this but it is a real build-order constraint — build the chart primitive shared, not inside the spectator folder.",
+      "Circular-injection budget is the largest soft-element cluster in the app (99px capsule tabs + round FAB with green-glow shadow + avatar stack + rounded sheet). As written it stays disciplined (confined to nav/data-dot/FAB), but this is the one place the blend can tip toward generic-friendly if the circular set expands during build — keep it exactly as scoped.",
+      "Effort is labeled L but with the blocking event-log data model plus spectator/read-only infra it is realistically XL across 3-4 PRs; L is only defensible for the viz-components PR (PR3) in isolation."
+    ]
+  },
+  {
+    "screen": "Share live link (QR)",
+    "group": "spectator",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "SCOPE (verified): main lacks the ENTIRE live-broadcast substrate this screen depends on — no qrcode.react, no src/lib/live/watchUrl.js, no design1-mono/live/ subdir (ShareLiveMatch/LiveBroadcastBar), no useLiveBroadcast hook, and no spectator /live/:token route or read-only view (only legacy tennis live routes exist). The QR/link therefore points at a nonexistent target: the screen is non-functional until that infra lands. This is a feature epic, not a one-screen reskin.",
+      "SPLIT: Separate (A) the broadcast substrate promotion — watchUrl + live-token infra, useLiveBroadcast (249 lines), LiveBroadcastBar (216 lines), MonoLiveGame ⋯-menu wiring, spectator route + read-only view — from (B) the reskin. (B) alone (ShareLiveMatch.jsx + mono.css classes + @keyframes + qrcode.react dep) IS one focused PR at ~M. (A) must precede or accompany it as its own cross-cutting work.",
+      "EFFORT: M is optimistic for the bundle as scoped. The pure reskin is M/S; the whole design (infra promotion + dead-link dependency + spectator route) is L.",
+      "STUB-TO-NOWHERE: the 'Auto-share new matches → Settings' hint links to a Settings toggle that does not exist in main (design admits it). Even a disabled stub adds surface pointing at a nonexistent destination — drop it from this PR and file the Settings toggle separately, rather than ship the hint now.",
+      "DILUTION RISK: 8 adopted-HiFi elements vs 6 kept-brutalist on a tiny surface; grabber pill + 20px corners + capsule buttons + circular channel targets reads as a generic friendly bottom-sheet. The brutalist identity rests almost entirely on the pure-black QR + mono micro-labels + hard offset shell. Hold the ink-on-hairline channel-glyph constraint firmly (green only on the single WhatsApp glyph) or the touch surface drifts generic.",
+      "MINOR: base component already sets borderTopRadius 16 and a 12px white QR pad; design specifies 20px corners + 16px green-tint frame — trivial deltas, just noting the base differs from the spec."
+    ]
+  },
+  {
+    "screen": "Result (FULL TIME)",
+    "group": "result",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Over-scoped for one PR: wiring the result gate into 5 separate completion flows (4 tournament scorers + MonoLiveGame) with distinct navigation/draft/auto-save semantics is L-sized, not M. Recommend split: PR1 = MonoMatchResult + CSS + victory token + verdict helper wired into Sets only (reference integration + tests); PR2 = roll out to Goals/Tennis/Cricket.",
+      "MonoLiveGame is a DIFFERENT engine (session/completeGame/participants model, verified lines 79-178), not the tournament match model the other four share. Bundling it multiplies integration surface — it should be a separate follow-up, not in the same PR.",
+      "lineScores[] contract must handle three genuinely different shapes: per-set (Sets), per-game/set (Tennis), and innings runs/wickets (Cricket, verified lines 40-66). The generic prop is correct but this adapter work is understated in the M estimate — cricket will render wrong if the contract isn't proven on one sport first.",
+      "Two hard dependencies (Scorecard screen, Share-live QR sheet) are unbuilt; stubbing Share to navigator.share and Scorecard to MonoHistory is acceptable but adds routing scatter across the same PR.",
+      "Flow change from auto-navigate to full-screen result gate risks AppOwnedScoringPrompts.test.jsx and MonoHistory.test.jsx (both confirmed to exist) plus back-button protection logic in index.jsx (protectedRouteHistoryIndexRef) — test-preservation work is real and should be budgeted."
+    ]
+  },
+  {
+    "screen": "Scorecard (post-match detail)",
+    "group": "result",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Momentum sparkline is framed as 'shared with Match-graphs/Spectator' but NO such component exists anywhere in design1-mono (grep for momentum/sparkline/match-graph returns nothing). It is a net-new charting component built from scratch, not an extract-and-reuse.",
+      "Momentum data is not persisted: on match-complete, draftState (which holds point history) is set to undefined in MonoSetsLiveScore.jsx:349, so completed matches retain only per-set final scores (sets = [{score1,score2,completed}]). A 'set-by-set momentum sparkline' can only plot ~3-5 set totals -- thin/near-decorative. Simplify or cut it.",
+      "ShareCardSheet + QR is framed as 'reused from Share-live' but Share-live does not exist, there is no QR component, and no QR library in package.json. This is net-new UI plus a new dependency. A simpler share already exists (shareEntry, MonoHistory.jsx:475, navigator.share/clipboard).",
+      "'Reuse .mono-table-panel + hard offset shadow 3px 3px 0' is inaccurate: .mono-table-panel is box-shadow:none with border-radius var(--se-radius-card), and every shadow token in mono.css is soft or none. The current mono system is brutalist-lite (mono uppercase labels + 1px hairlines + boxy), NOT hard-offset-shadow brutalist. The design invents that shadow and mislabels it as reuse/preserve.",
+      "Gold MVP/player-of-match chip and Aces/Blocks/Errors sub-rows have no backing data (team-level sets model only). Design correctly gates them to phase-2, but they contribute zero visible value in v1 -- keep them strictly conditional so they never render empty.",
+      "Scope is L, not M, and not one PR. Split into: (A) shared MonoScorecard = celebration hero + hairline ledger + /:sport/match/:id/scorecard route + wiring from match-complete and History + empty/legacy/error state; (B) momentum strip as a follow-up; (C) QR share-sheet (with its new dependency) as a follow-up. PR (A) is the focused, high-value core.",
+      "Result screen is also missing (grep confirms no Result component); design correctly routes around it via match-complete + History entry points, so Scorecard is not blocked -- good, but keep both entry points wired to the ONE shared component to avoid divergence."
+    ]
+  },
+  {
+    "screen": "Share result card",
+    "group": "result",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "--shadow-md is NOT zero-blur: it has a second soft layer (3px 2px 4px -0.5px). For the hard-artifact card use --shadow-2xs/--shadow-xs (single 0px-blur layer) or hardcode, not --shadow-md.",
+      "Risk section omits color-mix(), which mono.css uses heavily (.mono-btn-warning etc.). The card subtree must be audited to contain ZERO color-mix()/oklch() and use inlined hex only, or the PNG breaks.",
+      "The 'shared sheet primitive with attribution bottom-sheets' dependency is speculative — no bottom-sheet primitive exists in design1-mono today. Build a local sheet; do not block this PR on extracting a shared shell.",
+      "No html-to-image dep is installed. Because the export is fixed-size and fully known, a hand-rolled canvas is likely MORE reliable than a DOM-to-image lib (sidesteps the oklch resolution failure entirely). Decide lib-vs-canvas up front, don't default to the library.",
+      "Split at the natural fault line: PR1 = static MonoShareCard sheet+card render + format toggle + shareFiles() primitive (visually verifiable, reusable by the QR-share screen); PR2 = shareCardImage.js rasterization/export + test. The rasterization util is a high-risk spike that should not share a PR with the new component surface.",
+      "buildResultShareText is imported but the design lists only getResultSetSummary as reused; confirm buildResultShareText remains the fallback text-share path (it must stay — do not remove existing text Share)."
+    ]
+  },
+  {
+    "screen": "History (past matches)",
+    "group": "history-stats",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Redundant type-selector: the three summary cards ALREADY drive the All/Quick/Tournament filter (line 528 'The summary board IS the type filter', aria-pressed + setFilter). Item-1's new capsule segmented-toggle above them is a SECOND control for the same `filter` state, stacking a rounded pill over the brutalist cards. Drop one — do not ship both.",
+      "Per-row circular green-wash sport avatar contradicts the design's own rules: it lives IN each ledger row (not chrome, breaking 'rows stay square/brutalist for data density') and applies a green wash to EVERY row (breaking 'green reserved strictly for lead/emphasis'). Also hardcodes #e7f4ee while the design condemns hardcoded hex. Keep the plain SportIcon glyph (current line 808) or use a neutral wash.",
+      "Cross-cutting coupling defeats 'one focused PR': SegmentedToggle, CaptionChip, and the gold/green-wash tokens are shared with Live/Profile/Result. Land a foundation PR (shared primitives + src/index.css tokens) FIRST, then History consumes them — otherwise parallel builds collide on the same files (the design's own risks section admits this).",
+      "Split the I-053 loading fix (loaded flag + skeleton, an unrelated correctness change to the synchronous useEffect at lines 306-314) into its own small PR rather than bundling it with a visual reskin.",
+      "Effort is L not M: 3 new component files (2 cross-cutting), a new semantic-token layer, a bottom-sheet requiring z-index/scrim over the global bottom-nav, the I-053 loaded+skeleton work, plus 6 separate chrome restyles (segmented toggle, chip scroller, pill search, winner cue, undo toast, empty state).",
+      "Verify the 320px horizontal-scroll claim in-browser: the current filter panel is collapsed by default (showFilters=false), so the 'pushes list off-screen' problem is partly mitigated already — confirm the chip row is a real win, not just a lateral change."
+    ]
+  },
+  {
+    "screen": "Match detail (from history)",
+    "group": "history-stats",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Invented idiom: the 'hard offset drop-shadow 3px 3px 0 0.5px #000 zero blur' is claimed as existing brutalist scaffolding but does NOT exist in mono.css (grep found no 3px/2px offset shadows). The mono system uses flat rounded --se-radius-card cards with soft focus rings only. This introduces a NEW neo-brutalist idiom, not preservation of the current one.",
+      "Data gap: entry objects (quickEntries L316-341, tournamentEntries L224-236, legacyEntries L350-362) carry only a flattened `score` STRING, not sets/innings arrays. Both the set-breakdown table (item 3) and the graph (item 4) assume entry.sets/entry.innings exist. The detail route must re-load raw quick/tournament storage and re-resolve the raw match to recover per-set data — much more plumbing than 'resolve entry by id'.",
+      "Over-scope: bundles three features, two explicitly cross-screen. The MonoMatchGraph (flagged reusable by spectator screens) and the ShareLiveSheet + offline CSP-safe QR generator (flagged 'shared with live-scorer and spectator screens') should each be their own PR. Building them inside 'match detail' over-scopes this and risks building them wrong for their other consumers.",
+      "Semantic mismatch: 'Share live / Scan-to-watch' makes no sense on a FINISHED historical match — you cannot watch a completed match live. On history detail this should be 'copy link to result', not 'watch live'. QR-scan-to-watch belongs on live-scorer/spectator screens.",
+      "Undefined subsystem: the gold MVP/milestone winner medallion references an MVP/milestone signal that does not exist in the entry model today — a new concept smuggled in as a visual accent.",
+      "Minor inaccuracies: buildTournamentEntries is already module-level (L206), not 'inside the component' (only quick/legacy useMemo mappings are); and the current route has no <Outlet>, so :id must be a sibling route, not 'nested under' history.",
+      "Recommended split: focused core PR (M) = route + report-card hero + set breakdown from re-plumbed raw data + meta chips + Rematch/Share/Delete, keeping the coaching caption chip. Graph = separate PR. Share-live/QR sheet = separate PR (coordinate with eval-app as a shared component)."
+    ]
+  },
+  {
+    "screen": "Statistics overview + per-sport",
+    "group": "history-stats",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVER-SCOPE / split out: The shared bottom tab nav (Home·Play·History·Stats) is cross-cutting across 4 screens and shifts page bottom padding app-wide. Confirmed not present in this file. It does NOT belong in a per-screen Statistics blend PR — carve it into its own component PR and land it first, then this screen just consumes it.",
+      "DATA-CLAIM UNDERSTATED: 'No data-model changes needed' is misleading. buildQuickInsights.form (L180) is a pre-joined string of winner NAMES, not a per-team W/L/D array — the FormSparkline worm needs new derivation of W/L/D relative to the hero team. rivalry (L185) is only 'pairKey (N matches)' — the head-to-head card's W–W split is NOT exposed and needs fresh compute. Two of the four TRENDS features require new logic, not just re-render.",
+      "COLOR DISCIPLINE (top brutalist risk): the blend introduces green in the glow-CTA, hero-tint wash (#e7f4ee), caption chips, AND sparkline-ups — far beyond the stated 'green strictly reserved for lead/win%'. This is the easiest way to erode brutalist restraint into generic friendly UI. Enforce green = positive/lead ONLY, gold = rank-1 ONLY, red = negative ONLY; audit every new green surface.",
+      "GOOD: correctly proposes NEW .mono-pill-tab class instead of mutating .mono-tab (verify mono-tab isn't shared before repurposing) — keep that.",
+      "A11y requirement stands: WinRateRing and FormSparkline need role/title/desc so the dense tables remain the screen-reader source of truth; don't let SVG become the only path to the numbers.",
+      "Even after splitting out the bottom nav, the remaining screen work (WinRateRing + FormSparkline + LeaderboardRow + StatChip + hero + leaderboard + 3-part TRENDS + capsule tabs + empty-state CTA + 8 CSS classes) is a legitimately large but cohesive single-screen PR — stays L. Consider whether TRENDS could be a fast-follow if the PR gets unwieldy in review."
+    ]
+  },
+  {
+    "screen": "Player profile (career records/milestones)",
+    "group": "history-stats",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVER-SCOPE (primary): This is 3 PRs masquerading as one L. The design's OWN dependency list admits TWO blocking backend systems + a cross-cutting token migration. Split: (A) buildable-now visual polish, (B) CAREER rail gated on milestone backend, (C) Add-friend gated on friends backend.",
+      "HOLLOW HEADLINE: The CAREER achievement rail is called 'the HiFi ask' and 'the primary gap being filled', but its data source does not exist. Verified: getPublicUserStatsByUsername (convex/matches.ts:211-58) returns only totalMatches/wins/winRate/gamesOperated/sportBreakdown, and sportBreakdown is only {played,wins} — no wickets/goals/cumulative totals, no MVP count, no cups. '50 career wickets' has NOTHING to render. Backend is not a 'coordinate with' footnote; it's a prerequisite feature (Convex aggregation + per-sport metric tracking + threshold logic) larger than the frontend. Do NOT ship the section without it — a gated-on-empty section is a hollow shell.",
+      "DEAD BUTTON: Add-friend CTA depends on an entire friends schema + request mutations that don't exist. Design says 'degrade gracefully (hidden)' — but if it's always hidden until a separate social epic lands, it contributes ZERO value to this PR and is pure dead code. Cut it from this screen's scope entirely; it belongs in the friends-system PR, not here.",
+      "CROSS-CUTTING TOKEN RISK: gold palette + green-glow shadow + breathe keyframe are declared shared with Result/MVP, leaderboard, team stats. Defining them 'once' inside a profile-screen PR means a profile PR now owns a design-system change 4+ screens consume. The token additions to sportsTokens.js/mono.css should land as their own tiny foundation PR FIRST, so this screen and others build on a merged base — not invent tokens mid-feature.",
+      "BUILDABLE-NOW SLICE (the real M PR): avatar 48px->true 50% circle + 1px black ring, Win% promoted to clamp() hero numeral (still inside boxy card — good, no rounding), green-tint (#e7f4ee) left-edge wash on winner rows replacing 'Winner:' text, plain-language identity line + empty-state ('No matches yet — score your first game'). All need ZERO new data and preserve the ledger. This is the coherent, shippable unit.",
+      "BRUTALIST INTEGRITY: GENUINELY PRESERVED, not diluted. The design is disciplined — stat cards stay boxy, tables stay hairline+mono, hard shadows kept, roundness/gold strictly confined to the human/achievement layer, gold reserved for achievement only (real discipline, not decoration). This is a thoughtful blend, not generic-friendly mush. Credit where due.",
+      "MINOR: 'Message' secondary CTA is listed in the blend but MonoProfile currently has no Message button and no messaging system — another latent dependency smuggled in. Drop it from scope.",
+      "prefers-reduced-motion is already handled in mono.css (block exists at line ~862), so the breathing-glow accessibility requirement is low-risk to satisfy — pattern is established."
+    ]
+  },
+  {
+    "screen": "Team stats",
+    "group": "history-stats",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Effort 'M' understates it: the stable team-key fix + deeper aggregation (head-to-head/streak/momentum) is the real work, which the design itself admits is 'not the layout' — this is L.",
+      "teamMap is keyed by team.name (MonoStatistics.jsx:781), confirmed. A /team/:teamKey route surfaces a real data-integrity bug: duplicate or renamed teams merge stats. The stable-key fix must land BEFORE or WITH the aggregation util as its own foundation, not bolted onto the layout PR.",
+      "StatCard/InsightCard/EmptyState are inline in MonoStatistics.jsx (used lines 382-412), not shared components. Extracting them to MonoStatPrimitives.jsx is a refactor of a 37KB file plus MonoStatistics.test.jsx — belongs in the foundation PR, not mixed with new-screen work.",
+      "Over-scope: split into PR1 (extract primitives + extend utils/teamStats.js aggregation + stable team key) and PR2 (MonoTeamStats route/layout/components).",
+      "MomentumStrip is net-new with no existing chart primitive — the design flags it as a scope-balloon risk. Defer to a follow-up; keep v1 to the CSS hairline-bar strip only if it's trivial, otherwise cut.",
+      "LIVE 'Watch' pill depends on a spectator/live view that may not exist (soft dependency). Must degrade gracefully or be cut from v1 rather than block the screen.",
+      "8 sections on one screen is a real over-decoration risk the design acknowledges; the green=win-only / gold=milestone-only discipline is the only thing holding it — enforce in review."
+    ]
+  },
+  {
+    "screen": "Match graphs / momentum viz",
+    "group": "history-stats",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "SCOPE (primary): The design bundles a BLOCKING cross-engine point-log persistence change that touches 6 scoring engines (MonoSetsLiveScore L406, MonoGoalsLiveScore, MonoCricketLiveScore, MonoCricketTestLiveScore, MonoTennisLiveScore + MonoQuickMatch) plus src/models/types.js and storage. That is a separate high-blast-radius concern from a read-only viz screen. Verified: draftState:undefined on completion is confirmed across all engines. SPLIT: PR1 = MomentumChart + momentum.js + MonoMatchGraphs + routes + CSS + MonoHistory affordance, shipping on the set-level cumulative fallback + live draftState.history it already has (a clean M PR); PR2 = the cross-engine point-log persistence for true point-by-point fidelity. The screen does NOT need persistence to ship, so the dependency should not gate it.",
+      "DATA FIDELITY understated: persisted draftState.history is structuredClone(history.slice(-50)) (MonoSetsLiveScore L306/L352), not the 'last 100' the risks section cites. The 100 is only the in-memory undo stack; anything LOADED from storage (including a live match opened in the graphs route) is capped at 50 snapshots. So even the 'live/in-progress rich point-by-point' path is 50-point-limited, and long matches lose early points more aggressively than stated.",
+      "HISTORY SNAPSHOT SHAPE: snapshots are {timestamp, sets, currentSet, servingTeam, scoringMode} (full sets array), NOT flat scores. buildMomentumSeries must flatten sets state per snapshot into score1/score2 — feasible but a real derivation step the design's clean [{t,score1,score2,lead}] shape glosses over. Confirm the same for goals/cricket/tennis snapshot shapes before claiming a generic builder.",
+      "MonoQuickMatch UNVERIFIED: grep found NO draftState:undefined in MonoQuickMatch.jsx, unlike the other 5 engines the design lists. Quick matches may not persist draftState.history at all, meaning momentum could be entirely unavailable for the app's most common casual path. Verify before promising quick-match momentum; the empty state must cover this cleanly.",
+      "MULTI-SPORT: keep the promise to ship volleyball/sets only with a sport-pluggable builder; do NOT let cricket (runs/wickets/overs) or goals (time-based) series builders creep into this PR — that alone would push it back to L.",
+      "BRUTALIST RISK (minor): the ~1.4s breathing GLOW pulse on the live crossover dot is the one element that can soften the hard read. Constrain it to opacity-only (no blur-glow) to stay consistent with the zero-blur --shadow-xs idiom.",
+      "Line-ref drift (cosmetic): design cites MonoSetsLiveScore ~L354 for draftState:undefined; actual is L406. MonoHistory 'Match details' panel confirmed present (~L857) as a valid affordance site."
+    ]
+  },
+  {
+    "screen": "Tournament setup / create",
+    "group": "tournament-schedule",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Over-scoped for one PR: split out MonoBracketPreview into its own PR. It is a new reusable component the design itself says must share visual language with downstream Fixtures/Bracket/Standings and can balloon across 2-16 teams and 4 tournament types; bundling a cross-screen shared primitive into a single-file re-skin creates coupling and a coordination dependency. PR1 = re-skin + prompts + descriptors + coaching chips + milestone/celebration + CTA + empty state; PR2 = MonoBracketPreview.",
+      "Coaching-chips replacing raw mono-alert boxes risks losing severity/accessibility signal. The mono-alert-danger at line 473 is destructive-context; the softened caption-chips must retain role=alert / severity semantics, not become ambient captions. Design flags this risk but does not resolve it.",
+      "Empty/first-run preset-shortcut state depends on the upstream location.state contract (teams/tournamentName) and is a distinct feature (preset -> wizard prefill), low value-to-effort inside a re-skin. Defer or gate if PR1 runs hot.",
+      "Gold + green-glow + geP/breathing tokens/keyframes do not exist yet and are cross-cutting shared-CSS additions used by all HiFi-blend screens including live scorers. Land once in index.css and coordinate keyframe ownership to avoid duplicate definitions - an ordering dependency across the blend work.",
+      "Weakest HiFi items (step-dot breathing pulse, CTA green-glow) are borderline change-for-its-own-sake; cheap and harmless but not the value - keep, do not let them drive effort.",
+      "Verified: all keep-brutalist claims are factually accurate against the codebase (1838 lines, STEP_LABELS 4-step, 24px circles, tournamentTypeDescription/schedulePreview truncation, mono-alert/row-panel/schedule-preview classes, green-only primary). MonoBracketPreview and gold/glow tokens confirmed absent = genuinely new work."
+    ]
+  },
+  {
+    "screen": "Tournament dispatch (per-engine)",
+    "group": "tournament-schedule",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVER-SCOPE (split into 2 PRs): bundles a pure structural refactor (extract TournamentDetailShell from 3 files - verified ~90% dup, only 126/597 lines differ sets-vs-goals) + a ~113-instance token migration (25x #0066ff, 88x #111/#888 across the 3 files) + 5 new components + a true BracketView. Design itself says 'extract Shell FIRST, then wire all three' = two phases. Split: PR1 = TournamentDetailShell extraction + blue-to-token migration (no new visuals; run TournamentDestructiveSafety.test.jsx). PR2 = HiFi blend (BracketView, SeedAvatar, ChampionBanner, ContextChip, breathing pulse).",
+      "BRACKETVIEW UNDER-SPECIFIED FOR REAL DATA (correctness gap): knockoutManager.js + getKnockoutRoundGroups support play-in, quarter-final, semi-final AND third-place rounds, plus an explicit top-2 (no-semi) direct-final format (L86-87 'No semis = nothing to update'). The design's fixed 'SF1/SF2 -> Final' layout and the 'Final unlocks after both semis' caption break for QF/play-in brackets, the 3rd-place match, and the no-semi format. BracketView must render generic rounds + 3rd-place slot + handle no-semi, not just SF->Final. Design only flags verifying against the 3 engine data shapes, not against bracket sizes.",
+      "PREFERS-REDUCED-MOTION GAP: mono.css already has a reduced-motion guard (~L865, animation:none). The new breathing-pulse on the Live badge/in-progress segment and the live-glow shadow must be added inside that guard or it is an a11y regression; the design does not mention gating the new animation.",
+      "UNRESOLVED CROSS-CUTTING DEPENDENCY blocks a clean single PR: --se-color-action currently maps to var(--primary) (index.css L60) and the accent intent is still flagged 'confirm with eval-app'. Gold/live-glow/pulse tokens are shared with the live scorers and sibling screens (MonoTournamentList, MonoStatistics) - building SeedAvatar/ContextChip/ChampionBanner fully here risks divergence unless the shared token/keyframe work lands first. Sequence the token PR before this screen.",
+      "GROUNDING OK (not an issue, confirms accuracy): champion inline-hex claim verified accurate (borderColor:'#0066ff', color '#888'/'#111' at Goals L479-486, Sets L545, Cricket L657); progress-count data exists via getTournamentProgressCounts import; KnockoutMatchCard uses #111/#888/#ccc/#aaa hardcodes (in filesToChange, correct). The gold-champion + token migration is well-grounded, not change-for-its-own-sake."
+    ]
+  },
+  {
+    "screen": "Tournament match score",
+    "group": "scorer",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Architectural blocker: the 'ONE shared component slot' the design mandates does not exist. MonoTournamentLiveScore.jsx (13-56) is a pure switch that renders each scorer with no props/children; scorers accept no slot and each builds its own mono-scorer-shell/topbar. Injecting the ribbon 'above mono-scorer-topbar' forces edits inside all 5 scorers = exactly the per-sport drift the risk section warns against. Requires a slot/children refactor first.",
+      "Over-scope: touches 6 JSX (wrapper + 5 scorers) + 2 new components + 2 CSS files. The 5-scorer edits are shared-scorer HiFi (pulse, coaching chip) that the dependencies section itself says should be defined once by the non-tournament scorer work — they should not live in a 'tournament match score' PR.",
+      "Split into: (A) tournament chrome — fixture ribbon + gold advance-to-final finish + knockout next-match naming via the wrapper (clean M); (B) shared coaching-chip + breathing LIVE pulse pattern/CSS landed once in the shared scorer PR and consumed here.",
+      "Cross-sport coaching-chip is not presentational plumbing: SET POINT/MATCH POINT/BREAK POINT labels are volleyball/tennis semantics; goals and cricket need distinct, real per-sport derived logic in 5 scorers — underestimated in an M.",
+      "Advance-target naming is thin in the codebase: knockoutManager.js:70-77 has a nextMatch reduce but no clean API to name the next round for the 'advances to <next round>' copy — real unbuilt dependency.",
+      "Weakest HiFi items: the breathing LIVE pulse replacing a static badge is largely decorative (change-for-its-own-sake risk); the strong, real win is the missing tournament/round/advance context, which the current topbar (sport name + 'Set X of Y') entirely lacks.",
+      "Verified-good: gold token, geP/geGlow keyframes, mono-fixture-ribbon, mono-coaching-chip are all genuinely net-new; prefers-reduced-motion blocks already exist (mono.css:862,1793) so the new pulse must be gated there; brutalist shadow 3px 3px 0px 0.5px and green-for-lead are accurately cited and honored in code."
+    ]
+  },
+  {
+    "screen": "Standings",
+    "group": "tournament-schedule",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "SCOPE (too-big): This bundles a 14-sport correctness rewrite with a full new visual language. The config->field column mapping is a real bug fix — confirmed at GenericGoalsTournament.jsx:369-391 where rugby's 9-col config (incl BP) renders only 8 hardcoded body cells, misaligning header/body. That fix is load-bearing, independently testable, and should ship on its own. The chips/rail/pulse/pills/capsule-toggle are a separate aesthetic concern that the design itself says is SHARED with Live and Fixtures screens. Split: PR1 = extract shared config-driven StandingsTable + column correctness, verified across all sports, plain styling; PR2 = HiFi chrome. Effort is L, not M.",
+      "BRUTALIST DILUTION: The 1.4s breathing-pulse on the leader row and the gold-filled leader chip are the elements most likely to read as generic friendly sports-app rather than brutalist. Animation is decoration and cuts against brutalist restraint — recommend dropping the pulse. Also 'soft rounded row-tiles instead of flat rows' softens the grid more than the 'grid stays hard/square' claim admits; keep true 1-1.5px hairline separators, not tile gaps, or the tabular strength erodes.",
+      "CRICKET MISROUTE: design claims verification against ALL 14 sport configs via these two files, but cricket's engine is custom-cricket and does not use GenericSets/GoalsTournament. The shared component covers 13 sports (6 sets + 7 goals). Cricket's NR/NRR standings live on a separate path not listed in filesToChange — the dependency/risk list is inaccurate here.",
+      "NO-KNOCKOUT DEGRADE UNSPECIFIED: qualification band, green rail, 'Q - through' caption chips, and 'Top 2 advance' header all assume knockoutConfig exists. Round-robin-only tournaments (hasKnockouts false) have no advance-count; the design does not specify graceful fallback to plain standings for that case.",
+      "VALUE RANKING: the genuine HiFi UX win is the qualification context (left rail + plain-language caption chips + contextual header) plus the column-correctness fix — not the rank chips/Pts pills, which are largely decorative. Prioritize the former; treat chips/pills as optional polish that can be dropped without losing the win."
+    ]
+  },
+  {
+    "screen": "Schedule / fixtures calendar",
+    "group": "tournament-schedule",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "OVER-SCOPE / split required: TournamentTabs (segmented Standings/Fixtures/Bracket) is cross-cutting — it must mount in 3 divergent host components (cricket/goals/sets) AND be coordinated with the Bracket + Standings screen owners. Bundling it forces this PR to depend on 2 unbuilt screens. Ship the Fixtures screen first via its own route + the 'View fixtures' link on MonoTournamentList; land TournamentTabs as a separate coordinated PR.",
+      "SEQUENCING HAZARD: a segmented tab rendered now would point at Standings/Bracket screens that may not exist, producing dead or placeholder tabs. Reinforces splitting the tab out until siblings land.",
+      "REGRESSION RISK (verified real): extracting getOpenMatches/getNextScorableMatch/getMatchTeamName out of MonoTournamentList.jsx (lines 15/31/36) into src/utils/tournamentSchedule.js will affect the list's live 'Score next match' button (consumed at line 200-204). Must port existing tests and keep the list importing the extracted util.",
+      "ROUNDED-CAPSULE DENSITY: round-jump chips + status pills + CTA + monogram circles are ALL 99px rounded. Confirm at build time that boxy black structure still visually dominates each cell, or the blend drifts toward generic-friendly. Keep gold hard-restricted to Final/champion and green to live/lead as stated.",
+      "MINOR: route line cited as 1535-1536; the actual sibling :id route is ~line 1534 — accurate enough, no correction needed."
+    ]
+  },
+  {
+    "screen": "Your profile (account)",
+    "group": "settings-account",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "placeholder"
+    ]
+  },
+  {
+    "screen": "Settings / More",
+    "group": "settings-account",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "TOO BIG: bundles 3 cross-cutting concerns the design itself flags as separate dependencies. Split. PR1 (settings screen + MonoSwitch + settingsPrefs util + tests + /settings route + 'More' as plain 6th tab + sign-in hero + Export + Clear-all confirm-sheet, dark toggle shipped as coming-soon) = M. PR2 = .dark oklch token system in index.css (own issue, design-token owner). PR3 = nav IA fold of Stats/Account into More + isActive/isAppShellPath rework. PR4 = wire se_settings into scorers + share-sheet to activate Confirm-wicket/goal and Auto-share.",
+      "DEAD SWITCH: Dark mode toggle is inert. Verified index.css has only '@custom-variant dark' (line 4) and ZERO '.dark {}' rules. As specified, the Appearance toggle toggles a class nothing responds to. Must ship disabled/coming-soon in PR1 or the .dark token system lands first.",
+      "INERT TOGGLES: 'Confirm wicket/goal' and 'Auto-share live link' persist to se_settings but no code reads it (scorers/MonoQuickMatch/share-sheet unchanged). They silently do nothing until PR4. Either descope them from the settings-screen PR or pair with the consumer wiring; do not ship visible switches that no-op.",
+      "NAV IS A PRODUCT DECISION, NOT JUST CODE: verified navItems/bottomNavItems are exactly 5 today (index.jsx:564-591). A 6th 'More' tab crowds mobile, and 'fold Stats or Account into More' is an information-architecture call owned by those screens — cannot be unilaterally decided inside a settings PR. isActive()/isAppShellPath ripple = active-highlight regression risk across every app-shell screen; needs its own PR + owner coordination.",
+      "SCOPE-SLIM SUGGESTION: the genuinely-real, self-contained value = the settings home + sign-in-sync hero + Export history + Clear-all (confirm sheet) + local sport-default/toggle persistence. That is a clean, brutalist-preserving, HiFi-winning M-sized PR on its own. Everything else (dark tokens, nav fold, toggle wiring) is a dependency, not this screen.",
+      "MINOR: 'Clear all data' for guests is high-blast-radius with no cloud backup. Design mentions 'ideally an undo' but leaves it optional. For a destructive irreversible-for-guests action, a soft-delete/undo window (or a typed-confirm) should be required in PR1, not aspirational."
+    ]
+  },
+  {
+    "screen": "User search / find friends",
+    "group": "settings-account",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Backend does not exist: verified convex/users.ts has only search/getByUsername/store/etc and there is NO convex/friends.ts. The per-row 'Add' CTA and Mutual/MVP chips are dead buttons without a new friends backend (mutations + schema tables + notifications). Must gate behind cloudAuth + feature flag or sequence after friends.ts lands.",
+      "Bundles 3 non-existent systems into one 'screen' spec: (a) social friends backend, (b) QR + invite-link/deep-link infra + Share-live bottom-sheet, (c) shared bottom tab nav (grep found none in MonoHome/MonoProfile). This is not one focused PR; effort 'M' is understated -> L or a split.",
+      "Split recommendation: PR1 = copy/prompt + designed empty state + row visual redesign with Add CTA rendered-but-disabled behind a flag (pure frontend, ships now); PR2 = convex/friends.ts + schema + notifications to make Add + Mutual/MVP chips live; PR3 = invite/QR sheet reusing the Share-live component. Bottom nav is owned by the nav/Home screen, only consumed here.",
+      "Accuracy caveat: several 'keepsBrutalist' bullets are aspirational, not current state. Today MonoUserSearch.jsx uses soft grays (#888/#bbb/#eee/#111, header is #888), and mono.css uses tokens --se-color-line (oklch mix) + --se-shadow-card, not literal #000 / '3px 3px 0px'. #F1F4EF is not in mono.css. The redesign is effectively hardening the aesthetic, not merely preserving it - fine, but reviewers should know.",
+      "Real dilution risk (design flags it too): the green-tint wash + colored-glow shadow are the first non-black shadow tokens in the system. Enforce strict scoping to social CTAs/avatars only, or they leak the brutalist identity app-wide. Add the new tokens scoped, do not touch --se-shadow-card.",
+      "Minor change-for-its-own-sake: caption chips (Mutual/Plays volleyball/gold MVP) are speculative, all require social/graph data that does not exist. Defer to PR2 rather than ship empty/hardcoded chips.",
+      "Preserve the offline/guest escape: the current file's 'Start guest match' branch (canSearchCloud false + no-results) must survive the redesign so the no-account path is not broken by the social layer."
+    ]
+  },
+  {
+    "screen": "Activity feed (social / live)",
+    "group": "other",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Verification gap / honest-scope collapse: with no Convex feed/friends table (schema has only users, matches, matchPlayers, teams) and the stated 'skip query + no fake data' mitigation, the rich UI (hero live row, breathing dot, avatar cluster, gold milestone rows) can NEVER render with real data in this PR. As written it's a large body of unverifiable UI shipped against an empty state. Split: PR1 = route + MonoHome nav link + empty/first-run state + the CSS primitives (mono-live-dot, mono-watch-pill, mono-feed-filter) rendered via a dev-only mock so they can be exercised; PR2 = wire the populated feed once api.feed/api.friends and the spectator route land.",
+      "Premature shared-component extraction: pulling AvatarCluster.jsx and LiveDot.jsx into components/ 'shared with Friends list / Notifications / spectator' builds abstractions for consumers that do not exist yet (YAGNI). Build them inline in MonoActivityFeed first; extract on the second real consumer.",
+      "'Watch' CTA is a confirmed dead-end: routes end at /game/:id (an editor/scorer, not a read-only spectator view). Routing Watch there is wrong; in v1 either disable/omit the CTA or gate it behind a decided spectator destination rather than the live scorer.",
+      "Avatar reuse mismatch: MonoUserSearch's fallback circle is 32px; the design specifies 40px row avatars and a 28px watcher cluster. 'Reuse' requires a size-parametrized avatar, not a drop-in — minor but the plan implies free reuse.",
+      "Green-overuse risk is self-flagged and the discipline (green only on live row/dot, gold only on milestone) is sound — but with mono.css already using --se-color-action-soft washes on ~15 existing panels, enforcing 'green means live only' on THIS screen while the rest of the app washes green decoratively is an inconsistency to call out, not a blocker."
+    ]
+  },
+  {
+    "screen": "Friends list",
+    "group": "other",
+    "effort": "L",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "SELF-CONTRADICTION on the primary CTA: keepsBrutalist says Find-friends CTA carries 'hard 3px 3px 0 offset black shadow (no blur)', but circularFriendlyElements says the same '+ Find friends' CTA has a 'green-glow colored shadow'. You cannot have both on one element. A soft colored glow is the exact anti-brutalist move the frame forbids. Pick the hard black offset shadow; drop the glow. This is the clearest dilution risk.",
+      "DILUTION PILE-UP: 99px capsule segmented filter + 99px pill CTA + circular check/x buttons + breathing green glow-pulse live-ring together shift the screen toward generic-friendly. Brutalist identity survives in the row/typography/labels but the chrome additions are heavy. Recommend: keep the boxy 4px filter as mono tabs (not 99px capsule) OR accept capsule but then NO glow shadows anywhere, to avoid stacking every soft signal at once.",
+      "DEAD-FEATURE RISK (self-flagged, confirmed): live-ring + Watch spectator has no backing signal — matches.ts has no live/status field and active sessions are local-only localStorage. Building this UI ships a permanently empty affordance. MUST be carved into a later gated phase, not this screen.",
+      "OVER-SCOPE — split into 3 PRs. This is not one focused PR: (a) backend = new schema table(s)+indexes + convex/friends.ts with 6 authed fns; (b) MonoFriends page + 3 subcomponents + CSS + tests; (c) cross-cutting 5->4 nav consolidation touching every app-shell screen; (d) MonoUserSearch + MonoProfile add-friend wiring; (e) live-watch spectator (whole separate feature); (f) Notifications de-dup decision. Recommended split: PR1 backend + add-friend wiring into UserSearch/Profile; PR2 MonoFriends list/requests/accept/decline page + nav consolidation + CSS + tests (NO live-ring); PR3 (later, gated) live-match cloud signal + spectator view + live-ring.",
+      "NAV CONSOLIDATION is under-specified but load-bearing: the design lists it as a dependency but the screen can't ship without deciding fold-Stats/Account-into-More vs reuse --bottom-nav-count. That decision touches isAppShellPath, isActive, NavIcon, and every shell screen — treat it as its own sub-task with a decision, not an append.",
+      "REAL HiFi WIN is narrower than pitched: the genuine, buildable-today UX win is the request accept/decline flow (green-wash card + Skip/Confirm), question-first copy, and designed empty/signed-out states — all grounded in existing patterns. The headline 'cheer them on / Watch live' story is the part with no backend, so don't let it justify the effort."
+    ]
+  },
+  {
+    "screen": "My teams (grouped)",
+    "group": "other",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Wrong premise: bottom nav is NOT 4 tabs 'Home/Play/History/Profile'. index.jsx:564-591 shows 5 items Home/Play/History/Stats/Account (Account = accountMenu, appears when cloudAuthAvailable). No 'Profile' tab. IA conclusion (nest under Account) survives but the stated constraint is false.",
+      "Wrong premise: convex/teams.ts already EXISTS with a `search` query (teams.ts:4-26). The design says 'functions do not' exist. listMyTeams is genuinely missing but the file/function claim is unverified.",
+      "storage.js is at src/utils/storage.js, not src/designs/utils/ (proposed teamsStorage.js targets a new dir); 'mirroring storage.js' points at a different path.",
+      "Over-scope: one declared PR bundles a new backend query (non-trivial grouping + matchCount aggregation), a cross-cutting anon/local persistence model (teamsStorage.js), IA wiring, 2 new shared components, and the full page. Split: PR1 = listMyTeams query + matchCount-derivation; PR2 = the list screen. De-scope anon model to a 'Sign in to sync' gate for v1.",
+      "Dead-end interactions: FAB/capsule -> /teams/new and card-tap -> /teams/:id are BOTH explicitly separate unbuilt screens. As one PR the screen has no working forward navigation — a display shell. Stub tap/FAB explicitly.",
+      "Confirmed risks are real: teams table createdBy id('users') + matchCount v.optional (schema.ts:56-63) and CloudAuthOnly-gated routes (index.jsx:1522) => anon users hit a permanently empty auth-gated screen; matchCount not live-aggregated => stale 'MOST PLAYED' gold chip / win captions.",
+      "Dilution risk (self-noted, valid): circular crests + green washes + gold chips + capsule pills + capsule CTA + caption chips stacked on one screen. Constrain gold to the single MOST PLAYED chip and green to active-pill + most-played wash only.",
+      "Effort M is understated given new backend query semantics + anon fallback + IA + 2 shared components + page + empty state + CSS; realistically L."
+    ]
+  },
+  {
+    "screen": "Create team (limits)",
+    "group": "other",
+    "effort": "M",
+    "revisedEffort": "L",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Bundles an unresolved cross-cutting data-model decision (team entity vs existing createParticipant loose-name model, which the design itself flags) plus a new persistence path (today only saveSession via universalStorage exists) with the UI — the model + useTeams hook should be a prerequisite PR, not folded into a screen PR.",
+      "Ships stranded: no upstream (My Teams list missing) and no downstream (Add players missing), so it is simultaneously too-big (bundles domain foundation) and un-shippable in isolation.",
+      "The live roster-capacity meter ('0 of 12 spots') is hollow on THIS screen — zero players exist and there is no way to add them here; roster-filling happens on the next screen. Partly change-for-its-own-sake; the format-preset + coaching caption is the actual HiFi win.",
+      "Char counter on a 24-char team name is marginal ceremony, low UX value.",
+      "'Disabled-CTA reason chip' overstates MonoSetup's pattern, which is a plain muted text span (lines 197-203), not a capsule chip.",
+      "Effort M is optimistic: greenfield data model + persistence hook + screen + 2 new components + new CSS classes + route-area registration is L.",
+      "Colors b8862e / e7f4ee / F1F4EF are all net-new (not in mono.css today); the gold captain token is speculative wiring for an unbuilt feature.",
+      "Recommended split: PR-1 = createTeam model + useTeams persistence + /teams My Teams shell (entry); PR-2 = MonoCreateTeam screen + CoachChip/TeamCrestPicker + stubbed add-players route. Drop or defer the capacity meter on this screen."
+    ]
+  },
+  {
+    "screen": "Add players (sources)",
+    "group": "other",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "Scope too big for one PR. Bundles 1 new screen + 3 new components (SourceCard, FriendAvatarScroller, InviteLinkSheet) + 3 CSS classes + PlayerChip rewrite + routing + a new qrcode dependency + 2 zero-backend stub sources. Split: (A) core shell = header, upgraded capsule chips, SourceCard, Search + Guest sources, commit CTA bar (pure brutalist-blend, no new deps, no backend); (B) InviteLinkSheet + qrcode dep; (C) Friends/Recent scrollers + their Convex queries.",
+      "keepsBrutalist framing for the chip is factually wrong. PlayerChip.jsx today is a generic friendly pill (#f5f5f5 bg, #eee border, #888 text, no black ink, no offset shadow). The design claims it 'keeps' an existing 1px hairline + 3px zero-blur offset shadow that doesn't exist. The upgrade is a re-skin that ADDS brutalist treatment, not preservation. Enforce the hard black hairline + offset shadow explicitly in the new .mono-chip-capsule or the chip drifts to the same soft pill it is now.",
+      "InviteLinkSheet has no existing pattern to reuse. Grep of src/ finds zero share-live / bottom-sheet / QR code. The design assumes 'reuse the share-live pattern' but it must be built from scratch here, plus a new qrcode dependency. This alone justifies its own PR and a dependency-confirm step before committing.",
+      "convex/teams.ts exports only search() — no friends query, no recent-teammates, no roster-add mutation, no team members. Friends and Recent teammates sources have zero backend. Shipping 2 of 6 sources as pure empty stubs makes the source list read placeholder-heavy on first render; defer both to PR (C) rather than land them empty.",
+      "Guest-vs-cloud dedup gap. PlayerSearchInput dedupes only by userId (taggedIds Set). A person added as a typed guest via the Guest source vs. 'Add as guest' from search has no shared key, so the same human can be added twice. Needs an explicit merge/normalize rule in the shared selected-tray state, not just per-source.",
+      "Tab-nav suppression ('hidden while this is a modal sub-flow') is unverified — index.jsx routing must actually support a full-screen sub-route that hides the bottom tab bar; existing Mono screens may always render it."
+    ]
+  },
+  {
+    "screen": "Roster (squad & bench)",
+    "group": "other",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "SCOPE (primary): Not one PR. Verified convex/teams.ts is a search-only stub and schema.ts teams table has NO members/role/jersey/captain/order/bench fields. The screen requires a net-new team-membership schema + Convex CRUD mutations, a cross-cutting bottom-nav shell (0 hits, referenced-only), and leans on 2-3 unbuilt sibling screens. Split into: (a) team-membership schema+queries+mutations, (b) shared bottom-tab-nav shell, (c) MonoRoster screen + RosterPlayerRow/PlayerManageSheet/AddPlayerFab/AvatarCircle/CapsulePill + tests. Roster is the leaf; its trunk must land first.",
+      "Drag-to-reorder should NOT be in v1 (spec's own risk section agrees). It touches order-persistence in the not-yet-existent membership model and is fiddly on touch. Ship move via the bottom-sheet action only; defer drag + drag-handle pill to a follow-up. Dropping it makes the Roster screen a clean M.",
+      "Soft-element accumulation risk to monitor at build: circular avatars + capsule pills + role chips + rounded bottom-sheet + FAB green-glow + reduced-opacity bench in one screen is a lot of HiFi surface. The borderless hairline-separated rows (not floated cards) are the load-bearing brutalist choice — keep them; do not let rows drift into soft cards under review.",
+      "Gold token: --se-color-gold does not exist (0 hits) and the mono palette deliberately lacks gold. Introducing it is defensible ONLY if hard-gated to captain-ring + C badge + MVP. Add it as one status alias in index.css, not a decorative color; guard against reuse in a lint/review note.",
+      "Minor accuracy note (not blocking): --se-shadow-hard IS already defined (index.css:83 = var(--shadow)); mono-card/mono-section/se-color-danger exist. The reuse claims check out — the only genuinely-missing CSS is capsule/avatar/bottom-sheet/FAB-glow classes, which the spec correctly lists as new."
+    ]
+  },
+  {
+    "screen": "Teams empty state",
+    "group": "other",
+    "effort": "M",
+    "revisedEffort": "M",
+    "hifiWin": true,
+    "scope": "too-big",
+    "issues": [
+      "DEAD-END: Both CTAs (Create team, Add players) target routes that do not exist yet. As specified the screen ships with two buttons that go nowhere. Either land them disabled/stub with a 'coming soon' affordance, or gate this PR on the parallel Create/Add PRs. Design admits this risk but does not resolve it.",
+      "OVER-SCOPE (split out): BottomTabNav is cross-cutting and forces the unresolved 'dedicated Teams tab vs under More' architecture decision that affects every Band 5/6 screen. Do NOT decide nav architecture inside a Teams empty-state PR. Make it its own nav PR; MonoTeams should consume whatever nav exists (or a thin stub).",
+      "OVER-SCOPE (split out): The EmptyState shared extraction refactors MonoStatistics.jsx (3 call sites at lines 382/563/844) AND is meant to be coordinated with History-empty + Home-first-run. Mixing a cross-screen refactor with a new feature in one PR is risky. Extract EmptyState in a prior standalone PR, or ship MonoTeams with a LOCAL hero first and extract later.",
+      "CLAIM INACCURATE: Design says it reuses a 'hard black hairline' header divider at mono.css:~42, but the actual pattern there is a MUTED color-mix (--se-color-line 30% + surface), not pure black. The 'pure-black hard hairline' brutalist tell is aspirational, not an existing reuse — reconcile by adding a true-black divider variant or drop the claim.",
+      "MISSING PRIMITIVES: 'geGlow-style' pulse animation and a gold token (#b8862e / --se-color-gold) are referenced as if they exist; neither exists anywhere in src. The gold token must be added and the glow keyframe authored (glow is optional, gold is required for the accent).",
+      "IDENTITY RISK (design's own core bet): An empty state is dominated by the soft green circular hero + serif headline + two capsule pills; the brutalist identity rests almost entirely on the CTA's hard-offset shadow and a thin top mono label. Needs a visual check that it reads 'intentional brutalist+rounded' rather than generic friendly onboarding. Fallback (warm soft shadow on capsule, hard offset reserved for shell) should be pre-agreed.",
+      "CONFIRMED STRENGTH (no change needed): The 3px 3px 0 zero-blur offset shadow is an established codebase pattern (src/index.css:227), so the brutalist CTA tell is a genuine reuse; SE action/action-soft/line/surface tokens exist; lazy /teams route is consistent with MonoHistory/MonoPlayHub."
+    ]
+  },
+  {
+    "screen": "Dev showcases",
+    "group": "other",
+    "effort": "L",
+    "revisedEffort": "M",
+    "hifiWin": false,
+    "scope": "too-big",
+    "issues": [
+      "BLOCKED ON UNBUILT WORK (verified): the HiFi token foundation the Explainer documents does not exist yet — no #e7f4ee green wash, no gold #b8862e/#e8b64c, no warm-green-black shadow, no LIVE pulse @keyframes in mono.css or index.css (only base --se-* tokens + 999px radii). And the 'upgraded scoring surfaces' (soft tap-zones, circular/capsule point buttons, 'set point'/'break point' caption chips) do not exist in src/designs/design1-mono/scoring/. Two prerequisites, both absent. The design's own risks section admits this ('lowest risk if sequenced AFTER the token layer and at least one upgraded scorer land'). It cannot ship as-is.",
+      "TOO BIG — split into two PRs. PR-A (buildable NOW, no dependency): ShowcaseHub + ShowcaseFrame + rewire the 4 existing orphan pages to the shared chrome and kill the ad-hoc #fafafa/#dcfce7/#fee2e2/#0066ff literals (also fixes the dead /showcase/landing-designs back-link in BrutalistColorShowcase.jsx:121). This is the real, self-contained value. PR-B (gated on token+scorer landing): DesignSystemExplainer that documents the HiFi token layer and embeds real scoring surfaces. Bundling both = a blocked mega-PR that stalls the deliverable half.",
+      "'REAL HiFi UX win' is weak: this route is SHOW_INTERNAL_ROUTES-gated (DEV/env only) and never reaches end users, so the genuine benefit is dev-experience/source-of-truth consolidation (de-duplicating headers + centralizing color literals), not an end-user UX win. The HiFi-flavored parts (explainer narration micro-copy, 300x600 phone-frame preview slot) are cosmetic on an internal page — exactly the over-investment the design's own risk note warns against. Keep effort proportionate: the ShowcaseFrame refactor is worth it; the elaborate Explainer is nice-to-have.",
+      "FRAGILE PROMISE: the Explainer claims it 'renders the ACTUAL upgraded live-scorer tap-zone + circular/capsule point buttons + coaching caption chips so the lab never drifts from production.' Those components expect match context/routing; embedding them outside a live match needs mock providers or static prop-driven variants. Since the upgraded scorers don't exist yet, the Explainer would have to re-mock — directly contradicting the 'never drifts from production' guarantee. Either wait for the real components or accept it is a mock (drop the guarantee).",
+      "Revised effort: the recommended focused slice (PR-A: hub + frame + 4-page reframe/token-cleanup) is M and shippable immediately. The Explainer slice (PR-B) is M but blocked; do not start it until the token foundation and at least one upgraded scorer land, or it documents a moving target."
+    ]
+  },
+  {
+    "screen": "Legacy orphans (unwired)",
+    "group": "other",
+    "effort": "S",
+    "revisedEffort": "S",
+    "hifiWin": false,
+    "scope": "ok",
+    "issues": [
+      "No genuine HiFi UX win: the design itself states 'No NEW HiFi surface added.' Every adoptsHifi item is retention of what NewUserFlow already has. As a blend screen it fails criterion 2 — it is a pure delete/reconcile task. Fine to ship, but do not credit it as a HiFi win.",
+      "Shadow fix should reuse the existing token, not re-hardcode: NewUserFlow.jsx:23 already defines cardShadow: 'var(--shadow-2xs)'. The preview cards at lines 263 and 298 hardcode '0 4px 20px rgba(0,0,0,0.08)' instead of using t.cardShadow. Fix = replace with boxShadow: t.cardShadow. Writing a raw '3px 3px 0 0.5px #000' string reintroduces the hardcoded-value anti-pattern the deletion rationale is built to eliminate.",
+      "Token value stated inaccurately: --shadow-2xs (index.css:49) is '3px 3px 0px 0.5px hsl(0 0% 0% / 0.35)' — 35% black, not the pure #000 the design's prose claims. Intent correct, cosmetic inaccuracy only.",
+      "VERIFIED all routing claims from source: MonoHome/MonoSetup/MonoSportHome_TABBED have zero importers (dead, safe to delete); NewUserFlow is LIVE (imported by MonoPlayHub.jsx:6, rendered :99) — the design's CRITICAL do-not-delete callout is correct.",
+      "Minor intent-mixing: bundling a visual change to LIVE code (NewUserFlow shadow) with dead-code deletion mixes two operations, but both are trivial and thematically coherent (reconcile to token system) — acceptable as one PR, no split needed."
+    ]
+  }
+]

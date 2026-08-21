@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy — all games · one wall</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+
+:root {
+  color-scheme: light;
+  --ink: #18221c;
+  --ink-faint: #667168;
+  --paper: #f5f1e8;
+  --surface: #fffdf7;
+  --line: #c9cec7;
+  --accent: #147447;
+  --accent-soft: #dcebdd;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Inter, "Segoe UI", sans-serif;
+}
+
+header.top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .8rem 1.4rem;
+  padding: .8rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+  background: rgb(245 241 232 / 96%);
+  backdrop-filter: blur(6px);
+}
+
+.brand { display: flex; align-items: baseline; gap: .6rem; }
+.brand h1 { margin: 0; font: 800 1.15rem/1 Inter, sans-serif; letter-spacing: -.02em; }
+.brand span {
+  color: var(--accent);
+  font: 700 .62rem/1 "JetBrains Mono", monospace;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.jump { display: flex; flex-wrap: wrap; gap: .3rem; }
+.jump a {
+  padding: .38rem .68rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-faint);
+  background: var(--surface);
+  font: 700 .72rem/1 Inter, sans-serif;
+  text-decoration: none;
+}
+.jump a:hover, .jump a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+
+.zoom { display: flex; align-items: center; gap: .35rem; margin-left: auto; }
+.zoom label { color: var(--ink-faint); font: 700 .64rem/1 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; }
+.zoom button {
+  min-width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+  font: 800 .78rem/1 "JetBrains Mono", monospace;
+  cursor: pointer;
+}
+.zoom button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+/* ---- the wall: every game side by side ---- */
+.wall {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.2rem .4rem;
+  overflow-x: auto;
+}
+
+.tile { flex: 0 0 auto; }
+
+.tile .cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .6rem;
+  margin-bottom: .4rem;
+}
+
+.tile .cap b { font: 800 .82rem/1 Inter, sans-serif; }
+.tile .cap a {
+  color: var(--accent);
+  font: 700 .62rem/1 "JetBrains Mono", monospace;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.tile .cap a:hover { text-decoration: underline; }
+
+.clip {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 3px 3px 0 rgb(24 34 28 / .12);
+}
+
+.clip iframe {
+  display: block;
+  width: 1240px;
+  height: 940px;
+  border: 0;
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+/* ---- full-size sections, same single page ---- */
+.fulls { padding: .6rem 1.2rem 2.5rem; }
+
+.game-block { margin-top: 1.6rem; scroll-margin-top: 4.2rem; }
+
+.game-block > .head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .4rem 1rem;
+  margin-bottom: .55rem;
+}
+
+.game-block > .head h2 { margin: 0; font: 800 1.05rem/1 Inter, sans-serif; letter-spacing: -.01em; }
+.game-block > .head .meta { color: var(--ink-faint); font: 600 .74rem/1.3 Inter, sans-serif; }
+.game-block > .head a {
+  margin-left: auto;
+  color: var(--accent);
+  font: 700 .66rem/1 "JetBrains Mono", monospace;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.game-block > .head a:hover { text-decoration: underline; }
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 3px 3px 0 rgb(24 34 28 / .10);
+}
+
+.stage iframe {
+  display: block;
+  width: 1240px;
+  height: 960px;
+  border: 0;
+  transform-origin: top left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>All games · one wall</h1>
+    <span>ScoreEasy design review</span>
+  </div>
+
+  <nav class="jump" aria-label="Jump to a game">
+    <a href="#g-volleyball">Volleyball</a>
+    <a href="#g-throwball">Throwball</a>
+    <a href="#g-badminton">Badminton</a>
+    <a href="#g-kabaddi">Kabaddi</a>
+    <a href="#g-football">Football</a>
+    <a href="#g-basketball">Basketball</a>
+    <a href="#g-kho-kho">Kho-Kho</a>
+  </nav>
+
+  <div class="zoom" role="group" aria-label="Wall thumbnail size">
+    <label for="zoom-s">Wall</label>
+    <button type="button" data-zoom="0.20" aria-pressed="false">S</button>
+    <button type="button" id="zoom-s" data-zoom="0.27" aria-pressed="true">M</button>
+    <button type="button" data-zoom="0.36" aria-pressed="false">L</button>
+  </div>
+</header>
+
+<section class="wall" id="wall" aria-label="All seven games side by side"></section>
+
+<main class="fulls" id="fulls"></main>
+
+<script>
+const GAMES = [
+  { id: 'volleyball', label: 'Volleyball', meta: 'sets engine · 2 giant Point→Team keys · serve derived silently' },
+  { id: 'throwball',  label: 'Throwball',  meta: 'sets engine · volleyball mirror · serve demoted under rally scoring' },
+  { id: 'badminton',  label: 'Badminton',  meta: 'sets engine · serve + court R/L central · change-ends banner' },
+  { id: 'kabaddi',    label: 'Kabaddi',    meta: 'raid engine · Big-4 TOUCH·TACKLE·BONUS·EMPTY · mat dolls' },
+  { id: 'football',   label: 'Football',   meta: 'attribution engine · GOAL keys + deferrable scorer row · clock bar' },
+  { id: 'basketball', label: 'Basketball', meta: 'typed counter · value keypad 5×5↔3×3 fork · BONUS stamp' },
+  { id: 'kho-kho',    label: 'Kho-Kho',    meta: 'turn engine · Big-1 OUT +1 · batch dots · tap-to-pause clock' },
+];
+
+const PREVIEW_W = 1240;
+
+const wall = document.getElementById('wall');
+const fulls = document.getElementById('fulls');
+
+for (const g of GAMES) {
+  const src = `${g.id}/${g.id}-preview.html`;
+
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.innerHTML =
+    `<div class="cap"><b>${g.label}</b><a href="${src}" target="_blank" rel="noopener">open ↗</a></div>` +
+    `<div class="clip"><iframe title="${g.label} wall thumbnail" src="${src}" tabindex="-1" loading="lazy"></iframe></div>`;
+  wall.appendChild(tile);
+
+  const block = document.createElement('section');
+  block.className = 'game-block';
+  block.id = `g-${g.id}`;
+  block.innerHTML =
+    `<div class="head"><h2>${g.label}</h2><span class="meta">${g.meta}</span>` +
+    `<a href="${src}" target="_blank" rel="noopener">open standalone ↗</a></div>` +
+    `<div class="stage"><iframe title="${g.label} full preview" src="${src}" loading="lazy"></iframe></div>`;
+  fulls.appendChild(block);
+}
+
+let wallZoom = 0.27;
+
+function paintWall() {
+  wall.querySelectorAll('.clip').forEach((clip) => {
+    const f = clip.querySelector('iframe');
+    f.style.transform = `scale(${wallZoom})`;
+    clip.style.width = `${PREVIEW_W * wallZoom}px`;
+    clip.style.height = `${Math.round(940 * wallZoom)}px`;
+  });
+}
+
+document.querySelectorAll('.zoom button').forEach((b) => {
+  b.addEventListener('click', () => {
+    wallZoom = parseFloat(b.dataset.zoom);
+    document.querySelectorAll('.zoom button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    paintWall();
+  });
+});
+paintWall();
+
+const ro = new ResizeObserver((entries) => {
+  for (const e of entries) {
+    const stage = e.target;
+    const f = stage.querySelector('iframe');
+    const s = Math.min(1, stage.clientWidth / PREVIEW_W);
+    f.style.transform = `scale(${s})`;
+    stage.style.height = `${Math.round(960 * s)}px`;
+  }
+});
+
+document.querySelectorAll('.stage').forEach((st) => ro.observe(st));
+</script>
+
+</body>
+</html>

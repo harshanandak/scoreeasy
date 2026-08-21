@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScoreEasy Cricket — Guided Tap-Flow (blend v2)</title>
+<style>
+  /* =========================================================================
+     TOKENS — mirrors src/index.css. No raw hex anywhere; every colour is an
+     --se-* token or a color-mix of them. --se-blend-* are the HiFi softness
+     overlay defined strictly on top of the same palette.
+     ========================================================================= */
+  :root{
+    /* base (mirrors src/index.css :root) */
+    --se-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --se-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --se-color-canvas: oklch(0.9782 0.0039 145.5458);
+    --se-color-surface: oklch(0.9855 0.0026 145.5558);
+    --se-color-surface-warm: oklch(0.9398 0.0035 145.5478);
+    --se-color-ink: oklch(0 0 0);
+    --se-color-ink-strong: oklch(0 0 0);
+    --se-color-ink-soft: oklch(0.3211 0 0);
+    --se-color-ink-muted: oklch(0.5103 0 0);
+    --se-color-ink-faint: color-mix(in oklch, var(--se-color-ink-muted) 68%, var(--se-color-canvas));
+    --se-color-line: oklch(0 0 0);
+    --se-color-line-strong: oklch(0 0 0);
+    --se-color-inverse: oklch(1 0 0);
+    --se-color-action: oklch(0.6230 0.1688 149.1777);
+    --se-color-action-soft: oklch(0.9231 0.0773 156.7494);
+    --se-color-action-strong: oklch(0.4104 0.1066 149.9393);
+    --se-color-danger: oklch(0.49 0.17 29);
+    --se-color-danger-soft: oklch(0.96 0.04 29);
+    --se-color-warning: oklch(0.54 0.12 78);
+    --se-color-warning-soft: oklch(0.96 0.05 86);
+
+    --se-border-standard: 1.5px;
+    --se-radius-button: 0.25rem;
+    --se-radius-card: calc(0.25rem + 4px);
+    --se-shadow-card: 3px 3px 0px 0.5px color-mix(in oklch, var(--se-color-ink) 35%, transparent);
+    --se-shadow-hard: 3px 3px 0 var(--se-color-line-strong);
+    --se-motion-standard: 250ms;
+
+    /* --se-blend-* : HiFi softness layer, derived from the same palette */
+    --se-blend-radius-soft-sm: 10px;
+    --se-blend-radius-soft: 12px;
+    --se-blend-radius-soft-lg: 16px;
+    --se-blend-radius-capsule: 999px;
+    --se-blend-green-wash: color-mix(in oklch, var(--se-color-action) 11%, var(--se-color-surface));
+    --se-blend-green-wash-strong: color-mix(in oklch, var(--se-color-action) 18%, var(--se-color-surface));
+    --se-blend-shadow-soft: 0 6px 20px -9px color-mix(in oklch, var(--se-color-ink) 45%, transparent);
+    --se-blend-shadow-tier1: 0 1px 2px color-mix(in oklch, var(--se-color-ink) 12%, transparent);
+    --se-blend-shadow-cta: 0 10px 18px -10px color-mix(in oklch, var(--se-color-action) 75%, transparent);
+    --se-blend-gold: var(--se-color-warning);
+    --se-blend-gold-bright: oklch(0.8153 0.1652 85.6698);
+    --se-blend-gold-ink: color-mix(in oklch, var(--se-color-warning) 72%, var(--se-color-ink));
+
+    /* derived hairlines — interior separation is ALWAYS a hairline, never a rule */
+    --hair: color-mix(in oklch, var(--se-color-line) 16%, transparent);
+    --hair-strong: color-mix(in oklch, var(--se-color-line) 24%, transparent);
+
+    /* gallery chrome only (outside the app surface) */
+    --stage: oklch(0.24 0.006 150);
+    --stage-ink: oklch(0.88 0.012 150);
+    --stage-ink-soft: oklch(0.72 0.014 150);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:26px 12px 72px; background:var(--stage);
+    color:var(--se-color-ink); font-family:var(--se-font-sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:30px; }
+
+  /* ---------- gallery chrome ---------- */
+  .cap{ font-family:var(--se-font-mono); font-weight:700; font-size:10px; letter-spacing:.13em;
+        text-transform:uppercase; color:var(--stage-ink-soft); margin:0 0 8px 2px; }
+  .cap b{ color:var(--stage-ink); }
+  .cap span{ font-weight:500; }
+  .lede{ color:var(--stage-ink-soft); font-size:12.5px; line-height:1.55; margin:0 2px; }
+  .lede b{ color:var(--stage-ink); font-weight:600; }
+  .note{ color:var(--stage-ink-soft); font-size:11.5px; line-height:1.4; margin:9px 4px 0;
+         font-weight:500; }
+
+  /* =========================================================================
+     BRUTALIST BONES
+     One ink frame + one hard shadow per screen, on the outermost shell only.
+     Nothing inside ever repeats either.
+     ========================================================================= */
+  .device{
+    background:var(--se-color-canvas);
+    border:var(--se-border-standard) solid var(--se-color-line-strong);
+    box-shadow:var(--se-shadow-hard);
+    border-radius:var(--se-radius-card);
+    overflow:hidden;
+  }
+  /* canvas warms during a decision state — modality without a scrim */
+  .device.deciding{ background:color-mix(in oklch, var(--se-color-surface-warm) 89%, var(--se-color-warning)); }
+  .band{ padding:9px 13px 0; }
+  .band.last{ padding-bottom:12px; }
+
+  /* uppercase-mono label voice — ≤3 words, ≥10px, tracked */
+  .eyebrow{ font-family:var(--se-font-mono); font-size:10px; font-weight:700;
+            letter-spacing:.11em; text-transform:uppercase; color:var(--se-color-ink-muted); }
+  .num{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; }
+  .hairline{ height:1px; background:var(--hair); border:0; margin:11px 0 0; }
+
+  /* live pulse — exactly one per screen, reduced-motion gated */
+  .live-dot{ width:7px; height:7px; border-radius:var(--se-blend-radius-capsule);
+             background:var(--se-color-danger); display:inline-block; flex:none; }
+  .pulse{ animation:se-pulse 1.6s ease-in-out infinite; }
+  @keyframes se-pulse{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+  .rise{ animation:se-rise .45s ease both; }
+  @keyframes se-rise{ from{ transform:translateY(5px); opacity:0 } to{ transform:none; opacity:1 } }
+  @media (prefers-reduced-motion: reduce){
+    .pulse,.rise{ animation:none !important; }
+    *{ transition:none !important; }
+    .key:active,.pill:active,.cta:active{ transform:none !important; }
+  }
+
+  /* ---------- header triptych (chrome = brutalist) ---------- */
+  .chrome{ display:flex; align-items:center; gap:9px; padding:10px 12px 9px;
+           border-bottom:1px solid var(--hair); }
+  .iconbtn{ width:31px; height:31px; flex:none; display:grid; place-items:center;
+            border:1px solid var(--hair-strong); border-radius:var(--se-radius-button);
+            background:transparent; color:var(--se-color-ink); font-size:14px; cursor:pointer; }
+  .titlestack{ flex:1; min-width:0; text-align:center; }
+  .titlestack .t{ font-size:13px; font-weight:700; letter-spacing:-.01em;
+                  color:var(--se-color-ink-strong); display:flex; align-items:center;
+                  justify-content:center; gap:6px; }
+  .titlestack .s{ font-family:var(--se-font-mono); font-size:10px; font-weight:600;
+                  letter-spacing:.09em; text-transform:uppercase; color:var(--se-color-ink-faint);
+                  margin-top:2px; }
+
+  /* ---------- chase equation band (second innings only) ---------- */
+  .chase{ background:var(--se-color-surface-warm); border-top:1px solid var(--hair);
+          border-bottom:1px solid var(--hair); padding:7px 13px;
+          display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .chase .eq{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums;
+              font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+              color:var(--se-color-ink-strong); }
+  .chase .eq b{ font-weight:700; }
+  .chase .rrr{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums;
+               font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+               color:var(--se-color-ink-muted); }
+
+  /* =========================================================================
+     HERO — brutalist number, soft stage. No border, no hard shadow of its own.
+     ========================================================================= */
+  .hero{ background:var(--se-blend-green-wash); border-radius:var(--se-blend-radius-soft-lg);
+         box-shadow:var(--se-blend-shadow-soft); padding:11px 13px 11px; }
+  .hero-id{ display:flex; align-items:center; gap:7px; }
+  .crest{ width:18px; height:18px; border-radius:6px; background:var(--se-color-action);
+          color:var(--se-color-inverse); font-size:9px; font-weight:800; display:grid;
+          place-items:center; flex:none; }
+  .hero-team{ font-size:12px; font-weight:600; color:var(--se-color-ink-soft); flex:1; }
+  .hero-target{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums;
+                font-size:10.5px; font-weight:600; color:var(--se-color-ink-muted); }
+  .hero-score{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+               margin-top:6px; }
+  .runs{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-weight:500;
+         font-size:47px; line-height:.84; letter-spacing:-.02em; color:var(--se-color-ink-strong); }
+  .runs .wk{ font-size:26px; color:var(--se-color-ink-muted); }
+  .runs .ov{ font-size:14px; color:var(--se-color-ink-faint); margin-left:6px; }
+  .crr{ text-align:right; }
+  .crr .l{ font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+           color:var(--se-color-ink-muted); display:block; }
+  .crr .v{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-size:15px;
+           font-weight:600; color:var(--se-color-ink-strong); }
+  .chasebar{ height:4px; border-radius:var(--se-blend-radius-capsule); margin-top:10px;
+             background:color-mix(in oklch, var(--se-color-action) 22%, transparent);
+             overflow:hidden; }
+  .chasebar > i{ display:block; height:100%; background:var(--se-color-action);
+                 border-radius:var(--se-blend-radius-capsule); }
+  .microstrip{ display:flex; gap:14px; margin-top:9px; padding-top:9px;
+               border-top:1px solid color-mix(in oklch, var(--se-color-action) 24%, transparent); }
+  .microstrip div{ min-width:0; }
+  .microstrip .l{ font-size:9px; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+                  color:var(--se-color-ink-muted); display:block; }
+  .microstrip .v{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums;
+                  font-size:13px; font-weight:600; color:var(--se-color-ink-strong); }
+
+  /* compact hero used on pinned decision screens */
+  .hero.mini{ padding:9px 12px; }
+  .hero.mini .runs{ font-size:31px; }
+  .hero.mini .runs .wk{ font-size:17px; }
+  .hero.mini .runs .ov{ font-size:11.5px; }
+
+  /* =========================================================================
+     RECORD CHIPS — the over strip stays hard. All six slots always rendered.
+     ========================================================================= */
+  .over{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+  .ball{ width:26px; height:26px; border-radius:10px; border:1px solid var(--hair-strong);
+         background:var(--se-color-surface); display:grid; place-items:center;
+         font-family:var(--se-font-mono); font-variant-numeric:tabular-nums;
+         font-size:11px; font-weight:600; color:var(--se-color-ink-strong); flex:none; }
+  .ball.dot{ color:var(--se-color-ink-muted); }
+  .ball.bnd{ background:var(--se-color-action-soft); color:var(--se-color-action-strong);
+             border-color:color-mix(in oklch, var(--se-color-action) 40%, transparent);
+             font-weight:700; }
+  .ball.wkt{ background:var(--se-color-danger); color:var(--se-color-inverse);
+             border-color:var(--se-color-danger); font-weight:700; }
+  .ball.xtra{ width:auto; padding:0 6px; background:var(--se-color-warning-soft);
+              color:var(--se-color-warning);
+              border-color:color-mix(in oklch, var(--se-color-warning) 40%, transparent); }
+  .ball.empty{ border-style:dashed; border-color:var(--hair-strong); background:transparent;
+               color:var(--se-color-ink-muted); }
+
+  /* hard status stamps — read-only labels, squarer than pills */
+  .stamp{ border-radius:var(--se-radius-button); padding:3px 7px; font-size:10px; font-weight:800;
+          letter-spacing:.05em; text-transform:uppercase; color:var(--se-color-inverse);
+          background:var(--se-color-ink); display:inline-block; flex:none;
+          font-family:var(--se-font-sans); }
+  .stamp.danger{ background:var(--se-color-danger); }
+  .stamp.action{ background:var(--se-color-action); }
+  .stamp.line{ background:transparent; color:var(--se-color-ink-muted);
+               border:1px solid var(--hair-strong); font-weight:700; }
+
+  /* =========================================================================
+     TABLES — brutalist grid, soft container.
+     ========================================================================= */
+  .tbl{ background:var(--se-color-surface); border-radius:var(--se-blend-radius-soft-lg);
+        box-shadow:var(--se-blend-shadow-soft); overflow:hidden; }
+  .thead,.trow{ display:grid; grid-template-columns:1fr 62px 70px; gap:6px; align-items:center; }
+  .thead{ padding:7px 12px; border-bottom:1px solid var(--hair);
+          font-family:var(--se-font-mono); font-size:9px; font-weight:600; letter-spacing:.1em;
+          text-transform:uppercase; color:var(--se-color-ink-faint); }
+  .thead span:not(:first-child),.trow .f{ text-align:right; }
+  .trow{ padding:8px 12px; }
+  .trow + .trow{ border-top:1px solid var(--hair); }
+  .trow .nm{ font-size:12.5px; font-weight:600; color:var(--se-color-ink-strong);
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .trow .f{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-size:12.5px;
+            font-weight:700; color:var(--se-color-ink-strong); }
+  .trow .f2{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-size:10.5px;
+             font-weight:500; color:var(--se-color-ink-muted); text-align:right; }
+  .trow .f span{ font-weight:500; color:var(--se-color-ink-muted); font-size:11px; }
+  .trow.striker{ border-left:3px solid var(--se-color-action); padding-left:9px; }
+  .trow.nonstriker .nm{ font-weight:500; color:var(--se-color-ink-soft); }
+  .trow.nonstriker .f{ font-weight:500; color:var(--se-color-ink-soft); }
+  .bowlrow{ display:flex; align-items:center; gap:8px; padding:8px 12px;
+            background:var(--se-color-surface-warm); border-top:1px solid var(--hair); }
+  .bowlrow .nm{ font-size:12.5px; font-weight:600; flex:1; }
+  .tfoot{ padding:7px 12px; border-top:1px solid var(--hair); display:flex;
+          justify-content:space-between; gap:8px; }
+
+  /* =========================================================================
+     SOFT SKIN — guidance, decisions, touch surfaces
+     ========================================================================= */
+  /* help / teaching / narration — always soft, always sentence case */
+  .help{ background:var(--se-color-surface-warm); border:1px dashed var(--hair-strong);
+         border-radius:var(--se-blend-radius-soft); padding:9px 11px;
+         font-size:11.5px; line-height:1.4; color:var(--se-color-ink-soft); }
+  .help b{ font-weight:700; color:var(--se-color-ink-strong); }
+  .help .num{ font-weight:600; }
+
+  /* inline context banner — replaces every dialog */
+  .banner{ border-radius:var(--se-blend-radius-soft); padding:9px 11px; display:flex; gap:9px;
+           align-items:flex-start; font-size:12px; line-height:1.4; }
+  .banner b{ font-weight:700; }
+  .banner.neutral{ background:var(--se-color-surface); color:var(--se-color-ink-soft);
+                   border:1px solid var(--hair); }
+  .banner.danger{ background:var(--se-color-danger-soft);
+                  color:color-mix(in oklch, var(--se-color-danger) 78%, var(--se-color-ink)); }
+  .banner.success{ background:var(--se-color-action-soft); color:var(--se-color-action-strong); }
+  .banner.warm{ background:var(--se-color-warning-soft);
+                color:color-mix(in oklch, var(--se-color-warning) 78%, var(--se-color-ink)); }
+
+  /* keypad — hard grid, soft borderless keys separated by hairlines only */
+  .keys{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+         background:var(--hair-strong); border-radius:var(--se-blend-radius-soft-lg);
+         overflow:hidden; box-shadow:var(--se-blend-shadow-soft); }
+  .key{ border:0; background:var(--se-color-surface); cursor:pointer; padding:8px 4px;
+        min-height:clamp(58px,11vh,74px); display:flex; flex-direction:column;
+        align-items:center; justify-content:center; gap:3px;
+        transition:background var(--se-motion-standard) ease, transform 90ms ease; }
+  .key .n{ font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-size:24px;
+           font-weight:500; line-height:1; color:var(--se-color-ink-strong); }
+  .key .c{ font-size:9px; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
+           color:var(--se-color-ink-muted); }
+  .key.bnd{ background:var(--se-color-action-soft); }
+  .key.bnd .n{ color:var(--se-color-action-strong); }
+  .key.bnd .c{ color:color-mix(in oklch, var(--se-color-action-strong) 78%, transparent); }
+  .key:active{ transform:translateY(1px); background:var(--se-color-surface-warm); }
+  .key.bnd:active{ background:color-mix(in oklch, var(--se-color-action) 26%, var(--se-color-surface)); }
+
+  /* branch controls — extras ghost, wicket outline-danger at rest */
+  .branch{ display:flex; align-items:center; gap:9px; width:100%; min-height:48px;
+           padding:9px 12px; border-radius:var(--se-blend-radius-soft); cursor:pointer;
+           background:transparent; border:1px solid var(--hair-strong); text-align:left;
+           font-family:var(--se-font-sans); color:var(--se-color-ink-muted);
+           transition:background var(--se-motion-standard) ease; }
+  .branch .g{ font-size:15px; line-height:1; flex:none; }
+  .branch b{ display:block; font-size:13.5px; font-weight:700; color:var(--se-color-ink-strong); }
+  .branch em{ font-style:normal; font-size:11px; font-weight:500; color:var(--se-color-ink-muted); }
+  .branch:active{ background:var(--se-color-surface-warm); }
+  .branch.danger{ border-color:color-mix(in oklch, var(--se-color-danger) 45%, transparent); }
+  .branch.danger .g, .branch.danger b{ color:var(--se-color-danger); }
+
+  /* footer: undo square (always visible) + CTA */
+  .foot{ display:flex; gap:9px; align-items:stretch; }
+  .sq{ width:52px; flex:none; border:1px solid var(--hair-strong);
+       background:var(--se-color-surface-warm); border-radius:var(--se-blend-radius-soft);
+       display:grid; place-items:center; font-size:16px; color:var(--se-color-ink);
+       cursor:pointer; }
+  .ghostbtn{ flex:1; min-height:48px; border:1px solid var(--hair-strong);
+             background:var(--se-color-surface-warm); border-radius:var(--se-blend-radius-soft);
+             font-family:var(--se-font-sans); font-size:12.5px; font-weight:600;
+             color:var(--se-color-ink-soft); cursor:pointer; display:flex; align-items:center;
+             justify-content:center; gap:6px; padding:0 12px; text-align:center; }
+  .ghostbtn em{ font-style:normal; font-weight:500; color:var(--se-color-ink-muted);
+                font-size:11.5px; }
+  .cancel{ width:94px; flex:none; min-height:48px; border:1px solid var(--hair-strong);
+           background:transparent; border-radius:var(--se-blend-radius-soft);
+           font-family:var(--se-font-sans); font-size:12.5px; font-weight:600;
+           color:var(--se-color-ink-muted); cursor:pointer; }
+  /* the one glow per screen */
+  .cta{ flex:1; min-height:48px; border:0; border-radius:var(--se-blend-radius-soft);
+        background:var(--se-color-action); color:var(--se-color-inverse);
+        font-family:var(--se-font-sans); font-size:13.5px; font-weight:700; cursor:pointer;
+        box-shadow:var(--se-blend-shadow-cta); display:flex; align-items:center;
+        justify-content:center; gap:7px; padding:0 12px;
+        transition:transform 90ms ease; }
+  .cta .num{ font-weight:600; }
+  .cta:active{ transform:translateY(1px); }
+  .cta.outline{ background:transparent; color:var(--se-color-action-strong);
+                border:1.5px solid color-mix(in oklch, var(--se-color-action) 55%, transparent);
+                box-shadow:none; }
+
+  /* option rows — soft, teaching, ≥44px */
+  .opts{ display:flex; flex-direction:column; gap:7px; }
+  .opt{ display:flex; align-items:center; gap:10px; min-height:48px; width:100%;
+        padding:8px 12px; border-radius:var(--se-blend-radius-soft);
+        background:var(--se-color-surface); border:1px solid var(--hair);
+        cursor:pointer; text-align:left;
+        font-family:var(--se-font-sans);
+        transition:background var(--se-motion-standard) ease; }
+  .opt .txt{ flex:1; min-width:0; }
+  .opt b{ display:block; font-size:13px; font-weight:700; color:var(--se-color-ink-strong); }
+  .opt em{ font-style:normal; display:block; font-size:11.5px; line-height:1.35; font-weight:500;
+           color:var(--se-color-ink-muted); margin-top:1px; }
+  .opt .tick{ font-size:13px; color:var(--se-color-ink-faint); font-weight:700; flex:none; }
+  .opt:active{ background:var(--se-color-surface-warm); }
+  .opt.sel{ background:var(--se-color-action-soft); border-color:transparent;
+            border-left:3px solid var(--se-color-action); padding-left:9px; }
+  .opt.sel b{ color:var(--se-color-action-strong); }
+  .opt.sel em{ color:color-mix(in oklch, var(--se-color-action-strong) 80%, transparent); }
+  .opt.sel .tick{ color:var(--se-color-action); }
+  .opt.more{ background:var(--se-color-surface-warm); border-style:dashed;
+             border-color:var(--hair-strong); box-shadow:none; min-height:44px; }
+  .opt.more b{ font-size:12.5px; color:var(--se-color-ink-soft); }
+
+  /* selection pills — capsule, interactive only */
+  .pills{ display:flex; flex-wrap:wrap; gap:7px; }
+  .pill{ min-height:44px; padding:0 15px; border-radius:var(--se-blend-radius-capsule);
+         background:var(--se-color-surface); border:1px solid var(--hair-strong);
+         font-family:var(--se-font-mono); font-variant-numeric:tabular-nums; font-size:13px;
+         font-weight:600; color:var(--se-color-ink-soft); cursor:pointer;
+         display:inline-flex; align-items:center; gap:6px;
+         transition:transform 90ms ease; }
+  .pill.sel{ background:var(--se-color-action); color:var(--se-color-inverse); border-color:transparent;
+             font-weight:700; }
+  .pill:active{ transform:translateY(1px); }
+  .pill.sm{ min-height:44px; font-family:var(--se-font-sans); font-size:12px; }
+
+  /* inline refinement row */
+  .refine{ display:flex; align-items:center; gap:8px; min-height:44px; padding:8px 12px;
+           background:var(--se-color-surface); border:1px solid var(--hair);
+           border-radius:var(--se-blend-radius-soft); font-size:12px;
+           color:var(--se-color-ink-muted); }
+  .refine b{ font-weight:600; color:var(--se-color-ink-strong); }
+
+  /* confirmation echo — read your own decision back before committing */
+  .echo{ background:var(--se-color-action-soft); border-radius:var(--se-blend-radius-soft);
+         padding:10px 12px; font-size:12.5px; line-height:1.45;
+         color:var(--se-color-action-strong); }
+  .echo b{ font-weight:700; }
+  .echo .num{ font-weight:600; }
+
+  /* =========================================================================
+     CELEBRATION — soft interior, ONE brutalist anchor (the gold card frame)
+     ========================================================================= */
+  .gold{ position:relative; overflow:hidden; text-align:center; padding:19px 16px 17px;
+         background:var(--se-color-surface);
+         border:2px solid var(--se-blend-gold);
+         box-shadow:var(--se-shadow-hard);
+         border-radius:var(--se-blend-radius-soft-lg); }
+  .gold::before{ content:""; position:absolute; inset:0; pointer-events:none;
+                 background:radial-gradient(120% 90% at 50% -10%,
+                   color-mix(in oklch, var(--se-blend-gold-bright) 26%, transparent), transparent 62%); }
+  .gold > *{ position:relative; }
+
+  /* =========================================================================
+     SPECTATOR
+     ========================================================================= */
+  .seg{ display:flex; gap:2px; padding:2px; background:var(--se-color-surface-warm);
+        border-radius:var(--se-blend-radius-soft); }
+  .seg button{ flex:1; min-height:36px; border:0; background:transparent; cursor:pointer;
+               border-radius:var(--se-blend-radius-soft-sm); font-family:var(--se-font-sans);
+               font-size:11.5px; font-weight:600; color:var(--se-color-ink-muted); }
+  .seg button.on{ background:var(--se-color-surface); color:var(--se-color-ink-strong);
+                  font-weight:700; box-shadow:var(--se-blend-shadow-tier1); }
+  .wp{ height:8px; border-radius:var(--se-blend-radius-capsule); overflow:hidden;
+       background:var(--se-color-surface-warm); display:flex; }
+  .soft{ background:var(--se-color-surface-warm); border-radius:var(--se-blend-radius-soft-lg);
+         padding:10px 11px 8px; box-shadow:var(--se-blend-shadow-soft); }
+  .react{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .rpill{ min-height:36px; padding:0 12px; border-radius:var(--se-blend-radius-capsule);
+          background:var(--se-color-surface); border:1px solid var(--hair);
+          box-shadow:var(--se-blend-shadow-tier1); display:inline-flex; align-items:center; gap:6px;
+          font-size:13px; cursor:pointer; }
+  .rpill .num{ font-size:11px; font-weight:600; color:var(--se-color-ink-muted); }
+  .rpill.follow{ font-family:var(--se-font-sans); font-size:11.5px; font-weight:600;
+                 color:var(--se-color-action-strong); background:var(--se-color-action-soft);
+                 border-color:transparent; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ OPTION HEADER ============ -->
+  <div>
+    <p class="cap" style="font-size:11.5px;"><b>ScoreEasy Cricket</b> · <span>Guided tap-flow v2 — default surface (casual / gully scorer)</span></p>
+    <p class="lede">
+      One question per ball. The board never shows a dense keypad — it asks <b>Runs?</b> → <b>Extra?</b> → <b>Wicket?</b>,
+      one plain-language screen at a time. Impossible to fumble a wide into a wicket. The record stays hard
+      (mono figures, over strip, stamps, one ink frame); everything a thumb touches or a person reads got soft.
+    </p>
+  </div>
+
+  <!-- ============ PANEL 1 — SCORER LIVE BOARD ============ -->
+  <div>
+    <p class="cap"><b>1 · Scorer</b> — <span>live board, mid-over (default question)</span></p>
+    <div class="device">
+
+      <!-- header triptych: back / two-line title with persistent context / more -->
+      <div class="chrome">
+        <button class="iconbtn" aria-label="Back">‹</button>
+        <div class="titlestack">
+          <div class="t"><span class="live-dot pulse" aria-hidden="true"></span>Mumbai XI vs Chennai · Match 42</div>
+          <div class="s">T20 · over 17.2 · chasing 170</div>
+        </div>
+        <button class="iconbtn" aria-label="More">⋯</button>
+      </div>
+
+      <!-- chase equation gets its own band (second innings only) -->
+      <div class="chase">
+        <span class="eq">Need 23 off 16</span>
+        <span class="rrr">RRR 8.60 · CRR 8.48</span>
+      </div>
+
+      <!-- hero: brutalist number, soft stage -->
+      <div class="band">
+        <div class="hero">
+          <div class="hero-id">
+            <span class="crest">M</span>
+            <span class="hero-team">Mumbai XI · chasing</span>
+            <span class="hero-target num">Target 170</span>
+          </div>
+          <div class="hero-score">
+            <div class="runs">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+            <div class="crr"><span class="l">CRR</span><span class="v num">8.48</span></div>
+          </div>
+          <div class="chasebar" aria-label="147 of 170 runs"><i style="width:86%"></i></div>
+          <div class="microstrip">
+            <div><span class="l">P'ship</span><span class="v num">41 (27)</span></div>
+            <div><span class="l">Last 5 ov</span><span class="v num">47/2</span></div>
+            <div><span class="l">Wkts left</span><span class="v num">6</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- this over: all six slots always rendered -->
+      <div class="band">
+        <div class="over">
+          <span class="eyebrow" style="margin-right:3px;">This over</span>
+          <span class="ball">1</span>
+          <span class="ball bnd">4</span>
+          <span class="ball xtra">3wd</span>
+          <span class="ball empty">·</span>
+          <span class="ball empty">·</span>
+          <span class="ball empty">·</span>
+          <span class="ball empty">·</span>
+        </div>
+      </div>
+
+      <!-- batters + bowler: brutalist grid, soft container -->
+      <div class="band">
+        <div class="tbl">
+          <div class="thead"><span>Batter</span><span>R (B)</span><span>SR</span></div>
+          <div class="trow striker">
+            <span class="nm">R. Sharma <span class="stamp line" style="margin-left:4px;">On strike</span></span>
+            <span class="f num">68 <span>(44)</span></span>
+            <span class="f2 num">155 · 7×4</span>
+          </div>
+          <div class="trow nonstriker">
+            <span class="nm">S. Yadav</span>
+            <span class="f num">19 <span>(14)</span></span>
+            <span class="f2 num">136 · 1×4</span>
+          </div>
+          <div class="bowlrow">
+            <span class="eyebrow" style="flex:none;">Bowler</span>
+            <span class="nm">Bumrah</span>
+            <span class="num" style="font-size:12px;font-weight:700;">3.2 – 0 – 24 – 2</span>
+            <span class="num" style="font-size:10.5px;color:var(--se-color-ink-muted);">econ 7.2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- narration: teaching copy, soft, sentence case -->
+      <div class="band">
+        <div class="help rise">
+          <b>Ball recorded:</b> 3 wide — that's <span class="num">+3</span> to Mumbai. A wide doesn't count as a
+          legal ball, so this one gets <b>re-bowled</b> and Sharma keeps strike.
+        </div>
+      </div>
+
+      <!-- the guided question -->
+      <div class="band">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+          <span style="font-size:16.5px;font-weight:700;letter-spacing:-.01em;">Runs off the bat?</span>
+          <span class="eyebrow">Ball 17.3 · step 1</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="keys">
+          <button class="key"><span class="n">0</span><span class="c">Dot</span></button>
+          <button class="key"><span class="n">1</span><span class="c">Single</span></button>
+          <button class="key"><span class="n">2</span><span class="c">Two</span></button>
+          <button class="key"><span class="n">3</span><span class="c">Three</span></button>
+          <button class="key bnd"><span class="n">4</span><span class="c">Four</span></button>
+          <button class="key bnd"><span class="n">6</span><span class="c">Six</span></button>
+        </div>
+      </div>
+
+      <div class="band">
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <button class="branch">
+            <span class="g">⊕</span>
+            <span><b>Extra</b><em>Wide, no-ball, bye or leg-bye</em></span>
+          </button>
+          <button class="branch danger">
+            <span class="g">✕</span>
+            <span><b>Wicket</b><em>Someone got out</em></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="band last" style="padding-top:11px;">
+        <div class="foot">
+          <button class="ghostbtn" aria-label="Undo last ball, removes the 3 wide"><span aria-hidden="true" style="font-size:16px;">↶</span> Undo last ball <em>— removes the 3 wide</em></button>
+        </div>
+      </div>
+    </div>
+    <p class="note">A normal ball is one tap. Four and six are one tap. Only genuinely complex events cost extra taps.</p>
+  </div>
+
+  <!-- ============ PANEL 2 — GUIDED SUB-FLOWS ============ -->
+  <div>
+    <p class="cap"><b>2 · The guided flow</b> — <span>full screens, hero pinned, nothing saves until you confirm</span></p>
+
+    <!-- EXTRA sub-flow -->
+    <div class="device deciding" style="margin-bottom:14px;">
+      <div class="chrome">
+        <button class="iconbtn" aria-label="Back">‹</button>
+        <div class="titlestack">
+          <div class="t">Extra · ball 17.3</div>
+          <div class="s">T20 · over 17.2 · chasing 170</div>
+        </div>
+        <button class="iconbtn" aria-label="Cancel">✕</button>
+      </div>
+
+      <!-- hero stays pinned so the match never leaves the screen -->
+      <div class="band">
+        <div class="hero mini">
+          <div class="hero-score">
+            <div class="runs">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+            <div class="crr"><span class="l">Need</span><span class="v num">23 off 16</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="over">
+          <span class="ball">1</span><span class="ball bnd">4</span><span class="ball xtra">3wd</span>
+          <span class="ball empty">·</span><span class="ball empty">·</span>
+          <span class="ball empty">·</span><span class="ball empty">·</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="banner success">
+          <span class="stamp action">Wd</span>
+          <span><b>Wide selected</b> — the ball was too far for the batter to reach.
+                It isn't a legal ball, so it gets re-bowled.</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <span class="eyebrow">What kind of extra?</span>
+        <div class="opts" style="margin-top:8px;">
+          <button class="opt sel">
+            <span class="txt"><b>Wide</b><em>Too far for the batter to reach — doesn't count, re-bowl</em></span>
+            <span class="tick">✓</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>No-ball</b><em>Bowler overstepped — next ball is a free hit</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>Bye</b><em>Missed the bat and the keeper, they ran — this ball counts</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>Leg-bye</b><em>Hit the pads, they ran — this ball counts</em></span>
+            <span class="tick">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="band">
+        <span class="eyebrow">How many did they run?</span>
+        <div class="pills" style="margin-top:8px;">
+          <button class="pill sel">0 ✓</button>
+          <button class="pill">1</button>
+          <button class="pill">2</button>
+          <button class="pill">3</button>
+          <button class="pill sm">Overthrow ›</button>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="echo">
+          Adds <b>1 run</b> to Mumbai (<span class="num">147</span> → <span class="num">148</span>),
+          re-bowls ball <span class="num">17.3</span>, and leaves <b>Sharma</b> on strike. You never do the math.
+        </div>
+      </div>
+
+      <div class="band last" style="padding-top:11px;">
+        <div class="foot">
+          <button class="cancel">✕ Cancel</button>
+          <button class="cta">Add · wide <span class="num">+ 0 = 1</span></button>
+        </div>
+      </div>
+    </div>
+    <p class="note" style="margin:-6px 4px 14px;">A plain wide is two taps. A wide with an overthrow is three.</p>
+
+    <!-- WICKET sub-flow -->
+    <div class="device deciding">
+      <div class="chrome">
+        <button class="iconbtn" aria-label="Back">‹</button>
+        <div class="titlestack">
+          <div class="t">Wicket · ball 17.3</div>
+          <div class="s">T20 · over 17.2 · chasing 170</div>
+        </div>
+        <button class="iconbtn" aria-label="Cancel">✕</button>
+      </div>
+
+      <div class="band">
+        <div class="hero mini">
+          <div class="hero-score">
+            <div class="runs">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+            <div class="crr"><span class="l">Need</span><span class="v num">23 off 16</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="over">
+          <span class="ball">1</span><span class="ball bnd">4</span><span class="ball xtra">3wd</span>
+          <span class="ball wkt">W</span>
+          <span class="ball empty">·</span><span class="ball empty">·</span><span class="ball empty">·</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="banner danger">
+          <span class="stamp danger">Out</span>
+          <span><b>R. Sharma is out</b> — how was the batter dismissed?</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <span class="eyebrow">How out?</span>
+        <div class="opts" style="margin-top:8px;">
+          <button class="opt sel">
+            <span class="txt"><b>Bowled</b><em>The ball hit the stumps</em></span>
+            <span class="tick">✓</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>Caught</b><em>Caught in the air — we'll ask who took it, and whether they crossed</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>LBW</b><em>Hit the pads in line with the stumps, and would have gone on to hit them</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>Run out</b><em>Didn't make the crease — we'll ask which batter, and how many they'd run</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt">
+            <span class="txt"><b>Stumped</b><em>Keeper broke the stumps while the batter was out of the crease</em></span>
+            <span class="tick">›</span>
+          </button>
+          <button class="opt more">
+            <span class="txt"><b>More ways out…</b><em>Hit wicket, retired, obstructing the field</em></span>
+            <span class="tick">›</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="refine">
+          <span>Bowler <b>Bumrah</b></span>
+          <span style="color:var(--se-color-ink-faint);">·</span>
+          <span style="flex:1;">Fielder <em style="font-style:normal;">(if caught)</em></span>
+          <span style="color:var(--se-color-ink-faint);">›</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="echo">
+          <b>Bowled by Bumrah</b> — Sharma out for <span class="num">68 (44)</span>.
+          Mumbai go to <span class="num">147/5</span>, still needing <span class="num">23 off 16</span>.
+          Next we'll ask who comes in at <span class="num">#6</span>.
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="help">
+          Tapped Wicket by mistake? Nothing has been saved yet — hit <b>Cancel</b> and the ball goes back
+          to where it was.
+        </div>
+      </div>
+
+      <div class="band last" style="padding-top:11px;">
+        <div class="foot">
+          <button class="cancel">✕ Cancel</button>
+          <button class="cta">Confirm → new batter</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">Bowled or caught is two to three taps. A run out is four, because the engine needs the completed runs to work out who's on strike.</p>
+  </div>
+
+  <!-- ============ PANEL 3 — SIGNATURE MOMENT ============ -->
+  <div>
+    <p class="cap"><b>3 · Signature moment</b> — <span>fifty (the one gold on the surface)</span></p>
+    <div class="gold rise">
+      <div class="eyebrow" style="color:var(--se-blend-gold-ink);">Milestone · 15.4 ov</div>
+      <div style="font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:9px 0 2px;">
+        Fifty for Sharma
+      </div>
+      <div style="font-size:13px;color:var(--se-color-ink-soft);line-height:1.4;">
+        Great knock — off just 32 balls. <span aria-hidden="true">🏏</span>
+      </div>
+      <div class="num" style="font-size:14px;font-weight:600;margin-top:9px;color:var(--se-color-ink-strong);">
+        50 <span style="color:var(--se-color-ink-muted);font-weight:500;">(32)</span> · SR 156 · 6×4 1×6
+      </div>
+      <div style="display:flex;gap:9px;justify-content:center;margin-top:15px;">
+        <button class="cta outline" style="flex:none;padding:0 16px;min-height:44px;">Share to WhatsApp ↗</button>
+        <button class="cta" style="flex:none;padding:0 18px;min-height:44px;">Keep scoring →</button>
+      </div>
+    </div>
+    <p class="note">Non-blocking — the scorer can tap the next ball while this is still on screen.</p>
+  </div>
+
+  <!-- ============ PANEL 4 — SPECTATOR LIVE ============ -->
+  <div>
+    <p class="cap"><b>4 · Spectator</b> — <span>live view, read-only, sparse &amp; emotional</span></p>
+    <div class="device">
+
+      <div class="chrome">
+        <button class="iconbtn" aria-label="Back">‹</button>
+        <div class="titlestack">
+          <div class="t"><span class="live-dot pulse" aria-hidden="true"></span>Mumbai XI vs Chennai</div>
+          <div class="s">Chepauk · match 42 · updated 3s ago</div>
+        </div>
+        <button class="iconbtn" aria-label="Share">↗</button>
+      </div>
+
+      <div class="band">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="stamp line">T20 · 6-ball overs · LBW enabled</span>
+          <span style="margin-left:auto;font-size:11.5px;color:var(--se-color-ink-muted);">
+            <span aria-hidden="true">👁</span> <span class="num" style="font-weight:600;">312</span> watching
+          </span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="seg">
+          <button class="on">Live</button>
+          <button>Scorecard</button>
+          <button>Commentary</button>
+        </div>
+      </div>
+
+      <!-- soft surface 1: hero -->
+      <div class="band">
+        <div class="hero">
+          <div class="hero-id">
+            <span class="crest">M</span>
+            <span class="hero-team">Mumbai XI · batting</span>
+            <span class="stamp">Chasing 170</span>
+          </div>
+          <div class="hero-score">
+            <div class="runs">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+            <div class="crr"><span class="l">Need</span><span class="v num">23 off 16</span></div>
+          </div>
+          <div class="chasebar" aria-label="147 of 170 runs"><i style="width:86%"></i></div>
+          <div class="microstrip">
+            <div><span class="l">CRR</span><span class="v num">8.48</span></div>
+            <div><span class="l">RRR</span><span class="v num">8.60</span></div>
+            <div><span class="l">P'ship</span><span class="v num">41 (27)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="over">
+          <span class="eyebrow" style="margin-right:3px;">This over</span>
+          <span class="ball">1</span><span class="ball bnd">4</span><span class="ball xtra">3wd</span>
+          <span class="ball empty">·</span><span class="ball empty">·</span>
+          <span class="ball empty">·</span><span class="ball empty">·</span>
+        </div>
+      </div>
+
+      <div class="band">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;margin-bottom:5px;">
+          <span>Mumbai <span class="num" style="font-weight:700;">52%</span></span>
+          <span style="color:var(--se-color-ink-muted);">Chennai <span class="num">48%</span></span>
+        </div>
+        <div class="wp">
+          <i style="width:52%;background:var(--se-color-action);"></i>
+          <i style="width:48%;background:color-mix(in oklch, var(--se-color-ink) 18%, transparent);"></i>
+        </div>
+        <div style="font-size:11.5px;line-height:1.35;color:var(--se-color-ink-muted);margin-top:6px;">
+          Required rate is just above the current rate, with six wickets in hand — it's still Mumbai's to lose.
+        </div>
+      </div>
+
+      <!-- soft surface 2: momentum -->
+      <div class="band">
+        <div class="soft">
+          <div class="eyebrow" style="margin:0 0 5px 2px;">Momentum · runs per over</div>
+          <svg viewBox="0 0 300 60" width="100%" height="52" preserveAspectRatio="none" aria-label="Momentum trending toward Mumbai">
+            <line x1="0" y1="30" x2="300" y2="30" stroke="currentColor" stroke-opacity="0.14" stroke-width="1"/>
+            <polyline points="0,38 40,34 80,40 120,26 160,30 200,20 240,24 300,16"
+              fill="none" stroke="var(--se-color-action)" stroke-width="2.5"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="80" cy="40" r="4" fill="var(--se-color-danger)"/>
+            <circle cx="200" cy="20" r="4" fill="var(--se-color-ink)"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:10.5px;
+                      color:var(--se-color-ink-muted);padding:0 2px;">
+            <span><span style="color:var(--se-color-danger);">●</span> wicket</span>
+            <span><span style="color:var(--se-color-ink);">●</span> fifty</span>
+            <span>Trending Mumbai ▲</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- soft surface 3: players -->
+      <div class="band">
+        <div class="tbl">
+          <div class="thead"><span>Batter</span><span>R (B)</span><span>SR</span></div>
+          <div class="trow striker">
+            <span class="nm">R. Sharma</span>
+            <span class="f num">68 <span>(44)</span></span>
+            <span class="f2 num">155</span>
+          </div>
+          <div class="trow nonstriker">
+            <span class="nm">S. Yadav</span>
+            <span class="f num">19 <span>(14)</span></span>
+            <span class="f2 num">136</span>
+          </div>
+          <div class="bowlrow">
+            <span class="eyebrow" style="flex:none;">Bowler</span>
+            <span class="nm">Bumrah</span>
+            <span class="num" style="font-size:12px;font-weight:700;">3.2 – 0 – 24 – 2</span>
+          </div>
+          <div class="tfoot">
+            <span style="font-size:11.5px;color:var(--se-color-ink-muted);">Partnership</span>
+            <span class="num" style="font-size:11.5px;font-weight:600;">41 (27)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="band last" style="padding-top:12px;">
+        <div class="react">
+          <button class="rpill"><span aria-hidden="true">🔥</span> <span class="num">124</span></button>
+          <button class="rpill"><span aria-hidden="true">👏</span> <span class="num">38</span></button>
+          <button class="rpill follow" style="margin-left:auto;">Following ✓</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">The viewer operates nothing, so nothing here is hard except the shell, the figures, the over strip and the chasing stamp.</p>
+  </div>
+
+</div>
+</body>
+</html>

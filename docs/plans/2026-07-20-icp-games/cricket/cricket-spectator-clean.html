@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket Spectator — clean</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+:root{
+  --background:oklch(0.9782 0.0039 145.5458);--foreground:oklch(0 0 0);--card:oklch(0.9855 0.0026 145.5558);
+  --primary:oklch(0.6230 0.1688 149.1777);--primary-foreground:oklch(1 0 0);--muted:oklch(0.9398 0.0035 145.5478);
+  --muted-foreground:oklch(0.5103 0 0);--accent:oklch(0.9231 0.0773 156.7494);--destructive:oklch(0.5308 0.2178 29.2339);
+  --border:oklch(0 0 0);--chart-5:oklch(0.3211 0 0);--font-sans:Inter,ui-sans-serif,sans-serif,system-ui;
+  --font-mono:JetBrains Mono,ui-monospace,monospace;--radius:0.25rem;
+  --shadow-2xs:3px 3px 0px 0.5px hsl(0 0% 0% / .35);--shadow:3px 3px 0px 0.5px hsl(0 0% 0% / .70), 3px 1px 2px -0.5px hsl(0 0% 0% / .70);
+  --se-font-mono:var(--font-mono);--se-font-sans:var(--font-sans);--se-color-action:var(--primary);
+  --se-color-canvas:var(--background);--se-color-surface:var(--card);--se-color-ink:var(--foreground);
+  --se-color-ink-muted:var(--muted-foreground);--se-color-ink-faint:color-mix(in oklch,var(--muted-foreground) 62%,var(--background));
+  --se-color-line:var(--border);--se-color-inverse:var(--primary-foreground);--se-color-danger:oklch(0.49 0.17 29);
+  --se-border-standard:1.5px;--se-radius-card:calc(var(--radius) + 4px);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--se-color-canvas);color:var(--se-color-ink);font-family:var(--se-font-sans);-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.screen{max-width:390px;margin:0 auto;padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px))}
+.eyebrow{font-family:var(--se-font-mono);font-size:.625rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--se-color-ink-faint)}
+
+/* header */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.hdr .ttl{font-size:.9375rem;font-weight:700}
+.hdr .live{font-family:var(--se-font-mono);font-size:.625rem;font-weight:800;letter-spacing:.08em;color:var(--se-color-danger);display:inline-flex;align-items:center;gap:4px}
+.hdr .live .d{width:6px;height:6px;border-radius:50%;background:var(--se-color-danger)}
+.ico{width:34px;height:34px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--se-color-line);border-radius:var(--radius);background:var(--se-color-surface);box-shadow:var(--shadow-2xs);font-size:1rem}
+
+/* tabs — capsule segmented */
+.tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--se-color-line);border-radius:999px;background:var(--se-color-surface);margin-bottom:14px}
+.tab{flex:1;text-align:center;padding:7px 0;border-radius:999px;font-size:.75rem;font-weight:700;color:var(--se-color-ink-muted);cursor:pointer}
+.tab.on{background:var(--se-color-ink);color:var(--se-color-inverse)}
+
+/* dual-team hero (black) */
+.hero{background:var(--se-color-ink);color:var(--se-color-inverse);border:1px solid var(--se-color-line);border-radius:var(--se-radius-card);box-shadow:var(--shadow);padding:13px 15px;margin-bottom:12px}
+.hero-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.team{min-width:0}
+.team .nm{font-family:var(--se-font-mono);font-size:.625rem;font-weight:800;letter-spacing:.1em;color:color-mix(in oklch,var(--se-color-inverse) 60%,transparent)}
+.team .sc{font-family:var(--se-font-mono);font-size:1.9rem;font-weight:800;line-height:1;margin-top:3px}
+.team .sc .wk{font-size:.55em;font-weight:500;color:color-mix(in oklch,var(--se-color-inverse) 55%,transparent)}
+.team.r{text-align:right}
+.team.r .sc{color:var(--primary)}
+.hero-mid{text-align:center;padding:0 6px}
+.hero-mid .k{font-family:var(--se-font-mono);font-size:.5625rem;letter-spacing:.1em;color:color-mix(in oklch,var(--se-color-inverse) 55%,transparent)}
+.hero-mid .v{font-family:var(--se-font-mono);font-size:.8125rem;font-weight:700;margin-top:2px}
+.hero-note{margin-top:11px;padding-top:9px;border-top:1px solid color-mix(in oklch,var(--se-color-inverse) 18%,transparent);text-align:center;font-family:var(--se-font-mono);font-size:.75rem}
+.hero-note b{color:var(--primary);font-weight:800}
+
+/* momentum — runs per over bars */
+.blk{margin-bottom:14px}
+.blk-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.blk-hd .r{font-family:var(--se-font-mono);font-size:.6875rem;color:var(--se-color-ink-muted)}
+.blk-hd .r b{color:var(--se-color-ink)}
+.mom{display:flex;align-items:flex-end;gap:4px;height:56px;padding:0 1px}
+.bar{flex:1;background:color-mix(in oklch,var(--se-color-line) 16%,transparent);border-radius:2px 2px 0 0}
+.bar.hi{background:var(--primary)}
+.bar.wk{background:color-mix(in oklch,var(--se-color-danger) 80%,transparent)}
+.bar.now{background:transparent;border:1px dashed color-mix(in oklch,var(--se-color-line) 40%,transparent)}
+.mom-d{margin-bottom:14px;border:1px solid color-mix(in oklch,var(--se-color-line) 22%,transparent);border-radius:var(--se-radius-card);background:var(--se-color-surface);box-shadow:var(--shadow-2xs)}
+.mom-d>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 12px}
+.mom-d>summary::-webkit-details-marker{display:none}
+.mom-d>summary .mi{font-size:.9rem}
+.mom-d>summary .r{margin-left:auto;font-family:var(--se-font-mono);font-size:.6875rem;color:var(--se-color-ink-muted)}
+.mom-d>summary .r b{color:var(--se-color-ink)}
+.mom-d>summary .chev{color:var(--se-color-ink-muted);transition:transform .2s ease}
+.mom-d[open]>summary .chev{transform:rotate(180deg)}
+.mom-d .mom{padding:2px 12px 12px}
+
+/* current: batters + bowler */
+.now-card{border:1px solid var(--se-color-line);border-radius:var(--se-radius-card);background:var(--se-color-surface);box-shadow:var(--shadow-2xs);overflow:hidden;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;padding:7px 12px;font-family:var(--se-font-mono);font-size:.75rem;align-items:center}
+.row+.row{border-top:1px solid color-mix(in oklch,var(--se-color-line) 16%,transparent)}
+.row .who{font-family:var(--se-font-sans);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .who .dot{color:var(--primary);margin-right:4px}
+.row .mut{color:var(--se-color-ink-muted)}
+.row.head{background:color-mix(in oklch,var(--se-color-line) 5%,transparent);font-size:.5625rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--se-color-ink-faint)}
+.row.head .who{font-family:var(--se-font-mono)}
+.psh{padding:7px 12px;border-top:1px solid color-mix(in oklch,var(--se-color-line) 16%,transparent);font-family:var(--se-font-mono);font-size:.6875rem;color:var(--se-color-ink-muted);display:flex;justify-content:space-between}
+.psh b{color:var(--se-color-ink)}
+
+/* key moments feed */
+.moment{display:flex;gap:10px;padding:9px 0;border-top:1px solid color-mix(in oklch,var(--se-color-line) 16%,transparent)}
+.moment .ov{font-family:var(--se-font-mono);font-size:.6875rem;color:var(--se-color-ink-faint);flex:none;width:34px;padding-top:1px}
+.moment .tx{font-size:.8125rem;line-height:1.35}
+.moment .tx .six{color:var(--primary);font-weight:800}
+.moment .tx .wkt{color:var(--se-color-danger);font-weight:800}
+.moment .tx b{font-weight:700}
+
+/* footer presence */
+.pres{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-family:var(--se-font-mono);font-size:.6875rem;color:var(--se-color-ink-muted)}
+.follow{border:1px solid var(--se-color-action);background:var(--se-color-action);color:var(--se-color-inverse);border-radius:999px;padding:7px 16px;font-family:var(--se-font-sans);font-size:.75rem;font-weight:700;box-shadow:var(--shadow-2xs)}
+</style>
+</head>
+<body>
+<h1 class="sr-only">Cricket spectator — live</h1>
+<div class="screen">
+
+  <div class="hdr">
+    <span class="ico" aria-hidden="true">&#8249;</span>
+    <div style="text-align:center;flex:1;min-width:0">
+      <div class="ttl">Sunday Cup &middot; Final</div>
+      <div class="live"><span class="d"></span>LIVE</div>
+    </div>
+    <span class="ico" aria-hidden="true">&#8599;</span>
+  </div>
+
+  <div class="tabs">
+    <span class="tab on">Live</span>
+    <span class="tab">Scorecard</span>
+    <span class="tab">Stats</span>
+  </div>
+
+  <!-- dual-team hero -->
+  <div class="hero">
+    <div class="hero-row">
+      <div class="team">
+        <div class="nm">STRIKERS</div>
+        <div class="sc mono">170<span class="wk">/8</span></div>
+      </div>
+      <div class="hero-mid">
+        <div class="k">CHASING</div>
+        <div class="v">17.2 ov</div>
+      </div>
+      <div class="team r">
+        <div class="nm">ROYALS</div>
+        <div class="sc mono">147<span class="wk">/4</span></div>
+      </div>
+    </div>
+    <div class="hero-note">Royals need <b>23</b> off <b>16</b> &middot; RRR 8.63 vs CRR 8.48</div>
+  </div>
+
+  <!-- momentum — collapsed behind an icon toggle; tap to open/close -->
+  <details class="mom-d">
+    <summary><span class="mi">&#128202;</span><span class="eyebrow">Momentum &middot; runs / over</span><span class="r">RRR <b>8.6</b> vs CRR <b>7.6</b></span><span class="chev">&#9662;</span></summary>
+    <div class="mom">
+      <div class="bar" style="height:34%"></div><div class="bar" style="height:52%"></div>
+      <div class="bar hi" style="height:80%"></div><div class="bar" style="height:44%"></div>
+      <div class="bar wk" style="height:24%"></div><div class="bar" style="height:60%"></div>
+      <div class="bar hi" style="height:92%"></div><div class="bar" style="height:48%"></div>
+      <div class="bar" style="height:56%"></div><div class="bar wk" style="height:30%"></div>
+      <div class="bar hi" style="height:100%"></div><div class="bar" style="height:64%"></div>
+      <div class="bar" style="height:70%"></div><div class="bar hi" style="height:86%"></div>
+      <div class="bar" style="height:50%"></div><div class="bar" style="height:58%"></div>
+      <div class="bar hi" style="height:96%"></div><div class="bar now" style="height:40%"></div>
+    </div>
+  </details>
+
+  <!-- current batters + bowler -->
+  <div class="now-card">
+    <div class="row head"><span class="who">Batting</span><span>R</span><span>B</span><span>SR</span></div>
+    <div class="row"><span class="who"><span class="dot">&#9679;</span>R. Sharma</span><span>62</span><span class="mut">41</span><span>151</span></div>
+    <div class="row"><span class="who">K. Patel</span><span>38</span><span class="mut">29</span><span>131</span></div>
+    <div class="psh"><span>Partnership <b>52 (37)</b></span><span>Last wkt &middot; Kohli 24 (18)</span></div>
+    <div class="row head"><span class="who">Bowling</span><span>O</span><span>R</span><span>W</span></div>
+    <div class="row"><span class="who">J. Khan</span><span>3.2</span><span class="mut">28</span><span>2</span></div>
+  </div>
+
+  <!-- key moments -->
+  <div class="blk">
+    <div class="blk-hd"><span class="eyebrow">Key moments</span></div>
+    <div class="moment"><span class="ov">17.2</span><span class="tx"><span class="six">SIX!</span> Sharma launches Khan over long-on &mdash; <b>23 needed</b></span></div>
+    <div class="moment"><span class="ov">16.4</span><span class="tx"><span class="wkt">WICKET</span> &mdash; Kohli b Khan, 24 (18)</span></div>
+    <div class="moment"><span class="ov">15.1</span><span class="tx"><b>FIFTY</b> &middot; R. Sharma off 34 balls</span></div>
+  </div>
+
+  <div class="pres">
+    <span>&#128065; 312 watching &middot; &#128293; 41</span>
+    <span class="follow">Following &#10003;</span>
+  </div>
+
+</div>
+</body>
+</html>

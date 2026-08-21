@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy Cricket — UX Option: Tap-zones + Gestures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- brutalist Mono backbone (verbatim from src/index.css) ---- */
+    --background: oklch(0.9782 0.0039 145.5458);
+    --foreground: oklch(0 0 0);
+    --card: oklch(0.9855 0.0026 145.5558);
+    --primary: oklch(0.6230 0.1688 149.1777);
+    --muted: oklch(0.9398 0.0035 145.5478);
+    --muted-foreground: oklch(0.5103 0 0);
+    --border: oklch(0 0 0);
+    --se-color-ink: var(--foreground);
+    --se-color-ink-muted: var(--muted-foreground);
+    --se-color-surface: var(--card);
+    --se-color-canvas: var(--background);
+    --se-color-danger: oklch(0.49 0.17 29);
+    --se-color-danger-soft: oklch(0.96 0.04 29);
+    --se-color-warning: oklch(0.54 0.12 78);
+    --se-color-warning-soft: oklch(0.96 0.05 86);
+    --se-font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --se-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --se-shadow-hard: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70);
+    --se-shadow-hard-lg: 5px 5px 0px 0.5px hsl(0 0% 0% / 0.80);
+
+    /* ---- HiFi-blend overlay (frozen tokens) ---- */
+    --se-blend-radius-capsule: 999px;
+    --se-blend-radius-soft-sm: 10px;
+    --se-blend-radius-soft: 12px;
+    --se-blend-radius-soft-lg: 16px;
+    --se-blend-green-wash: #e7f4ee;
+    --se-blend-green-wash-strong: #d6ecdf;
+    --se-blend-shadow-soft: 0 6px 20px -8px rgba(20,40,30,.28);
+    --se-blend-gold: #b8862e;
+    --se-blend-gold-bright: #e8b64c;
+    --se-blend-pulse-duration: 2.4s;
+
+    /* ---- cricket additions (declared once, referenced by name) ---- */
+    --se-blend-boundary-green: oklch(0.62 0.17 149);   /* tint of --primary */
+    --se-blend-boundary-ink:   oklch(0.31 0.10 150);
+    --se-blend-danger-solid:   var(--se-color-danger);
+    --se-blend-gold-ink:       #3a2a06;
+    --se-blend-momentum-up:    var(--se-blend-boundary-green);
+    --se-blend-momentum-down:  var(--se-color-danger);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:#c9d4cd;
+    font-family:var(--se-font-sans);
+    color:var(--se-color-ink);
+    padding:28px 14px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .lab{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:flex-start}
+
+  /* device frame */
+  .phone{
+    width:420px;flex:0 0 420px;
+    background:var(--se-color-canvas);
+    border:2.5px solid var(--border);
+    box-shadow:var(--se-shadow-hard-lg);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .caption{
+    text-align:center;font-family:var(--se-font-mono);font-size:11px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:#20302a;margin-bottom:12px;
+  }
+  .caption small{display:block;font-weight:500;letter-spacing:.04em;color:#3c4a44;margin-top:3px;text-transform:none;font-family:var(--se-font-sans);font-size:11px}
+
+  /* ---------- generic mono bits ---------- */
+  .mono{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums}
+  .ulabel{font-family:var(--se-font-mono);text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+  .pad{padding:14px 15px}
+
+  /* header */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-bottom:1.5px solid var(--border);background:var(--se-color-surface)}
+  .live{display:flex;align-items:center;gap:7px;font-family:var(--se-font-mono);font-size:11px;font-weight:700;letter-spacing:.1em}
+  .dot{width:9px;height:9px;border-radius:var(--se-blend-radius-capsule);background:var(--primary)}
+  .pulse{animation:sePulse var(--se-blend-pulse-duration) ease-in-out infinite}
+  @keyframes sePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+  .hbtns{display:flex;gap:7px}
+  .hbtn{font-family:var(--se-font-mono);font-size:10px;font-weight:700;letter-spacing:.08em;border:1.5px solid var(--border);background:var(--se-color-canvas);padding:5px 9px;border-radius:var(--se-blend-radius-capsule)}
+
+  .ctxrow{padding:6px 13px 0;font-size:11px;color:var(--se-color-ink-muted)}
+  .rulechip{display:inline-block;margin:7px 13px 0;font-family:var(--se-font-mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-capsule);padding:3px 9px;background:var(--se-color-canvas)}
+
+  /* hero */
+  .hero{position:relative;margin:11px 13px 0;padding:12px 13px 13px;background:var(--se-blend-green-wash);border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft);box-shadow:var(--se-shadow-hard)}
+  .hero .team{font-family:var(--se-font-mono);font-size:12px;font-weight:800;letter-spacing:.09em}
+  .hero .score{font-family:var(--se-font-mono);font-weight:800;font-size:56px;line-height:.95;letter-spacing:-.02em;margin-top:2px}
+  .hero .score .wk{color:var(--se-color-ink-muted);font-size:.55em}
+  .hero .score .ov{font-size:.32em;color:var(--se-color-ink-muted);font-weight:700;margin-left:6px}
+  .chase{margin-top:7px;font-family:var(--se-font-mono);font-size:12.5px;font-weight:700;letter-spacing:.01em}
+  .chase .need{font-size:14px}
+  .chase .rrr{color:var(--se-color-danger)}
+  .chase .sub{display:block;font-size:10px;font-weight:500;color:var(--se-color-ink-muted);letter-spacing:.02em;margin-top:2px}
+
+  /* this-over strip (read-only chips → soft-sm radius, NOT capsule) */
+  .overstrip{display:flex;align-items:center;gap:6px;margin:11px 13px 0;flex-wrap:wrap}
+  .overstrip .lbl{font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--se-color-ink-muted)}
+  .chip{font-family:var(--se-font-mono);font-size:12px;font-weight:700;min-width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:var(--se-blend-radius-soft-sm);border:1.5px solid var(--border)}
+  .chip.dotc{background:transparent;color:var(--se-color-ink-muted);border-color:var(--muted-foreground)}
+  .chip.run{background:var(--se-color-canvas)}
+  .chip.bnd{background:var(--se-blend-boundary-green);color:#fff;border-color:var(--se-blend-boundary-ink)}
+  .chip.wk{background:var(--se-blend-danger-solid);color:#fff}
+  .chip.ex{background:var(--se-color-warning-soft);color:#5a4408;border-color:var(--se-color-warning)}
+  .recent{margin:6px 13px 0;font-family:var(--se-font-mono);font-size:10px;color:var(--se-color-ink-muted);letter-spacing:.04em}
+
+  /* batter/bowler */
+  .cards{margin:10px 13px 0;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft);overflow:hidden;background:var(--se-color-surface)}
+  .prow{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;border-bottom:1px solid color-mix(in oklch,var(--border) 20%,transparent)}
+  .prow:last-child{border-bottom:none}
+  .prow.strike{border-left:3px solid var(--primary)}
+  .prow .nm{font-family:var(--se-font-mono);font-weight:700;flex:1}
+  .prow .fig{font-family:var(--se-font-mono);color:var(--se-color-ink-muted);font-size:11px}
+  .sdot{width:7px;height:7px;border-radius:var(--se-blend-radius-capsule);background:var(--primary);flex:0 0 auto}
+  .prow.bowl{background:var(--muted)}
+  .prow .part{font-size:10px;color:var(--se-color-ink-muted);font-family:var(--se-font-mono)}
+
+  /* ============ THE SCORING CANVAS (the philosophy) ============ */
+  .canvaswrap{margin:11px 13px 15px;border:2px solid var(--border);border-radius:var(--se-blend-radius-soft);box-shadow:var(--se-shadow-hard);overflow:hidden;background:var(--se-color-surface)}
+  .canvashdr{display:flex;justify-content:space-between;align-items:center;padding:6px 11px;border-bottom:1.5px solid var(--border);background:var(--muted)}
+  .canvashdr .t{font-family:var(--se-font-mono);font-size:9.5px;font-weight:700;letter-spacing:.11em}
+  .swap{font-family:var(--se-font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-capsule);padding:4px 11px;background:var(--se-color-canvas)}
+
+  /* extras rail — interactive → capsule */
+  .exrail{display:flex;gap:6px;padding:9px 11px 4px;justify-content:space-between}
+  .exbtn{flex:1;font-family:var(--se-font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-capsule);padding:7px 0;text-align:center;background:var(--se-color-canvas)}
+  .exbtn.armed{background:var(--se-color-warning-soft);border-color:var(--se-color-warning);box-shadow:inset 0 0 0 1px var(--se-color-warning)}
+
+  /* number micro-strip — interactive → capsule */
+  .numstrip{display:flex;gap:7px;padding:6px 11px 2px;justify-content:center}
+  .numstrip .cap{font-family:var(--se-font-mono);font-size:9px;color:var(--se-color-ink-muted);letter-spacing:.1em;align-self:center;margin-right:2px}
+  .numbtn{width:40px;height:34px;font-family:var(--se-font-mono);font-size:15px;font-weight:700;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-capsule);background:var(--se-color-canvas)}
+
+  /* the field pad */
+  .field{position:relative;height:250px;margin:8px 11px 12px;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft);overflow:hidden;
+    background:
+      radial-gradient(120% 150% at 50% 118%, var(--se-blend-green-wash-strong) 0%, var(--se-blend-green-wash) 42%, var(--se-color-canvas) 100%);
+  }
+  /* off/leg seam */
+  .seam{position:absolute;left:50%;top:0;bottom:0;width:1.5px;background:repeating-linear-gradient(var(--border) 0 5px, transparent 5px 11px);opacity:.45;transform:translateX(-50%)}
+  .sidelbl{position:absolute;top:8px;font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--se-color-ink-muted)}
+  .sidelbl.off{left:14px}
+  .sidelbl.leg{right:14px}
+  /* boundary rope arc */
+  .rope{position:absolute;left:-6%;right:-6%;top:6px;height:210px;border:2.5px dashed var(--se-blend-boundary-ink);border-bottom:none;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.5}
+  .ropelbl{position:absolute;top:11px;left:50%;transform:translateX(-50%);font-family:var(--se-font-mono);font-size:8px;font-weight:700;letter-spacing:.18em;color:var(--se-blend-boundary-ink);opacity:.75}
+  /* run rings hint */
+  .ring{position:absolute;left:50%;bottom:-40px;transform:translateX(-50%);border:1px dashed var(--muted-foreground);border-radius:50%;opacity:.32}
+  .r1{width:120px;height:120px}
+  .r2{width:210px;height:210px}
+  .r3{width:320px;height:320px}
+  .ringtag{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--se-font-mono);font-size:8px;font-weight:700;color:var(--muted-foreground);letter-spacing:.1em}
+  .rt1{bottom:64px}.rt2{bottom:108px}
+  /* central dot pad (thumb home) */
+  .dotpad{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:96px;height:56px;border:2px solid var(--border);border-radius:26px 26px 6px 6px;background:var(--se-color-canvas);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:var(--se-shadow-hard)}
+  .dotpad .big{font-family:var(--se-font-mono);font-size:20px;font-weight:800;line-height:1}
+  .dotpad .cap{font-family:var(--se-font-mono);font-size:7.5px;font-weight:700;letter-spacing:.13em;color:var(--se-color-ink-muted);margin-top:1px}
+  .batsman{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);font-size:15px}
+
+  /* gesture ghost hints */
+  .ghost{position:absolute;font-family:var(--se-font-mono);font-size:8.5px;font-weight:700;letter-spacing:.08em;color:var(--se-blend-boundary-ink);opacity:.62;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+  .ghost .g{font-size:15px;opacity:.8}
+  .g-tap{left:22%;bottom:96px}
+  .g-4{right:16%;top:78px;color:var(--se-color-ink-muted)}
+  .g-6{left:12%;top:40px;color:var(--se-blend-boundary-ink)}
+  .arrow6{position:absolute;left:24%;top:78px;font-size:22px;color:var(--se-blend-boundary-ink);opacity:.5;transform:rotate(-38deg)}
+
+  /* legend footer */
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding:2px 13px 12px;font-size:9.5px;color:var(--se-color-ink-muted)}
+  .legend b{font-family:var(--se-font-mono);color:var(--se-color-ink);font-weight:700;font-size:9.5px}
+
+  /* ============ SPECTATOR ============ */
+  .tabs{display:flex;border-bottom:1.5px solid var(--border);background:var(--se-color-surface)}
+  .tab{flex:1;text-align:center;font-family:var(--se-font-mono);font-size:10px;font-weight:700;letter-spacing:.09em;padding:10px 0;color:var(--se-color-ink-muted)}
+  .tab.on{color:var(--se-color-ink);border-bottom:2.5px solid var(--primary)}
+  .fresh{display:flex;align-items:center;gap:7px;padding:8px 14px 0;font-family:var(--se-font-mono);font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--se-color-ink-muted)}
+
+  /* spectator live shot-map hero */
+  .shotmap{position:relative;height:172px;margin:10px 13px 0;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft);overflow:hidden;
+    background:radial-gradient(120% 150% at 50% 120%, var(--se-blend-green-wash-strong) 0%, var(--se-blend-green-wash) 45%, var(--se-color-canvas) 100%)}
+  .shotmap .smhdr{position:absolute;top:8px;left:11px;font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--se-color-ink-muted)}
+  .stroke{position:absolute;left:50%;bottom:8px;height:2px;transform-origin:left center;background:var(--se-blend-boundary-ink);opacity:.55;border-radius:2px}
+  .stroke.hit4{background:var(--se-blend-boundary-green)}
+  .stroke.hit6{background:var(--se-blend-boundary-ink);height:2.5px}
+  .strokeend{position:absolute;width:6px;height:6px;border-radius:50%}
+  .smbat{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);font-size:13px}
+  .smseam{position:absolute;left:50%;top:6px;bottom:6px;width:1px;background:repeating-linear-gradient(var(--border) 0 4px,transparent 4px 9px);opacity:.35;transform:translateX(-50%)}
+
+  /* momentum band */
+  .momo{margin:11px 13px 0;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft);padding:9px 11px;background:var(--se-color-surface)}
+  .momo .mh{display:flex;justify-content:space-between;font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--se-color-ink-muted);margin-bottom:5px}
+  .momo svg{display:block;width:100%;height:52px}
+  /* win prob */
+  .wp{display:flex;height:22px;margin:9px 13px 0;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-soft-sm);overflow:hidden;font-family:var(--se-font-mono);font-size:10px;font-weight:700}
+  .wp .mum{background:var(--se-blend-boundary-green);color:#fff;display:flex;align-items:center;justify-content:flex-start;padding-left:8px}
+  .wp .che{background:var(--muted);color:var(--se-color-ink);display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+  .wpbasis{margin:4px 13px 0;font-size:9px;color:var(--se-color-ink-muted);font-family:var(--se-font-mono);letter-spacing:.02em}
+  .specfoot{margin:11px 13px 15px;display:flex;gap:8px}
+  .specfoot .sbtn{flex:1;text-align:center;font-family:var(--se-font-mono);font-size:10px;font-weight:700;letter-spacing:.06em;border:1.5px solid var(--border);border-radius:var(--se-blend-radius-capsule);padding:9px 0;background:var(--se-color-canvas)}
+
+  /* ============ SIGNATURE MOMENT — the swipe-six ============ */
+  .sig{position:relative;height:100%;min-height:660px;background:#04160d;overflow:hidden;display:flex;flex-direction:column}
+  .sixburst{position:absolute;inset:0;box-shadow:inset 0 0 90px 20px rgba(47,143,92,.85), inset 0 0 200px 60px rgba(47,143,92,.35);animation:sixglow 2.4s ease-in-out infinite}
+  @keyframes sixglow{0%,100%{opacity:.55}50%{opacity:1}}
+  .sigtop{position:relative;z-index:2;padding:16px 16px 0;color:#eafff2}
+  .sigtop .live{color:#bff3d3}
+  .sigctr{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}
+  .sixword{font-family:var(--se-font-mono);font-size:74px;font-weight:800;letter-spacing:.02em;line-height:.9;color:#eafff2;text-shadow:0 3px 0 rgba(0,0,0,.4);animation:sixpop 1.6s ease-in-out infinite}
+  @keyframes sixpop{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .sixsub{font-family:var(--se-font-mono);font-size:13px;font-weight:700;letter-spacing:.14em;color:#bff3d3;margin-top:10px}
+  .sixplayer{font-family:var(--se-font-mono);font-size:15px;font-weight:700;color:#fff;margin-top:22px}
+  .sixfig{font-family:var(--se-font-mono);font-size:11px;color:#8fd3aa;margin-top:3px;letter-spacing:.05em}
+  /* the swipe arc that produced the six */
+  .sigfield{position:relative;z-index:2;height:150px;margin:6px 18px 0}
+  .sigarc{position:absolute;left:50%;bottom:0;width:150px;height:150px;border:2.5px solid #7fe0a6;border-right:none;border-bottom:none;border-radius:100% 0 0 0/100% 0 0 0;transform:translateX(-100%);opacity:.85}
+  .sigball{position:absolute;left:14%;top:8px;font-size:16px;animation:ballfly 2.4s ease-in-out infinite}
+  @keyframes ballfly{0%{transform:translate(0,0)}50%{transform:translate(-8px,-10px)}100%{transform:translate(0,0)}}
+  .sigswipe{position:absolute;right:20px;bottom:8px;font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;color:#8fd3aa;text-align:right}
+  .sigswipe .em{font-size:20px;display:block;margin-bottom:3px}
+  .sigbottom{position:relative;z-index:2;padding:0 16px 18px;display:flex;gap:9px}
+  .sigbottom .b{flex:1;text-align:center;font-family:var(--se-font-mono);font-size:10px;font-weight:700;letter-spacing:.07em;border:1.5px solid #7fe0a6;border-radius:var(--se-blend-radius-capsule);padding:9px 0;color:#eafff2;background:rgba(255,255,255,.05)}
+  .ssignote{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:var(--se-font-mono);font-size:8px;letter-spacing:.1em;color:#4e7d63;z-index:2}
+
+  @media (prefers-reduced-motion: reduce){
+    .pulse,.sixburst,.sixword,.sigball{animation:none}
+  }
+  @media (max-width:520px){
+    .phone{width:100%;flex-basis:100%;max-width:420px}
+  }
+</style>
+</head>
+<body>
+<div class="lab">
+
+  <!-- ============================ 1 · SCORER ============================ -->
+  <div>
+    <div class="caption">Scorer board · mid-over
+      <small>Tap-zones + gestures — one thumb, no button-hunting</small>
+    </div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="live"><span class="dot pulse"></span> LIVE · MATCH 42 · TNPL 2026</div>
+        <div class="hbtns"><span class="hbtn">UNDO</span><span class="hbtn">⋯</span></div>
+      </div>
+      <div class="ctxrow">Chepauk · Kings won toss, bowled</div>
+      <span class="rulechip">T20 · 6-BALL · LBW ON</span>
+
+      <div class="hero">
+        <div class="team">MUMBAI XI</div>
+        <div class="score mono">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+        <div class="chase mono">
+          <span class="need">NEED 23 OFF 16</span> · <span class="rrr">RRR 8.6</span>
+          <span class="sub">CRR 8.5 · target 170 · WIN Mumbai 52% (RRR-gap · 6 wkts · venue)</span>
+        </div>
+      </div>
+
+      <div class="overstrip">
+        <span class="lbl">THIS OVER</span>
+        <span class="chip run">1</span>
+        <span class="chip bnd">4</span>
+        <span class="chip ex">3wd</span>
+        <span class="chip dotc" style="border-style:dashed;opacity:.6">•</span>
+        <span class="chip dotc" style="border-style:dashed;opacity:.6">•</span>
+      </div>
+      <div class="recent">LAST 5 OV 47/2 · RECENT 4 1 W 6 1</div>
+
+      <div class="cards">
+        <div class="prow strike"><span class="sdot"></span><span class="nm">R. SHARMA</span><span class="fig">68 (44) · 7×4 2×6 · SR155</span></div>
+        <div class="prow"><span style="width:7px"></span><span class="nm">S. YADAV</span><span class="fig">19 (14) · 1×4 · SR136</span></div>
+        <div class="prow bowl"><span class="nm">BUMRAH</span><span class="fig">3.2-0-24-2 · Econ7.2 · 1 ov left</span><span class="part">P’SHIP 41 (27)</span></div>
+      </div>
+
+      <!-- THE SCORING CANVAS -->
+      <div class="canvaswrap">
+        <div class="canvashdr">
+          <span class="t">SCORING CANVAS · TAP WHERE IT WENT</span>
+          <span class="swap">⇄ SWAP</span>
+        </div>
+
+        <div class="exrail">
+          <span class="exbtn">WD</span>
+          <span class="exbtn">NB</span>
+          <span class="exbtn">B</span>
+          <span class="exbtn">LB</span>
+        </div>
+
+        <div class="numstrip">
+          <span class="cap">EXACT →</span>
+          <span class="numbtn">2</span>
+          <span class="numbtn">3</span>
+          <span class="numbtn">5</span>
+        </div>
+
+        <div class="field">
+          <div class="rope"></div><div class="ropelbl">BOUNDARY</div>
+          <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+          <div class="ringtag rt1">·1·</div><div class="ringtag rt2">·1·</div>
+          <div class="seam"></div>
+          <div class="sidelbl off">OFF ◀</div><div class="sidelbl leg">▶ LEG</div>
+
+          <!-- ghost gesture hints (discoverability aid, fades after learning) -->
+          <div class="ghost g-tap"><span class="g">☝</span>TAP = 1</div>
+          <div class="ghost g-4"><span class="g">☝☝</span>2-TAP = 4</div>
+          <div class="ghost g-6"><span class="g">↗</span>SWIPE OUT = 6</div>
+          <div class="arrow6">➚</div>
+
+          <div class="batsman">🏏</div>
+          <div class="dotpad">
+            <div class="big mono">•</div>
+            <div class="cap">DOT · TAP</div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div><b>TAP</b> field = 1 (side = where)</div>
+          <div><b>2-TAP</b> = FOUR</div>
+          <div><b>SWIPE OUT</b> = SIX</div>
+          <div><b>DOT PAD</b> = dot ball</div>
+          <div><b>LONG-PRESS</b> = wicket sheet</div>
+          <div><b>2·3·5</b> strip = exact runs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ 2 · SPECTATOR ============================ -->
+  <div>
+    <div class="caption">Spectator · LIVE tab
+      <small>Read-only — same canvas metaphor as a live shot-map</small>
+    </div>
+    <div class="phone">
+      <div class="tabs">
+        <div class="tab on">LIVE</div>
+        <div class="tab">SCORECARD</div>
+        <div class="tab">COMMENTARY</div>
+        <div class="tab">INFO</div>
+      </div>
+      <div class="fresh"><span class="dot pulse"></span> LIVE · updated 3s ago · swipe tabs ⟷</div>
+
+      <div class="hero" style="margin-top:9px">
+        <div class="team">MUMBAI XI</div>
+        <div class="score mono">147<span class="wk">/4</span><span class="ov">(17.2)</span></div>
+        <div class="chase mono"><span class="need">NEED 23 OFF 16</span> · <span class="rrr">RRR 8.6</span>
+          <span class="sub">CRR 8.5 · chasing 170</span></div>
+      </div>
+
+      <div class="overstrip">
+        <span class="lbl">THIS OVER</span>
+        <span class="chip run">1</span><span class="chip bnd">4</span><span class="chip ex">3wd</span>
+        <span class="chip dotc" style="border-style:dashed;opacity:.6">•</span>
+        <span class="chip dotc" style="border-style:dashed;opacity:.6">•</span>
+      </div>
+
+      <!-- live shot-map (fed for FREE by scorer tap positions) -->
+      <div class="shotmap">
+        <div class="smhdr">SHARMA · SHOT MAP (THIS INNINGS)</div>
+        <div class="smseam"></div>
+        <div class="smbat">🏏</div>
+        <!-- strokes: rotate & length vary; boundaries green/ink -->
+        <div class="stroke hit4" style="width:82px;transform:rotate(200deg)"></div>
+        <div class="stroke hit6" style="width:96px;transform:rotate(232deg)"></div>
+        <div class="stroke hit4" style="width:80px;transform:rotate(158deg)"></div>
+        <div class="stroke" style="width:54px;transform:rotate(184deg)"></div>
+        <div class="stroke" style="width:60px;transform:rotate(212deg)"></div>
+        <div class="stroke hit4" style="width:78px;transform:rotate(250deg)"></div>
+        <div class="stroke" style="width:46px;transform:rotate(140deg)"></div>
+        <div class="stroke hit6" style="width:92px;transform:rotate(148deg)"></div>
+      </div>
+
+      <div class="momo">
+        <div class="mh"><span>MOMENTUM</span><span>◀ CHENNAI · MUMBAI ▶</span></div>
+        <svg viewBox="0 0 300 52" preserveAspectRatio="none">
+          <line x1="0" y1="26" x2="300" y2="26" stroke="oklch(0.5103 0 0)" stroke-width="0.6" stroke-dasharray="3 4"/>
+          <polyline fill="none" stroke="var(--se-blend-momentum-up)" stroke-width="2.4"
+            points="0,30 34,24 68,28 102,14 136,20 150,40 170,22 204,16 238,26 272,12 300,18"/>
+          <!-- wicket incident marker (danger) -->
+          <circle cx="150" cy="40" r="4" fill="var(--se-blend-momentum-down)"/>
+          <!-- 50 milestone = NEUTRAL ink dot, NOT gold -->
+          <circle cx="102" cy="14" r="3.4" fill="oklch(0 0 0)"/>
+        </svg>
+      </div>
+
+      <div class="wp">
+        <div class="mum" style="flex:0 0 52%">MUMBAI 52%</div>
+        <div class="che" style="flex:0 0 48%">48% CHENNAI</div>
+      </div>
+      <div class="wpbasis">▲ +4% last ball · basis: RRR-gap × 6 wkts × venue chase-avg</div>
+
+      <div class="specfoot">
+        <span class="sbtn">⤢ WORM</span><span class="sbtn">▦ WAGON</span><span class="sbtn">⇪ SHARE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ 3 · SIGNATURE MOMENT ============================ -->
+  <div>
+    <div class="caption">Signature moment · the swipe-six
+      <small>Gesture-native celebration — swipe drew the arc that scored it</small>
+    </div>
+    <div class="phone">
+      <div class="sig">
+        <div class="sixburst"></div>
+        <div class="sigtop">
+          <div class="live mono" style="font-size:11px;font-weight:700;letter-spacing:.1em">⦿ LIVE · MUMBAI 153/4 (17.3)</div>
+        </div>
+
+        <div class="sigctr">
+          <div class="sixword">SIX</div>
+          <div class="sixsub">OVER LONG-ON · 96m</div>
+          <div class="sixplayer">R. SHARMA 74 (45)</div>
+          <div class="sixfig">7×4 · 3×6 · SR 164 · need 17 off 15</div>
+        </div>
+
+        <div class="sigfield">
+          <div class="sigarc"></div>
+          <div class="sigball">🔴</div>
+          <div class="sigswipe"><span class="em">↗</span>your swipe<br>= the six</div>
+        </div>
+
+        <div class="sigbottom">
+          <span class="b">⇪ SHARE CARD</span>
+          <span class="b">TAP TO DISMISS</span>
+        </div>
+        <div class="ssignote">GREEN FAMILY ONLY · NO GOLD · REDUCED-MOTION GATED · SCORER STAYS NON-BLOCKING</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

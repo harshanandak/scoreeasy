@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScoreEasy — Cricket UX · Option A: Dense Keypad (power-scorer)</title>
+<style>
+  :root{
+    /* ── base mono tokens (mirrored from src/index.css) ── */
+    --canvas: oklch(0.9782 0.0039 145.5458);
+    --surface: oklch(0.9855 0.0026 145.5558);
+    --surface-warm: oklch(0.9398 0.0035 145.5478);
+    --ink: #000;
+    --ink-muted: oklch(0.5103 0 0);
+    --ink-faint: oklch(0.62 0 0);
+    --line: #000;
+    --primary: oklch(0.6230 0.1688 149.1777);
+    --danger: oklch(0.49 0.17 29);
+    --warning: oklch(0.54 0.12 78);
+    --inverse: #fff;
+    --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    --shadow-hard: 3px 3px 0 var(--line);
+    /* ── blend tokens (mirrored from BLEND-GOVERNANCE) ── */
+    --se-green-wash: #e7f4ee;
+    --se-green-wash-strong: #d6ecdf;
+    --se-shadow-soft: 0 6px 20px -8px rgba(20,40,30,.28);
+    --se-gold: #b8862e;
+    --se-gold-bright: #e8b64c;
+    --se-gold-ink: #3a2a06;
+    --r-capsule: 999px;
+    --r-circle: 50%;
+    --r-soft-sm: 10px;
+    --r-soft: 12px;
+    --r-soft-lg: 16px;
+    /* ── cricket additions (spec §6 — one green family, tokenized, no raw hex downstream) ── */
+    --se-boundary-green: #2f8f5c;   /* tint of --primary */
+    --se-boundary-ink:   #14502f;
+    --se-danger-solid:   #b3261e;
+    --se-momentum-up:    #2f8f5c;
+    --se-momentum-down:  #b3261e;
+    --se-mom-g1: #eef7f1;  --se-mom-g2: #f4f0ea;  --se-mom-g3: #fbf3e0;
+    --pulse-a: rgba(45,140,90,.45);
+    --pulse-b: rgba(45,140,90,0);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    background:var(--surface-warm);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    line-height:1.32;
+    -webkit-font-smoothing:antialiased;
+    padding:16px 10px 60px;
+  }
+  .wrap{max-width:440px;margin:0 auto}
+  h1.page{font-size:13px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.13em;margin-bottom:3px}
+  p.sub{font-size:11.5px;color:var(--ink-muted);margin-bottom:18px;line-height:1.5}
+  .col-cap{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.15em;font-size:10px;color:var(--ink-muted);margin:22px 3px 8px;display:flex;justify-content:space-between}
+  .col-cap b{color:var(--ink)}
+  .col-cap:first-of-type{margin-top:6px}
+
+  /* ── MonoSheet shell (hard, brutalist) ── */
+  .sheet{border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-hard);overflow:hidden}
+
+  /* live dot + reduced-motion-gated pulse */
+  .live{display:inline-flex;align-items:center;gap:5px;color:var(--primary);font-weight:700}
+  .dot{width:8px;height:8px;border-radius:var(--r-circle);background:var(--primary);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 var(--pulse-a)}70%{box-shadow:0 0 0 6px var(--pulse-b)}100%{box-shadow:0 0 0 0 var(--pulse-b)}}
+
+  /* ═══════════ SCORER — DENSE ═══════════ */
+  .hd{display:flex;align-items:center;gap:7px;padding:8px 10px;border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;font-size:10px}
+  .hd .title{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbtn{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
+    border:1px solid var(--line);background:var(--surface);padding:4px 7px;cursor:pointer;border-radius:var(--r-capsule)}
+
+  /* context row + ruleset chip (dense: one tight line) */
+  .ctx{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);font-size:9.5px;color:var(--ink-muted);letter-spacing:.04em}
+  .ruleset{border:1px solid var(--line);border-radius:var(--r-soft-sm);padding:2px 6px;color:var(--ink);font-weight:600;white-space:nowrap}
+  .ctx .venue{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* compressed hero — power-scorer keeps info tiny, keypad big */
+  .hero{position:relative;display:flex;gap:10px;padding:9px 10px 8px;align-items:center}
+  .lead-strip{width:5px;align-self:stretch;background:var(--se-green-wash-strong);border-radius:var(--r-soft);flex:0 0 5px}
+  .hero-main{flex:1;min-width:0}
+  .team{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em;font-size:9.5px;color:var(--ink-muted);font-weight:600}
+  .score{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:700;line-height:.92;
+    font-size:clamp(2.7rem,13vw,3.4rem);letter-spacing:-.02em}
+  .score .wkt{color:var(--ink-faint);font-size:.5em}
+  .score .ov{color:var(--ink-muted);font-size:.26em;letter-spacing:0;margin-left:.3em;font-weight:600}
+  .chase{text-align:right;font-family:var(--font-mono);font-size:10px;line-height:1.5;flex:0 0 auto}
+  .chase .big{font-size:14px;font-weight:700;color:var(--ink)}
+  .chase .rrr{color:var(--danger);font-weight:700}
+  .chase .win{color:var(--ink-muted)}
+
+  /* this-over strip + recent (dense, shared idiom) */
+  .over{padding:7px 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
+  .over .lbl{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.12em;font-size:8.5px;color:var(--ink-muted);flex:0 0 auto}
+  .chips{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+  .chip{min-width:25px;height:25px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-weight:700;font-size:11px;border:1px solid var(--line);border-radius:var(--r-soft-sm)}
+  .chip.dot{background:var(--surface);color:var(--ink-faint)}
+  .chip.run{background:var(--ink);color:var(--inverse)}
+  .chip.four{background:var(--se-green-wash-strong);color:var(--se-boundary-ink);border-color:var(--se-boundary-ink)}
+  .chip.six{background:var(--primary);color:var(--inverse)}
+  .chip.w{background:var(--danger);color:var(--inverse)}
+  .chip.x{background:transparent;color:var(--warning);border-color:var(--warning);border-style:dashed}
+  .chip.new{animation:pop .32s ease-out}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  .recent{font-family:var(--font-mono);font-size:8.5px;color:var(--ink-muted);text-align:right;flex:0 0 auto;line-height:1.35}
+  .recent b{color:var(--ink)}
+
+  /* ultra-dense batter/bowler grid */
+  .players{padding:6px 10px;font-family:var(--font-mono);font-size:11px}
+  .prow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:baseline;padding:3px 6px;border:1px solid transparent}
+  .prow .nm{font-family:var(--font-sans);font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prow .muted{color:var(--ink-muted);font-size:9.5px}
+  .prow.striker{border-left:3px solid var(--primary);background:var(--se-green-wash);border-radius:var(--r-soft-sm)}
+  .prow .star{color:var(--primary);font-weight:700}
+  .bowlrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:baseline;
+    padding:4px 6px;margin-top:3px;border-top:1px dashed var(--ink-faint)}
+  .bowlrow .nm{font-family:var(--font-sans);font-weight:600;font-size:11.5px}
+  .bowlrow .lft{color:var(--ink-muted);font-size:9px}
+  .partn{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:8.5px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);padding:3px 6px 1px}
+
+  /* ═══════════ THE POWER KEYPAD ═══════════ */
+  .pad{border-top:2px solid var(--line);background:var(--surface)}
+  /* persistent extras modifier row — ALWAYS visible, no drilling */
+  .extras{display:flex;border-bottom:1px solid var(--line)}
+  .extras button{flex:1;background:var(--surface);border:0;cursor:pointer;padding:9px 0 8px;
+    font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.04em;position:relative}
+  .extras button + button{border-left:1px solid var(--line)}
+  .extras button small{display:block;font-size:7px;color:var(--ink-muted);letter-spacing:.1em;margin-top:2px}
+  .extras button.armed{background:var(--warning);color:var(--inverse)}
+  .extras button.armed small{color:var(--inverse)}
+  /* armed banner */
+  .armbar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--warning);color:var(--inverse);
+    font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-bottom:1px solid var(--line)}
+  .armbar .x{margin-left:auto;border:1px solid var(--inverse);border-radius:var(--r-capsule);padding:1px 7px;cursor:pointer}
+
+  /* run grid 0–6 — all seven always visible, big thumb targets */
+  .runs{display:grid;grid-template-columns:repeat(4,1fr)}
+  .key{position:relative;background:transparent;border:0;cursor:pointer;
+    font-family:var(--font-mono);font-weight:700;font-size:30px;color:var(--ink);
+    min-height:clamp(58px,11vh,74px);display:flex;align-items:center;justify-content:center}
+  /* hairline gradient dividers instead of hard borders */
+  .runs .key::after{content:"";position:absolute;right:0;top:14%;bottom:14%;width:1px;
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.28),transparent)}
+  .runs .key:nth-child(4n)::after{display:none}
+  .runs .key::before{content:"";position:absolute;left:12%;right:12%;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(0,0,0,.2),transparent)}
+  .key.four,.key.six{color:var(--se-boundary-ink)}
+  .key .tag{position:absolute;bottom:7px;font-family:var(--font-mono);font-size:7.5px;letter-spacing:.14em;color:var(--primary);font-weight:700}
+  .key.wide-cell{grid-column:span 1}
+  .key .sub{position:absolute;bottom:7px;font-family:var(--font-mono);font-size:7px;letter-spacing:.1em;color:var(--ink-muted);font-weight:600}
+
+  /* distinct wicket action — biggest single target, unmissable */
+  .actionbar{display:flex;border-top:2px solid var(--line)}
+  .wicket{flex:3;background:var(--danger);color:var(--inverse);border:0;cursor:pointer;
+    font-family:var(--font-mono);font-weight:700;font-size:16px;letter-spacing:.1em;padding:15px 0;text-transform:uppercase}
+  .swap{flex:1;background:var(--surface);color:var(--ink);border:0;border-left:1px solid var(--line);cursor:pointer;
+    font-family:var(--font-mono);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+
+  /* wicket quick-sheet overlay (2nd tap of the 2-tap wicket) */
+  .qsheet{border-top:1px solid var(--line);background:var(--se-green-wash);padding:8px 10px 10px}
+  .qsheet .qh{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted);margin-bottom:6px;display:flex;justify-content:space-between}
+  .qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .qbtn{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-capsule);cursor:pointer;
+    font-family:var(--font-mono);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:9px 0;color:var(--ink)}
+  .qbtn.more{background:var(--ink);color:var(--inverse)}
+
+  .caption{font-size:10.5px;color:var(--ink-muted);font-family:var(--font-mono);margin:7px 3px 0;line-height:1.55}
+  .caption b{color:var(--ink)}
+
+  /* ═══════════ SPECTATOR ═══════════ */
+  .tabs{display:flex;border-bottom:1px solid var(--line)}
+  .tab{flex:1;text-align:center;padding:9px 0;font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ink-muted);border-right:1px solid var(--line);cursor:pointer;border-radius:var(--r-capsule)}
+  .tab:last-child{border-right:0}
+  .tab.on{background:var(--ink);color:var(--inverse)}
+  .fresh{display:flex;align-items:center;gap:6px;padding:6px 12px;font-family:var(--font-mono);font-size:9px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);border-bottom:1px solid var(--line)}
+  .spec-hero .score{font-size:clamp(3rem,15vw,4rem)}
+  .wpbar{display:flex;height:20px;border:1px solid var(--line);border-radius:var(--r-soft-sm);overflow:hidden;margin:0 10px 4px}
+  .wpbar .m{background:var(--primary);color:var(--inverse)}
+  .wpbar .d{background:var(--surface-warm);color:var(--ink)}
+  .wpbar span{display:flex;align-items:center;padding:0 8px;font-family:var(--font-mono);font-size:10px;font-weight:700}
+  .wpbasis{font-family:var(--font-mono);font-size:8.5px;color:var(--ink-muted);padding:0 10px 8px;letter-spacing:.04em}
+  .mom{padding:10px 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .mom .lbl{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.14em;font-size:8.5px;color:var(--ink-muted);margin-bottom:7px;display:flex;justify-content:space-between}
+  .mom .lbl .a{color:var(--primary)}.mom .lbl .b{color:var(--ink)}
+  .mom-svg{width:100%;height:64px;display:block;border:1px solid var(--line);border-radius:var(--r-soft-sm);
+    background:linear-gradient(180deg,var(--se-mom-g1) 0%,var(--surface) 50%,var(--se-mom-g2) 100%)}
+  .mk{font-family:var(--font-mono);font-size:7.5px;font-weight:700}
+  .comm{padding:2px 0}
+  .cline{display:grid;grid-template-columns:38px 1fr;gap:9px;padding:7px 12px;border-bottom:1px solid rgba(0,0,0,.1);font-size:11.5px}
+  .cline .cov{font-family:var(--font-mono);font-weight:700;color:var(--ink-muted);font-size:11px}
+  .cline .txt b{font-family:var(--font-mono)}
+  .band{grid-column:1/3;margin:2px 0;padding:7px 9px;border-radius:var(--r-soft-sm);font-family:var(--font-mono);
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;gap:8px;align-items:center}
+  .band.wk{background:var(--danger);color:var(--inverse)}
+  .band.six{background:var(--primary);color:var(--inverse)}
+  .band small{font-weight:500;letter-spacing:0;text-transform:none;font-family:var(--font-sans);opacity:.92}
+  .oversum{grid-column:1/3;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-muted);
+    border-top:1px dashed var(--ink-faint);border-bottom:1px dashed var(--ink-faint);padding:5px 0;letter-spacing:.03em}
+
+  /* ═══════════ SIGNATURE MOMENT — milestone gold ═══════════ */
+  .sig-hd{background:var(--se-gold);color:var(--se-gold-ink)}
+  .mile{position:relative;padding:18px 14px;overflow:hidden;
+    background:linear-gradient(135deg,var(--surface) 0%,var(--se-mom-g3) 100%)}
+  .mile::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 15% 0%,rgba(232,182,76,.28),transparent 62%);animation:sweep .5s ease-out}
+  @keyframes sweep{from{transform:translateX(-30%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .mile .row{position:relative;display:flex;align-items:center;gap:14px}
+  .mile .ring{width:56px;height:56px;border-radius:var(--r-circle);flex:0 0 56px;
+    background:linear-gradient(145deg,var(--se-gold-bright),var(--se-gold));
+    display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;color:var(--se-gold-ink);font-size:19px;
+    box-shadow:0 0 0 3px var(--surface),0 0 0 4px var(--se-gold)}
+  .mile .kw{font-family:var(--font-mono);font-weight:700;font-size:28px;line-height:1;letter-spacing:.02em}
+  .mile .who{font-family:var(--font-sans);font-weight:700;font-size:15px;margin-top:3px}
+  .mile .fig{position:relative;font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:2px}
+  .mile .stamp{position:relative;margin-top:14px;font-family:var(--font-mono);font-size:9px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--ink-muted);border-top:1px solid var(--se-gold);padding-top:9px;display:flex;justify-content:space-between;align-items:center}
+  .mile .share{font-family:var(--font-mono);font-size:9.5px;background:var(--se-gold);color:var(--se-gold-ink);
+    border:0;border-radius:var(--r-capsule);padding:5px 12px;font-weight:700;letter-spacing:.07em;cursor:pointer}
+
+  @media (prefers-reduced-motion:reduce){
+    .dot,.chip.new,.mile::before{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page">ScoreEasy · Cricket UX — Option A</h1>
+  <p class="sub"><b>Dense keypad · power-scorer.</b> Always-visible 0–6 run grid, a persistent extras modifier row, and one unmissable wicket action — CricHeroes-style density. Built for a fast, experienced scorer: minimal taps per ball, everything one thumb-reach away, the this-over strip live. Trades learnability for raw speed. design1-mono tokens: brutalist shell (hard borders, 3px 3px 0, mono numerals) × selective HiFi warmth (green = lead/live, one gold milestone, capsules interactive-only, reduced-motion-gated pulse).</p>
+
+  <!-- ════════════ SCORER (mid-over) ════════════ -->
+  <div class="col-cap"><span>Surface 1</span><b>SCORER · mid-over</b></div>
+  <div class="sheet">
+    <div class="hd">
+      <span class="live"><span class="dot"></span>LIVE</span>
+      <span class="title">MATCH 42 · TNPL 2026</span>
+      <button class="hbtn">↩ UNDO</button>
+      <button class="hbtn">⋯</button>
+    </div>
+    <div class="ctx">
+      <span class="ruleset">T20 · 6-BALL · LBW ON</span>
+      <span class="venue">Chepauk · Kings won toss, bowled</span>
+    </div>
+
+    <!-- compressed hero: score left, chase datum right -->
+    <div class="hero">
+      <div class="lead-strip" title="green wash = batting/lead side"></div>
+      <div class="hero-main">
+        <div class="team">MUMBAI XI · 2ND INN · TARGET 170</div>
+        <div class="score">147<span class="wkt">/4</span><span class="ov">(17.2)</span></div>
+      </div>
+      <div class="chase">
+        <div>NEED <span class="big">23</span> off <span class="big">16</span></div>
+        <div class="rrr">RRR 8.6</div>
+        <div>CRR 8.5</div>
+        <div class="win">WIN 52%</div>
+      </div>
+    </div>
+
+    <!-- this-over strip + recent (dense) -->
+    <div class="over">
+      <span class="lbl">Over 18<br>Bumrah</span>
+      <div class="chips">
+        <span class="chip run">1</span>
+        <span class="chip four">4</span>
+        <span class="chip x">3wd</span>
+      </div>
+      <div class="recent">Last 5 ov <b>47/2</b><br>Recent <b>4 1 W 6 1</b></div>
+    </div>
+
+    <!-- ultra-dense batter/bowler block -->
+    <div class="players">
+      <div class="prow striker">
+        <span class="nm"><span class="star">●</span> R. Sharma</span>
+        <span>68 <span class="muted">(44)</span></span>
+        <span class="muted">7×4 2×6</span>
+        <span>SR 155</span>
+      </div>
+      <div class="prow">
+        <span class="nm" style="padding-left:14px">S. Yadav</span>
+        <span>19 <span class="muted">(14)</span></span>
+        <span class="muted">1×4 0×6</span>
+        <span>SR 136</span>
+      </div>
+      <div class="bowlrow">
+        <span class="nm">J. Bumrah</span>
+        <span>3.2–0–24–2</span>
+        <span class="lft">Econ 7.2 · 1 ov left</span>
+      </div>
+      <div class="partn"><span>Partnership 41 (27)</span><span>Extras 12 · b3 lb2 wd6 nb1</span></div>
+    </div>
+
+    <!-- ═══ THE POWER KEYPAD ═══ -->
+    <div class="pad">
+      <!-- persistent extras modifiers — always on screen, no menu -->
+      <div class="extras">
+        <button class="armed">WD<small>+RUNS?</small></button>
+        <button>NB<small>FREE HIT</small></button>
+        <button>BYE<small>LEGAL</small></button>
+        <button>LB<small>LEGAL</small></button>
+      </div>
+      <!-- armed banner: WD tapped, now choose runs off it or commit +1 -->
+      <div class="armbar">
+        <span>WIDE ARMED — tap a number for runs off it, or WD again = +1</span>
+        <span class="x">✕ cancel</span>
+      </div>
+      <!-- run grid: all of 0–6 visible, big targets -->
+      <div class="runs">
+        <button class="key">0<span class="sub">DOT</span></button>
+        <button class="key">1</button>
+        <button class="key">2</button>
+        <button class="key">3</button>
+        <button class="key four">4<span class="tag">FOUR</span></button>
+        <button class="key">5</button>
+        <button class="key six">6<span class="tag">SIX</span></button>
+        <button class="key" style="color:var(--ink-muted);font-size:18px">7+<span class="sub">OVERTHROW</span></button>
+      </div>
+      <!-- distinct wicket action + strike swap -->
+      <div class="actionbar">
+        <button class="wicket">W · WICKET</button>
+        <button class="swap">⇄ SWAP</button>
+      </div>
+    </div>
+
+    <!-- wicket quick-sheet (2nd tap: shown here to demonstrate the 2-tap wicket) -->
+    <div class="qsheet">
+      <div class="qh"><span>▸ WICKET — pick dismissal (tap 2 of 2)</span><span>auto new-batter</span></div>
+      <div class="qgrid">
+        <button class="qbtn">BOWLED</button>
+        <button class="qbtn">CAUGHT</button>
+        <button class="qbtn">LBW</button>
+        <button class="qbtn">RUN OUT</button>
+        <button class="qbtn">STUMPED</button>
+        <button class="qbtn more">MORE…</button>
+      </div>
+    </div>
+  </div>
+  <p class="caption"><b>Taps per ball —</b> normal ball / boundary = <b>1 tap</b> (number auto-commits + rotates strike). Wide/no-ball no-runs = <b>1 tap</b> (extra chip commits +1); wide+runs or bye/leg-bye = <b>2 taps</b> (arm modifier → number). Wicket = <b>2 taps</b> (W → dismissal; bowled/caught auto-suggest new batter). Extras row is <b>always visible</b> — no drilling. Undo + 150ms debounce always on.</p>
+
+  <!-- ════════════ SPECTATOR ════════════ -->
+  <div class="col-cap"><span>Surface 2</span><b>SPECTATOR · read-only LIVE</b></div>
+  <div class="sheet">
+    <div class="tabs">
+      <div class="tab on">Live</div>
+      <div class="tab">Scorecard</div>
+      <div class="tab">Comment.</div>
+      <div class="tab">Info</div>
+    </div>
+    <div class="fresh"><span class="live"><span class="dot"></span></span> Live · updated 3s ago · last-known-good on drop</div>
+    <div class="ctx">
+      <span class="ruleset">T20 · 6-BALL · LBW ON</span>
+      <span class="venue">MA Chidambaram, Chepauk · M42</span>
+    </div>
+
+    <!-- hero: chase equation is the giant unit -->
+    <div class="hero spec-hero">
+      <div class="lead-strip"></div>
+      <div class="hero-main">
+        <div class="team">MUMBAI XI NEED · 147/4 (17.2)</div>
+        <div class="score">23<span class="ov">off 16</span></div>
+        <div class="chase" style="text-align:left;margin-top:3px">
+          <span class="rrr">RRR 8.6</span> · CRR 8.5
+        </div>
+      </div>
+    </div>
+
+    <!-- win-probability bar with basis (not a bare number) -->
+    <div class="wpbar">
+      <span class="m" style="flex:52">MUMBAI 52%</span>
+      <span class="d" style="flex:48">CHENNAI 48%</span>
+    </div>
+    <div class="wpbasis">basis · RRR-vs-CRR gap · 6 wkts in hand · venue chase avg · ▲ +3% last ball</div>
+
+    <!-- this-over strip (shared) -->
+    <div class="over">
+      <span class="lbl">Over 18</span>
+      <div class="chips">
+        <span class="chip run">1</span>
+        <span class="chip four">4</span>
+        <span class="chip x">3wd</span>
+      </div>
+      <div class="recent">Recent <b>4 1 W 6 1</b></div>
+    </div>
+
+    <!-- momentum band (flagship): 50 marker is a NEUTRAL ink dot, not gold -->
+    <div class="mom">
+      <div class="lbl"><span class="a">◤ Mumbai</span><span>Momentum</span><span class="b">Chennai ◢</span></div>
+      <svg class="mom-svg" viewBox="0 0 400 64" preserveAspectRatio="none" aria-label="Match momentum">
+        <line x1="0" y1="32" x2="400" y2="32" stroke="var(--ink)" stroke-dasharray="3 4" stroke-width="1" opacity=".35"/>
+        <path d="M0,36 C40,28 70,16 100,40 C130,58 150,54 175,26 C205,8 225,20 255,22 C285,24 305,46 335,28 C365,14 385,20 400,18"
+              fill="none" stroke="var(--se-momentum-up)" stroke-width="3"/>
+        <circle cx="130" cy="54" r="5.5" fill="var(--se-momentum-down)"/><text class="mk" x="130" y="57" text-anchor="middle" fill="var(--inverse)">W</text>
+        <circle cx="175" cy="26" r="5.5" fill="var(--se-boundary-green)" stroke="var(--ink)"/><text class="mk" x="175" y="28.6" text-anchor="middle" fill="var(--inverse)">6</text>
+        <!-- 50 milestone marker = NEUTRAL ink dot (spec FIX 4) -->
+        <circle cx="300" cy="42" r="5.5" fill="var(--ink)" stroke="var(--ink)"/><text class="mk" x="300" y="44.6" text-anchor="middle" fill="var(--inverse)">50</text>
+      </svg>
+    </div>
+
+    <!-- commentary preview (over-summary + single dismissalText helper) -->
+    <div class="comm">
+      <div class="cline">
+        <span class="cov">17.2</span>
+        <div class="txt">Bumrah to Sharma, <b>1 run</b>, tucked to fine leg, keeps strike for Yadav.</div>
+      </div>
+      <div class="cline">
+        <span class="cov">17.1</span>
+        <div class="txt">Bumrah to Sharma, <b>FOUR</b>, punched through cover — 68 now.</div>
+      </div>
+      <div class="cline">
+        <div class="oversum">End of over 17 · Mumbai 142/4 · need 28 off 18 · Sharma 63* Yadav 19*</div>
+      </div>
+      <div class="cline">
+        <span class="cov">16.6</span>
+        <div class="band wk">WICKET · Kishan<small>c Kohli b Bumrah 31 (19) — partnership broken (41)</small></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Same Convex delivery stream as the scorer, read-only. Progressive disclosure: hero equation + WP + last events first; scorecard / worm / manhattan / wagon one tap deeper. Soft budget on LIVE = 3 soft + 1 gold + 1 live. Momentum 50-marker is a neutral ink dot — gold is reserved for the milestone card.</p>
+
+  <!-- ════════════ SIGNATURE MOMENT — milestone gold ════════════ -->
+  <div class="col-cap"><span>Surface 3</span><b>SIGNATURE · milestone (the one gold)</b></div>
+  <div class="sheet">
+    <div class="hd sig-hd">
+      <span class="live" style="color:var(--se-gold-ink)"><span class="dot" style="background:var(--se-gold-ink);animation:none"></span>MILESTONE</span>
+      <span class="title">Auto share-card · timestamped to the crossing ball</span>
+    </div>
+    <div class="mile">
+      <div class="row">
+        <div class="ring">50</div>
+        <div>
+          <div class="kw">FIFTY</div>
+          <div class="who">R. Sharma — raised bat</div>
+          <div class="fig">50 (32) · 6×4 1×6 · SR 156</div>
+        </div>
+      </div>
+      <div class="stamp">
+        <span>Reached at 15.4 · Mumbai 118/3 · historical card, not a live surface</span>
+        <button class="share">Share ▸</button>
+      </div>
+    </div>
+  </div>
+  <p class="caption"><b>Escalation ladder:</b> dot = silent tick → single = numeral flip → FOUR = green hero sweep → SIX = edge-burst + wagon arc → WICKET = full-width danger takeover (momentum snaps to bowling side) → <b>50/100 = gold raised-bat</b> (the screen's ONE gold, auto share-card, frozen at the crossing ball) → hat-trick held-breath → clutch mode → super over → match complete. All ≤500ms, reduced-motion gated. Scorer variants are non-modal so ball entry never stalls — the power-scorer keeps tapping through any celebration.</p>
+
+</div>
+</body>
+</html>

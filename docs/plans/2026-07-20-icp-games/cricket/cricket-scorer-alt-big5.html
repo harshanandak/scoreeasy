@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket Live Scorer — Big-5</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from src/index.css :root
+   (Tailwind-only @import/@theme/@custom-variant lines omitted;
+    the --se-* + --shadow-* design tokens are what mono.css binds to)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Merriweather, ui-serif, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --tracking-normal: 0;
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-focus-ring: oklch(0.58 0.22 255);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: var(--muted-foreground);
+  --se-color-line: var(--border);
+  --se-color-line-strong: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-shadow-card: var(--shadow-xs);
+  --se-motion-standard: 250ms;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ============================================================
+   REAL component classes — verbatim from
+   src/designs/design1-mono/mono.css
+   ============================================================ */
+.mono-score { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; line-height: 1; }
+
+.mono-badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 0.6875rem; font-family: var(--se-font-mono); border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.mono-badge-live { background: var(--se-color-action-soft); color: var(--se-color-action); }
+
+.mono-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 20px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-button); background: transparent; color: var(--se-color-ink); font-size: 0.875rem; font-family: var(--se-font-sans); cursor: pointer; transition: background var(--se-motion-standard) ease; }
+.mono-btn:hover { background: var(--se-color-action-soft); }
+.mono-btn:active { transform: translateY(1px); box-shadow: var(--shadow-2xs); }
+
+.mono-btn-primary { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 24px; border: 1px solid var(--se-color-action); border-radius: var(--se-radius-button); background: var(--se-color-action); color: var(--se-color-inverse); box-shadow: var(--shadow-2xs); font-size: 0.875rem; font-family: var(--se-font-sans); cursor: pointer; }
+
+/* "this over" ball strip */
+.mono-over-strip { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+.mono-over-label { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-right: 2px; }
+.mono-over-pip { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; border: 1px solid color-mix(in oklch, var(--se-color-line) 28%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.mono-over-pip-four { background: var(--accent); border-color: var(--primary); color: var(--primary); }
+.mono-over-pip-six { background: var(--primary); border-color: var(--primary); color: var(--se-color-inverse); }
+.mono-over-pip-wicket { background: var(--destructive); border-color: var(--destructive); color: var(--se-color-inverse); }
+.mono-over-pip-empty { background: transparent; border-style: dashed; border-color: color-mix(in oklch, var(--se-color-line) 34%, transparent); }
+
+/* Brutalist-monotone keypad — hairline dividers only, keys on open canvas.
+   Verbatim from mono.css (used by the app's keypad cricket scorers). */
+.mono-cricket-keypad { --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent); display: flex; flex-direction: column; margin-top: 10px; background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent), linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 100% 1px, 100% 1px; background-position: 0 0, 0 100%; background-repeat: no-repeat; }
+.mono-cricket-keys { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: clamp(52px, 8vh, 66px); gap: 0; background-image: linear-gradient(to bottom, transparent, var(--cricket-line), transparent), linear-gradient(to bottom, transparent, var(--cricket-line), transparent), linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 1px 100%, 1px 100%, 100% 1px; background-position: 33.33% 50%, 66.67% 50%, 50% 50%; background-repeat: no-repeat; }
+.mono-cricket-keys-sec { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); grid-auto-rows: auto; background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 100% 1px; background-position: 0 0; background-repeat: no-repeat; }
+.mono-cricket-keys-sec .mono-cricket-key-sec:not(:first-child)::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 56%; background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent); }
+.mono-cricket-key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; border: none; background: transparent; color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 1.875rem; font-weight: 700; line-height: 1; cursor: pointer; transition: background 120ms ease; }
+.mono-cricket-key:active { background: var(--accent); }
+.mono-cricket-key small { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; color: var(--se-color-ink-faint); }
+.mono-cricket-key-four { color: var(--primary); }
+.mono-cricket-key-six { color: var(--primary); }
+.mono-cricket-key-four small, .mono-cricket-key-six small { color: inherit; opacity: 0.85; }
+.mono-cricket-key-sec { min-height: 44px; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; color: var(--se-color-ink-soft); }
+
+.mono-scorer-screen { min-height: 100dvh; padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.mono-scorer-shell { max-width: 390px; margin: 0 auto; display: flex; flex-direction: column; }
+/* thumb-zone order: rare/management on top, most-tapped Big-5 at the bottom */
+.ctrls { order: 4; }
+.sec-extras { order: 5; }
+.sec-otherruns { order: 6; }
+.big5 { order: 7; }
+.ck-footer { order: 8; }
+.mono-scorer-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.mono-scorer-topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ============================================================
+   Composed blocks — OUR brutalist palette, real tokens only.
+   Flat BLACK hero (no gradient, no green card), hard 3px shadow.
+   ============================================================ */
+.ck-topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; }
+.ck-topbar-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; }
+
+.ck-hero { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); padding: 13px 15px; }
+.ck-hero-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ck-hero-score { font-family: var(--se-font-mono); font-size: 2.6rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.ck-hero-score .wk { font-size: 1.5rem; font-weight: 600; color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.ck-hero-ov { font-family: var(--se-font-mono); font-size: 0.75rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); margin-left: 8px; }
+.ck-hero-crr { font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.ck-hero-bar { height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-inverse) 22%, transparent); margin: 10px 0; overflow: hidden; }
+.ck-hero-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.ck-hero-chase { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.ck-hero-chase b { color: var(--se-color-inverse); font-weight: 700; }
+.ck-hero-chase .need { color: var(--primary); font-weight: 800; }
+
+.ck-players { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 8px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; }
+.ck-player { padding: 7px 10px; min-width: 0; }
+.ck-player + .ck-player { border-left: 1px solid color-mix(in oklch, var(--se-color-line) 22%, var(--se-color-surface)); }
+.ck-player-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ck-player-name.sub { color: var(--se-color-ink-muted); }
+.ck-player-name .dot { color: var(--primary); margin-right: 3px; }
+.ck-player-fig { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ck-over-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ck-over-last { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-left: auto; }
+
+.ck-action-row { display: flex; gap: 8px; margin-top: 8px; }
+.ck-out { flex: 1.5; min-height: 46px; border-radius: var(--se-radius-button); border: 1px solid var(--se-color-danger); background: color-mix(in oklch, var(--se-color-danger-soft) 40%, var(--se-color-surface)); color: var(--se-color-danger); font-family: var(--se-font-mono); font-size: 0.9375rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.ck-out:active { background: var(--se-color-danger); color: var(--se-color-inverse); }
+.ck-strike { flex: 1; min-height: 46px; font-size: 0.8125rem; font-weight: 600; }
+
+.ck-bottom-row { display: flex; gap: 8px; margin-top: 8px; }
+.ck-undo { flex: 0 0 64px; min-height: 46px; font-size: 1.1rem; }
+.ck-end { flex: 1; min-height: 46px; font-size: 0.875rem; font-weight: 700; }
+
+.ck-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 2px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
+.ck-footer .left { color: var(--primary); font-weight: 700; cursor: pointer; }
+.ck-footer .right { color: var(--se-color-ink-muted); font-weight: 600; }
+.ck-footer .right .go { color: var(--primary); }
+
+/* ============================================================
+   BIG-5 SCORING ZONE — the only interaction change.
+   Real --se-* tokens only. The five frequent outcomes
+   (dot · 1 · 4 · 6 · W) are large one-tap targets; rare
+   outcomes (2 · 3 · 5 + extras) sit in ONE compact strip.
+   Reuses the baseline's shadow/border/mono grammar exactly.
+   ============================================================ */
+.big5 { margin-top: 10px; }
+.big5-caption { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.big5-caption .lbl { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.big5-caption .hint { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; color: var(--se-color-ink-muted); }
+
+.big5-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+/* --- compaction pass: shorter tiles, tighter rhythm --- */
+.big5 { margin-top: 8px; }
+.big5-caption { margin-bottom: 6px; }
+.big5-key { min-height: clamp(48px, 7.5vh, 60px) !important; font-size: 2rem !important; gap: 1px !important; }
+.big5-key-wicket { min-height: 46px !important; }
+.sec { margin-top: 9px !important; }
+.sec-lbl { margin-bottom: 5px !important; }
+.ck-over-row { margin-top: 8px !important; }
+.ck-action-row, .ck-bottom-row { margin-top: 7px !important; }
+.ck-footer { margin-top: 9px !important; }
+.big5-key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: clamp(66px, 11.5vh, 84px); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-button); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 2.4rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; cursor: pointer; transition: background 120ms ease; }
+.big5-key small { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; color: var(--se-color-ink-faint); }
+.big5-key:active { transform: translateY(1px); background: var(--accent); box-shadow: none; }
+.big5-key-four, .big5-key-six { color: var(--primary); border-color: var(--primary); }
+.big5-key-four small, .big5-key-six small { color: inherit; opacity: 0.85; }
+/* the wicket — fifth big target, spans full width, danger-styled */
+.big5-key-wicket { grid-column: 1 / -1; flex-direction: row; gap: 10px; min-height: 54px; font-size: 1.25rem; letter-spacing: 0.1em; text-transform: uppercase; border-color: var(--se-color-danger); background: color-mix(in oklch, var(--se-color-danger-soft) 40%, var(--se-color-surface)); color: var(--se-color-danger); }
+.big5-key-wicket small { color: inherit; opacity: 0.8; letter-spacing: 0.12em; }
+.big5-key-wicket:active { background: var(--se-color-danger); color: var(--se-color-inverse); }
+
+/* rare-outcome strip — 2 · 3 · 5 + extras, on open canvas, hairline split */
+.big5-rare { --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent); display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 8px; background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 100% 1px; background-position: 0 0; background-repeat: no-repeat; }
+.big5-rare-key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 46px; border: none; background: transparent; color: var(--se-color-ink-soft); font-family: var(--se-font-mono); font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1; cursor: pointer; transition: background 120ms ease; }
+.big5-rare-key small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; color: var(--se-color-ink-faint); }
+.big5-rare-key:active { background: var(--accent); }
+.big5-rare-key:not(:first-child)::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 56%; background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .big5-key:active, .mono-btn:active { transform: none; }
+}
+
+/* ELEVATIONS OFF + a little HiFi flow: flat surfaces, softer radii,
+   and an inline connected "how out?" options row (no modal/overlay). */
+.ck-hero, .ck-players, .ck-icon, .big5-key, .mono-btn-primary, .big5-key:active, .mono-btn:active { box-shadow: none !important; }
+.big5-key { border-radius: 12px; }
+.mono-btn, .mono-btn-primary, .ck-out, .ck-strike, .ck-end, .ck-icon { border-radius: 10px; }
+.ck-hero, .ck-players { border-radius: 14px; }
+.w-flow { grid-column: 1 / -1; }
+.w-flow > summary { list-style: none; cursor: pointer; }
+.w-flow > summary::-webkit-details-marker { display: none; }
+.w-flow[open] > summary.big5-key-wicket { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.howout { border: 1px solid var(--se-color-danger); border-top: none; border-radius: 0 0 12px 12px; background: color-mix(in oklch, var(--se-color-danger-soft) 22%, var(--se-color-surface)); padding: 10px 12px 11px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.howout-lbl { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-danger); width: 100%; margin-bottom: 3px; }
+.ho-pill { border: 1px solid color-mix(in oklch, var(--se-color-danger) 38%, var(--se-color-line)); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 13px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.ho-pill.more { color: var(--se-color-ink-muted); border-style: dashed; }
+
+/* Improved secondary section — clear grouped pills, flat, HiFi flow */
+.sec { margin-top: 13px; }
+.sec-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 7px; }
+.sec-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 8px 15px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.pill:active { background: var(--accent); }
+.pill.num { font-family: var(--se-font-mono); font-weight: 700; min-width: 44px; padding: 8px 10px; }
+.pill.more { color: var(--se-color-ink-muted); border-style: dashed; }
+.more-flow { margin-top: 9px; }
+.more-flow > summary { list-style: none; display: inline-flex; cursor: pointer; }
+.more-flow > summary::-webkit-details-marker { display: none; }
+.more-opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.more-opts .pill { min-height: 34px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); flex: 1 1 auto; }
+/* fill the row — no wasted horizontal space */
+.sec-pills.fill { display: flex; gap: 7px; }
+.sec-pills.fill > .pill { flex: 1 1 0; }
+.more-flow > summary.more { width: 100%; justify-content: center; border-radius: 10px; }
+
+/* one control row: Undo · Swap strike · More; More opens a HiFi in-match menu */
+.ctrls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ctrls .ck-undo { flex: 0 0 52px; min-height: 46px; font-size: 1.05rem; }
+.ctrls .ck-strike { flex: 1; min-height: 46px; font-size: 0.8125rem; font-weight: 600; }
+.more-menu { flex: 0 0 auto; position: relative; }
+.sheet-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.ck-more { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 8px 16px; }
+.sheet-backdrop { display: none; }
+.sheet-cb:checked ~ .sheet-backdrop { display: block; position: fixed; inset: 0; z-index: 40; background: color-mix(in oklch, black 45%, transparent); }
+.menu-panel { display: none; }
+.sheet-cb:checked ~ .menu-panel { display: flex; flex-direction: column; gap: 10px; position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 420px; z-index: 50; padding: 8px 14px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--se-color-surface); border: 1px solid var(--se-color-line); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px -14px rgba(20,40,30,.55); max-height: 74vh; overflow-y: auto; }
+.sheet-grab { width: 36px; height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); margin: 2px auto 4px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.sheet-title { font-size: 0.9375rem; font-weight: 700; }
+.sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
+.menu-actions { margin-top: 4px; }
+.menu-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 6px; }
+.menu-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.menu-row .pill { min-height: 34px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); }
+.menu-actions { display: flex; gap: 8px; margin-top: 2px; }
+.menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
+
+/* ============================================================
+   OPTIONAL SHOT TRACKING — on-demand wagon wheel.
+   A toggle in the scoring caption; when ON, a run-scoring tap
+   opens a bottom-sheet ground (round | box) to record where the
+   ball went. Feeds the batsman wagon wheel. Skippable every ball.
+   ============================================================ */
+:root { --wash: oklch(0.955 0.03 150); }
+.track-toggle { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-muted); cursor: pointer; user-select: none; padding: 0; }
+.track-toggle .sw { width: 30px; height: 17px; border-radius: 99px; border: 1px solid var(--se-color-line); background: var(--se-color-surface); position: relative; transition: background 150ms ease; }
+.track-toggle .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 13px; height: 13px; border-radius: 50%; background: var(--se-color-ink-muted); transition: transform 150ms ease, background 150ms ease; }
+.track-toggle.on { color: var(--primary); }
+.track-toggle.on .sw { background: var(--primary); border-color: var(--primary); }
+.track-toggle.on .sw::after { transform: translateX(13px); background: var(--primary-foreground); }
+
+.track-backdrop { display: none; }
+body.track-open .track-backdrop { display: block; position: fixed; inset: 0; z-index: 60; background: color-mix(in oklch, black 45%, transparent); }
+.track-panel { display: none; }
+body.track-open .track-panel { display: flex; flex-direction: column; position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 420px; z-index: 70; padding: 10px 14px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--se-color-surface); border: 1px solid var(--se-color-line); border-bottom: none; border-radius: 16px 16px 0 0; box-shadow: 0 -10px 30px -14px rgba(20,40,30,.55); max-height: 90vh; overflow-y: auto; }
+.track-grab { width: 36px; height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); margin: 2px auto 4px; }
+.track-head { display: flex; align-items: center; justify-content: space-between; }
+.track-title { font-size: 0.95rem; font-weight: 800; }
+.track-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
+.track-sub { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin: 2px 0 10px; }
+.track-sub b { color: var(--primary); }
+.gt { display: flex; gap: 6px; margin-bottom: 10px; }
+.gt button { flex: 1; min-height: 34px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); border-radius: 999px; font-family: var(--se-font-sans); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink); cursor: pointer; }
+.gt button.on { background: var(--se-color-ink); color: var(--primary-foreground); border-color: var(--se-color-ink); }
+.ground-wrap { position: relative; width: 100%; max-width: 270px; margin: 0 auto; }
+.ground-wrap svg { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+.track-hint { text-align: center; font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-faint); margin: 8px 0 2px; }
+.track-legend { display: flex; justify-content: center; gap: 14px; font-family: var(--se-font-mono); font-size: 0.5625rem; color: var(--se-color-ink-muted); margin-top: 2px; }
+.track-legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+.track-actions { display: flex; gap: 8px; margin-top: 12px; }
+.track-actions .btn { flex: 1; min-height: 44px; border-radius: 10px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.track-actions .skip { border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink-muted); }
+.track-actions .save { border: 1px solid var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.dims { margin: 0 0 4px; }
+.dims-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-faint); margin: 2px 0 7px; text-align: center; }
+.dims-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.dim { min-height: 30px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); border-radius: 999px; padding: 5px 11px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; color: var(--se-color-ink); cursor: pointer; }
+.dim.on { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.track-ground-tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; color: var(--se-color-ink-muted); border: 1px solid color-mix(in oklch, var(--se-color-line) 30%, transparent); border-radius: 999px; padding: 4px 11px; margin-bottom: 8px; align-self: flex-start; }
+.track-ground-tag b { color: var(--se-color-ink); font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .track-toggle .sw, .track-toggle .sw::after { transition: none; } }
+</style>
+</head>
+<body>
+<!-- BIG-5 (frequency-first) alternative. Reuses the baseline's ENTIRE style
+     head + top structure verbatim (topbar · flat BLACK hero · 3-col players ·
+     over strip). Only the SCORING-INTERACTION zone changes: the five frequent
+     outcomes (dot · 1 · 4 · 6 · W) are large one-tap targets, the rare ones
+     (2 · 3 · 5 + Wide/No-ball/Bye/LB) sit in ONE compact strip below.
+     Demo state: Royals 147/4 (17.2) chasing 170 — NEED 23 OFF 16. -->
+<div class="mono-scorer-screen">
+  <div class="mono-scorer-shell">
+    <h1 class="sr-only">Cricket match scorer</h1>
+
+    <!-- Top bar: back · title+subline · menu -->
+    <div class="mono-scorer-topbar">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <span class="ck-icon" aria-hidden="true">&#8249;</span>
+        <div style="min-width:0;">
+          <div class="ck-topbar-title">Royals vs Strikers &middot; T20</div>
+          <div class="ck-topbar-sub">Over 17.2 &middot; Chasing 170</div>
+        </div>
+      </div>
+      <div class="mono-scorer-topbar-actions">
+        <span class="mono-badge mono-badge-live">Live</span>
+        <span class="ck-icon" aria-hidden="true">&#8801;</span>
+      </div>
+    </div>
+
+    <!-- HERO — flat black, our tokens. Score + overs/CRR, chase progress bar,
+         NEED/OFF · RRR as ONE compact block. -->
+    <div class="ck-hero">
+      <div class="ck-hero-top">
+        <div style="display:flex; align-items:baseline;">
+          <span class="ck-hero-score mono-score">147<span class="wk">/4</span></span>
+          <span class="ck-hero-ov">(17.2)</span>
+        </div>
+        <span class="ck-hero-crr">CRR 8.48</span>
+      </div>
+      <div class="ck-hero-bar"><i style="width:87%"></i></div>
+      <div class="ck-hero-chase">
+        <span>NEED <b class="need">23</b> OFF <b>16</b></span>
+        <span>RRR <b>8.63</b></span>
+      </div>
+    </div>
+
+    <!-- PLAYERS — compact 3-column: striker | non-striker | bowler -->
+    <div class="ck-players">
+      <div class="ck-player">
+        <div class="ck-player-name"><span class="dot">&#9679;</span>R. Sharma</div>
+        <div class="ck-player-fig">62 (41)</div>
+      </div>
+      <div class="ck-player">
+        <div class="ck-player-name sub">K. Patel</div>
+        <div class="ck-player-fig">38 (29)</div>
+      </div>
+      <div class="ck-player">
+        <div class="ck-player-name sub">J. Khan &#9682;</div>
+        <div class="ck-player-fig">3.2-0-28-2</div>
+      </div>
+    </div>
+
+    <!-- THIS OVER — every ball bowled + dashed slots for the rest -->
+    <div class="ck-over-row">
+      <div class="mono-over-strip">
+        <span class="mono-over-label">Over 18</span>
+        <span class="mono-over-pip">1</span>
+        <span class="mono-over-pip mono-over-pip-four">4</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- ======= BIG-5 SCORING ZONE ======= -->
+    <div class="big5">
+      <div class="big5-caption">
+        <span class="lbl">Score this ball</span>
+        <button class="track-toggle on" id="trackToggle" type="button"><span class="sw"></span>Track shots</button>
+      </div>
+
+      <!-- Five big frequent targets: dot · 1 · 4 · 6 · W -->
+      <div class="big5-grid">
+        <button class="big5-key" data-run="0">&middot;<small>DOT</small></button>
+        <button class="big5-key" data-run="1">1<small>SINGLE</small></button>
+        <button class="big5-key big5-key-four" data-run="4">4<small>FOUR</small></button>
+        <button class="big5-key big5-key-six" data-run="6">6<small>SIX</small></button>
+        <details class="w-flow">
+          <summary class="big5-key big5-key-wicket">W<small>WICKET</small></summary>
+          <div class="howout">
+            <span class="howout-lbl">How out?</span>
+            <button class="ho-pill">Bowled</button>
+            <button class="ho-pill">Caught</button>
+            <button class="ho-pill">LBW</button>
+            <button class="ho-pill">Run out</button>
+            <button class="ho-pill">Stumped</button>
+            <button class="ho-pill more">More &middot;</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Extras (positioned above the Big-5 via CSS order) -->
+    <div class="sec sec-extras">
+      <span class="sec-lbl">Extras</span>
+      <div class="sec-pills fill">
+        <button class="pill">Wide</button>
+        <button class="pill">No-ball</button>
+        <button class="pill">Bye</button>
+        <button class="pill">Leg-bye</button>
+      </div>
+    </div>
+
+    <!-- Other runs (positioned just above the Big-5 via CSS order) -->
+    <div class="sec sec-otherruns">
+      <span class="sec-lbl">Other runs</span>
+      <div class="sec-pills fill">
+        <button class="pill num" data-run="2">2</button>
+        <button class="pill num" data-run="3">3</button>
+        <button class="pill num" data-run="5">5</button>
+        <button class="pill num" data-run="7">7</button>
+      </div>
+    </div>
+
+    <!-- One control row: Undo · Swap strike · ⋯ More (HiFi in-match menu) -->
+    <div class="ctrls">
+      <button class="mono-btn ck-undo" aria-label="Undo last ball">&#8617;</button>
+      <button class="mono-btn ck-strike">&#8646; Swap strike</button>
+      <div class="more-menu">
+        <input type="checkbox" id="moreSheet" class="sheet-cb" aria-hidden="true">
+        <label for="moreSheet" class="mono-btn ck-more">&#8943; More</label>
+        <label for="moreSheet" class="sheet-backdrop" aria-hidden="true"></label>
+        <div class="menu-panel" role="menu">
+          <div class="sheet-grab"></div>
+          <div class="sheet-head"><span class="sheet-title">Match options</span><label for="moreSheet" class="sheet-x" aria-label="Close">&#10005;</label></div>
+          <div>
+            <span class="menu-lbl">Correct</span>
+            <div class="menu-row">
+              <button class="pill">Correct last ball</button>
+              <button class="pill">Overthrow</button>
+              <button class="pill">Change bowler</button>
+            </div>
+          </div>
+          <div>
+            <span class="menu-lbl">Score</span>
+            <div class="menu-row">
+              <button class="pill">Retire</button>
+              <button class="pill">Penalty +5</button>
+              <button class="pill">Dead ball</button>
+            </div>
+          </div>
+          <div>
+            <span class="menu-lbl">Match</span>
+            <div class="menu-row">
+              <button class="pill">Edit setup</button>
+              <button class="pill">Rain / DLS</button>
+              <button class="pill">Share live &#8599;</button>
+            </div>
+          </div>
+          <div class="menu-actions">
+            <button class="menu-end">End innings</button>
+            <button class="menu-end danger">End match</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer: quiet scorecard link + spectator/share -->
+    <div class="ck-footer">
+      <span class="left">Full scorecard &rsaquo;</span>
+      <span class="right">Share live <span class="go">&#8599;</span></span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======= OPTIONAL SHOT-TRACKING SHEET =======
+     Opens after a run-scoring tap when "Track shots" is ON.
+     Ground shape + rough size are chosen once at match setup;
+     this per-ball sheet just records WHERE the ball went. -->
+<label class="track-backdrop" id="trackBackdrop" aria-hidden="true"></label>
+<div class="track-panel" role="dialog" aria-label="Shot tracking">
+  <div class="track-grab"></div>
+  <div class="track-head">
+    <span class="track-title">Where did it go?</span>
+    <span class="track-x" id="trackClose" role="button" aria-label="Close">&#10005;</span>
+  </div>
+  <div class="track-sub" id="trackSub">Scored <b>FOUR</b> &middot; R. Sharma &middot; tap where it went</div>
+
+  <!-- read-only: ground shape + size were chosen at match setup -->
+  <div class="track-ground-tag" id="trackGroundTag">GROUND &middot; <b>Box</b> &middot; &asymp;20×18 m</div>
+
+  <div class="ground-wrap">
+    <svg id="g" viewBox="0 0 300 300" aria-label="Round ground" style="display:none">
+      <circle cx="150" cy="150" r="146" fill="var(--wash)" stroke="var(--se-color-line)" stroke-width="1.5"/>
+      <circle cx="150" cy="150" r="88" fill="none" stroke="color-mix(in oklch,var(--se-color-line) 22%,transparent)" stroke-width="1" stroke-dasharray="3 4"/>
+      <g stroke="color-mix(in oklch,var(--se-color-line) 14%,transparent)" stroke-width="1">
+        <line x1="150" y1="4" x2="150" y2="296"/><line x1="4" y1="150" x2="296" y2="150"/>
+        <line x1="46" y1="46" x2="254" y2="254"/><line x1="254" y1="46" x2="46" y2="254"/>
+      </g>
+      <rect x="143" y="120" width="14" height="60" rx="2" fill="color-mix(in oklch,var(--se-color-line) 10%,var(--se-color-surface))" stroke="color-mix(in oklch,var(--se-color-line) 30%,transparent)" stroke-width="1"/>
+      <circle cx="150" cy="150" r="4.5" fill="var(--se-color-ink)"/>
+    </svg>
+    <svg id="oval" viewBox="0 0 300 300" aria-label="Oval ground" style="display:none">
+      <ellipse cx="150" cy="150" rx="144" ry="106" fill="var(--wash)" stroke="var(--se-color-line)" stroke-width="1.5"/>
+      <ellipse cx="150" cy="150" rx="86" ry="62" fill="none" stroke="color-mix(in oklch,var(--se-color-line) 22%,transparent)" stroke-width="1" stroke-dasharray="3 4"/>
+      <g stroke="color-mix(in oklch,var(--se-color-line) 14%,transparent)" stroke-width="1">
+        <line x1="150" y1="44" x2="150" y2="256"/><line x1="6" y1="150" x2="294" y2="150"/>
+      </g>
+      <rect x="143" y="122" width="14" height="56" rx="2" fill="color-mix(in oklch,var(--se-color-line) 10%,var(--se-color-surface))" stroke="color-mix(in oklch,var(--se-color-line) 30%,transparent)" stroke-width="1"/>
+      <circle cx="150" cy="150" r="4.5" fill="var(--se-color-ink)"/>
+    </svg>
+    <svg id="rect" viewBox="0 0 300 300" aria-label="Rectangular ground"></svg>
+  </div>
+
+  <div class="track-hint">Tap where the ball was hit &middot; long-press = along the ground</div>
+  <div class="track-legend"><span><i style="background:var(--primary)"></i>Boundary</span><span><i style="background:color-mix(in oklch,var(--se-color-ink-muted) 55%,transparent)"></i>Ran</span></div>
+  <div class="track-actions">
+    <button class="btn skip" id="trackSkip">Skip</button>
+    <button class="btn save" id="trackSave">Save shot</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var toggle=document.getElementById('trackToggle');
+  var sub=document.getElementById('trackSub');
+  var tag=document.getElementById('trackGroundTag');
+  var grounds={g:document.getElementById('g'),oval:document.getElementById('oval'),rect:document.getElementById('rect')};
+  var rectSvg=grounds.rect;
+  var PRESETS={
+    box:[{w:16,h:16,t:'16×16'},{w:20,h:18,t:'20×18'},{w:24,h:20,t:'24×20'},{w:30,h:22,t:'30×22'}],
+    gully:[{w:5,h:22,t:'5×22'},{w:6,h:30,t:'6×30'},{w:7,h:40,t:'7×40'},{w:9,h:50,t:'9×50'}]
+  };
+  // === CHOSEN AT MATCH SETUP (pre-match config) — read-only in-match ===
+  var CONFIG={ ground:'box', size:1 };
+  var LABEL={g:'Round',oval:'Oval',box:'Box',gully:'Gully'};
+  var batX=150, batY=240, pending=null;
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function svgId(){ return (CONFIG.ground==='box'||CONFIG.ground==='gully')?'rect':CONFIG.ground; }
+  function drawRect(){
+    while(rectSvg.firstChild) rectSvg.removeChild(rectSvg.firstChild); pending=null;
+    var p=PRESETS[CONFIG.ground][CONFIG.size], pad=18, span=300-pad*2;
+    var s=span/Math.max(p.w,p.h), w=p.w*s, h=p.h*s, x=(300-w)/2, y=(300-h)/2;
+    var isGully=CONFIG.ground==='gully', wall=isGully?4:6;
+    rectSvg.appendChild(el('rect',{x:x,y:y,width:w,height:h,rx:isGully?7:12,fill:'var(--wash)',stroke:'var(--se-color-line)','stroke-width':wall}));
+    rectSvg.appendChild(el('rect',{x:x+5,y:y+5,width:w-10,height:h-10,rx:5,fill:'none',stroke:'color-mix(in oklch,var(--se-color-line) 16%,transparent)','stroke-width':1}));
+    batX=150; batY=y+h-24;
+    var pitchH=Math.min(h*0.5,116);
+    rectSvg.appendChild(el('rect',{x:143,y:batY-pitchH+16,width:14,height:pitchH,rx:2,fill:'color-mix(in oklch,var(--se-color-line) 10%,var(--se-color-surface))',stroke:'color-mix(in oklch,var(--se-color-line) 30%,transparent)','stroke-width':1}));
+    var top=el('text',{x:150,y:y+18,'text-anchor':'middle','font-family':'var(--se-font-mono)','font-size':10,'font-weight':800,fill:'var(--se-color-danger)'});
+    top.textContent=(isGully?'STRAIGHT':'BACK WALL')+' · 6 / OUT'; rectSvg.appendChild(top);
+    var ll=el('text',{x:x+13,y:150,'text-anchor':'middle','font-family':'var(--se-font-mono)','font-size':9,'font-weight':700,fill:'var(--se-color-ink-muted)',transform:'rotate(-90 '+(x+13)+' 150)'}); ll.textContent=isGully?'WALL':'SIDE · 1'; rectSvg.appendChild(ll);
+    var rl=el('text',{x:x+w-13,y:150,'text-anchor':'middle','font-family':'var(--se-font-mono)','font-size':9,'font-weight':700,fill:'var(--se-color-ink-muted)',transform:'rotate(90 '+(x+w-13)+' 150)'}); rl.textContent=isGully?'WALL':'SIDE · 1'; rectSvg.appendChild(rl);
+    rectSvg.appendChild(el('circle',{cx:batX,cy:batY,r:4.5,fill:'var(--se-color-ink)'}));
+  }
+  function render(){
+    var id=svgId();
+    for(var k in grounds) grounds[k].style.display=(k===id?'block':'none');
+    if(id==='rect') drawRect();
+    var dim=(CONFIG.ground==='box'||CONFIG.ground==='gully') ? ' &middot; &asymp;'+PRESETS[CONFIG.ground][CONFIG.size].t+' m' : '';
+    tag.innerHTML='GROUND &middot; <b>'+LABEL[CONFIG.ground]+'</b>'+dim;
+  }
+  function center(){ return svgId()==='rect' ? [batX,batY] : [150,150]; }
+  function drawShot(svg,e){
+    var c=center(), r=svg.getBoundingClientRect(), t=e.touches?e.touches[0]:e;
+    var x=(t.clientX-r.left)/r.width*300, y=(t.clientY-r.top)/r.height*300;
+    if(pending&&pending.parentNode) pending.parentNode.removeChild(pending);
+    pending=el('line',{x1:c[0],y1:c[1],x2:x.toFixed(0),y2:y.toFixed(0),stroke:'var(--primary)','stroke-width':3,'stroke-linecap':'round'});
+    svg.appendChild(pending);
+  }
+  grounds.g.addEventListener('click',function(e){drawShot(grounds.g,e);});
+  grounds.oval.addEventListener('click',function(e){drawShot(grounds.oval,e);});
+  grounds.rect.addEventListener('click',function(e){drawShot(grounds.rect,e);});
+
+  toggle.addEventListener('click',function(){ toggle.classList.toggle('on'); });
+
+  var RUN={1:'ONE',2:'TWO',3:'THREE',4:'FOUR',5:'FIVE',6:'SIX',7:'SEVEN'};
+  function openFor(run){
+    if(pending&&pending.parentNode){pending.parentNode.removeChild(pending);pending=null;}
+    if(svgId()==='rect') drawRect();
+    sub.innerHTML='Scored <b>'+RUN[run]+'</b> · R. Sharma · tap where it went';
+    document.body.classList.add('track-open');
+  }
+  document.querySelectorAll('[data-run]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var r=+b.getAttribute('data-run');
+      if(r>0 && toggle.classList.contains('on')) openFor(r);
+    });
+  });
+  function close(keep){
+    if(!keep && pending && pending.parentNode){pending.parentNode.removeChild(pending);}
+    pending=null; document.body.classList.remove('track-open');
+  }
+  document.getElementById('trackSkip').addEventListener('click',function(){close(false);});
+  document.getElementById('trackSave').addEventListener('click',function(){close(true);});
+  document.getElementById('trackClose').addEventListener('click',function(){close(false);});
+  document.getElementById('trackBackdrop').addEventListener('click',function(){close(false);});
+
+  // demo: #track-gully etc. simulates what setup configured, then opens the sheet
+  var hx=(location.hash||'').toLowerCase();
+  var want=(hx.match(/round|oval|box|gully/)||[])[0];
+  if(want){ CONFIG.ground={round:'g',oval:'oval',box:'box',gully:'gully'}[want]; CONFIG.size=1; }
+  render();
+  if(hx.indexOf('track')>=0) openFor(4);
+})();
+</script>
+</body>
+</html>

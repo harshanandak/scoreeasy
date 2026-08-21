@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volleyball — design preview</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from cricket-scorer-alt-big5.html
+   (src/index.css :root). --se-* / --primary / --font-mono only.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Merriweather, ui-serif, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --tracking-normal: 0;
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: color-mix(in oklch, var(--muted-foreground) 62%, var(--background));
+  --se-color-line: var(--border);
+  --se-color-line-strong: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-shadow-card: var(--shadow-xs);
+  --se-motion-standard: 250ms;
+  /* leader/lead wash — derived from --primary, no new hue (green = lead only) */
+  --se-blend-green-wash: color-mix(in oklch, var(--primary) 22%, transparent);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.mono-score { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; line-height: 1; }
+
+/* ============================================================
+   PREVIEW SHELL — landscape canvas, three phone frames in a row
+   ============================================================ */
+.pv-page { padding: 34px 30px 60px; }
+.pv-head { max-width: 1300px; margin: 0 auto 28px; }
+.pv-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.01em; }
+.pv-sub { margin-top: 6px; font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; color: var(--se-color-ink-muted); }
+.pv-sub b { color: var(--se-color-ink); }
+.pv-row { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; }
+.pv-col { display: flex; flex-direction: column; gap: 10px; width: 380px; }
+.pv-cap { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--se-color-ink-faint); padding-left: 3px; }
+.pv-cap .n { color: var(--primary); margin-right: 7px; }
+.pv-frame {
+  position: relative;
+  width: 380px; min-height: 760px;
+  border: 1px solid var(--se-color-line); border-radius: 26px;
+  background: var(--se-color-canvas); box-shadow: var(--shadow);
+  padding: 15px 15px calc(15px + 4px); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* ============================================================
+   SHARED — topbar / icons / badges (verbatim grammar)
+   ============================================================ */
+.mono-badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 0.6875rem; font-family: var(--se-font-mono); border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.mono-badge-live { background: var(--se-color-action-soft); color: var(--se-color-action); display: inline-flex; align-items: center; gap: 5px; }
+.mono-badge-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; cursor: pointer; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; }
+.topbar-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+
+/* ============================================================
+   THE HERO BOARD (main-scoreboard.md) — flat BLACK, one hard shadow.
+   Reused inert & FLAT by the scorer; shadowed card by board & live.
+   ============================================================ */
+.vb-hero { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); padding: 14px 16px; }
+.vb-hero-ctx { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.vb-hero-ctx .ttl { font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 600; color: color-mix(in oklch, var(--se-color-inverse) 72%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vb-hero-ctx .live { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; color: var(--primary); display: inline-flex; align-items: center; gap: 5px; }
+.vb-hero-ctx .live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1.4s ease-in-out infinite; }
+
+.vb-codes { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.vb-code { font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; color: color-mix(in oklch, var(--se-color-inverse) 66%, transparent); display: inline-flex; align-items: center; gap: 6px; }
+.vb-code.r { justify-content: flex-end; }
+.vb-code .srv { color: var(--primary); font-size: 0.9rem; line-height: 1; }
+.vb-code .pip { width: 8px; height: 8px; border-radius: 2px; background: color-mix(in oklch, var(--se-color-inverse) 40%, transparent); }
+.vb-code.lead { color: var(--se-color-inverse); }
+
+.vb-nums { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 2px; }
+.vb-num { font-family: var(--se-font-mono); font-size: 3.4rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.vb-num.l { text-align: left; }
+.vb-num.r { text-align: right; }
+.vb-num .wash { display: inline-block; padding: 0 10px; margin: 0 -4px; border-radius: 8px; background: var(--se-blend-green-wash); }
+
+/* phase spine — the single context slot; ladder tint, no new hue */
+.vb-phase { text-align: center; font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 9px; border-radius: 999px; white-space: nowrap; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.vb-phase.set { color: color-mix(in oklch, var(--se-color-inverse) 58%, transparent); border: 1px solid color-mix(in oklch, var(--se-color-inverse) 18%, transparent); }
+.vb-phase.deuce { color: var(--se-color-warning); background: color-mix(in oklch, var(--se-color-warning) 20%, transparent); }
+.vb-phase.setpoint { color: var(--se-color-warning); background: color-mix(in oklch, var(--se-color-warning) 28%, transparent); }
+.vb-phase.matchpoint { color: var(--se-color-danger-soft); background: color-mix(in oklch, var(--se-color-danger) 42%, transparent); }
+
+/* sets-won pips + timeout dots (State B) */
+.vb-meta { margin-top: 12px; padding-top: 11px; border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); display: flex; flex-direction: column; gap: 7px; }
+.vb-meta-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.14em; color: color-mix(in oklch, var(--se-color-inverse) 52%, transparent); }
+.vb-meta-row .l { display: inline-flex; align-items: center; gap: 8px; }
+.vb-meta-row .r { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.vb-meta-row .mid { text-align: center; color: color-mix(in oklch, var(--se-color-inverse) 30%, transparent); }
+.dots { display: inline-flex; gap: 4px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dots i.on { background: var(--primary); }
+.dots i.off { background: transparent; border: 1px solid color-mix(in oklch, var(--se-color-inverse) 34%, transparent); }
+.dots.set i.on { background: var(--se-color-inverse); }
+
+.vb-setline { margin-top: 11px; padding-top: 10px; border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 700; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.vb-setline .s { color: color-mix(in oklch, var(--se-color-inverse) 82%, transparent); }
+.vb-setline .live { color: var(--primary); font-weight: 800; }
+.vb-setline .sep { color: color-mix(in oklch, var(--se-color-inverse) 28%, transparent); }
+
+/* board frame 1 — one calm caption line under the sacred board */
+.board-note { margin-top: auto; padding-top: 16px; }
+.board-legend { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; color: var(--se-color-ink-muted); display: flex; align-items: center; gap: 7px; line-height: 1.6; }
+.board-legend + .board-legend { margin-top: 5px; }
+.board-legend .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.board-legend .sw.green { background: var(--se-blend-green-wash); border: 1px solid var(--primary); }
+.board-legend .sw.srv { background: transparent; color: var(--primary); border: none; width: auto; font-weight: 800; }
+
+/* ============================================================
+   SCREEN 2 — LEAN SCORER (scorer.md). FLAT — no elevations.
+   Thumb-zone: rarest (⋯) on top · read hero · control strip mid
+   · two GIANT targets pinned low. ⋯ opens an in-frame bottom-sheet.
+   ============================================================ */
+.scorer-body { display: flex; flex-direction: column; flex: 1; }
+.vb-hero.pinned { margin-bottom: 12px; box-shadow: none; }
+
+.vb-ctrl { display: flex; gap: 8px; margin-bottom: 12px; }
+.vb-ctrl button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 46px; border: 1px solid color-mix(in oklch, var(--se-color-line) 55%, transparent); border-radius: 10px; background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; }
+.vb-ctrl .undo { flex: 0 0 74px; font-size: 1.05rem; }
+.vb-ctrl .to { flex: 1; flex-direction: column; gap: 4px; }
+.vb-ctrl .to .lbl { display: inline-flex; align-items: center; gap: 6px; }
+.vb-ctrl .to .dots i.on { background: var(--primary); }
+.vb-ctrl .to .dots i.off { background: transparent; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); }
+.vb-ctrl button:active { transform: translateY(1px); background: var(--accent); }
+
+.vb-targets-wrap { margin-top: auto; }
+.vb-target-caps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 7px; }
+.vb-target-caps span { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.vb-target-caps span.r { text-align: right; }
+.vb-targets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vb-target { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: clamp(132px, 24vh, 172px); border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); cursor: pointer; transition: background 120ms ease; }
+.vb-target:active { transform: translateY(1px); background: var(--accent); }
+.vb-target .tcode { font-family: var(--se-font-mono); font-size: 1.05rem; font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-ink); display: inline-flex; align-items: center; gap: 7px; }
+.vb-target .tcode .srv { color: var(--primary); }
+.vb-target .tcode .pip { width: 9px; height: 9px; border-radius: 2px; background: color-mix(in oklch, var(--se-color-line) 34%, transparent); }
+.vb-target .tbig { font-family: var(--se-font-mono); font-size: 2.6rem; font-weight: 800; color: var(--se-color-ink); font-variant-numeric: tabular-nums; line-height: 0.9; }
+.vb-target .tword { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.16em; color: var(--se-color-ink-faint); }
+.vb-target.serving { border-color: var(--primary); }
+
+.vb-scorer-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 4px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
+.vb-scorer-foot .left { color: var(--primary); font-weight: 700; cursor: pointer; }
+.vb-scorer-foot .right { color: var(--se-color-ink-muted); font-weight: 600; cursor: pointer; }
+.vb-scorer-foot .right .go { color: var(--primary); }
+
+/* ⋯ More — in-frame bottom-sheet (inline, not a blocking modal) */
+.sheet-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.sheet-backdrop { display: none; }
+.sheet-cb:checked ~ .sheet-backdrop { display: block; position: absolute; inset: 0; z-index: 40; background: color-mix(in oklch, black 42%, transparent); border-radius: inherit; }
+.menu-panel { display: none; }
+.sheet-cb:checked ~ .menu-panel { display: flex; flex-direction: column; gap: 12px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 50; padding: 8px 15px calc(16px + 4px); background: var(--se-color-surface); border-top: 1px solid var(--se-color-line); border-radius: 16px 16px 24px 24px; box-shadow: 0 -10px 30px -14px rgba(20,40,30,.55); max-height: 74%; overflow-y: auto; }
+.sheet-grab { width: 36px; height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); margin: 2px auto 2px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.sheet-title { font-size: 0.9375rem; font-weight: 700; }
+.sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
+.menu-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 6px; }
+.menu-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 8px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.pill:active { background: var(--accent); }
+.pill .sw { width: 26px; height: 15px; border-radius: 99px; border: 1px solid color-mix(in oklch, var(--se-color-line) 45%, transparent); position: relative; margin-left: 4px; }
+.pill .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--se-color-ink-muted); }
+.menu-actions { display: flex; gap: 8px; }
+.menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
+
+/* ============================================================
+   SCREEN 3 — LIVE / SPECTATOR (live-innovations.md)
+   header → tabs → hero(B) → ONE collapsed momentum → now-card
+   → key-moments feed → presence footer
+   ============================================================ */
+.live-body { display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+.tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin-bottom: 13px; }
+.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
+
+.blk { margin-top: 13px; }
+.eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+
+/* ONE momentum element — collapsed <details>; summary is the always-visible
+   one-line signature read, opening reveals the set-swing worm (icon toggle). */
+.mom-d { margin-top: 13px; border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); }
+.mom-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.mom-d > summary::-webkit-details-marker { display: none; }
+.mom-d > summary .mi { font-size: 0.95rem; color: var(--primary); }
+.mom-d > summary .lead { margin-left: auto; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.mom-d > summary .lead .srv { color: var(--primary); }
+.mom-d > summary .lead b { color: var(--primary); font-weight: 800; }
+.mom-d > summary .chev { color: var(--se-color-ink-muted); transition: transform 0.2s ease; }
+.mom-d[open] > summary .chev { transform: rotate(180deg); }
+.mom-worm-cap { display: flex; align-items: baseline; justify-content: space-between; padding: 0 12px; margin-top: 2px; font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-faint); }
+.mom-worm-cap b { color: var(--primary); font-weight: 800; }
+.mom-worm { display: flex; align-items: flex-end; gap: 4px; height: 54px; padding: 6px 12px 12px; }
+.mom-worm .bar { flex: 1; border-radius: 2px 2px 0 0; background: color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.mom-worm .bar.hi { background: var(--primary); }
+.mom-worm .bar.wk { background: color-mix(in oklch, var(--se-color-danger) 78%, transparent); }
+.mom-worm .bar.now { background: transparent; border: 1px dashed color-mix(in oklch, var(--se-color-line) 40%, transparent); }
+
+/* now-card */
+.now-card { margin-top: 13px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; }
+.now-card .nrow { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 9px 12px; font-family: var(--se-font-mono); font-size: 0.75rem; align-items: center; }
+.now-card .nrow + .nrow { border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.now-card .nrow .k { font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.now-card .nrow .v { color: var(--se-color-ink); }
+.now-card .nrow .v .srv { color: var(--primary); font-weight: 800; }
+.now-card .nrow .v b { color: var(--primary); font-weight: 800; }
+.now-card .nrow .v .mut { color: var(--se-color-ink-muted); }
+
+/* key moments feed */
+.moment { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.moment:first-of-type { border-top: none; }
+.moment .ov { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink-faint); flex: none; width: 32px; padding-top: 1px; }
+.moment .ov .srv { color: var(--primary); }
+.moment .tx { font-size: 0.8125rem; line-height: 1.35; }
+.moment .tx b { font-weight: 700; }
+.moment .tx .run { color: var(--primary); font-weight: 800; }
+.moment .tx .sp { color: var(--se-color-warning); font-weight: 800; }
+.moment .tx .saved { color: var(--primary); font-weight: 800; }
+.moment .tx .setwon { font-weight: 800; }
+
+/* presence footer */
+.pres { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  .vb-target:active, .vb-ctrl button:active { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="pv-page">
+
+  <div class="pv-head">
+    <div class="pv-title">Volleyball &mdash; design preview</div>
+    <div class="pv-sub">design1-mono &middot; brutalist &times; HiFi-blend &middot; <b>Royals vs Strikers</b> &middot; sets 1&ndash;1 &middot; set 3 &middot; ROY 22&ndash;19, serving, on a 4-point run</div>
+  </div>
+
+  <div class="pv-row">
+
+    <!-- ============================================================
+         FRAME 1 — MAIN SCOREBOARD (State B stadium hero)
+         ============================================================ -->
+    <div class="pv-col">
+      <div class="pv-cap"><span class="n">1</span>Main scoreboard</div>
+      <div class="pv-frame">
+        <div class="vb-hero">
+          <div class="vb-hero-ctx">
+            <span class="ttl">Sunday Cup &middot; Final</span>
+            <span class="live"><span class="d"></span>LIVE</span>
+          </div>
+
+          <div class="vb-codes">
+            <span class="vb-code lead"><span class="srv">&#9656;</span><span class="pip"></span>ROY</span>
+            <span></span>
+            <span class="vb-code r">STR<span class="pip"></span></span>
+          </div>
+
+          <div class="vb-nums">
+            <div class="vb-num l mono-score"><span class="wash">22</span></div>
+            <div class="vb-phase set">SET 3</div>
+            <div class="vb-num r mono-score">19</div>
+          </div>
+
+          <div class="vb-meta">
+            <div class="vb-meta-row">
+              <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
+              <span class="mid">&mdash;</span>
+              <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+            </div>
+            <div class="vb-meta-row">
+              <span class="l">T.O <span class="dots"><i class="on"></i><i class="on"></i></span></span>
+              <span class="mid"></span>
+              <span class="r"><span class="dots"><i class="on"></i><i class="off"></i></span> T.O</span>
+            </div>
+          </div>
+
+          <div class="vb-setline">
+            <span class="s">25&ndash;21</span><span class="sep">&middot;</span>
+            <span class="s">23&ndash;25</span><span class="sep">&middot;</span>
+            <span class="live">22&#9656;</span>
+          </div>
+        </div>
+
+        <div class="board-note">
+          <div class="board-legend"><span class="sw green"></span>Green wash = leading side &middot; <span class="sw srv">&#9656;</span> serve glyph flips on side-out</div>
+          <div class="board-legend">Reads across a room &middot; never computes. No feed, no charts, one accent.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         FRAME 2 — LEAN SCORER (flat, thumb-zone, ⋯ bottom-sheet)
+         ============================================================ -->
+    <div class="pv-col">
+      <div class="pv-cap"><span class="n">2</span>Lean scorer</div>
+      <div class="pv-frame">
+
+        <input type="checkbox" id="moreSheet" class="sheet-cb" aria-hidden="true">
+
+        <div class="scorer-body">
+
+          <div class="topbar">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <span class="ck-icon" aria-hidden="true">&#8249;</span>
+              <div style="min-width:0;">
+                <div class="topbar-title">Sunday Cup &middot; Final</div>
+                <div class="topbar-sub">Set 3 &middot; Royals lead</div>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <span class="mono-badge mono-badge-live"><span class="d"></span>Live</span>
+              <label for="moreSheet" class="ck-icon" aria-label="More">&#8943;</label>
+            </div>
+          </div>
+
+          <!-- PINNED HERO (State A, read-only glass, FLAT — not tappable) -->
+          <div class="vb-hero pinned">
+            <div class="vb-codes">
+              <span class="vb-code lead"><span class="srv">&#9656;</span><span class="pip"></span>ROY</span>
+              <span></span>
+              <span class="vb-code r">STR<span class="pip"></span></span>
+            </div>
+            <div class="vb-nums">
+              <div class="vb-num l mono-score"><span class="wash">22</span></div>
+              <div class="vb-phase set">SET 3</div>
+              <div class="vb-num r mono-score">19</div>
+            </div>
+            <div class="vb-meta">
+              <div class="vb-meta-row">
+                <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
+                <span class="mid">1&ndash;1</span>
+                <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTROL STRIP (secondary, mid-reach) -->
+          <div class="vb-ctrl">
+            <button class="undo" aria-label="Undo last rally">&#8617;</button>
+            <button class="to"><span class="lbl">T.O &middot; ROY</span><span class="dots"><i class="on"></i><i class="on"></i></span></button>
+            <button class="to"><span class="lbl">T.O &middot; STR</span><span class="dots"><i class="on"></i><i class="off"></i></span></button>
+          </div>
+
+          <!-- TWO GIANT TARGETS (dominant, pinned low in thumb arc) -->
+          <div class="vb-targets-wrap">
+            <div class="vb-target-caps"><span>Point to</span><span class="r">Point to</span></div>
+            <div class="vb-targets">
+              <button class="vb-target serving">
+                <span class="tcode"><span class="srv">&#9656;</span><span class="pip"></span>ROY</span>
+                <span class="tbig">22</span>
+                <span class="tword">POINT</span>
+              </button>
+              <button class="vb-target">
+                <span class="tcode"><span class="pip"></span>STR</span>
+                <span class="tbig">19</span>
+                <span class="tword">POINT</span>
+              </button>
+            </div>
+            <div class="vb-scorer-foot">
+              <span class="left">Full scorecard &rsaquo;</span>
+              <span class="right">Share live <span class="go">&#8599;</span></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ⋯ MORE — in-frame bottom-sheet holding the genuine rarities -->
+        <label for="moreSheet" class="sheet-backdrop" aria-hidden="true"></label>
+        <div class="menu-panel" role="menu">
+          <div class="sheet-grab"></div>
+          <div class="sheet-head"><span class="sheet-title">Match options</span><label for="moreSheet" class="sheet-x" aria-label="Close">&#10005;</label></div>
+          <div>
+            <span class="menu-lbl">Correct</span>
+            <div class="menu-row">
+              <button class="pill">Correct score</button>
+              <button class="pill">Fix first server</button>
+            </div>
+          </div>
+          <div>
+            <span class="menu-lbl">Match</span>
+            <div class="menu-row">
+              <button class="pill">Quick mode<span class="sw"></span></button>
+              <button class="pill">Subs / libero</button>
+              <button class="pill">Share live &#8599;</button>
+            </div>
+          </div>
+          <div class="menu-actions">
+            <button class="menu-end">End set</button>
+            <button class="menu-end danger">End match</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         FRAME 3 — LIVE (spectator watch surface)
+         ============================================================ -->
+    <div class="pv-col">
+      <div class="pv-cap"><span class="n">3</span>Live</div>
+      <div class="pv-frame">
+        <div class="live-body">
+
+          <div class="topbar">
+            <span class="ck-icon" aria-hidden="true">&#8249;</span>
+            <div style="text-align:center; flex:1; min-width:0;">
+              <div class="topbar-title">Sunday Cup &middot; Final</div>
+              <div class="topbar-sub" style="color:var(--primary);">&#9679; LIVE</div>
+            </div>
+            <span class="ck-icon" aria-hidden="true">&#8599;</span>
+          </div>
+
+          <div class="tabs">
+            <span class="tab on">Live</span>
+            <span class="tab">Sets</span>
+            <span class="tab">Stats</span>
+          </div>
+
+          <!-- HERO BOARD (State B, verbatim shared component) -->
+          <div class="vb-hero">
+            <div class="vb-codes">
+              <span class="vb-code lead"><span class="srv">&#9656;</span><span class="pip"></span>ROY</span>
+              <span></span>
+              <span class="vb-code r">STR<span class="pip"></span></span>
+            </div>
+            <div class="vb-nums">
+              <div class="vb-num l mono-score"><span class="wash">22</span></div>
+              <div class="vb-phase set">SET 3</div>
+              <div class="vb-num r mono-score">19</div>
+            </div>
+            <div class="vb-meta">
+              <div class="vb-meta-row">
+                <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
+                <span class="mid">&mdash;</span>
+                <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+              </div>
+              <div class="vb-meta-row">
+                <span class="l">T.O <span class="dots"><i class="on"></i><i class="on"></i></span></span>
+                <span class="mid"></span>
+                <span class="r"><span class="dots"><i class="on"></i><i class="off"></i></span> T.O</span>
+              </div>
+            </div>
+            <div class="vb-setline">
+              <span class="s">25&ndash;21</span><span class="sep">&middot;</span>
+              <span class="s">23&ndash;25</span><span class="sep">&middot;</span>
+              <span class="live">22&#9656;</span>
+            </div>
+          </div>
+
+          <!-- ONE momentum element — collapsed; summary is the signature read -->
+          <details class="mom-d">
+            <summary>
+              <span class="mi">&#10233;</span><span class="eyebrow">Momentum</span>
+              <span class="lead"><span class="srv">&#9656;</span> ROY on serve &middot; <b>4&#9656;</b> run</span>
+              <span class="chev">&#9662;</span>
+            </summary>
+            <div class="mom-worm-cap"><span>Set swing &middot; this set</span><span>lead &plusmn; <b>ROY +4</b></span></div>
+            <div class="mom-worm">
+              <div class="bar wk" style="height:30%"></div>
+              <div class="bar hi" style="height:52%"></div>
+              <div class="bar wk" style="height:40%"></div>
+              <div class="bar hi" style="height:70%"></div>
+              <div class="bar wk" style="height:26%"></div>
+              <div class="bar hi" style="height:60%"></div>
+              <div class="bar hi" style="height:100%"></div>
+              <div class="bar now" style="height:44%"></div>
+            </div>
+          </details>
+
+          <!-- now-card -->
+          <div class="now-card">
+            <div class="nrow"><span class="k">Now</span><span class="v"><span class="srv">&#9656;</span> Serving <b>ROY</b> &middot; 4 straight &middot; <span class="mut">3 from the set</span></span></div>
+            <div class="nrow"><span class="k">Last point</span><span class="v">KILL &middot; A. Menon <span class="mut">&middot; line 4</span></span></div>
+          </div>
+
+          <!-- key moments feed (auto from log) -->
+          <div class="blk">
+            <div class="eyebrow" style="display:block; margin-bottom:4px;">Key moments</div>
+            <div class="moment"><span class="ov">22<span class="srv">&#9656;</span></span><span class="tx"><span class="run">RUN</span> &middot; ROY <b>4 straight</b> on R. Nair's serve</span></div>
+            <div class="moment"><span class="ov">20</span><span class="tx"><b>TECH</b> &middot; STR timeout &mdash; ROY momentum</span></div>
+            <div class="moment"><span class="ov">&mdash;</span><span class="tx"><span class="setwon">SET 2</span> &middot; STR take it <b>25&ndash;23</b></span></div>
+            <div class="moment"><span class="ov">24</span><span class="tx"><span class="sp">SET POINT</span> &middot; STR led 24&ndash;23, serving</span></div>
+            <div class="moment"><span class="ov">23</span><span class="tx"><span class="saved">SAVED</span> &middot; ROY erase set point, K. Reddy kill</span></div>
+          </div>
+
+          <!-- presence footer -->
+          <div class="pres">
+            <span>&#128065; 208 watching</span>
+            <span class="follow">Following &#10003;</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

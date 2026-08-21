@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScoreEasy — Cricket · POWER mode keypad (blend v2)</title>
+<style>
+  :root{
+    /* ══ base minimal-brutalist tokens — mirrored verbatim from src/index.css ══ */
+    --se-color-canvas:        oklch(0.9782 0.0039 145.5458);
+    --se-color-surface:       oklch(0.9855 0.0026 145.5558);
+    --se-color-surface-warm:  oklch(0.9398 0.0035 145.5478);
+    --se-color-ink:           oklch(0 0 0);
+    --se-color-ink-strong:    oklch(0 0 0);
+    --se-color-ink-soft:      oklch(0.3211 0 0);
+    --se-color-ink-muted:     oklch(0.5103 0 0);
+    --se-color-ink-faint:     oklch(0.62 0 0);
+    --se-color-line:          oklch(0 0 0);
+    --se-color-line-strong:   oklch(0 0 0);
+    --se-color-inverse:       oklch(1 0 0);
+    --se-color-action:        oklch(0.6230 0.1688 149.1777);
+    --se-color-action-soft:   oklch(0.9231 0.0773 156.7494);
+    --se-color-action-strong: oklch(0.4104 0.1066 149.9393);
+    --se-color-focus-ring:    oklch(0.58 0.22 255);
+    --se-color-danger:        oklch(0.49 0.17 29);
+    --se-color-danger-soft:   oklch(0.96 0.04 29);
+    --se-color-warning:       oklch(0.54 0.12 78);
+    --se-color-warning-soft:  oklch(0.96 0.05 86);
+    --se-font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --se-font-mono: "JetBrains Mono", ui-monospace, monospace;
+    --se-border-standard: 1.5px;
+    --se-radius-button: 0.25rem;
+    --se-radius-card:   0.5rem;
+    --se-shadow-card: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+    --se-shadow-hard: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+    --se-motion-standard: 250ms;
+
+    /* ══ blend tokens — all DERIVED from the tokens above, zero raw hex, zero new hues (gold excepted, budgeted at 1/app) ══ */
+    --se-blend-radius-capsule: 999px;
+    --se-blend-radius-circle:  50%;
+    --se-blend-radius-soft-sm: 10px;
+    --se-blend-radius-soft:    12px;
+    --se-blend-radius-soft-lg: 16px;
+    --se-blend-green-wash:        color-mix(in oklab, var(--se-color-action-soft) 46%, var(--se-color-surface));
+    --se-blend-green-wash-strong: color-mix(in oklab, var(--se-color-action-soft) 78%, var(--se-color-surface));
+    --se-blend-hairline:        color-mix(in oklab, var(--se-color-line) 16%, transparent);
+    --se-blend-hairline-strong: color-mix(in oklab, var(--se-color-line) 22%, transparent);
+    --se-blend-shadow-soft: 0 6px 18px -10px color-mix(in oklab, var(--se-color-ink) 55%, transparent);
+    --se-blend-shadow-cta:  0 10px 20px -10px color-mix(in oklab, var(--se-color-action) 70%, transparent);
+    --se-blend-ring:        0 0 0 3px color-mix(in oklab, var(--se-color-action) 24%, transparent);
+    --se-blend-gold:        oklch(0.62 0.108 82);
+    --se-blend-gold-bright: oklch(0.84 0.125 88);
+    --se-blend-gold-ink:    oklch(0.30 0.055 76);
+    --se-blend-pulse-a: color-mix(in oklab, var(--se-color-action) 42%, transparent);
+    --se-blend-pulse-b: color-mix(in oklab, var(--se-color-action) 0%, transparent);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    background:var(--se-color-canvas);
+    color:var(--se-color-ink);
+    font-family:var(--se-font-sans);
+    line-height:1.34;
+    -webkit-font-smoothing:antialiased;
+    padding:18px 10px 64px;
+  }
+  .wrap{max-width:420px;margin:0 auto}
+  h1.page{font-size:13px;font-family:var(--se-font-mono);text-transform:uppercase;letter-spacing:.13em;margin-bottom:5px}
+  p.lede{font-size:12px;color:var(--se-color-ink-muted);margin-bottom:16px;line-height:1.5}
+  p.lede b{color:var(--se-color-ink)}
+
+  /* section caption — uppercase mono eyebrow, ≤3 words, the record voice */
+  .col-cap{font-family:var(--se-font-mono);text-transform:uppercase;letter-spacing:.15em;font-size:9.5px;
+    color:var(--se-color-ink-muted);margin:26px 3px 8px;display:flex;justify-content:space-between}
+  .col-cap b{color:var(--se-color-ink)}
+  .col-cap:first-of-type{margin-top:6px}
+
+  /* ══════ THE SHELL — the screen's ONE ink frame + ONE hard shadow. Nothing inside repeats either. ══════ */
+  .sheet{
+    border:var(--se-border-standard) solid var(--se-color-line);
+    background:var(--se-color-canvas);
+    box-shadow:var(--se-shadow-hard);
+    border-radius:var(--se-radius-card);
+    overflow:hidden;
+  }
+  .sheet.decision{background:var(--se-color-surface-warm)} /* canvas shift signals modality — no scrim, no modal */
+
+  /* live dot — the one pulse, reduced-motion gated */
+  .live{display:inline-flex;align-items:center;gap:5px;color:var(--se-color-action-strong);
+    font-family:var(--se-font-mono);font-weight:700;font-size:9px;letter-spacing:.12em}
+  .dot{width:6px;height:6px;border-radius:var(--se-blend-radius-circle);background:var(--se-color-action);
+    animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 var(--se-blend-pulse-a)}70%{box-shadow:0 0 0 6px var(--se-blend-pulse-b)}100%{box-shadow:0 0 0 0 var(--se-blend-pulse-b)}}
+
+  /* ══════ 1. PAGE CHROME — brutalist. hairlines only inside; compact square icon buttons, no fill, no offset shadow ══════ */
+  .hd{display:flex;align-items:center;gap:9px;padding:8px 13px;
+    border-bottom:1px solid var(--se-blend-hairline-strong);background:var(--se-color-canvas)}
+  .hd-title{flex:1;min-width:0}
+  .hd-title .t1{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:flex;align-items:center;gap:7px}
+  /* context subtitle carries real figures (over, target) — ink-muted, not ink-faint, to clear the outdoor contrast floor */
+  .hd-title .t2{font-family:var(--se-font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--se-color-ink-muted);margin-top:2px;font-variant-numeric:tabular-nums}
+  .icon{width:30px;height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-radius-button);
+    background:transparent;color:var(--se-color-ink);font-size:15px;cursor:pointer;line-height:1}
+
+  /* context row — ruleset chip (record grammar) + plain-English venue sentence */
+  .ctx{display:flex;align-items:center;gap:8px;padding:7px 13px;
+    border-bottom:1px solid var(--se-blend-hairline);flex-wrap:wrap}
+  .ruleset{border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-radius-button);
+    padding:2px 6px;font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--se-color-ink);white-space:nowrap}
+  .ctx .venue{font-size:11px;color:var(--se-color-ink-muted);flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* segmented control — surface-warm track + surface thumb w/ card shadow. Never also a bordered grid cell. */
+  .seg{display:flex;gap:2px;padding:2px;background:var(--se-color-surface-warm);
+    border-radius:var(--se-blend-radius-soft);flex:0 0 auto}
+  .seg span{padding:4px 9px;border-radius:var(--se-blend-radius-soft-sm);font-size:10.5px;font-weight:600;
+    color:var(--se-color-ink-muted);cursor:pointer;white-space:nowrap}
+  .seg span.on{background:var(--se-color-surface);color:var(--se-color-ink);font-weight:700;box-shadow:var(--se-blend-shadow-soft)}
+
+  /* chase band — second innings only, own surface-warm band, escalated by state not glow */
+  .chaseband{display:flex;align-items:center;gap:8px;padding:8px 13px;
+    background:var(--se-color-warning-soft);border-bottom:1px solid var(--se-blend-hairline);
+    font-size:11.5px;line-height:1.4;color:var(--se-color-ink-soft)}
+  .chaseband b{color:var(--se-color-ink);font-weight:700}
+  .chaseband .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--se-color-ink)}
+  .badge{font-family:var(--se-font-mono);font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 6px;border-radius:var(--se-radius-button);flex:0 0 auto;line-height:1.4}
+  .badge.warn{background:var(--se-color-warning);color:var(--se-color-inverse)}
+  .badge.dngr{background:var(--se-color-danger);color:var(--se-color-inverse)}
+  .badge.act {background:var(--se-color-action);color:var(--se-color-inverse)}
+
+  /* ══════ 2. SCORE HERO — hybrid: brutalist number, soft stage. No border, no hard shadow of its own. ══════ */
+  .herowrap{padding:10px 13px 0}
+  .hero{background:var(--se-blend-green-wash);border-radius:var(--se-blend-radius-soft-lg);
+    box-shadow:var(--se-blend-shadow-soft);padding:10px 12px 11px}
+  .idchip{display:flex;align-items:center;gap:7px;background:color-mix(in oklab, var(--se-color-surface) 62%, transparent);
+    border-radius:var(--se-blend-radius-capsule);padding:3px 9px 3px 4px;font-size:11px}
+  .crest{width:17px;height:17px;flex:0 0 17px;border-radius:5px;background:var(--se-color-action);
+    color:var(--se-color-inverse);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .idchip .who{font-weight:600;color:var(--se-color-ink)}
+  .idchip .tgt{margin-left:auto;font-family:var(--se-font-mono);font-size:10px;font-weight:600;
+    color:var(--se-color-action-strong);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .scoreline{display:flex;align-items:flex-end;gap:10px;margin-top:6px}
+  /* the ONE number a scorer glances: weight 600 (usability tie-breaker beats the ~500 guide) so it survives direct sun; satellites stay lighter */
+  .score{flex:1;font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:600;
+    line-height:.84;font-size:clamp(2.5rem,12.5vw,3.1rem);letter-spacing:-.02em;color:var(--se-color-ink-strong)}
+  .score .wkt{font-size:.55em;color:var(--se-color-ink-muted);font-weight:500}
+  .score .ov{font-size:.27em;color:var(--se-color-ink-muted);letter-spacing:.02em;margin-left:.35em;font-weight:600}
+  .crr{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:11px;font-weight:600;
+    color:var(--se-color-ink-muted);padding-bottom:3px;white-space:nowrap}
+  .chasebar{height:4px;border-radius:var(--se-blend-radius-capsule);margin-top:9px;
+    background:color-mix(in oklab, var(--se-color-surface) 70%, transparent);overflow:hidden}
+  .chasebar i{display:block;height:100%;width:86.5%;border-radius:var(--se-blend-radius-capsule);background:var(--se-color-action)}
+  .hero hr{border:0;border-top:1px solid color-mix(in oklab, var(--se-color-action-strong) 22%, transparent);margin:9px 0 8px}
+  .strip{display:flex;gap:12px;flex-wrap:wrap}
+  .strip div{min-width:0}
+  .strip .k{font-family:var(--se-font-mono);font-size:8.5px;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--se-color-ink-muted);display:block}
+  .strip .v{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;
+    color:var(--se-color-ink-strong);display:block;margin-top:1px}
+
+  /* ══════ 3. RECORD CHIPS — brutalist. 26px, hairline, semantic fill, all six slots always rendered ══════ */
+  .over{padding:11px 13px 9px}
+  .eyebrow{font-family:var(--se-font-mono);text-transform:uppercase;letter-spacing:.14em;font-size:9px;
+    font-weight:800;color:var(--se-color-ink-muted);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .eyebrow .r{letter-spacing:.04em;font-weight:600;color:var(--se-color-ink-faint);text-transform:none;
+    font-variant-numeric:tabular-nums}
+  .chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .chip{min-width:26px;height:26px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;
+    font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;font-size:11px;
+    border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-blend-radius-soft-sm);
+    background:var(--se-color-surface);color:var(--se-color-ink)}
+  .chip.dot  {color:var(--se-color-ink-muted)}
+  .chip.four {background:var(--se-color-action-soft);color:var(--se-color-action-strong);border-color:color-mix(in oklab,var(--se-color-action-strong) 30%,transparent)}
+  .chip.six  {background:var(--se-color-action-soft);color:var(--se-color-action-strong);border-color:var(--se-color-action-strong)}
+  .chip.wk   {background:var(--se-color-danger-soft);color:var(--se-color-danger);border-color:color-mix(in oklab,var(--se-color-danger) 42%,transparent)}
+  .chip.xtra {background:transparent;color:var(--se-color-warning);border-color:var(--se-color-warning)}
+  .chip.todo {background:transparent;border-style:dashed;border-color:var(--se-blend-hairline-strong);color:var(--se-color-ink-faint)}
+  .chip.new  {animation:pop .32s ease-out}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  .recent{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:9.5px;
+    color:var(--se-color-ink-muted);letter-spacing:.03em;margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .recent b{color:var(--se-color-ink)}
+
+  /* ══════ 4. PLAYER TABLE — hybrid: brutalist fixed grid, soft container (hairline, no ink cage) ══════ */
+  .tblwrap{padding:0 13px 11px}
+  .tbl{background:var(--se-color-surface);border:1px solid var(--se-blend-hairline);
+    border-radius:var(--se-radius-card);overflow:hidden}
+  .trow{display:grid;grid-template-columns:1fr 52px 50px 40px;gap:6px;align-items:baseline;padding:7px 11px}
+  .trow + .trow{border-top:1px solid var(--se-blend-hairline)}
+  .thead{font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--se-color-ink-faint);padding-top:8px;padding-bottom:5px}
+  .thead span:not(:first-child),.trow span:not(.nm){text-align:right}
+  .trow .nm{font-family:var(--se-font-sans);font-weight:600;font-size:12px;color:var(--se-color-ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .trow .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:12px;font-weight:700;color:var(--se-color-ink-strong)}
+  .trow .fig small{font-weight:500;font-size:10.5px;color:var(--se-color-ink-muted)}
+  .trow .sec{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:10.5px;color:var(--se-color-ink-muted)}
+  .trow.striker{border-left:3px solid var(--se-color-action);background:var(--se-blend-green-wash);padding-left:8px}
+  .trow.bowler{background:var(--se-color-surface-warm)}
+  .trow.bowler{grid-template-columns:1fr auto}
+  .trow.bowler .sec{font-size:10.5px}
+  .tfoot{display:flex;justify-content:space-between;gap:10px;padding:6px 11px 7px;
+    border-top:1px solid var(--se-blend-hairline);background:var(--se-color-surface);
+    font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:9.5px;
+    color:var(--se-color-ink-muted);letter-spacing:.03em}
+  .tfoot b{color:var(--se-color-ink)}
+
+  /* ══════ 5. THE POWER KEYPAD — hard grid, soft keys ══════ */
+  .pad{border-top:1px solid var(--se-blend-hairline-strong);background:var(--se-color-surface)}
+
+  /* extras = one tier DOWN: shorter ghost chips, no fill, hairline, ink-muted */
+  .extras{display:flex;gap:7px;padding:9px 13px 8px}
+  .xbtn{flex:1;min-height:44px;background:transparent;cursor:pointer;
+    border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-blend-radius-soft);
+    font-family:var(--se-font-mono);font-size:11.5px;font-weight:700;color:var(--se-color-ink-muted);
+    letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    transition:transform var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease}
+  /* caption lifted 7.5px → 9px — anything a human reads must clear the field-legibility floor */
+  .xbtn small{font-family:var(--se-font-mono);font-size:9px;font-weight:700;letter-spacing:.08em;
+    color:var(--se-color-ink-faint);text-transform:uppercase}
+  .xbtn:active{transform:translate(1px,1px)}
+  .xbtn.armed{background:var(--se-color-action);color:var(--se-color-inverse);border-color:var(--se-color-action);
+    box-shadow:var(--se-blend-ring)}
+  .xbtn.armed small{color:color-mix(in oklab, var(--se-color-inverse) 78%, transparent)}
+  .xbtn.ghost{opacity:.42}
+
+  /* armed banner + inline teaching line — soft skin, hard badge */
+  .banner{display:flex;gap:9px;align-items:flex-start;margin:0 13px 8px;padding:9px 11px;
+    border-radius:var(--se-blend-radius-soft);background:var(--se-color-action-soft);
+    font-size:11.5px;line-height:1.4;color:var(--se-color-action-strong)}
+  .banner.dngr{background:var(--se-color-danger-soft);color:var(--se-color-danger)}
+  .banner .txt b{font-weight:700}
+  .banner .x{margin-left:auto;flex:0 0 auto;border:1px solid currentColor;border-radius:var(--se-blend-radius-capsule);
+    padding:2px 9px;font-size:10px;font-weight:600;cursor:pointer;background:transparent;color:inherit}
+  .help{margin:0 13px 9px;padding:8px 11px;border:1px dashed var(--se-blend-hairline-strong);
+    border-radius:var(--se-blend-radius-soft);background:var(--se-color-surface-warm);
+    font-size:11.5px;line-height:1.4;color:var(--se-color-ink-soft)}
+  .help .num{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--se-color-ink)}
+
+  /* run grid — borderless keys, hairline dividers, big thumb targets */
+  /* run grid gets a hair MORE separation from the soft table above (stronger top rule) — the most-tapped surface must not dissolve in glare */
+  .runs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1.5px solid var(--se-blend-hairline-strong)}
+  .key{position:relative;background:transparent;border:0;cursor:pointer;
+    font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:28px;
+    color:var(--se-color-ink-strong);min-height:clamp(58px,11vh,74px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    transition:transform var(--se-motion-standard) ease, background var(--se-motion-standard) ease}
+  .key .cap{font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--se-color-ink-faint)}
+  /* per-key dividers bumped 16% → 22% so tap zones stay legible in harsh outdoor light */
+  .key::after{content:"";position:absolute;right:0;top:16%;bottom:16%;width:1px;background:var(--se-blend-hairline-strong)}
+  .key:nth-child(4n)::after{display:none}
+  .key:nth-child(-n+4)::before{content:"";position:absolute;left:10%;right:10%;bottom:0;height:1px;background:var(--se-blend-hairline-strong)}
+  .key:active{transform:translate(1px,1px);background:var(--se-color-surface-warm)}
+  .key.boundary{background:var(--se-color-action-soft);color:var(--se-color-action-strong)}
+  .key.boundary .cap{color:var(--se-color-action-strong)}
+  .key.small{font-size:19px;color:var(--se-color-ink-muted)}
+
+  /* wicket = outline-danger at rest (solid danger is reserved for the confirm) + ghost swap */
+  .actionbar{display:flex;gap:7px;padding:9px 13px 0}
+  /* the most consequential non-run tap: taller + a danger-soft fill so it can't read as low-priority next to the big run keys (still outline-danger — SOLID danger is reserved for the confirm) */
+  .wicket{flex:3;min-height:54px;background:var(--se-color-danger-soft);color:var(--se-color-danger);cursor:pointer;
+    border:var(--se-border-standard) solid var(--se-color-danger);border-radius:var(--se-blend-radius-soft);
+    font-family:var(--se-font-mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;
+    transition:transform var(--se-motion-standard) ease}
+  .wicket:active{transform:translate(1px,1px)}
+  .swap{flex:2;min-height:46px;background:transparent;color:var(--se-color-ink-muted);cursor:pointer;
+    border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-blend-radius-soft);
+    font-family:var(--se-font-mono);font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+
+  /* footer — always-visible undo + the ONE glow: the primary CTA, labelled with the OUTCOME */
+  .padfoot{display:flex;gap:7px;padding:9px 13px 12px}
+  .undo{width:58px;flex:0 0 58px;min-height:46px;background:var(--se-color-surface-warm);color:var(--se-color-ink);
+    border:1px solid var(--se-blend-hairline);border-radius:var(--se-radius-button);cursor:pointer;font-size:16px}
+  .cta{flex:1;min-height:46px;background:var(--se-color-action);color:var(--se-color-inverse);border:0;
+    border-radius:var(--se-blend-radius-soft);cursor:pointer;box-shadow:var(--se-blend-shadow-cta);
+    font-family:var(--se-font-sans);font-weight:700;font-size:13px;
+    transition:transform var(--se-motion-standard) ease, box-shadow var(--se-motion-standard) ease}
+  .cta .arith{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:600}
+  .cta:active{transform:translate(1px,1px);box-shadow:var(--se-shadow-card)}
+  .cta.outline{background:transparent;color:var(--se-color-ink);border:var(--se-border-standard) solid var(--se-color-line);box-shadow:none}
+  .cancel{width:94px;flex:0 0 94px;min-height:46px;background:transparent;color:var(--se-color-ink-muted);
+    border:1px solid var(--se-blend-hairline-strong);border-radius:var(--se-blend-radius-soft);cursor:pointer;
+    font-size:12px;font-weight:600}
+
+  /* ══════ 6. DECISION SCREEN — no modal, no scrim: warm canvas, hero pinned, capsule pills ══════ */
+  .decisionzone{padding:11px 13px 0}
+  .pills{display:flex;flex-wrap:wrap;gap:7px}
+  .pill{background:var(--se-color-surface);border:1px solid var(--se-blend-hairline-strong);
+    border-radius:var(--se-blend-radius-capsule);padding:9px 14px;font-size:12px;font-weight:600;
+    color:var(--se-color-ink);cursor:pointer;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+  .pill.on{background:var(--se-color-action);border-color:var(--se-color-action);color:var(--se-color-inverse);font-weight:700}
+  .pill.more{background:var(--se-color-ink);border-color:var(--se-color-ink);color:var(--se-color-inverse)}
+  .refine{display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 11px;
+    background:var(--se-color-surface);border:1px solid var(--se-blend-hairline);
+    border-radius:var(--se-blend-radius-soft);font-size:11.5px;color:var(--se-color-ink-muted)}
+  .refine b{color:var(--se-color-ink);font-weight:600}
+  .refine .go{margin-left:auto;color:var(--se-color-ink-faint)}
+  .echo{margin-top:10px;padding:10px 12px;border-radius:var(--se-blend-radius-soft);
+    background:var(--se-color-action-soft);color:var(--se-color-action-strong);font-size:12px;line-height:1.45}
+  .echo b{font-weight:700}
+  .echo .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700}
+
+  /* ══════ 7. SPECTATOR ══════ */
+  .segbar{padding:9px 13px 8px;border-bottom:1px solid var(--se-blend-hairline)}
+  .segbar .seg{display:flex}
+  .segbar .seg span{flex:1;text-align:center}
+  .presence{display:flex;align-items:center;gap:10px;padding:8px 13px;
+    border-bottom:1px solid var(--se-blend-hairline);font-size:11px;color:var(--se-color-ink-muted)}
+  .presence .cnt{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--se-color-ink)}
+  .rx{margin-left:auto;display:flex;gap:6px}
+  .rxpill{background:var(--se-color-surface);border:1px solid var(--se-blend-hairline);
+    border-radius:var(--se-blend-radius-capsule);padding:4px 10px;font-size:11px;cursor:pointer;
+    display:inline-flex;gap:5px;align-items:center}
+  .rxpill .n{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--se-color-ink)}
+  .rxpill.on{background:var(--se-color-action-soft);border-color:color-mix(in oklab,var(--se-color-action-strong) 30%,transparent);
+    color:var(--se-color-action-strong)}
+
+  .wpwrap{padding:11px 13px 0}
+  .wpbar{display:flex;height:22px;border-radius:var(--se-blend-radius-capsule);overflow:hidden;
+    border:1px solid var(--se-blend-hairline)}
+  .wpbar span{display:flex;align-items:center;padding:0 10px;font-family:var(--se-font-mono);
+    font-variant-numeric:tabular-nums;font-size:10px;font-weight:700}
+  .wpbar .m{background:var(--se-color-action-soft);color:var(--se-color-action-strong)}
+  .wpbar .d{background:var(--se-color-surface-warm);color:var(--se-color-ink-muted);justify-content:flex-end}
+  .wpbasis{font-size:11px;color:var(--se-color-ink-muted);padding:7px 0 0;line-height:1.4}
+  .wpbasis .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;color:var(--se-color-ink)}
+
+  .mom{padding:12px 13px}
+  .mom .lbl{font-family:var(--se-font-mono);text-transform:uppercase;letter-spacing:.14em;font-size:9px;
+    font-weight:800;color:var(--se-color-ink-muted);margin-bottom:8px;display:flex;justify-content:space-between}
+  .mom-svg{width:100%;height:64px;display:block;border:1px solid var(--se-blend-hairline);
+    border-radius:var(--se-blend-radius-soft);background:var(--se-color-surface)}
+  .mk{font-family:var(--se-font-mono);font-size:7.5px;font-weight:700}
+  .momlegend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:10.5px;color:var(--se-color-ink-muted)}
+  .momlegend i{width:8px;height:8px;border-radius:var(--se-blend-radius-circle);display:inline-block;margin-right:5px;vertical-align:middle}
+
+  /* ball-by-ball: elevation is the signal — notable = soft card, ordinary = bare row */
+  .comm{padding:0 13px 12px}
+  .cline{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:7px 2px;align-items:start;font-size:11.5px;
+    line-height:1.42;color:var(--se-color-ink-soft)}
+  .cline .cov{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;
+    color:var(--se-color-ink-muted);font-size:11px}
+  .cline .txt b{font-weight:700;color:var(--se-color-ink)}
+  .cnote{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:9px 11px;margin:5px 0;
+    background:var(--se-color-surface);border-radius:var(--se-blend-radius-soft);
+    box-shadow:var(--se-blend-shadow-soft);align-items:start;font-size:11.5px;line-height:1.42}
+  .cnote .head{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+  .cnote .head .nm{font-weight:700;font-size:12.5px}
+  .cnote .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--se-color-ink-muted)}
+  .oversum{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:9.5px;
+    color:var(--se-color-ink-muted);border-top:1px dashed var(--se-blend-hairline-strong);
+    border-bottom:1px dashed var(--se-blend-hairline-strong);padding:6px 2px;letter-spacing:.03em;margin:5px 0}
+  .drill{width:100%;min-height:44px;margin-top:9px;background:transparent;color:var(--se-color-ink);
+    border:var(--se-border-standard) solid var(--se-color-line);border-radius:var(--se-blend-radius-soft);
+    font-size:12px;font-weight:600;cursor:pointer}
+
+  /* ══════ 8. THE ONE GOLD — celebration still wears the app's frame ══════ */
+  .milewrap{padding:13px}
+  .mile{position:relative;overflow:hidden;padding:16px 14px;border-radius:var(--se-blend-radius-soft-lg);
+    border:2px solid var(--se-blend-gold);box-shadow:3px 3px 0 var(--se-color-ink);background:var(--se-color-surface)}
+  .mile::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 90% at 12% 0%, color-mix(in oklab, var(--se-blend-gold-bright) 34%, transparent), transparent 64%);
+    animation:sweep .5s ease-out}
+  @keyframes sweep{from{transform:translateX(-24%);opacity:0}to{transform:translateX(0);opacity:1}}
+  .mile > *{position:relative}
+  .mile .row{display:flex;align-items:center;gap:14px}
+  .mile .ring{width:54px;height:54px;flex:0 0 54px;border-radius:var(--se-blend-radius-circle);
+    background:var(--se-blend-gold-bright);color:var(--se-blend-gold-ink);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:700;font-size:19px;
+    box-shadow:0 0 0 3px var(--se-color-surface),0 0 0 4px var(--se-blend-gold)}
+  .mile .kw{font-family:var(--se-font-sans);font-weight:800;font-size:21px;line-height:1.1;letter-spacing:-.02em}
+  .mile .say{font-size:12px;color:var(--se-color-ink-soft);margin-top:4px;line-height:1.42}
+  .mile .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-size:11.5px;
+    color:var(--se-color-ink-muted);margin-top:5px;letter-spacing:.02em}
+  .mile .stamp{margin-top:14px;padding-top:10px;border-top:1px solid color-mix(in oklab,var(--se-blend-gold) 55%,transparent);
+    display:flex;align-items:center;gap:10px;font-size:10.5px;color:var(--se-color-ink-muted)}
+  .mile .stamp .t{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;color:var(--se-color-ink)}
+  .mile .share{margin-left:auto;flex:0 0 auto;min-height:36px;padding:0 14px;cursor:pointer;
+    background:transparent;color:var(--se-color-ink);border:var(--se-border-standard) solid var(--se-color-line);
+    border-radius:var(--se-blend-radius-capsule);font-size:11.5px;font-weight:600}
+
+  /* ══════ 9. HELP / GUIDANCE — zero exceptions: sentence case sans, dashed warm container ══════ */
+  .note{margin:9px 3px 0;padding:11px 13px;border:1px dashed var(--se-blend-hairline-strong);
+    border-radius:var(--se-blend-radius-soft);background:var(--se-color-surface-warm);
+    font-size:11.5px;line-height:1.45;color:var(--se-color-ink-soft)}
+  .note b{color:var(--se-color-ink);font-weight:700}
+  .note .fig{font-family:var(--se-font-mono);font-variant-numeric:tabular-nums;font-weight:600;color:var(--se-color-ink)}
+  .note + .note{margin-top:7px}
+
+  @media (prefers-reduced-motion:reduce){
+    .dot,.chip.new,.mile::before{animation:none}
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page">ScoreEasy · Cricket — POWER mode</h1>
+  <p class="lede"><b>The fast lane for an experienced scorer.</b> Always-visible 0–6 grid, a persistent extras row and one unmissable wicket action — the same <span style="font-family:var(--se-font-mono)">Delivery</span> the Guided default writes, just fewer screens between the thumb and the ledger. The record stays brutalist: mono numerals, hairline grids, hard status stamps, the over strip. Everything that talks to a human — the armed banner, the dismissal screen, help, celebration — goes soft.</p>
+
+  <!-- ════════════ SURFACE 1 · SCORER (mid-over, wide armed) ════════════ -->
+  <div class="col-cap"><span>Surface 1</span><b>SCORER · MID-OVER</b></div>
+  <div class="sheet">
+
+    <!-- chrome: header triptych + persistent mono context subtitle -->
+    <div class="hd">
+      <button class="icon" aria-label="Back">‹</button>
+      <div class="hd-title">
+        <div class="t1">Match 42 · TNPL 2026 <span class="live"><span class="dot"></span>LIVE</span></div>
+        <div class="t2">T20 · Over 17.2 · Chasing 170</div>
+      </div>
+      <button class="icon" aria-label="More">⋯</button>
+    </div>
+
+    <div class="ctx">
+      <span class="ruleset">T20 · 6-ball</span>
+      <span class="venue">LBW on · Chepauk · Kings won the toss and bowled</span>
+      <div class="seg"><span>Guided</span><span class="on">Power</span></div>
+    </div>
+
+    <!-- chase equation: its own band, second innings only, escalated by state (not by glow) -->
+    <div class="chaseband">
+      <span class="badge warn">Tight</span>
+      <span>Mumbai need <span class="fig">23</span> off <span class="fig">16</span> — the asking rate has just gone above the run rate.</span>
+    </div>
+
+    <!-- HERO — brutalist number on a soft stage. No border, no hard shadow of its own. -->
+    <div class="herowrap">
+      <div class="hero">
+        <div class="idchip">
+          <span class="crest">M</span>
+          <span class="who">Mumbai XI · chasing</span>
+          <span class="tgt">Target 170</span>
+        </div>
+        <div class="scoreline">
+          <div class="score">147<span class="wkt">/4</span><span class="ov">(17.2)</span></div>
+          <div class="crr">CRR 8.50</div>
+        </div>
+        <div class="chasebar"><i></i></div>
+        <hr />
+        <div class="strip">
+          <div><span class="k">Need</span><span class="v">23</span></div>
+          <div><span class="k">Off</span><span class="v">16</span></div>
+          <div><span class="k">RRR</span><span class="v">8.63</span></div>
+          <div><span class="k">P'ship</span><span class="v">41(27)</span></div>
+          <div><span class="k">Win</span><span class="v">52%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECORD: all six slots always rendered, unbowled = dashed -->
+    <div class="over">
+      <div class="eyebrow"><span>This over</span><span class="r">Over 18 · Bumrah</span></div>
+      <div class="chips">
+        <span class="chip">1</span>
+        <span class="chip four">4</span>
+        <span class="chip xtra new">3wd</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+      </div>
+      <div class="recent"><span>Last 5 overs <b>47/2</b></span><span>Recent <b>4 1 W 6 1</b></span><span>Last wkt <b>Kishan 31 (19)</b></span></div>
+    </div>
+
+    <!-- PLAYERS: brutalist fixed grid inside a soft, hairline container -->
+    <div class="tblwrap">
+      <div class="tbl">
+        <div class="trow thead"><span>Batter</span><span>R (B)</span><span>4s/6s</span><span>SR</span></div>
+        <div class="trow striker">
+          <span class="nm">R. Sharma</span>
+          <span class="fig">68 <small>(44)</small></span>
+          <span class="sec">7 / 2</span>
+          <span class="sec">155</span>
+        </div>
+        <div class="trow">
+          <span class="nm">S. Yadav</span>
+          <span class="fig">19 <small>(14)</small></span>
+          <span class="sec">1 / 0</span>
+          <span class="sec">136</span>
+        </div>
+        <div class="trow bowler">
+          <span class="nm">J. Bumrah <span class="sec" style="font-family:var(--se-font-sans);font-weight:500">bowling</span></span>
+          <span class="sec">3.2 – 0 – 24 – 2 · econ 7.2 · 1 ov left</span>
+        </div>
+        <div class="tfoot">
+          <span>Partnership <b>41 (27)</b></span>
+          <span>Extras <b>12</b> (b3 lb2 wd6 nb1)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ THE KEYPAD ═══ -->
+    <div class="pad">
+
+      <!-- extras: one tier down — ghost chips, not filled buttons. WD armed = solid action + focus ring, siblings ghosted. -->
+      <div class="extras">
+        <button class="xbtn armed">WD<small>+ runs?</small></button>
+        <button class="xbtn ghost">NB<small>free hit</small></button>
+        <button class="xbtn ghost">BYE<small>legal</small></button>
+        <button class="xbtn ghost">LB<small>legal</small></button>
+      </div>
+
+      <!-- armed banner: soft skin, hard badge, sentence with the subject bolded -->
+      <div class="banner">
+        <span class="badge act">Wd</span>
+        <span class="txt"><b>Wide armed</b> — tap the runs that came off it, or tap WD again to log a plain single.</span>
+        <button class="x">✕ cancel</button>
+      </div>
+
+      <!-- teaching line for the novice who just toggled into Power mode -->
+      <div class="help">A wide adds <span class="num">1</span> to Mumbai and <b>doesn't count as a ball</b> — Bumrah still has 4 legal deliveries left in the over.</div>
+
+      <div class="runs">
+        <button class="key">0<span class="cap">Dot</span></button>
+        <button class="key">1<span class="cap">Single</span></button>
+        <button class="key">2<span class="cap">Two</span></button>
+        <button class="key">3<span class="cap">Three</span></button>
+        <button class="key boundary">4<span class="cap">Four</span></button>
+        <button class="key">5<span class="cap">Five</span></button>
+        <button class="key boundary">6<span class="cap">Six</span></button>
+        <button class="key small">7+<span class="cap">Overthrow</span></button>
+      </div>
+
+      <div class="actionbar">
+        <button class="wicket">W · Wicket</button>
+        <button class="swap">⇄ Swap strike</button>
+      </div>
+
+      <!-- always-visible undo + the screen's ONE glow, labelled with the outcome -->
+      <div class="padfoot">
+        <button class="undo" aria-label="Undo last ball">↩</button>
+        <button class="cta">Add · <span class="arith">wide + 4 = 5</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>Taps per ball.</b> A normal ball or a boundary is <span class="fig">1</span> tap — the number commits and rotates the strike for you. A plain wide or no-ball is <span class="fig">1</span> tap. A wide with runs, or a bye/leg-bye, is <span class="fig">2</span> taps: arm the modifier, then tap the number. A wicket is <span class="fig">2</span> taps. Undo sits next to the confirm button on every screen, and a 150 ms debounce catches double-taps.</div>
+  <div class="note">Extras never hide behind a menu here, which is what makes Power mode fast — and also why it isn't the default. If a ball ever looks wrong on the over strip, tap undo rather than scoring around it.</div>
+
+  <!-- ════════════ SURFACE 2 · DECISION (wicket, tap 2 of 2) ════════════ -->
+  <div class="col-cap"><span>Surface 2</span><b>DECISION · HOW OUT?</b></div>
+  <div class="sheet decision">
+
+    <div class="hd">
+      <button class="icon" aria-label="Back">‹</button>
+      <div class="hd-title">
+        <div class="t1">Match 42 · TNPL 2026 <span class="live"><span class="dot"></span>LIVE</span></div>
+        <div class="t2">T20 · Over 17.2 · Chasing 170</div>
+      </div>
+      <button class="icon" aria-label="More">⋯</button>
+    </div>
+
+    <!-- the hero stays pinned: you never lose sight of the match while answering -->
+    <div class="herowrap">
+      <div class="hero">
+        <div class="idchip">
+          <span class="crest">M</span>
+          <span class="who">Mumbai XI · chasing</span>
+          <span class="tgt">Target 170</span>
+        </div>
+        <div class="scoreline">
+          <div class="score">147<span class="wkt">/5</span><span class="ov">(17.3)</span></div>
+          <div class="crr">CRR 8.48</div>
+        </div>
+        <div class="chasebar"><i></i></div>
+        <hr />
+        <div class="strip">
+          <div><span class="k">Need</span><span class="v">23</span></div>
+          <div><span class="k">Off</span><span class="v">15</span></div>
+          <div><span class="k">RRR</span><span class="v">9.20</span></div>
+          <div><span class="k">Wkts left</span><span class="v">5</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="over">
+      <div class="eyebrow"><span>This over</span><span class="r">Over 18 · Bumrah</span></div>
+      <div class="chips">
+        <span class="chip">1</span>
+        <span class="chip four">4</span>
+        <span class="chip xtra">3wd</span>
+        <span class="chip wk new">W</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+      </div>
+    </div>
+
+    <div class="decisionzone">
+      <!-- inline context banner: soft tint + hard stamp + a sentence with the subject bolded -->
+      <div class="banner dngr" style="margin-left:0;margin-right:0">
+        <span class="badge dngr">Out</span>
+        <span class="txt"><b>R. Sharma is out</b> — how was the batter dismissed?</span>
+      </div>
+
+      <div class="eyebrow" style="margin-bottom:8px"><span>Dismissal · tap 2 of 2</span><span class="r">auto new-batter</span></div>
+      <div class="pills">
+        <button class="pill on">Bowled ✓</button>
+        <button class="pill">Caught</button>
+        <button class="pill">LBW</button>
+        <button class="pill">Run out</button>
+        <button class="pill">Stumped</button>
+        <button class="pill more">More…</button>
+      </div>
+
+      <div class="refine">Bowler <b>J. Bumrah</b> · fielder (if caught) <span class="go">›</span></div>
+
+      <!-- confirmation echo: you read your own sentence back before committing -->
+      <div class="echo"><b>R. Sharma</b> b <b>J. Bumrah</b> for <span class="fig">68 (44)</span>. Mumbai <span class="fig">147/5</span>, still needing <span class="fig">23</span> off <span class="fig">15</span>. Next in: <b>H. Pandya</b>, on strike.</div>
+
+      <div class="padfoot" style="padding-left:0;padding-right:0">
+        <button class="cancel">✕ Cancel</button>
+        <button class="cta">Confirm → new batter</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>Never green behind a dismissal.</b> The question sits on a warm canvas with the score pinned above it, so answering it never feels like leaving the match. On a run out the same screen also asks how many runs were completed and which batter was out; on a catch it asks whether the batters crossed — the engine needs both to work out who is on strike next.</div>
+
+  <!-- ════════════ SURFACE 3 · SPECTATOR ════════════ -->
+  <div class="col-cap"><span>Surface 3</span><b>SPECTATOR · READ-ONLY</b></div>
+  <div class="sheet">
+
+    <div class="hd">
+      <button class="icon" aria-label="Back">‹</button>
+      <div class="hd-title">
+        <div class="t1">Mumbai XI vs Chennai <span class="live"><span class="dot"></span>LIVE</span></div>
+        <div class="t2">T20 · Over 17.2 · Chepauk · M42</div>
+      </div>
+      <button class="icon" aria-label="Share">↗</button>
+    </div>
+
+    <div class="segbar">
+      <div class="seg"><span class="on">Live</span><span>Scorecard</span><span>Commentary</span><span>Info</span></div>
+    </div>
+
+    <div class="presence">
+      <span>👁 <span class="cnt">31</span> watching</span>
+      <span>Updated 3s ago</span>
+      <div class="rx">
+        <button class="rxpill on">🔥 <span class="n">11</span></button>
+        <button class="rxpill">👏 <span class="n">6</span></button>
+      </div>
+    </div>
+
+    <div class="herowrap">
+      <div class="hero">
+        <div class="idchip">
+          <span class="crest">M</span>
+          <span class="who">Mumbai XI · chasing</span>
+          <span class="tgt">147/4 (17.2)</span>
+        </div>
+        <div class="scoreline">
+          <div class="score">23<span class="ov">off 16</span></div>
+          <div class="crr">RRR 8.63 · CRR 8.50</div>
+        </div>
+        <div class="chasebar"><i></i></div>
+        <hr />
+        <div class="strip">
+          <div><span class="k">Target</span><span class="v">170</span></div>
+          <div><span class="k">Wkts left</span><span class="v">6</span></div>
+          <div><span class="k">Striker</span><span class="v">68(44)</span></div>
+          <div><span class="k">Last 5 ov</span><span class="v">47/2</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wpwrap">
+      <div class="eyebrow"><span>Win chance</span><span class="r">▲ +3% last ball</span></div>
+      <div class="wpbar">
+        <span class="m" style="flex:52">Mumbai 52%</span>
+        <span class="d" style="flex:48">Chennai 48%</span>
+      </div>
+      <p class="wpbasis">Based on the gap between required and current run rate, <span class="fig">6</span> wickets in hand, and this ground's average chase.</p>
+    </div>
+
+    <div class="over">
+      <div class="eyebrow"><span>This over</span><span class="r">Over 18 · Bumrah</span></div>
+      <div class="chips">
+        <span class="chip">1</span>
+        <span class="chip four">4</span>
+        <span class="chip xtra">3wd</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+        <span class="chip todo">·</span>
+      </div>
+      <div class="recent"><span>Recent <b>4 1 W 6 1</b></span><span>Last wkt <b>Kishan 31 (19)</b></span></div>
+    </div>
+
+    <div class="mom">
+      <div class="lbl"><span>◤ Mumbai</span><span>Momentum</span><span>Chennai ◢</span></div>
+      <svg class="mom-svg" viewBox="0 0 400 64" preserveAspectRatio="none" aria-label="Match momentum">
+        <line x1="0" y1="32" x2="400" y2="32" stroke="var(--se-color-ink)" stroke-dasharray="3 4" stroke-width="1" opacity=".22"/>
+        <path d="M0,36 C40,28 70,16 100,40 C130,58 150,54 175,26 C205,8 225,20 255,22 C285,24 305,46 335,28 C365,14 385,20 400,18"
+              fill="none" stroke="var(--se-color-action)" stroke-width="3"/>
+        <circle cx="130" cy="54" r="6" fill="var(--se-color-danger)"/><text class="mk" x="130" y="56.6" text-anchor="middle" fill="var(--se-color-inverse)">W</text>
+        <circle cx="175" cy="26" r="6" fill="var(--se-color-action)"/><text class="mk" x="175" y="28.6" text-anchor="middle" fill="var(--se-color-inverse)">6</text>
+        <!-- 50 milestone marker = NEUTRAL ink dot (spec FIX 4); it is the screen's single inversion -->
+        <circle cx="300" cy="42" r="6" fill="var(--se-color-ink)"/><text class="mk" x="300" y="44.6" text-anchor="middle" fill="var(--se-color-inverse)">50</text>
+      </svg>
+      <div class="momlegend">
+        <span><i style="background:var(--se-color-action)"></i>Boundary</span>
+        <span><i style="background:var(--se-color-danger)"></i>Wicket</span>
+        <span><i style="background:var(--se-color-ink)"></i>Milestone</span>
+      </div>
+    </div>
+
+    <div class="comm">
+      <div class="eyebrow"><span>Key moments</span><span class="r">17.2 → 16.6</span></div>
+      <div class="cline">
+        <span class="cov">17.2</span>
+        <div class="txt">Bumrah to Sharma, <b>1 run</b>, tucked to fine leg — keeps the strike for Yadav.</div>
+      </div>
+      <div class="cnote">
+        <span class="cov">17.1</span>
+        <div>
+          <div class="head"><span class="nm">Four</span><span class="badge act">4</span></div>
+          <div>Punched through cover off the back foot — Sharma is up to <span class="fig">68</span>.</div>
+        </div>
+      </div>
+      <div class="oversum">End of over 17 · Mumbai 142/4 · need 28 off 18 · Sharma 63* Yadav 19*</div>
+      <div class="cnote">
+        <span class="cov">16.6</span>
+        <div>
+          <div class="head"><span class="nm">I. Kishan is out</span><span class="badge dngr">W</span></div>
+          <div>Caught at cover by Kohli off Bumrah — the partnership of <span class="fig">41</span> is broken.</div>
+          <div class="fig">31 (19) · SR 163</div>
+        </div>
+      </div>
+      <button class="drill">Ball-by-ball ›</button>
+    </div>
+  </div>
+
+  <div class="note">The spectator screen keeps the hard shell and the record — mono numerals, the over strip, hard status stamps — and softens everything else, because a viewer operates nothing. Presence is first class: viewers, reactions and the live pulse sit in the chrome rather than in a menu. Soft budget on this screen: <span class="fig">3</span> soft surfaces, <span class="fig">1</span> live pulse, <span class="fig">1</span> inversion (the momentum milestone dot). No gold here — gold belongs to the milestone card.</div>
+
+  <!-- ════════════ SURFACE 4 · SIGNATURE MOMENT ════════════ -->
+  <div class="col-cap"><span>Surface 4</span><b>SIGNATURE · THE ONE GOLD</b></div>
+  <div class="sheet">
+    <div class="hd">
+      <button class="icon" aria-label="Back">‹</button>
+      <div class="hd-title">
+        <div class="t1">Milestone</div>
+        <div class="t2">Auto share-card · frozen at the crossing ball</div>
+      </div>
+      <button class="icon" aria-label="Share">↗</button>
+    </div>
+
+    <div class="milewrap">
+      <div class="mile">
+        <div class="row">
+          <div class="ring">50</div>
+          <div>
+            <div class="kw">Fifty for R. Sharma</div>
+            <div class="say">Raised the bat at Chepauk — and Mumbai still need 23 off 16.</div>
+            <div class="fig">50 (32) · 6×4 1×6 · SR 156</div>
+          </div>
+        </div>
+        <div class="stamp">
+          <span>Reached at <span class="t">15.4</span> · Mumbai <span class="t">118/3</span></span>
+          <button class="share">Share ↗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>The escalation ladder.</b> A dot is a silent tick. A single flips the numeral. A four washes the hero green. A six adds an edge burst. A wicket turns the strip red and snaps the momentum line to the bowling side. Fifty and a hundred earn the gold card — one per screen, ever. Every step lands in under half a second and is switched off entirely when reduced motion is on.</div>
+  <div class="note">None of it blocks the keypad. A Power-mode scorer can keep tapping straight through any celebration; the card waits in the timeline rather than stopping the ledger.</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket Live Scorer — clean</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from src/index.css :root
+   (Tailwind-only @import/@theme/@custom-variant lines omitted;
+    the --se-* + --shadow-* design tokens are what mono.css binds to)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Merriweather, ui-serif, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --tracking-normal: 0;
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-focus-ring: oklch(0.58 0.22 255);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: var(--muted-foreground);
+  --se-color-line: var(--border);
+  --se-color-line-strong: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-shadow-card: var(--shadow-xs);
+  --se-motion-standard: 250ms;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ============================================================
+   REAL component classes — verbatim from
+   src/designs/design1-mono/mono.css
+   ============================================================ */
+.mono-score { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; line-height: 1; }
+
+.mono-badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 0.6875rem; font-family: var(--se-font-mono); border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.mono-badge-live { background: var(--se-color-action-soft); color: var(--se-color-action); }
+
+.mono-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 20px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-button); background: transparent; color: var(--se-color-ink); font-size: 0.875rem; font-family: var(--se-font-sans); cursor: pointer; transition: background var(--se-motion-standard) ease; }
+.mono-btn:hover { background: var(--se-color-action-soft); }
+.mono-btn:active { transform: translateY(1px); box-shadow: var(--shadow-2xs); }
+
+.mono-btn-primary { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 24px; border: 1px solid var(--se-color-action); border-radius: var(--se-radius-button); background: var(--se-color-action); color: var(--se-color-inverse); box-shadow: var(--shadow-2xs); font-size: 0.875rem; font-family: var(--se-font-sans); cursor: pointer; }
+
+/* "this over" ball strip */
+.mono-over-strip { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+.mono-over-label { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-right: 2px; }
+.mono-over-pip { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; border: 1px solid color-mix(in oklch, var(--se-color-line) 28%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.mono-over-pip-four { background: var(--accent); border-color: var(--primary); color: var(--primary); }
+.mono-over-pip-six { background: var(--primary); border-color: var(--primary); color: var(--se-color-inverse); }
+.mono-over-pip-wicket { background: var(--destructive); border-color: var(--destructive); color: var(--se-color-inverse); }
+.mono-over-pip-empty { background: transparent; border-style: dashed; border-color: color-mix(in oklch, var(--se-color-line) 34%, transparent); }
+
+/* Brutalist-monotone keypad — hairline dividers only, keys on open canvas.
+   Verbatim from mono.css (used by the app's keypad cricket scorers). */
+.mono-cricket-keypad { --cricket-line: color-mix(in oklch, var(--se-color-line) 46%, transparent); display: flex; flex-direction: column; margin-top: 10px; background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent), linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 100% 1px, 100% 1px; background-position: 0 0, 0 100%; background-repeat: no-repeat; }
+.mono-cricket-keys { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: clamp(52px, 8vh, 66px); gap: 0; background-image: linear-gradient(to bottom, transparent, var(--cricket-line), transparent), linear-gradient(to bottom, transparent, var(--cricket-line), transparent), linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 1px 100%, 1px 100%, 100% 1px; background-position: 33.33% 50%, 66.67% 50%, 50% 50%; background-repeat: no-repeat; }
+.mono-cricket-keys-sec { display: grid; grid-template-columns: repeat(auto-fit, minmax(56px, 1fr)); grid-auto-rows: auto; background-image: linear-gradient(to right, transparent, var(--cricket-line), transparent); background-size: 100% 1px; background-position: 0 0; background-repeat: no-repeat; }
+.mono-cricket-keys-sec .mono-cricket-key-sec:not(:first-child)::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 56%; background: linear-gradient(to bottom, transparent, var(--cricket-line), transparent); }
+.mono-cricket-key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; border: none; background: transparent; color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 1.875rem; font-weight: 700; line-height: 1; cursor: pointer; transition: background 120ms ease; }
+.mono-cricket-key:active { background: var(--accent); }
+.mono-cricket-key small { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; color: var(--se-color-ink-faint); }
+.mono-cricket-key-four { color: var(--primary); }
+.mono-cricket-key-six { color: var(--primary); }
+.mono-cricket-key-four small, .mono-cricket-key-six small { color: inherit; opacity: 0.85; }
+.mono-cricket-key-sec { min-height: 44px; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; color: var(--se-color-ink-soft); }
+
+.mono-scorer-screen { min-height: 100dvh; padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
+.mono-scorer-shell { max-width: 390px; margin: 0 auto; }
+.mono-scorer-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.mono-scorer-topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ============================================================
+   Composed blocks — OUR brutalist palette, real tokens only.
+   Flat BLACK hero (no gradient, no green card), hard 3px shadow.
+   ============================================================ */
+.ck-topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; }
+.ck-topbar-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; }
+
+.ck-hero { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); padding: 13px 15px; }
+.ck-hero-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.ck-hero-score { font-family: var(--se-font-mono); font-size: 2.6rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.ck-hero-score .wk { font-size: 1.5rem; font-weight: 600; color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.ck-hero-ov { font-family: var(--se-font-mono); font-size: 0.75rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); margin-left: 8px; }
+.ck-hero-crr { font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.ck-hero-bar { height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-inverse) 22%, transparent); margin: 10px 0; overflow: hidden; }
+.ck-hero-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.ck-hero-chase { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.ck-hero-chase b { color: var(--se-color-inverse); font-weight: 700; }
+.ck-hero-chase .need { color: var(--primary); font-weight: 800; }
+
+.ck-players { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 8px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; }
+.ck-player { padding: 7px 10px; min-width: 0; }
+.ck-player + .ck-player { border-left: 1px solid color-mix(in oklch, var(--se-color-line) 22%, var(--se-color-surface)); }
+.ck-player-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ck-player-name.sub { color: var(--se-color-ink-muted); }
+.ck-player-name .dot { color: var(--primary); margin-right: 3px; }
+.ck-player-fig { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ck-over-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ck-over-last { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); margin-left: auto; }
+
+.ck-action-row { display: flex; gap: 8px; margin-top: 8px; }
+.ck-out { flex: 1.5; min-height: 46px; border-radius: var(--se-radius-button); border: 1px solid var(--se-color-danger); background: color-mix(in oklch, var(--se-color-danger-soft) 40%, var(--se-color-surface)); color: var(--se-color-danger); font-family: var(--se-font-mono); font-size: 0.9375rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.ck-out:active { background: var(--se-color-danger); color: var(--se-color-inverse); }
+.ck-strike { flex: 1; min-height: 46px; font-size: 0.8125rem; font-weight: 600; }
+
+.ck-bottom-row { display: flex; gap: 8px; margin-top: 8px; }
+.ck-undo { flex: 0 0 64px; min-height: 46px; font-size: 1.1rem; }
+.ck-end { flex: 1; min-height: 46px; font-size: 0.875rem; font-weight: 700; }
+
+.ck-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 2px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
+.ck-footer .left { color: var(--primary); font-weight: 700; cursor: pointer; }
+.ck-footer .right { color: var(--se-color-ink-muted); font-weight: 600; }
+.ck-footer .right .go { color: var(--primary); }
+</style>
+</head>
+<body>
+<!-- Ports the HiFi "Cricket scorer refined" (5a) LAYOUT into OUR brutalist
+     palette: flat BLACK hero (no gradient/green card), hard 3px shadows, real
+     --se-* tokens, and the app's REAL .mono-cricket-* keypad + .mono-over-*
+     classes. Demo state: Royals 147/4 (17.2) chasing 170 — NEED 23 OFF 16. -->
+<div class="mono-scorer-screen">
+  <div class="mono-scorer-shell">
+    <h1 class="sr-only">Cricket match scorer</h1>
+
+    <!-- Top bar: back · title+subline · menu -->
+    <div class="mono-scorer-topbar">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        <span class="ck-icon" aria-hidden="true">&#8249;</span>
+        <div style="min-width:0;">
+          <div class="ck-topbar-title">Royals vs Strikers &middot; T20</div>
+          <div class="ck-topbar-sub">Over 17.2 &middot; Chasing 170</div>
+        </div>
+      </div>
+      <div class="mono-scorer-topbar-actions">
+        <span class="mono-badge mono-badge-live">Live</span>
+        <span class="ck-icon" aria-hidden="true">&#8801;</span>
+      </div>
+    </div>
+
+    <!-- HERO — flat black, our tokens. Score + overs/CRR, chase progress bar,
+         NEED/OFF · RRR · P'SHIP as ONE compact block. -->
+    <div class="ck-hero">
+      <div class="ck-hero-top">
+        <div style="display:flex; align-items:baseline;">
+          <span class="ck-hero-score mono-score">147<span class="wk">/4</span></span>
+          <span class="ck-hero-ov">(17.2)</span>
+        </div>
+        <span class="ck-hero-crr">CRR 8.48</span>
+      </div>
+      <div class="ck-hero-bar"><i style="width:87%"></i></div>
+      <div class="ck-hero-chase">
+        <span>NEED <b class="need">23</b> OFF <b>16</b></span>
+        <span>RRR <b>8.63</b></span>
+      </div>
+    </div>
+
+    <!-- PLAYERS — compact 3-column: striker | non-striker | bowler -->
+    <div class="ck-players">
+      <div class="ck-player">
+        <div class="ck-player-name"><span class="dot">&#9679;</span>R. Sharma</div>
+        <div class="ck-player-fig">62 (41)</div>
+      </div>
+      <div class="ck-player">
+        <div class="ck-player-name sub">K. Patel</div>
+        <div class="ck-player-fig">38 (29)</div>
+      </div>
+      <div class="ck-player">
+        <div class="ck-player-name sub">J. Khan &#9682;</div>
+        <div class="ck-player-fig">3.2-0-28-2</div>
+      </div>
+    </div>
+
+    <!-- THIS OVER — every ball bowled + dashed slots for the rest + last wkt -->
+    <div class="ck-over-row">
+      <div class="mono-over-strip">
+        <span class="mono-over-label">Over 18</span>
+        <span class="mono-over-pip">1</span>
+        <span class="mono-over-pip mono-over-pip-four">4</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+        <span class="mono-over-pip mono-over-pip-empty">&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- KEYPAD — real .mono-cricket-* : 3-col grid, 4/6 accent + FOUR/SIX caption -->
+    <div class="mono-cricket-keypad">
+      <div class="mono-cricket-keys">
+        <button class="mono-cricket-key">0</button>
+        <button class="mono-cricket-key">1</button>
+        <button class="mono-cricket-key">2</button>
+        <button class="mono-cricket-key">3</button>
+        <button class="mono-cricket-key mono-cricket-key-four">4<small>FOUR</small></button>
+        <button class="mono-cricket-key mono-cricket-key-six">6<small>SIX</small></button>
+      </div>
+      <!-- Secondary extras row: Wide · No-ball · Bye · LB · 5/7 -->
+      <div class="mono-cricket-keys mono-cricket-keys-sec">
+        <button class="mono-cricket-key mono-cricket-key-sec">Wide</button>
+        <button class="mono-cricket-key mono-cricket-key-sec">No-ball</button>
+        <button class="mono-cricket-key mono-cricket-key-sec">Bye</button>
+        <button class="mono-cricket-key mono-cricket-key-sec">LB</button>
+        <button class="mono-cricket-key mono-cricket-key-sec">5/7</button>
+      </div>
+    </div>
+
+    <!-- OUT + STRIKE side by side -->
+    <div class="ck-action-row">
+      <button class="ck-out">OUT</button>
+      <button class="mono-btn ck-strike">&#8646; Strike</button>
+    </div>
+
+    <!-- Undo + End innings -->
+    <div class="ck-bottom-row">
+      <button class="mono-btn ck-undo" aria-label="Undo">&#8617;</button>
+      <button class="mono-btn-primary ck-end">End innings</button>
+    </div>
+
+    <!-- Footer: quiet scorecard link + spectator/share -->
+    <div class="ck-footer">
+      <span class="left">Full scorecard &rsaquo;</span>
+      <span class="right">Share live <span class="go">&#8599;</span></span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
