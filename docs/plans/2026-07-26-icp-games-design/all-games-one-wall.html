@@ -155,7 +155,34 @@ header.top {
   box-shadow: 3px 3px 0 rgb(24 34 28 / .10);
 }
 
-.stage iframe {
+.stage.split { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); }
+
+.stage .pane { position: relative; overflow: hidden; background: #fff; }
+
+.stage .pane iframe {
+  display: block;
+  width: 1240px;
+  height: 960px;
+  border: 0;
+  transform-origin: top left;
+}
+
+.stage .pane .tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font: 700 .62rem/1 "JetBrains Mono", monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.pane.tag-new .tag { background: var(--accent); color: #fff; }
+.pane.tag-old .tag { background: #8a5a00; color: #fff; }
+
+.stage > iframe {
   display: block;
   width: 1240px;
   height: 960px;
@@ -186,6 +213,13 @@ header.top {
     <a href="#g-kho-kho">Kho-Kho</a>
   </nav>
 
+  <div class="zoom" role="group" aria-label="Compare mode">
+    <label>Compare</label>
+    <button type="button" data-mode="new" aria-pressed="true">New</button>
+    <button type="button" data-mode="old" aria-pressed="false">Old</button>
+    <button type="button" data-mode="split" aria-pressed="false">Side by side</button>
+  </div>
+
   <div class="zoom" role="group" aria-label="Wall thumbnail size">
     <label for="zoom-s">Wall</label>
     <button type="button" data-zoom="0.20" aria-pressed="false">S</button>
@@ -214,24 +248,90 @@ const PREVIEW_W = 1240;
 const wall = document.getElementById('wall');
 const fulls = document.getElementById('fulls');
 
-for (const g of GAMES) {
-  const src = `${g.id}/${g.id}-preview.html`;
+let MODE = 'new';
+const srcFor = (id) => MODE === 'old' ? `_old/${id}-preview.html` : `${id}/${id}-preview.html`;
 
+for (const g of GAMES) {
   const tile = document.createElement('div');
   tile.className = 'tile';
+  tile.dataset.game = g.id;
   tile.innerHTML =
-    `<div class="cap"><b>${g.label}</b><a href="${src}" target="_blank" rel="noopener">open ↗</a></div>` +
-    `<div class="clip"><iframe title="${g.label} wall thumbnail" src="${src}" tabindex="-1" loading="lazy"></iframe></div>`;
+    `<div class="cap"><b>${g.label}</b><a href="${g.id}/${g.id}-preview.html" target="_blank" rel="noopener">open ↗</a></div>` +
+    `<div class="clip"><iframe title="${g.label} wall thumbnail" src="${srcFor(g.id)}" tabindex="-1" loading="lazy"></iframe></div>`;
   wall.appendChild(tile);
+}
 
+function buildStage(g, mode) {
+  const stage = document.createElement('div');
+  stage.className = 'stage' + (mode === 'split' ? ' split' : '');
+  if (mode === 'split') {
+    stage.innerHTML =
+      `<div class="pane tag-new"><span class="tag">new</span><iframe title="${g.label} new" src="${g.id}/${g.id}-preview.html" loading="lazy"></iframe></div>` +
+      `<div class="pane tag-old"><span class="tag">old</span><iframe title="${g.label} old" src="_old/${g.id}-preview.html" loading="lazy"></iframe></div>`;
+  } else {
+    stage.innerHTML = `<iframe title="${g.label} ${mode} preview" src="${srcFor(g.id)}" loading="lazy"></iframe>`;
+  }
+  return stage;
+}
+
+for (const g of GAMES) {
   const block = document.createElement('section');
   block.className = 'game-block';
   block.id = `g-${g.id}`;
   block.innerHTML =
     `<div class="head"><h2>${g.label}</h2><span class="meta">${g.meta}</span>` +
-    `<a href="${src}" target="_blank" rel="noopener">open standalone ↗</a></div>` +
-    `<div class="stage"><iframe title="${g.label} full preview" src="${src}" loading="lazy"></iframe></div>`;
+    `<a href="${g.id}/${g.id}-preview.html" target="_blank" rel="noopener">open standalone ↗</a></div>`;
+  block.appendChild(buildStage(g, MODE));
   fulls.appendChild(block);
+}
+
+function rescale() {
+  document.querySelectorAll('.game-block').forEach((block) => {
+    const g = GAMES.find((x) => `g-${x.id}` === block.id);
+    const stage = block.querySelector('.stage');
+    if (!stage || !g) return;
+    if (MODE === 'split') {
+      const panes = stage.querySelectorAll('.pane');
+      const s = Math.max(0.1, (stage.clientWidth - 1) / 2 / PREVIEW_W);
+      panes.forEach((p) => {
+        const f = p.querySelector('iframe');
+        f.style.transform = `scale(${s})`;
+        p.style.height = `${Math.round(960 * s)}px`;
+      });
+      stage.style.height = `${Math.round(960 * s)}px`;
+    } else {
+      const f = stage.querySelector(':scope > iframe');
+      const s = Math.min(1, stage.clientWidth / PREVIEW_W);
+      f.style.transform = `scale(${s})`;
+      stage.style.height = `${Math.round(960 * s)}px`;
+    }
+  });
+}
+
+function setMode(mode) {
+  MODE = mode;
+  localStorage.setItem('wall-mode', mode);
+  wall.querySelectorAll('.tile').forEach((t) => {
+    t.querySelector('iframe').src = srcFor(t.dataset.game);
+  });
+  document.querySelectorAll('.game-block').forEach((block) => {
+    const g = GAMES.find((x) => `g-${x.id}` === block.id);
+    const old = block.querySelector('.stage');
+    const fresh = buildStage(g, mode);
+    old.replaceWith(fresh);
+  });
+  requestAnimationFrame(rescale);
+}
+
+document.querySelectorAll('[data-mode]').forEach((b) => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    setMode(b.dataset.mode);
+  });
+});
+const savedMode = localStorage.getItem('wall-mode');
+if (savedMode && savedMode !== 'new') {
+  document.querySelector(`[data-mode="${savedMode}"]`)?.click();
 }
 
 let wallZoom = 0.27;
@@ -245,26 +345,18 @@ function paintWall() {
   });
 }
 
-document.querySelectorAll('.zoom button').forEach((b) => {
+document.querySelectorAll('[data-zoom]').forEach((b) => {
   b.addEventListener('click', () => {
     wallZoom = parseFloat(b.dataset.zoom);
-    document.querySelectorAll('.zoom button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('[data-zoom]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     paintWall();
   });
 });
 paintWall();
 
-const ro = new ResizeObserver((entries) => {
-  for (const e of entries) {
-    const stage = e.target;
-    const f = stage.querySelector('iframe');
-    const s = Math.min(1, stage.clientWidth / PREVIEW_W);
-    f.style.transform = `scale(${s})`;
-    stage.style.height = `${Math.round(960 * s)}px`;
-  }
-});
-
-document.querySelectorAll('.stage').forEach((st) => ro.observe(st));
+const ro = new ResizeObserver(() => rescale());
+ro.observe(fulls);
+window.addEventListener('resize', rescale);
 </script>
 
 </body>
