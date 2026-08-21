@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -81,7 +81,7 @@ body {
 .crest { display: inline-flex; align-items: center; justify-content: center; border-radius: 30%; font-family: var(--se-font-mono); font-weight: 800; flex: none; }
 
 /* flat black hero — shared board grammar (NO gradient; lead = green score/crest only) */
-.hero-blk { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: 16px; box-shadow: var(--shadow); }
+.hero-blk { background: var(--se-color-ink); color: var(--se-color-inverse); border-radius: 16px;  }
 
 /* ============================================================
    FRAME 1 — MAIN SCOREBOARD (glanceable record, flat black)
@@ -112,7 +112,7 @@ body {
 .mb-caption .mn { color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
 
 /* single compact glance-legend (the board itself stays pristine) */
-.mb-note { font-family: var(--se-font-mono); font-size: 0.62rem; line-height: 1.55; color: var(--se-color-ink-muted); border: 1px solid color-mix(in oklch, var(--se-color-line) 24%, transparent); border-radius: 12px; background: var(--se-color-surface); box-shadow: var(--shadow-2xs); padding: 13px 14px; }
+.mb-note { font-family: var(--se-font-mono); font-size: 0.62rem; line-height: 1.55; color: var(--se-color-ink-muted); border: 1px solid color-mix(in oklch, var(--se-color-line) 24%, transparent); border-radius: 12px; background: var(--se-color-surface); padding: 13px 14px; }
 .mb-note .h { display: block; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 9px; }
 .mb-note .li { display: flex; gap: 9px; align-items: baseline; }
 .mb-note .li + .li { margin-top: 6px; }
@@ -126,7 +126,7 @@ body {
 .sc-shell { flex: 1; display: flex; flex-direction: column; }
 .sc-topbar { order: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .sc-tb-l { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.sc-ico { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--se-color-line); border-radius: 9px; background: var(--se-color-surface); font-size: 0.95rem; flex: none; }
+.sc-ico { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--se-color-line); border-radius: 9px; background: var(--se-color-surface); font-size: 0.95rem; flex: none; }
 .sc-tb-ttl { font-size: 0.8rem; font-weight: 700; line-height: 1.1; }
 .sc-tb-sub { font-family: var(--se-font-mono); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
 
@@ -140,22 +140,22 @@ body {
 .sc-ro-r { text-align: right; }
 .sc-ro-clk { font-family: var(--se-font-mono); font-size: 0.72rem; font-weight: 700; }
 .sc-ro-clk .ph { color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
-.sc-ro-live { display: inline-flex; align-items: center; gap: 4px; font-family: var(--se-font-mono); font-size: 0.54rem; font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-danger); margin-top: 3px; justify-content: flex-end; }
+.sc-ro-live { display: inline-flex; align-items: center; gap: 4px; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-danger); margin-top: 3px; justify-content: flex-end; }
 .sc-ro-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-danger); animation: pulse 1.6s ease-in-out infinite; }
 
 /* order 2 — last event + persistent Undo */
 .sc-last { order: 2; display: flex; align-items: center; gap: 8px; margin-top: 11px; font-family: var(--se-font-mono); font-size: 0.68rem; color: var(--se-color-ink-muted); }
-.sc-last .lbl { font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); font-size: 0.56rem; }
-.sc-last .ev { color: var(--se-color-ink); font-weight: 600; }
+.sc-last .lbl { font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); font-size: 0.5625rem; }
+.sc-last .ev { color: var(--se-color-ink); font-weight: 600; cursor: pointer; border-bottom: 1px dashed color-mix(in oklch, var(--primary) 55%, transparent); }
 .sc-last .ev .g { color: var(--primary); }
-.sc-undo { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--se-color-line); background: var(--se-color-surface); border-radius: 10px; padding: 7px 13px; font-family: var(--se-font-sans); font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+.sc-undo { margin-left: auto; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-height: 44px; gap: 2px; border: 1px solid var(--se-color-line); background: var(--se-color-surface); border-radius: 10px; padding: 6px 13px; font-family: var(--se-font-sans); font-size: 0.72rem; font-weight: 700; cursor: pointer; }
 
 /* order 3 — clock bar (full width, flat, hairline) */
 .sc-clock { order: 3; display: flex; align-items: center; gap: 10px; margin-top: 11px; border: 1px solid var(--se-color-line); border-radius: 12px; background: var(--se-color-surface); padding: 11px 14px; }
 .sc-clock .pause { display: inline-flex; align-items: center; gap: 7px; font-family: var(--se-font-sans); font-size: 0.8rem; font-weight: 700; }
 .sc-clock .pause .b { letter-spacing: 0.12em; }
 .sc-clock .t { margin-left: auto; margin-right: auto; font-family: var(--se-font-mono); font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.sc-clock .stop { display: inline-flex; align-items: center; gap: 5px; font-family: var(--se-font-mono); font-size: 0.68rem; font-weight: 700; color: var(--se-color-ink-muted); border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.sc-clock .stop { min-height: 44px; display: inline-flex; align-items: center; gap: 5px; font-family: var(--se-font-mono); font-size: 0.68rem; font-weight: 700; color: var(--se-color-ink-muted); border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
 
 /* order 4 — secondary strip (rare actions folded here; hairline splits) */
 .sc-strip { order: 4; display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 11px; border: 1px solid color-mix(in oklch, var(--se-color-line) 42%, transparent); border-radius: 12px; overflow: hidden; background: var(--se-color-surface); }
@@ -181,11 +181,11 @@ body {
 .sc-attr-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .sc-attr-hd .t { font-family: var(--se-font-mono); font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-action-strong); }
 .sc-attr-hd .t b { color: var(--primary); }
-.sc-attr-hd .away { font-family: var(--se-font-mono); font-size: 0.56rem; font-weight: 700; color: var(--se-color-ink-muted); }
+.sc-attr-hd .away { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; color: var(--se-color-ink-muted); }
 .sc-attr-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .sc-attr-line + .sc-attr-line { margin-top: 9px; }
-.sc-attr-line .rl { font-family: var(--se-font-mono); font-size: 0.56rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); width: 44px; flex: none; }
-.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid color-mix(in oklch, var(--se-color-line) 32%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 12px; font-family: var(--se-font-sans); font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+.sc-attr-line .rl { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); width: 44px; flex: none; }
+.chip { display: inline-flex; align-items: center; min-height: 44px; gap: 4px; border: 1px solid color-mix(in oklch, var(--se-color-line) 32%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 14px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
 .chip.on { border-color: var(--primary); background: var(--se-color-action-soft); color: var(--se-color-action-strong); font-weight: 700; }
 .chip.add { border-style: dashed; color: var(--se-color-ink-muted); }
 .chip.unknown { border-style: dashed; color: var(--se-color-ink-muted); font-family: var(--se-font-mono); font-size: 0.66rem; }
@@ -202,7 +202,7 @@ body {
 .lv-hdr .live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-danger); animation: pulse 1.6s ease-in-out infinite; }
 
 .lv-tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin-bottom: 13px; }
-.lv-tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.72rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.lv-tab { flex: 1; text-align: center; min-height: 44px; padding: 12px 0; border-radius: 999px; font-size: 0.72rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
 .lv-tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
 
 /* live hero (flat black, compact — the glanceable record) */
@@ -211,7 +211,7 @@ body {
 .lv-ht { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; }
 .lv-ht .crest { width: 34px; height: 34px; font-size: 0.82rem; border: 1.5px solid color-mix(in oklch, var(--se-color-inverse) 42%, transparent); color: var(--se-color-inverse); }
 .lv-ht.lead .crest { border-color: var(--primary); color: var(--primary); }
-.lv-ht .nm { font-size: 0.72rem; font-weight: 700; text-align: center; line-height: 1.05; }
+.lv-ht .nm { font-size: 0.78rem; font-weight: 700; text-align: center; line-height: 1.05; }
 .lv-hs { display: flex; align-items: center; gap: 9px; font-family: var(--se-font-mono); font-size: 3rem; font-weight: 800; line-height: 0.86; font-variant-numeric: tabular-nums; }
 .lv-hs .dash { font-size: 1.4rem; font-weight: 500; color: color-mix(in oklch, var(--se-color-inverse) 42%, transparent); }
 .lv-hs .win { color: var(--primary); }
@@ -222,8 +222,8 @@ body {
 .lv-hcap .mn { color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
 
 /* NOW-card (derived: scorers · on-pitch · subs) */
-.now-card { border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; margin-bottom: 13px; }
-.nc-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 7px 12px; background: color-mix(in oklch, var(--se-color-line) 5%, transparent); font-family: var(--se-font-mono); font-size: 0.54rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.now-card { border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); overflow: hidden; margin-bottom: 13px; }
+.nc-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 7px 12px; background: color-mix(in oklch, var(--se-color-line) 5%, transparent); font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); }
 .nc-head .c { text-align: center; }
 .nc-head .r { text-align: right; }
 .nc-score { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; padding: 10px 12px; }
@@ -234,7 +234,7 @@ body {
 .nc-score .cs { font-family: var(--se-font-mono); font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; }
 .nc-score .cs .win { color: var(--primary); }
 .nc-line { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); font-family: var(--se-font-mono); font-size: 0.64rem; color: var(--se-color-ink-muted); }
-.nc-line .lbl { font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-ink-faint); font-size: 0.54rem; }
+.nc-line .lbl { font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-ink-faint); font-size: 0.5625rem; }
 .nc-line b { color: var(--se-color-ink); }
 
 /* key moments feed */
@@ -246,11 +246,11 @@ body {
 .moment .tx .six { color: var(--primary); font-weight: 800; }
 .moment .tx .wkt { color: var(--se-color-danger); font-weight: 800; }
 .moment .tx b { font-weight: 700; }
-.km-more { display: block; margin-top: 10px; font-family: var(--se-font-mono); font-size: 0.66rem; font-weight: 700; color: var(--primary); cursor: pointer; }
+.km-more { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; font-family: var(--se-font-mono); font-size: 0.66rem; font-weight: 700; color: var(--primary); cursor: pointer; }
 
 /* presence footer */
 .pres { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 13px; font-family: var(--se-font-mono); font-size: 0.66rem; color: var(--se-color-ink-muted); }
-.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.7rem; font-weight: 700; box-shadow: var(--shadow-2xs); }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.7rem; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
@@ -294,7 +294,7 @@ body {
             <div class="mb-clock">
               <div class="v mono"><span class="ph">H2</span> &middot; 67:14</div>
             </div>
-            <div class="mb-caption mono"><span class="ball">&#9917;</span> SHARMA <span class="mn">58'</span></div>
+            <div class="mb-caption mono"><span class="ball">&#9917;</span> Sharma <span class="mn">58'</span></div>
           </div>
 
           <div class="mb-note">
@@ -346,7 +346,7 @@ body {
           <div class="sc-last">
             <span class="lbl">Last</span>
             <span class="ev mono"><span class="g">&#9917;</span> 58' Sharma (Nair)</span>
-            <button class="sc-undo">&#8617; Undo</button>
+            <button class="sc-undo" title="removes the 58' goal"><span>&#8617; Undo</span><span class="what">removes the 58' goal</span></button>
           </div>
 
           <!-- order 3 — clock bar -->
@@ -385,7 +385,7 @@ body {
             <!-- inline attribution (expands under the tapped key; fully deferrable) -->
             <div class="sc-attr">
               <div class="sc-attr-hd">
-                <span class="t mono">&#9917; GOAL &middot; <b>ROV &rarr; 2</b> &middot; 67'</span>
+                <span class="t mono">&#9917; GOAL &middot; <b>ROV &rarr; 2</b> &middot; 58'</span>
                 <span class="away">tap away = later</span>
               </div>
               <div class="sc-attr-line">
@@ -400,8 +400,11 @@ body {
                 <span class="chip">skip</span>
                 <span class="chip on">8 Nair</span>
                 <span class="chip">11 Das</span>
+              </div>
+              <div class="sc-attr-line">
+                <span class="rl">Type</span>
                 <span class="chip tag">&#9873; Pen</span>
-                <span class="chip tag">&#10558; Own goal</span>
+                <span class="chip tag" title="Put in by a UTD player — who?">&#10558; Own goal</span>
               </div>
             </div>
           </div>
@@ -447,7 +450,7 @@ body {
               </div>
             </div>
             <div class="lv-hclk mono"><span class="ph">H2</span> &middot; 67:14</div>
-            <div class="lv-hcap mono"><span class="ball">&#9917;</span> SHARMA <span class="mn">58'</span></div>
+            <div class="lv-hcap mono"><span class="ball">&#9917;</span> Sharma <span class="mn">58'</span></div>
           </div>
 
           <!-- NOW-card (derived) -->

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -100,6 +100,8 @@ body {
 .ico { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; cursor: pointer; }
 .badge-live { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border-radius: var(--radius); background: var(--se-color-action-soft); color: var(--se-color-action); }
 .badge-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-action); }
+
+.off-chip { display:inline-flex; align-items:center; gap:4px; border:1px solid color-mix(in oklch, var(--se-color-line) 55%, transparent); border-radius:999px; padding:3px 8px; font-family:var(--se-font-mono); font-size:0.5625rem; font-weight:700; letter-spacing:0.06em; color:var(--se-color-ink-muted); }
 .live-red { display: inline-flex; align-items: center; gap: 5px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-danger); }
 .live-red .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-danger); }
 
@@ -112,7 +114,7 @@ body {
 .board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px 14px 4px; }
 .side { min-width: 0; }
 .side.r { text-align: right; }
-.side .nm { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.09em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); display: flex; align-items: center; gap: 6px; }
+.side .nm { font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.01em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); display: flex; align-items: center; gap: 6px; }
 .side.r .nm { justify-content: flex-end; }
 .side .raidmark { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.06em; color: var(--primary); }
 .side .raidmark.dod { color: var(--se-color-warning); }
@@ -123,11 +125,11 @@ body {
 .ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .ring { display: block; }
 .ring .rt { font-family: var(--se-font-mono); font-weight: 800; fill: var(--se-color-inverse); }
-.ring-lbl { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); }
+.ring-lbl { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); }
 /* compact boxed clock (State A) */
 .clockbox { display: inline-flex; flex-direction: column; align-items: center; }
 .clockbox .n { font-family: var(--se-font-mono); font-size: 1.5rem; font-weight: 800; line-height: 1; padding: 3px 10px; border: 1px solid color-mix(in oklch, var(--se-color-inverse) 34%, transparent); border-radius: 8px; }
-.clockbox .l { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); margin-top: 3px; }
+.clockbox .l { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); margin-top: 3px; }
 
 /* dolls — 7 pips / side */
 .dolls-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 8px; padding: 4px 14px 2px; }
@@ -158,7 +160,7 @@ body {
    SCORER — last-raid narration, rare strip, Big-4
    ============================================================ */
 .narr { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 9px 11px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 12px; background: var(--se-color-surface); }
-.narr .undo { flex: none; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); font-size: 1.15rem; cursor: pointer; }
+.narr .undo { flex: none; width: 46px; height: 46px; flex-direction: column; gap: 1px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); font-size: 1.15rem; cursor: pointer; }
 .narr .tx { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 600; line-height: 1.35; color: var(--se-color-ink-soft); }
 .narr .tx b { color: var(--se-color-ink); font-weight: 800; }
 
@@ -177,7 +179,7 @@ body {
 .multi-panel { display: none; }
 .multi-cb:checked ~ .multi-panel { display: block; border: 1px solid color-mix(in oklch, var(--primary) 40%, var(--se-color-line)); border-top: none; border-radius: 0 0 12px 12px; background: color-mix(in oklch, var(--se-color-action-soft) 22%, var(--se-color-surface)); padding: 10px 12px 11px; }
 .multi-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.mc { flex: 1 1 auto; min-height: 38px; border: 1px solid color-mix(in oklch, var(--se-color-line) 38%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 6px 14px; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.mc { flex: 1 1 auto; min-height: 44px; border: 1px solid color-mix(in oklch, var(--se-color-line) 38%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 6px 14px; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .mc.on { background: var(--se-color-ink); color: var(--se-color-inverse); border-color: var(--se-color-ink); }
 .mc.bon { color: var(--primary); border-color: color-mix(in oklch, var(--primary) 44%, var(--se-color-line)); }
 .multi-guard { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 9px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
@@ -231,16 +233,16 @@ body {
 .sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
 .menu-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 6px; }
 .menu-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.menu-row .pill { flex: 1 1 auto; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.menu-row .pill { flex: 1 1 auto; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .menu-actions { display: flex; gap: 8px; margin-top: 2px; }
-.menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.menu-end { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid color-mix(in oklch, var(--se-color-line) 60%, transparent); background: transparent; color: var(--se-color-ink); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
 
 /* ============================================================
    LIVE spectator surface — tabs / now-card / momentum / feed
    ============================================================ */
 .tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin: 12px 0; }
-.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.tab { flex: 1; text-align: center; min-height: 44px; padding: 12px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
 .tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
 
 .now-card { border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; margin-bottom: 13px; }
@@ -324,7 +326,7 @@ body {
 
         <div class="board band-dod">
           <div class="side">
-            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="nm">Warriors <span class="raidmark">&#9656; RAID</span></div>
             <div class="sc lead" style="font-size:3.6rem;">34</div>
           </div>
           <div class="ring-wrap">
@@ -336,7 +338,7 @@ body {
             <span class="ring-lbl">Raid</span>
           </div>
           <div class="side r">
-            <div class="nm">TITANS</div>
+            <div class="nm">Titans</div>
             <div class="sc" style="font-size:3.6rem;">29</div>
           </div>
         </div>
@@ -391,8 +393,7 @@ body {
           </div>
         </div>
         <div class="actions">
-          <span class="badge-live"><span class="d"></span>Live</span>
-          <label for="kMore" class="ico" aria-label="More">&#8943;</label>
+          <span class="badge-live"><span class="d"></span>Live</span><span class="off-chip" title="Works offline — scores save on this device">● saved</span>          <label for="kMore" class="ico" aria-label="More">&#8943;</label>
         </div>
       </div>
 
@@ -400,7 +401,7 @@ body {
       <div class="hero">
         <div class="board band-dod" style="padding-top:12px;">
           <div class="side">
-            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="nm">Warriors <span class="raidmark">&#9656; RAID</span></div>
             <div class="sc lead" style="font-size:2rem;">34</div>
           </div>
           <div class="clockbox">
@@ -408,7 +409,7 @@ body {
             <span class="l">Raid</span>
           </div>
           <div class="side r">
-            <div class="nm">TITANS</div>
+            <div class="nm">Titans</div>
             <div class="sc" style="font-size:2rem;">29</div>
           </div>
         </div>
@@ -432,7 +433,7 @@ body {
 
       <!-- last-raid narration + fat Undo -->
       <div class="narr">
-        <span class="undo" aria-hidden="true">&#8617;</span>
+        <span class="undo" role="button" aria-label="Undo last raid" title="removes the tackle"><span>&#8617;</span><small>undo</small></span>
         <span class="tx"><b>Tackle</b> — Titans +1, raider out &middot; Warriors down to <b>5 on mat</b>. Possession &#8594; Warriors <b>(do-or-die)</b>.</span>
       </div>
 
@@ -454,8 +455,8 @@ body {
             <button class="mc bon" type="button">+ Bonus</button>
           </div>
           <div class="multi-guard">
-            <span class="sum">Touch &times;2 = <b>+2 raiders &middot; 2 back</b></span>
-            <button class="multi-commit" type="button">Add raid</button>
+            <span class="sum">Touch &times;2 = <b>+2 Raiders &middot; 2 back</b></span>
+            <button class="multi-commit" type="button">Add raid &middot; +2 Super Raid</button>
           </div>
         </div>
       </div>
@@ -529,7 +530,7 @@ body {
       <div class="hero">
         <div class="board band-dod" style="padding-top:12px;">
           <div class="side">
-            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="nm">Warriors <span class="raidmark">&#9656; RAID</span></div>
             <div class="sc lead" style="font-size:2.6rem;">34</div>
           </div>
           <div class="ring-wrap">
@@ -541,7 +542,7 @@ body {
             <span class="ring-lbl">Raid</span>
           </div>
           <div class="side r">
-            <div class="nm">TITANS</div>
+            <div class="nm">Titans</div>
             <div class="sc" style="font-size:2.6rem;">29</div>
           </div>
         </div>

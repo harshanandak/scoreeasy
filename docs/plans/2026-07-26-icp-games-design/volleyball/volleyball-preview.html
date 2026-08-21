@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -108,7 +108,7 @@ body {
 .mono-badge-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; cursor: pointer; }
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; cursor: pointer; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .topbar-actions { display: flex; align-items: center; gap: 8px; }
 .topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; }
@@ -177,14 +177,29 @@ body {
 .scorer-body { display: flex; flex-direction: column; flex: 1; }
 .vb-hero.pinned { margin-bottom: 12px; box-shadow: none; }
 
-.vb-ctrl { display: flex; gap: 8px; margin-bottom: 12px; }
+.vb-ctrl { display: flex; gap: 8px; margin-bottom: 10px; }
 .vb-ctrl button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 46px; border: 1px solid color-mix(in oklch, var(--se-color-line) 55%, transparent); border-radius: 10px; background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; }
-.vb-ctrl .undo { flex: 0 0 74px; font-size: 1.05rem; }
+.vb-ctrl .undo { flex: 0 0 118px; flex-direction: column; gap: 2px; }
+.vb-ctrl .undo .glyph { font-size: 1.05rem; line-height: 1; }
+.vb-ctrl .undo .what { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.04em; color: var(--se-color-ink-muted); text-transform: none; max-width: 106px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vb-ctrl .to { flex: 1; flex-direction: column; gap: 4px; }
 .vb-ctrl .to .lbl { display: inline-flex; align-items: center; gap: 6px; }
 .vb-ctrl .to .dots i.on { background: var(--primary); }
 .vb-ctrl .to .dots i.off { background: transparent; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); }
 .vb-ctrl button:active { transform: translateY(1px); background: var(--accent); }
+
+/* last-event narration band — the conversation layer (cricket guided-v2 grammar) */
+.vb-narr { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; padding: 8px 11px; border: 1px dashed color-mix(in oklch, var(--se-color-warning) 45%, transparent); border-radius: 10px; background: color-mix(in oklch, var(--se-color-warning) 7%, var(--se-color-surface)); }
+.vb-narr .tx { font-family: var(--se-font-sans); font-size: 0.75rem; line-height: 1.35; color: var(--se-color-ink); }
+.vb-narr .tx b { font-weight: 700; }
+
+/* recent-rally strip — self-audit row (cricket over-strip instantiation) */
+.rally-strip { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
+.rally-strip .rlbl { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; color: var(--se-color-ink-faint); margin-right: 3px; }
+.rally-strip i { flex: 1; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 5px; font-style: normal; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; }
+.rally-strip i.l { background: color-mix(in oklch, var(--primary) 16%, transparent); color: var(--se-color-ink); }
+.rally-strip i.r { background: color-mix(in oklch, var(--se-color-line) 26%, transparent); color: var(--se-color-ink-muted); }
+.rally-strip i.next { background: transparent; border: 1px dashed color-mix(in oklch, var(--se-color-line) 55%, transparent); }
 
 .vb-targets-wrap { margin-top: auto; }
 .vb-target-caps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 7px; }
@@ -198,7 +213,7 @@ body {
 .vb-target .tcode .pip { width: 9px; height: 9px; border-radius: 2px; background: color-mix(in oklch, var(--se-color-line) 34%, transparent); }
 .vb-target .tbig { font-family: var(--se-font-mono); font-size: 2.6rem; font-weight: 800; color: var(--se-color-ink); font-variant-numeric: tabular-nums; line-height: 0.9; }
 .vb-target .tword { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.16em; color: var(--se-color-ink-faint); }
-.vb-target.serving { border-color: var(--primary); }
+.vb-target.serving { background: color-mix(in oklch, var(--primary) 7%, var(--se-color-surface)); }
 
 .vb-scorer-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 4px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
 .vb-scorer-foot .left { color: var(--primary); font-weight: 700; cursor: pointer; }
@@ -214,16 +229,16 @@ body {
 .sheet-grab { width: 36px; height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); margin: 2px auto 2px; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; }
 .sheet-title { font-size: 0.9375rem; font-weight: 700; }
-.sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
+.sheet-x { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
 .menu-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 6px; }
 .menu-row { display: flex; flex-wrap: wrap; gap: 7px; }
-.pill { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 8px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.pill { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 8px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
 .pill:active { background: var(--accent); }
 .pill .sw { width: 26px; height: 15px; border-radius: 99px; border: 1px solid color-mix(in oklch, var(--se-color-line) 45%, transparent); position: relative; margin-left: 4px; }
 .pill .sw::after { content: ''; position: absolute; top: 1px; left: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--se-color-ink-muted); }
 .menu-actions { display: flex; gap: 8px; }
-.menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
-.menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
+.menu-end { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid color-mix(in oklch, var(--se-color-line) 60%, transparent); background: transparent; color: var(--se-color-ink); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.menu-end.danger { border-color: var(--se-color-danger); color: var(--se-color-danger); }
 
 /* ============================================================
    SCREEN 3 — LIVE / SPECTATOR (live-innovations.md)
@@ -232,8 +247,8 @@ body {
    ============================================================ */
 .live-body { display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
 .tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin-bottom: 13px; }
-.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
-.tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
+.tab { flex: 1; text-align: center; min-height: 44px; padding: 11px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.tab.on { background: var(--se-color-surface); color: var(--se-color-ink); border: 1px solid var(--se-color-line); box-shadow: 0 1px 2px rgb(24 34 28 / 0.14); }
 
 .blk { margin-top: 13px; }
 .eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
@@ -281,7 +296,7 @@ body {
 
 /* presence footer */
 .pres { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
-.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); cursor: pointer; }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 11px 18px; min-height: 44px; display: inline-flex; align-items: center; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -327,7 +342,7 @@ body {
             <div class="vb-meta-row">
               <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
               <span class="mid">&mdash;</span>
-              <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+              <span class="r"><span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span> SETS</span>
             </div>
             <div class="vb-meta-row">
               <span class="l">T.O <span class="dots"><i class="on"></i><i class="on"></i></span></span>
@@ -366,7 +381,7 @@ body {
               <span class="ck-icon" aria-hidden="true">&#8249;</span>
               <div style="min-width:0;">
                 <div class="topbar-title">Sunday Cup &middot; Final</div>
-                <div class="topbar-sub">Set 3 &middot; Royals lead</div>
+                <div class="topbar-sub">BO3 &middot; SET 3 DECIDER &middot; TO 15 &middot; SWITCH AT 8</div>
               </div>
             </div>
             <div class="topbar-actions">
@@ -391,16 +406,27 @@ body {
               <div class="vb-meta-row">
                 <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
                 <span class="mid">1&ndash;1</span>
-                <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+                <span class="r"><span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span> SETS</span>
               </div>
             </div>
           </div>
 
+          <!-- LAST-EVENT NARRATION (the conversation layer) -->
+          <div class="vb-narr">
+            <span class="tx">Point <b>ROY</b> &middot; 22&ndash;19 &middot; side-out &mdash; <b>ROY to serve next</b>.</span>
+          </div>
+
+          <!-- RECENT RALLY STRIP (self-audit: last 7 rallies, L=ROY won) -->
+          <div class="rally-strip" aria-label="Recent rallies">
+            <span class="rlbl">RALLIES</span>
+            <i class="l">L</i><i class="r">R</i><i class="l">L</i><i class="l">L</i><i class="r">R</i><i class="l">L</i><i class="l">L</i><i class="next"></i>
+          </div>
+
           <!-- CONTROL STRIP (secondary, mid-reach) -->
           <div class="vb-ctrl">
-            <button class="undo" aria-label="Undo last rally">&#8617;</button>
-            <button class="to"><span class="lbl">T.O &middot; ROY</span><span class="dots"><i class="on"></i><i class="on"></i></span></button>
-            <button class="to"><span class="lbl">T.O &middot; STR</span><span class="dots"><i class="on"></i><i class="off"></i></span></button>
+            <button class="undo" aria-label="Undo last rally"><span class="glyph">&#8617;</span><span class="what">removes STR's point</span></button>
+            <button class="to" title="Timeout"><span class="lbl">Timeout &middot; ROY</span><span class="dots"><i class="on"></i><i class="on"></i></span></button>
+            <button class="to" title="Timeout"><span class="lbl">Timeout &middot; STR</span><span class="dots"><i class="on"></i><i class="off"></i></span></button>
           </div>
 
           <!-- TWO GIANT TARGETS (dominant, pinned low in thumb arc) -->
@@ -448,7 +474,7 @@ body {
           </div>
           <div class="menu-actions">
             <button class="menu-end">End set</button>
-            <button class="menu-end danger">End match</button>
+            <button class="menu-end danger" title="Asks for confirmation — nothing ends on one tap">End match&hellip;</button>
           </div>
         </div>
 
@@ -494,7 +520,7 @@ body {
               <div class="vb-meta-row">
                 <span class="l">SETS <span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span></span>
                 <span class="mid">&mdash;</span>
-                <span class="r"><span class="dots set"><i class="off"></i><i class="off"></i><i class="on"></i></span> SETS</span>
+                <span class="r"><span class="dots set"><i class="on"></i><i class="off"></i><i class="off"></i></span> SETS</span>
               </div>
               <div class="vb-meta-row">
                 <span class="l">T.O <span class="dots"><i class="on"></i><i class="on"></i></span></span>

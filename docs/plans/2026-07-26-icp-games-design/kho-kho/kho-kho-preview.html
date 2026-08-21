@@ -44,6 +44,9 @@
   --se-color-inverse: var(--primary-foreground);
   --se-color-danger: oklch(0.49 0.17 29);
   --se-color-danger-soft: oklch(0.96 0.04 29);
+  /* kho "warning" surfaces map onto the EXISTING danger pair — no new colours */
+  --kk-warn: var(--se-color-danger);
+  --kk-warn-soft: var(--se-color-danger-soft);
   --se-radius-card: calc(var(--radius) + 4px);
 }
 
@@ -96,7 +99,7 @@ body {
 .kk-live-pulse { animation: kkpulse 1.6s ease-in-out infinite; }
 
 .kk-names { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
-.kk-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); display: inline-flex; align-items: center; gap: 7px; }
+.kk-name { font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.01em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); display: inline-flex; align-items: center; gap: 7px; }
 .kk-name.chase { color: var(--se-color-inverse); }
 .kk-attack { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; }
 .kk-def { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; color: color-mix(in oklch, var(--se-color-inverse) 45%, transparent); }
@@ -107,9 +110,13 @@ body {
 .kk-total.chase { color: var(--primary); }
 .kk-clock { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .kk-clock .t { font-family: var(--se-font-mono); font-size: 2.05rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; }
-.kk-clock .k { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.14em; color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
-/* scorer clock is a tap-to-pause co-primary → hairline ring + ⏯ */
-.kk-clock.tap { border: 1px solid color-mix(in oklch, var(--se-color-inverse) 30%, transparent); border-radius: 12px; padding: 6px 16px 5px; }
+.kk-clock .k { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.14em; color: color-mix(in oklch, var(--se-color-inverse) 78%, transparent); }
+/* scorer clock is a tap-to-pause co-primary → hairline ring + ⏯.
+   Whole clockbox is the hit-area: cursor + enlarged padding so a
+   sun-glared thumb lands inside it. */
+.kk-clock.tap { border: 1px solid color-mix(in oklch, var(--se-color-inverse) 30%, transparent); border-radius: 12px; padding: 10px 22px 9px; cursor: pointer; }
+/* pressed state (pause feedback): ring fills to inverse, slab tints */
+.kk-clock.tap:active { border-color: var(--se-color-inverse); background: color-mix(in oklch, var(--se-color-inverse) 12%, transparent); }
 
 .kk-rule { height: 1px; margin: 12px 0 10px; background: color-mix(in oklch, var(--se-color-inverse) 18%, transparent); }
 .kk-band { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
@@ -137,6 +144,11 @@ body {
 .kk-dream { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
 .kk-dream .star { color: var(--primary); }
 .kk-dream b { color: var(--se-color-inverse); font-weight: 700; }
+/* THIS-TURN outs counter — glanceable mid-turn; prominent but
+   subordinate to the 3.5rem totals above it */
+.kk-this { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; font-family: var(--se-font-mono); }
+.kk-this .lbl { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.12em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.kk-this .v { font-size: 1.375rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: var(--se-color-inverse); }
 
 /* ============================================================
    FRAME 2 — LEAN SCORER (Big-1). FLAT surfaces (no offset
@@ -153,10 +165,27 @@ body {
 .kk-rare-key small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.08em; color: var(--se-color-ink-faint); text-transform: uppercase; }
 .kk-rare-key:not(:first-child)::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 56%; background: linear-gradient(to bottom, transparent, var(--line), transparent); }
 
+/* NARRATION BAND — last event in words, sits directly above the thumb
+   zone so the scorer can confirm what the last tap did before tapping again */
+.kk-narr { margin-top: 12px; padding: 8px 11px; border: 1px dashed color-mix(in oklch, var(--kk-warn) 45%, transparent); border-radius: 10px; background: color-mix(in oklch, var(--kk-warn-soft) 7%, var(--se-color-surface)); font-family: var(--se-font-sans); font-size: 0.75rem; line-height: 1.35; color: var(--se-color-ink); }
+.kk-narr b { font-family: var(--se-font-mono); font-weight: 800; letter-spacing: 0.06em; color: var(--kk-warn); }
+
+/* PAUSED state banner — warning-soft band. Dormant in this static mock;
+   renders while the tap-to-pause clock is engaged (clock caption flips to
+   RESUME, scoring keys dim) and hides again on resume:
+<div class="kk-paused">&#10074;&#10074; PAUSED &mdash; tap the clock to resume</div> */
+.kk-paused { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 8px 11px; border: 1px dashed color-mix(in oklch, var(--kk-warn) 45%, transparent); border-radius: 10px; background: color-mix(in oklch, var(--kk-warn-soft) 60%, var(--se-color-surface)); font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em; color: var(--kk-warn); }
+
 /* THUMB ZONE — pinned to the bottom; OUT is the giant Big-1 primary */
 .kk-thumb { display: flex; gap: 9px; margin-top: auto; padding-top: 14px; }
-.kk-undo { flex: 0 0 74px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 122px; border: 1px solid var(--se-color-line); border-radius: 12px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 1.35rem; cursor: pointer; }
+/* MISFIRE GUARD: UNDO sits ~74px from the giant OUT key — layout is fixed,
+   so UNDO is deliberately QUIETER instead: hairline low-contrast border,
+   smaller glyph, shorter body, centred. A burst-thumb overshooting OUT must
+   land on something visibly inert, not an equally loud twin.
+   Do not restyle UNDO up to match OUT. */
+.kk-undo { flex: 0 0 88px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 104px; align-self: center; border: 1px solid color-mix(in oklch, var(--se-color-line) 28%, transparent); border-radius: 12px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 1.05rem; cursor: pointer; }
 .kk-undo small { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 800; letter-spacing: 0.1em; color: var(--se-color-ink-muted); }
+.kk-undo small.sub { text-transform: none; letter-spacing: 0.02em; font-weight: 600; }
 .kk-out { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 122px; border: 1px solid var(--se-color-danger); border-radius: 12px; background: color-mix(in oklch, var(--se-color-danger-soft) 40%, var(--se-color-surface)); color: var(--se-color-danger); font-family: var(--se-font-mono); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
 .kk-out .big { font-size: 2.5rem; line-height: 1; letter-spacing: 0.04em; }
 .kk-out small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.14em; opacity: 0.85; }
@@ -174,13 +203,13 @@ body {
    Verbatim cricket-spectator-clean grammar.
    ============================================================ */
 .tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin: 12px 0 12px; }
-.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; white-space: nowrap; }
+.tab { flex: 1; text-align: center; min-height: 44px; padding: 12px 0; border-radius: 999px; font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; white-space: nowrap; }
 .tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
 
 .kk-ledger { border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); padding: 9px 12px; margin-top: 12px; }
 .kk-led-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-family: var(--se-font-mono); font-size: 0.75rem; }
 .kk-led-row + .kk-led-row { margin-top: 5px; padding-top: 5px; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 14%, transparent); }
-.kk-led-row .nm { font-weight: 800; letter-spacing: 0.06em; font-size: 0.625rem; color: var(--se-color-ink-muted); flex: 0 0 92px; }
+.kk-led-row .nm { font-family: var(--se-font-sans); font-weight: 700; letter-spacing: 0.01em; font-size: 0.75rem; color: var(--se-color-ink-muted); flex: 0 0 92px; }
 .kk-led-row .nm.chase { color: var(--se-color-ink); }
 .kk-led-cells { flex: 1; display: flex; gap: 6px; color: var(--se-color-ink-soft); }
 .kk-led-cells span { min-width: 20px; text-align: center; }
@@ -273,8 +302,8 @@ body {
               <span class="live"><span class="d kk-live-pulse"></span>LIVE</span>
             </div>
             <div class="kk-names">
-              <span class="kk-name chase">GUJARAT <span class="kk-attack">ATTACK</span></span>
-              <span class="kk-name">MAHARASHTRA <span class="kk-def">DEF</span></span>
+              <span class="kk-name chase">Gujarat <span class="kk-attack">ATTACK</span></span>
+              <span class="kk-name">Maharashtra <span class="kk-def">DEF</span></span>
             </div>
             <div class="kk-main">
               <div class="kk-total chase mono">22</div>
@@ -293,6 +322,8 @@ body {
               </span>
               <span>GUJARAT lead <b>+4</b></span>
             </div>
+            <!-- THIS-TURN outs counter — glanceable mid-turn -->
+            <div class="kk-this"><span class="lbl">THIS TURN</span><span class="v">10</span></div>
             <!-- the ONE derived dream-run datum (state, not a feed) -->
             <div class="kk-dream"><span class="star">&#9733;</span> DREAM RUN &middot; <b>S. Kadam 2:38</b> unbroken on the mat</div>
           </div>
@@ -332,8 +363,8 @@ body {
               <span class="live"><span class="d kk-live-pulse"></span>LIVE</span>
             </div>
             <div class="kk-names">
-              <span class="kk-name chase">GUJARAT <span class="kk-attack">ATTACK</span></span>
-              <span class="kk-name">MAHARASHTRA <span class="kk-def">DEF</span></span>
+              <span class="kk-name chase">Gujarat <span class="kk-attack">ATTACK</span></span>
+              <span class="kk-name">Maharashtra <span class="kk-def">DEF</span></span>
             </div>
             <div class="kk-main">
               <div class="kk-total chase mono">22</div>
@@ -352,6 +383,8 @@ body {
               </span>
               <span>batch <b>2 of 3</b></span>
             </div>
+            <!-- lull drama: derived dream-run watch datum (static demo text) -->
+            <div class="kk-dream"><span class="star">&#9733;</span> Runner on mat <b>1:47</b> &mdash; longest today</div>
           </div>
 
           <!-- rare strip — two optional items, hairline, quiet (design-final §3.1) -->
@@ -360,9 +393,12 @@ body {
             <button class="kk-rare-key" type="button">NAME DEFENDER<small>optional</small></button>
           </div>
 
+          <!-- NARRATION — what the last tap did, in words -->
+          <div class="kk-narr"><b>OUT</b> &middot; More tagged by Jaydeep S. &middot; +1 &middot; batch 2 of 3</div>
+
           <!-- THUMB ZONE — giant OUT +1 pinned lowest, UNDO small beside it -->
           <div class="kk-thumb">
-            <button class="kk-undo" type="button" aria-label="Undo last event">&#8617;<small>UNDO</small></button>
+            <button class="kk-undo" type="button" aria-label="Undo last event: removes More's out">&#8617;<small>UNDO</small><small class="sub">removes More&rsquo;s out</small></button>
             <button class="kk-out" type="button">
               <span class="big">OUT&nbsp;+1</span>
               <small>tag &middot; defender falls</small>
@@ -409,8 +445,8 @@ body {
             <span class="live"><span class="d kk-live-pulse"></span>LIVE</span>
           </div>
           <div class="kk-names">
-            <span class="kk-name chase">GUJARAT <span class="kk-attack">ATTACK</span></span>
-            <span class="kk-name">MAHARASHTRA <span class="kk-def">DEF</span></span>
+            <span class="kk-name chase">Gujarat <span class="kk-attack">ATTACK</span></span>
+            <span class="kk-name">Maharashtra <span class="kk-def">DEF</span></span>
           </div>
           <div class="kk-main">
             <div class="kk-total chase mono">22</div>
@@ -434,12 +470,12 @@ body {
         <!-- simple per-turn ledger (current cell pulses) -->
         <div class="kk-ledger">
           <div class="kk-led-row">
-            <span class="nm chase">GUJARAT</span>
+            <span class="nm chase">Gujarat</span>
             <span class="kk-led-cells mono"><span>8</span><span class="em">&mdash;</span><span class="live pulse">14</span><span class="em">&mdash;</span></span>
             <span class="sum chase mono">=22</span>
           </div>
           <div class="kk-led-row">
-            <span class="nm">MAHARASHTRA</span>
+            <span class="nm">Maharashtra</span>
             <span class="kk-led-cells mono"><span class="em">&mdash;</span><span>18</span><span class="em">&mdash;</span><span class="em">&mdash;</span></span>
             <span class="sum mono">=18</span>
           </div>
@@ -471,7 +507,7 @@ body {
           <div class="blk-hd"><span class="eyebrow">Key moments</span></div>
           <div class="moment"><span class="ov mono">T3 2:38</span><span class="tx"><span class="hi">DREAM RUN</span> &mdash; Kadam survives 2:38 unbroken, band climbing</span></div>
           <div class="moment"><span class="ov mono">T3 3:05</span><span class="tx"><span class="wkt">OUT</span> &mdash; More tagged by Jaydeep S. &middot; batch 2/3 down</span></div>
-          <div class="moment"><span class="ov mono">T3 4:12</span><span class="tx"><span class="hi">LONA!</span> Gujarat cleared the side &mdash; order recycles</span></div>
+          <div class="moment"><span class="ov mono">T3 4:12</span><span class="tx"><span class="hi">LONA!</span> All out &mdash; order restarts &times;1 &middot; order recycles</span></div>
         </div>
 
         <div class="pres">

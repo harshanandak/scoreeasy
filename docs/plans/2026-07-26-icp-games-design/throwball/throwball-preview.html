@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -108,7 +108,7 @@ body {
    ============================================================ */
 .mono-badge { display:inline-flex; align-items:center; padding:2px 10px; font-size:0.6875rem; font-family:var(--se-font-mono); border-radius:var(--radius); text-transform:uppercase; letter-spacing:0.08em; font-weight:700; }
 .mono-badge-live { background:var(--se-color-action-soft); color:var(--se-color-action); }
-.ck-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid var(--se-color-line); border-radius:10px; background:var(--se-color-surface); font-size:1rem; flex:none; }
+.ck-icon { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--se-color-line); border-radius:10px; background:var(--se-color-surface); font-size:1rem; flex:none; }
 .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .topbar-actions { display:flex; align-items:center; gap:8px; }
 .tb-title { font-size:0.8125rem; font-weight:700; color:var(--se-color-ink); line-height:1.15; }
@@ -121,8 +121,8 @@ body {
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
 .tabs { display:flex; gap:4px; padding:3px; border:1px solid var(--se-color-line); border-radius:999px; background:var(--se-color-surface); margin-bottom:14px; }
-.tab { flex:1; text-align:center; padding:7px 0; border-radius:999px; font-size:0.75rem; font-weight:700; color:var(--se-color-ink-muted); cursor:pointer; }
-.tab.on { background:var(--se-color-ink); color:var(--se-color-inverse); }
+.tab { flex:1; text-align:center; min-height:44px; padding:12px 0; border-radius:999px; font-size:0.75rem; font-weight:700; color:var(--se-color-ink-muted); cursor:pointer; }
+.tab.on { background:var(--se-color-surface); color:var(--se-color-ink); border:1px solid var(--se-color-line); box-shadow:0 1px 2px rgb(24 34 28 / 0.14); }
 
 /* ============================================================
    SET-BOX STRIP — brutalist stacked chips (flat, hairline)
@@ -133,30 +133,32 @@ body {
 .set-chip .a.lo, .set-chip .b.lo { color:var(--se-color-ink-muted); font-weight:600; }
 .set-chip.live { border-color:var(--primary); border-width:1.5px; }
 .set-chip.up { border-style:dashed; }
-.set-chip .lbl { font-size:0.5rem; font-weight:800; letter-spacing:0.08em; color:var(--se-color-ink-faint); margin-top:1px; }
+.set-chip .lbl { font-size:0.5625rem; font-weight:800; letter-spacing:0.08em; color:var(--se-color-ink-faint); margin-top:1px; }
 
 /* ============================================================
    STATE A — compact green-wash board (inside scorer, FLAT)
    ============================================================ */
 .board-a { border:1px solid var(--se-color-line); border-radius:14px; background:color-mix(in oklch, var(--accent) 42%, var(--se-color-surface)); padding:12px 14px 13px; }
 .board-a-names { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.board-a-names .nm { font-family:var(--se-font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.02em; color:var(--se-color-ink); }
+.board-a-names .nm { font-family:var(--se-font-sans); font-size:0.75rem; font-weight:800; letter-spacing:0.02em; color:var(--se-color-ink); }
 .board-a-names .sets { font-family:var(--se-font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.08em; color:var(--se-color-ink-muted); text-align:center; }
-.board-a-names .sets small { display:block; font-size:0.5rem; letter-spacing:0.1em; color:var(--se-color-ink-faint); }
+.board-a-names .sets small { display:block; font-size:0.5625rem; letter-spacing:0.1em; color:var(--se-color-ink-faint); }
 .board-a-nums { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
 .board-a-nums .num { font-family:var(--se-font-mono); font-size:2.7rem; font-weight:800; line-height:0.9; font-variant-numeric:tabular-nums; color:var(--se-color-ink-strong); }
 .board-a-nums .num.lead { color:var(--primary); }
 .board-a-nums .mid { font-family:var(--se-font-mono); font-size:1rem; font-weight:700; color:var(--se-color-ink-faint); }
 
 /* ONE context line — escalation ladder (set point = warning-soft) */
-.ctx-line { margin-top:10px; text-align:center; font-family:var(--se-font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; padding:6px 8px; border-radius:8px; }
+.tb-narr { display:flex; align-items:center; gap:9px; margin:9px 0; padding:8px 11px; border:1px dashed color-mix(in oklch, var(--se-color-warning) 45%, transparent); border-radius:10px; background:color-mix(in oklch, var(--se-color-warning) 7%, var(--se-color-surface)); }
+.tb-narr .tx { font-family:var(--se-font-sans); font-size:0.75rem; line-height:1.35; color:var(--se-color-ink); }
+.ctx-line { text-transform:none; margin-top:10px; text-align:center; font-family:var(--se-font-mono); font-size:0.6875rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; padding:6px 8px; border-radius:8px; }
 .ctx-line.setpoint { color:var(--se-color-warning); background:var(--se-color-warning-soft); border:1px solid color-mix(in oklch, var(--se-color-warning) 40%, transparent); }
 
 /* ============================================================
    STATE B — flat-black live hero (spectator / stadium / cast)
    The ONE inversion + ONE hard shadow per board/live screen.
    ============================================================ */
-.hero { background:var(--se-color-ink); color:var(--se-color-inverse); border:1px solid var(--se-color-line); border-radius:14px; box-shadow:var(--shadow); padding:15px 16px; }
+.hero { background:var(--se-color-ink); color:var(--se-color-inverse); border-radius:14px; padding:15px 16px; }
 .hero-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .hteam { min-width:0; }
 .hteam .nm { font-size:0.8125rem; font-weight:700; color:var(--se-color-inverse); }
@@ -166,7 +168,7 @@ body {
 .hteam.r { text-align:right; }
 .hteam.r .num { justify-content:flex-end; }
 .hmid { text-align:center; padding:2px 4px; flex:none; }
-.hmid .k { font-family:var(--se-font-mono); font-size:0.5rem; letter-spacing:0.14em; color:color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.hmid .k { font-family:var(--se-font-mono); font-size:0.5625rem; letter-spacing:0.14em; color:color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
 .hmid .v { font-family:var(--se-font-mono); font-size:0.9375rem; font-weight:800; margin-top:3px; }
 .hero-sets { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; font-family:var(--se-font-mono); font-size:0.75rem; font-weight:700; color:color-mix(in oklch, var(--se-color-inverse) 66%, transparent); }
 .hero-sets .live-f { color:var(--se-color-inverse); }
@@ -186,7 +188,8 @@ body {
 .ctrls { display:flex; gap:8px; margin-top:12px; }
 .mono-btn { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:8px 20px; border:1px solid var(--se-color-line); border-radius:10px; background:transparent; color:var(--se-color-ink); font-size:0.875rem; font-family:var(--se-font-sans); cursor:pointer; }
 .mono-btn:active { transform:translateY(1px); background:var(--accent); }
-.ctrls .undo { flex:0 0 96px; font-family:var(--se-font-mono); font-size:0.8125rem; font-weight:700; }
+.ctrls .undo { flex:0 0 150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-family:var(--se-font-mono); font-size:0.8125rem; font-weight:700; }
+.ctrls .undo .what { font-size:0.5625rem; font-weight:700; letter-spacing:0.02em; color:var(--se-color-ink-muted); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ctrls .more { flex:1; font-weight:700; }
 
 /* the two giant point buttons — the whole workhorse, pinned LOWEST (thumb) */
@@ -218,26 +221,26 @@ body {
 .sheet-grab { width:36px; height:4px; border-radius:99px; background:color-mix(in oklch, var(--se-color-line) 30%, transparent); margin:2px auto 4px; }
 .sheet-head { display:flex; align-items:center; justify-content:space-between; }
 .sheet-title { font-size:0.9375rem; font-weight:700; }
-.sheet-x { width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; color:var(--se-color-ink-muted); cursor:pointer; }
+.sheet-x { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; color:var(--se-color-ink-muted); cursor:pointer; }
 .menu-lbl { display:block; font-family:var(--se-font-mono); font-size:0.5625rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--se-color-ink-faint); margin-bottom:7px; }
 .menu-row { display:flex; flex-wrap:wrap; gap:7px; }
-.pill { display:inline-flex; align-items:center; justify-content:center; min-height:40px; border:1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background:var(--se-color-surface); color:var(--se-color-ink); border-radius:999px; padding:8px 15px; font-family:var(--se-font-sans); font-size:0.8125rem; font-weight:600; cursor:pointer; }
+.pill { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border:1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background:var(--se-color-surface); color:var(--se-color-ink); border-radius:999px; padding:8px 15px; font-family:var(--se-font-sans); font-size:0.8125rem; font-weight:600; cursor:pointer; }
 .pill:active { background:var(--accent); }
 .pill.fed { color:var(--se-color-ink-muted); border-style:dashed; }
 .menu-actions { display:flex; gap:8px; margin-top:2px; }
-.menu-end { flex:1; min-height:44px; border-radius:10px; border:1px solid var(--se-color-action); background:var(--se-color-action); color:var(--se-color-inverse); font-family:var(--se-font-sans); font-size:0.8125rem; font-weight:700; cursor:pointer; }
+.menu-end { flex:1; min-height:44px; border-radius:10px; border:1px solid color-mix(in oklch, var(--se-color-line) 60%, transparent); background:transparent; color:var(--se-color-ink); font-family:var(--se-font-sans); font-size:0.8125rem; font-weight:700; cursor:pointer; }
 .menu-end.danger { border-color:var(--se-color-danger); background:transparent; color:var(--se-color-danger); }
 
 /* ============================================================
    LIVE PAGE — run badge / momentum / now-card / feed / footer
    ============================================================ */
-.run-badge { display:flex; align-items:center; gap:8px; border:1.5px solid var(--primary); border-radius:14px; background:color-mix(in oklch, var(--accent) 55%, var(--se-color-surface)); box-shadow:var(--shadow-2xs); padding:9px 13px; margin-bottom:12px; font-family:var(--se-font-mono); font-size:0.8125rem; font-weight:800; color:var(--se-color-ink); }
+.run-badge { display:flex; align-items:center; gap:8px; border:1.5px solid var(--primary); border-radius:14px; background:color-mix(in oklch, var(--accent) 55%, var(--se-color-surface)); padding:9px 13px; margin-bottom:12px; font-family:var(--se-font-mono); font-size:0.8125rem; font-weight:800; color:var(--se-color-ink); }
 .run-badge .ar { color:var(--primary); }
 .run-badge .n { color:var(--primary); }
 .run-badge .fire { margin-left:auto; font-size:0.95rem; }
 
 .eyebrow { font-family:var(--se-font-mono); font-size:0.625rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--se-color-ink-faint); }
-.mom-d { margin-bottom:12px; border:1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent); border-radius:14px; background:var(--se-color-surface); box-shadow:var(--shadow-2xs); }
+.mom-d { margin-bottom:12px; border:1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent); border-radius:14px; background:var(--se-color-surface); }
 .mom-d > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px; padding:9px 12px; }
 .mom-d > summary::-webkit-details-marker { display:none; }
 .mom-d > summary .mi { font-size:0.9rem; }
@@ -250,7 +253,7 @@ body {
 .bar.hi { background:var(--primary); }
 .bar.now { background:transparent; border:1px dashed color-mix(in oklch, var(--se-color-line) 40%, transparent); }
 
-.now-card { border:1px solid var(--se-color-line); border-radius:14px; background:var(--se-color-surface); box-shadow:var(--shadow-2xs); overflow:hidden; margin-bottom:14px; }
+.now-card { border:1px solid var(--se-color-line); border-radius:14px; background:var(--se-color-surface); overflow:hidden; margin-bottom:14px; }
 .nrow { display:grid; grid-template-columns:auto 1fr auto; gap:10px; padding:8px 12px; font-family:var(--se-font-mono); font-size:0.75rem; align-items:center; }
 .nrow + .nrow { border-top:1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
 .nrow .k { font-size:0.5625rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--se-color-ink-faint); }
@@ -269,7 +272,17 @@ body {
 .moment .tx b { font-weight:700; }
 
 .pres { display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-family:var(--se-font-mono); font-size:0.6875rem; color:var(--se-color-ink-muted); }
-.cheer { border:1px solid var(--se-color-action); background:var(--se-color-action); color:var(--se-color-inverse); border-radius:999px; padding:7px 16px; font-family:var(--se-font-sans); font-size:0.75rem; font-weight:700; box-shadow:var(--shadow-2xs); cursor:pointer; }
+.cheer { border:1px solid var(--se-color-action); background:var(--se-color-action); color:#fff; border-radius:999px; padding:11px 18px; min-height:44px; display:inline-flex; align-items:center; font-family:var(--se-font-sans); font-size:0.75rem; font-weight:700; cursor:pointer; }
+
+/* set-break confirmation card — the app's most reassuring moment */
+.break-card { border-radius:16px; background:color-mix(in oklch, var(--se-color-warning) 8%, var(--se-color-surface)); border:1px solid color-mix(in oklch, var(--se-color-warning) 35%, transparent); padding:18px 16px; display:flex; flex-direction:column; gap:10px; }
+.break-card .bc-stamp { align-self:flex-start; font-family:var(--se-font-mono); font-size:0.5625rem; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--se-color-ink-muted); border:1px solid color-mix(in oklch, var(--se-color-line) 50%, transparent); border-radius:4px; padding:3px 7px; }
+.break-card h3 { margin:0; font-size:1.05rem; font-weight:800; letter-spacing:-0.01em; }
+.break-card .bc-echo { font-family:var(--se-font-mono); font-size:0.75rem; font-weight:700; color:var(--se-color-ink-muted); }
+.break-card .bc-help { font-size:0.75rem; line-height:1.4; color:var(--se-color-ink-muted); }
+.break-card .bc-actions { display:flex; gap:8px; margin-top:4px; }
+.break-card .bc-actions .undo-link { flex:1; min-height:44px; border-radius:10px; border:1px solid color-mix(in oklch, var(--se-color-line) 60%, transparent); background:transparent; color:var(--se-color-ink); font-size:0.8125rem; font-weight:600; cursor:pointer; }
+.break-card .bc-actions .cta { flex:1.4; min-height:44px; border-radius:10px; border:1px solid var(--se-color-action); background:var(--se-color-action); color:#fff; font-size:0.8125rem; font-weight:700; cursor:pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition:none !important; animation:none !important; }
@@ -301,7 +314,7 @@ body {
             <span class="ck-icon" aria-hidden="true">&#8249;</span>
             <div style="min-width:0;">
               <div class="tb-title">Inter-College Cup &middot; Final</div>
-              <div class="tb-sub">Set 3 &middot; to 15</div>
+              <div class="tb-sub">BO3 &middot; SET 3 &middot; TO 15 &middot; WIN BY 2</div>
             </div>
           </div>
           <div class="topbar-actions">
@@ -355,7 +368,7 @@ body {
             <span class="ck-icon" aria-hidden="true">&#8249;</span>
             <div style="min-width:0;">
               <div class="tb-title">Falcons vs Eagles</div>
-              <div class="tb-sub">Set 3 &middot; to 15</div>
+              <div class="tb-sub">BO3 &middot; SET 3 &middot; TO 15 &middot; WIN BY 2</div>
             </div>
           </div>
           <div class="topbar-actions">
@@ -385,12 +398,14 @@ body {
         </div>
         <div class="ctx-line setpoint">Set point &middot; Falcons</div>
 
+<div class="tb-narr"><span class="tx">Point <b>Eagles</b> &middot; 13&ndash;11 &middot; Eagles to serve &middot; nothing is lost &mdash; Undo restores it.</span></div>
+
         <!-- read at top, tap at bottom -->
         <div class="scorer-spacer"></div>
 
         <!-- 4. control row — Undo always visible · ⋯More sheet (sits ABOVE primaries) -->
         <div class="ctrls">
-          <button class="mono-btn undo" type="button">&#8617; Undo</button>
+          <button class="mono-btn undo" type="button"><span>&#8617; Undo</span><span class="what">removes Eagles' point</span></button>
           <div class="more-wrap">
             <input type="checkbox" id="moreSheet" class="sheet-cb" aria-hidden="true">
             <label for="moreSheet" class="more-lbl">&#8943; More</label>
@@ -508,7 +523,7 @@ body {
           <summary>
             <span class="mi">&#128202;</span>
             <span class="eyebrow">Momentum &middot; points this set</span>
-            <span class="r">Run <b>5</b> &middot; 0</span>
+            <span class="r">Run <b>2</b> &middot; 0</span>
             <span class="chev">&#9662;</span>
           </summary>
           <div class="mom">
@@ -519,6 +534,10 @@ body {
             <div class="bar hi" style="height:72%"></div><div class="bar hi" style="height:80%"></div>
             <div class="bar hi" style="height:88%"></div><div class="bar hi" style="height:96%"></div>
             <div class="bar hi" style="height:100%"></div><div class="bar now" style="height:44%"></div>
+          </div>
+          <div style="display:flex; gap:14px; padding:0 12px 10px; font-family:var(--se-font-mono); font-size:0.5625rem; font-weight:700; color:var(--se-color-ink-muted);">
+            <span><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background:var(--primary); margin-right:5px;"></span>Falcons take the point</span>
+            <span><span style="display:inline-block; width:8px; height:8px; border-radius:2px; background:color-mix(in oklch, var(--se-color-line) 30%, transparent); margin-right:5px;"></span>Eagles take the point</span>
           </div>
         </details>
 
@@ -550,6 +569,31 @@ body {
         <div class="pres">
           <span>&#9825; 214 watching &middot; &#128079; 63</span>
           <span class="cheer">&#128079; Cheer</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         FRAME 04 — SET-BREAK CONFIRMATION (the reassuring handoff)
+         Warm canvas · hero pinned in miniature · echo does the math
+         · outcome-naming CTA · undo escape. Never a modal.
+         ============================================================ -->
+    <div class="pv-col">
+      <div class="pv-cap"><span class="n">04</span> &middot; Set break</div>
+      <div class="frame" style="justify-content:center;">
+        <h2 class="sr-only">Set break confirmation</h2>
+        <div style="text-align:center; margin-bottom:14px;">
+          <div style="font-family:var(--se-font-mono); font-size:2rem; font-weight:800; font-variant-numeric:tabular-nums;">13&ndash;11<span style="font-size:1rem; color:var(--se-color-ink-muted);"> &middot; 1&ndash;1 sets</span></div>
+        </div>
+        <div class="break-card">
+          <span class="bc-stamp">Set 2 &middot; Final</span>
+          <h3>Eagles take Set 2</h3>
+          <div class="bc-echo">12&ndash;15 &middot; match level 1&ndash;1 &middot; next: Set 3 &middot; first to 15, win by 2</div>
+          <p class="bc-help">Teams switch ends before Set 3. Tapped by mistake? Nothing is lost &mdash; Undo restores the last point.</p>
+          <div class="bc-actions">
+            <button class="undo-link" type="button">&#8617; Not yet &mdash; undoes last point only</button>
+            <button class="cta" type="button">Start Set 3 &rarr;</button>
+          </div>
         </div>
       </div>
     </div>
