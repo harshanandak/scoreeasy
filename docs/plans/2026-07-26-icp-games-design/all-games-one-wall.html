@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -256,7 +256,7 @@ for (const g of GAMES) {
   tile.className = 'tile';
   tile.dataset.game = g.id;
   tile.innerHTML =
-    `<div class="cap"><b>${g.label}</b><a href="${g.id}/${g.id}-preview.html" target="_blank" rel="noopener">open ↗</a></div>` +
+    `<div class="cap"><b>${g.label}</b><a href="#g-${g.id}">open ↓</a></div>` +
     `<div class="clip"><iframe title="${g.label} wall thumbnail" src="${srcFor(g.id)}" tabindex="-1" loading="lazy"></iframe></div>`;
   wall.appendChild(tile);
 }
@@ -280,7 +280,7 @@ for (const g of GAMES) {
   block.id = `g-${g.id}`;
   block.innerHTML =
     `<div class="head"><h2>${g.label}</h2><span class="meta">${g.meta}</span>` +
-    `<a href="${g.id}/${g.id}-preview.html" target="_blank" rel="noopener">open standalone ↗</a></div>`;
+    `<a href="#wall">back to wall ↑</a></div>`;
   block.appendChild(buildStage(g, MODE));
   fulls.appendChild(block);
 }
