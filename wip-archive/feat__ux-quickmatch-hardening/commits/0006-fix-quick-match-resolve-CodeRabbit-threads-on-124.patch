@@ -1,0 +1,74 @@
+From 978992cc73239e54d36b6c280e8311c93994fd9c Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Mon, 29 Jun 2026 00:36:31 +0530
+Subject: [PATCH] fix(quick-match): resolve CodeRabbit threads on #124
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Major: the cricket scorer ends via EndMatchButton + keypad (no ThumbActionBar),
+  so it has no Discard trigger — the discardDialog rendered there was unreachable.
+  Remove it from the cricket branch (it stays in goals/sets, which have the Discard
+  action). Cricket had no discard pre-PR; this avoids a misleading dead dialog.
+- Minor: confirmDiscardQuickMatch now tears down the live broadcast (liveRef.reset)
+  before clearing the draft, so discarding a live match can't leave an orphaned
+  session streaming to spectators. Asserted in the discard test.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx | 5 ++++-
+ src/designs/design1-mono/MonoQuickMatch.jsx                | 6 +++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+index 8967461..6a18128 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+@@ -69,6 +69,7 @@ beforeEach(() => {
+   storageMock.saveQuickMatch.mockClear();
+   live.point.mockClear();
+   live.finalize.mockClear();
++  live.reset.mockClear();
+   ctx.queryResult = undefined;
+   ctx.cloudAuthAvailable = true;
+ });
+@@ -85,9 +86,11 @@ describe('MonoQuickMatch hardening (#106)', () => {
+     expect(storageMock.clearData).not.toHaveBeenCalled();
+     expect(nav).not.toHaveBeenCalled();
+ 
+-    // Confirming inside the dialog performs the wipe + navigates home.
++    // Confirming inside the dialog performs the wipe, tears down the live session,
++    // and navigates home.
+     fireEvent.click(within(dialog).getByRole('button', { name: 'Discard' }));
+     expect(storageMock.clearData).toHaveBeenCalled();
++    expect(live.reset).toHaveBeenCalled();
+     expect(nav).toHaveBeenCalledWith('/app');
+   });
+ 
+diff --git a/src/designs/design1-mono/MonoQuickMatch.jsx b/src/designs/design1-mono/MonoQuickMatch.jsx
+index 37f8a59..694d405 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.jsx
+@@ -927,6 +927,9 @@ export default function MonoQuickMatch() {
+   };
+   const confirmDiscardQuickMatch = () => {
+     setShowDiscardConfirm(false);
++    // Tear down any in-flight live broadcast so a discarded match doesn't leave an
++    // orphaned live session streaming to spectators.
++    liveRef.current?.reset?.();
+     clearData(quickMatchDraftKey);
+     navigate('/app');
+   };
+@@ -2603,7 +2606,8 @@ export default function MonoQuickMatch() {
+           <div className="mono-scorer-shell mono-cricket-shell">
+             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+             {endMatchDialog}
+-            {discardDialog}
++            {/* Cricket ends via EndMatchButton + keypad (no ThumbActionBar), so it
++                has no Discard trigger — no discardDialog rendered here. */}
+             <ScoringNotice message={saveWarning} />
+             <ScoringStatusStrip lastAction={lastAction} />
+             {/* Top bar */}
+-- 
+2.51.0.windows.1
+

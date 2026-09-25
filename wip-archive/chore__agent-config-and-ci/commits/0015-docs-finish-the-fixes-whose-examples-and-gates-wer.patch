@@ -1,0 +1,261 @@
+From 37072426c1fc68451db787a6a9066634f92d1ec2 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 13:27:45 +0530
+Subject: [PATCH] docs: finish the fixes whose examples and gates were left
+ stale
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Four of these are my own incomplete follow-through from earlier in this PR —
+the logic was corrected but the example, the exit gate, or the second copy of
+the rule was not.
+
+- CODING_STANDARDS.md still listed three must-fix classes while AGENTS.md had
+  moved to four, so the generated harness files carried both rules. Aligned,
+  with a note that the two must stay identical, plus an explicit statement
+  that Sonar severity ranks urgency and does not override the four classes.
+  review.md's Blocker/Critical list now routes through the same test.
+- verify.md's exit gate still demanded a branch-wide `gh run list` after Step 3
+  was moved to the merge commit, so the mandatory evidence check could be
+  satisfied by an unrelated green run. Now commit-scoped, completed + success.
+- verify.md's deployment check used `git rev-parse HEAD`, which is the newest
+  commit on master, not the merge being verified. Uses $MERGE_SHA from Step 3.
+- rollback.md's two worked examples still printed `git revert -m 1` after the
+  logic above them was fixed, reproducing the exact mainline error.
+- greptile-resolve.sh `list --unresolved` returns every unresolved thread,
+  including humans and other bots, and review.md treated the whole list as
+  Greptile feedback. Kept the full listing (you need the true count) but
+  flagged non-Greptile authors in the output and told /review to answer those
+  individually and never bulk-resolve them.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/review.md          | 21 ++++++++++++++++-----
+ .claude/commands/rollback.md        |  6 ++++--
+ .claude/commands/verify.md          | 17 ++++++++++-------
+ .claude/scripts/greptile-resolve.sh | 10 +++++++++-
+ .clinerules                         |  4 +++-
+ .cursor/rules/project.mdc           |  4 +++-
+ .cursorrules                        |  4 +++-
+ .github/copilot-instructions.md     |  4 +++-
+ .roorules                           |  4 +++-
+ CODING_STANDARDS.md                 |  4 +++-
+ 10 files changed, 57 insertions(+), 21 deletions(-)
+
+diff --git a/.claude/commands/review.md b/.claude/commands/review.md
+index 54d2e33..4683c23 100644
+--- a/.claude/commands/review.md
++++ b/.claude/commands/review.md
+@@ -88,8 +88,14 @@ This shows:
+ 
+ **Step 2: For EACH unresolved thread:**
+ 
++⚠️ The listing includes **every** unresolved thread, not only Greptile's — humans and
++other review bots appear too, flagged `<- NOT Greptile` in the output. The categories
++below are for bot feedback. Never apply them, and never bulk-resolve, on a human or
++other-bot thread: read it, answer it on its own terms, and only resolve once the person
++who opened it is actually answered.
++
+ 1. **Understand the issue**
+-   - Read the comment carefully
++   - Check the author first, then read the comment carefully
+    - Check the file and line number
+ 
+ 2. **Categorize the comment** (bot feedback is advisory — AGENTS.md "Shipping regime"):
+@@ -170,10 +176,15 @@ The summary typically includes:
+ - Code coverage changes
+ - Technical debt added
+ 
+-**Prioritize issues**:
+-1. **Blocker/Critical**: Must fix before merge
+-2. **Major**: Should fix if valid
+-3. **Minor/Info**: Optional improvements
++**Prioritize issues** — severity ranks urgency, it does not decide who fixes it when.
++Route every finding, whatever Sonar labelled it, through the same four-class test in
++Step 2: secrets, injection, a broken build, or documentation asserting something the
++code does not do get fixed here; everything else is filed.
++
++1. **Blocker/Critical**: fix here if it lands in one of the four classes (a real build
++   break, an injection, a leaked secret) — otherwise file it as a P1 follow-up.
++2. **Major**: file, unless it is one of the four classes.
++3. **Minor/Info**: file or skip with a reason.
+ 
+ ### Step 5: Check Other CI/CD Tools
+ 
+diff --git a/.claude/commands/rollback.md b/.claude/commands/rollback.md
+index 5bfffd0..616640a 100644
+--- a/.claude/commands/rollback.md
++++ b/.claude/commands/rollback.md
+@@ -162,7 +162,8 @@ bunx forge rollback
+ ✓ Validating commit hash...
+ ✓ Working directory is clean
+ ✓ Extracting USER sections...
+-✓ Executing: git revert -m 1 def456 --no-edit
++✓ Squash merge detected (1 parent) — using plain revert
++✓ Executing: git revert def456 --no-edit
+ ✓ Restoring USER sections...
+ ✓ Amended commit to preserve USER content
+ ✓ Beads integration: Issue #123 marked as 'reverted'
+@@ -638,7 +639,8 @@ bunx forge rollback
+ # ✓ Validating commit hash...
+ # ✓ Working directory is clean
+ # ✓ Extracting USER sections...
+-# ✓ Executing: git revert -m 1 merge789 --no-edit
++# ✓ Squash merge detected (1 parent) — using plain revert
++# ✓ Executing: git revert merge789 --no-edit
+ # ✓ Restoring USER sections...
+ # ✓ Beads: Issue #123 → status: reverted
+ # ✓ Rollback complete!
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index 3c6565d..7fbf2a8 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -67,13 +67,14 @@ Every run on that commit must be `status=completed` **and** `conclusion=success`
+ 
+ Check if the project has a deployment target:
+ 
+-```bash
+-# Check deployment status from latest run
+-gh run list --branch master --limit 1
++Use the same `$MERGE_SHA` resolved in Step 3 — never `HEAD`. If another commit reached
++`master` after the merge you are verifying, `HEAD` is that other commit and you would
++clear cleanup on an unrelated deployment.
+ 
+-# Cloudflare deployments for this ref. `gh pr view` has no `deployments` field —
+-# the deployments REST API is the supported surface.
+-DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" --jq '.[0].id')
++```bash
++# Cloudflare deployments for the verified merge commit. `gh pr view` has no
++# `deployments` field — the deployments REST API is the supported surface.
++DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$MERGE_SHA&per_page=1" --jq '.[0].id')
+ 
+ if [ -n "$DEPLOY_ID" ] && [ "$DEPLOY_ID" != "null" ]; then
+   gh api "repos/{owner}/{repo}/deployments/$DEPLOY_ID/statuses?per_page=1" \
+@@ -238,7 +239,9 @@ fi
+ ```
+ <HARD-GATE: /verify exit>
+ Do NOT declare /verify complete until:
+-1. gh run list --branch master --limit 3 shows actual CI output (not "should be fine")
++1. gh run list --commit "$MERGE_SHA" shows actual CI output (not "should be fine"),
++   and every run on that commit is completed + success. A branch-wide listing does
++   not count — it can be green on some other commit entirely.
+ 2. If healthy: Beads issues extracted from PR body/branch and closed (bd close run and confirmed)
+    - If no beads ID found: user was warned and given manual close command
+ 3. If issues found: Beads tracking issue created for every problem
+diff --git a/.claude/scripts/greptile-resolve.sh b/.claude/scripts/greptile-resolve.sh
+index e358cdd..84d4b43 100644
+--- a/.claude/scripts/greptile-resolve.sh
++++ b/.claude/scripts/greptile-resolve.sh
+@@ -255,7 +255,15 @@ cmd_list() {
+ 
+         echo -e "  ${BLUE}Thread ID:${NC} $thread_id"
+         echo -e "  ${BLUE}Comment ID:${NC} $comment_id"
+-        echo -e "  ${BLUE}Author:${NC} $author"
++        # `list` deliberately shows EVERY unresolved thread, not just Greptile's —
++        # you need the full count to know the PR is clear. But a thread that is not
++        # Greptile's is someone else's conversation: read and answer it on its own
++        # terms, never bulk-resolve it as bot feedback.
++        if [[ "$author" == "greptile-apps"* ]]; then
++            echo -e "  ${BLUE}Author:${NC} $author"
++        else
++            echo -e "  ${BLUE}Author:${NC} $author  ${RED}<- NOT Greptile: answer individually${NC}"
++        fi
+ 
+         # Extract title from body (first line)
+         local title
+diff --git a/.clinerules b/.clinerules
+index 5b81eb1..7383b3a 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -82,7 +82,9 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index 9f73fa2..bb267f2 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -85,7 +85,9 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+diff --git a/.cursorrules b/.cursorrules
+index 5b81eb1..7383b3a 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -82,7 +82,9 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 078bce2..c51f08f 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -80,7 +80,9 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+diff --git a/.roorules b/.roorules
+index 5b81eb1..7383b3a 100644
+--- a/.roorules
++++ b/.roorules
+@@ -82,7 +82,9 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+diff --git a/CODING_STANDARDS.md b/CODING_STANDARDS.md
+index f80a51f..6c09547 100644
+--- a/CODING_STANDARDS.md
++++ b/CODING_STANDARDS.md
+@@ -3,7 +3,9 @@
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
+-**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++**Review feedback is advisory** except four classes that must be fixed in the active PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here — it must stay identical to the "Shipping regime" bullet in `AGENTS.md`.)
++
++Sonar and other scanners are graded on the same four classes, not on their own severity labels: a Blocker that is a real build break or injection gets fixed here, a Blocker that is an advisory code-quality finding gets filed. Severity says how much it matters, not who fixes it when.
+ 
+ ## Convex functions
+ 
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,133 @@
+From aa643fba3f9f5ae8a3895e5586a2f482a193145f Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Thu, 25 Jun 2026 17:21:45 +0530
+Subject: [PATCH] chore(deploy): move deploy config from Vercel to Cloudflare
+ Pages
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The site now serves from Cloudflare Pages (project "volleyball", custom domain
+scoreeasy.app). Replace the Vercel-only config with Cloudflare Pages equivalents
+that are version-controlled and therefore apply to PRODUCTION and every PR
+PREVIEW deployment (not just whatever was set in the dashboard):
+
+- Remove vercel.json (ignored by Cloudflare; dead config).
+- public/_headers — ports the security headers (X-Content-Type-Options,
+  X-Frame-Options, X-XSS-Protection, Referrer-Policy), the immutable /assets/*
+  cache, and /sw.js no-store. Vite copies public/ into the dist/ build root where
+  Pages reads _headers.
+- public/_redirects — SPA fallback (/* -> /index.html 200), replacing the
+  vercel.json rewrite so deep links (/live/:token, /history) resolve on previews.
+
+Convex is unaffected (separate backend). Build output (dist) and build command
+(bun run build) are unchanged.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ public/_headers   | 18 ++++++++++++++++
+ public/_redirects |  5 +++++
+ vercel.json       | 54 -----------------------------------------------
+ 3 files changed, 23 insertions(+), 54 deletions(-)
+ create mode 100644 public/_headers
+ create mode 100644 public/_redirects
+ delete mode 100644 vercel.json
+
+diff --git a/public/_headers b/public/_headers
+new file mode 100644
+index 0000000..557e75f
+--- /dev/null
++++ b/public/_headers
+@@ -0,0 +1,18 @@
++# Cloudflare Pages response headers — ported from the former vercel.json.
++# Lives in public/ so Vite copies it to dist/ (the Pages build output root),
++# which means it applies to production AND every PR preview deployment — not just
++# whatever was configured in the Cloudflare dashboard.
++
++/*
++  X-Content-Type-Options: nosniff
++  X-Frame-Options: DENY
++  X-XSS-Protection: 1; mode=block
++  Referrer-Policy: strict-origin-when-cross-origin
++
++# Fingerprinted build assets are immutable — cache hard.
++/assets/*
++  Cache-Control: public, max-age=31536000, immutable
++
++# Service worker must never be cached, so updates ship immediately.
++/sw.js
++  Cache-Control: no-store, max-age=0
+diff --git a/public/_redirects b/public/_redirects
+new file mode 100644
+index 0000000..7d3be2f
+--- /dev/null
++++ b/public/_redirects
+@@ -0,0 +1,5 @@
++# SPA fallback for Cloudflare Pages — serve index.html (HTTP 200) for any
++# client-side route (e.g. /live/:token, /history) on direct load / refresh.
++# Replaces the vercel.json `rewrites` rule. Cloudflare Pages serves real static
++# files first, so /assets/* and /sw.js are served directly and never rewritten.
++/*    /index.html    200
+diff --git a/vercel.json b/vercel.json
+deleted file mode 100644
+index 46ca57c..0000000
+--- a/vercel.json
++++ /dev/null
+@@ -1,54 +0,0 @@
+-{
+-  "buildCommand": "bun run build",
+-  "outputDirectory": "dist",
+-  "devCommand": "bun run dev",
+-  "installCommand": "bun install",
+-  "framework": "vite",
+-  "rewrites": [
+-    {
+-      "source": "/(.*)",
+-      "destination": "/index.html"
+-    }
+-  ],
+-  "headers": [
+-    {
+-      "source": "/(.*)",
+-      "headers": [
+-        {
+-          "key": "X-Content-Type-Options",
+-          "value": "nosniff"
+-        },
+-        {
+-          "key": "X-Frame-Options",
+-          "value": "DENY"
+-        },
+-        {
+-          "key": "X-XSS-Protection",
+-          "value": "1; mode=block"
+-        },
+-        {
+-          "key": "Referrer-Policy",
+-          "value": "strict-origin-when-cross-origin"
+-        }
+-      ]
+-    },
+-    {
+-      "source": "/sw.js",
+-      "headers": [
+-        {
+-          "key": "Cache-Control",
+-          "value": "no-store, max-age=0"
+-        }
+-      ]
+-    },
+-    {
+-      "source": "/assets/(.*)",
+-      "headers": [
+-        {
+-          "key": "Cache-Control",
+-          "value": "public, max-age=31536000, immutable"
+-        }
+-      ]
+-    }
+-  ]
+-}
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,59 @@
+From ed63535805a8b56d869e700af0d1e3b008b88243 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 15:33:20 +0530
+Subject: [PATCH] fix(share): hold copy-confirmation timer in a ref, clear
+ before reschedule
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Review nit on #115: each copy/share flashed "Copied ✓" via a fresh setTimeout
+with no handle, so rapid re-copies stacked timeouts (each racing to flip the
+flag off) and an unmount mid-flash left a dangling timer. Store the id in a ref,
+clear any pending timer before scheduling the next, and clean up on unmount.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../design1-mono/live/ShareLiveMatch.jsx        | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/src/designs/design1-mono/live/ShareLiveMatch.jsx b/src/designs/design1-mono/live/ShareLiveMatch.jsx
+index 33474f4..59e3910 100644
+--- a/src/designs/design1-mono/live/ShareLiveMatch.jsx
++++ b/src/designs/design1-mono/live/ShareLiveMatch.jsx
+@@ -1,4 +1,4 @@
+-import { useState } from 'react';
++import { useEffect, useRef, useState } from 'react';
+ import PropTypes from 'prop-types';
+ import { QRCodeSVG } from 'qrcode.react';
+ import { watchUrl } from '../../../lib/live/watchUrl';
+@@ -17,13 +17,24 @@ export default function ShareLiveMatch({ token, teamA, teamB, onClose }) {
+   const title = teamA && teamB ? `${teamA} vs ${teamB} — live` : 'Live match';
+ 
+   // Shared confirmation flash so BOTH the copy button and the share→clipboard
+-  // fallback surface "Copied ✓" identically.
++  // fallback surface "Copied ✓" identically. Hold the timer in a ref so rapid
++  // re-copies clear the prior timeout (instead of stacking N timers that each
++  // race to flip `copied` off), and so we can clean it up on unmount.
++  const copyTimerRef = useRef(null);
+   const flashCopied = () => {
+     setShareNote('');
+     setCopied(true);
+-    setTimeout(() => setCopied(false), 1600);
++    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
++    copyTimerRef.current = setTimeout(() => {
++      copyTimerRef.current = null;
++      setCopied(false);
++    }, 1600);
+   };
+ 
++  useEffect(() => () => {
++    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
++  }, []);
++
+   const copyLink = async () => {
+     try {
+       // Guard explicitly: with optional chaining, a missing Clipboard API (non-secure
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,178 @@
+From 3845b8df125cb85ae1570d06fd1f9a0fb3a106f4 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 13:04:55 +0530
+Subject: [PATCH] docs: fix four more claims the code contradicts
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- AGENTS.md said tsconfig runs `strict: false` and a .tsx file gets no type
+  checking. The same tree sets `strict: true` and includes src/**/*.tsx, so a
+  .tsx file is checked, strictly. `checkJs: false` (the JS half) was correct
+  and is kept. Still don't add TypeScript to src/ — but for the convention
+  reason, not a false one about the compiler.
+- rollback.md used `git revert -m 1 <sha>`. We squash-merge, so a merged PR is
+  a one-parent commit and -m fails on it — the emergency rollback could not
+  run. Branch on the parent count.
+- verify.md Step 1 ran `git checkout master`, which git refuses when the
+  primary worktree already holds master — i.e. every time /verify runs from a
+  feature worktree. Locate the worktree that has master and work there.
+- verify.md Step 2 took "the most recently merged PR". If anything merged in
+  between, cleanup would remove the wrong worktree and branch and close
+  unrelated issues. Verify the PR by number, resolved from HEAD if not given.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/rollback.md    | 11 +++++++++--
+ .claude/commands/verify.md      | 16 +++++++++++++---
+ .clinerules                     |  2 +-
+ .cursor/rules/project.mdc       |  2 +-
+ .cursorrules                    |  2 +-
+ .github/copilot-instructions.md |  2 +-
+ .roorules                       |  2 +-
+ AGENTS.md                       |  2 +-
+ 8 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/.claude/commands/rollback.md b/.claude/commands/rollback.md
+index f3a47db..5bfffd0 100644
+--- a/.claude/commands/rollback.md
++++ b/.claude/commands/rollback.md
+@@ -141,9 +141,16 @@ Rollback complete!
+ 
+ **Use when**: Need to revert an entire merged pull request
+ 
+-**How it works**:
++**How it works**: we squash-merge, so a merged PR is an ordinary one-parent commit and
++`git revert -m 1` fails on it ("mainline was specified but commit is not a merge").
++Check the parent count first:
++
+ ```bash
+-git revert -m 1 <merge-commit-hash> --no-edit
++if [ "$(git rev-list --parents -n 1 <sha> | wc -w)" -gt 2 ]; then
++  git revert -m 1 <sha> --no-edit    # true merge commit (rare here)
++else
++  git revert <sha> --no-edit         # the normal squash case
++fi
+ ```
+ 
+ **Example**:
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index ee57e67..3b5a5fb 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -18,8 +18,13 @@ This command runs AFTER the user has merged the PR. It checks system health —
+ 
+ ### Step 1: Switch to Main and Pull
+ 
++`/verify` usually runs from the feature worktree, where `git checkout master` is
++refused — the primary worktree already holds it. Move to the worktree that has
++`master` instead of switching branches:
++
+ ```bash
+-git checkout master
++MAIN_WT=$(git worktree list --porcelain | awk '/^worktree /{wt=$2} /^branch refs\/heads\/(master|main)$/{print wt; exit}')
++cd "$MAIN_WT" || { echo "No worktree holds master — stop and tell the user"; exit 1; }
+ git pull
+ ```
+ 
+@@ -27,10 +32,15 @@ Confirm the merge actually landed on main. If the PR isn't merged yet, stop and
+ 
+ ### Step 2: Confirm PR Is Merged
+ 
+-Detect the most recently merged PR from the current HEAD commit:
++Verify **the PR you are verifying**, by number. Never take "the most recently merged
++PR" — if anything else merged in between, the cleanup steps below would delete the
++wrong worktree and branch and close unrelated issues.
+ 
+ ```bash
+-gh pr list --state merged --base master --limit 1 --json number,state,mergedAt,mergedBy
++# <number> comes from the invocation. If it wasn't given, resolve it from HEAD
++# rather than from a recency list:
++#   gh pr list --state merged --search "$(git rev-parse HEAD)" --json number
++gh pr view <number> --json number,state,mergedAt,mergedBy,headRefName
+ ```
+ 
+ - `state` should be `MERGED`
+diff --git a/.clinerules b/.clinerules
+index d08a953..f6a5565 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -32,7 +32,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index 57f7a63..de5b5db 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -35,7 +35,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+diff --git a/.cursorrules b/.cursorrules
+index d08a953..f6a5565 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -32,7 +32,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 8982948..8b95de0 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -30,7 +30,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+diff --git a/.roorules b/.roorules
+index d08a953..f6a5565 100644
+--- a/.roorules
++++ b/.roorules
+@@ -32,7 +32,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+diff --git a/AGENTS.md b/AGENTS.md
+index 7d5b94d..5c1e52e 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -27,7 +27,7 @@ Reject your own diff if it breaks one of these.
+ 
+ 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
+ 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
+-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`; `tsconfig.json` runs with `strict: false` and `checkJs: false`. Adding a `.tsx` file gets no type checking and breaks the convention.
++3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+ 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
+ 5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+ 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
+-- 
+2.51.0.windows.1
+

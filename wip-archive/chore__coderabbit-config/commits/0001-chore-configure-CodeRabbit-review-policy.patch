@@ -1,0 +1,36 @@
+From e00e5a4b4f67024d9ef029494935c6dadcfe6210 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Mon, 17 Aug 2026 13:17:14 +0530
+Subject: [PATCH] chore: configure CodeRabbit review policy
+
+---
+ .coderabbit.yaml | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+ create mode 100644 .coderabbit.yaml
+
+diff --git a/.coderabbit.yaml b/.coderabbit.yaml
+new file mode 100644
+index 0000000..9d5af7d
+--- /dev/null
++++ b/.coderabbit.yaml
+@@ -0,0 +1,17 @@
++# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
++language: en-US
++tone_instructions: >-
++  Be concise and evidence-based. Treat feedback as advisory except secrets,
++  injection, broken builds, or docs claiming behavior the code does not implement.
++  Do not expand scope; call unrelated valid work a follow-up.
++reviews:
++  profile: assertive
++  request_changes_workflow: true
++  high_level_summary: true
++  review_status: true
++  review_progress: false
++  commit_status: true
++  auto_review:
++    enabled: true
++    auto_incremental_review: true
++    drafts: false
+-- 
+2.51.0.windows.1
+

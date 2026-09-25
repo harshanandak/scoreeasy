@@ -1,0 +1,132 @@
+From 6d711edd7ad005ee283245c091de585338fc7b50 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 12:44:08 +0530
+Subject: [PATCH] docs(commands): make review/verify/premerge match what
+ actually happens
+
+Three claims the code does not back:
+
+- review.md told the agent to implement any "clear improvement" and commit it,
+  which contradicts the shipping regime (AGENTS.md): bot feedback is advisory
+  except secrets, injection, a broken build, or docs asserting something the
+  code does not do, and it never expands the PR. Re-cut the categories around
+  that rule; advisory findings get filed instead.
+- verify.md used `gh pr view --json deployments`. There is no such field, so
+  the deployment check always exited with "Unknown JSON field". Use the
+  deployments REST API, which returns the Cloudflare state and preview URL.
+- verify.md used `git branch -d` after a squash merge, where the tip is not an
+  ancestor of master, so it always refused and the `|| echo` fallback reported
+  "already deleted". Prove the PR merged, then `-D`, and report failures.
+- premerge.md claimed `.claude/settings.json` blocks `gh pr merge` via a
+  PreToolUse hook. The hooks object is empty. Say it is a rule, not a
+  mechanism; wiring the real guard is filed as scoreeasy-ncs.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/premerge.md |  4 +++-
+ .claude/commands/review.md   | 21 ++++++++++++---------
+ .claude/commands/verify.md   | 28 +++++++++++++++++++++++-----
+ 3 files changed, 38 insertions(+), 15 deletions(-)
+
+diff --git a/.claude/commands/premerge.md b/.claude/commands/premerge.md
+index 5dc2593..1df8444 100644
+--- a/.claude/commands/premerge.md
++++ b/.claude/commands/premerge.md
+@@ -168,7 +168,9 @@ After you merge, run /verify
+ 
+ ## Rules
+ 
+-- **NEVER run `gh pr merge`** — blocked by PreToolUse hook in `.claude/settings.json`
++- **NEVER run `gh pr merge`** — merging is the user's, by hand. This is a rule you
++  follow, not something the harness enforces: `.claude/settings.json` ships no
++  PreToolUse guard today.
+ - **CLAUDE.md USER section only** — never touch other managed blocks
+ - **Warn if branch is behind** — tell user to rebase before doc updates
+ - **Re-check CI after doc push** — doc commits re-trigger full CI pipeline
+diff --git a/.claude/commands/review.md b/.claude/commands/review.md
+index 5f09ffb..54d2e33 100644
+--- a/.claude/commands/review.md
++++ b/.claude/commands/review.md
+@@ -92,15 +92,18 @@ This shows:
+    - Read the comment carefully
+    - Check the file and line number
+ 
+-2. **Categorize the comment**:
+-   - **Valid**: Should be implemented (security issue, bug, clear improvement)
+-   - **Invalid**: Greptile misunderstood context
+-   - **Conflicting**: Contradicts research decisions with good reason
+-   - **Out of scope**: Valid but not for this PR
+-
+-3. **Fix the issue** (if valid)
+-   - Make code changes
+-   - Commit with clear message
++2. **Categorize the comment** (bot feedback is advisory — AGENTS.md "Shipping regime"):
++   - **Fix here**: secrets, injection, a broken build, or documentation asserting
++     something the code does not do. Only this class changes the PR.
++   - **Valid but advisory**: a real improvement that is not in the class above —
++     file a follow-up issue, do not expand this PR.
++   - **Invalid**: the bot misunderstood the context.
++   - **Conflicting**: contradicts a research decision with good reason.
++
++3. **Act on it**
++   - **Fix here** → make the code change, commit with a clear message.
++   - **Valid but advisory** → `bd create` the follow-up and note the id in the reply.
++   - **Invalid / conflicting** → change nothing; the reply carries the reason.
+ 
+ 4. **Reply and resolve** (for ALL comments, even invalid ones)
+    ```bash
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index 59bc1eb..ee57e67 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -56,8 +56,16 @@ Check if the project has a deployment target:
+ # Check deployment status from latest run
+ gh run list --branch master --limit 1
+ 
+-# Check Vercel deployments for the merged PR (use number from Step 2)
+-gh pr view <number> --json deployments
++# Cloudflare deployments for this ref. `gh pr view` has no `deployments` field —
++# the deployments REST API is the supported surface.
++DEPLOY_ID=$(gh api "repos/{owner}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" --jq '.[0].id')
++
++if [ -n "$DEPLOY_ID" ] && [ "$DEPLOY_ID" != "null" ]; then
++  gh api "repos/{owner}/{repo}/deployments/$DEPLOY_ID/statuses?per_page=1" \
++    --jq '.[0] | "state=\(.state) url=\(.environment_url)"'
++else
++  echo "Deployments: none recorded for this ref"
++fi
+ ```
+ 
+ If deployments exist:
+@@ -125,13 +133,23 @@ fi
+ 
+ If no worktree is found for that branch, skip gracefully with a note: "Worktree: not found (already removed or never created)".
+ 
+-Delete the local branch (safe delete only):
++Delete the local branch. We squash-merge, so the feature tip is **not** an ancestor of
++`master` and `git branch -d` always refuses — the merge has to be proven from the PR,
++then the branch force-deleted:
+ 
+ ```bash
+-git branch -d <branch> 2>/dev/null || echo "Branch: already deleted — skipping"
++if ! git show-ref --verify --quiet "refs/heads/<branch>"; then
++  echo "Branch: <branch> already gone — skipping"
++elif [ "$(gh pr view <number> --json state --jq .state)" = "MERGED" ]; then
++  # -D, not -d: a squash merge leaves the tip unreachable from master.
++  git branch -D "<branch>" && echo "Branch: <branch> deleted ✓"
++else
++  echo "Branch: <branch> KEPT — PR <number> is not merged"
++fi
+ ```
+ 
+-The `|| echo` fallback handles the case where the branch is already gone (e.g., deleted by a previous run or the remote), so the command never fails the verify step.
++Never swallow the failure with `|| echo "already deleted"` — that reports success while
++leaving the branch behind, which is how every verified branch accumulated locally.
+ 
+ Report cleanup in output:
+ ```
+-- 
+2.51.0.windows.1
+

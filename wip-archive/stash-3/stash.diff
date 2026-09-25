@@ -1,0 +1,1243 @@
+diff --git a/.beads/hooks/prepare-commit-msg b/.beads/hooks/prepare-commit-msg
+index f0aec3c..c168a4a 100644
+--- a/.beads/hooks/prepare-commit-msg
++++ b/.beads/hooks/prepare-commit-msg
+@@ -1,24 +1,74 @@
+-#!/usr/bin/env sh
+-# --- BEGIN BEADS INTEGRATION v1.0.3 ---
+-# This section is managed by beads. Do not remove these markers.
+-if command -v bd >/dev/null 2>&1; then
+-  export BD_GIT_HOOK=1
+-  _bd_timeout=${BEADS_HOOK_TIMEOUT:-300}
+-  if command -v timeout >/dev/null 2>&1; then
+-    timeout "$_bd_timeout" bd hooks run prepare-commit-msg "$@"
+-    _bd_exit=$?
+-    if [ $_bd_exit -eq 124 ]; then
+-      echo >&2 "beads: hook 'prepare-commit-msg' timed out after ${_bd_timeout}s — continuing without beads"
+-      _bd_exit=0
+-    fi
++#!/bin/sh
++
++if [ "$LEFTHOOK_VERBOSE" = "1" -o "$LEFTHOOK_VERBOSE" = "true" ]; then
++  set -x
++fi
++
++if [ "$LEFTHOOK" = "0" ]; then
++  exit 0
++fi
++
++call_lefthook()
++{
++  if test -n "$LEFTHOOK_BIN"
++  then
++    "$LEFTHOOK_BIN" "$@"
++  elif lefthook.exe -h >/dev/null 2>&1
++  then
++    lefthook.exe "$@"
++  elif lefthook.bat -h >/dev/null 2>&1
++  then
++    lefthook.bat "$@"
++  elif C:/Users/harsha_befach/Downloads/Volleyball/node_modules/lefthook-windows-x64/bin/lefthook.exe -h >/dev/null 2>&1
++  then
++    C:/Users/harsha_befach/Downloads/Volleyball/node_modules/lefthook-windows-x64/bin/lefthook.exe "$@"
+   else
+-    bd hooks run prepare-commit-msg "$@"
+-    _bd_exit=$?
+-  fi
+-  if [ $_bd_exit -eq 3 ]; then
+-    echo >&2 "beads: database not initialized — skipping hook 'prepare-commit-msg'"
+-    _bd_exit=0
++    dir="$(git rev-parse --show-toplevel)"
++    osArch=$(uname | tr '[:upper:]' '[:lower:]')
++    cpuArch=$(uname -m | sed 's/aarch64/arm64/;s/x86_64/x64/')
++    if test -f "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook.exe"
++    then
++      "$dir/node_modules/lefthook-${osArch}-${cpuArch}/bin/lefthook.exe" "$@"
++    elif test -f "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook.exe"
++    then
++      "$dir/node_modules/@evilmartians/lefthook/bin/lefthook-${osArch}-${cpuArch}/lefthook.exe" "$@"
++    elif test -f "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook.exe"
++    then
++      "$dir/node_modules/@evilmartians/lefthook-installer/bin/lefthook.exe" "$@"
++    elif test -f "$dir/node_modules/lefthook/bin/index.js"
++    then
++      "$dir/node_modules/lefthook/bin/index.js" "$@"
++    elif go tool lefthook -h >/dev/null 2>&1
++    then
++      go tool lefthook "$@"
++    elif bundle exec lefthook -h >/dev/null 2>&1
++    then
++      bundle exec lefthook "$@"
++    elif yarn lefthook -h >/dev/null 2>&1
++    then
++      yarn lefthook "$@"
++    elif pnpm lefthook -h >/dev/null 2>&1
++    then
++      pnpm lefthook "$@"
++    elif swift package lefthook >/dev/null 2>&1
++    then
++      swift package --build-path .build/lefthook --disable-sandbox lefthook "$@"
++    elif command -v mint >/dev/null 2>&1
++    then
++      mint run csjones/lefthook-plugin "$@"
++    elif uv run lefthook -h >/dev/null 2>&1
++    then
++      uv run lefthook "$@"
++    elif mise exec -- lefthook -h >/dev/null 2>&1
++    then
++      mise exec -- lefthook "$@"
++    elif devbox run lefthook -h >/dev/null 2>&1
++    then
++      devbox run lefthook "$@"
++    else
++      echo "Can't find lefthook in PATH"
++    fi
+   fi
+-  if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi
+-fi
+-# --- END BEADS INTEGRATION v1.0.3 ---
++}
++
++call_lefthook run "prepare-commit-msg" "$@"
+diff --git a/.beads/issues.jsonl b/.beads/issues.jsonl
+new file mode 100644
+index 0000000..bf84680
+--- /dev/null
++++ b/.beads/issues.jsonl
+@@ -0,0 +1 @@
++{"_type":"issue","id":"score-easy-11r","title":"Setup verification","status":"closed","priority":4,"issue_type":"task","owner":"harshanandak@users.noreply.github.com","created_at":"2026-05-11T07:34:53Z","created_by":"harshanandak","updated_at":"2026-05-11T07:34:54Z","closed_at":"2026-05-11T07:34:54Z","close_reason":"Setup smoke test","dependency_count":0,"dependent_count":0,"comment_count":0}
+diff --git a/.claude/settings.local.json b/.claude/settings.local.json
+index 03b9d2f..ae9a4b7 100644
+--- a/.claude/settings.local.json
++++ b/.claude/settings.local.json
+@@ -1,40 +1,62 @@
+ {
+   "permissions": {
+     "allow": [
+-      "Bash(npm run build:*)",
+-      "Bash(git add:*)",
+-      "Bash(git commit:*)",
+-      "Bash(git push:*)",
+-      "Bash(npx vercel:*)",
+-      "Bash(npx ai-agent-skills:*)",
++      "Bash(ls:*)",
+       "Bash(dir:*)",
++      "Bash(cat:*)",
++      "Bash(head:*)",
++      "Bash(tail:*)",
++      "Bash(find:*)",
++      "Bash(grep:*)",
+       "Bash(findstr:*)",
+-      "Bash(npm install:*)",
+-      "Bash(npx vite build:*)",
+-      "Bash(for dir in src/designs/*/:*)",
+-      "Bash(bun add:*)",
+-      "Bash(bunx convex init --help:*)",
++      "Bash(wc:*)",
++      "Bash(where:*)",
++      "Bash(which:*)",
++      "Bash(pwd:*)",
++      "Bash(echo:*)",
++      "Bash(type:*)",
++      "Bash(tasklist:*)",
+       "Bash(git status:*)",
+-      "mcp__claude_ai_Parallel_Ai_seach__web_search_preview",
+-      "Bash(npx convex login:*)",
+-      "Bash(npx convex init:*)",
+-      "Bash(bunx convex dev:*)",
+-      "Bash(taskkill:*)",
++      "Bash(git diff:*)",
++      "Bash(git log:*)",
++      "Bash(git show:*)",
++      "Bash(git branch:*)",
++      "Bash(git remote:*)",
++      "Bash(git stash:*)",
++      "Bash(git add:*)",
++      "Bash(git commit:*)",
++      "Bash(git push:*)",
++      "Bash(git restore:*)",
++      "Bash(git checkout:*)",
++      "Bash(gh:*)",
++      "Bash(bun:*)",
++      "Bash(bunx:*)",
++      "Bash(npm:*)",
++      "Bash(npx:*)",
++      "Bash(node:*)",
+       "Bash(vercel:*)",
+-      "Bash(wc:*)",
+-      "Bash(find:*)",
++      "Bash(taskkill:*)",
+       "Bash(sonar-scanner:*)",
+       "Bash(sonar-scanner.bat:*)",
+-      "Bash(where:*)",
+-      "Bash(bunx --bun vite build:*)",
+-      "Bash(npx vitest:*)",
+-      "Bash(ls:*)",
+-      "Bash(git restore:*)",
+-      "Bash(bun run preview:*)",
+-      "mcp__claude_ai_Vercel__deploy_to_vercel",
++      "Bash(for:*)",
++      "Bash(mkdir:*)",
++      "Bash(touch:*)",
++      "Bash(cp:*)",
++      "Bash(mv:*)",
++      "mcp__claude_ai_Parallel_Ai_seach__web_search_preview",
+       "mcp__claude_ai_Parallel_Ai_seach__web_fetch",
+-      "Bash(bunx eslint:*)",
+-      "Bash(grep:*)"
++      "WebFetch(domain:www.convex.dev)",
++      "WebFetch(domain:docs.convex.dev)",
++      "WebFetch(domain:bundlephobia.com)",
++      "mcp__convex__status",
++      "mcp__convex__tables",
++      "mcp__convex__functionSpec",
++      "mcp__convex__data",
++      "mcp__convex__logs",
++      "mcp__convex__insights",
++      "mcp__convex__runOneoffQuery",
++      "mcp__convex__envList",
++      "mcp__convex__envGet"
+     ]
+   }
+ }
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 50af487..4603305 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,6 +1,229 @@
+-# Project Instructions for AI Agents
++<!-- This file is a copy of AGENTS.md. Keep in sync manually or use: bunx forge setup --symlink -->
++# Project Workflow Instructions
+ 
+-This file provides instructions and context for AI coding agents working on this project.
++## 7-Stage TDD-First Workflow
++
++This project enforces a **strict TDD-first development workflow** with 7 stages:
++
++| Stage | Command     | Purpose                                                   | Required For |
++|-------|-------------|-----------------------------------------------------------|--------------|
++| 1     | `/plan`     | Design intent → research → branch + worktree + task list | Critical, Standard, Refactor |
++| 2     | `/dev`      | Subagent-driven TDD per task (spec + quality review)     | All types    |
++| 3     | `/validate`    | Validate + 4-phase debug mode on failure                    | All types    |
++| 4     | `/ship`     | Create PR with documentation                             | All types    |
++| 5     | `/review`   | Address ALL PR feedback                                  | Critical, Standard |
++| 6     | `/premerge` | Complete docs on feature branch, hand off PR             | All types    |
++| 7     | `/verify`   | Post-merge health check (CI, deployments)                | All types    |
++
++**Utility**: `/status` — Context check before starting work (not a numbered stage)
++
++## Automatic Change Classification
++
++When the user requests work, **you MUST automatically classify** the change type:
++
++### Critical (Full 7-stage workflow)
++**Triggers:** Security, authentication, payments, breaking changes, new architecture, data migrations
++**Example:** "Add OAuth login", "Migrate database schema", "Implement payment gateway"
++**Workflow:** plan → dev → validate → ship → review → premerge → verify
++
++### Standard (6-stage workflow)
++**Triggers:** Normal features, enhancements, new components
++**Example:** "Add user profile page", "Create notification system"
++**Workflow:** plan → dev → validate → ship → review → premerge
++
++### Simple (3-stage workflow, skip plan)
++**Triggers:** Bug fixes, UI tweaks, small changes, minor refactors
++**Example:** "Fix button color", "Update validation message", "Adjust padding"
++**Workflow:** dev → validate → ship
++
++### Hotfix (Emergency 3-stage workflow)
++**Triggers:** Production emergencies, critical bugs affecting users
++**Example:** "Production payment processing down", "Security vulnerability fix"
++**Workflow:** dev → validate → ship (immediate merge allowed)
++
++### Docs (Documentation-only workflow)
++**Triggers:** Documentation updates, README changes, comment improvements
++**Example:** "Update README", "Add API documentation"
++**Workflow:** verify → ship
++
++### Refactor (5-stage workflow for safe cleanup)
++**Triggers:** Code cleanup, performance optimization, technical debt reduction
++**Example:** "Refactor auth service", "Extract utility functions"
++**Workflow:** plan → dev → validate → ship → premerge
++
++## Enforcement Philosophy
++
++**Conversational, not blocking** - Offer solutions when prerequisites are missing:
++
++❌ **Don't:** "ERROR: Research required for critical features"
++✅ **Do:** "Before implementation, I should research OAuth best practices. I can:
++   1. Auto-research now with parallel-deep-research (~5 min)
++   2. Use your research if you have it
++   3. Skip (not recommended for security features)
++
++   What would you prefer?"
++
++**Create accountability for skips:**
++
++"Skipping tests creates technical debt. I'll:
++ ✓ Allow this commit
++ ✓ Create follow-up Beads issue for tests
++ ✓ Document in commit message as [tech-debt]
++
++ Proceed?"
++
++**Dynamic commands — no hardcoded examples:**
++
++Command files (`.claude/commands/*.md` and agent equivalents) must never hardcode example output when a script generates that output dynamically. Reference the script and describe what it does — don't duplicate its output with fake data that becomes stale.
++
++## TDD Development (Stage 2: /dev)
++
++**Subagent-driven per-task implementation loop:**
++
++1. **Read task list** → Pre-made task list from `/plan` Phase 3 at `docs/plans/YYYY-MM-DD-<slug>-tasks.md`
++2. **Dispatch implementer subagent per task** → Fresh context, complete task text, relevant design doc sections
++3. **TDD inside implementer** → RED-GREEN-REFACTOR enforced by HARD-GATE:
++   - RED: Write failing test first (must run test and show failing output)
++   - GREEN: Implement minimal code to pass (must show passing output)
++   - REFACTOR: Clean up while keeping tests green
++4. **Spec compliance review** → Spec reviewer checks every task before quality review
++5. **Code quality review** → Quality reviewer checks after spec compliance ✅
++6. **Decision gate** → 7-dimension impact scoring when spec gap found; score routes to PROCEED/SPEC-REVIEWER/BLOCKED
++
++**Example execution:**
++```
++/dev starts:
++  ✓ Read task list: docs/plans/2026-02-26-stripe-billing-tasks.md (8 tasks)
++  ✓ Created decisions log: docs/plans/2026-02-26-stripe-billing-decisions.md
++
++Task 1: Types and interfaces
++  ✓ Implementer: test written → failing → implementation → passing → committed
++  ✓ Spec review: ✅
++  ✓ Quality review: ✅
++  Decision gates: 0
++
++Task 2: Validation logic
++  ✓ Implementer: test written → failing → implementation → passing
++  ⚠️  Decision gate fired (score: 2/14 — PROCEED)
++     Gap: Error message format not specified in design doc
++     Choice: Use { code, message } object (conservative, documented)
++  ✓ Spec review: ✅
++  ✓ Quality review: ✅
++```
++
++## State Management (Single Source of Truth)
++
++> GitHub issue lifecycle may sync to Beads via CI -- see [docs/BEADS_GITHUB_SYNC.md](docs/BEADS_GITHUB_SYNC.md).
++
++**All workflow state stored in Beads metadata** (survives compaction):
++
++```json
++{
++  "id": "bd-x7y2",
++  "type": "critical",
++  "currentStage": "dev",
++  "completedStages": ["plan"],
++  "skippedStages": [],
++  "workflowDecisions": {
++    "classification": "critical",
++    "reason": "Payment processing, PCI compliance required",
++    "userOverride": false
++  },
++  "parallelTracks": [
++    {
++      "name": "API endpoints",
++      "agent": "backend-architect",
++      "status": "in_progress",
++      "tddPhase": "GREEN"
++    }
++  ]
++}
++```
++
++## Git Hooks (Automatic Enforcement)
++
++**Pre-commit hook enforces TDD:**
++- Blocks commits if source code modified without test files
++- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
++- No AI decision required - automatic validation
++
++**Pre-push hook validates tests:**
++- All tests must pass before push
++- Can skip for hotfixes with documentation
++
++## Documentation Index (Context Pointers)
++
++**Detailed command instructions** are located in:
++- [.claude/commands/status.md](.claude/commands/status.md) - How to check current context (utility)
++- [.claude/commands/plan.md](.claude/commands/plan.md) - How to plan features (3 phases: design intent + research + branch/worktree/tasks)
++- [.claude/commands/dev.md](.claude/commands/dev.md) - How to implement with subagent-driven TDD and decision gate
++- [.claude/commands/validate.md](.claude/commands/validate.md) - How to run validation (with HARD-GATE exit)
++- [.claude/commands/ship.md](.claude/commands/ship.md) - How to create PRs
++- [.claude/commands/review.md](.claude/commands/review.md) - How to address PR feedback (with HARD-GATE exit)
++- [.claude/commands/premerge.md](.claude/commands/premerge.md) - How to complete docs and hand off PR for merge
++- [.claude/commands/verify.md](.claude/commands/verify.md) - How to verify post-merge health
++
++**Planning documents** (created by `/plan`, consumed by `/dev`):
++- `docs/plans/YYYY-MM-DD-<slug>-design.md` - Design intent + technical research
++- `docs/plans/YYYY-MM-DD-<slug>-tasks.md` - Task list with TDD steps
++- `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
++
++**Comprehensive workflow guide:**
++- This file (AGENTS.md) is the single source of truth for the complete workflow
++- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
++- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
++
++**Load these files when you need detailed instructions for a specific stage.**
++
++## Descriptive Context Convention
++
++Every stage transition should carry structured context so the next stage (or a new session) can resume without re-reading the full design doc. This convention is **advisory** — warnings are informational, not blocking.
++
++### Required Fields at Each Stage Exit
++
++| Stage Exit | Summary | Decisions | Artifacts | Next |
++|------------|---------|-----------|-----------|------|
++| /plan      | Design approach chosen | Key trade-offs resolved | Design doc, task list paths | First dev task focus |
++| /dev       | Tasks completed, gate count | Spec gaps encountered | Changed files, test files | Validation priorities |
++| /validate  | All checks pass/fail summary | Failures diagnosed | Scripts/commands run | Ship readiness |
++| /ship      | PR created, checks pending | Template sections filled | PR URL, branch name | Review focus areas |
++| /review    | All feedback addressed | Comment resolutions | Fixed files, commit SHAs | Doc update needs |
++| /premerge  | Docs updated, CI green | N/A | Updated doc files | Merge instructions |
++
++### Validation Command
++
++Run at each stage exit to check for missing context:
++
++```bash
++bash scripts/beads-context.sh validate <beads-issue-id>
++```
++
++This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
++
++### Field Definitions
++
++- **Summary**: 1-2 sentence recap of what was accomplished in this stage. Example: `--summary "All 5 tasks done, 1 decision gate fired"`
++- **Decisions**: Key choices made during this stage that affect downstream work. Example: `--decisions "Used streaming parser over DOM for memory efficiency"`
++- **Artifacts**: File paths or URLs produced by this stage. Example: `--artifacts "lib/parser.js test/parser.test.js docs/plans/2026-03-26-parser-design.md"`
++- **Next**: Guidance for the next stage on what to focus on. Example: `--next "Run lint first — streaming approach may trigger no-await rule"`
++
++### Usage in Stage Transitions
++
++```bash
++# Basic (backward compatible)
++bash scripts/beads-context.sh stage-transition <id> dev validate
++
++# With context fields (recommended)
++bash scripts/beads-context.sh stage-transition <id> dev validate \
++  --summary "All 5 tasks done, 0 gates fired" \
++  --decisions "Used approach A per design doc" \
++  --artifacts "lib/foo.js test/foo.test.js" \
++  --next "Run type check and lint"
++```
++
++### Enforcement Level
++
++This convention is **advisory only**. The `validate` subcommand prints warnings but always exits 0. It does not block any stage transition. The goal is to build good habits, not to create friction.
+ 
+ <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
+ ## Beads Issue Tracker
+@@ -10,15 +233,15 @@ This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full
+ ### Quick Reference
+ 
+ ```bash
+-bd ready              # Find available work
+-bd show <id>          # View issue details
+-bd update <id> --claim  # Claim work
+-bd close <id>         # Complete work
++forge ready           # Find available work
++forge show <id>       # View issue details
++forge claim <id>      # Claim work
++forge close <id>      # Complete work
+ ```
+ 
+ ### Rules
+ 
+-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
++- Use `forge` as the routine command surface for bd-backed issue tracking and sync workflows — do NOT use TodoWrite, TaskCreate, or markdown TODO lists. Exception: `/plan` Phase 3 generates task lists at `docs/plans/YYYY-MM-DD-<slug>-tasks.md` — these are approved artifacts consumed by `/dev`, but Beads (`bd`) remains the source of truth for issue state and IDs. Use `bd` directly only for operations Forge does not wrap yet, such as `bd init`, `bd comments`, `bd dep`, and `bd dolt *`. GitHub issues may be used for external/public tracking; CI may sync GitHub issue lifecycle to Beads (see `docs/BEADS_GITHUB_SYNC.md`).
+ - Run `bd prime` for detailed command reference and session close protocol
+ - Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+ 
+@@ -33,10 +256,10 @@ bd close <id>         # Complete work
+ 3. **Update issue status** - Close finished work, update in-progress items
+ 4. **PUSH TO REMOTE** - This is MANDATORY:
+    ```bash
+-   git pull --rebase
+-   bd dolt push
+-   git push
+-   git status  # MUST show "up to date with origin"
++    git pull --rebase
++    forge sync     # wraps the supported Beads sync flow when Beads is configured
++    git push
++    git status  # MUST show "up to date with origin"
+    ```
+ 5. **Clean up** - Clear stashes, prune remote branches
+ 6. **Verify** - All changes committed AND pushed
+@@ -47,23 +270,5 @@ bd close <id>         # Complete work
+ - NEVER stop before pushing - that leaves work stranded locally
+ - NEVER say "ready to push when you are" - YOU must push
+ - If push fails, resolve and retry until it succeeds
++- After fixing review feedback, always push the changes and resolve the related GitHub review threads via the GraphQL API before considering the work complete
+ <!-- END BEADS INTEGRATION -->
+-
+-
+-## Build & Test
+-
+-_Add your build and test commands here_
+-
+-```bash
+-# Example:
+-# npm install
+-# npm test
+-```
+-
+-## Architecture Overview
+-
+-_Add a brief overview of your project architecture_
+-
+-## Conventions & Patterns
+-
+-_Add your project-specific conventions here_
+diff --git a/bun.lock b/bun.lock
+index f7cbc12..bf7a395 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -20,6 +20,7 @@
+         "@vitejs/plugin-react": "^4.3.2",
+         "autoprefixer": "^10.4.24",
+         "jsdom": "^28.0.0",
++        "lefthook": "^2.1.6",
+         "postcss": "^8.5.6",
+         "react-grab": "^0.1.13",
+         "tailwindcss": "^3.4.1",
+@@ -772,6 +773,28 @@
+ 
+     "jsonpointer": ["jsonpointer@5.0.1", "", {}, "sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ=="],
+ 
++    "lefthook": ["lefthook@2.1.6", "", { "optionalDependencies": { "lefthook-darwin-arm64": "2.1.6", "lefthook-darwin-x64": "2.1.6", "lefthook-freebsd-arm64": "2.1.6", "lefthook-freebsd-x64": "2.1.6", "lefthook-linux-arm64": "2.1.6", "lefthook-linux-x64": "2.1.6", "lefthook-openbsd-arm64": "2.1.6", "lefthook-openbsd-x64": "2.1.6", "lefthook-windows-arm64": "2.1.6", "lefthook-windows-x64": "2.1.6" }, "bin": { "lefthook": "bin/index.js" } }, "sha512-w9sBoR0mdN+kJc3SB85VzpiAAl451/rxdCRcZlwW71QLjkeH3EBQFgc4VMj5apePychYDHAlqEWTB8J8JK/j1Q=="],
++
++    "lefthook-darwin-arm64": ["lefthook-darwin-arm64@2.1.6", "", { "os": "darwin", "cpu": "arm64" }, "sha512-hyB7eeiX78BS66f70byTJacDLC/xV1vgMv9n+idFUsrM7J3Udd/ag9Ag5NP3t0eN0EqQqAtrNnt35EH01lxnRQ=="],
++
++    "lefthook-darwin-x64": ["lefthook-darwin-x64@2.1.6", "", { "os": "darwin", "cpu": "x64" }, "sha512-5Ka6cFxiH83krt+OMRQtmS6zqoZR5SLXSudLjTbZA1c3ZqF0+dqkeb4XcB6plx6WR0GFizabuc6Bi3iXPIe1eQ=="],
++
++    "lefthook-freebsd-arm64": ["lefthook-freebsd-arm64@2.1.6", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-VswyOg5CVN3rMaOJ2HtnkltiMKgFHW/wouWxXsV8RxSa4tgWOKxM0EmSXi8qc2jX+LRga6B0uOY6toXS01zWxA=="],
++
++    "lefthook-freebsd-x64": ["lefthook-freebsd-x64@2.1.6", "", { "os": "freebsd", "cpu": "x64" }, "sha512-vXsCUFYuVwrVWwcypB7Zt2Hf+5pl1V1la7ZfvGYZaTRURu0zF/XUnMF/nOz/PebGv0f4x/iOWXWwP7E42xRWsg=="],
++
++    "lefthook-linux-arm64": ["lefthook-linux-arm64@2.1.6", "", { "os": "linux", "cpu": "arm64" }, "sha512-WDJiQhJdZOvKORZd+kF/ms2l6NSsXzdA9ahflyr65V90AC4jES223W8VtEMbGPUtHuGWMEZ/v/XvwlWv0Ioz9g=="],
++
++    "lefthook-linux-x64": ["lefthook-linux-x64@2.1.6", "", { "os": "linux", "cpu": "x64" }, "sha512-C18nCd7nTX1AVL4TcvwMmLAO1VI1OuGluIOTjiPkBQ746Ls1HhL5rl//jMPACmT28YmxIQJ2ZcLPNmhvEVBZvw=="],
++
++    "lefthook-openbsd-arm64": ["lefthook-openbsd-arm64@2.1.6", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-mZOMxM8HiPxVFXDO3PtCUbH4GB8rkveXhsgXF27oAZTYVzQ3gO9vT6r/pxit6msqRXz3fvcwimLVJgb8eRsa8A=="],
++
++    "lefthook-openbsd-x64": ["lefthook-openbsd-x64@2.1.6", "", { "os": "openbsd", "cpu": "x64" }, "sha512-sG9ALLZSnnMOfXu+B7SmxFhJhuoAh4bqi5En5aaHJET48TqrLOcWWZuH+7ArFM6gr/U5KfSUvdmHFmY8WqCcIg=="],
++
++    "lefthook-windows-arm64": ["lefthook-windows-arm64@2.1.6", "", { "os": "win32", "cpu": "arm64" }, "sha512-lD8yFWY4Csuljd0Rqs7EQaySC0VvDf7V3rN1FhRMUISTRDHutebIom1Loc8ckQPvKYGC6mftT9k0GvipsS+Brw=="],
++
++    "lefthook-windows-x64": ["lefthook-windows-x64@2.1.6", "", { "os": "win32", "cpu": "x64" }, "sha512-q4z2n3xucLscoWiyMwFViEj3N8MDSkPulMwcJYuCYFHoPhP1h+icqNu7QRLGYj6AnVrCQweiUJY3Tb2X+GbD/A=="],
++
+     "leven": ["leven@3.1.0", "", {}, "sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A=="],
+ 
+     "lilconfig": ["lilconfig@3.1.3", "", {}, "sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw=="],
+diff --git a/package.json b/package.json
+index 24c7f7c..0156ea0 100644
+--- a/package.json
++++ b/package.json
+@@ -24,6 +24,7 @@
+     "@vitejs/plugin-react": "^4.3.2",
+     "autoprefixer": "^10.4.24",
+     "jsdom": "^28.0.0",
++    "lefthook": "^2.1.6",
+     "postcss": "^8.5.6",
+     "react-grab": "^0.1.13",
+     "tailwindcss": "^3.4.1",
+diff --git a/src/designs/design1-mono/MonoHome.jsx b/src/designs/design1-mono/MonoHome.jsx
+deleted file mode 100644
+index e5ca2b4..0000000
+--- a/src/designs/design1-mono/MonoHome.jsx
++++ /dev/null
+@@ -1,154 +0,0 @@
+-import React, { useState, useEffect } from 'react';
+-import { useNavigate } from 'react-router-dom';
+-import { getActiveSessions } from '../../utils/universalStorage';
+-import { useGameHistory } from '../../hooks/useGameHistory';
+-
+-export default function MonoHome() {
+-  const navigate = useNavigate();
+-  const [sessions, setSessions] = useState([]);
+-  const [visible, setVisible] = useState(false);
+-  const { history } = useGameHistory();
+-
+-  useEffect(() => {
+-    setSessions(getActiveSessions());
+-    // Trigger fade-in
+-    requestAnimationFrame(() => setVisible(true));
+-  }, []);
+-
+-  const recentHistory = history.slice(0, 3);
+-
+-  return (
+-    <div
+-      className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}
+-    >
+-      <div className="max-w-2xl mx-auto">
+-        {/* Nav bar */}
+-        <nav className="flex items-center justify-between mb-12">
+-          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
+-            Score Easy
+-          </h1>
+-          <button
+-            onClick={() => navigate('/history')}
+-            className="text-sm bg-transparent border-none cursor-pointer font-swiss"
+-            style={{ color: '#888' }}
+-          >
+-            History
+-          </button>
+-        </nav>
+-
+-        {/* Active Games */}
+-        {sessions.length === 0 ? (
+-          <div className="flex flex-col items-center justify-center" style={{ minHeight: '40vh' }}>
+-            <p className="text-base mb-6" style={{ color: '#888' }}>
+-              No active games
+-            </p>
+-            <button
+-              onClick={() => navigate('/setup')}
+-              className="text-sm bg-transparent border-none cursor-pointer font-swiss"
+-              style={{ color: '#0066ff' }}
+-            >
+-              Start a game
+-            </button>
+-          </div>
+-        ) : (
+-          <div className="mb-12">
+-            <div className="flex items-center justify-between mb-6">
+-              <h2 className="text-xs uppercase tracking-widest font-normal" style={{ color: '#888' }}>
+-                Active
+-              </h2>
+-              <button
+-                onClick={() => navigate('/setup')}
+-                className="mono-btn"
+-                style={{ padding: '6px 16px', fontSize: '0.8125rem', borderColor: '#0066ff', color: '#0066ff' }}
+-              >
+-                New Game
+-              </button>
+-            </div>
+-
+-            <div className="flex flex-col gap-3">
+-              {sessions.map((session) => {
+-                const participantNames = session.participants
+-                  .map((p) => p.name)
+-                  .join(' vs ');
+-                const scoreDisplay = session.participants
+-                  .map((p) => session.scores[p.id]?.total ?? 0)
+-                  .join(' : ');
+-                const statusLabel = session.status === 'paused' ? 'Paused' : 'Live';
+-                const badgeClass = session.status === 'paused' ? 'mono-badge mono-badge-paused' : 'mono-badge mono-badge-live';
+-
+-                return (
+-                  <button
+-                    key={session.id}
+-                    onClick={() => navigate(`/game/${session.id}`)}
+-                    className="mono-card w-full text-left cursor-pointer font-swiss"
+-                    style={{ padding: '16px 20px', border: '1px solid #eee', background: '#fff' }}
+-                  >
+-                    <div className="flex items-center justify-between mb-2">
+-                      <span className="text-sm font-medium" style={{ color: '#111' }}>
+-                        {session.name}
+-                      </span>
+-                      <span className={badgeClass}>
+-                        {statusLabel}
+-                      </span>
+-                    </div>
+-                    <div className="flex items-center justify-between">
+-                      <span className="text-xs" style={{ color: '#888' }}>
+-                        {participantNames}
+-                      </span>
+-                      <span
+-                        className="text-lg font-bold mono-score"
+-                        style={{ color: '#111' }}
+-                      >
+-                        {scoreDisplay}
+-                      </span>
+-                    </div>
+-                  </button>
+-                );
+-              })}
+-            </div>
+-          </div>
+-        )}
+-
+-        {/* Recent history */}
+-        {recentHistory.length > 0 && (
+-          <div className="mt-8">
+-            <h2 className="text-xs uppercase tracking-widest font-normal mb-4" style={{ color: '#888' }}>
+-              Recent
+-            </h2>
+-            {recentHistory.map((record, index) => {
+-              const scores = record.participants
+-                .map((name) => record.finalScores[name] ?? 0)
+-                .join(' : ');
+-
+-              return (
+-                <div key={record.id}>
+-                  {index > 0 && <hr className="mono-divider" />}
+-                  <div className="flex items-center justify-between py-3">
+-                    <div>
+-                      <span className="text-sm" style={{ color: '#111' }}>
+-                        {record.gameName}
+-                      </span>
+-                      <span className="text-xs ml-3" style={{ color: '#888' }}>
+-                        {record.participants.join(' vs ')}
+-                      </span>
+-                    </div>
+-                    <div className="flex items-center gap-4">
+-                      <span className="text-sm font-mono mono-score" style={{ color: '#111' }}>
+-                        {scores}
+-                      </span>
+-                      {record.winner && (
+-                        <span className="text-xs" style={{ color: '#0066ff' }}>
+-                          {record.winner}
+-                        </span>
+-                      )}
+-                    </div>
+-                  </div>
+-                </div>
+-              );
+-            })}
+-          </div>
+-        )}
+-      </div>
+-    </div>
+-  );
+-}
+diff --git a/src/designs/design1-mono/MonoLiveGame.jsx b/src/designs/design1-mono/MonoLiveGame.jsx
+deleted file mode 100644
+index 30c5bde..0000000
+--- a/src/designs/design1-mono/MonoLiveGame.jsx
++++ /dev/null
+@@ -1,309 +0,0 @@
+-import React, { useState, useEffect, useCallback, useRef } from 'react';
+-import { useParams, useNavigate } from 'react-router-dom';
+-import { useGameSession } from '../../hooks/useGameSession';
+-import { useTimer } from '../../hooks/useTimer';
+-
+-const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+-
+-export default function MonoLiveGame() {
+-  const { id } = useParams();
+-  const navigate = useNavigate();
+-  const {
+-    session,
+-    updateScore,
+-    undoLastScore,
+-    completeGame,
+-    pauseGame,
+-    resumeGame,
+-  } = useGameSession(id);
+-  const timer = useTimer();
+-
+-  const [visible, setVisible] = useState(false);
+-  const timerStartedRef = useRef(false);
+-  const lastClickRef = useRef(0);
+-
+-  // Fade in
+-  useEffect(() => {
+-    requestAnimationFrame(() => setVisible(true));
+-  }, []);
+-
+-  // Start timer when session loads
+-  useEffect(() => {
+-    if (session && session.status === 'active' && !timerStartedRef.current) {
+-      timer.start();
+-      timerStartedRef.current = true;
+-    }
+-  }, [session, timer]);
+-
+-  // Pause/resume timer with game status
+-  useEffect(() => {
+-    if (!session) return;
+-    if (session.status === 'completed' || session.status === 'paused') {
+-      timer.pause();
+-    }
+-  }, [session, timer]);
+-
+-  const handleScoreChange = useCallback(
+-    (participantId, delta) => {
+-      // Debounce rapid clicks
+-      const now = Date.now();
+-      if (now - lastClickRef.current < 150) return;
+-      lastClickRef.current = now;
+-
+-      updateScore(participantId, delta);
+-    },
+-    [updateScore]
+-  );
+-
+-  const handleUndo = useCallback(() => {
+-    if (!session) return;
+-    // Undo the last score change from any participant
+-    const allHistory = [];
+-    session.participants.forEach((p) => {
+-      const hist = session.scores[p.id]?.history || [];
+-      if (hist.length > 0) {
+-        allHistory.push({
+-          participantId: p.id,
+-          timestamp: hist[hist.length - 1].timestamp,
+-        });
+-      }
+-    });
+-    if (allHistory.length === 0) return;
+-    allHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+-    undoLastScore(allHistory[0].participantId);
+-  }, [session, undoLastScore]);
+-
+-  const handleComplete = useCallback(() => {
+-    if (!session) return;
+-    let highestScore = -1;
+-    let winnerId = null;
+-    session.participants.forEach((p) => {
+-      const score = session.scores[p.id]?.total ?? 0;
+-      if (score > highestScore) {
+-        highestScore = score;
+-        winnerId = p.id;
+-      }
+-    });
+-    completeGame(winnerId);
+-  }, [session, completeGame]);
+-
+-  const handleTogglePause = useCallback(() => {
+-    if (!session) return;
+-    if (session.status === 'paused') {
+-      resumeGame();
+-      timer.start();
+-    } else {
+-      pauseGame();
+-      timer.pause();
+-    }
+-  }, [session, pauseGame, resumeGame, timer]);
+-
+-  const handleBackToHome = useCallback(() => {
+-    navigate('/');
+-  }, [navigate]);
+-
+-  if (!session) {
+-    return (
+-      <div className="min-h-screen flex items-center justify-center">
+-        <p className="text-sm font-swiss" style={{ color: '#888' }}>
+-          Loading...
+-        </p>
+-      </div>
+-    );
+-  }
+-
+-  const participants = session.participants;
+-  const isCompleted = session.status === 'completed';
+-
+-  // Status label
+-  const statusText =
+-    session.status === 'completed'
+-      ? 'Final'
+-      : session.status === 'paused'
+-      ? 'Paused'
+-      : 'Live';
+-  const statusBadgeClass =
+-    session.status === 'completed'
+-      ? 'mono-badge mono-badge-final'
+-      : session.status === 'paused'
+-      ? 'mono-badge mono-badge-paused'
+-      : 'mono-badge mono-badge-live';
+-
+-  // Completed state
+-  if (isCompleted) {
+-    const winner = session.winner
+-      ? participants.find((p) => p.id === session.winner)
+-      : null;
+-
+-    return (
+-      <div
+-        className={`min-h-screen flex items-center justify-center mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}
+-      >
+-        <div className="text-center">
+-          <span className={statusBadgeClass} style={{ marginBottom: '24px', display: 'inline-flex' }}>
+-            {statusText}
+-          </span>
+-
+-          {/* Score display */}
+-          <div className="flex items-center justify-center gap-6 mt-6 mb-6">
+-            {participants.map((p, index) => (
+-              <React.Fragment key={p.id}>
+-                {index > 0 && (
+-                  <span
+-                    className="text-4xl font-light mono-score"
+-                    style={{ color: '#ddd' }}
+-                  >
+-                    :
+-                  </span>
+-                )}
+-                <div className="text-center">
+-                  <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
+-                    {p.name}
+-                  </p>
+-                  <p
+-                    className="font-bold mono-score"
+-                    style={{ fontSize: '4rem', color: '#111', lineHeight: 1 }}
+-                  >
+-                    {session.scores[p.id]?.total ?? 0}
+-                  </p>
+-                </div>
+-              </React.Fragment>
+-            ))}
+-          </div>
+-
+-          {/* Winner */}
+-          {winner && (
+-            <div className="mt-8">
+-              <p className="text-2xl font-semibold" style={{ color: '#0066ff' }}>
+-                {winner.name}
+-              </p>
+-              <p className="text-sm mt-1" style={{ color: '#888' }}>
+-                wins
+-              </p>
+-            </div>
+-          )}
+-
+-          {/* Timer */}
+-          <p className="text-xs font-mono mt-6" style={{ color: '#888' }}>
+-            {timer.formatted}
+-          </p>
+-
+-          <button
+-            onClick={handleBackToHome}
+-            className="mono-btn mt-8"
+-          >
+-            Done
+-          </button>
+-        </div>
+-      </div>
+-    );
+-  }
+-
+-  // Active / Paused game
+-  return (
+-    <div
+-      className={`min-h-screen flex flex-col mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}
+-    >
+-      {/* Top bar */}
+-      <div className="flex items-center justify-between px-6 pt-6">
+-        <button
+-          onClick={handleBackToHome}
+-          className="text-xs bg-transparent border-none cursor-pointer font-swiss"
+-          style={{ color: '#888' }}
+-        >
+-          &larr; Back
+-        </button>
+-        <div className="flex items-center gap-4">
+-          <span className="text-xs font-mono" style={{ color: '#888' }}>
+-            {timer.formatted}
+-          </span>
+-          <span className={statusBadgeClass}>{statusText}</span>
+-        </div>
+-      </div>
+-
+-      {/* Game name */}
+-      <div className="text-center mt-4">
+-        <p className="text-xs" style={{ color: '#888' }}>{session.name}</p>
+-      </div>
+-
+-      {/* Hero score area */}
+-      <div className="flex-1 flex items-center justify-center px-6">
+-        <div className="flex items-center justify-center gap-8">
+-          {participants.map((participant, index) => (
+-            <React.Fragment key={participant.id}>
+-              {index > 0 && (
+-                <span
+-                  className="mono-score font-light"
+-                  style={{ fontSize: '5rem', color: '#ddd', lineHeight: 1 }}
+-                >
+-                  :
+-                </span>
+-              )}
+-              <div className="text-center">
+-                {/* Player name */}
+-                <p
+-                  className="text-xs uppercase tracking-widest mb-4"
+-                  style={{ color: '#888' }}
+-                >
+-                  {participant.name}
+-                </p>
+-
+-                {/* Giant score */}
+-                <p
+-                  className="font-bold mono-score"
+-                  style={{
+-                    fontSize: 'clamp(4rem, 15vw, 10rem)',
+-                    color: '#111',
+-                    lineHeight: 1,
+-                  }}
+-                >
+-                  {session.scores[participant.id]?.total ?? 0}
+-                </p>
+-
+-                {/* +/- buttons */}
+-                <div className="flex items-center justify-center gap-3 mt-6">
+-                  <button
+-                    onClick={() =>
+-                      handleScoreChange(participant.id, -(session.pointIncrement || 1))
+-                    }
+-                    className="mono-score-btn"
+-                    style={{ touchAction: 'manipulation' }}
+-                  >
+-                    &minus;
+-                  </button>
+-                  <button
+-                    onClick={() =>
+-                      handleScoreChange(participant.id, session.pointIncrement || 1)
+-                    }
+-                    className="mono-score-btn"
+-                    style={{ touchAction: 'manipulation' }}
+-                  >
+-                    +
+-                  </button>
+-                </div>
+-              </div>
+-            </React.Fragment>
+-          ))}
+-        </div>
+-      </div>
+-
+-      {/* Bottom bar */}
+-      <div
+-        className="px-6 py-4 flex items-center justify-between"
+-        style={{ borderTop: '1px solid #eee' }}
+-      >
+-        <div className="flex items-center gap-3">
+-          <button onClick={handleUndo} className="mono-btn" style={{ fontSize: '0.8125rem' }}>
+-            Undo
+-          </button>
+-          <button onClick={handleTogglePause} className="mono-btn" style={{ fontSize: '0.8125rem' }}>
+-            {session.status === 'paused' ? 'Resume' : 'Pause'}
+-          </button>
+-        </div>
+-        <button onClick={handleComplete} className="mono-btn-primary" style={{ fontSize: '0.8125rem' }}>
+-          Complete
+-        </button>
+-      </div>
+-    </div>
+-  );
+-}
+diff --git a/src/designs/design1-mono/MonoSetup.jsx b/src/designs/design1-mono/MonoSetup.jsx
+deleted file mode 100644
+index af8a7f5..0000000
+--- a/src/designs/design1-mono/MonoSetup.jsx
++++ /dev/null
+@@ -1,210 +0,0 @@
+-import React, { useState, useEffect } from 'react';
+-import { useNavigate } from 'react-router-dom';
+-import { useGameSession } from '../../hooks/useGameSession';
+-import { useGameTemplates } from '../../hooks/useGameTemplates';
+-import { createParticipant } from '../../models/types';
+-
+-export default function MonoSetup() {
+-  const navigate = useNavigate();
+-  const { startGame } = useGameSession();
+-  const { templates } = useGameTemplates();
+-
+-  const [visible, setVisible] = useState(false);
+-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+-  const [gameName, setGameName] = useState('');
+-  const [players, setPlayers] = useState([]);
+-  const [playerInput, setPlayerInput] = useState('');
+-
+-  useEffect(() => {
+-    requestAnimationFrame(() => setVisible(true));
+-  }, []);
+-
+-  const handleAddPlayer = () => {
+-    const name = playerInput.trim();
+-    if (name && !players.includes(name)) {
+-      setPlayers((prev) => [...prev, name]);
+-      setPlayerInput('');
+-    }
+-  };
+-
+-  const handleRemovePlayer = (index) => {
+-    setPlayers((prev) => prev.filter((_, i) => i !== index));
+-  };
+-
+-  const handlePlayerKeyDown = (e) => {
+-    if (e.key === 'Enter') {
+-      e.preventDefault();
+-      handleAddPlayer();
+-    }
+-  };
+-
+-  const handleStart = () => {
+-    if (!selectedTemplate || !gameName.trim() || players.length < 2) return;
+-    const participants = players.map((name) => createParticipant({ name }));
+-    const newSession = startGame({
+-      template: selectedTemplate,
+-      name: gameName,
+-      participants,
+-    });
+-    navigate(`/game/${newSession.id}`);
+-  };
+-
+-  const canStart = selectedTemplate && gameName.trim() && players.length >= 2;
+-
+-  return (
+-    <div
+-      className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}
+-    >
+-      <div className="max-w-2xl mx-auto">
+-        {/* Breadcrumb */}
+-        <nav className="flex items-center gap-2 mb-10 text-sm" aria-label="Breadcrumb">
+-          <button
+-            onClick={() => navigate('/')}
+-            className="bg-transparent border-none cursor-pointer font-swiss"
+-            style={{ color: '#888' }}
+-          >
+-            Home
+-          </button>
+-          <span style={{ color: '#ddd' }} aria-hidden="true">/</span>
+-          <span style={{ color: '#111' }} aria-current="page">New Game</span>
+-        </nav>
+-
+-        {/* Game Type */}
+-        <section className="mb-10" aria-label="Game type selection">
+-          <h2
+-            className="text-xs uppercase tracking-widest font-normal mb-4"
+-            style={{ color: '#888' }}
+-          >
+-            Game Type
+-          </h2>
+-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3" role="radiogroup" aria-label="Game type">
+-            {templates.map((template) => (
+-              <button
+-                key={template.id}
+-                onClick={() => setSelectedTemplate(template)}
+-                className={`mono-type-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+-                aria-pressed={selectedTemplate?.id === template.id}
+-                aria-label={`${template.name} game type`}
+-              >
+-                <span className="mono-type-icon" aria-hidden="true">{template.icon}</span>
+-                <span className="mono-type-name">{template.name}</span>
+-              </button>
+-            ))}
+-          </div>
+-        </section>
+-
+-        <hr className="mono-divider" style={{ marginBottom: '32px' }} />
+-
+-        {/* Game Name */}
+-        <section className="mb-10">
+-          <label
+-            htmlFor="game-name-input"
+-            className="text-xs uppercase tracking-widest font-normal mb-4 block"
+-            style={{ color: '#888' }}
+-          >
+-            Game Name
+-          </label>
+-          <input
+-            id="game-name-input"
+-            type="text"
+-            value={gameName}
+-            onChange={(e) => setGameName(e.target.value)}
+-            placeholder="e.g. Friday Night Match"
+-            className="mono-input"
+-            style={{ maxWidth: '400px' }}
+-          />
+-        </section>
+-
+-        <hr className="mono-divider" style={{ marginBottom: '32px' }} />
+-
+-        {/* Players */}
+-        <section className="mb-10" aria-label="Players">
+-          <h2
+-            className="text-xs uppercase tracking-widest font-normal mb-4"
+-            style={{ color: '#888' }}
+-          >
+-            Players
+-          </h2>
+-
+-          {/* Player list */}
+-          {players.length > 0 && (
+-            <ul className="mb-6" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+-              {players.map((name, index) => (
+-                <li
+-                  key={index}
+-                  className="flex items-center justify-between py-3"
+-                  style={{ borderBottom: '1px solid #eee' }}
+-                >
+-                  <span className="text-sm font-swiss" style={{ color: '#111' }}>
+-                    {name}
+-                  </span>
+-                  <button
+-                    onClick={() => handleRemovePlayer(index)}
+-                    className="bg-transparent border-none cursor-pointer font-swiss text-sm"
+-                    style={{ color: '#888' }}
+-                    aria-label={`Remove ${name}`}
+-                  >
+-                    &times;
+-                  </button>
+-                </li>
+-              ))}
+-            </ul>
+-          )}
+-
+-          {/* Add player input */}
+-          <div className="flex items-end gap-3" style={{ maxWidth: '400px' }}>
+-            <input
+-              type="text"
+-              value={playerInput}
+-              onChange={(e) => setPlayerInput(e.target.value)}
+-              onKeyDown={handlePlayerKeyDown}
+-              placeholder="Player or team name"
+-              className="mono-input"
+-              style={{ flex: 1 }}
+-              aria-label="Player or team name"
+-            />
+-            <button
+-              onClick={handleAddPlayer}
+-              className="mono-btn"
+-              style={{ marginBottom: '1px', whiteSpace: 'nowrap' }}
+-            >
+-              Add
+-            </button>
+-          </div>
+-
+-          {players.length < 2 && players.length > 0 && (
+-            <p className="text-xs mt-3" style={{ color: '#888' }} role="status">
+-              Add at least {2 - players.length} more
+-            </p>
+-          )}
+-        </section>
+-
+-        <hr className="mono-divider" style={{ marginBottom: '32px' }} />
+-
+-        {/* Start button */}
+-        <div className="flex items-center gap-4">
+-          <button
+-            onClick={handleStart}
+-            disabled={!canStart}
+-            className="mono-btn-primary"
+-            style={{
+-              opacity: canStart ? 1 : 0.4,
+-              cursor: canStart ? 'pointer' : 'not-allowed',
+-            }}
+-          >
+-            Start Game
+-          </button>
+-          {!canStart && (
+-            <span className="text-xs" style={{ color: '#888' }}>
+-              {!selectedTemplate
+-                ? 'Select a game type'
+-                : !gameName.trim()
+-                ? 'Enter a game name'
+-                : 'Add at least 2 players'}
+-            </span>
+-          )}
+-        </div>
+-      </div>
+-    </div>
+-  );
+-}

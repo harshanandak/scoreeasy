@@ -1,0 +1,585 @@
+From 37c957ed5eef54a2f4ff27cadb65967e85915fc7 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 12:26:00 +0530
+Subject: [PATCH] =?UTF-8?q?docs(commands):=20de-script=20the=20slash=20com?=
+ =?UTF-8?q?mands=20=E2=80=94=20no=20more=20phantom=20helper=20scripts?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The .claude/commands/*.md files were carried over from another repo and called
+six helper scripts that have never existed here: beads-context.sh,
+conflict-detect.sh, dep-guard.sh, pr-coordinator.sh, smart-status.sh and
+validate.sh. Every one of those invocations was an instruction the agent could
+not carry out.
+
+Rather than port ~4k lines of shell, each call site now says what to actually
+do in this repo, matching how docs/agents/forge-workflow.md was already
+de-scripted:
+
+- beads-context.sh (stage transitions, progress, design/acceptance metadata)
+  -> forge issue comment / forge issue show, re-read to confirm it landed.
+  Beads is retired; the kernel is the issue authority.
+- smart-status.sh -> read the real state: forge ready, git status -sb,
+  git worktree list, gh pr list.
+- pr-coordinator.sh merge-sim -> git merge-tree --write-tree against
+  origin/HEAD, which is what the simulation was approximating.
+  merge-order / auto-label / stale-worktrees dropped: they coordinate a
+  multi-PR queue this solo app does not have.
+- conflict-detect.sh and dep-guard.sh -> dropped. Both exist to arbitrate
+  between concurrent developers over shared contracts; ScoreEasy has one
+  developer. What survives is the part that still bites: your own parallel
+  worktrees and open PRs.
+
+Every command written here was verified to exist before being written --
+forge/gh subcommands against --help and live runs, git merge-tree flags
+against git 2.51, package.json scripts against the file. `git grep` for the
+six script names now returns nothing, and every scripts/ path still
+referenced in .claude/commands resolves on disk.
+
+Closes e6e95c70
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/dev.md      |  44 ++++-----
+ .claude/commands/plan.md     | 178 ++++++++---------------------------
+ .claude/commands/premerge.md |  14 +--
+ .claude/commands/review.md   |  13 +--
+ .claude/commands/ship.md     |  51 ++++------
+ .claude/commands/status.md   |  17 +++-
+ .claude/commands/validate.md |  13 +--
+ 7 files changed, 114 insertions(+), 216 deletions(-)
+
+diff --git a/.claude/commands/dev.md b/.claude/commands/dev.md
+index 9b93cef..fce2050 100644
+--- a/.claude/commands/dev.md
++++ b/.claude/commands/dev.md
+@@ -64,28 +64,20 @@ Do NOT write any code until ALL confirmed:
+ ---
+ 
+ 
+-### Multi-developer conflict check (soft block)
++### Worktree isolation check
+ 
+-Before starting the per-task loop, check for cross-developer conflicts:
++ScoreEasy is a solo project — there is no cross-developer conflict surface. What matters is
++that you are implementing in your own worktree and not in someone else's (or the primary
++checkout while another agent holds it):
+ 
+ ```bash
+-# Auto-sync to get latest team state (non-blocking)
+ forge sync || true
+-
+-# Check for conflicts with the current beads issue
+-bash scripts/conflict-detect.sh --issue <beads-id>
++git worktree list
++git status -sb
+ ```
+ 
+-If exit code 2 (validation error): show error message, abort — do not show conflict prompt.
+-
+-If exit code 1 (conflicts found):
+-- Display the conflict output to the developer
+-- Ask: "Other developers are working in overlapping areas. Proceed anyway? (y/n)"
+-- If `n`: exit cleanly, no side effects
+-- If `y`: log override via `bd comments add <id> "Conflict override: proceeding despite overlap with <conflicting-issues>"`, then continue to Per-Task Loop
+-- Audit: record conflict override per OWASP A09
+-
+-If exit code 0: proceed silently to Per-Task Loop.
++If the current worktree has uncommitted changes that are not yours, STOP and say so rather
++than editing over them. Otherwise proceed to the Per-Task Loop.
+ 
+ ---
+ 
+@@ -211,7 +203,9 @@ Do NOT mark task complete or move to next task until ALL confirmed in this sessi
+ 4. Run it fresh — show the actual output. "Last run was fine" is not evidence.
+ 5. Tests run fresh — actual output shows passing.
+ 6. Implementer has committed (git log shows the commit).
+-7. `bash scripts/beads-context.sh update-progress <id> <task-num> <total> "<title>" <commit-sha> <test-count> <gate-count>` ran successfully (exit code 0). If it fails: STOP. Show error. Do not proceed to next task.
++7. Progress recorded on the issue — run and confirm it exits 0:
++   `forge issue comment <id> "task <task-num>/<total>: <title> — commit <commit-sha>, <test-count> tests, <gate-count> decision gates"`
++   If it fails: STOP. Show error. Do not proceed to next task.
+ 
+ Forbidden phrases (these are not evidence):
+ - "should pass"
+@@ -272,17 +266,19 @@ Do NOT declare /dev complete until:
+ </HARD-GATE>
+ ```
+ 
+-### Beads update
++### Issue update
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <id>
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "<N tasks done, M decision gates fired>" \
+-  --decisions "<key spec gaps and how they were resolved>" \
+-  --artifacts "<changed source files and test files>" \
+-  --next "<validation priorities — lint issues, type concerns>"
++forge issue comment <id> "stage: dev -> validate
++summary: <N tasks done, M decision gates fired>
++decisions: <key spec gaps and how they were resolved>
++artifacts: <changed source files and test files>
++next: <validation priorities — lint issues, type concerns>"
+ ```
+ 
++Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
++carries a summary.
++
+ ---
+ 
+ ## Decision Gate Calibration
+diff --git a/.claude/commands/plan.md b/.claude/commands/plan.md
+index a303bd0..e8d84c9 100644
+--- a/.claude/commands/plan.md
++++ b/.claude/commands/plan.md
+@@ -27,7 +27,7 @@ Before ANY planning work begins:
+    ```bash
+    bd create --title="<feature-name>" --type=epic
+    bd update <id> --status=in_progress
+-   bash scripts/beads-context.sh stage-transition <id> none plan
++   forge issue comment <id> "stage: none -> plan"
+    ```
+ 6. ONLY THEN begin Phase 1.
+ 
+@@ -51,54 +51,27 @@ between parallel features or sessions.
+ ---
+ 
+ 
+-### Multi-developer conflict check (soft block)
++### In-flight work check (advisory)
+ 
+-Before proceeding to Phase 1, check for cross-developer conflicts:
++ScoreEasy is a solo project — there is no cross-developer conflict surface. What can still
++bite is your own parallel work: another worktree or an open PR already touching these files.
+ 
+ ```bash
+-# Auto-sync to get latest team state
++# Refresh issue state
+ forge sync || true
+ 
+-# Check for conflicts with this issue's planned work area
+-bash scripts/conflict-detect.sh --issue <beads-id>
+-```
+-
+-If exit code 2 (validation error): show error message, abort — do not show conflict prompt.
+-
+-If exit code 1 (conflicts found):
+-- Display the conflict output to the developer
+-- Ask: "Other developers are working in overlapping areas. Proceed anyway? (y/n)"
+-- If `n`: exit cleanly, no side effects
+-- If `y`: log override via `bd comments add <id> "Conflict override: proceeding despite overlap with <conflicting-issues>"`, then continue to Phase 1
+-- Audit: record conflict override per OWASP A09
+-
+-If exit code 0: proceed silently to Phase 1.
+-
+----
+-
+-### Parallel PR coordination check (soft block)
+-
+-Before proceeding to Phase 1, check for merge conflicts and dependency issues with in-flight PRs:
++# Your own in-flight branches and worktrees
++git worktree list
+ 
+-```bash
+-# Run merge simulation if on a feature branch
+-current_branch="$(git branch --show-current)"
+-if [[ "$current_branch" != "master" ]] && [[ "$current_branch" != "main" ]]; then
+-  bash scripts/pr-coordinator.sh merge-sim "$current_branch" 2>&1 || true
+-fi
+-
+-# Show current merge queue
+-bash scripts/pr-coordinator.sh merge-order 2>&1 || true
+-
+-# Check for stale worktrees (informational)
+-bash scripts/pr-coordinator.sh stale-worktrees 2>&1 || true
++# Open PRs — anything overlapping this feature's area?
++gh pr list --state open
+ ```
+ 
+-If merge conflicts or unmet dependencies are found:
+-- Display the findings to the developer
+-- Ask: "In-flight PRs have potential conflicts. Proceed with planning anyway? (y/n)"
+-- If `n`: exit cleanly, no side effects
+-- If `y`: log override via `bd comments add <id> "PR coordination override: proceeding despite in-flight conflicts"`, then continue to Phase 1
++If an open PR or another worktree already touches the area you are about to plan, say so and
++ask whether to plan on top of it, wait for it to merge, or scope this feature to avoid it.
++If nothing overlaps, proceed silently to Phase 1.
++
++This is advisory — proceed to Phase 1 either way once the user has chosen.
+ 
+ ---
+ 
+@@ -118,62 +91,20 @@ If verify reports issues, address them before proceeding (the output will includ
+ 
+ **Goal**: Capture WHAT to build — purpose, constraints, success criteria, edge cases, approach.
+ 
+-### Step 0: Dependency ripple check (advisory)
++### Step 0: Open work check (advisory)
+ 
+-Before exploring context or asking questions, check for potential conflicts with in-flight work:
++Before exploring context or asking questions, see what else is already open:
+ 
+ ```bash
+-# If a Beads issue ID is known (e.g., from /status or bd ready):
+-bash scripts/dep-guard.sh check-ripple <beads-issue-id>
+-
+-# If no issue exists yet (first-time plan):
+-bd list --status=open,in_progress
++forge issue list --status open
++forge issue list --status in_progress
+ ```
+ 
+-Review the output. If overlaps are detected:
+-- Consider whether the overlapping issue should be a dependency
++Review the output. If another open issue covers overlapping ground:
++- Consider whether it should be a dependency (`forge issue dep add <issue-id> <blocks-issue-id>`)
+ - Note any shared areas for the design Q&A
+ - This check is **advisory only** — always proceed to Step 1 regardless of findings
+ 
+-#### Ripple Analyst Agent (spawned when contract overlaps found)
+-
+-When `check-ripple` detects overlapping issues AND contract metadata is available, spawn a Ripple Analyst subagent with this prompt:
+-
+-**Input to agent**:
+-- Current issue's contract changes (from `extract-contracts` output)
+-- Consumer code snippets (from `find-consumers` output for each changed contract)
+-- Overlapping issue's title, description, and contract metadata
+-
+-**Agent instructions**:
+-1. For each overlapping contract, imagine 2-3 concrete break scenarios:
+-   - "If [contract X] changes [specific behavior], then [consumer Y] will [specific failure]"
+-2. Rate overall impact as one of:
+-   - **NONE**: No real conflict despite keyword overlap
+-   - **LOW**: Consumers need trivial adjustment (add parameter, rename call)
+-   - **HIGH**: Consumer needs significant rework (parsing logic, data handling changes)
+-   - **CRITICAL**: Consumer is in an active in_progress issue's task list
+-3. **When uncertain, default to HIGH** — conservative over permissive
+-4. Recommend one action:
+-   - Add dependency (`bd dep add <source> <target>`)
+-   - Coordinate with other issue's developer
+-   - Scope down current feature to avoid overlap
+-   - Proceed as-is (no real conflict)
+-
+-**Output format**:
+-```
+-Impact: [NONE|LOW|HIGH|CRITICAL]
+-Confidence: [high|medium|low]
+-
+-Break scenarios:
+-1. [scenario description]
+-2. [scenario description]
+-
+-Recommendation: [action]
+-Reason: [why this action]
+-```
+-
+-This agent is advisory only. The developer always makes the final decision.
+-
+ ### Step 1: Explore project context
+ 
+ Before asking any questions, read relevant files:
+@@ -252,7 +183,7 @@ Do NOT begin Phase 2 (web research) until:
+ 
+ Record the phase transition before starting research:
+ ```bash
+-bash scripts/beads-context.sh stage-transition <id> plan research
++forge issue comment <id> "stage: plan -> research"
+ ```
+ 
+ Run these in parallel:
+@@ -349,7 +280,7 @@ Do NOT begin Phase 3 (setup) until:
+ 
+ Record the phase transition before starting setup:
+ ```bash
+-bash scripts/beads-context.sh stage-transition <id> research setup
++forge issue comment <id> "stage: research -> setup"
+ ```
+ 
+ ### Step 1: Link child issues to the epic
+@@ -439,52 +370,22 @@ For each task, confirm it maps to a specific requirement, success criterion, or
+ 
+ Save to `docs/plans/YYYY-MM-DD-<slug>-tasks.md`.
+ 
+-### Step 5b: Beads context
++### Step 5b: Attach design context to the issue
+ 
+-After saving the task list, attach design context and acceptance criteria to the Beads issue so downstream stages (`/dev`, `/validate`, `/review`) can retrieve it without re-reading the design doc.
++After saving the task list, record the design context and acceptance criteria on the issue so
++downstream stages (`/dev`, `/validate`, `/review`) can retrieve it without re-reading the design doc.
+ 
+ ```bash
+-# Link design metadata (task count + task file path) to the Beads issue
+-bash scripts/beads-context.sh set-design <id> <task-count> docs/plans/YYYY-MM-DD-<slug>-tasks.md
+-
+-# Record the success criteria from the design doc on the issue
+-bash scripts/beads-context.sh set-acceptance <id> "<success-criteria from design doc>"
++forge issue comment <id> "design: docs/plans/YYYY-MM-DD-<slug>-tasks.md (<task-count> tasks)
++acceptance: <success criteria, copied verbatim from the design doc>"
+ ```
+ 
+-Both commands must exit with code 0. If either fails, investigate (wrong issue ID? missing script?) before continuing.
+-
+-### Step 5c: Contract extraction and logic-level dependency review
+-
+-After saving the task list and Beads context, extract and store contract metadata, then run the logic-level Phase 3 dependency review:
++Then re-read it back and confirm the comment landed:
+ 
+ ```bash
+-# Extract contracts — only call store-contracts if extract succeeds (exit 0)
+-if bash scripts/dep-guard.sh extract-contracts docs/plans/YYYY-MM-DD-<slug>-tasks.md > /tmp/contracts.txt; then
+-  bash scripts/dep-guard.sh store-contracts <id> "$(cat /tmp/contracts.txt)"
+-else
+-  echo "No contracts found — skipping store-contracts"
+-fi
+-
+-# Re-run ripple check using Beads JSON + logic-level analysis
+-bash scripts/dep-guard.sh check-ripple <id>
++forge issue show <id>
+ ```
+ 
+-`extract-contracts` exits 1 when no contracts are found (not an error — just nothing to store). `store-contracts` must exit 0 if called.
+-
+-`check-ripple` is now advisory but logic-aware. It should:
+-- read Beads issue data via JSON
+-- analyze import/call-chain, contract, and behavioral dependency signals
+-- show rubric score, confidence, issue pairs, and proposed dependency updates with pros/cons
+-- stop for user approval whenever a dependency mutation is proposed
+-
+-If the user approves a dependency mutation, apply it explicitly:
+-
+-```bash
+-bash scripts/dep-guard.sh apply-decision <id> <dependent-id> <depends-on-id> "<approval rationale>"
+-```
+-
+-That approval step must validate with `bd dep cycles`, show `bd graph`, summarize `bd ready`, and persist the decision via `bd set-state` plus `bd comments`. Beads remains the canonical machine-readable decision record; the plan docs hold only the concise summary.
+-
+ ### Step 6: User review
+ 
+ Present the full task list. Allow the user to reorder, split, or remove tasks.
+@@ -500,24 +401,23 @@ Do NOT proceed to /dev until ALL are confirmed:
+ 4. Beads issue is created with status=in_progress
+ 5. Task list exists at docs/plans/YYYY-MM-DD-<slug>-tasks.md
+ 6. User has confirmed task list is correct
+-7. `beads-context.sh set-design` ran successfully (exit code 0)
+-8. `beads-context.sh set-acceptance` ran successfully (exit code 0)
+-9. `dep-guard.sh store-contracts` ran successfully (exit code 0) — or skipped if no contracts found
+-10. `dep-guard.sh check-ripple` ran successfully and any proposed dependency mutation was reviewed with the user before calling `apply-decision`
++7. `forge issue show <id>` shows the design + acceptance comment from Step 5b
+ </HARD-GATE>
+ ```
+ 
+-After all HARD-GATE items pass, validate context and record the stage transition:
++After all HARD-GATE items pass, record the stage transition:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <id>
+-bash scripts/beads-context.sh stage-transition <id> plan dev \
+-  --summary "<design approach chosen, task count>" \
+-  --decisions "<key trade-offs resolved during Q&A>" \
+-  --artifacts "docs/plans/YYYY-MM-DD-<slug>-design.md docs/plans/YYYY-MM-DD-<slug>-tasks.md" \
+-  --next "<first dev task focus area>"
++forge issue comment <id> "stage: plan -> dev
++summary: <design approach chosen, task count>
++decisions: <key trade-offs resolved during Q&A>
++artifacts: docs/plans/YYYY-MM-DD-<slug>-design.md docs/plans/YYYY-MM-DD-<slug>-tasks.md
++next: <first dev task focus area>"
+ ```
+ 
++Re-read with `forge issue show <id>` and confirm by eye that the issue has a description, the
++transition comment is present, and it carries a summary.
++
+ ---
+ 
+ ## Example Output (Phase 3 complete)
+diff --git a/.claude/commands/premerge.md b/.claude/commands/premerge.md
+index 5f4146a..5dc2593 100644
+--- a/.claude/commands/premerge.md
++++ b/.claude/commands/premerge.md
+@@ -123,16 +123,18 @@ Output:
+ After you merge, run /verify to confirm everything landed correctly.
+ ```
+ 
+-### Step 6: Validate Context and Record Stage Transition
++### Step 6: Record Stage Transition
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <id>
+-bash scripts/beads-context.sh stage-transition <id> premerge verify \
+-  --summary "<docs updated, CI green, PR ready>" \
+-  --artifacts "<updated doc files, PR URL>" \
+-  --next "<merge instructions for user>"
++forge issue comment <id> "stage: premerge -> verify
++summary: <docs updated, CI green, PR ready>
++artifacts: <updated doc files, PR URL>
++next: <merge instructions for user>"
+ ```
+ 
++Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
++carries a summary.
++
+ ```
+ <HARD-GATE: /premerge exit>
+ Do NOT run gh pr merge.
+diff --git a/.claude/commands/review.md b/.claude/commands/review.md
+index 0922586..5f09ffb 100644
+--- a/.claude/commands/review.md
++++ b/.claude/commands/review.md
+@@ -367,13 +367,14 @@ Do NOT declare /review complete until:
+ 1. bash .claude/scripts/greptile-resolve.sh stats <pr-number> shows "All Greptile threads resolved"
+ 2. ALL human reviewer comments are either resolved or have a reply with explanation
+ 3. gh pr checks <pr-number> shows all checks passing
+-4. Context check: Run `bash scripts/beads-context.sh validate <id>` and address any warnings
++4. Context check: Run `forge issue show <id>` and confirm by eye that the issue has a
++   description, at least one stage-transition comment, and that the latest one carries a summary
+ 5. Stage transition: Run the following → exit 0 confirmed:
+-   bash scripts/beads-context.sh stage-transition <id> review premerge \
+-     --summary "<all feedback addressed summary>" \
+-     --decisions "<comment resolutions — valid fixes and justified rejections>" \
+-     --artifacts "<fixed files, commit SHAs>" \
+-     --next "<doc update needs for premerge>"
++   forge issue comment <id> "stage: review -> premerge
++   summary: <all feedback addressed summary>
++   decisions: <comment resolutions — valid fixes and justified rejections>
++   artifacts: <fixed files, commit SHAs>
++   next: <doc update needs for premerge>"
+ </HARD-GATE>
+ ```
+ 
+diff --git a/.claude/commands/ship.md b/.claude/commands/ship.md
+index 2966360..082e7da 100644
+--- a/.claude/commands/ship.md
++++ b/.claude/commands/ship.md
+@@ -46,35 +46,22 @@ BEHIND=$(git rev-list --count HEAD..origin/"$BASE")
+ 
+ This is NOT a full rebase — just a check. The rebase happens in /validate where the full test suite runs afterward.
+ 
+-### Parallel PR coordination (soft block)
++### Merge readiness (soft block)
+ 
+-Before creating the PR, check merge readiness:
++Before creating the PR, confirm the branch actually merges into the base cleanly. `git
++merge-tree` does this without touching the working tree:
+ 
+ ```bash
+-# Run merge simulation against base branch
+-bash scripts/pr-coordinator.sh merge-sim "$(git branch --show-current)" 2>&1
+-
+-# Show recommended merge order
+-bash scripts/pr-coordinator.sh merge-order 2>&1 || true
+-
+-# Auto-label the PR after creation (called after gh pr create below)
+-# bash scripts/pr-coordinator.sh auto-label <issue-id>
++BASE=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's|refs/remotes/origin/||')
++git merge-tree --write-tree "origin/$BASE" HEAD >/dev/null && echo "clean merge" \
++  || echo "CONFLICTS with origin/$BASE"
+ ```
+ 
+-If merge simulation finds conflicts:
+-- Display conflicted files
+-- Ask: "Merge conflicts detected with base branch. These PRs should merge first: [list]. Proceed with PR creation anyway? (y/n)"
+-- If `n`: exit cleanly
+-- If `y`: log override via `bd comments add <id> "Ship override: creating PR despite merge conflicts"`, then continue
+-
+-After PR creation completes:
+-```bash
+-# Auto-label the newly created PR
+-bash scripts/pr-coordinator.sh auto-label <issue-id>
+-
+-# Check for stale worktrees (informational)
+-bash scripts/pr-coordinator.sh stale-worktrees 2>&1 || true
+-```
++If conflicts are reported:
++- Show the conflicted paths (`git merge-tree --write-tree --name-only "origin/$BASE" HEAD`)
++- Ask: "Merge conflicts with the base branch. Rebase now, or create the PR anyway? (rebase/proceed)"
++- If `rebase`: rebase onto `origin/$BASE`, re-run `/validate`, then return here
++- If `proceed`: log the override via `forge issue comment <id> "Ship override: creating PR despite merge conflicts"`, then continue
+ 
+ ### Step 3: Update Beads
+ ```bash
+@@ -150,16 +137,18 @@ Rules for the PR body:
+ - **Check applicable checkboxes** — `[x]` for items that apply, `[ ]` for items that don't
+ - **Include "Closes beads-xxx"** in the Beads section (required for auto-close in /verify)
+ 
+-### Step 6: Validate Context and Record Stage Transition
++### Step 6: Record Stage Transition
+ ```bash
+-bash scripts/beads-context.sh validate <id>
+-bash scripts/beads-context.sh stage-transition <id> ship review \
+-  --summary "<PR created, checks pending>" \
+-  --decisions "<template sections filled, beads linked>" \
+-  --artifacts "<PR URL, branch name>" \
+-  --next "<review focus areas>"
++forge issue comment <id> "stage: ship -> review
++summary: <PR created, checks pending>
++decisions: <template sections filled, issue linked>
++artifacts: <PR URL, branch name>
++next: <review focus areas>"
+ ```
+ 
++Re-read with `forge issue show <id>` and confirm by eye that the transition comment landed and
++carries a summary.
++
+ ### Team sync after PR
+ 
+ After PR is created, sync issue state to GitHub and verify 1:1 mapping:
+diff --git a/.claude/commands/status.md b/.claude/commands/status.md
+index 199f616..d84f64f 100644
+--- a/.claude/commands/status.md
++++ b/.claude/commands/status.md
+@@ -23,14 +23,23 @@ This command helps you understand the current state of the project before starti
+ forge sync || true
+ ```
+ 
+-### Step 1: Smart Status (ranked issues with conflict detection)
++### Step 1: Read the real state
++
++Read the three surfaces that actually hold state — the issue tracker, the working tree, and open PRs:
+ 
+ ```bash
+-bash scripts/smart-status.sh
++# Ready work, ranked by the kernel (unblocked issues first)
++forge ready
++
++# What is in flight locally
++git status -sb
++git worktree list
++
++# What is in flight on the remote
++gh pr list --state open
+ ```
+-This command dynamically computes and displays all issues ranked by composite score (priority, dependency impact, type, staleness, epic proximity). Output includes active sessions, conflict risk annotations, and grouped categories. No manual querying needed.
+ 
+-For full context on any issue: `bd show <id>`
++For full context on any issue: `forge show <id>`
+ 
+ ### Step 1b: Reconcile stale in-progress issues
+ 
+diff --git a/.claude/commands/validate.md b/.claude/commands/validate.md
+index 1c8e49e..a0ce7fa 100644
+--- a/.claude/commands/validate.md
++++ b/.claude/commands/validate.md
+@@ -228,13 +228,14 @@ until ALL FOUR show fresh output in this session:
+ "Should pass", "was passing earlier", and "I'm confident" are not evidence.
+ Run the commands. Show the output. THEN declare done.
+ 
+-5. Context check: Run `bash scripts/beads-context.sh validate <id>` and address any warnings
++5. Context check: Run `forge issue show <id>` and confirm by eye that the issue has a
++   description, at least one stage-transition comment, and that the latest one carries a summary
+ 6. Stage transition: Run the following → exit 0 confirmed:
+-   bash scripts/beads-context.sh stage-transition <id> validate ship \
+-     --summary "<all checks pass/fail summary>" \
+-     --decisions "<any failures diagnosed and fixed>" \
+-     --artifacts "<scripts and commands run>" \
+-     --next "<ship readiness notes>"
++   forge issue comment <id> "stage: validate -> ship
++   summary: <all checks pass/fail summary>
++   decisions: <any failures diagnosed and fixed>
++   artifacts: <commands run>
++   next: <ship readiness notes>"
+ </HARD-GATE>
+ ```
+ 
+-- 
+2.51.0.windows.1
+

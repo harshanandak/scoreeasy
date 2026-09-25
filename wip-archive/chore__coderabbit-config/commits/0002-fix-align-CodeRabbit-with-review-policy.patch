@@ -1,0 +1,32 @@
+From 24f0cb5a86a9008aed46900a3167de4b3082d2a1 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Mon, 17 Aug 2026 17:03:17 +0530
+Subject: [PATCH] fix: align CodeRabbit with review policy
+
+---
+ .coderabbit.yaml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.coderabbit.yaml b/.coderabbit.yaml
+index 9d5af7d..079d26c 100644
+--- a/.coderabbit.yaml
++++ b/.coderabbit.yaml
+@@ -6,12 +6,12 @@ tone_instructions: >-
+   Do not expand scope; call unrelated valid work a follow-up.
+ reviews:
+   profile: assertive
+-  request_changes_workflow: true
++  request_changes_workflow: false
+   high_level_summary: true
+   review_status: true
+   review_progress: false
+   commit_status: true
+   auto_review:
+-    enabled: true
+-    auto_incremental_review: true
++    enabled: false
++    auto_incremental_review: false
+     drafts: false
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,709 @@
+From 514b3a2c52e83aea6012f246351cf2e671f03855 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 12:22:24 +0530
+Subject: [PATCH] feat(shell): unify app shell nav, routing recovery &
+ deep-links
+
+Implements the Wave 1 multi-surface UX audit (#104):
+
+- deepLinks: canonicalize /stats AND /statistics straight to /history in
+  one hop (no /stats -> /statistics -> /history double redirect).
+- Unify active-tab detection across header, mobile sheet and bottom nav
+  via a shared logical `tab` id, and paint every active surface with the
+  same solid action token (was action-soft on the bottom nav only).
+- Account bottom-nav cell is now a single control: a labelled navigation
+  button to /profile. Removed the invisible overlaid Clerk UserButton
+  (the double control confused screen readers and dead-mapped the tap).
+- Replace the full branded splash route fallback with a lightweight
+  inline skeleton; the nav shell already lives outside the boundary so
+  chunk loads no longer flash the splash.
+- Brand button: add aria-label "Score Easy home" and hide the SCORE/EASY
+  wordmark (and its <br/>) from the accessible name.
+- Sport-scoped 404s now offer a guaranteed Home escape.
+- Legacy /game/:id resume links resolve against saved on-device drafts
+  (tennis quick + cricket Test) and redirect to the canonical scorer URL,
+  falling back to the recovery screen when no live draft exists.
+
+Deferred (noted in PR): sets/goals quick-match per-matchId deep-link
+URL, which would require refactoring MonoQuickMatch + both scorer
+components (out of the issue's named files). Those quick matches remain
+resumable at /:sport/quick via their existing per-sport draft.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../design1-mono/AppEntryRoute.test.jsx       |  62 +++-
+ .../design1-mono/AppRouteRecovery.test.jsx    |  72 ++++-
+ .../design1-mono/RouteSkeleton.test.jsx       |  52 ++++
+ .../components/RouteRecoveryActions.jsx       |   5 +-
+ src/designs/design1-mono/index.jsx            | 266 +++++++++++-------
+ src/mobile/deepLinks.js                       |  12 +-
+ src/mobile/deepLinks.test.js                  |   8 +-
+ 7 files changed, 361 insertions(+), 116 deletions(-)
+ create mode 100644 src/designs/design1-mono/RouteSkeleton.test.jsx
+
+diff --git a/src/designs/design1-mono/AppEntryRoute.test.jsx b/src/designs/design1-mono/AppEntryRoute.test.jsx
+index f03781f..4e642b1 100644
+--- a/src/designs/design1-mono/AppEntryRoute.test.jsx
++++ b/src/designs/design1-mono/AppEntryRoute.test.jsx
+@@ -239,7 +239,7 @@ describe('app entry route contract', () => {
+     });
+   });
+ 
+-  it('keeps the signed-in account menu reachable from app bottom navigation', async () => {
++  it('exposes a single account control in app bottom navigation', async () => {
+     authState = {
+       ...authState,
+       authMode: 'cloud',
+@@ -252,8 +252,18 @@ describe('app entry route contract', () => {
+     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+     const appNav = container.querySelector('.global-bottom-nav');
+ 
++    // Single control per cell: one labelled "Account" button that navigates to
++    // the profile screen. The previous invisible Clerk "Account menu" button
++    // overlaid on top has been removed so screen readers see one control.
+     expect(within(appNav).getByText('Account')).toBeInTheDocument();
+-    expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
++    expect(within(appNav).queryByRole('button', { name: 'Account menu', hidden: true })).not.toBeInTheDocument();
++    expect(within(appNav).getByRole('button', { name: 'Account', hidden: true })).toBeInTheDocument();
++
++    fireEvent.click(within(appNav).getByRole('button', { name: 'Account', hidden: true }));
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
++    });
+   });
+ 
+   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
+@@ -278,6 +288,54 @@ describe('app entry route contract', () => {
+     expect(screen.getByText('Profile screen')).toBeInTheDocument();
+   });
+ 
++  it('gives the brand button an accessible label without leaking the line break', async () => {
++    const { container } = renderApp('/app');
++
++    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
++    const brand = container.querySelector('.global-nav-brand');
++    expect(brand).toHaveAttribute('aria-label', 'Score Easy home');
++    // The visible SCORE/EASY wordmark (with its <br/>) must not pollute the
++    // accessible name — it is hidden from assistive tech.
++    expect(brand.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
++    expect(within(container).getByRole('button', { name: 'Score Easy home', hidden: true })).toBe(brand);
++  });
++
++  it('marks the active tab consistently across header and bottom navigation', async () => {
++    const { container } = renderApp('/history');
++
++    // History route renders MonoHistory; assert via the location probe so the
++    // test does not depend on that screen's internals.
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/history');
++    });
++
++    const headerHistory = within(container.querySelector('.global-nav-links'))
++      .getByRole('button', { name: 'History', hidden: true });
++    const bottomHistory = within(container.querySelector('.global-bottom-nav'))
++      .getByRole('button', { name: 'History', hidden: true });
++
++    expect(headerHistory).toHaveAttribute('aria-current', 'page');
++    expect(bottomHistory).toHaveAttribute('aria-current', 'page');
++
++    // Both surfaces drive the active cue off the same unified action token.
++    const navStyles = Array.from(container.querySelectorAll('style'))
++      .map((style) => style.textContent)
++      .join('\n');
++    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"] {\n            background: var(--se-color-action);');
++    expect(navStyles).not.toContain('var(--se-color-action-soft)');
++  });
++
++  it('keeps the nav shell mounted around the lazy route boundary', async () => {
++    const { container } = renderApp('/app');
++
++    // The nav shell lives OUTSIDE the route <Suspense>, so it is present both
++    // during and after the lazy chunk load — chunk swaps never tear down the
++    // header/brand.
++    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
++    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
++    expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
++  });
++
+   it('does not show app bottom navigation on the public marketing route', async () => {
+     renderApp('/marketing');
+ 
+diff --git a/src/designs/design1-mono/AppRouteRecovery.test.jsx b/src/designs/design1-mono/AppRouteRecovery.test.jsx
+index eecb6e2..c4d6852 100644
+--- a/src/designs/design1-mono/AppRouteRecovery.test.jsx
++++ b/src/designs/design1-mono/AppRouteRecovery.test.jsx
+@@ -67,6 +67,7 @@ function expectCurrentRoute(route) {
+ 
+ describe('app route recovery', () => {
+   beforeEach(() => {
++    globalThis.localStorage?.clear();
+     authState.current = {
+       authMode: 'local',
+       cloudAuthAvailable: false,
+@@ -203,11 +204,56 @@ describe('app route recovery', () => {
+   it('recovers dead dashboard game resume links without generic not found', async () => {
+     renderApp('/game/stale-draft');
+ 
+-    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
+-    expect(screen.getByRole('button', { name: 'Find matches to resume' })).toBeInTheDocument();
++    const heading = await screen.findByRole('heading', { name: 'Resume link unavailable' });
++    const recoveryPanel = heading.closest('.max-w-2xl');
++    expect(within(recoveryPanel).getByRole('button', { name: 'Find matches to resume' })).toBeInTheDocument();
++    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
+     expect(screen.queryByRole('heading', { name: 'This screen is not available' })).not.toBeInTheDocument();
+   });
+ 
++  it('resolves a legacy game resume link against a saved tennis quick draft', async () => {
++    globalThis.localStorage.setItem('se_tennis_quick_draft_resume-1', JSON.stringify({
++      id: 'resume-1',
++      sport: 'tennis',
++      status: 'in-progress',
++    }));
++
++    renderApp('/game/resume-1');
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick/live/resume-1');
++    });
++    expect(screen.queryByRole('heading', { name: 'Resume link unavailable' })).not.toBeInTheDocument();
++  });
++
++  it('resolves a legacy game resume link against a saved cricket Test quick match', async () => {
++    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
++      id: 'test-resume-1',
++      sport: 'cricket',
++      status: 'in-progress',
++      format: { totalInnings: 4 },
++    }]));
++
++    renderApp('/game/test-resume-1');
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick/test-match/test-resume-1');
++    });
++    expect(screen.queryByRole('heading', { name: 'Resume link unavailable' })).not.toBeInTheDocument();
++  });
++
++  it('falls back to recovery when a saved draft is already completed', async () => {
++    globalThis.localStorage.setItem('se_tennis_quick_draft_done-1', JSON.stringify({
++      id: 'done-1',
++      sport: 'tennis',
++      status: 'completed',
++    }));
++
++    renderApp('/game/done-1');
++
++    expect(await screen.findByRole('heading', { name: 'Resume link unavailable' })).toBeInTheDocument();
++  });
++
+   it('shows actionable recovery for missing tournament scorer deep links', async () => {
+     renderApp('/football/tournament/missing/match/missing/score');
+ 
+@@ -242,13 +288,29 @@ describe('app route recovery', () => {
+   it('preserves sport context in bad sport-scoped route recovery', async () => {
+     renderApp('/badminton/not-a-route');
+ 
+-    expect(await screen.findByRole('heading', { name: 'This Badminton screen is not available' })).toBeInTheDocument();
+-    expect(screen.getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
++    const heading = await screen.findByRole('heading', { name: 'This Badminton screen is not available' });
++    const recoveryPanel = heading.closest('.max-w-2xl');
++    expect(within(recoveryPanel).getByRole('button', { name: 'Start Badminton quick match' })).toBeInTheDocument();
++    // Sport-scoped 404s previously dead-ended without a Home escape.
++    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
+ 
+-    fireEvent.click(screen.getByRole('button', { name: 'Choose another sport' }));
++    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Choose another sport' }));
+ 
+     await waitFor(() => {
+       expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+     });
+   });
++
++  it('offers a Home escape from sport-scoped 404s', async () => {
++    renderApp('/badminton/not-a-route');
++
++    const heading = await screen.findByRole('heading', { name: 'This Badminton screen is not available' });
++    const recoveryPanel = heading.closest('.max-w-2xl');
++
++    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Home' }));
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
++    });
++  });
+ });
+diff --git a/src/designs/design1-mono/RouteSkeleton.test.jsx b/src/designs/design1-mono/RouteSkeleton.test.jsx
+new file mode 100644
+index 0000000..631051b
+--- /dev/null
++++ b/src/designs/design1-mono/RouteSkeleton.test.jsx
+@@ -0,0 +1,52 @@
++import { render } from '@testing-library/react';
++import { describe, expect, it, vi } from 'vitest';
++
++// index.jsx pulls in router hooks and the design CSS at module load; stub the
++// heavy/native edges so we can unit-test the exported LazyFallback skeleton in
++// isolation (the lighter replacement for the full-splash route fallback).
++vi.mock('convex/react', () => ({
++  useMutation: () => vi.fn(),
++  useQuery: () => [],
++  useConvexConnectionState: () => ({
++    isWebSocketConnected: true,
++    hasEverConnected: true,
++    connectionRetries: 0,
++  }),
++}));
++
++vi.mock('../../hooks/useAuth', () => ({
++  useAuth: () => ({
++    authMode: 'local',
++    cloudAuthAvailable: false,
++    isAuthenticated: false,
++    isLoading: false,
++    needsOnboarding: false,
++    user: null,
++  }),
++}));
++
++import { LazyFallback } from './index';
++
++describe('LazyFallback route skeleton', () => {
++  it('renders a light, polite inline skeleton rather than the branded splash', () => {
++    const { container } = render(<LazyFallback />);
++
++    const skeleton = container.querySelector('.route-skeleton');
++    expect(skeleton).toBeInTheDocument();
++    expect(skeleton).toHaveAttribute('role', 'status');
++    expect(skeleton).toHaveAttribute('aria-live', 'polite');
++    expect(skeleton).toHaveAttribute('aria-busy', 'true');
++
++    // It must NOT be the heavy AppLoading splash (no scoreboard / brand mark).
++    expect(container.querySelector('.app-loading')).not.toBeInTheDocument();
++    expect(container.querySelector('.app-loading-board')).not.toBeInTheDocument();
++
++    // Placeholder blocks carry the shimmer animation styling.
++    expect(container.querySelectorAll('.route-skeleton-block').length).toBeGreaterThan(0);
++    const styles = Array.from(container.querySelectorAll('style'))
++      .map((style) => style.textContent)
++      .join('\n');
++    expect(styles).toContain('route-skeleton-shimmer');
++    expect(styles).toContain('prefers-reduced-motion: reduce');
++  });
++});
+diff --git a/src/designs/design1-mono/components/RouteRecoveryActions.jsx b/src/designs/design1-mono/components/RouteRecoveryActions.jsx
+index 0460549..cb0cb4c 100644
+--- a/src/designs/design1-mono/components/RouteRecoveryActions.jsx
++++ b/src/designs/design1-mono/components/RouteRecoveryActions.jsx
+@@ -21,7 +21,10 @@ export default function RouteRecoveryActions({
+   const actions = [
+     { label: effectivePrimaryLabel, path: effectivePrimaryPath, primary: true },
+     sport ? { label: `Start ${sport.name} quick match`, path: quickPath, primary: false } : null,
+-    sport ? { label: 'Choose another sport', path: playPath, primary: false } : { label: 'Home', path: '/', primary: false },
++    sport ? { label: 'Choose another sport', path: playPath, primary: false } : null,
++    // Every recovery screen offers a guaranteed escape Home, including
++    // sport-scoped 404s that previously dead-ended at "Choose another sport".
++    { label: 'Home', path: '/', primary: false },
+   ].filter(Boolean);
+ 
+   return (
+diff --git a/src/designs/design1-mono/index.jsx b/src/designs/design1-mono/index.jsx
+index b3d37b0..bb4ff64 100644
+--- a/src/designs/design1-mono/index.jsx
++++ b/src/designs/design1-mono/index.jsx
+@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
+ import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
+ import MonoLanding from './MonoLanding';
+ import { getSportById } from '../../models/sportRegistry';
++import { loadData, loadQuickMatch } from '../../utils/storage';
++import { getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
+ import { useAuth } from '../../hooks/useAuth';
+ import {
+   APP_ENTRY_PATH,
+@@ -11,7 +13,6 @@ import {
+   loadAppEntryState,
+ } from '../../utils/appEntry';
+ import { AuthUserButton } from '../../components/AuthButtons';
+-import AppLoading from '../../components/AppLoading';
+ import ErrorBoundary from '../../components/ErrorBoundary';
+ import OfflineFallback from '../../components/OfflineFallback';
+ import ConvexReconnectingFallback from '../../components/ConvexReconnectingFallback';
+@@ -62,8 +63,73 @@ const MonoUserSearch = lazy(() => import('./MonoUserSearch'));
+ 
+ const SHOW_INTERNAL_ROUTES = import.meta.env.DEV || import.meta.env.VITE_SHOW_INTERNAL_ROUTES === 'true';
+ 
+-function LazyFallback() {
+-  return <AppLoading compact />;
++// Lightweight inline skeleton shown while a lazy route chunk loads. The nav
++// shell (header + bottom nav) lives OUTSIDE the route <Suspense>, so chunk loads
++// no longer flash the full branded splash — only this content placeholder swaps
++// in, keeping the surrounding shell stable. Exported for direct unit testing.
++export function LazyFallback() {
++  return (
++    <div className="route-skeleton" role="status" aria-live="polite" aria-busy="true">
++      <span className="route-skeleton-label">Loading…</span>
++      <div className="route-skeleton-block route-skeleton-title" aria-hidden="true" />
++      <div className="route-skeleton-block route-skeleton-line" aria-hidden="true" />
++      <div className="route-skeleton-block route-skeleton-line route-skeleton-line-short" aria-hidden="true" />
++      <div className="route-skeleton-block route-skeleton-card" aria-hidden="true" />
++      <style>{`
++        .route-skeleton {
++          box-sizing: border-box;
++          width: 100%;
++          max-width: 720px;
++          margin: 0 auto;
++          padding: 24px 20px 40px;
++          display: flex;
++          flex-direction: column;
++          gap: 14px;
++        }
++
++        .route-skeleton-label {
++          position: absolute;
++          width: 1px;
++          height: 1px;
++          padding: 0;
++          margin: -1px;
++          overflow: hidden;
++          clip: rect(0, 0, 0, 0);
++          white-space: nowrap;
++          border: 0;
++        }
++
++        .route-skeleton-block {
++          border-radius: var(--se-radius-button);
++          background: linear-gradient(
++            90deg,
++            color-mix(in oklch, var(--se-color-line) 16%, var(--se-color-surface)) 25%,
++            color-mix(in oklch, var(--se-color-line) 28%, var(--se-color-surface)) 37%,
++            color-mix(in oklch, var(--se-color-line) 16%, var(--se-color-surface)) 63%
++          );
++          background-size: 400% 100%;
++          animation: route-skeleton-shimmer 1.4s ease-in-out infinite;
++        }
++
++        .route-skeleton-title { height: 28px; width: 60%; }
++        .route-skeleton-line { height: 14px; width: 100%; }
++        .route-skeleton-line-short { width: 80%; }
++        .route-skeleton-card { height: 180px; width: 100%; margin-top: 6px; border-radius: var(--se-radius-card); }
++
++        @keyframes route-skeleton-shimmer {
++          0% { background-position: 100% 0; }
++          100% { background-position: 0 0; }
++        }
++
++        @media (prefers-reduced-motion: reduce) {
++          .route-skeleton-block {
++            animation: none;
++            background: color-mix(in oklch, var(--se-color-line) 18%, var(--se-color-surface));
++          }
++        }
++      `}</style>
++    </div>
++  );
+ }
+ 
+ function NotFoundRoute() {
+@@ -147,7 +213,37 @@ function SignInAliasRedirect() {
+   return <Navigate to={`/login${location.search}${location.hash}`} replace />;
+ }
+ 
++// Resolves a legacy /game/:id resume link against saved on-device drafts.
++// Returns the canonical live scorer path when an in-progress draft is found,
++// otherwise null so the caller can render the recovery screen.
++export function resolveGameResumePath(id) {
++  if (!id) return null;
++
++  // Cricket Test matches persist into the shared quick-match store.
++  const quickMatch = loadQuickMatch(id);
++  if (quickMatch && quickMatch.status !== 'completed' && getSportById(quickMatch.sport)) {
++    if (quickMatch.sport === 'cricket' && quickMatch.format?.totalInnings === 4) {
++      return `/${quickMatch.sport}/quick/test-match/${id}`;
++    }
++  }
++
++  // Tennis quick matches persist into their own per-id draft key.
++  const tennisDraft = loadData(getTennisQuickDraftKey(id), null);
++  if (tennisDraft && tennisDraft.status !== 'completed' && getSportById(tennisDraft.sport)) {
++    return `/${tennisDraft.sport}/quick/live/${id}`;
++  }
++
++  return null;
++}
++
+ function GameResumeRecoveryRoute() {
++  const { id } = useParams();
++  const resumePath = resolveGameResumePath(id);
++
++  if (resumePath) {
++    return <Navigate to={resumePath} replace />;
++  }
++
+   return (
+     <RouteRecoveryActions
+       eyebrow="Resume recovery"
+@@ -566,71 +662,79 @@ function GlobalNavigation({ requestScoringExit }) {
+     setOpen(false);
+   };
+ 
++  // Each surface (header, mobile sheet, bottom nav) shares a single logical
++  // `tab` id so active styling is computed identically everywhere. Previously
++  // the header Home used path "/" (which matched every route via startsWith)
++  // while the bottom nav used APP_ENTRY_PATH, so the active tab disagreed across
++  // surfaces. Keying off `tab` removes that drift.
++  const accountTab = isAuthenticated ? 'account' : 'signin';
++  const accountPath = isAuthenticated ? '/profile' : '/login';
++  const accountLabel = isAuthenticated ? 'Account' : 'Sign in';
++
+   const navItems = [
+-    { label: 'Home', path: '/' },
+-    { label: 'Play', path: '/play' },
+-    { label: 'History', path: '/history' },
++    { tab: 'home', label: 'Home', path: '/' },
++    { tab: 'play', label: 'Play', path: '/play' },
++    { tab: 'history', label: 'History', path: '/history' },
+   ];
+ 
+   if (cloudAuthAvailable) {
+-    navItems.push({
+-      label: isAuthenticated ? 'Account' : 'Sign in',
+-      path: isAuthenticated ? '/profile' : '/login',
+-    });
++    navItems.push({ tab: accountTab, label: accountLabel, path: accountPath });
+   }
+ 
+   const bottomNavItems = [
+-    { label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
+-    { label: 'Play', path: '/play', icon: 'play' },
+-    { label: 'History', path: '/history', icon: 'matches' },
++    { tab: 'home', label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
++    { tab: 'play', label: 'Play', path: '/play', icon: 'play' },
++    { tab: 'history', label: 'History', path: '/history', icon: 'matches' },
+     cloudAuthAvailable
+       ? {
++        tab: accountTab,
+         label: 'Account',
+-        path: isAuthenticated ? '/profile' : '/login',
++        path: accountPath,
+         icon: 'account',
+-        kind: isAuthenticated ? 'accountMenu' : 'link',
+       }
+       : null,
+   ].filter(Boolean);
+ 
+-  const isActive = (item) => {
+-    if (item.path === APP_ENTRY_PATH) {
+-      return pathname === '/' ||
+-        pathname === APP_ENTRY_PATH ||
+-        pathname === '/dashboard';
+-    }
+-    if (item.path === '/play') {
+-      return pathname === '/play' ||
+-        /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
+-    }
+-    if (item.path === '/login') {
+-      return pathname.startsWith('/login') ||
+-        pathname.startsWith('/signup') ||
+-        pathname.startsWith('/onboarding');
+-    }
+-    if (item.path === '/profile') {
+-      return pathname.startsWith('/profile') ||
+-        pathname.startsWith('/users/search') ||
+-        pathname.startsWith('/onboarding');
+-    }
+-    if (item.path === '/history') {
+-      // History now hosts the merged stats view; keep the tab active for the
+-      // legacy /statistics and /stats paths while their redirects resolve.
+-      return pathname === '/history' ||
+-        pathname.startsWith('/history/') ||
+-        pathname === '/statistics' ||
+-        pathname === '/stats';
++  const isTabActive = (tab) => {
++    switch (tab) {
++      case 'home':
++        return pathname === '/' || pathname === APP_ENTRY_PATH || pathname === '/dashboard';
++      case 'play':
++        return pathname === '/play' || /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
++      case 'history':
++        // History now hosts the merged stats view; keep the tab active for the
++        // legacy /statistics and /stats paths while their redirects resolve.
++        return pathname === '/history' ||
++          pathname.startsWith('/history/') ||
++          pathname === '/statistics' ||
++          pathname === '/stats';
++      case 'signin':
++        return pathname.startsWith('/login') ||
++          pathname.startsWith('/signup') ||
++          pathname.startsWith('/onboarding');
++      case 'account':
++        return pathname.startsWith('/profile') ||
++          pathname.startsWith('/users/search') ||
++          pathname.startsWith('/onboarding');
++      default:
++        return false;
+     }
+-    return pathname === item.path || pathname.startsWith(`${item.path}/`);
+   };
+ 
++  const isActive = (item) => isTabActive(item.tab);
++
+   const currentItem = navItems.find(isActive);
+ 
+   return (
+     <>
+       <header className="global-nav">
+-        <button type="button" className="global-nav-brand" onClick={() => go('/')}>
+-          SCORE<br />EASY
++        <button
++          type="button"
++          className="global-nav-brand"
++          aria-label="Score Easy home"
++          onClick={() => go('/')}
++        >
++          <span aria-hidden="true">SCORE<br />EASY</span>
+         </button>
+ 
+         <nav className="global-nav-links" aria-label="Primary navigation">
+@@ -721,30 +825,11 @@ function GlobalNavigation({ requestScoringExit }) {
+           style={{ '--bottom-nav-count': bottomNavItems.length }}
+         >
+           {bottomNavItems.map((item) => {
+-            if (item.kind === 'accountMenu') {
+-              return (
+-                <div
+-                  key={item.path}
+-                  className="global-bottom-nav-account-shell"
+-                >
+-                  <button
+-                    type="button"
+-                    onClick={() => go(item.path)}
+-                    className="global-bottom-nav-item global-bottom-nav-account-item"
+-                    aria-current={isActive(item) ? 'page' : undefined}
+-                  >
+-                    <span className="global-bottom-nav-icon">
+-                      <NavIcon name={item.icon} />
+-                    </span>
+-                    <span className="global-bottom-nav-account-label">{item.label}</span>
+-                  </button>
+-                  <span className="global-bottom-nav-account-menu">
+-                    <AuthUserButton aria-label="Account menu" />
+-                  </span>
+-                </div>
+-              );
+-            }
+-
++            // Single control per cell. The account tab is a plain navigation
++            // button to the profile screen — no invisible Clerk UserButton
++            // overlaid on top (that double-control confused screen readers and
++            // made the visible icon/label a dead tap target). The Clerk account
++            // popover stays reachable from the header on larger screens.
+             return (
+               <button
+                 key={item.path}
+@@ -1199,18 +1284,6 @@ function GlobalNavigation({ requestScoringExit }) {
+             position: relative;
+           }
+ 
+-          .global-bottom-nav-account-shell {
+-            position: relative;
+-            min-width: 0;
+-            min-height: 54px;
+-          }
+-
+-          .global-bottom-nav-account-item {
+-            width: 100%;
+-            height: 100%;
+-            cursor: pointer;
+-          }
+-
+           .global-bottom-nav-icon {
+             display: inline-flex;
+             align-items: center;
+@@ -1226,34 +1299,17 @@ function GlobalNavigation({ requestScoringExit }) {
+             height: 22px;
+           }
+ 
+-          .global-bottom-nav-label,
+-          .global-bottom-nav-account-label {
++          .global-bottom-nav-label {
+             line-height: 1;
+           }
+ 
+-          .global-bottom-nav-account-menu {
+-            position: absolute;
+-            inset: 0;
+-            display: flex;
+-            align-items: stretch;
+-            justify-content: stretch;
+-            pointer-events: none;
+-          }
+-
+-          .global-bottom-nav-account-menu > *,
+-          .global-bottom-nav-account-menu button {
+-            width: 100%;
+-            height: 100%;
+-            opacity: 0;
+-          }
+-
+-          .global-bottom-nav-account-menu button {
+-            pointer-events: auto;
+-          }
+-
++          /* Unified active treatment: every nav surface (header link, mobile
++             sheet item, bottom-nav item) paints the active tab with the same
++             solid action fill + inverse ink, so the "you are here" cue is
++             consistent across the shell. */
+           .global-bottom-nav-item[aria-current="page"] {
+-            background: var(--se-color-action-soft);
+-            color: var(--se-color-action-strong);
++            background: var(--se-color-action);
++            color: var(--se-color-inverse);
+           }
+ 
+           body.has-mobile-input-focus .global-bottom-nav {
+diff --git a/src/mobile/deepLinks.js b/src/mobile/deepLinks.js
+index bc238ba..77bdb75 100644
+--- a/src/mobile/deepLinks.js
++++ b/src/mobile/deepLinks.js
+@@ -4,7 +4,17 @@ import { hasNativePlugin, isNativeMobile } from './platform';
+ export const APP_LINK_HOST = 'scoreeasy.app';
+ 
+ export function canonicalizeAppPath(pathname = '/') {
+-  if (pathname === '/stats' || pathname === '/stats/') return '/statistics';
++  // Stats links are merged into History. Map both legacy spellings straight to
++  // /history so native deep links resolve in a single hop (no /stats →
++  // /statistics → /history double-redirect).
++  if (
++    pathname === '/stats' ||
++    pathname === '/stats/' ||
++    pathname === '/statistics' ||
++    pathname === '/statistics/'
++  ) {
++    return '/history';
++  }
+   if (pathname === '/dashboard' || pathname === '/dashboard/') return '/app';
+   return pathname || '/';
+ }
+diff --git a/src/mobile/deepLinks.test.js b/src/mobile/deepLinks.test.js
+index 303cd7a..4147bf5 100644
+--- a/src/mobile/deepLinks.test.js
++++ b/src/mobile/deepLinks.test.js
+@@ -40,9 +40,13 @@ describe('pathFromAppUrl', () => {
+   });
+ 
+   it('canonicalizes legacy native app links before navigation', () => {
+-    expect(pathFromAppUrl('https://scoreeasy.app/stats?range=month#totals')).toBe('/statistics?range=month#totals');
++    // Both legacy stats spellings collapse straight to /history in a single hop
++    // (no /stats → /statistics → /history double redirect).
++    expect(pathFromAppUrl('https://scoreeasy.app/stats?range=month#totals')).toBe('/history?range=month#totals');
++    expect(pathFromAppUrl('https://scoreeasy.app/statistics?range=month#totals')).toBe('/history?range=month#totals');
+     expect(pathFromAppUrl('https://scoreeasy.app/dashboard')).toBe('/app');
+-    expect(pathFromAppUrl('https://scoreeasy.app/stats/')).toBe('/statistics');
++    expect(pathFromAppUrl('https://scoreeasy.app/stats/')).toBe('/history');
++    expect(pathFromAppUrl('https://scoreeasy.app/statistics/')).toBe('/history');
+     expect(pathFromAppUrl('https://scoreeasy.app/dashboard/')).toBe('/app');
+   });
+ 
+-- 
+2.51.0.windows.1
+

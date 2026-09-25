@@ -1,0 +1,33 @@
+From 8953f0cb34496aa4739f21d242755dfd87f7f0e9 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 14:44:57 +0530
+Subject: [PATCH] test: de-brittle the tennis canScoreCurrentSet source
+ assertion
+
+The missing-set guard changed the canScoreCurrentSet definition, breaking an
+exact-string source snapshot. Switch to a regex that asserts the invariant the
+test actually cares about (it gates on scoringPrompt.isInteractionLocked),
+tolerating the added Boolean(sets[currentSet]) guard. Matches the regex style of
+the sibling assertions.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../design1-mono/scoring/AppOwnedScoringPrompts.test.jsx        | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/designs/design1-mono/scoring/AppOwnedScoringPrompts.test.jsx b/src/designs/design1-mono/scoring/AppOwnedScoringPrompts.test.jsx
+index 56fd497..35396bd 100644
+--- a/src/designs/design1-mono/scoring/AppOwnedScoringPrompts.test.jsx
++++ b/src/designs/design1-mono/scoring/AppOwnedScoringPrompts.test.jsx
+@@ -310,7 +310,7 @@ describe('app-owned scoring prompts', () => {
+     expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+     expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(isInteractionLocked\) return;/);
+     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+-    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toContain('const canScoreCurrentSet = !currentSetData.completed && !scoringPrompt.isInteractionLocked');
++    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const canScoreCurrentSet =.*!scoringPrompt\.isInteractionLocked/);
+     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/scoringPrompt\.isInteractionLocked\r?\n {4}\? 'Scoring is temporarily locked'/);
+     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+   });
+-- 
+2.51.0.windows.1
+

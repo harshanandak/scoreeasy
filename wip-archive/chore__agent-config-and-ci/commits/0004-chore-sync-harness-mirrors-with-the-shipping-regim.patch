@@ -1,0 +1,162 @@
+From 97274b4806b82d69aa190b7439ccaa8bb8f84ae7 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 01:38:31 +0530
+Subject: [PATCH] chore: sync harness mirrors with the shipping-regime section
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+---
+ .clinerules                     | 11 +++++++++++
+ .cursor/rules/project.mdc       | 11 +++++++++++
+ .cursorrules                    | 11 +++++++++++
+ .github/copilot-instructions.md | 11 +++++++++++
+ .roorules                       | 11 +++++++++++
+ 5 files changed, 55 insertions(+)
+
+diff --git a/.clinerules b/.clinerules
+index dbfa9c8..ee13323 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -58,6 +58,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+@@ -73,6 +82,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index e0c0ffd..d54f982 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -61,6 +61,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+@@ -76,6 +85,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+diff --git a/.cursorrules b/.cursorrules
+index dbfa9c8..ee13323 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -58,6 +58,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+@@ -73,6 +82,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 5420024..aeb24d1 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -56,6 +56,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+@@ -71,6 +80,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+diff --git a/.roorules b/.roorules
+index dbfa9c8..ee13323 100644
+--- a/.roorules
++++ b/.roorules
+@@ -58,6 +58,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+@@ -73,6 +82,8 @@ When this file contradicts what the code plainly does, the code wins — then sa
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+-- 
+2.51.0.windows.1
+

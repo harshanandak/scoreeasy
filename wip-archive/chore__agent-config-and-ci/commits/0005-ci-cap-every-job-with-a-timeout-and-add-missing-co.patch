@@ -1,0 +1,115 @@
+From 7f0e8e8b62434b22dacb8958c8391189f6f36c83 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 02:05:27 +0530
+Subject: [PATCH] ci: cap every job with a timeout and add missing concurrency
+ groups
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+scoreeasy's pipeline is already fast (<=4 min), so this is reliability only, no
+gating changes and no coverage change — every job that ran before still runs.
+
+- timeout-minutes on the jobs that lacked one (ci verify, both Cloudflare
+  workflows, the CodeRabbit trigger). The android/ios build jobs already had one.
+- concurrency + cancel-in-progress on ci.yml, android-build.yml and ios-build.yml,
+  which are PR-triggered and previously let superseded runs finish. The Cloudflare
+  production workflow keeps cancel-in-progress: false so a deploy is never cut off.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+---
+ .github/workflows/android-build.yml                | 4 ++++
+ .github/workflows/ci.yml                           | 5 +++++
+ .github/workflows/cloudflare-worker-preview.yml    | 1 +
+ .github/workflows/cloudflare-worker-production.yml | 1 +
+ .github/workflows/coderabbit-after-checks.yml      | 1 +
+ .github/workflows/ios-build.yml                    | 4 ++++
+ 6 files changed, 16 insertions(+)
+
+diff --git a/.github/workflows/android-build.yml b/.github/workflows/android-build.yml
+index 9ec5a56..0ed6038 100644
+--- a/.github/workflows/android-build.yml
++++ b/.github/workflows/android-build.yml
+@@ -16,6 +16,10 @@ on:
+       - "vite.config.js"
+   pull_request:
+ 
++concurrency:
++  group: android-build-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: true
++
+ jobs:
+   android-debug-build:
+     name: Build Android APK and AAB
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 582461d..df5e44d 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -6,8 +6,13 @@ on:
+       - master
+   pull_request:
+ 
++concurrency:
++  group: ci-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: true
++
+ jobs:
+   verify:
++    timeout-minutes: 20
+     runs-on: ubuntu-latest
+     env:
+       VITE_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+diff --git a/.github/workflows/cloudflare-worker-preview.yml b/.github/workflows/cloudflare-worker-preview.yml
+index e4e7d4e..4e1ee44 100644
+--- a/.github/workflows/cloudflare-worker-preview.yml
++++ b/.github/workflows/cloudflare-worker-preview.yml
+@@ -36,6 +36,7 @@ concurrency:
+ 
+ jobs:
+   preview:
++    timeout-minutes: 30
+     name: Cloudflare Preview
+     runs-on: ubuntu-latest
+     permissions:
+diff --git a/.github/workflows/cloudflare-worker-production.yml b/.github/workflows/cloudflare-worker-production.yml
+index 9047fc3..4c0c659 100644
+--- a/.github/workflows/cloudflare-worker-production.yml
++++ b/.github/workflows/cloudflare-worker-production.yml
+@@ -30,6 +30,7 @@ concurrency:
+ 
+ jobs:
+   deploy:
++    timeout-minutes: 20
+     name: Deploy Worker production
+     runs-on: ubuntu-latest
+     permissions:
+diff --git a/.github/workflows/coderabbit-after-checks.yml b/.github/workflows/coderabbit-after-checks.yml
+index 4d220e4..1b75ece 100644
+--- a/.github/workflows/coderabbit-after-checks.yml
++++ b/.github/workflows/coderabbit-after-checks.yml
+@@ -17,6 +17,7 @@ permissions:
+ 
+ jobs:
+   request-review:
++    timeout-minutes: 10
+     name: Request CodeRabbit review
+     runs-on: ubuntu-latest
+     concurrency:
+diff --git a/.github/workflows/ios-build.yml b/.github/workflows/ios-build.yml
+index f593b49..1e8624b 100644
+--- a/.github/workflows/ios-build.yml
++++ b/.github/workflows/ios-build.yml
+@@ -16,6 +16,10 @@ on:
+       - "vite.config.js"
+   pull_request:
+ 
++concurrency:
++  group: ios-build-${{ github.event.pull_request.number || github.ref }}
++  cancel-in-progress: true
++
+ jobs:
+   ios-simulator-build:
+     name: Build iOS Simulator App
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,66 @@
+From 197a6bbd9c4ee6efd64843246aba4421d4c07570 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 15:24:28 +0530
+Subject: [PATCH] fix(shell): restrict tennis-draft recovery, derive nav label,
+ assert Clerk hit area
+
+Review nits on #119:
+- Tennis quick-match recovery used any tennisDraft.sport, so corrupt storage could
+  redirect to /<other-sport>/quick/live. Restrict to sport === 'tennis' (its own key).
+- Bottom-nav account item hardcoded "Account"; use the derived accountLabel so it
+  reads "Sign in" when unauthenticated (matches header/mobile sheet).
+- Strengthen the touch-target test to assert Clerk's own .cl-userButtonTrigger/Box
+  are sized to 44px (the real hit area), not just that a 44px rule exists.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ src/designs/design1-mono/AppEntryRoute.test.jsx | 6 ++++--
+ src/designs/design1-mono/index.jsx              | 8 +++++---
+ 2 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/src/designs/design1-mono/AppEntryRoute.test.jsx b/src/designs/design1-mono/AppEntryRoute.test.jsx
+index 3d40c60..66bf1a1 100644
+--- a/src/designs/design1-mono/AppEntryRoute.test.jsx
++++ b/src/designs/design1-mono/AppEntryRoute.test.jsx
+@@ -352,8 +352,10 @@ describe('app entry route contract', () => {
+       .map((style) => style.textContent)
+       .join('\n');
+     expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
+-    // Tap targets meet the >=44px accessibility bar (no leftover 24px controls).
+-    expect(navStyles).toContain('min-height: 44px;');
++    // Tap targets meet the >=44px bar — assert Clerk's OWN trigger/avatar box (the
++    // real hit area) is sized to 44px, not just that a 44px rule exists somewhere.
++    expect(navStyles).toContain('.global-bottom-nav-account-control .cl-userButtonTrigger');
++    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 44px;[^}]*height: 44px;/);
+     expect(navStyles).not.toContain('min-height: 24px;');
+   });
+ 
+diff --git a/src/designs/design1-mono/index.jsx b/src/designs/design1-mono/index.jsx
+index 7f44e6d..04595ba 100644
+--- a/src/designs/design1-mono/index.jsx
++++ b/src/designs/design1-mono/index.jsx
+@@ -229,8 +229,10 @@ export function resolveGameResumePath(id) {
+ 
+   // Tennis quick matches persist into their own per-id draft key.
+   const tennisDraft = loadData(getTennisQuickDraftKey(id), null);
+-  if (tennisDraft && tennisDraft.status !== 'completed' && getSportById(tennisDraft.sport)) {
+-    return `/${tennisDraft.sport}/quick/live/${id}`;
++  // This is the tennis-specific draft key, so only recover an actual tennis draft —
++  // stale/corrupt storage with another sport must not redirect to /<sport>/quick/live.
++  if (tennisDraft && tennisDraft.status !== 'completed' && tennisDraft.sport === 'tennis') {
++    return `/tennis/quick/live/${id}`;
+   }
+ 
+   return null;
+@@ -759,7 +761,7 @@ function GlobalNavigation({ requestScoringExit }) {
+     cloudAuthAvailable
+       ? {
+         tab: accountTab,
+-        label: 'Account',
++        label: accountLabel,
+         path: accountPath,
+         icon: 'account',
+       }
+-- 
+2.51.0.windows.1
+

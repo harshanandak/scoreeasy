@@ -1,0 +1,203 @@
+From a37a2b060d984add8f9c7be412ee898e403afd4a Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 12:56:12 +0530
+Subject: [PATCH] fix(shell): paint account tab active on /profile with >=44px
+ tap target
+
+The mobile bottom-nav account tab never painted active on /profile: the
+active rule only matched .global-bottom-nav-item[aria-current=page], but
+the account cell uses .global-bottom-nav-account-cell and its interactive
+control is the Clerk button (which cannot carry aria-current). Drive the
+cue from the cell's is-active state (+ aria-current for assistive tech) so
+both the Clerk-mounted and loading-fallback paths paint active.
+
+Restore >=44px tap targets for the account cell: the control wrapper, the
+fallback button, and Clerk's own avatar trigger were ~24px, below the
+accessibility bar. The cell now fills its grid track.
+
+Tests: assert the account cell carries the active cue on /profile (Clerk
+mounted and while loading) and that tap targets are >=44px.
+
+Refs #104
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../design1-mono/AppEntryRoute.test.jsx       | 61 ++++++++++++++++++-
+ src/designs/design1-mono/index.jsx            | 50 ++++++++++++---
+ 2 files changed, 101 insertions(+), 10 deletions(-)
+
+diff --git a/src/designs/design1-mono/AppEntryRoute.test.jsx b/src/designs/design1-mono/AppEntryRoute.test.jsx
+index b2023f2..3d40c60 100644
+--- a/src/designs/design1-mono/AppEntryRoute.test.jsx
++++ b/src/designs/design1-mono/AppEntryRoute.test.jsx
+@@ -318,10 +318,69 @@ describe('app entry route contract', () => {
+     const navStyles = Array.from(container.querySelectorAll('style'))
+       .map((style) => style.textContent)
+       .join('\n');
+-    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"] {\n            background: var(--se-color-action);');
++    expect(navStyles).toContain('.global-bottom-nav-item[aria-current="page"]');
++    expect(navStyles).toContain('background: var(--se-color-action);');
+     expect(navStyles).not.toContain('var(--se-color-action-soft)');
+   });
+ 
++  it('paints the account tab active on the profile route with a >=44px tap target', async () => {
++    authState = {
++      ...authState,
++      authMode: 'cloud',
++      cloudAuthAvailable: true,
++      isAuthenticated: true,
++      user: { username: 'harsha' },
++    };
++    const { container } = renderApp('/profile');
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
++    });
++
++    const appNav = container.querySelector('.global-bottom-nav');
++    // With Clerk mounted, the interactive control is the Clerk account button,
++    // so the active cue must live on the account CELL (not the fallback button,
++    // which only renders while Clerk is loading).
++    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
++    expect(accountCell).not.toBeNull();
++    expect(accountCell).toHaveClass('is-active');
++    expect(accountCell).toHaveAttribute('aria-current', 'page');
++
++    // The active cue is driven by the same unified action token as every other
++    // tab, via a selector that includes the account cell.
++    const navStyles = Array.from(container.querySelectorAll('style'))
++      .map((style) => style.textContent)
++      .join('\n');
++    expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
++    // Tap targets meet the >=44px accessibility bar (no leftover 24px controls).
++    expect(navStyles).toContain('min-height: 44px;');
++    expect(navStyles).not.toContain('min-height: 24px;');
++  });
++
++  it('keeps the active cue on the account cell while Clerk is still loading', async () => {
++    authState = {
++      ...authState,
++      authMode: 'cloud',
++      cloudAuthAvailable: true,
++      isAuthenticated: true,
++      user: { username: 'harsha' },
++    };
++    // Clerk chunk not mounted yet -> the cell renders the /profile fallback.
++    renderAuthUserButton = false;
++    const { container } = renderApp('/profile');
++
++    await waitFor(() => {
++      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
++    });
++
++    const appNav = container.querySelector('.global-bottom-nav');
++    const accountCell = appNav.querySelector('.global-bottom-nav-account-cell');
++    expect(accountCell).toHaveClass('is-active');
++    // The loading fallback also exposes the active cue for assistive tech.
++    const fallback = within(appNav).getByRole('button', { name: 'Account', hidden: true });
++    expect(fallback).toHaveAttribute('aria-current', 'page');
++  });
++
+   it('keeps the nav shell mounted around the lazy route boundary', async () => {
+     const { container } = renderApp('/app');
+ 
+diff --git a/src/designs/design1-mono/index.jsx b/src/designs/design1-mono/index.jsx
+index 9691d9b..7f44e6d 100644
+--- a/src/designs/design1-mono/index.jsx
++++ b/src/designs/design1-mono/index.jsx
+@@ -602,7 +602,15 @@ function BottomNavAccountCell({ item, active, onNavigate }) {
+   }, []);
+ 
+   return (
+-    <div className="global-bottom-nav-account-cell">
++    // The active "you are here" cue lives on the CELL, not just the fallback
++    // button: when Clerk has mounted, the interactive control is the Clerk
++    // account button (which we cannot decorate with aria-current), so the cell
++    // carries the active state for both the loaded and loading paths. Mirror it
++    // onto `aria-current` so the cue is exposed to assistive tech too.
++    <div
++      className={`global-bottom-nav-account-cell${active ? ' is-active' : ''}`}
++      aria-current={active ? 'page' : undefined}
++    >
+       <span
+         ref={controlRef}
+         className={`global-bottom-nav-account-control${clerkReady ? ' is-ready' : ''}`}
+@@ -1381,7 +1389,9 @@ function GlobalNavigation({ requestScoringExit }) {
+           }
+ 
+           /* Account cell: one stacked control (Clerk button or fallback) plus a
+-             non-interactive label, laid out to match the other tabs. */
++             non-interactive label, laid out to match the other tabs. The cell
++             itself fills the grid track and carries the active cue + a >=44px
++             tap target (the control/fallback stretch to fill it). */
+           .global-bottom-nav-account-cell {
+             display: flex;
+             align-items: center;
+@@ -1389,7 +1399,9 @@ function GlobalNavigation({ requestScoringExit }) {
+             flex-direction: column;
+             gap: 3px;
+             min-height: 54px;
++            width: 100%;
+             min-width: 0;
++            border-radius: 10px;
+             color: var(--se-color-ink-muted);
+           }
+ 
+@@ -1397,8 +1409,23 @@ function GlobalNavigation({ requestScoringExit }) {
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+-            width: 24px;
+-            height: 24px;
++            min-width: 44px;
++            min-height: 44px;
++          }
++
++          /* Clerk renders its own avatar trigger inside the control wrapper.
++             Sizing only the wrapper leaves the real hit area (Clerk's avatar
++             button) at ~24px, so we expand Clerk's own trigger/avatar box to
++             the 44px target as well. */
++          .global-bottom-nav-account-control .cl-userButtonTrigger,
++          .global-bottom-nav-account-control .cl-userButtonBox {
++            width: 44px;
++            height: 44px;
++          }
++
++          .global-bottom-nav-account-control .cl-userButtonAvatarBox {
++            width: 36px;
++            height: 36px;
+           }
+ 
+           .global-bottom-nav-account-fallback {
+@@ -1406,7 +1433,7 @@ function GlobalNavigation({ requestScoringExit }) {
+             align-items: center;
+             justify-content: center;
+             width: 100%;
+-            min-height: 24px;
++            min-height: 44px;
+             border: 0;
+             border-radius: 10px;
+             background: transparent;
+@@ -1415,10 +1442,15 @@ function GlobalNavigation({ requestScoringExit }) {
+           }
+ 
+           /* Unified active treatment: every nav surface (header link, mobile
+-             sheet item, bottom-nav item) paints the active tab with the same
+-             solid action fill + inverse ink, so the "you are here" cue is
+-             consistent across the shell. */
+-          .global-bottom-nav-item[aria-current="page"] {
++             sheet item, bottom-nav item, account cell) paints the active tab
++             with the same solid action fill + inverse ink, so the "you are
++             here" cue is consistent across the shell. The account cell needs
++             its own selector because its interactive control is the Clerk
++             button (no aria-current of its own) rather than a
++             .global-bottom-nav-item, so the cue is driven by the cell's
++             is-active state. */
++          .global-bottom-nav-item[aria-current="page"],
++          .global-bottom-nav-account-cell.is-active {
+             background: var(--se-color-action);
+             color: var(--se-color-inverse);
+           }
+-- 
+2.51.0.windows.1
+

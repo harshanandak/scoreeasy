@@ -1,0 +1,333 @@
+From df042872da638d886a23b5534d9f4ea7e8cbfc19 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 21:20:54 +0530
+Subject: [PATCH] fix(live): label serve switches & corrections in the
+ spectator feed
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Serve switches (side-out) and per-team corrections were broadcast through
+point() as type:"point" with value 0 / -1, so the spectator feed rendered
+nonsensical "Beta +0" / "Alpha +-1" rows. The scorer already tagged these
+intents (kind:'serve'/'correction') but the broadcast dispatch dropped the tag.
+
+Thread the event type end to end and render it:
+- convex scorePoint: optional `type` arg (restricted to point|serve_change|
+  correction), default "point"; runningA/runningB stay snapshot-authoritative
+  and independent of type.
+- useLiveBroadcast.point(): accepts/forwards `type` through the outbox; queued
+  items without it default to point.
+- MonoSetsLiveScore: dispatch maps intent.kind -> event type.
+- MonoWatchMatch feed: serve_change -> "Serve -> {server}", correction ->
+  "Correction · {team} -N"; point branch unchanged.
+
+Pure labeling change: for an identical tap sequence the stored running totals
+and reduced score are byte-identical (serve_change is a reduce no-op, correction
+is the same signed adjustment value:-1 already was, score patches from snapshot).
+
+Note: undo's target-scan still keys on type:"point" so it skips these events;
+score stays correct (these occur only in snapshot-authoritative sports and undo
+patches from the snapshot), only the compensating event's reversesSeq audit
+metadata can reference the prior point. Cricket wickets (value:0 points) keep
+"+0" — a separate cricket-specific concern.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ convex/live.test.ts                           | 38 +++++++++++++++++++
+ convex/live.ts                                | 14 ++++++-
+ src/designs/design1-mono/MonoWatchMatch.jsx   | 17 ++++++---
+ .../design1-mono/MonoWatchMatch.test.jsx      | 26 +++++++++++++
+ .../scoring/MonoSetsLiveScore.jsx             | 12 +++++-
+ .../scoring/MonoSetsLiveScore.test.jsx        |  5 ++-
+ src/hooks/useLiveBroadcast.js                 | 11 ++++--
+ src/hooks/useLiveBroadcast.test.js            | 22 +++++++++++
+ 8 files changed, 133 insertions(+), 12 deletions(-)
+
+diff --git a/convex/live.test.ts b/convex/live.test.ts
+index 0cb9e25..12ef708 100644
+--- a/convex/live.test.ts
++++ b/convex/live.test.ts
+@@ -121,6 +121,44 @@ describe("live.scorePoint", () => {
+     expect(snap?.lastSeq).toBe(2);
+   });
+ 
++  test("tags serve_change / correction events without disturbing the score", async () => {
++    const t = newClient();
++    await seedUser(t, "owner|1");
++    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
++    const { matchId, token } = await asOwner.mutation(api.live.create, {
++      sport: "volleyball",
++      scorecardKind: "volleyball",
++      ...TEAMS,
++      clientMatchId: "cm-types",
++    });
++
++    // No `type` arg → defaults to "point".
++    const p = await asOwner.mutation(api.live.scorePoint, {
++      matchId, clientEventId: "p1", team: "A", at: 1000,
++    });
++    expect(p!.type).toBe("point");
++    expect(p!.runningA).toBe(1);
++
++    // Serve switch: value 0, tagged serve_change — the score must NOT move.
++    const sc = await asOwner.mutation(api.live.scorePoint, {
++      matchId, clientEventId: "s1", team: "B", value: 0, type: "serve_change", at: 2000,
++    });
++    expect(sc!.type).toBe("serve_change");
++    expect(sc!.runningA).toBe(1);
++    expect(sc!.runningB).toBe(0);
++
++    // Correction: value -1, tagged correction — the score decrements by one.
++    const co = await asOwner.mutation(api.live.scorePoint, {
++      matchId, clientEventId: "c1", team: "A", value: -1, type: "correction", at: 3000,
++    });
++    expect(co!.type).toBe("correction");
++    expect(co!.runningA).toBe(0);
++
++    const snap = await t.query(api.live.getByToken, { token });
++    expect(snap?.pointsA).toBe(0);
++    expect(snap?.pointsB).toBe(0);
++  });
++
+   test("supports a custom point value", async () => {
+     const t = newClient();
+     await seedUser(t, "owner|1");
+diff --git a/convex/live.ts b/convex/live.ts
+index d0d0009..56ac43e 100644
+--- a/convex/live.ts
++++ b/convex/live.ts
+@@ -193,6 +193,14 @@ export const scorePoint = authedMutation({
+     clientEventId: v.string(),
+     team: v.union(v.literal("A"), v.literal("B")),
+     value: v.optional(v.number()),
++    // The kind of scoring event. Restricted to the three a scorer routes through
++    // point(): a plain point, a serve switch (value 0), or a correction
++    // (value < 0). set_end/undo/timeout/note have their own flows and are
++    // intentionally NOT accepted here. Defaults to "point" for older clients and
++    // queued outbox items that predate this field.
++    type: v.optional(
++      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction")),
++    ),
+     at: v.number(),
+     playerId: v.optional(v.string()),
+     snapshot: v.optional(snapshotArgValidator),
+@@ -232,7 +240,11 @@ export const scorePoint = authedMutation({
+       matchId: args.matchId,
+       seq,
+       clientEventId: args.clientEventId,
+-      type: "point",
++      // Label the event by its kind so spectators see "Serve → B" / "Correction"
++      // instead of a nonsensical "+0" / "+-1". This is purely a display label:
++      // runningA/runningB (and the patched score below) are snapshot-authoritative
++      // and independent of `type`, so the reduced score is unchanged.
++      type: args.type ?? "point",
+       team: args.team,
+       value: delta,
+       playerId: args.playerId,
+diff --git a/src/designs/design1-mono/MonoWatchMatch.jsx b/src/designs/design1-mono/MonoWatchMatch.jsx
+index bda0cc6..2ab7cb5 100644
+--- a/src/designs/design1-mono/MonoWatchMatch.jsx
++++ b/src/designs/design1-mono/MonoWatchMatch.jsx
+@@ -345,12 +345,19 @@ function FeedPanel({ events, nameA, nameB, loadMore, canLoadMore }) {
+       <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+         {rows.map((e) => {
+           const team = e.team === 'A' ? nameA : e.team === 'B' ? nameB : null;
++          // servingAfter names the team holding serve once this event settled.
++          const server = e.servingAfter === 'A' ? nameA : e.servingAfter === 'B' ? nameB : null;
+           const description =
+-            e.type === 'point'
+-              ? `${team ?? 'Point'} +${e.value}`
+-              : e.type === 'undo'
+-                ? 'Correction (undo)'
+-                : e.type.replace(/_/g, ' ');
++            e.type === 'serve_change'
++              ? `Serve → ${server ?? team ?? 'next server'}`
++              : e.type === 'correction'
++                // value is the signed adjustment (e.g. -1); show its magnitude.
++                ? `Correction · ${team ?? 'point'} −${Math.abs(Number(e.value) || 0)}`
++                : e.type === 'point'
++                  ? `${team ?? 'Point'} +${e.value}`
++                  : e.type === 'undo'
++                    ? 'Correction (undo)'
++                    : e.type.replace(/_/g, ' ');
+           return (
+             <li
+               key={e.seq}
+diff --git a/src/designs/design1-mono/MonoWatchMatch.test.jsx b/src/designs/design1-mono/MonoWatchMatch.test.jsx
+index bb67ae1..3c2ae24 100644
+--- a/src/designs/design1-mono/MonoWatchMatch.test.jsx
++++ b/src/designs/design1-mono/MonoWatchMatch.test.jsx
+@@ -166,6 +166,32 @@ describe('MonoWatchMatch', () => {
+     expect(within(feed).getAllByText(/Reds|Blues/).length).toBeGreaterThan(0);
+   });
+ 
++  it('labels serve switches and corrections instead of rendering "+0" / "+-1"', () => {
++    mocks.snapshot = VOLLEY_SNAPSHOT;
++    mocks.meta = META;
++    mocks.paginated = {
++      results: [
++        // A correction (value -1) and a serve switch (value 0) must NOT render as
++        // "+-1" / "+0" — they are the exact rows issue spectators saw broken.
++        { seq: 3, type: 'correction', team: 'A', value: -1, runningA: 0, runningB: 1, setsA: 0, setsB: 0, at: 3000 },
++        { seq: 2, type: 'serve_change', team: 'B', value: 0, runningA: 1, runningB: 1, setsA: 0, setsB: 0, servingAfter: 'B', at: 2000 },
++        { seq: 1, type: 'point', team: 'A', value: 1, runningA: 1, runningB: 1, setsA: 0, setsB: 0, at: 1000 },
++      ],
++      status: 'Exhausted',
++      loadMore: vi.fn(),
++      isLoading: false,
++    };
++    renderAt();
++
++    const feed = screen.getByRole('region', { name: 'Commentary feed' });
++    // Serve switch is labelled "Serve → <new server>"; correction names the team.
++    expect(within(feed).getByText(/Serve/)).toBeInTheDocument();
++    expect(within(feed).getByText(/Correction/)).toBeInTheDocument();
++    // The broken labels never appear (the point row is "+1", not "+0").
++    expect(within(feed).queryByText(/\+0/)).not.toBeInTheDocument();
++    expect(within(feed).queryByText(/\+-1/)).not.toBeInTheDocument();
++  });
++
+   it('scorecard (goals) renders the total from the snapshot, no winner mid-match', () => {
+     // Snapshot says 3-2 LIVE; the loaded event page is EMPTY. A correct scorecard
+     // shows the snapshot totals (re-deriving from the partial page would show 0-0)
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+index 1e9befe..15314bd 100644
+--- a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+@@ -425,8 +425,16 @@ export default function MonoSetsLiveScore() {
+     } else {
+       // 'point' (value 1), 'serve' switch (value 0) and 'correction' (value -1)
+       // all flow through the same point() surface; the snapshot carries the
+-      // settled score/serving so spectators stay in lockstep with undo.
+-      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
++      // settled score/serving so spectators stay in lockstep with undo. Tag the
++      // EVENT type so the spectator feed labels a serve switch / correction
++      // instead of rendering a meaningless "+0" / "+-1" (the snapshot still
++      // owns the score, so the label changes nothing about the running totals).
++      const broadcastType = intent.kind === 'serve'
++        ? 'serve_change'
++        : intent.kind === 'correction'
++          ? 'correction'
++          : 'point';
++      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, type: broadcastType, at: intent.at, snapshot });
+     }
+   }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
+ 
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+index 6dd97f0..216f702 100644
+--- a/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+@@ -158,11 +158,13 @@ describe('MonoSetsLiveScore — issue #108', () => {
+     const [, right] = arenaButtons();
+     fireEvent.click(right);
+ 
+-    // A serve switch broadcasts a value:0 point for team B.
++    // A serve switch broadcasts a value:0 event TAGGED serve_change (so the
++    // spectator feed labels it "Serve → …" instead of a meaningless "+0").
+     expect(broadcast.point).toHaveBeenCalledTimes(1);
+     const arg = broadcast.point.mock.calls[0][0];
+     expect(arg.team).toBe('B');
+     expect(arg.value).toBe(0);
++    expect(arg.type).toBe('serve_change');
+     // Score did NOT change.
+     expect(arg.snapshot.pointsA).toBe(0);
+     expect(arg.snapshot.pointsB).toBe(0);
+@@ -191,6 +193,7 @@ describe('MonoSetsLiveScore — issue #108', () => {
+     const correctionCall = broadcast.point.mock.calls.find((c) => c[0].value === -1);
+     expect(correctionCall).toBeTruthy();
+     expect(correctionCall[0].team).toBe('A');
++    expect(correctionCall[0].type).toBe('correction');
+     expect(correctionCall[0].snapshot.pointsA).toBe(0);
+ 
+     // At 0 the button is disabled (floors at 0, no negative scores).
+diff --git a/src/hooks/useLiveBroadcast.js b/src/hooks/useLiveBroadcast.js
+index faa8be6..19d1f17 100644
+--- a/src/hooks/useLiveBroadcast.js
++++ b/src/hooks/useLiveBroadcast.js
+@@ -28,7 +28,7 @@ import { loadSession, saveSession } from '../lib/live/liveSession';
+  *   token: string|null,
+  *   error: Error|null,
+  *   goLive: (opts: object) => Promise<{token: string, matchId: string}|null>,
+- *   point: (input: { team: 'A'|'B', value?: number, at: number }) => Promise<unknown>,
++ *   point: (input: { team: 'A'|'B', value?: number, at: number, type?: 'point'|'serve_change'|'correction' }) => Promise<unknown>,
+  *   undo: (input: { at: number }) => Promise<unknown>,
+  *   finalize: () => Promise<unknown>,
+  *   setVisibility: (visibility: 'public'|'unlisted'|'private') => Promise<unknown>,
+@@ -77,6 +77,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
+           clientEventId: item.clientEventId,
+           team: item.team,
+           value: item.value,
++          // Older queued items have no `type`; the mutation defaults it to "point".
++          type: item.type,
+           at: item.at,
+           snapshot: item.snapshot,
+         });
+@@ -154,14 +156,17 @@ export function useLiveBroadcast({ enabled = true } = {}) {
+   );
+ 
+   const point = useCallback(
+-    ({ team, value = 1, at, snapshot }) => {
++    ({ team, value = 1, at, snapshot, type = 'point' }) => {
+       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
+       seqRef.current += 1;
+       const clientMatchId = clientMatchIdRef.current;
+       const clientEventId = `${clientMatchId}:${seqRef.current}`;
+       // snapshot (engine-derived sets/serving/period for non-flat sports) + the
+       // owning clientMatchId travel WITH the event through the outbox to the mutation.
+-      enqueue({ kind: 'point', team, value, at, snapshot, clientMatchId, clientEventId });
++      // `kind` stays 'point' (the outbox routing discriminator vs 'undo'); `type` is
++      // the public EVENT type (point | serve_change | correction) the spectator feed
++      // labels by. Both ride along so a queued event keeps its label while offline.
++      enqueue({ kind: 'point', type, team, value, at, snapshot, clientMatchId, clientEventId });
+       persistSeq(seqRef.current);
+       return flush();
+     },
+diff --git a/src/hooks/useLiveBroadcast.test.js b/src/hooks/useLiveBroadcast.test.js
+index f1bd9e7..1b7955e 100644
+--- a/src/hooks/useLiveBroadcast.test.js
++++ b/src/hooks/useLiveBroadcast.test.js
+@@ -97,11 +97,32 @@ describe('useLiveBroadcast', () => {
+       clientEventId: 'cm1:1',
+       team: 'A',
+       value: 1,
++      type: 'point',
+       at: 1000,
+     });
+     expect(load()).toEqual([]);
+   });
+ 
++  it('point() forwards the event type (serve_change / correction) to scorePoint', async () => {
++    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
++    h.get('live:scorePoint').mockResolvedValue({});
++    const { result } = setup();
++
++    await act(async () => {
++      await result.current.goLive(GO);
++    });
++    await act(async () => {
++      await result.current.point({ team: 'B', value: 0, at: 1000, type: 'serve_change' });
++    });
++    await act(async () => {
++      await result.current.point({ team: 'A', value: -1, at: 2000, type: 'correction' });
++    });
++
++    const calls = h.spies['live:scorePoint'].mock.calls.map((c) => c[0]);
++    expect(calls[0]).toMatchObject({ team: 'B', value: 0, type: 'serve_change' });
++    expect(calls[1]).toMatchObject({ team: 'A', value: -1, type: 'correction' });
++  });
++
+   it('keeps the event queued and never throws when the push fails (local scoring unaffected)', async () => {
+     h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+     h.get('live:scorePoint').mockRejectedValue(new Error('offline'));
+@@ -226,6 +247,7 @@ describe('useLiveBroadcast', () => {
+       clientEventId: 'cm1:2',
+       team: 'B',
+       value: 1,
++      type: 'point',
+       at: 2,
+     });
+   });
+-- 
+2.51.0.windows.1
+

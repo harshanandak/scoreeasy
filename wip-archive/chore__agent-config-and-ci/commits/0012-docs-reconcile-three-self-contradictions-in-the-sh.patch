@@ -1,0 +1,180 @@
+From 38f6d485689684cc1aba1abeecffaea2b5254d36 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 13:10:19 +0530
+Subject: [PATCH] docs: reconcile three self-contradictions in the shipping
+ rules
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- AGENTS.md listed three must-fix classes (secrets, injection, broken build)
+  while review.md added a fourth for inaccurate documentation. The fourth is
+  the intended rule — a doc promising an enforcement or command that does not
+  exist makes future agents stop checking, which is most of what this PR is
+  fixing — so AGENTS.md now states it and review.md matches. Everything else
+  valid is still filed, not built.
+- ship.md marked the beads issue done in Step 3, before the push and before
+  gh pr create. A failure in either left an issue completed with no PR, and
+  /ship's own entry gate then refuses the retry because it wants in_progress.
+  Moved to after PR creation, with an explicit restore-on-failure line.
+- premerge.md's exit gate said "Do NOT suggest merging" while Step 5 requires
+  asking the user to squash-and-merge, so every successful run had to break
+  one or the other. The gate now forbids executing a merge and explicitly
+  requires the handoff.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/premerge.md    |  8 +++++---
+ .claude/commands/ship.md        | 24 ++++++++++++++++--------
+ .clinerules                     |  2 +-
+ .cursor/rules/project.mdc       |  2 +-
+ .cursorrules                    |  2 +-
+ .github/copilot-instructions.md |  2 +-
+ .roorules                       |  2 +-
+ AGENTS.md                       |  2 +-
+ 8 files changed, 27 insertions(+), 17 deletions(-)
+
+diff --git a/.claude/commands/premerge.md b/.claude/commands/premerge.md
+index 1df8444..3a952ce 100644
+--- a/.claude/commands/premerge.md
++++ b/.claude/commands/premerge.md
+@@ -137,9 +137,11 @@ carries a summary.
+ 
+ ```
+ <HARD-GATE: /premerge exit>
+-Do NOT run gh pr merge.
+-Do NOT suggest merging.
+-/premerge ends here. Output the PR URL and status. Wait for user.
++Do NOT run gh pr merge, or any other command that merges the PR. Merging is the
++user's action, in the GitHub UI, always.
++DO hand off: output the PR URL and status and ask the user to squash-and-merge.
++Asking is the point of this command; doing it yourself is the violation.
++/premerge ends here. Wait for user.
+ 
+ "After you merge, run /verify to confirm everything landed correctly."
+ </HARD-GATE>
+diff --git a/.claude/commands/ship.md b/.claude/commands/ship.md
+index 005fdb3..e6a2073 100644
+--- a/.claude/commands/ship.md
++++ b/.claude/commands/ship.md
+@@ -63,13 +63,7 @@ If conflicts are reported:
+ - If `rebase`: rebase onto `origin/$BASE`, re-run `/validate`, then return here
+ - If `proceed`: log the override via `forge issue comment <id> "Ship override: creating PR despite merge conflicts"`, then continue
+ 
+-### Step 3: Update Beads
+-```bash
+-bd update <id> --status done
+-bd sync
+-```
+-
+-### Step 4: Push Branch
++### Step 3: Push Branch
+ 
+ Use `--force-with-lease` because `/validate` may have rebased the branch, rewriting history. This is safe: it only forces the push if the remote branch hasn't been updated by someone else since the last fetch.
+ 
+@@ -150,7 +144,21 @@ Rules for the PR body:
+ - **Check applicable checkboxes** — `[x]` for items that apply, `[ ]` for items that don't
+ - **Include "Closes beads-xxx"** in the Beads section (required for auto-close in /verify)
+ 
+-### Step 6: Record Stage Transition
++### Step 6: Update Beads — only now that the PR exists
++
++Do this **after** `gh pr create` succeeds, never before the push. If the push or the
++PR creation fails and the issue is already `done`, no PR exists, and re-running
++`/ship` is refused by its own entry gate, which requires `in_progress`.
++
++```bash
++bd update <id> --status done
++bd sync
++```
++
++If a later step fails after this point, put it back with
++`bd update <id> --status in_progress` before you stop.
++
++### Step 7: Record Stage Transition
+ ```bash
+ forge issue comment <id> "stage: ship -> review
+ summary: <PR created, checks pending>
+diff --git a/.clinerules b/.clinerules
+index f6a5565..1cc7227 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -64,7 +64,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index de5b5db..b1c30eb 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -67,7 +67,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+diff --git a/.cursorrules b/.cursorrules
+index f6a5565..1cc7227 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -64,7 +64,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 8b95de0..1d087a8 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -62,7 +62,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+diff --git a/.roorules b/.roorules
+index f6a5565..1cc7227 100644
+--- a/.roorules
++++ b/.roorules
+@@ -64,7 +64,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+diff --git a/AGENTS.md b/AGENTS.md
+index 5c1e52e..b036f84 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -59,7 +59,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a
+ 
+ - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+ - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
+-- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
+ - **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+ 
+ ## Non-interactive shell
+-- 
+2.51.0.windows.1
+

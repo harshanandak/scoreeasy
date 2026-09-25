@@ -1,0 +1,112 @@
+From acb4082134c4d9785263e2ee9cc82f83338d0df8 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 23:22:12 +0530
+Subject: [PATCH] feat(quick-match): enforce match end when a timed goals match
+ runs out (#106)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Previously "Time's up!" was cosmetic — scoring continued and the match never
+ended. Now: addGoal hard-returns when isTimeUp (load-bearing guard), the goals
+half + quick buttons are disabled, and a one-shot effect pauses the clock and
+opens the end prompt when time first hits zero. The prompt reuses the normal end
+flow, so a no-draw sport still blocks ending on a tie. Scoring stays locked even
+if the prompt is dismissed, so the match can't drift past full time.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../MonoQuickMatch.hardening.test.jsx         | 22 +++++++++++++++++++
+ src/designs/design1-mono/MonoQuickMatch.jsx   | 22 ++++++++++++++++++-
+ 2 files changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+index 9847842..4ba1b62 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+@@ -109,6 +109,28 @@ describe('MonoQuickMatch hardening (#106)', () => {
+     expect(screen.queryByText(/win by 2/)).not.toBeInTheDocument();
+   });
+ 
++  it('locks scoring and prompts to end when a timed goals match runs out', async () => {
++    // Seed a timed match restored exactly at its limit (timerElapsed === timeLimit,
++    // no updatedAt so elapsed isn't advanced) → isTimeUp is true on mount.
++    ctx.sport = 'football';
++    ctx.draft = {
++      ...base,
++      sport: 'football',
++      quickMatchId: 4004,
++      gScore1: 1,
++      gScore2: 0,
++      gScoreHistory: [{ team: 1, value: 1 }],
++      format: { mode: 'timed', timeLimit: 60 },
++      timerElapsed: 60,
++    };
++    render(<MonoQuickMatch />);
++
++    // The end prompt appears automatically once time is up.
++    expect(await screen.findByRole('dialog', { name: /End match/i })).toBeInTheDocument();
++    // Scoring is locked: the half control is disabled.
++    expect(screen.getByRole('button', { name: 'Add 1 to Reds' })).toBeDisabled();
++  });
++
+   it('announces the last scoring action in an aria-live region inside the scorer', () => {
+     seedVolleyball({ lastAction: 'Reds +1' });
+     render(<MonoQuickMatch />);
+diff --git a/src/designs/design1-mono/MonoQuickMatch.jsx b/src/designs/design1-mono/MonoQuickMatch.jsx
+index fb7b11e..093910f 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.jsx
+@@ -735,6 +735,22 @@ export default function MonoQuickMatch() {
+   const isTimeUp = isTimedMode && remainingSeconds === 0;
+   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
+ 
++  // Timed mode: when the clock first reaches zero, pause and prompt to end — ONCE
++  // (a ref one-shot, reset whenever the clock isn't up, e.g. a new match). The
++  // prompt reuses the normal end flow, which still blocks ending on a no-draw tie.
++  // Scoring stays locked after time's up regardless of whether the prompt is
++  // dismissed (addGoal guard + disabled controls), so the match can't drift on.
++  const timeUpPromptedRef = useRef(false);
++  useEffect(() => {
++    if (isTimeUp && !timeUpPromptedRef.current) {
++      timeUpPromptedRef.current = true;
++      timer.pause();
++      setShowEndConfirm(true);
++    } else if (!isTimeUp) {
++      timeUpPromptedRef.current = false;
++    }
++  }, [isTimeUp]);
++
+   // Live broadcast descriptor (shared across all three sport branches). clientMatchId
+   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
+   const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
+@@ -1439,6 +1455,9 @@ export default function MonoQuickMatch() {
+ 
+   // Goals: Add score for a team
+   const addGoal = (team, value = 1) => {
++    // Timed mode: once the clock hits zero scoring is locked. This is the
++    // load-bearing guard; the render also disables the controls (defense in depth).
++    if (isTimeUp) return;
+     const now = Date.now();
+     if (now - lastClickRef.current < 150) return;
+     lastClickRef.current = now;
+@@ -2758,6 +2777,7 @@ export default function MonoQuickMatch() {
+                       className="mono-arena-half"
+                       data-leading={h.leading ? 'true' : 'false'}
+                       onClick={() => addGoal(h.team)}
++                      disabled={isTimeUp}
+                       style={{ '--score-accent': h.accent, touchAction: 'manipulation' }}
+                       aria-label={`Add 1 to ${h.name}`}
+                     >
+@@ -2769,7 +2789,7 @@ export default function MonoQuickMatch() {
+                   {hasQuickButtons && (
+                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 8 }}>
+                       {quickButtons.map((btn) => (
+-                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
++                        <button key={`${h.side}-${btn.label}`} onClick={() => addGoal(h.team, btn.value)} disabled={isTimeUp} className="mono-btn font-mono" style={{ padding: '10px 14px', fontSize: '0.8125rem', fontWeight: 800, touchAction: 'manipulation' }}>
+                           {btn.label}
+                         </button>
+                       ))}
+-- 
+2.51.0.windows.1
+

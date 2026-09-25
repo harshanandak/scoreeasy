@@ -1,0 +1,57 @@
+From b4a0bd928f8d731014400a7d76023a7f20d15bca Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 15:15:53 +0530
+Subject: [PATCH] fix(onboarding): correct username-check mismatch + don't skip
+ a touched step
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Review follow-ups on #118 (two Major bugs):
+- The username input stripped only whitespace while the availability check
+  stripped [^a-z0-9_.], so it validated a different string than the user saw.
+  The input now strips the same character class — what's shown is what's checked.
+- The Clerk-init step-skip fired on `hasName && step===0` only, so if clerkUser
+  resolved after the user started typing it yanked them off step 1. It now also
+  requires the name fields to be untouched (!firstName && !lastName).
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ src/designs/design1-mono/MonoOnboarding.jsx | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/designs/design1-mono/MonoOnboarding.jsx b/src/designs/design1-mono/MonoOnboarding.jsx
+index 7e71820..4d33fff 100644
+--- a/src/designs/design1-mono/MonoOnboarding.jsx
++++ b/src/designs/design1-mono/MonoOnboarding.jsx
+@@ -398,7 +398,7 @@ function StepUsername({ username, onChange, onNext, onBack }) {
+           placeholder="username"
+           value={username}
+           onChange={(e) =>
+-            onChange("username", e.target.value.toLowerCase().replaceAll(/\s/g, ""))
++            onChange("username", e.target.value.toLowerCase().replaceAll(/[^a-z0-9_.]/g, ""))
+           }
+           autoComplete="off"
+           maxLength={20}
+@@ -829,14 +829,16 @@ export default function MonoOnboarding() {
+     if (!clerkUser) return;
+     didInitStep.current = true;
+     const hasName = Boolean(clerkUser.firstName || clerkUser.lastName);
+-    if (hasName && step === 0) {
++    // Only auto-skip when the name step is still untouched — if clerkUser resolves
++    // AFTER the user has started typing, don't yank them off the step.
++    if (hasName && step === 0 && !firstName && !lastName) {
+       // Prefill so the resolved name carries through, then jump straight to the
+       // gamertag step without the slide animation.
+       if (clerkUser.firstName) setFirstName((prev) => prev || clerkUser.firstName);
+       if (clerkUser.lastName) setLastName((prev) => prev || clerkUser.lastName);
+       setStep(1);
+     }
+-  }, [clerkUser, isLoading, step]);
++  }, [clerkUser, isLoading, step, firstName, lastName]);
+ 
+   // --- Field change handler ---
+   const handleChange = useCallback((field, value) => {
+-- 
+2.51.0.windows.1
+

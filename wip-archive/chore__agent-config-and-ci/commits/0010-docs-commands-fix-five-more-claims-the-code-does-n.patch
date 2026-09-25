@@ -1,0 +1,336 @@
+From 805d3855867dee4a9046d3a79f2f0b1f6a2ac847 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 12:58:05 +0530
+Subject: [PATCH] docs(commands): fix five more claims the code does not back
+
+- validate.md hard gate demanded "0 errors, 0 warnings". Lint reports 28
+  warnings / 0 errors by design (explicit-table-ids and two Convex rules are
+  configured warn), so /validate could never exit. Gate on exit 0 and zero
+  errors; treat warnings as a named baseline that must not grow.
+- validate.md told the agent to run `npm audit`. This repo has only bun.lock,
+  so that exits ENOLOCK and invites a stray package-lock.json. Use `bun audit`.
+- forge-workflow.md claimed pre-commit blocks source changes without tests.
+  lefthook.yml runs lint, type-check and sync:agents --check, nothing else.
+  Say what the hooks actually do.
+- forge-workflow.md ordered the Docs workflow as verify -> ship. /verify is a
+  post-merge check that needs a merged PR, so that order cannot run. It is
+  validate -> ship.
+- plan.md sent the user to `/plan <slug> --continue` after the proposal PR, but
+  the entry gate rejects every non-master branch and would otherwise re-create
+  the existing worktree. Handle --continue before the gate and resume in place.
+- ship.md's fallback PR body is the only one this repo ever uses (no template
+  exists) and had no slot for the demo or acceptance checklist that AGENTS.md
+  makes the merge artifact. Added both.
+
+Harness mirrors regenerated with `bun run sync:agents`.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/plan.md        | 12 +++++++++++-
+ .claude/commands/ship.md        | 17 +++++++++++++++--
+ .claude/commands/validate.md    | 10 +++++++---
+ .clinerules                     | 15 +++++++--------
+ .cursor/rules/project.mdc       | 15 +++++++--------
+ .cursorrules                    | 15 +++++++--------
+ .github/copilot-instructions.md | 15 +++++++--------
+ .roorules                       | 15 +++++++--------
+ docs/agents/forge-workflow.md   | 15 +++++++--------
+ 9 files changed, 75 insertions(+), 54 deletions(-)
+
+diff --git a/.claude/commands/plan.md b/.claude/commands/plan.md
+index e8d84c9..8c93ecf 100644
+--- a/.claude/commands/plan.md
++++ b/.claude/commands/plan.md
+@@ -14,6 +14,12 @@ This command runs in **3 phases**. Each phase ends with a HARD-GATE. Do not skip
+ <HARD-GATE: /plan entry — worktree isolation>
+ Before ANY planning work begins:
+ 
++0. If invoked as `/plan <slug> --continue`, this gate does NOT apply. The worktree
++   already exists from the first run. Resume it instead of building a new one:
++   a. cd .worktrees/<slug>   (if it is gone: bd worktree create .worktrees/<slug> --branch feat/<slug>)
++   b. git checkout feat/<slug>   — the proposal branch was a detour; Phase 2+3 run on the feature branch
++   c. git pull --rebase origin master   — pick up the merged proposal
++   d. Skip to Phase 2. Do not re-run steps 1-5 and do not re-create the branch or the epic.
+ 1. Run: git branch --show-current
+ 2. If the current branch is NOT master/main:
+    - STOP. Do not begin Phase 1.
+@@ -161,7 +167,11 @@ gh pr create --title "Design: <feature-name>" \
+ ```
+ 
+ **STOP here.** Present the PR URL. Wait for the user to merge the proposal PR.
+-After merge, run `/plan <slug> --continue` to proceed to Phase 2 + 3.
++
++After merge, run `/plan <slug> --continue` **from inside `.worktrees/<slug>`**. Step 0
++of the entry gate handles it: it switches back off `feat/<slug>-proposal` onto
++`feat/<slug>`, rebases on master, and resumes at Phase 2 without re-creating the
++worktree, branch, or epic.
+ 
+ ---
+ 
+diff --git a/.claude/commands/ship.md b/.claude/commands/ship.md
+index 082e7da..005fdb3 100644
+--- a/.claude/commands/ship.md
++++ b/.claude/commands/ship.md
+@@ -108,10 +108,23 @@ If a PR template exists:
+ 3. **Do NOT remove any sections** — fill them all, even if "N/A"
+ 4. **Do NOT restructure the template** — keep the project's chosen format
+ 
+-If no PR template exists, use this minimal fallback:
++There is no PR template in this repo today, so this fallback is what every `/ship`
++actually uses. It carries the merge artifact AGENTS.md requires — a phone-viewport
++demo plus the acceptance checklist walked item by item. **Do not open the PR with
++either of those two sections empty** for feature work; for a docs-only or tooling PR,
++write "N/A — no user-visible surface" and say why.
++
+ ```
+ ## Summary
+-[1-3 sentences: what this PR does and why]
++[Lead with the problem, then the change — 1-3 sentences]
++
++## Demo
++[Recording or screenshots of the change on a phone viewport. Required for anything
++user-visible. N/A only for docs/tooling, with a reason.]
++
++## Acceptance checklist
++[Every state and transition the plan named, including undo and the reverse path,
++each one ticked and walked out loud. Completeness gates the merge, size does not.]
+ 
+ ## Changes
+ [Bulleted list of key changes]
+diff --git a/.claude/commands/validate.md b/.claude/commands/validate.md
+index a0ce7fa..101956e 100644
+--- a/.claude/commands/validate.md
++++ b/.claude/commands/validate.md
+@@ -111,8 +111,9 @@ bun run lint    # or: npm run lint, eslint ., etc.
+ 
+ **Automated Security Scan**:
+ ```bash
+-# Run your project's security scan
+-npm audit    # or: bun audit, snyk test, etc.
++# This project is bun-only — there is no package-lock.json, so `npm audit`
++# exits ENOLOCK and will try to talk you into creating one. Don't.
++bun audit
+ ```
+ 
+ **Manual Review**:
+@@ -221,7 +222,10 @@ Do NOT output any variation of "check complete", "ready to ship", or proceed to
+ until ALL FOUR show fresh output in this session:
+ 
+ 1. Type check: [command run] → [actual output] → exit 0 confirmed
+-2. Lint: [command run] → [actual output] → 0 errors, 0 warnings confirmed
++2. Lint: [command run] → [actual output] → exit 0 and 0 errors confirmed.
++   Warnings are a known baseline (`explicit-table-ids` and two other Convex rules
++   are configured `warn` in eslint.config.js; CODING_STANDARDS.md records why).
++   Do not add new ones — say the count and whether your change moved it.
+ 3. Tests: [command run] → [actual output] → N/N passing confirmed
+ 4. Security scan: [command run] → [actual output] → no critical issues confirmed
+ 
+diff --git a/.clinerules b/.clinerules
+index 526259d..d08a953 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -187,7 +187,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -285,14 +287,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index 5580010..57f7a63 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -190,7 +190,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -288,14 +290,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+diff --git a/.cursorrules b/.cursorrules
+index 526259d..d08a953 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -187,7 +187,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -285,14 +287,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 67eacaf..8982948 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -185,7 +185,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -283,14 +285,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+diff --git a/.roorules b/.roorules
+index 526259d..d08a953 100644
+--- a/.roorules
++++ b/.roorules
+@@ -187,7 +187,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -285,14 +287,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+diff --git a/docs/agents/forge-workflow.md b/docs/agents/forge-workflow.md
+index 67e6562..34ea111 100644
+--- a/docs/agents/forge-workflow.md
++++ b/docs/agents/forge-workflow.md
+@@ -44,7 +44,9 @@ When the user requests work, **you MUST automatically classify** the change type
+ ### Docs (Documentation-only workflow)
+ **Triggers:** Documentation updates, README changes, comment improvements
+ **Example:** "Update README", "Add API documentation"
+-**Workflow:** verify → ship
++**Workflow:** validate → ship
++(`/verify` is a *post-merge* health check — it needs a merged PR and switches to the
++base branch, so it can never run before `/ship`.)
+ 
+ ### Refactor (5-stage workflow for safe cleanup)
+ **Triggers:** Code cleanup, performance optimization, technical debt reduction
+@@ -142,14 +144,11 @@ Task 2: Validation logic
+ 
+ ## Git Hooks (Automatic Enforcement)
+ 
+-**Pre-commit hook enforces TDD:**
+-- Blocks commits if source code modified without test files
+-- Offers guided recovery (add tests now, skip with tech debt tracking, emergency override)
+-- No AI decision required - automatic validation
++**Pre-commit hook** (`lefthook.yml`) runs lint, type-check, and `sync:agents --check`.
++It does **not** compare changed source against changed tests — there is no automatic
++TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
+ 
+-**Pre-push hook validates tests:**
+-- All tests must pass before push
+-- Can skip for hotfixes with documentation
++**Pre-push hook** runs the full test suite and the build. Both must pass.
+ 
+ ## Documentation Index (Context Pointers)
+ 
+-- 
+2.51.0.windows.1
+

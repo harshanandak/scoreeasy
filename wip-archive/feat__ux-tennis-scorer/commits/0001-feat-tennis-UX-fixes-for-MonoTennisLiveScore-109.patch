@@ -1,0 +1,514 @@
+From 15d2dee76354343c8ed8c92534f0eb5074c6a58e Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 13:38:31 +0530
+Subject: [PATCH] feat(tennis): UX fixes for MonoTennisLiveScore (#109)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Add a serving indicator (●) derived purely from match state — flips per
+  game and every 2 points in a tiebreak (deriveServer, cumulative parity).
+- Render game/set milestone toasts via React state + an aria-live <output>
+  so they are actually announced (was direct DOM injection, invisible to AT).
+- Add a completed-set history strip, matching MonoSetsLiveScore.
+- Standardize the aria-live region as a polite, atomic <output>; include
+  serving + milestone context.
+- Visually distinguish destructive Discard (mono-btn-danger) from Finish.
+- Guard currentSetData (fallback to a blank set) so a completed/undone set
+  no longer crashes the render.
+- Mirror the derived server into the live-broadcast snapshot (servingTeam),
+  same as the sibling sets scorer — no new mirrored action since serve is a
+  pure function of the score.
+
+Closes #109
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../scoring/MonoTennisLiveScore.jsx           | 162 ++++++++++++++----
+ .../scoring/MonoTennisLiveScore.test.jsx      | 134 +++++++++++++++
+ 2 files changed, 263 insertions(+), 33 deletions(-)
+ create mode 100644 src/designs/design1-mono/scoring/MonoTennisLiveScore.test.jsx
+
+diff --git a/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx b/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx
+index 16636d1..0fd572f 100644
+--- a/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx
++++ b/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx
+@@ -45,22 +45,16 @@ const pointToDisplay = (points) => {
+   return map[points] || points;
+ };
+ 
+-// Show game won notification
+-const showGameWon = (teamName, gameNumber, setNumber) => {
+-  const notification = document.createElement('div');
+-  notification.className = 'mono-set-won mono-set-won-animate';
+-  notification.textContent = `${teamName} wins Game ${gameNumber} (Set ${setNumber})!`;
+-  document.body.appendChild(notification);
+-  setTimeout(() => notification.remove(), 1500);
++// Record a milestone (game/set won) so it can be rendered via React state + an
++// aria-live region and announced — replaces the old direct-DOM injection which
++// was invisible to assistive tech. A set-won supersedes a game-won fired by the
++// same point, so callers overwrite (not append) the collector for that point.
++const recordGameWon = (collect, teamName, gameNumber, setNumber) => {
++  collect?.({ kind: 'game', text: `${teamName} wins Game ${gameNumber} (Set ${setNumber})!` });
+ };
+ 
+-// Show set won notification
+-const showSetWon = (teamName, setNumber) => {
+-  const notification = document.createElement('div');
+-  notification.className = 'mono-set-won mono-set-won-animate';
+-  notification.textContent = `${teamName} wins Set ${setNumber}!`;
+-  document.body.appendChild(notification);
+-  setTimeout(() => notification.remove(), 1500);
++const recordSetWon = (collect, teamName, setNumber) => {
++  collect?.({ kind: 'set', text: `${teamName} wins Set ${setNumber}!` });
+ };
+ 
+ // Build a blank set object
+@@ -126,8 +120,37 @@ const countSetsWon = (completedSets) => {
+   return { team1Sets, team2Sets };
+ };
+ 
++// Derive the serving team (1 or 2) purely from match state. In tennis the server
++// is a deterministic function of the score, so we compute it rather than tracking
++// a separate state variable — this makes undo "just work" and avoids a StrictMode
++// double-toggle. Assumption: team 1 serves the first game of the match.
++//
++// Serve parity is CUMULATIVE across the whole match (not per-set): we sum every
++// game played in all sets up to and including the current one. The tiebreak code
++// awards the winner a 13th deciding game (odd), which correctly flips the
++// first-server into the next set. Regular game: server alternates each game.
++// Tiebreak: the serve changes every 2 points (after the first point).
++export const deriveServer = (sets, currentSet) => {
++  const set = sets[currentSet];
++  if (!set) return 1;
++  let gamesBefore = 0;
++  for (let i = 0; i <= currentSet; i += 1) {
++    const s = sets[i];
++    if (!s) continue;
++    gamesBefore += (s.games1 || 0) + (s.games2 || 0);
++  }
++  const firstServer = gamesBefore % 2 === 0 ? 1 : 2;
++  const other = firstServer === 1 ? 2 : 1;
++  if (set.isTiebreak) {
++    // Points already played in the tiebreak; p = the point about to be served.
++    const p = (set.tiebreakPoints1 || 0) + (set.tiebreakPoints2 || 0) + 1;
++    return Math.floor(p / 2) % 2 === 0 ? firstServer : other;
++  }
++  return firstServer;
++};
++
+ // Apply deuce/advantage logic to a set in-place — extracted to reduce cognitive complexity
+-const applyDeuceLogic = (set, team1Name, team2Name, currentSetNum) => {
++const applyDeuceLogic = (set, team1Name, team2Name, currentSetNum, collect) => {
+   const p1 = set.points1;
+   const p2 = set.points2;
+ 
+@@ -148,7 +171,7 @@ const applyDeuceLogic = (set, team1Name, team2Name, currentSetNum) => {
+     set.isDeuce = false;
+     set.advantage = null;
+     triggerHaptic([50, 100, 50]);
+-    showGameWon(team1Name, set.games1, currentSetNum);
++    recordGameWon(collect, team1Name, set.games1, currentSetNum);
+   } else if (p2 - p1 >= 2) {
+     set.games2++;
+     set.points1 = 0;
+@@ -156,12 +179,12 @@ const applyDeuceLogic = (set, team1Name, team2Name, currentSetNum) => {
+     set.isDeuce = false;
+     set.advantage = null;
+     triggerHaptic([50, 100, 50]);
+-    showGameWon(team2Name, set.games2, currentSetNum);
++    recordGameWon(collect, team2Name, set.games2, currentSetNum);
+   }
+ };
+ 
+ // Apply regular (no-deuce) game win logic to a set in-place
+-const applyRegularGameLogic = (set, team1Name, team2Name, currentSetNum) => {
++const applyRegularGameLogic = (set, team1Name, team2Name, currentSetNum, collect) => {
+   const p1 = set.points1;
+   const p2 = set.points2;
+ 
+@@ -170,18 +193,18 @@ const applyRegularGameLogic = (set, team1Name, team2Name, currentSetNum) => {
+     set.points1 = 0;
+     set.points2 = 0;
+     triggerHaptic([50, 100, 50]);
+-    showGameWon(team1Name, set.games1, currentSetNum);
++    recordGameWon(collect, team1Name, set.games1, currentSetNum);
+   } else if (p2 >= 4 && p2 - p1 >= 2) {
+     set.games2++;
+     set.points1 = 0;
+     set.points2 = 0;
+     triggerHaptic([50, 100, 50]);
+-    showGameWon(team2Name, set.games2, currentSetNum);
++    recordGameWon(collect, team2Name, set.games2, currentSetNum);
+   }
+ };
+ 
+ // Process a tiebreak point and return updated sets + optional next set index
+-const processTiebreakPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn) => {
++const processTiebreakPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn, collect) => {
+   const set = newSets[setIdx];
+   if (team === 1) set.tiebreakPoints1++;
+   else set.tiebreakPoints2++;
+@@ -194,14 +217,14 @@ const processTiebreakPoint = (newSets, setIdx, team, team1Name, team2Name, advan
+     else set.games2 += 1;
+     triggerHaptic([50, 100, 50]);
+     const winner = set.tiebreakPoints1 > set.tiebreakPoints2 ? team1Name : team2Name;
+-    showSetWon(winner, setIdx + 1);
++    recordSetWon(collect, winner, setIdx + 1);
+     advanceFn(setIdx, newSets.length);
+   }
+   return newSets;
+ };
+ 
+ // Process a regular-game point and return updated sets
+-const processRegularPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn) => {
++const processRegularPoint = (newSets, setIdx, team, team1Name, team2Name, advanceFn, collect) => {
+   const set = newSets[setIdx];
+   if (team === 1) set.points1++;
+   else set.points2++;
+@@ -210,9 +233,9 @@ const processRegularPoint = (newSets, setIdx, team, team1Name, team2Name, advanc
+   const p2 = set.points2;
+ 
+   if (p1 >= 3 && p2 >= 3) {
+-    applyDeuceLogic(set, team1Name, team2Name, setIdx + 1);
++    applyDeuceLogic(set, team1Name, team2Name, setIdx + 1, collect);
+   } else if (p1 >= 4 || p2 >= 4) {
+-    applyRegularGameLogic(set, team1Name, team2Name, setIdx + 1);
++    applyRegularGameLogic(set, team1Name, team2Name, setIdx + 1, collect);
+   }
+ 
+   // 6-6 → tiebreak
+@@ -226,7 +249,8 @@ const processRegularPoint = (newSets, setIdx, team, team1Name, team2Name, advanc
+     set.completed = true;
+     triggerHaptic([50, 100, 50]);
+     const winner = set.games1 > set.games2 ? team1Name : team2Name;
+-    showSetWon(winner, setIdx + 1);
++    // A set-won supersedes the game-won the same point may have recorded.
++    recordSetWon(collect, winner, setIdx + 1);
+     advanceFn(setIdx, newSets.length);
+   }
+   return newSets;
+@@ -296,6 +320,13 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+   const [sidesSwapped, setSidesSwapped] = useState(false);
+   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
+   const [saveWarning, setSaveWarning] = useState('');
++  // Milestone toast (game/set won) — rendered via React state into an aria-live
++  // region so it is actually announced (replaces the old direct-DOM injection).
++  // The pending milestone is recorded into a ref inside the setSets updater and
++  // flushed in a post-commit effect (cannot call setState inside an updater).
++  const [milestone, setMilestone] = useState(null);
++  const milestoneRef = useRef(null);
++  const milestoneTimerRef = useRef(null);
+   const scoringPrompt = useAppScoringPrompt();
+ 
+   // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
+@@ -413,6 +444,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+       if (setIdx < totalSets - 1) setCurrentSet(setIdx + 1);
+     };
+ 
++    // Collector overwrites (not appends) so a set-won supersedes the game-won the
++    // same point fires, and the dev StrictMode double-invoke can't duplicate it.
++    const collect = (m) => { milestoneRef.current = m; };
++
+     setSets(prevSets => {
+       const newSets = prevSets.map(s => ({ ...s }));
+       const set = newSets[currentSet];
+@@ -421,9 +456,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+       triggerHaptic([50]);
+ 
+       if (set.isTiebreak) {
+-        return processTiebreakPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn);
++        return processTiebreakPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn, collect);
+       }
+-      return processRegularPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn);
++      return processRegularPoint(newSets, currentSet, team, team1Name, team2Name, advanceFn, collect);
+     });
+ 
+     setHasChanges(true);
+@@ -514,12 +549,18 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+     const completed = sets.filter((s) => s.completed);
+     const { team1Sets, team2Sets } = countSetsWon(completed);
+     const [labelA, labelB] = tennisGameLabels(cur);
++    // Serve change is never a user action in tennis — it's a consequence of a
++    // point, which already fires point()/undo(). So we don't add a serveChange
++    // mirror; we just carry the derived server in the existing snapshot (team1->A),
++    // matching how MonoSetsLiveScore broadcasts servingTeam.
++    const server = deriveServer(sets, currentSet);
+     const snapshot = {
+       pointsA: cur.games1 || 0,
+       pointsB: cur.games2 || 0,
+       setsA: team1Sets,
+       setsB: team2Sets,
+       setScores: completed.map((s) => ({ a: s.games1 || 0, b: s.games2 || 0 })),
++      servingTeam: server === 1 ? 'A' : 'B',
+       currentUnit: currentSet + 1,
+       periodLabel: `${labelA}-${labelB}`,
+     };
+@@ -530,6 +571,22 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+     }
+   }, [sets, currentSet]);
+ 
++  // Flush a pending game/set milestone into React state AFTER the score commits,
++  // so it renders in the aria-live region and is announced. Auto-dismisses after
++  // 1.5s, matching the prior toast lifetime. Cleared on unmount.
++  useEffect(() => {
++    const pending = milestoneRef.current;
++    if (!pending) return;
++    milestoneRef.current = null;
++    setMilestone(pending);
++    if (milestoneTimerRef.current) clearTimeout(milestoneTimerRef.current);
++    milestoneTimerRef.current = setTimeout(() => setMilestone(null), 1500);
++  }, [sets, currentSet]);
++
++  useEffect(() => () => {
++    if (milestoneTimerRef.current) clearTimeout(milestoneTimerRef.current);
++  }, []);
++
+   const saveQuickMatch = () => {
+     const completedAt = new Date().toISOString();
+     const entry = buildTennisQuickHistoryEntry({
+@@ -660,8 +717,17 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+     );
+   }
+ 
+-  const currentSetData = sets[currentSet];
++  // Guard: after a set completes (or an undo rewinds past the array) sets[currentSet]
++  // can be undefined, and the derived display values below destructure it — an
++  // unguarded access crashes the render. Fall back to a blank set so the scorer
++  // stays mounted (the match-complete badge / recovery still applies).
++  const currentSetData = sets[currentSet] || makeBlankSet();
+   const isTiebreakMode = currentSetData?.isTiebreak;
++  // Serving indicator — derived from match state (server is a pure function of the
++  // score in tennis). Flips per game, and every 2 points in a tiebreak.
++  const servingTeam = deriveServer(sets, currentSet);
++  const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
++  const rightServing = sidesSwapped ? servingTeam === 1 : servingTeam === 2;
+   const { team1Sets, team2Sets } = countSetsWon(sets.filter((s) => s.completed));
+   const leftSetsWon = sidesSwapped ? team2Sets : team1Sets;
+   const rightSetsWon = sidesSwapped ? team1Sets : team2Sets;
+@@ -736,10 +802,13 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+         onEnableChange={setLiveEnabled}
+       />
+ 
+-      {/* ARIA live region — S6819: use <output> instead of role="status" div */}
++      {/* ARIA live region — standardized polite/atomic <output> (S6819). Announces
++          the running score, set/serving context, and game/set milestones. */}
+       <output aria-live="polite" aria-atomic="true" className="sr-only">
+         {leftName}: {leftScoreDisplay}. {rightName}: {rightScoreDisplay}.
+         {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}.
++        {' '}Serving: {servingTeam === 1 ? team1Name : team2Name}.
++        {milestone ? ` ${milestone.text}` : ''}
+       </output>
+ 
+       {/* Seam: sets tally + format — matches the arena scorers */}
+@@ -765,7 +834,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+             style={{ '--score-accent': teamAccent(leftPoints, rightPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+           >
+             <span className="mono-arena-overline" style={{ color: teamAccent(leftPoints, rightPoints) }}>
+-              {leftName}
++              {leftServing ? <span aria-hidden="true">● </span> : ''}{leftName}
+             </span>
+             <span
+               key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
+@@ -790,7 +859,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+             style={{ '--score-accent': teamAccent(rightPoints, leftPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
+           >
+             <span className="mono-arena-overline" style={{ color: teamAccent(rightPoints, leftPoints) }}>
+-              {rightName}
++              {rightServing ? <span aria-hidden="true">● </span> : ''}{rightName}
+             </span>
+             <span
+               key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
+@@ -804,6 +873,20 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+         </div>
+       </div>
+ 
++      {/* Completed-set history strip — matches the sets scorer. Shows games per
++          set (tiebreak sets read 7-6 because the winner gets a deciding game). */}
++      {sets.some(s => s.completed) && (
++        <div className="mono-score-history-strip py-4 text-center text-sm mb-6">
++          <div className="flex justify-center gap-3 flex-wrap">
++            {sets.filter(s => s.completed).map((s, i) => (
++              <span key={`completed-set-${i}-${s.games1}-${s.games2}`} className="font-mono">
++                Set {i + 1}: {s.games1}-{s.games2}
++              </span>
++            ))}
++          </div>
++        </div>
++      )}
++
+       {/* Bottom bar — thin line-divided action row to match the arena scorers.
+           Saving is automatic (see the autosave effect); these are manual controls.
+           "Save" keeps/finishes the match; "Discard" deletes this in-progress match. */}
+@@ -825,7 +908,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+           >
+             Swap
+           </button>
+-          <button onClick={handleCancel} className="mono-btn">
++          <button
++            onClick={handleCancel}
++            className="mono-btn mono-btn-danger"
++            style={{ touchAction: 'manipulation' }}
++          >
+             Discard
+           </button>
+           <button
+@@ -839,6 +926,15 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
+         </div>
+       </div>
+       </div>
++
++      {/* Milestone toast (game/set won) — React-rendered (was direct DOM). The
++          announcement itself lives in the polite <output> above; this is the
++          visual counterpart, hidden from AT to avoid a double read. */}
++      {milestone && (
++        <div className="mono-set-won mono-set-won-animate" aria-hidden="true">
++          {milestone.text}
++        </div>
++      )}
+     </div>
+   );
+ }
+diff --git a/src/designs/design1-mono/scoring/MonoTennisLiveScore.test.jsx b/src/designs/design1-mono/scoring/MonoTennisLiveScore.test.jsx
+new file mode 100644
+index 0000000..7a1999f
+--- /dev/null
++++ b/src/designs/design1-mono/scoring/MonoTennisLiveScore.test.jsx
+@@ -0,0 +1,134 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest';
++import { fireEvent, render, screen, act } from '@testing-library/react';
++import { deriveServer } from './MonoTennisLiveScore.jsx';
++
++// Issue #109: tennis scorer UX fixes. These tests cover the pure serve-derivation
++// helper plus the render-level fixes (serving indicator, milestone announcement,
++// completed-set history strip, distinct Discard button, no-crash guard).
++
++const makeSet = (over = {}) => ({
++  games1: 0, games2: 0, points1: 0, points2: 0,
++  isDeuce: false, advantage: null, isTiebreak: false,
++  tiebreakPoints1: 0, tiebreakPoints2: 0, completed: false, ...over,
++});
++
++describe('deriveServer', () => {
++  it('team 1 serves the first game of the match', () => {
++    expect(deriveServer([makeSet()], 0)).toBe(1);
++  });
++
++  it('flips per game (alternates as games accumulate)', () => {
++    expect(deriveServer([makeSet({ games1: 1 })], 0)).toBe(2); // 1 game done
++    expect(deriveServer([makeSet({ games1: 1, games2: 1 })], 0)).toBe(1); // 2 games done
++  });
++
++  it('serve parity is cumulative across sets, not per-set', () => {
++    // Set 1 ended 6-4 (10 games, even) -> set 2 first game still team 1.
++    const sets = [makeSet({ games1: 6, games2: 4, completed: true }), makeSet()];
++    expect(deriveServer(sets, 1)).toBe(1);
++    // Set 1 ended 6-3 (9 games, odd) -> set 2 first game flips to team 2.
++    const sets2 = [makeSet({ games1: 6, games2: 3, completed: true }), makeSet()];
++    expect(deriveServer(sets2, 1)).toBe(2);
++  });
++
++  it('tiebreak: serve changes every 2 points after the first point', () => {
++    // 12 games before (even) -> first tiebreak server is team 1.
++    const base = (tb1, tb2) => [makeSet({ games1: 6, games2: 6, isTiebreak: true, tiebreakPoints1: tb1, tiebreakPoints2: tb2 })];
++    expect(deriveServer(base(0, 0), 0)).toBe(1); // p=1 -> firstServer
++    expect(deriveServer(base(1, 0), 0)).toBe(2); // p=2 -> other
++    expect(deriveServer(base(1, 1), 0)).toBe(2); // p=3 -> other
++    expect(deriveServer(base(2, 1), 0)).toBe(1); // p=4 -> firstServer
++  });
++
++  it('returns 1 for an out-of-range current set (no crash)', () => {
++    expect(deriveServer([makeSet()], 5)).toBe(1);
++  });
++});
++
++// --- Component-level render tests ---
++
++const h = vi.hoisted(() => ({
++  draft: {
++    matchId: 'q1', sport: 'tennis', team1Name: 'Alpha', team2Name: 'Beta',
++    // 3-set match (best of 3 -> 2 sets to win). Set 1 is done 6-4; sets 2 & 3 are
++    // open, so the match is NOT yet complete and the current set (2) is scorable.
++    format: { sets: 3 },
++    sets: [
++      { games1: 6, games2: 4, points1: 0, points2: 0, isDeuce: false, advantage: null, isTiebreak: false, tiebreakPoints1: 0, tiebreakPoints2: 0, completed: true },
++      { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false, advantage: null, isTiebreak: false, tiebreakPoints1: 0, tiebreakPoints2: 0, completed: false },
++      { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false, advantage: null, isTiebreak: false, tiebreakPoints1: 0, tiebreakPoints2: 0, completed: false },
++    ],
++  },
++}));
++
++vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
++vi.mock('react-router-dom', () => ({
++  useNavigate: () => vi.fn(),
++  useParams: () => ({ sport: 'tennis', matchId: 'q1' }),
++  useLocation: () => ({ pathname: '/tennis/quick/q1', search: '' }),
++}));
++vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
++vi.mock('../../../utils/storage', () => ({
++  loadData: vi.fn(() => h.draft),
++  saveData: vi.fn(() => true),
++  clearData: vi.fn(),
++  isStaleQuickMatchDraft: vi.fn(() => false),
++  loadSportTournaments: vi.fn(() => []),
++  saveSportTournament: vi.fn(() => true),
++  saveQuickMatch: vi.fn(() => true),
++}));
++
++try { delete globalThis.ontouchstart; } catch { /* ignore */ }
++try {
++  Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 0 });
++} catch { /* ignore */ }
++
++const { default: MonoTennisLiveScore } = await import('./MonoTennisLiveScore.jsx');
++
++const renderScorer = async () => {
++  const utils = render(<MonoTennisLiveScore storageMode="quick" />);
++  await screen.findByRole('button', { name: /Alpha:/ });
++  return utils;
++};
++
++describe('MonoTennisLiveScore render', () => {
++  beforeEach(() => { vi.clearAllMocks(); });
++
++  it('renders a serving indicator dot on the serving team', async () => {
++    const { container } = await renderScorer();
++    // Set 1 was 6-4 (10 games, even) -> set 2 first game: team 1 (Alpha, left) serves.
++    const overlines = container.querySelectorAll('.mono-arena-overline');
++    expect(overlines[0].textContent).toContain('●');
++    expect(overlines[1].textContent).not.toContain('●');
++  });
++
++  it('shows a completed-set history strip', async () => {
++    const { container } = await renderScorer();
++    const strip = container.querySelector('.mono-score-history-strip');
++    expect(strip).toBeTruthy();
++    expect(strip.textContent).toContain('Set 1: 6-4');
++  });
++
++  it('announces a game-won milestone via the aria-live <output> (not direct DOM)', async () => {
++    const { container } = await renderScorer();
++    const output = container.querySelector('output[aria-live="polite"]');
++    expect(output).toBeTruthy();
++    // Win a game for Alpha: 4 straight points (0->15->30->40->game). A 150ms
++    // click debounce guards the score button, so wait past it between taps.
++    for (let i = 0; i < 4; i += 1) {
++      const alpha = screen.getByRole('button', { name: /Alpha:/ });
++      await act(async () => { fireEvent.click(alpha); await new Promise(r => setTimeout(r, 160)); });
++    }
++    expect(output.textContent).toMatch(/wins Game/i);
++    // No stray direct-DOM toast was appended to document.body.
++    expect(document.body.querySelectorAll('body > .mono-set-won').length).toBe(0);
++  });
++
++  it('the Discard button is visually distinguished from Finish (destructive class)', async () => {
++    await renderScorer();
++    const discard = screen.getByRole('button', { name: 'Discard' });
++    expect(discard.className).toContain('mono-btn-danger');
++    const finish = screen.getByRole('button', { name: 'Finish' });
++    expect(finish.className).not.toContain('mono-btn-danger');
++  });
++});
+-- 
+2.51.0.windows.1
+

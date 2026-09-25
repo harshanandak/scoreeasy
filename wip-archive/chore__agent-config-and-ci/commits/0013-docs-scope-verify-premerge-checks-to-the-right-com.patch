@@ -1,0 +1,114 @@
+From d4b03b319c3d3a51e2c72592386c25583845c247 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 13:16:13 +0530
+Subject: [PATCH] docs: scope verify/premerge checks to the right commit, pin
+ the audit toolchain
+
+- verify.md Step 3 listed runs by branch and accepted in_progress as healthy,
+  so cleanup could fire on an unrelated green run or before the target merge's
+  tests finished. Resolve the PR's merge commit and query `gh run list
+  --commit`, requiring completed + success.
+- premerge.md Step 2 ran `git status` to detect behind-master. That compares
+  against origin/<feature>, not master, so the exact condition it promised to
+  warn about was invisible. Count `HEAD..origin/master` instead.
+- `bun audit` needs Bun >= 1.2.15 and package.json declared no version at all,
+  so a valid older local Bun failed the mandatory /validate security step with
+  `Script not found "audit"`. Pin packageManager bun@1.3.13 (what CI installs)
+  plus an engines floor, and have the command print bun --version first.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/premerge.md |  9 +++++++--
+ .claude/commands/validate.md |  3 +++
+ .claude/commands/verify.md   | 15 ++++++++++-----
+ package.json                 |  4 ++++
+ 4 files changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/.claude/commands/premerge.md b/.claude/commands/premerge.md
+index 3a952ce..5581a4b 100644
+--- a/.claude/commands/premerge.md
++++ b/.claude/commands/premerge.md
+@@ -28,13 +28,18 @@ All checks must be green before proceeding. If any fail, run `/review <pr-number
+ 
+ ### Step 2: Warn If Branch Is Behind Master
+ 
++`git status` reports the branch against its own upstream (`origin/<feature>`), which
++says nothing about `master` — it would report "up to date" while master has moved on.
++Count the commits explicitly:
++
+ ```bash
+ gh pr view <pr-number> --json baseRefName,headRefName
+ git fetch origin master
+-git status
++BEHIND=$(git rev-list --count HEAD..origin/master)
++echo "behind master by $BEHIND commit(s)"
+ ```
+ 
+-If the feature branch is behind `master`, tell the user to rebase first:
++If `$BEHIND` is greater than 0, tell the user to rebase first:
+ 
+ ```
+ ⚠️  Branch is behind master — rebase before updating docs to avoid conflicts:
+diff --git a/.claude/commands/validate.md b/.claude/commands/validate.md
+index 101956e..456275a 100644
+--- a/.claude/commands/validate.md
++++ b/.claude/commands/validate.md
+@@ -113,6 +113,9 @@ bun run lint    # or: npm run lint, eslint ., etc.
+ ```bash
+ # This project is bun-only — there is no package-lock.json, so `npm audit`
+ # exits ENOLOCK and will try to talk you into creating one. Don't.
++# `bun audit` needs Bun >= 1.2.15; older Bun reports `Script not found "audit"`.
++# package.json pins packageManager bun@1.3.13 (what CI uses) — match it.
++bun --version
+ bun audit
+ ```
+ 
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index 3b5a5fb..c4d514d 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -49,14 +49,19 @@ gh pr view <number> --json number,state,mergedAt,mergedBy,headRefName
+ 
+ ### Step 3: Check CI on Main After Merge
+ 
++Scope this to **the merge commit you are verifying**, not the branch. A branch query
++mixes in runs from other commits, and an unrelated green run must never be what lets
++Step 6 delete a worktree and close issues.
++
+ ```bash
+-gh run list --branch master --limit 5
++MERGE_SHA=$(gh pr view <number> --json mergeCommit --jq .mergeCommit.oid)
++gh run list --commit "$MERGE_SHA" --json name,status,conclusion
+ ```
+ 
+-Check the most recent workflow runs on `master`:
+-- All should be passing or in progress
+-- If any failed: identify which workflow and what failed
+-- Failed CI on main after merge may need a hotfix PR
++Every run on that commit must be `status=completed` **and** `conclusion=success`:
++- `in_progress` is not healthy — it is unfinished. Wait for it, do not proceed to cleanup.
++- If any failed: identify which workflow and what failed. Failed CI on main after merge
++  may need a hotfix PR — and do not clean up the branch you may need to fix from.
+ 
+ ### Step 4: Check Deployments (if applicable)
+ 
+diff --git a/package.json b/package.json
+index 6785a76..5fcd93f 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,10 @@
+   "version": "1.0.0",
+   "description": "Score Easy - universal sports scorecard platform for any game",
+   "type": "module",
++  "packageManager": "bun@1.3.13",
++  "engines": {
++    "bun": ">=1.2.15"
++  },
+   "scripts": {
+     "dev": "vite",
+     "build": "vite build",
+-- 
+2.51.0.windows.1
+

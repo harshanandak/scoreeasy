@@ -1,0 +1,146 @@
+From f84a0ab300197d4b3e44cb333435175401e3ac32 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 20:48:05 +0530
+Subject: [PATCH] fix(scoring): normalize match-id lookup + make deuce-rotation
+ tests reach deuce
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Review nits on #121:
+- Match lookup compared raw string IDs only, but saveTournamentToConvex already
+  treats IDs as string|number, so numeric IDs fell into the "not found" path.
+  Normalize (matchId || Number(matchId)) and reset isKnockoutRef up front so a
+  previously viewed knockout match doesn't keep applying knockout format.
+- The deuce-rotation tests stopped at total score 2, so the new every-point-at-
+  deuce branch never ran. Drive table tennis to actual deuce (2-2 via points:3)
+  and assert serve switches on an odd total (3-2) where the every-2 rule would
+  not — that step is the regression discriminator. Badminton (capped, rotation=1)
+  drives to deuce-score and asserts every-point cadence is unchanged, confirming
+  the deuce special-case never fires for capped sports.
+
+Note: no sport has serviceRotation != 1 AND maxPoints, so the !maxPoints guard
+is defensive-only and has no real-sport behavior to assert directly.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../scoring/MonoSetsLiveScore.jsx             | 12 +++-
+ .../scoring/MonoSetsLiveScore.test.jsx        | 57 +++++++++++++------
+ 2 files changed, 50 insertions(+), 19 deletions(-)
+
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+index 1b231ad..1e9befe 100644
+--- a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+@@ -104,9 +104,17 @@ export default function MonoSetsLiveScore() {
+     const found = tournaments.find(t => t.id === Number(id));
+     if (!found) { setLoadStatus('notfound'); return; }
+ 
+-    let foundMatch = found.matches.find(m => m.id === matchId);
++    // Match IDs are stored as string or number depending on entry point (see
++    // saveTournamentToConvex above), so normalize before comparing — a strict
++    // string-only match sends numeric IDs into the "not found" path. Also reset
++    // the knockout flag up front so a previously viewed knockout match doesn't
++    // keep applying knockout format when we resolve a regular match next.
++    const isMatchId = (m) => m.id === matchId || m.id === Number(matchId);
++    isKnockoutRef.current = false;
++
++    let foundMatch = (found.matches || []).find(isMatchId);
+     if (!foundMatch) {
+-      foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId);
++      foundMatch = (found.knockoutMatches || []).find(isMatchId);
+       if (foundMatch) isKnockoutRef.current = true;
+     }
+     if (!foundMatch) { setLoadStatus('notfound'); return; }
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+index 4a42e85..6dd97f0 100644
+--- a/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+@@ -206,44 +206,67 @@ describe('MonoSetsLiveScore — issue #108', () => {
+     return leftServing ? 'A' : 'B';
+   }
+ 
+-  async function tapServer() {
+-    // Always tap the currently serving half so a point is scored (rally mode),
+-    // never a side-out switch. The serving team is whoever has the leading dot.
+-    const serving = servingTeamFromDom();
+-    const [left, right] = arenaButtons();
+-    fireEvent.click(serving === 'A' ? left : right);
+-    await wait(160);
++  // In rally mode, tapping a half scores a point for THAT side (left = A, right =
++  // B) — not a side-out switch. Driving each team's score independently lets us
++  // reach an actual deuce (both at target-1) rather than stopping short of it.
++  async function scoreFor(half) {
++    fireEvent.click(half);
++    await wait(160); // clear the 150ms rapid-click guard
+   }
+ 
+-  it('table tennis (uncapped) switches serve every 2 points, then every point at deuce', async () => {
++  it('table tennis (uncapped) switches serve every 2 points pre-deuce, then every point at deuce', async () => {
+     h.params = { sport: 'tabletennis', id: '1', matchId: 'm1' };
+     h.tournaments = [h.makeTournament({
+-      format: { type: 'best-of', sets: 5, points: 11 },
++      // points: 3 → deuce at 2-2 (target-1 each), reachable in a few taps; win-by-2
++      // keeps 3-2 / 3-3 from completing the set so deuce stays live to assert on.
++      format: { type: 'best-of', sets: 5, points: 3 },
+     })];
+     render(<MonoSetsLiveScore />);
+     await screen.findByText(/points to win/);
++    const [left, right] = arenaButtons();
+ 
+-    // Pre-deuce: serve changes every 2 points (serviceRotation = 2).
++    // Pre-deuce: serviceRotation = 2 → serve changes every 2 points, NOT every point.
+     expect(servingTeamFromDom()).toBe('A');
+-    await tapServer(); // total 1 → no switch
++    await scoreFor(left);  // 1-0, total 1 (odd) → no switch
++    expect(servingTeamFromDom()).toBe('A');
++    await scoreFor(right); // 1-1, total 2 → switch (every-2 cadence)
++    expect(servingTeamFromDom()).toBe('B');
++    await scoreFor(left);  // 2-1, total 3 (odd) → no switch, not yet deuce
++    expect(servingTeamFromDom()).toBe('B');
++
++    // At deuce (2-2) the uncapped branch switches serve on EVERY point — including
++    // odd totals where the every-2 rule would NOT. The 3-2 step (total 5, odd) is
++    // the discriminator: it only switches because the deuce branch fired.
++    await scoreFor(right); // 2-2, total 4 → reach deuce → switch
+     expect(servingTeamFromDom()).toBe('A');
+-    await tapServer(); // total 2 → switch to B
++    await scoreFor(left);  // 3-2, total 5 (odd) → deuce switch (every-2 would NOT)
+     expect(servingTeamFromDom()).toBe('B');
++    await scoreFor(right); // 3-3, total 6 → still deuce → switch
++    expect(servingTeamFromDom()).toBe('A');
+   });
+ 
+-  it('badminton (capped) never mis-fires the deuce branch — serve still rotates every point', async () => {
++  it('badminton (capped, rotation=1) switches serve every point even at deuce-score — deuce branch never fires', async () => {
+     h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
+     h.tournaments = [h.makeTournament({
+-      format: { type: 'best-of', sets: 3, points: 21 },
++      // points: 3 so we reach the would-be deuce score (2-2) fast. badminton is
++      // capped (maxPoints=30) AND serviceRotation=1, so the deuce special-case must
++      // NEVER engage: serve rotates on every single point, deuce-score included.
++      format: { type: 'best-of', sets: 3, points: 3 },
+     })];
+     render(<MonoSetsLiveScore />);
+     await screen.findByText(/points to win/);
++    const [left, right] = arenaButtons();
+ 
+-    // serviceRotation = 1 → switch on every point regardless of deuce.
+     expect(servingTeamFromDom()).toBe('A');
+-    await tapServer();
++    await scoreFor(left);  // 1-0 → switch
+     expect(servingTeamFromDom()).toBe('B');
+-    await tapServer();
++    await scoreFor(right); // 1-1 → switch
+     expect(servingTeamFromDom()).toBe('A');
++    await scoreFor(left);  // 2-1 → switch
++    expect(servingTeamFromDom()).toBe('B');
++    await scoreFor(right); // 2-2 (deuce-score) → STILL switches; no special-case
++    expect(servingTeamFromDom()).toBe('A');
++    await scoreFor(left);  // 3-2 (win-by-2: set not won yet) → switch
++    expect(servingTeamFromDom()).toBe('B');
+   });
+ });
+-- 
+2.51.0.windows.1
+

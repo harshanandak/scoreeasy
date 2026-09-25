@@ -1,0 +1,621 @@
+From 8fd793b8511ec840c1d43552313bf0d74dc96483 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 12:18:48 +0530
+Subject: [PATCH] feat(onboarding): UX & consent fixes for MonoOnboarding
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Closes #105
+
+- Consent: only persist a live-sharing decision when the user actually
+  interacts with the checkbox (track consentTouched); never pre-write
+  "declined" for an untouched control. Fix the stale "public-by-default"
+  comment to reflect the opt-in default.
+- Username availability: persistent aria-live="polite" status region with a
+  non-color valence glyph (✓/✕/⚠); add a watchdog timeout state so a stuck
+  pending check surfaces an actionable message instead of an endless spinner;
+  set aria-invalid on the input for error/taken/timeout.
+- "Skip for now" -> "Skip & finish": clearer label, disabled while submitting,
+  plus an explanatory line that sports are optional.
+- Move focus to each step's heading on step change (tabIndex={-1}); remove
+  input/heading autofocus races.
+- Enlarge nav/back/skip/checkbox touch targets to >=44px.
+- OAuth name pre-fill: fix effect deps ([clerkUser, firstName, lastName,
+  onChange]) with an empty-guard so the Google name is no longer missed.
+- Skip step 1 (Name) once when Clerk already has a name, prefilling state.
+
+Adds MonoOnboarding.test.jsx covering focus movement, skip-step-1 + payload
+carry-through, aria-live availability/timeout, 3-way consent persistence, and
+the 44px Back target.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ src/designs/design1-mono/MonoOnboarding.jsx   | 197 +++++++++++++-----
+ .../design1-mono/MonoOnboarding.test.jsx      | 188 +++++++++++++++++
+ 2 files changed, 335 insertions(+), 50 deletions(-)
+ create mode 100644 src/designs/design1-mono/MonoOnboarding.test.jsx
+
+diff --git a/src/designs/design1-mono/MonoOnboarding.jsx b/src/designs/design1-mono/MonoOnboarding.jsx
+index f764f3a..7e71820 100644
+--- a/src/designs/design1-mono/MonoOnboarding.jsx
++++ b/src/designs/design1-mono/MonoOnboarding.jsx
+@@ -186,23 +186,28 @@ StepIndicator.propTypes = {
+ // ---------------------------------------------------------------------------
+ 
+ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
+-  const firstRef = useRef(null);
++  const headingRef = useRef(null);
+ 
++  // Move focus to the step heading on entry (a11y: announces the new step and
++  // gives keyboard users a predictable landing point). The heading is
++  // programmatically focusable via tabIndex={-1}.
+   useEffect(() => {
+-    if (firstRef.current) firstRef.current.focus();
++    if (headingRef.current) headingRef.current.focus();
+   }, []);
+ 
+-  // Pre-fill from Clerk (Google OAuth) if fields are empty on mount
++  // Pre-fill from Clerk (e.g. Google OAuth) if fields are empty. Depends on
++  // clerkUser because it loads asynchronously (null on first render, then
++  // populated) — without these deps the Google name is missed. The empty-guard
++  // (!firstName / !lastName) prevents clobbering anything the user has typed.
+   useEffect(() => {
+-    if (clerkUser) {
+-      if (!firstName && clerkUser.firstName) {
+-        onChange("firstName", clerkUser.firstName);
+-      }
+-      if (!lastName && clerkUser.lastName) {
+-        onChange("lastName", clerkUser.lastName);
+-      }
++    if (!clerkUser) return;
++    if (!firstName && clerkUser.firstName) {
++      onChange("firstName", clerkUser.firstName);
+     }
+-  }, []);
++    if (!lastName && clerkUser.lastName) {
++      onChange("lastName", clerkUser.lastName);
++    }
++  }, [clerkUser, firstName, lastName, onChange]);
+ 
+   const canContinue = true;
+ 
+@@ -214,8 +219,10 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
+   return (
+     <form onSubmit={handleSubmit}>
+       <h1
++        ref={headingRef}
++        tabIndex={-1}
+         className="text-2xl font-swiss font-bold mb-2"
+-        style={{ color: "#111" }}
++        style={{ color: "#111", outline: "none" }}
+       >
+         What's your name?
+       </h1>
+@@ -233,7 +240,6 @@ function StepName({ firstName, lastName, onChange, onNext, clerkUser }) {
+         First name <span style={{ color: "#888", fontWeight: 400 }}>(optional)</span>
+       </label>
+       <input
+-        ref={firstRef}
+         id="onboard-first"
+         type="text"
+         className="mono-input w-full mb-6"
+@@ -287,35 +293,61 @@ StepName.propTypes = {
+ // Step 2 — Username
+ // ---------------------------------------------------------------------------
+ 
++// How long to wait for the availability check before treating it as a timeout.
++// Convex useQuery returns `undefined` while pending (it throws to an error
++// boundary on hard failure rather than returning an error), so a stuck
++// `undefined` is our only signal of a slow/lost connection — surface it.
++const USERNAME_CHECK_TIMEOUT_MS = 8000;
++
+ function StepUsername({ username, onChange, onNext, onBack }) {
+-  const inputRef = useRef(null);
++  const headingRef = useRef(null);
+ 
++  // Focus the step heading on entry (a11y) rather than the input, so the new
++  // step is announced. The input is the next Tab stop.
+   useEffect(() => {
+-    if (inputRef.current) inputRef.current.focus();
++    if (headingRef.current) headingRef.current.focus();
+   }, []);
+ 
+   const normalized = username.toLowerCase().replaceAll(/[^a-z0-9_.]/g, "");
+   const validationError = normalized.length > 0 ? validateUsername(normalized) : null;
+   const debouncedUsername = useDebounce(normalized, 300);
+ 
++  const shouldCheck = !validationError && debouncedUsername.length >= 4;
+   const isAvailable = useQuery(
+     api.users.checkUsername,
+-    !validationError && debouncedUsername.length >= 4
+-      ? { username: debouncedUsername }
+-      : "skip"
++    shouldCheck ? { username: debouncedUsername } : "skip"
+   );
+ 
++  // Watchdog: if the check stays pending past the timeout, flag it so the user
++  // gets an actionable message instead of an indefinite "Checking...".
++  const isPending = shouldCheck && debouncedUsername === normalized && isAvailable === undefined;
++  const [timedOut, setTimedOut] = useState(false);
++  useEffect(() => {
++    if (!isPending) {
++      setTimedOut(false);
++      return undefined;
++    }
++    const timer = setTimeout(() => setTimedOut(true), USERNAME_CHECK_TIMEOUT_MS);
++    return () => clearTimeout(timer);
++  }, [isPending, debouncedUsername]);
++
+   function getIndicator() {
+     if (normalized.length === 0) return null;
+-    if (validationError) return { text: validationError, color: "#dc2626" };
++    if (validationError) return { text: validationError, color: "#dc2626", icon: "✕" };
++    if (timedOut)
++      return {
++        text: "Couldn't check availability — check your connection and try again.",
++        color: "#dc2626",
++        icon: "⚠",
++      };
+     if (debouncedUsername !== normalized || isAvailable === undefined)
+-      return { text: "Checking...", color: "#888" };
+-    if (isAvailable) return { text: "Available", color: "#16a34a" };
+-    return { text: "Already taken", color: "#dc2626" };
++      return { text: "Checking availability...", color: "#888", icon: "" };
++    if (isAvailable) return { text: "Available", color: "#16a34a", icon: "✓" };
++    return { text: "Already taken", color: "#dc2626", icon: "✕" };
+   }
+ 
+   const indicator = getIndicator();
+-  const canContinue = !validationError && isAvailable === true;
++  const canContinue = !validationError && !timedOut && isAvailable === true;
+ 
+   function handleSubmit(e) {
+     e.preventDefault();
+@@ -327,15 +359,17 @@ function StepUsername({ username, onChange, onNext, onBack }) {
+       <button
+         type="button"
+         onClick={onBack}
+-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
+-        style={{ color: "#888", padding: 0 }}
++        className="text-sm bg-transparent border-none cursor-pointer font-swiss mb-6 flex items-center gap-1"
++        style={{ color: "#888", padding: "10px 8px 10px 0", minHeight: 44, marginLeft: -8, paddingLeft: 8 }}
+       >
+         <BackArrow /> Back
+       </button>
+ 
+       <h1
++        ref={headingRef}
++        tabIndex={-1}
+         className="text-2xl font-swiss font-bold mb-2"
+-        style={{ color: "#111" }}
++        style={{ color: "#111", outline: "none" }}
+       >
+         Choose your gamertag
+       </h1>
+@@ -358,7 +392,6 @@ function StepUsername({ username, onChange, onNext, onBack }) {
+           @
+         </span>
+         <input
+-          ref={inputRef}
+           type="text"
+           className="mono-input w-full font-mono"
+           style={{ paddingLeft: "1.5rem", fontSize: "1.125rem" }}
+@@ -369,15 +402,23 @@ function StepUsername({ username, onChange, onNext, onBack }) {
+           }
+           autoComplete="off"
+           maxLength={20}
++          aria-describedby="onboard-username-status"
++          aria-invalid={Boolean(indicator && indicator.color === "#dc2626")}
+         />
+       </div>
+ 
+-      {indicator && (
+-        <p className="text-xs mb-4" style={{ color: indicator.color }}>
+-          {indicator.text === "Available" ? "\u2713 " : ""}
+-          {indicator.text}
+-        </p>
+-      )}
++      {/* Persistent live region: kept mounted so screen readers reliably
++          announce status changes (availability, errors, timeout). Valence is
++          conveyed via a leading glyph + text, not color alone. */}
++      <p
++        id="onboard-username-status"
++        role="status"
++        aria-live="polite"
++        className="text-xs mb-4"
++        style={{ color: indicator ? indicator.color : "transparent", minHeight: "1rem" }}
++      >
++        {indicator ? `${indicator.icon ? `${indicator.icon} ` : ""}${indicator.text}` : ""}
++      </p>
+ 
+       <p className="text-xs mb-6" style={{ color: "#bbb" }}>
+         4-20 characters. Letters, numbers, underscore, and period.
+@@ -419,6 +460,12 @@ const PLAY_STYLES = [
+ ];
+ 
+ function StepPreferences({ role, playStyles, onChange, onNext, onBack }) {
++  const headingRef = useRef(null);
++
++  useEffect(() => {
++    if (headingRef.current) headingRef.current.focus();
++  }, []);
++
+   function togglePlayStyle(id) {
+     const next = playStyles.includes(id)
+       ? playStyles.filter((s) => s !== id)
+@@ -436,15 +483,17 @@ function StepPreferences({ role, playStyles, onChange, onNext, onBack }) {
+       <button
+         type="button"
+         onClick={onBack}
+-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
+-        style={{ color: "#888", padding: 0 }}
++        className="text-sm bg-transparent border-none cursor-pointer font-swiss mb-6 flex items-center gap-1"
++        style={{ color: "#888", padding: "10px 8px 10px 0", minHeight: 44, marginLeft: -8, paddingLeft: 8 }}
+       >
+         <BackArrow /> Back
+       </button>
+ 
+       <h1
++        ref={headingRef}
++        tabIndex={-1}
+         className="text-2xl font-swiss font-bold mb-2"
+-        style={{ color: "#111" }}
++        style={{ color: "#111", outline: "none" }}
+       >
+         How do you play?
+       </h1>
+@@ -558,6 +607,11 @@ StepPreferences.propTypes = {
+ 
+ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, error, liveConsent, onLiveConsentChange }) {
+   const categories = getSportsByCategory();
++  const headingRef = useRef(null);
++
++  useEffect(() => {
++    if (headingRef.current) headingRef.current.focus();
++  }, []);
+ 
+   function toggleGame(id) {
+     const next = selectedGames.includes(id)
+@@ -576,15 +630,17 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
+       <button
+         type="button"
+         onClick={onBack}
+-        className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-8 flex items-center gap-1"
+-        style={{ color: "#888", padding: 0 }}
++        className="text-sm bg-transparent border-none cursor-pointer font-swiss mb-6 flex items-center gap-1"
++        style={{ color: "#888", padding: "10px 8px 10px 0", minHeight: 44, marginLeft: -8, paddingLeft: 8 }}
+       >
+         <BackArrow /> Back
+       </button>
+ 
+       <h1
++        ref={headingRef}
++        tabIndex={-1}
+         className="text-2xl font-swiss font-bold mb-2"
+-        style={{ color: "#111" }}
++        style={{ color: "#111", outline: "none" }}
+       >
+         What do you play?
+       </h1>
+@@ -649,18 +705,21 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
+       )}
+ 
+       {/* Live-sharing consent — captured here so the scorer never interrupts a
+-          match to ask. Public-by-default (checked); you can stop any match later. */}
++          match to ask. Opt-IN (unchecked by default): a user must actively choose
++          to make matches public. If they never touch this control, we record no
++          choice at all (the share flow can ask later). You can stop any match
++          live-share at any time. */}
+       <hr className="mono-divider mt-8 mb-5" />
+       <label
+         htmlFor="onboarding-live-consent"
+-        style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}
++        style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", minHeight: 44, padding: "4px 0" }}
+       >
+         <input
+           id="onboarding-live-consent"
+           type="checkbox"
+           checked={liveConsent}
+           onChange={(e) => onLiveConsentChange(e.target.checked)}
+-          style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
++          style={{ marginTop: 3, width: 20, height: 20, flexShrink: 0 }}
+         />
+         <span className="text-sm font-swiss" style={{ color: "#444", lineHeight: 1.45 }}>
+           <strong style={{ color: "#111" }}>Share my matches live.</strong> When you score, anyone with the link can watch the live scoreboard (team names + score). You can stop sharing any match at any time.
+@@ -671,10 +730,11 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
+         <button
+           type="button"
+           onClick={onSubmit}
++          disabled={isSubmitting}
+           className="text-sm font-swiss bg-transparent border-none cursor-pointer"
+-          style={{ color: "#888", padding: 0 }}
++          style={{ color: "#888", padding: "10px 8px", minHeight: 44, marginLeft: -8 }}
+         >
+-          Skip for now
++          Skip &amp; finish
+         </button>
+         <button
+           type="submit"
+@@ -685,6 +745,9 @@ function StepGames({ selectedGames, onChange, onSubmit, onBack, isSubmitting, er
+           {isSubmitting ? "Setting up..." : "Let's go"}
+         </button>
+       </div>
++      <p className="text-xs mt-3" style={{ color: "#bbb", textAlign: "center" }}>
++        Sports are optional — you can add them later from your profile.
++      </p>
+     </form>
+   );
+ }
+@@ -726,10 +789,19 @@ export default function MonoOnboarding() {
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [error, setError] = useState("");
+   const [visible, setVisible] = useState(false);
+-  // Live-sharing consent, captured ONCE here at sign-in (opt-IN: unchecked by
+-  // default, so a user must actively choose to make matches public) so the scorer
+-  // never has to interrupt a match to ask. Persisted on submit.
++  // Live-sharing consent, optionally captured here at sign-in (opt-IN: unchecked
++  // by default, so a user must actively choose to make matches public) so the
++  // scorer never has to interrupt a match to ask. We ONLY persist a decision if
++  // the user actually interacts with the checkbox — if they never touch it we
++  // record nothing, leaving the choice to the share flow later. `consentTouched`
++  // tracks that interaction.
+   const [liveConsent, setLiveConsent] = useState(false);
++  const [consentTouched, setConsentTouched] = useState(false);
++
++  const handleLiveConsentChange = useCallback((next) => {
++    setConsentTouched(true);
++    setLiveConsent(next);
++  }, []);
+ 
+   const TOTAL_STEPS = 4;
+ 
+@@ -745,6 +817,27 @@ export default function MonoOnboarding() {
+     }
+   }, [isLoading, isAuthenticated, navigate, returnTo]);
+ 
++  // Skip step 1 (Name) once when Clerk already has a name (e.g. Google OAuth).
++  // clerkUser loads asynchronously (null first render, then populated), so this
++  // runs in an effect rather than initial state. `didInitStep` guards it to fire
++  // at most once and only while the user is still on step 0 untouched — we never
++  // yank the step out from under someone who has already started navigating.
++  const didInitStep = useRef(false);
++  useEffect(() => {
++    if (didInitStep.current) return;
++    if (isLoading) return;
++    if (!clerkUser) return;
++    didInitStep.current = true;
++    const hasName = Boolean(clerkUser.firstName || clerkUser.lastName);
++    if (hasName && step === 0) {
++      // Prefill so the resolved name carries through, then jump straight to the
++      // gamertag step without the slide animation.
++      if (clerkUser.firstName) setFirstName((prev) => prev || clerkUser.firstName);
++      if (clerkUser.lastName) setLastName((prev) => prev || clerkUser.lastName);
++      setStep(1);
++    }
++  }, [clerkUser, isLoading, step]);
++
+   // --- Field change handler ---
+   const handleChange = useCallback((field, value) => {
+     switch (field) {
+@@ -819,8 +912,12 @@ export default function MonoOnboarding() {
+         favoriteGames: selectedGames,
+         playStyle: playStyles,
+       });
+-      // Record the live-sharing choice now so matches never prompt for it.
+-      setConsent(liveConsent ? "accepted" : "declined");
++      // Record the live-sharing choice ONLY if the user actually interacted with
++      // the checkbox. If untouched, leave consent unset so the share flow can ask
++      // later — never pre-write "declined" for a choice the user never made.
++      if (consentTouched) {
++        setConsent(liveConsent ? "accepted" : "declined");
++      }
+       navigate(returnTo);
+     } catch (err) {
+       const msg = err?.message || "";
+@@ -915,7 +1012,7 @@ export default function MonoOnboarding() {
+             isSubmitting={isSubmitting}
+             error={error}
+             liveConsent={liveConsent}
+-            onLiveConsentChange={setLiveConsent}
++            onLiveConsentChange={handleLiveConsentChange}
+           />
+         );
+       default:
+diff --git a/src/designs/design1-mono/MonoOnboarding.test.jsx b/src/designs/design1-mono/MonoOnboarding.test.jsx
+new file mode 100644
+index 0000000..937fb84
+--- /dev/null
++++ b/src/designs/design1-mono/MonoOnboarding.test.jsx
+@@ -0,0 +1,188 @@
++import { beforeEach, describe, expect, it, vi } from 'vitest';
++import { fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { MemoryRouter } from 'react-router-dom';
++import MonoOnboarding from './MonoOnboarding';
++import { getConsent } from '../../lib/live/liveSession';
++
++// --- Controllable mocks ---------------------------------------------------
++
++const authState = vi.hoisted(() => ({
++  current: {
++    isAuthenticated: true,
++    isLoading: false,
++    clerkUser: null,
++  },
++}));
++
++// useQuery controls the username-availability result. `undefined` = pending.
++const queryState = vi.hoisted(() => ({ available: true }));
++const submitState = vi.hoisted(() => ({ impl: vi.fn(async () => {}) }));
++
++vi.mock('convex/react', () => ({
++  useMutation: () => (...args) => submitState.impl(...args),
++  useQuery: () => queryState.available,
++}));
++
++vi.mock('../../hooks/useAuth', () => ({
++  useAuth: () => authState.current,
++}));
++
++function renderOnboarding() {
++  return render(
++    <MemoryRouter initialEntries={['/onboarding']}>
++      <MonoOnboarding />
++    </MemoryRouter>,
++  );
++}
++
++beforeEach(() => {
++  localStorage.clear();
++  authState.current = { isAuthenticated: true, isLoading: false, clerkUser: null };
++  queryState.available = true;
++  submitState.impl = vi.fn(async () => {});
++});
++
++async function clickContinueAndWaitFor(headingRegex) {
++  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
++  return waitFor(() => screen.getByRole('heading', { name: headingRegex }), { timeout: 2000 });
++}
++
++describe('MonoOnboarding — step navigation & focus', () => {
++  it('moves focus to the new step heading on step change', async () => {
++    renderOnboarding();
++    const nameHeading = await screen.findByRole('heading', { name: /what's your name/i });
++    await waitFor(() => expect(nameHeading).toHaveFocus());
++
++    await clickContinueAndWaitFor(/choose your gamertag/i);
++    const gamertagHeading = screen.getByRole('heading', { name: /choose your gamertag/i });
++    await waitFor(() => expect(gamertagHeading).toHaveFocus());
++  });
++
++  it('skips the name step when Clerk already has a name and prefills it', async () => {
++    authState.current = {
++      isAuthenticated: true,
++      isLoading: false,
++      clerkUser: { firstName: 'Ada', lastName: 'Lovelace' },
++    };
++    renderOnboarding();
++    const gamertagHeading = await screen.findByRole('heading', { name: /choose your gamertag/i });
++    await waitFor(() => expect(gamertagHeading).toHaveFocus());
++    expect(screen.queryByRole('heading', { name: /what's your name/i })).toBeNull();
++  });
++
++  it('carries the prefilled OAuth name through to completeOnboarding', async () => {
++    authState.current = {
++      isAuthenticated: true,
++      isLoading: false,
++      clerkUser: { firstName: 'Ada', lastName: 'Lovelace' },
++    };
++    renderOnboarding();
++    await screen.findByRole('heading', { name: /choose your gamertag/i });
++    fireEvent.change(screen.getByPlaceholderText('username'), {
++      target: { value: 'adalovelace' },
++    });
++    await waitFor(
++      () => expect(screen.getByRole('button', { name: /continue/i })).not.toBeDisabled(),
++      { timeout: 2000 },
++    );
++    await clickContinueAndWaitFor(/how do you play/i);
++    await clickContinueAndWaitFor(/what do you play/i);
++    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
++    await waitFor(() => expect(submitState.impl).toHaveBeenCalled());
++    expect(submitState.impl).toHaveBeenCalledWith(
++      expect.objectContaining({ firstName: 'Ada', lastName: 'Lovelace', username: 'adalovelace' }),
++    );
++  });
++});
++
++describe('MonoOnboarding — username availability status', () => {
++  async function gotoUsernameStep() {
++    renderOnboarding();
++    await screen.findByRole('heading', { name: /what's your name/i });
++    await clickContinueAndWaitFor(/choose your gamertag/i);
++  }
++
++  it('conveys availability via a persistent aria-live region with a non-color glyph', async () => {
++    await gotoUsernameStep();
++    const status = document.getElementById('onboard-username-status');
++    expect(status).toBeTruthy();
++    expect(status.getAttribute('role')).toBe('status');
++    expect(status.getAttribute('aria-live')).toBe('polite');
++
++    fireEvent.change(screen.getByPlaceholderText('username'), {
++      target: { value: 'adalovelace' },
++    });
++    await waitFor(() => expect(status.textContent).toMatch(/available/i), { timeout: 2000 });
++    expect(status.textContent).toContain('✓');
++  });
++
++  it('shows a timeout message (not an endless spinner) when the check stays pending', async () => {
++    queryState.available = undefined; // never resolves
++    await gotoUsernameStep();
++    const input = screen.getByPlaceholderText('username');
++    fireEvent.change(input, { target: { value: 'adalovelace' } });
++    const status = document.getElementById('onboard-username-status');
++    await waitFor(() => expect(status.textContent).toMatch(/checking/i), { timeout: 2000 });
++    // Watchdog fires at 8s — give it real time plus margin.
++    await waitFor(() => expect(status.textContent).toMatch(/couldn't check/i), { timeout: 10000 });
++    expect(input.getAttribute('aria-invalid')).toBe('true');
++  }, 15000);
++});
++
++describe('MonoOnboarding — live-sharing consent (do not pre-write declined)', () => {
++  async function gotoFinalStep() {
++    renderOnboarding();
++    await screen.findByRole('heading', { name: /what's your name/i });
++    await clickContinueAndWaitFor(/choose your gamertag/i);
++    fireEvent.change(screen.getByPlaceholderText('username'), {
++      target: { value: 'adalovelace' },
++    });
++    await waitFor(
++      () => expect(screen.getByRole('button', { name: /continue/i })).not.toBeDisabled(),
++      { timeout: 2000 },
++    );
++    await clickContinueAndWaitFor(/how do you play/i);
++    await clickContinueAndWaitFor(/what do you play/i);
++  }
++
++  it('records NOTHING when the consent checkbox is never touched', async () => {
++    await gotoFinalStep();
++    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
++    await waitFor(() => expect(submitState.impl).toHaveBeenCalled());
++    expect(getConsent()).toBeNull();
++  });
++
++  it('records "accepted" when the user checks the box', async () => {
++    await gotoFinalStep();
++    fireEvent.click(screen.getByLabelText(/share my matches live/i));
++    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
++    await waitFor(() => expect(submitState.impl).toHaveBeenCalled());
++    expect(getConsent()).toBe('accepted');
++  });
++
++  it('records "declined" when the user toggles the box on then off (touched)', async () => {
++    await gotoFinalStep();
++    const box = screen.getByLabelText(/share my matches live/i);
++    fireEvent.click(box); // on
++    fireEvent.click(box); // off, but touched
++    fireEvent.click(screen.getByRole('button', { name: /let's go/i }));
++    await waitFor(() => expect(submitState.impl).toHaveBeenCalled());
++    expect(getConsent()).toBe('declined');
++  });
++
++  it('"Skip & finish" completes onboarding (submits)', async () => {
++    await gotoFinalStep();
++    fireEvent.click(screen.getByRole('button', { name: /skip & finish/i }));
++    await waitFor(() => expect(submitState.impl).toHaveBeenCalled());
++  });
++});
++
++describe('MonoOnboarding — touch targets', () => {
++  it('Back control meets the 44px minimum height', async () => {
++    renderOnboarding();
++    await screen.findByRole('heading', { name: /what's your name/i });
++    await clickContinueAndWaitFor(/choose your gamertag/i);
++    const back = screen.getByRole('button', { name: /back/i });
++    expect(back.style.minHeight).toBe('44px');
++  });
++});
+-- 
+2.51.0.windows.1
+

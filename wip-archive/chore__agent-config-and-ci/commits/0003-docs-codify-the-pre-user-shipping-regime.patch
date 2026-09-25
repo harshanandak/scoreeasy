@@ -1,0 +1,52 @@
+From 91ac3cfd58d17ef5132b468aa3d18120e723806e Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 01:37:17 +0530
+Subject: [PATCH] docs: codify the pre-user shipping regime
+
+Feature PRs are reviewed as features: demo + acceptance checklist walked
+out loud + problem-first description. Completeness gates the merge, not
+size. Bots block only on secrets/injection/build-break and never expand
+the PR. Main stays recoverable, no merge queue.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+---
+ AGENTS.md           | 9 +++++++++
+ CODING_STANDARDS.md | 2 ++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/AGENTS.md b/AGENTS.md
+index 506cf78..7d5b94d 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -53,6 +53,15 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
+ - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
+ - **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+ 
++## Shipping regime (pre-user)
++
++Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
++
++- The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
++- **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
++- **Bot and review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. File the follow-up.
++- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
++
+ ## Non-interactive shell
+ 
+ `cp`, `mv` and `rm` may be aliased to `-i` and will hang waiting for y/n. Pass `-f` (`cp -f`, `mv -f`, `rm -f`, `rm -rf`). Same class: `scp`/`ssh` need `-o BatchMode=yes`, `apt-get` needs `-y`.
+diff --git a/CODING_STANDARDS.md b/CODING_STANDARDS.md
+index 49bece4..f80a51f 100644
+--- a/CODING_STANDARDS.md
++++ b/CODING_STANDARDS.md
+@@ -3,6 +3,8 @@
+ Read at review time (the `code-review` skill loads this file) and before writing anything under `convex/`.
+ Consolidated from 15 always-loaded rule files that used to sit in `.claude/rules/`.
+ 
++**Review feedback is advisory** except secrets, injection, and a broken build — and it never expands the PR. Anything else worth doing becomes a follow-up issue, not more commits on this branch. (Pre-user shipping regime, decided 2026-08-16. This repo has no reviewer-bot config file; the rule lives here.)
++
+ ## Convex functions
+ 
+ **Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,412 @@
+From aef9be9710b3a6d13b7761161fad80c7e7cfa3b3 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 12:02:49 +0530
+Subject: [PATCH] fix: make the shipped agent docs and the lefthook gate
+ actually work
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- lefthook.yml was inert: lefthook was not a dependency and nothing ran
+  `lefthook install`, so a fresh clone bypassed every gate this PR adds.
+  Added the devDependency and a `prepare` script.
+- docs/agents/forge-workflow.md (and the five harness files generated from
+  it) told agents to run `scripts/beads-context.sh`, which does not exist in
+  this repo. Replaced with the `bd` commands that do.
+- .claude/commands/validate.md pointed at `bun run check`, `scripts/validate.sh`
+  and `bun run typecheck` — none of which exist. Pointed at lefthook and
+  `bun run type-check`.
+- .claude/commands/verify.md force-removed a worktree in a step that describes
+  itself as read-only; dropped `--force` so uncommitted work is never discarded.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/validate.md    | 12 ++++++------
+ .claude/commands/verify.md      |  4 +++-
+ .clinerules                     | 22 ++++++++++++----------
+ .cursor/rules/project.mdc       | 22 ++++++++++++----------
+ .cursorrules                    | 22 ++++++++++++----------
+ .github/copilot-instructions.md | 22 ++++++++++++----------
+ .roorules                       | 22 ++++++++++++----------
+ bun.lock                        | 23 +++++++++++++++++++++++
+ docs/agents/forge-workflow.md   | 22 ++++++++++++----------
+ package.json                    |  2 ++
+ 10 files changed, 106 insertions(+), 67 deletions(-)
+
+diff --git a/.claude/commands/validate.md b/.claude/commands/validate.md
+index d70ec55..1c8e49e 100644
+--- a/.claude/commands/validate.md
++++ b/.claude/commands/validate.md
+@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
+ > **Note:** Three things share the "validate" name in Forge:
+ > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
+ > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
+-> - `bun run check` (scripts/validate.sh): Local quality gate — runs type/lint/test/security checks only (does NOT rebase; assumes branch is already current with the base branch)
++> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — runs the same lint, type-check, agent-config-sync, test and build jobs CI runs (does NOT rebase; assumes branch is already current with the base branch)
+ 
+ Run comprehensive validation including type checking, linting, code review, security review, and tests.
+ 
+@@ -22,8 +22,9 @@ This command validates all code before creating a pull request.
+ Or use the validation script (checks only — no rebase):
+ 
+ ```bash
+-bun run check    # Runs lint/test/security checks only. Does NOT rebase onto the base branch.
+-                 # Use /validate for the full workflow (rebase + checks).
++lefthook run pre-commit   # lint + type-check + agent-config-sync
++lefthook run pre-push     # test + build
++                          # Neither rebases. Use /validate for the full workflow (rebase + checks).
+ ```
+ 
+ ```
+@@ -67,12 +68,11 @@ reflect the true state of what will be merged.
+ 
+ ## What This Command Does
+ 
+-**Quick Start**: Run `bun run check` to execute the full validation pipeline (implemented in `scripts/validate.sh`). The npm script is named `check`; the workflow command is `/validate`. See individual steps below for details.
++**Quick Start**: Run `lefthook run pre-commit && lefthook run pre-push` to execute the same pipeline CI runs (`lefthook.yml`). The workflow command is `/validate`. See individual steps below for details.
+ 
+ ### Step 1: Type Check
+ ```bash
+-# Run your project's type check command
+-bun run typecheck    # or: npm run typecheck, tsc, etc.
++bun run type-check
+ ```
+ - Verify all TypeScript types are valid
+ - No `any` types allowed
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index 5e69916..59bc1eb 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -114,7 +114,9 @@ WORKTREE_PATH=$(git worktree list --porcelain \
+     ')
+ 
+ if [ -n "$WORKTREE_PATH" ]; then
+-  git worktree remove "$WORKTREE_PATH" --force
++  # No --force: a worktree with uncommitted changes must not be silently discarded.
++  # If this fails, stop and ask before removing anything.
++  git worktree remove "$WORKTREE_PATH"
+   echo "Worktree: removed ✓ ($WORKTREE_PATH)"
+ else
+   echo "Worktree: not found (already removed or never created) — skipping"
+diff --git a/.clinerules b/.clinerules
+index ee13323..526259d 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -338,9 +338,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -352,16 +356,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index d54f982..5580010 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -341,9 +341,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -355,16 +359,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/.cursorrules b/.cursorrules
+index ee13323..526259d 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -338,9 +338,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -352,16 +356,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index aeb24d1..67eacaf 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -336,9 +336,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -350,16 +354,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/.roorules b/.roorules
+index ee13323..526259d 100644
+--- a/.roorules
++++ b/.roorules
+@@ -338,9 +338,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -352,16 +356,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/bun.lock b/bun.lock
+index 74256a8..5eee703 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -37,6 +37,7 @@
+         "eslint": "^10.3.0",
+         "eslint-plugin-react-hooks": "^7.1.1",
+         "jsdom": "^29.1.1",
++        "lefthook": "^2.1.6",
+         "postcss": "8.5.14",
+         "react-grab": "^0.1.34",
+         "tailwindcss": "^4.3.0",
+@@ -985,6 +986,28 @@
+ 
+     "kleur": ["kleur@4.1.5", "", {}, "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="],
+ 
++    "lefthook": ["lefthook@2.1.10", "", { "optionalDependencies": { "lefthook-darwin-arm64": "2.1.10", "lefthook-darwin-x64": "2.1.10", "lefthook-freebsd-arm64": "2.1.10", "lefthook-freebsd-x64": "2.1.10", "lefthook-linux-arm64": "2.1.10", "lefthook-linux-x64": "2.1.10", "lefthook-openbsd-arm64": "2.1.10", "lefthook-openbsd-x64": "2.1.10", "lefthook-windows-arm64": "2.1.10", "lefthook-windows-x64": "2.1.10" }, "bin": { "lefthook": "bin/index.js" } }, "sha512-K7mM4WoqMwqfXYK11EHy+lSH1uW8XHni3Yn/bSqyerPkUPygGdf3xn18JoV5HyA06xuQL3ofGAOjG01QX9oJ4w=="],
++
++    "lefthook-darwin-arm64": ["lefthook-darwin-arm64@2.1.10", "", { "os": "darwin", "cpu": "arm64" }, "sha512-nw+X8wRNDoUUV6WSteyKBbcLySq+fsmZt5WV/s50ZJpysmsDKJOUMln6SllNfP+60dzUahAO7REco/2633BsLg=="],
++
++    "lefthook-darwin-x64": ["lefthook-darwin-x64@2.1.10", "", { "os": "darwin", "cpu": "x64" }, "sha512-KQ/bHmvpkFdHMn4pZnUdTf+GuSC+aBBgBTxZT4GW+6cSf+qbErKZBhK7cH6BmILsvx43+VzEArvHYY7YOfRFOQ=="],
++
++    "lefthook-freebsd-arm64": ["lefthook-freebsd-arm64@2.1.10", "", { "os": "freebsd", "cpu": "arm64" }, "sha512-8su6DwydP7+pv7kG0zCtjphqsw4ouOnfexRUErapy5GTxYBoUOhYz3RSHTSWNRsK6W4jva7FPUh2Lp5/PSn30w=="],
++
++    "lefthook-freebsd-x64": ["lefthook-freebsd-x64@2.1.10", "", { "os": "freebsd", "cpu": "x64" }, "sha512-GeAJEFxko3Lk+AsnS3NleAFrpyMLFUKOlgJvPKuU0xHwVEI/z+ZoCcmuO0BX+4CS0NLbZhC/YQAvBASqDvvVdQ=="],
++
++    "lefthook-linux-arm64": ["lefthook-linux-arm64@2.1.10", "", { "os": "linux", "cpu": "arm64" }, "sha512-1sHTCmpTWjVMs+yKPBLRNT1kuuIr1yjietlk7rCB6wFPVOS6Ph3o2zPFH2AvW1UymHlqwyHXzBr9EtDpQ7j1mQ=="],
++
++    "lefthook-linux-x64": ["lefthook-linux-x64@2.1.10", "", { "os": "linux", "cpu": "x64" }, "sha512-z/VlRB3bh6mBvW3r1rwnJ5vP8z+Krx5gJzkZ4veDXh+6FlRTx8wtd3g3fllOv/yZMxkgmL3fQoFXv05Esa7vBQ=="],
++
++    "lefthook-openbsd-arm64": ["lefthook-openbsd-arm64@2.1.10", "", { "os": "openbsd", "cpu": "arm64" }, "sha512-430zL8sSIKw5P0YXGG6PB+eAhHa06n0PXuaERaAQE4Ss3odfqwnl5Mq9hQmkEnOS1EGiQEKkd0UHv/i4PtMNIQ=="],
++
++    "lefthook-openbsd-x64": ["lefthook-openbsd-x64@2.1.10", "", { "os": "openbsd", "cpu": "x64" }, "sha512-bgkO8PphGZVDhQgCJ524aYYPI5491pVmCiLPGjBIo1AvOSlIyw4N1Y+1C3QfqwEmechzw+Aq16SNc8pqv6UuXg=="],
++
++    "lefthook-windows-arm64": ["lefthook-windows-arm64@2.1.10", "", { "os": "win32", "cpu": "arm64" }, "sha512-5Q6etF0Fla2DDA4ilDySrdNgiR5+W7cJZwnZ69Je3kvWCaWm4wnkuc8FEdjp3kiL2x3ZXipdI00f5vpO8aWmog=="],
++
++    "lefthook-windows-x64": ["lefthook-windows-x64@2.1.10", "", { "os": "win32", "cpu": "x64" }, "sha512-c/XH8YZtylG4XaxzqFfXluvq2LXq2W/p54Bnzn3+Z7E5X2Fk3JlFJAibulMbIt2+w8T7UI/r97ok5GqE4kGaeA=="],
++
+     "leven": ["leven@3.1.0", "", {}, "sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A=="],
+ 
+     "levn": ["levn@0.4.1", "", { "dependencies": { "prelude-ls": "^1.2.1", "type-check": "~0.4.0" } }, "sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ=="],
+diff --git a/docs/agents/forge-workflow.md b/docs/agents/forge-workflow.md
+index 6aafad6..67e6562 100644
+--- a/docs/agents/forge-workflow.md
++++ b/docs/agents/forge-workflow.md
+@@ -195,9 +195,13 @@ Every stage transition should carry structured context so the next stage (or a n
+ Run at each stage exit to check for missing context:
+ 
+ ```bash
+-bash scripts/beads-context.sh validate <beads-issue-id>
++bd show <beads-issue-id>
+ ```
+ 
++Check by eye that: (1) the issue has a description, (2) at least one stage-transition
++comment exists, (3) the most recent transition carries a summary, (4) design metadata is
++set if the issue is past the plan stage.
++
+ This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+ 
+ ### Field Definitions
+@@ -209,16 +213,14 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
+ 
+ ### Usage in Stage Transitions
+ 
++Record the transition as a comment on the issue:
++
+ ```bash
+-# Basic (backward compatible)
+-bash scripts/beads-context.sh stage-transition <id> dev validate
+-
+-# With context fields (recommended)
+-bash scripts/beads-context.sh stage-transition <id> dev validate \
+-  --summary "All 5 tasks done, 0 gates fired" \
+-  --decisions "Used approach A per design doc" \
+-  --artifacts "lib/foo.js test/foo.test.js" \
+-  --next "Run type check and lint"
++bd comments add <id> "stage: dev -> validate
++summary: All 5 tasks done, 0 gates fired
++decisions: Used approach A per design doc
++artifacts: lib/foo.js test/foo.test.js
++next: Run type check and lint"
+ ```
+ 
+ ### Enforcement Level
+diff --git a/package.json b/package.json
+index d6c677a..6785a76 100644
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,7 @@
+     "preview": "vite preview",
+     "test": "vitest run",
+     "lint": "eslint .",
++    "prepare": "lefthook install",
+     "sync:agents": "node scripts/sync-agent-config.mjs",
+     "type-check": "tsc --noEmit -p tsconfig.json",
+     "mobile:build": "vite build && cap sync",
+@@ -52,6 +53,7 @@
+     "eslint": "^10.3.0",
+     "eslint-plugin-react-hooks": "^7.1.1",
+     "jsdom": "^29.1.1",
++    "lefthook": "^2.1.6",
+     "postcss": "8.5.14",
+     "react-grab": "^0.1.34",
+     "tailwindcss": "^4.3.0",
+-- 
+2.51.0.windows.1
+

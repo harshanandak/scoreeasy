@@ -1,0 +1,215 @@
+From 91daeeb79ca07e5cb62a83dbceb76f43c0bfad7f Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 12:31:46 +0530
+Subject: [PATCH] fix(shell): keep mobile sign-out reachable via single account
+ control
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The bottom nav is the only account surface on mobile (the header is
+hidden under 768px) and MonoProfile has no sign-out control, so a plain
+/profile button would strand mobile users with no way to sign out.
+
+Make the single account control the Clerk account button itself (the
+sole sign-out / manage-account surface) via a BottomNavAccountCell that
+renders the Clerk button once mounted and a /profile fallback button
+while the Clerk chunk loads — exactly one interactive control at a time,
+no invisible overlay.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../design1-mono/AppEntryRoute.test.jsx       |  23 ++--
+ src/designs/design1-mono/index.jsx            | 121 +++++++++++++++++-
+ 2 files changed, 126 insertions(+), 18 deletions(-)
+
+diff --git a/src/designs/design1-mono/AppEntryRoute.test.jsx b/src/designs/design1-mono/AppEntryRoute.test.jsx
+index 4e642b1..b2023f2 100644
+--- a/src/designs/design1-mono/AppEntryRoute.test.jsx
++++ b/src/designs/design1-mono/AppEntryRoute.test.jsx
+@@ -239,7 +239,7 @@ describe('app entry route contract', () => {
+     });
+   });
+ 
+-  it('exposes a single account control in app bottom navigation', async () => {
++  it('exposes a single account control (the Clerk button) in app bottom navigation', async () => {
+     authState = {
+       ...authState,
+       authMode: 'cloud',
+@@ -252,18 +252,15 @@ describe('app entry route contract', () => {
+     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+     const appNav = container.querySelector('.global-bottom-nav');
+ 
+-    // Single control per cell: one labelled "Account" button that navigates to
+-    // the profile screen. The previous invisible Clerk "Account menu" button
+-    // overlaid on top has been removed so screen readers see one control.
+-    expect(within(appNav).getByText('Account')).toBeInTheDocument();
+-    expect(within(appNav).queryByRole('button', { name: 'Account menu', hidden: true })).not.toBeInTheDocument();
+-    expect(within(appNav).getByRole('button', { name: 'Account', hidden: true })).toBeInTheDocument();
+-
+-    fireEvent.click(within(appNav).getByRole('button', { name: 'Account', hidden: true }));
+-
+-    await waitFor(() => {
+-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
+-    });
++    // Single control per cell: once the Clerk account button has mounted it is
++    // the ONLY interactive control (the sole sign-out / manage-account surface
++    // on mobile). The previous pattern stacked an invisible Clerk button over a
++    // separate visible nav button — now there is exactly one.
++    expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
++    expect(within(appNav).queryByRole('button', { name: 'Account', hidden: true })).not.toBeInTheDocument();
++    // Visible label is non-interactive chrome, hidden from assistive tech.
++    const label = within(appNav).getByText('Account');
++    expect(label).toHaveAttribute('aria-hidden', 'true');
+   });
+ 
+   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
+diff --git a/src/designs/design1-mono/index.jsx b/src/designs/design1-mono/index.jsx
+index bb4ff64..9691d9b 100644
+--- a/src/designs/design1-mono/index.jsx
++++ b/src/designs/design1-mono/index.jsx
+@@ -574,6 +574,69 @@ NavIcon.propTypes = {
+   name: PropTypes.oneOf(['home', 'play', 'matches', 'stats', 'account']).isRequired,
+ };
+ 
++// Single account control for the mobile bottom nav. The bottom nav is the ONLY
++// account surface on mobile (the header is hidden under 768px), so this cell
++// renders the real Clerk account button — the sole sign-out / manage-account
++// entry point. We render exactly one interactive control: the Clerk button when
++// it has mounted, otherwise a /profile fallback button so the tab is never dead
++// during the async Clerk component load. (No invisible button stacked on a
++// visible one — that double control was the accessibility bug this fixes.)
++function BottomNavAccountCell({ item, active, onNavigate }) {
++  const [clerkReady, setClerkReady] = useState(false);
++  const controlRef = useRef(null);
++
++  useEffect(() => {
++    const node = controlRef.current;
++    if (!node) return undefined;
++
++    const sync = () => setClerkReady(node.childElementCount > 0);
++    sync();
++
++    // Clerk's UserButton mounts asynchronously after its chunk loads; watch the
++    // host node so the fallback hands off to the real control without flicker.
++    const ObserverCtor = globalThis.MutationObserver;
++    if (typeof ObserverCtor !== 'function') return undefined;
++    const observer = new ObserverCtor(sync);
++    observer.observe(node, { childList: true });
++    return () => observer.disconnect();
++  }, []);
++
++  return (
++    <div className="global-bottom-nav-account-cell">
++      <span
++        ref={controlRef}
++        className={`global-bottom-nav-account-control${clerkReady ? ' is-ready' : ''}`}
++      >
++        <AuthUserButton aria-label="Account menu" />
++      </span>
++      {!clerkReady && (
++        <button
++          type="button"
++          onClick={onNavigate}
++          className="global-bottom-nav-account-fallback"
++          aria-current={active ? 'page' : undefined}
++          aria-label="Account"
++        >
++          <span className="global-bottom-nav-icon">
++            <NavIcon name={item.icon} />
++          </span>
++        </button>
++      )}
++      <span className="global-bottom-nav-label" aria-hidden="true">{item.label}</span>
++    </div>
++  );
++}
++
++BottomNavAccountCell.propTypes = {
++  item: PropTypes.shape({
++    icon: PropTypes.string.isRequired,
++    label: PropTypes.string.isRequired,
++    path: PropTypes.string.isRequired,
++  }).isRequired,
++  active: PropTypes.bool,
++  onNavigate: PropTypes.func.isRequired,
++};
++
+ function GlobalNavigation({ requestScoringExit }) {
+   const navigate = useNavigate();
+   const location = useLocation();
+@@ -825,11 +888,25 @@ function GlobalNavigation({ requestScoringExit }) {
+           style={{ '--bottom-nav-count': bottomNavItems.length }}
+         >
+           {bottomNavItems.map((item) => {
+-            // Single control per cell. The account tab is a plain navigation
+-            // button to the profile screen — no invisible Clerk UserButton
+-            // overlaid on top (that double-control confused screen readers and
+-            // made the visible icon/label a dead tap target). The Clerk account
+-            // popover stays reachable from the header on larger screens.
++            // Single control per cell. For a signed-in account tab the ONE
++            // control is the Clerk account button itself (the only sign-out /
++            // manage-account surface on mobile, where the header is hidden) with
++            // a non-interactive label beneath it. We no longer stack an
++            // invisible Clerk button over a separate visible nav button — that
++            // double control confused screen readers and dead-mapped the tap.
++            // If Clerk has not loaded yet, fall back to a single nav button to
++            // /profile so the tab is never dead.
++            if (item.tab === 'account') {
++              return (
++                <BottomNavAccountCell
++                  key={item.path}
++                  item={item}
++                  active={isActive(item)}
++                  onNavigate={() => go(item.path)}
++                />
++              );
++            }
++
+             return (
+               <button
+                 key={item.path}
+@@ -1303,6 +1380,40 @@ function GlobalNavigation({ requestScoringExit }) {
+             line-height: 1;
+           }
+ 
++          /* Account cell: one stacked control (Clerk button or fallback) plus a
++             non-interactive label, laid out to match the other tabs. */
++          .global-bottom-nav-account-cell {
++            display: flex;
++            align-items: center;
++            justify-content: center;
++            flex-direction: column;
++            gap: 3px;
++            min-height: 54px;
++            min-width: 0;
++            color: var(--se-color-ink-muted);
++          }
++
++          .global-bottom-nav-account-control {
++            display: inline-flex;
++            align-items: center;
++            justify-content: center;
++            width: 24px;
++            height: 24px;
++          }
++
++          .global-bottom-nav-account-fallback {
++            display: inline-flex;
++            align-items: center;
++            justify-content: center;
++            width: 100%;
++            min-height: 24px;
++            border: 0;
++            border-radius: 10px;
++            background: transparent;
++            color: currentColor;
++            cursor: pointer;
++          }
++
+           /* Unified active treatment: every nav surface (header link, mobile
+              sheet item, bottom-nav item) paints the active tab with the same
+              solid action fill + inverse ink, so the "you are here" cue is
+-- 
+2.51.0.windows.1
+

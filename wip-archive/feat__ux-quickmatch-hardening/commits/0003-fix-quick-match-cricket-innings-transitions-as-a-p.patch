@@ -1,0 +1,325 @@
+From 194893b44730b2173469aa798e08f4e62851f0e7 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 23:53:42 +0530
+Subject: [PATCH] fix(quick-match): cricket innings transitions as a
+ post-commit effect + break screen (#106)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Innings flip and match-finish ran as side effects INSIDE the setScores updaters
+(addRuns/addWicket/addExtra), so they read stale closure state and could double-
+fire when React re-invokes an updater (StrictMode/batching) — risking a double
+finalize. Make the updaters pure and move all transitions to ONE post-commit
+effect that reads committed state.
+
+Ordering is preserved: the boundary ball's broadcast is gated on a one-shot intent
+ref, so the innings/battingTeam change re-runs that effect harmlessly (no new
+intent -> no spurious feed event); and finishCricketMatch defers setPhase('result')
+to the next render, so the winning ball still enqueues before finalize drains (R1).
+
+Also adds the cricket innings-break interstitial (item 9): an innings-1 summary +
+chase target shown before innings 2, dismissed with "Start innings 2". Not
+persisted, so a reload simply resumes scoring; reset on a new match.
+
+Tests (StrictMode) assert exactly one innings flip with no premature finalize, and
+exactly one persist/finalize when the second innings ends — the regression a
+double-invoked updater would have produced.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../MonoQuickMatch.hardening.test.jsx         |  71 ++++++++++-
+ src/designs/design1-mono/MonoQuickMatch.jsx   | 118 +++++++++++-------
+ 2 files changed, 140 insertions(+), 49 deletions(-)
+
+diff --git a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+index 4ba1b62..554d4a1 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx
+@@ -1,3 +1,4 @@
++import { StrictMode } from 'react';
+ import { describe, it, expect, vi, beforeEach } from 'vitest';
+ import { fireEvent, render, screen, within } from '@testing-library/react';
+ 
+@@ -8,7 +9,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
+ 
+ const nav = vi.hoisted(() => vi.fn());
+ const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, queryResult: undefined }));
+-const storageMock = vi.hoisted(() => ({ clearData: vi.fn() }));
++const storageMock = vi.hoisted(() => ({ clearData: vi.fn(), saveQuickMatch: vi.fn(() => true) }));
+ const live = vi.hoisted(() => ({
+   point: vi.fn(() => Promise.resolve()),
+   undo: vi.fn(() => Promise.resolve()),
+@@ -41,7 +42,7 @@ vi.mock('../../utils/storage', () => ({
+   loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+   saveData: vi.fn(() => true),
+   clearData: storageMock.clearData,
+-  saveQuickMatch: vi.fn(() => true),
++  saveQuickMatch: storageMock.saveQuickMatch,
+   isStaleQuickMatchDraft: () => false,
+ }));
+ 
+@@ -65,6 +66,9 @@ function seedVolleyball(extra = {}) {
+ beforeEach(() => {
+   nav.mockClear();
+   storageMock.clearData.mockClear();
++  storageMock.saveQuickMatch.mockClear();
++  live.point.mockClear();
++  live.finalize.mockClear();
+   ctx.queryResult = undefined;
+ });
+ 
+@@ -140,4 +144,67 @@ describe('MonoQuickMatch hardening (#106)', () => {
+     // The strip lives in a polite live region so each action is announced.
+     expect(lastActionText.closest('[aria-live="polite"]')).not.toBeNull();
+   });
++
++  // Cricket innings transitions moved from inside the setScores updaters to a single
++  // post-commit effect. StrictMode double-invokes mount effects + updaters, which is
++  // exactly what would surface a double innings-flip / double-finalize regression.
++  it('flips the cricket innings once at innings end without finalizing (StrictMode)', () => {
++    ctx.sport = 'cricket';
++    ctx.draft = {
++      ...base,
++      sport: 'cricket',
++      quickMatchId: 5005,
++      // players: 2 -> maxWickets 1, so a single OUT ends the innings.
++      format: { overs: 5, players: 2 },
++      scores: {
++        team1: { runs: 7, balls: 3, wickets: 0, allOut: false },
++        team2: { runs: 0, balls: 0, wickets: 0, allOut: false },
++      },
++      innings: 1,
++      battingTeam: 1,
++      cricketHistory: [],
++    };
++    render(
++      <StrictMode>
++        <MonoQuickMatch />
++      </StrictMode>,
++    );
++
++    fireEvent.click(screen.getByRole('button', { name: 'OUT' }));
++
++    // Innings 1 ending shows the break with the chase target; it never finalizes.
++    const breakDialog = screen.getByRole('dialog', { name: 'Innings break' });
++    expect(breakDialog).toBeInTheDocument();
++    expect(breakDialog).toHaveTextContent('need 8 to win'); // team1's 7 + 1
++    expect(live.finalize).not.toHaveBeenCalled();
++    expect(storageMock.saveQuickMatch).not.toHaveBeenCalled();
++  });
++
++  it('finalizes the cricket match exactly once when the second innings ends (StrictMode)', () => {
++    ctx.sport = 'cricket';
++    ctx.draft = {
++      ...base,
++      sport: 'cricket',
++      quickMatchId: 6006,
++      format: { overs: 5, players: 2 }, // maxWickets 1
++      scores: {
++        team1: { runs: 5, balls: 30, wickets: 0, allOut: false }, // innings 1 total
++        team2: { runs: 5, balls: 12, wickets: 0, allOut: false },  // chasing
++      },
++      innings: 2,
++      battingTeam: 2,
++      cricketHistory: [],
++    };
++    render(
++      <StrictMode>
++        <MonoQuickMatch />
++      </StrictMode>,
++    );
++
++    // OUT all-out ends innings 2 -> finish, persisted exactly once (no double-fire).
++    fireEvent.click(screen.getByRole('button', { name: 'OUT' }));
++
++    expect(storageMock.saveQuickMatch).toHaveBeenCalledTimes(1);
++    expect(live.finalize).toHaveBeenCalledTimes(1);
++  });
+ });
+diff --git a/src/designs/design1-mono/MonoQuickMatch.jsx b/src/designs/design1-mono/MonoQuickMatch.jsx
+index 093910f..f3cb399 100644
+--- a/src/designs/design1-mono/MonoQuickMatch.jsx
++++ b/src/designs/design1-mono/MonoQuickMatch.jsx
+@@ -348,6 +348,7 @@ export default function MonoQuickMatch() {
+   const [showAdvanced, setShowAdvanced] = useState(false);
+   const [showEndConfirm, setShowEndConfirm] = useState(false);
+   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
++  const [showInningsBreak, setShowInningsBreak] = useState(false);
+   const endMatchTriggerRef = useRef(null);
+   const [servingTeam, setServingTeam] = useState(1);
+   const [lastAction, setLastAction] = useState('');
+@@ -980,6 +981,8 @@ export default function MonoQuickMatch() {
+     setLastAction('');
+     setSidesSwapped(false);
+     setShowEndConfirm(false);
++    setShowDiscardConfirm(false);
++    setShowInningsBreak(false);
+     timer.reset();
+     startedAtRef.current = null;
+     scoringSportRef.current = sport;
+@@ -1047,29 +1050,13 @@ export default function MonoQuickMatch() {
+     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: runs, at: Date.now() };
+     setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit, innings, battingTeam }]);
+ 
++    // Pure updater: compute the new score only. Innings flip / match finish are
++    // handled by a single post-commit effect, so they read committed state and
++    // can't double-fire when React re-invokes the updater (StrictMode/batching).
+     setScores(prev => {
+       const team = { ...prev[key] };
+       team.runs += runs;
+       team.balls += 1;
+-
+-      // Check if innings over
+-      if (team.balls >= totalBalls) {
+-        if (innings === 1) {
+-          setInnings(2);
+-          setBattingTeam(battingTeam === 1 ? 2 : 1);
+-        } else {
+-          finishCricketMatch({ ...prev, [key]: team });
+-        }
+-      }
+-
+-      // Check if team 2 chased
+-      if (innings === 2) {
+-        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
+-        if (team.runs > target) {
+-          finishCricketMatch({ ...prev, [key]: team });
+-        }
+-      }
+-
+       return { ...prev, [key]: team };
+     });
+   };
+@@ -1090,22 +1077,13 @@ export default function MonoQuickMatch() {
+     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 0, at: Date.now() };
+     setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit, innings, battingTeam }]);
+ 
++    // Pure updater: compute the new score (incl. all-out flag). Innings flip /
++    // finish are handled by the post-commit transition effect.
+     setScores(prev => {
+       const team = { ...prev[key] };
+       team.wickets += 1;
+       team.balls += 1;
+-
+-      // All out when wickets >= players-1, or overs done
+-      if (team.wickets >= maxWickets || team.balls >= totalBalls) {
+-        team.allOut = team.wickets >= maxWickets;
+-        if (innings === 1) {
+-          setInnings(2);
+-          setBattingTeam(battingTeam === 1 ? 2 : 1);
+-        } else {
+-          finishCricketMatch({ ...prev, [key]: team });
+-        }
+-      }
+-
++      if (team.wickets >= maxWickets) team.allOut = true;
+       return { ...prev, [key]: team };
+     });
+   };
+@@ -1126,26 +1104,12 @@ export default function MonoQuickMatch() {
+     setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
+     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 1, at: Date.now() };
+     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
++    // Pure updater: add the extra run (+ a ball for byes/leg-byes). Innings flip /
++    // chase-complete / finish are handled by the post-commit transition effect.
+     setScores(prev => {
+       const team = { ...prev[key], runs: prev[key].runs + 1 };
+-      // Byes / leg byes are legal deliveries — they consume a ball.
+       if (countsAsBall) {
+         team.balls += 1;
+-        if (team.balls >= totalBalls) {
+-          if (innings === 1) {
+-            setInnings(2);
+-            setBattingTeam(battingTeam === 1 ? 2 : 1);
+-          } else {
+-            finishCricketMatch({ ...prev, [key]: team });
+-          }
+-        }
+-      }
+-      // Chase complete in the second innings (any extra adds a run).
+-      if (innings === 2) {
+-        const target = battingTeam === 2 ? prev.team1.runs : prev.team2.runs;
+-        if (team.runs > target) {
+-          finishCricketMatch({ ...prev, [key]: team });
+-        }
+       }
+       return { ...prev, [key]: team };
+     });
+@@ -1212,6 +1176,31 @@ export default function MonoQuickMatch() {
+             finalizeMatch(r);
+   };
+ 
++  // Cricket innings flip / match finish as a single POST-COMMIT effect, instead of
++  // side effects inside the setScores updaters (which read stale closure state and
++  // could double-fire when React re-invokes an updater under StrictMode/batching).
++  // It reads the COMMITTED scores. Ordering vs the broadcast/finalize effects is
++  // safe: the boundary ball's broadcast is gated on a one-shot intent ref, so the
++  // innings/battingTeam change here re-runs that effect harmlessly (no new intent →
++  // no re-broadcast); and finishCricketMatch defers setPhase('result') to the next
++  // render, so the winning ball still enqueues before finalize drains (R1).
++  useEffect(() => {
++    if (!isCricket || phase !== 'scoring') return;
++    const key = battingTeam === 1 ? 'team1' : 'team2';
++    const team = scores[key];
++    if (!team) return;
++    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
++    const chaseTarget = battingTeam === 2 ? scores.team1.runs : scores.team2.runs;
++    const chaseDone = innings === 2 && team.runs > chaseTarget;
++    if (innings === 1 && inningsOver) {
++      setShowInningsBreak(true);
++      setInnings(2);
++      setBattingTeam(battingTeam === 1 ? 2 : 1);
++    } else if (innings === 2 && (inningsOver || chaseDone)) {
++      finishCricketMatch(scores);
++    }
++  }, [scores, innings, battingTeam, isCricket, phase, totalBalls, maxWickets]);
++
+   const completeSetIfNeeded = (candidateSets, setIndex, activeSetIndex = currentSet) => {
+     const update = { nextSets: candidateSets, nextActiveSetIndex: null, result: null };
+     if (!(format.type === 'best-of' && sportConfig?.config)) return update;
+@@ -2541,6 +2530,41 @@ export default function MonoQuickMatch() {
+         ? (battingTeam === 2 ? scores.team1.runs : scores.team2.runs)
+         : null;
+ 
++      // Innings break: summarise innings 1 and the chase target before innings 2
++      // scoring. Not persisted to the draft, so a reload simply resumes scoring.
++      if (showInningsBreak) {
++        return (
++          <div className="mono-scorer-screen mono-arena-screen">
++            <div className="mono-scorer-shell mono-cricket-shell">
++              <h1 className="sr-only">{quickMatchScoringHeading}</h1>
++              <section
++                className="mono-card"
++                role="dialog"
++                aria-modal="true"
++                aria-label="Innings break"
++                style={{ margin: 'auto', maxWidth: 420, padding: 24, display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'center' }}
++              >
++                <p className="font-swiss" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--se-color-ink-muted)' }}>
++                  Innings break
++                </p>
++                <div>
++                  <p className="text-sm" style={{ color: 'var(--se-color-ink-muted)' }}>{otherName} scored</p>
++                  <p className="mono-score" style={{ fontSize: '2rem', fontWeight: 800 }}>{otherScore.runs}/{otherScore.wickets}</p>
++                  <p className="text-xs" style={{ color: 'var(--se-color-ink-faint)' }}>({ballsToOvers(otherScore.balls)} overs)</p>
++                </div>
++                <p className="text-sm" style={{ color: 'var(--se-color-ink)' }}>
++                  {currentName} need <strong>{(target ?? 0) + 1}</strong> to win
++                  {showOvers && format.overs ? ` from ${format.overs} overs` : ''}.
++                </p>
++                <button type="button" className="mono-btn-primary w-full" style={{ minHeight: 52 }} onClick={() => setShowInningsBreak(false)}>
++                  Start innings 2
++                </button>
++              </section>
++            </div>
++          </div>
++        );
++      }
++
+       // CrickHeroes-style derived context (no new storage)
+       const overPips = cricketOverPips(cricketHistory, innings, battingTeam);
+       const crr = currentScore.balls > 0 ? calculateRunRate(currentScore.runs, currentScore.balls) : 0;
+-- 
+2.51.0.windows.1
+

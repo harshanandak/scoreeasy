@@ -1,0 +1,547 @@
+From 7103f07eb9bf53d898fae89cac69538d0911fc81 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 28 Jun 2026 13:37:00 +0530
+Subject: [PATCH] fix(scoring): sets/volleyball scorer UX fixes
+ (MonoSetsLiveScore)
+
+Addresses the multi-surface UX audit items in #108:
+
+- Set-won notice: capture the COMPLETED set number into state at
+  completion time (currentSet advances when the next set opens and
+  never advances on the match-ending set, so reading it at render was
+  wrong).
+- Side-out serve switch now broadcasts: emit a value:0 point intent
+  before the early return so spectators stay in lockstep; previously
+  the switch wrote no backend event, so a later undo popped the last
+  real point and desynced the watch.
+- Loading vs not-found: track a load lifecycle and render the existing
+  RouteRecoveryActions surface on not-found instead of a permanent
+  "Loading...".
+- Undo reverses serve in side-out: the serve switch records history
+  (with the pre-switch servingTeam) and now broadcasts an undo in
+  lockstep with the local restore.
+- Per-team correction (-1): floor-at-0, history-recorded, never
+  completes a set or rotates serve; mirrored as a value:-1 point.
+- Deuce/serve rotation: gate the every-point-at-deuce switch to
+  uncapped formats (!maxPoints) so it can never mis-fire for capped
+  sports.
+- Broadcast scorecardKind is now engine-derived (sets -> volleyball)
+  rather than hardcoded.
+
+Adds MonoSetsLiveScore.test.jsx (9 cases) covering set-won number,
+serve-switch broadcast + undo, correction, not-found recovery,
+rotation behavior, and engine-derived kind.
+
+Closes #108
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../scoring/MonoSetsLiveScore.jsx             | 124 ++++++++-
+ .../scoring/MonoSetsLiveScore.test.jsx        | 249 ++++++++++++++++++
+ 2 files changed, 364 insertions(+), 9 deletions(-)
+ create mode 100644 src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+index cc51207..1b231ad 100644
+--- a/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx
+@@ -12,6 +12,7 @@ import { triggerConfetti } from '../utils/confetti';
+ import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
+ import { getConsent } from '../../../lib/live/liveSession';
+ import LiveBroadcastBar from '../live/LiveBroadcastBar';
++import RouteRecoveryActions from '../components/RouteRecoveryActions';
+ 
+ const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
+ 
+@@ -33,6 +34,10 @@ export default function MonoSetsLiveScore() {
+   const [sportConfig, setSportConfig] = useState(null);
+   const [tournament, setTournament] = useState(null);
+   const [match, setMatch] = useState(null);
++  // Load lifecycle: 'loading' until the effect resolves, then 'ready' (match
++  // found) or 'notfound' (bad sport/tournament/match) so we can show a real
++  // recovery surface instead of a permanent "Loading…" (issue #108).
++  const [loadStatus, setLoadStatus] = useState('loading');
+ 
+   // Scoring state
+   const [currentSet, setCurrentSet] = useState(0);
+@@ -62,6 +67,11 @@ export default function MonoSetsLiveScore() {
+   // Animation state
+   const [showSetWon, setShowSetWon] = useState(false);
+   const [setWonTeam, setSetWonTeam] = useState('');
++  // The 1-indexed number of the set that JUST completed. Captured at completion
++  // time because `currentSet` increments when the next set opens, so reading it
++  // at render shows the wrong (next) number — and never advances at all on the
++  // match-ending set (issue #108).
++  const [setWonNumber, setSetWonNumber] = useState(0);
+   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
+ 
+   // Debounce ref for rapid clicks
+@@ -88,22 +98,23 @@ export default function MonoSetsLiveScore() {
+   // Load tournament and match
+   useEffect(() => {
+     const config = getSportById(sport);
+-    if (!config) return;
++    if (!config) { setLoadStatus('notfound'); return; }
+ 
+     const tournaments = loadSportTournaments(config.storageKey);
+     const found = tournaments.find(t => t.id === Number(id));
+-    if (!found) return;
++    if (!found) { setLoadStatus('notfound'); return; }
+ 
+     let foundMatch = found.matches.find(m => m.id === matchId);
+     if (!foundMatch) {
+       foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId);
+       if (foundMatch) isKnockoutRef.current = true;
+     }
+-    if (!foundMatch) return;
++    if (!foundMatch) { setLoadStatus('notfound'); return; }
+ 
+     setSportConfig(config);
+     setTournament(found);
+     setMatch(foundMatch);
++    setLoadStatus('ready');
+     const supportedModes = config?.config?.scoringModes;
+     const defaultScoringMode = (Array.isArray(supportedModes) && supportedModes.includes(config?.config?.defaultScoringMode))
+       ? config.config.defaultScoringMode
+@@ -195,7 +206,12 @@ export default function MonoSetsLiveScore() {
+     }
+     const target = getCurrentSetTarget(currentSet, effectiveFormat);
+     const totalPoints = (setScore?.score1 || 0) + (setScore?.score2 || 0);
+-    const atDeuce = (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
++    // The every-point-at-deuce switch only applies to UNCAPPED formats (e.g.
++    // table tennis). Capped sports (badminton, maxPoints=30) don't use it — and
++    // in fact reach this code path only via rotation===1 (handled above), so the
++    // guard keeps the deuce special-case from ever mis-firing for them (#108).
++    const maxPoints = sportConfig?.config?.maxPoints;
++    const atDeuce = !maxPoints && (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
+     if (atDeuce) {
+       setServingTeam((prev) => (prev === 1 ? 2 : 1));
+       return;
+@@ -233,14 +249,19 @@ export default function MonoSetsLiveScore() {
+     setScoreAnimKey(prev => ({ ...prev, [team === 1 ? 'left' : 'right']: (prev[team === 1 ? 'left' : 'right'] || 0) + 1 }));
+ 
+     // Side-out scoring: non-serving team tap switches serve without adding a point.
++    // Mirror the side-out to the broadcast like any sibling action: a serve
++    // switch changes no score, so we emit a value:0 "point" whose snapshot
++    // carries the new serving team (the watch reads servingTeam from the patched
++    // snapshot). This is reversed in lockstep by undo (issue #108).
+     if (scoringMode === 'side-out' && team !== servingTeam) {
++      broadcastIntentRef.current = { kind: 'serve', team: team === 1 ? 'A' : 'B', value: 0, at: Date.now() };
+       setServingTeam(team);
+       return;
+     }
+ 
+     // An actual point is being scored — mark it for broadcast (snapshot built
+     // once the set state settles, see the broadcast effect). team1 -> A.
+-    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
++    broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', value: 1, at: Date.now() };
+ 
+     setSets(prevSets => {
+       const newSets = prevSets.map(s => ({ ...s }));
+@@ -263,6 +284,7 @@ export default function MonoSetsLiveScore() {
+         const winningTeam = tournament.teams.find(t => t.id === winnerId)?.name;
+ 
+         setSetWonTeam(winningTeam || `Team ${team}`);
++        setSetWonNumber(currentSet + 1); // the set that just completed (1-indexed)
+         setShowSetWon(true);
+         setTimeout(() => setShowSetWon(false), 1500);
+ 
+@@ -298,6 +320,43 @@ export default function MonoSetsLiveScore() {
+     });
+   };
+ 
++  // Per-point correction (-1) for a team — fixes a mis-tap without unwinding the
++  // whole undo stack. Floors at 0 (a no-op when the score is already 0), records
++  // history so it is itself undoable, and never completes a set or rotates serve.
++  // Mirrored to the broadcast as a value:-1 point so spectators stay in sync.
++  const correctPoint = (team) => {
++    if (!sportConfig || !tournament || isInteractionLocked) return;
++
++    const now = Date.now();
++    if (now - lastClickRef.current < 150) return;
++    lastClickRef.current = now;
++
++    if (sets[currentSet]?.completed) return;
++
++    const scoreKey = team === 1 ? 'score1' : 'score2';
++    if ((sets[currentSet]?.[scoreKey] || 0) <= 0) return; // nothing to take away
++
++    triggerHaptic(30);
++
++    setHistory(prev => [...prev, {
++      timestamp: Date.now(),
++      sets: structuredClone(sets),
++      currentSet,
++      servingTeam,
++      scoringMode,
++    }].slice(-100));
++
++    setHasChanges(true);
++
++    broadcastIntentRef.current = { kind: 'correction', team: team === 1 ? 'A' : 'B', value: -1, at: Date.now() };
++
++    setSets(prevSets => {
++      const newSets = prevSets.map(s => ({ ...s }));
++      newSets[currentSet][scoreKey] = Math.max(0, newSets[currentSet][scoreKey] - 1);
++      return newSets;
++    });
++  };
++
+   // Undo last action
+   const undo = () => {
+     if (history.length === 0 || isInteractionLocked) return;
+@@ -356,7 +415,10 @@ export default function MonoSetsLiveScore() {
+     if (intent.kind === 'undo') {
+       liveRef.current.undo({ at: intent.at, snapshot });
+     } else {
+-      liveRef.current.point({ team: intent.team, value: 1, at: intent.at, snapshot });
++      // 'point' (value 1), 'serve' switch (value 0) and 'correction' (value -1)
++      // all flow through the same point() surface; the snapshot carries the
++      // settled score/serving so spectators stay in lockstep with undo.
++      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
+     }
+   }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
+ 
+@@ -466,7 +528,18 @@ export default function MonoSetsLiveScore() {
+   const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
+   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
+ 
+-  if (!sportConfig || !tournament || !match) {
++  if (loadStatus === 'notfound') {
++    return (
++      <RouteRecoveryActions
++        eyebrow="Scorer recovery"
++        title="Match not found"
++        message="This scorer link does not match a saved tournament match on this device."
++        sportId={getSportById(sport)?.id}
++      />
++    );
++  }
++
++  if (loadStatus !== 'ready' || !sportConfig || !tournament || !match) {
+     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
+       <p style={{ color: 'var(--se-color-ink-muted)' }}>Loading...</p>
+     </div>;
+@@ -494,6 +567,14 @@ export default function MonoSetsLiveScore() {
+   const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
+   const rightServing = sidesSwapped ? servingTeam === 1 : servingTeam === 2;
+   const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally');
++  // Broadcast scorecard kind, derived from the sport's ENGINE rather than
++  // hardcoded (#108). Every sport this scorer drives (volleyball, badminton,
++  // tabletennis, pickleball, squash) is engine 'sets' and renders through the
++  // watch's points-per-set scorebug, whose kind is 'volleyball'. Deriving by
++  // engine — instead of the sport id — avoids regressing the watch to the
++  // generic card (its ScorecardPanel only special-cases 'volleyball'/'tennis').
++  // Tennis routes to its own scorer, so it never reaches here.
++  const liveScorecardKind = sportConfig?.engine === 'sets' ? 'volleyball' : 'generic';
+ 
+   const { pointsPerSet, deciderPoints, winBy } = sportConfig.config;
+   const formatType = effectiveFormat.type || 'best-of';
+@@ -566,7 +647,7 @@ export default function MonoSetsLiveScore() {
+           descriptor={{
+             clientMatchId: liveClientMatchId,
+             sport,
+-            scorecardKind: 'volleyball',
++            scorecardKind: liveScorecardKind,
+             teamA: { name: team1Name },
+             teamB: { name: team2Name },
+           }}
+@@ -639,6 +720,31 @@ export default function MonoSetsLiveScore() {
+           </div>
+         </div>
+ 
++        {/* Per-team correction (-1) — fix a mis-tap without unwinding undo.
++            Mirrors the left/right side-swap mapping of the arena above. */}
++        <div className="mono-quick-action-row" style={{ marginBottom: '0.75rem' }}>
++          <button
++            type="button"
++            onClick={() => canScoreCurrentSet && correctPoint(leftTeam)}
++            disabled={!canScoreCurrentSet || leftScore <= 0}
++            aria-label={`Correct ${leftName}: remove one point`}
++            className="mono-btn"
++            style={{ minHeight: 44, opacity: (!canScoreCurrentSet || leftScore <= 0) ? 0.4 : 1, touchAction: 'manipulation' }}
++          >
++            &minus;1 {leftName}
++          </button>
++          <button
++            type="button"
++            onClick={() => canScoreCurrentSet && correctPoint(rightTeam)}
++            disabled={!canScoreCurrentSet || rightScore <= 0}
++            aria-label={`Correct ${rightName}: remove one point`}
++            className="mono-btn"
++            style={{ minHeight: 44, opacity: (!canScoreCurrentSet || rightScore <= 0) ? 0.4 : 1, touchAction: 'manipulation' }}
++          >
++            &minus;1 {rightName}
++          </button>
++        </div>
++
+         {/* Rules info */}
+         <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-faint)' }}>
+           {targetPoints} points to win &middot; Win by {winBy}
+@@ -701,7 +807,7 @@ export default function MonoSetsLiveScore() {
+       {/* Set Won Notification */}
+       {showSetWon && (
+         <div className="mono-set-won mono-set-won-animate">
+-          {setWonTeam} wins Set {currentSet}!
++          {setWonTeam} wins Set {setWonNumber}!
+         </div>
+       )}
+     </div>
+diff --git a/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+new file mode 100644
+index 0000000..4a42e85
+--- /dev/null
++++ b/src/designs/design1-mono/scoring/MonoSetsLiveScore.test.jsx
+@@ -0,0 +1,249 @@
++import { describe, it, expect, vi, beforeEach } from 'vitest';
++import { fireEvent, render, screen, within } from '@testing-library/react';
++
++// Issue #108 — MonoSetsLiveScore UX fixes. There is no existing render harness
++// for this scorer, so these tests drive the real component to verify:
++//   1. set-won notification shows the COMPLETED set number,
++//   2. a side-out serve switch broadcasts (value 0),
++//   3. loading vs not-found are distinct (recovery surface on not-found),
++//   4. undo reverses a side-out serve switch + broadcasts an undo,
++//   5. per-team correction (-1) decrements, floors at 0, and broadcasts value -1,
++//   7. the broadcast descriptor carries the engine-derived scorecard kind.
++
++const broadcast = vi.hoisted(() => ({
++  point: vi.fn(() => Promise.resolve(null)),
++  undo: vi.fn(() => Promise.resolve(null)),
++  finalize: vi.fn(() => Promise.resolve(null)),
++  goLive: vi.fn(() => Promise.resolve(null)),
++  setVisibility: vi.fn(() => Promise.resolve(null)),
++  reset: vi.fn(),
++  isLive: false,
++  token: null,
++  error: null,
++}));
++
++const h = vi.hoisted(() => ({
++  params: { sport: 'volleyball', id: '1', matchId: 'm1' },
++  tournaments: [],
++  saveSpy: vi.fn(() => true),
++  makeTournament: ({ format, ...overrides } = {}) => ({
++    id: 1,
++    teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
++    // effectiveFormat reads the TOURNAMENT-level format for non-knockout matches.
++    format: format || { type: 'best-of', sets: 3, points: 25 },
++    matches: [{
++      id: 'm1',
++      team1Id: 1,
++      team2Id: 2,
++      format: format || { type: 'best-of', sets: 3, points: 25, scoringModes: ['rally', 'side-out'] },
++      ...overrides,
++    }],
++    knockoutMatches: [],
++  }),
++}));
++
++vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
++vi.mock('react-router-dom', () => ({
++  useNavigate: () => vi.fn(),
++  useParams: () => h.params,
++}));
++vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
++vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => broadcast }));
++vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));
++// Capture the descriptor handed to the broadcast bar so we can assert the
++// scorecardKind that would be sent on goLive.
++const liveBarProps = vi.hoisted(() => ({ last: null }));
++vi.mock('../live/LiveBroadcastBar', () => ({
++  default: (props) => { liveBarProps.last = props; return null; },
++}));
++vi.mock('../../../utils/storage', () => ({
++  loadSportTournaments: () => h.tournaments,
++  saveSportTournament: h.saveSpy,
++  loadData: vi.fn((_key, def) => def),
++  saveData: vi.fn(() => true),
++}));
++
++// Force a non-touch environment so the keyboard handler / hints attach in jsdom.
++try { delete globalThis.ontouchstart; } catch { /* ignore */ }
++try {
++  Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 0 });
++} catch { /* ignore */ }
++
++const { default: MonoSetsLiveScore } = await import('./MonoSetsLiveScore.jsx');
++
++const wait = (ms) => new Promise((r) => setTimeout(r, ms));
++
++function arenaButtons() {
++  // The two big score halves are the first two buttons with aria-labels ending
++  // in the scoring hint.
++  return screen.getAllByRole('button').filter((b) => /points\./.test(b.getAttribute('aria-label') || ''));
++}
++
++beforeEach(() => {
++  vi.clearAllMocks();
++  h.params = { sport: 'volleyball', id: '1', matchId: 'm1' };
++  h.tournaments = [h.makeTournament()];
++});
++
++describe('MonoSetsLiveScore — issue #108', () => {
++  it('shows a recovery surface (not "Loading…") when the match is not found', async () => {
++    h.tournaments = []; // no tournament for this id
++    render(<MonoSetsLiveScore />);
++    expect(await screen.findByText('Match not found')).toBeTruthy();
++    expect(screen.queryByText('Loading...')).toBeNull();
++  });
++
++  it('renders the live scorer when the match is found', async () => {
++    render(<MonoSetsLiveScore />);
++    expect(await screen.findByText(/points to win/)).toBeTruthy();
++    expect(screen.queryByText('Match not found')).toBeNull();
++  });
++
++  it('broadcasts the engine-derived scorecard kind (volleyball) for a non-volleyball sets sport', async () => {
++    h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
++    h.tournaments = [h.makeTournament({
++      format: { type: 'best-of', sets: 3, points: 21, scoringModes: ['rally', 'side-out'] },
++    })];
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++    // The descriptor flows into LiveBroadcastBar; the kind resolves to
++    // 'volleyball' (engine-derived) even though the sport id is 'badminton'.
++    expect(liveBarProps.last.descriptor.sport).toBe('badminton');
++    expect(liveBarProps.last.descriptor.scorecardKind).toBe('volleyball');
++  });
++
++  it('shows the COMPLETED set number in the set-won notice (match-ending set)', async () => {
++    // Best-of-1 (single): the very first set completing ends the match without
++    // advancing currentSet — the buggy code rendered "Set 0".
++    h.tournaments = [h.makeTournament({
++      format: { type: 'single', sets: 1, points: 1, scoringModes: ['rally'] },
++    })];
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++    const [left] = arenaButtons();
++    // target=1, win-by-2 (volleyball): need 2-0 to satisfy both. Two taps with a
++    // wait between to clear the 150ms rapid-click guard.
++    fireEvent.click(left);
++    await wait(160);
++    fireEvent.click(left);
++    expect(await screen.findByText(/wins Set 1!/)).toBeTruthy();
++  });
++
++  it('shows the COMPLETED set number when a non-final set ends and the next opens', async () => {
++    // Best-of-3, target 1, win-by-2: 2-0 closes set 1 and opens set 2, so
++    // currentSet advances to index 1 — the notice must still say "Set 1".
++    h.tournaments = [h.makeTournament({
++      format: { type: 'best-of', sets: 3, points: 1 },
++    })];
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++    const [left] = arenaButtons();
++    fireEvent.click(left);
++    await wait(160);
++    fireEvent.click(left);
++    expect(await screen.findByText(/wins Set 1!/)).toBeTruthy();
++    // The top badge confirms the scorer advanced to set 2 of 3.
++    expect(screen.getByText('Set 2 of 3')).toBeTruthy();
++  });
++
++  it('side-out serve switch broadcasts a value:0 point and undo reverses it', async () => {
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++
++    // Switch to side-out mode.
++    fireEvent.click(screen.getByTitle('Toggle scoring model'));
++
++    // servingTeam defaults to 1 (team Alpha = left). Tapping the RIGHT half
++    // (team Beta, the non-serving team) switches serve without scoring.
++    const [, right] = arenaButtons();
++    fireEvent.click(right);
++
++    // A serve switch broadcasts a value:0 point for team B.
++    expect(broadcast.point).toHaveBeenCalledTimes(1);
++    const arg = broadcast.point.mock.calls[0][0];
++    expect(arg.team).toBe('B');
++    expect(arg.value).toBe(0);
++    // Score did NOT change.
++    expect(arg.snapshot.pointsA).toBe(0);
++    expect(arg.snapshot.pointsB).toBe(0);
++    // Serving moved to B.
++    expect(arg.snapshot.servingTeam).toBe('B');
++
++    // Undo reverses the serve switch and broadcasts an undo.
++    await wait(160); // clear rapid-click guard
++    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
++    expect(broadcast.undo).toHaveBeenCalledTimes(1);
++    expect(broadcast.undo.mock.calls[0][0].snapshot.servingTeam).toBe('A');
++  });
++
++  it('per-team correction (-1) decrements, broadcasts value -1, and floors at 0', async () => {
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++
++    const [left] = arenaButtons();
++    fireEvent.click(left); // Alpha 1
++    await wait(160);
++
++    // -1 Alpha button corrects the score back to 0.
++    const minusAlpha = screen.getByRole('button', { name: 'Correct Alpha: remove one point' });
++    fireEvent.click(minusAlpha);
++
++    const correctionCall = broadcast.point.mock.calls.find((c) => c[0].value === -1);
++    expect(correctionCall).toBeTruthy();
++    expect(correctionCall[0].team).toBe('A');
++    expect(correctionCall[0].snapshot.pointsA).toBe(0);
++
++    // At 0 the button is disabled (floors at 0, no negative scores).
++    await wait(160);
++    expect(minusAlpha.disabled).toBe(true);
++  });
++
++  // Reads the serving team from the left overline's leading dot. The serving dot
++  // ('● ') prefixes the serving side's name in the arena overline.
++  function servingTeamFromDom() {
++    const overlines = Array.from(document.querySelectorAll('.mono-arena-overline'));
++    const leftServing = (overlines[0]?.textContent || '').startsWith('●');
++    return leftServing ? 'A' : 'B';
++  }
++
++  async function tapServer() {
++    // Always tap the currently serving half so a point is scored (rally mode),
++    // never a side-out switch. The serving team is whoever has the leading dot.
++    const serving = servingTeamFromDom();
++    const [left, right] = arenaButtons();
++    fireEvent.click(serving === 'A' ? left : right);
++    await wait(160);
++  }
++
++  it('table tennis (uncapped) switches serve every 2 points, then every point at deuce', async () => {
++    h.params = { sport: 'tabletennis', id: '1', matchId: 'm1' };
++    h.tournaments = [h.makeTournament({
++      format: { type: 'best-of', sets: 5, points: 11 },
++    })];
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++
++    // Pre-deuce: serve changes every 2 points (serviceRotation = 2).
++    expect(servingTeamFromDom()).toBe('A');
++    await tapServer(); // total 1 → no switch
++    expect(servingTeamFromDom()).toBe('A');
++    await tapServer(); // total 2 → switch to B
++    expect(servingTeamFromDom()).toBe('B');
++  });
++
++  it('badminton (capped) never mis-fires the deuce branch — serve still rotates every point', async () => {
++    h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
++    h.tournaments = [h.makeTournament({
++      format: { type: 'best-of', sets: 3, points: 21 },
++    })];
++    render(<MonoSetsLiveScore />);
++    await screen.findByText(/points to win/);
++
++    // serviceRotation = 1 → switch on every point regardless of deuce.
++    expect(servingTeamFromDom()).toBe('A');
++    await tapServer();
++    expect(servingTeamFromDom()).toBe('B');
++    await tapServer();
++    expect(servingTeamFromDom()).toBe('A');
++  });
++});
+-- 
+2.51.0.windows.1
+

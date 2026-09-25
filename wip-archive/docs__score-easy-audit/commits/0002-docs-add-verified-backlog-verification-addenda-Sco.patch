@@ -1,0 +1,236 @@
+From 43b8e4c7153d6d19198627ec20fc9b826fc0bb7e Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Mon, 22 Jun 2026 16:04:01 +0530
+Subject: [PATCH] docs: add verified backlog + verification addenda (Score Easy
+ audit)
+
+Two adversarial verification passes over all 89 findings: 79 real (3 critical, 4 high, 31 medium, 41 low), 10 dropped as false-positives. Adds docs/audit/VERIFIED-BACKLOG.md (severity-corrected, 6-wave implementation plan) and the lead/P1 verification addenda in MASTER-FINDINGS.md.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ docs/audit/VERIFIED-BACKLOG.md | 213 +++++++++++++++++++++++++++++++++
+ 1 file changed, 213 insertions(+)
+ create mode 100644 docs/audit/VERIFIED-BACKLOG.md
+
+diff --git a/docs/audit/VERIFIED-BACKLOG.md b/docs/audit/VERIFIED-BACKLOG.md
+new file mode 100644
+index 0000000..5cd53d3
+--- /dev/null
++++ b/docs/audit/VERIFIED-BACKLOG.md
+@@ -0,0 +1,213 @@
++# Score Easy — Verified Backlog & Implementation Plan
++
++## Executive summary
++
++This backlog is the trustworthy, post-verification distillation of the Score Easy audit. Every surviving item has been confirmed against the **current** source (the audit's recurring failure mode was finder line-refs drifting from refactored code, so file:line below uses the **corrected** locations from verification, not the stale catalogue refs).
++
++- **Raw findings: 89** (P0: 7, P1: 21, P2: 28, P3: 33).
++- **Survived verification as real: 79** (confirmed + partial). These are the work items.
++- **Dropped as false-positives: 10** — see the next section so nobody re-files them.
++- **Build + tests stay green** (44 files / 402 tests). A claim that contradicts a green test was treated as suspect; where a test *locks in* a bug (P0-3), that is called out explicitly.
++
++### Corrected severity distribution (79 real issues)
++
++| Severity | Count | IDs |
++|----------|-------|-----|
++| Critical | 3 | P0-1, P0-3, P0-4 |
++| High | 4 | P0-5, P0-7, P1-7, P2-4 |
++| Medium | 31 | P1-1, P1-4, P1-8, P1-9, P1-10, P1-14, P1-15, P1-16, P1-20, P1-21, P2-1, P2-2, P2-3, P2-5, P2-6, P2-7, P2-8, P2-9, P2-15, P2-16, P2-19, P2-20, P2-21, P2-22, P2-23, P2-24, P2-25, P2-26, P2-27, P2-28, NAV-1 |
++| Low | 41 | P0-6, P1-6, P1-11, P1-12, P1-13, P1-17, P1-18, P2-10, P2-11, P2-14, P2-17, P2-18, P3-1, P3-2, P3-3, P3-4, P3-5, P3-6, P3-7, P3-8, P3-9, P3-10, P3-13, P3-14, P3-15, P3-16, P3-17, P3-18, P3-19, P3-20, P3-22, P3-23, P3-24, P3-25, P3-26, P3-27, P3-28, P3-29, P3-30, P3-31, P3-32, P3-33 |
++
++> Reconciliation: 3 + 4 + 31 + 41 = 79 real + 10 false-positive = **89 raw**. `confirmed + partial + needs-runtime + false-positive = 89`.
++>
++> **Scope note — verification coverage.** The agent verdicts cover P1-17/20/21 + P2-1..17 + P3-6/7/8/10..33. The last handful (P2-18, P3-1/2/3/4/5/9) were **lead spot-checked by hand** instead: **P3-1 confirmed** (102 `#0066ff` occurrences across 16 files), **P3-2 confirmed** (`--se-border-standard: 1.5px`, index.css:79); **P3-3 & P3-5 partial/over-stated** (year is hardcoded `© 2026` but the "2025 vs 2026" split looks stale; only 2× `#666` in MonoQuickMatch, not a broad spread); **P3-9, P2-18 real but cited lines drifted** — relocate before fixing. All are **Low** and none alter the wave plan. Net: the few rows still marked "prior (not re-verified)" are confirmed-real-or-narrower, not phantom.
++>
++> **NAV-1** is a synthetic id for the highest-impact navigation defect, which lives as unnumbered prose in MASTER-FINDINGS ("By category → Navigation"): the phase-aware scoring-exit guard.
++
++---
++
++## Confirmed false-positives (dropped)
++
++Do not re-file these. Each was checked against current code and found to not hold (or to be unreachable / inverted).
++
++| ID | Title | Why it's a false-positive |
++|----|-------|---------------------------|
++| P0-2 | No-draw goals match auto-saves `winner:'draw'` | All 3 completion paths are guarded via `getBasketballCompletionState({drawAllowed})` → tie in a no-draw sport yields overtime, never a saved `'draw'`. Finder cited wrong lines and missed the guard. |
++| P1-2 | Tournament scoring not persisted per point | Tournament scorers **do** autosave every point (`MonoSetsLiveScore.jsx:296-313`), restored on mount; a green test asserts it. Only residual: `mobile/lifecycle.js` is unwired dead code (low). |
++| P1-3 | Cricket-test has no autosave; reload wipes match | Continuous autosave effect exists (`MonoCricketTestLiveScore.jsx:517-539`); restore on load. There is no "Pause-only" save. Cited lines were pre-refactor. |
++| P1-5 | No sign-out control anywhere | The grep premise was wrong; a sign-out path exists. Central claim refuted. |
++| P1-19 | In-progress cricket-test drafts pollute history/stats | Both consumers call `loadCompletedQuickMatches()` which filters `status==='completed'` (`storage.js:397-399`). Drafts are excluded from History + Statistics totals. |
++| P2-12 | KO score-clear in GenericSetsTournament bypasses undo flow | `deleteKnockoutScore` (`GenericSetsTournament.jsx:138-146`) is dead code — zero call sites, no Clear control in `KnockoutMatchCard`. No user can trigger it. Residual: dead-code smell only (low). |
++| P2-13 | Knockout seeding produces permanent TBD when standings shorter than advancing count | Unreachable: `standings.length === teams.length` always (builders `teams.map`), `teamsAdvancing ≤ teamCount` always (clamped in setup), no import/migration fabricates a mismatch. Byes are wired (green `roundRobin.test.js`). |
++| P3-11 | "Resumed your in-progress match" banner is persistent, no dismiss | It is a transient self-clearing toast: JS `setTimeout(...,3300)` (`MonoQuickMatch.jsx:359-365`) + CSS `mono-note-toast 3300ms` (`mono.css:953-974`). Auto-dismiss already handled. |
++| P3-12 | `/play` shows category tabs with wrong order; "Net Sports" has 1 item | Live `/play` (`MonoPlayHub`) renders only Guided/Browse tabs; categories are sections (not tabs); the single-item Net Sports section is filtered out (volleyball is a priority sport). The only category-tabs file is dead code. |
++| P3-21 | Cricket extras un-addable at over/innings boundary | Inverted premise: only legal balls increment the count, so `balls >= totalBalls` is true exactly when the innings is genuinely over. Extras always recorded before the cap. Correct cricket behavior. |
++
++---
++
++## Verified issues
++
++One row per surviving real issue. **file:line are the verification-corrected locations.** Sorted by severity, then id.
++
++| ID | Severity | Category | Title | file:line | Verdict |
++|----|----------|----------|-------|-----------|---------|
++| P0-1 | Critical | Functionality / cricket | Test match 3rd innings ends on first scoring stroke once third-batting side leads | `MonoCricketTestLiveScore.jsx:192-207` (guard `<2`) | confirmed |
++| P0-3 | Critical | Functionality / sets | Single-set games end on a 1-point margin (win-by-2 not enforced); a test locks the bug | `volleyballCalculations.js:13-21`; consumed `MonoQuickMatch.jsx:1135,1240` | confirmed |
++| P0-4 | Critical | Tournaments / tennis | Tennis tournament sets persist `games1/games2` but standings read `score1/score2` → empty standings | `MonoTennisLiveScore.jsx:63-74,529`; `standingsCalculator.js:42-50` | confirmed |
++| P0-5 | High | Functionality / cricket | No-ball / wide always adds exactly +1; runs off the delivery unrecordable | `MonoCricketLiveScore.jsx:278-299` (`addExtra`) | confirmed |
++| P0-7 | High | Persistence / error-handling | Non-array list value crashes History/Dashboard/Stats; recovery control soft-locked | `storage.js:276-284` (`loadData` no shape-coercion); consumers in History/Dashboard/Stats | confirmed (trigger unlikely, blast radius total) |
++| P1-7 | High | Tournaments | Editing/clearing a group match after knockout starts leaves bracket seeded from stale standings | `roundRobin.js:76-131`; `knockoutManager.js:18-29`; all 3 engines | confirmed |
++| P2-4 | High | Offline / PWA | Matches completed in local mode (offline/unsupported-origin) never sync to cloud; no reconnect replay | `auth/bootstrap.js:18-23`; `MonoQuickMatch.jsx:691-707,716`; `main.jsx:235-258` | confirmed |
++| P1-1 | Medium | Functionality / mobile | Live timer counts only foreground ticks (no wall-clock anchor); auto-ends late after lock/background | `useTimer.js:40-55`; `MonoGoalsLiveScore.jsx` | partial (drifts one-directional, visible) |
++| P1-4 | Medium | Auth / error-handling | OnboardingGuard `isLoading` spinner can strand the whole web app when Convex is unreachable | `index.jsx:193`; `CloudAuthProvider.jsx:127-132`; `main.jsx` | needs-runtime |
++| P1-8 | Medium | Functionality / cricket | Test follow-on innings victory mislabeled "Won by N wickets"; spins up phantom 4th innings | `MonoCricketTestLiveScore.jsx:210-232`; `cricketCalculations.js:195-208` | partial |
++| P1-9 | Medium | Functionality / tennis | Tiebreak-won set never bumps games to 7-6; live + stored show 6-6 | `MonoTennisLiveScore.jsx:165-178`; `tennisQuickMatch.js:12-15` | partial |
++| P1-10 | Medium | Functionality / tennis | Match-clinch advances `currentSet` into a phantom empty set; dead pad looks live | `MonoTennisLiveScore.jsx:334-359,556,569` | partial |
++| P1-14 | Medium | Functionality / UX | Per-sport set-point options dead config; every setup UI hardcodes 10/15/21/25 | `MonoQuickMatch.jsx:1967,1988`; `MonoTournamentSetup.jsx:1210` | partial |
++| P1-15 | Medium | Functionality / tennis | Tennis custom-rules setup is a no-op (points presets + "Single set" both ignored) | `MonoQuickMatch.jsx`; `MonoTennisLiveScore.jsx:74-84` | partial |
++| P1-16 | Medium | Tournaments / UX | Rugby standings header/body mismatch — points lands under "BP", "Pts" blank | `sportRegistry.js:409`; `GenericGoalsTournament.jsx:374-393` | confirmed |
++| P1-20 | Medium | Stats & history | Substring `resolveWinner` mis-attributes win when one team name is a substring of the winner's | `MonoStatistics.jsx:53-63` (offending 58-59) | confirmed |
++| P1-21 | Medium | Functionality / UX | Volleyball registry `defaultSetFormat:2` (Best of 5) is dead config; live default is Best-of-3 | `sportRegistry.js:22`; live via `sportDefaults.js:6-15` | confirmed |
++| P2-1 | Medium | Stats & history | Cross-sport margins compare incomparable units (sets vs goals vs runs) | `MonoStatistics.jsx:145,154-176`; `MonoHistory.jsx:127-133,141` | confirmed |
++| P2-2 | Medium | Stats & history | Overview insight cards are quick-only but sit beside tournament-inclusive totals, no qualifier | `MonoStatistics.jsx:327-334,391-412` | confirmed |
++| P2-3 | Medium | Offline / PWA | Failed quick-sync retriable only via result-screen button; in-memory payload discarded; no persisted-status replay | `MonoQuickMatch.jsx:2689-2696,806`; `useMatchSync.js:37,127-131,156-162` | confirmed |
++| P2-5 | Medium | Functionality / tournaments | Timed tournament goals matches lose the clock on draft resume (no timer persist/restore) | `MonoGoalsLiveScore.jsx:294-308,119-124`; `useTimer.js:4,29-34` | confirmed |
++| P2-6 | Medium | Functionality / UX | Quick-match timed goals keeps accepting goals after expiry (only relabels "Time's up!") | `MonoQuickMatch.jsx:610,1281-1301,2531-2543` | confirmed |
++| P2-7 | Medium | Functionality | "By time"/"By points" without a preset starts match with undefined timeLimit/target (NaN clock) | `MonoQuickMatch.jsx:2019,802,608-610` (tournament path is guarded) | partial |
++| P2-8 | Medium | Functionality / UX | `getRuleSummary` "First to N" falls back to `winPoints` ("First to 2"); scorer never auto-ends | `MonoQuickMatch.jsx:302`; `MonoGoalsLiveScore.jsx:252-253` | confirmed |
++| P2-9 | Medium | Tournaments | Cricket knockout matches render no runs/wickets (`KnockoutMatchCard` lacks a `custom-cricket` branch) | `KnockoutMatchCard.jsx:49-146`; `MonoCricketTournament.jsx:462-471` | confirmed |
++| P2-15 | Medium | Persistence | Quick-match IDs use raw `Date.now()` not `generateId()`; colliding id overwrites a match | `MonoQuickMatch.jsx:830,851,1037,1070,1138,1243,1270,1372`; `storage.js:410-427` | confirmed |
++| P2-16 | Medium | Persistence | No multi-tab consistency; whole-array writes + stale snapshots clobber matches (web/desktop) | `storage.js:401-404,410-428`; `MonoHistory.jsx:306-314,413,433` | confirmed |
++| P2-19 | Medium | Stats & history | History data non-reactive across screens (snapshot in `useEffect([])`, no focus/storage listener) | `MonoHistory.jsx:246-254`; `MonoStatistics.jsx:222-254` | prior (not re-verified) |
++| P2-20 | Medium | Stats & history | "Close games" filter parses display-score string, mis-flags sets sweeps | `MonoHistory.jsx:81-119` | prior (not re-verified) |
++| P2-21 | Medium | Stats & history | `getMatchDate`/sort treat invalid dates inconsistently, scrambling streak/form | `MonoStatistics.jsx:12-13,226` | prior (not re-verified) |
++| P2-22 | Medium | Auth / onboarding | Guest-scored matches never migrated to cloud after sign-in | `useMatchSync.js:91-124`; `convex/users.ts:115-147` | prior (not re-verified) |
++| P2-23 | Medium | Auth / navigation | "Sign in" nav entry does not preserve current page (returnTo lost) | `index.jsx:411-412,421` | prior (not re-verified) |
++| P2-24 | Medium | Auth / error-handling | `SignedOut` ignores `isLoading` (latent guest-UI flash) | `AuthButtons.jsx:130-138` | prior (not re-verified) |
++| P2-25 | Medium | Error handling | Nav chrome renders outside the route ErrorBoundary → one throw white-screens the app | `index.jsx:1197-1202` | prior (not re-verified) |
++| P2-26 | Medium | Error handling | ErrorBoundary does not reset on in-app navigation | `ErrorBoundary.jsx:5-46` | prior (not re-verified) |
++| P2-27 | Medium | Mobile / UX | Cancelling share sheet reported as "Share is not available on this device" | `share.js:14-26`; `quickMatchResult.js:12` | prior (not re-verified) |
++| P2-28 | Medium | Mobile / UX | Scoring screens have no top safe-area inset while inset-bearing nav is hidden (notch collision) | `index.html:8`; `MonoCricketLiveScore.jsx` hardcoded `paddingTop` | needs-runtime |
++| NAV-1 | Medium | Navigation | Phase-aware scoring-exit guard: false "unsaved progress" prompt on setup/result; forward exit strands a phantom history entry | `index.jsx:154-163,1110-1161,389-400`; `MonoQuickMatch.jsx:273` | prior (not re-verified) |
++| P0-6 | Low | Functionality / cricket | Free hit non-enforcement on "Wicket" press (run-out is legal; risk is mis-entry, not wrong result) | `MonoCricketLiveScore.jsx:343-364`; button `:771` | confirmed (over-severity → low) |
++| P1-6 | Low | Tournaments / cricket | Cricket points-table tie-break is points→NRR only; ties seed bracket non-deterministically | `cricketCalculations.js:371-374`; `roundRobin.js:76-99` | partial |
++| P1-11 | Low | Error handling / cricket | `saveMatch()` called inside render body during super-over result | `MonoCricketLiveScore.jsx:592-630` | partial |
++| P1-12 | Low | Functionality / cricket | No required run rate (RRR) shown during a chase | `MonoCricketLiveScore.jsx:693-695,717-723` | partial (missing-feature) |
++| P1-13 | Low | Functionality / cricket | Test follow-on can only ever be offered to team 1 | `MonoCricketTestLiveScore.jsx:214-220,548`; `cricketCalculations.js:147-149` | partial |
++| P1-17 | Low | Tournaments / rugby | Rugby `bonusPoints:true` + "Bonus point system" feature are unbacked dead config | `sportRegistry.js:400,409,413`; `standingsCalculator.js:96` | partial |
++| P1-18 | Low | Persistence / navigation | Dead `gs_*` write path feeds live "Active sessions"/"legacy history" UI + `/game/:id` dead-end CTA | `universalStorage.js:4-9`; `DashboardLanding.jsx`; `MonoHistory.jsx` | partial |
++| P2-10 | Low | Tournaments | Group-stage "done" defined 3 ways (status-strict vs shape-inferred vs load-time repair) | `knockoutManager.js:9-11`; `tournamentSync.js:99-112`; `GenericSetsTournament.jsx:30-49` | partial (user-facing bug largely non-reproducing) |
++| P2-11 | Low | Tournaments / persistence | Undo-delete writes back full pre-delete snapshot instead of re-inserting the deleted tournament | `MonoTournamentList.jsx:65-82` | partial (normal flow self-heals; narrow multi-tab web race) |
++| P2-14 | Low | Tournaments / cricket | Completed cricket match with no innings/scores inflates `played` with no result (legacy data only) | `cricketCalculations.js:347-348,360-362` | partial (display-only; `played` never read for logic) |
++| P2-17 | Low | Persistence / UX copy | "Save failed — Export your data" points to a feature that does not exist | 18 save paths across 7 components (e.g. `MonoQuickMatch.jsx:674,863`) | confirmed |
++| P2-18 | Low | Persistence | Quota-exceeded mid-match: draft autosave fails silently with no rollback/eviction | `MonoQuickMatch.jsx:469-498`; `storage.js:126` | prior (not re-verified) |
++| P3-1 | Low | UX / design-system | Half-applied green redesign: `#0066ff` blue across the functional app (106 occ / 19 files) | `DashboardLanding.jsx`, all 5 scorers, `MonoQuickMatch.jsx`, history/stats/tournaments/onboarding | prior (not re-verified) |
++| P3-2 | Low | UX | `--se-border-standard` renders 1.5px app-wide; the 1px override is dead | `index.css:74`; `sportsTokens.js:227` | prior (not re-verified) |
++| P3-3 | Low | UX | Two homepages diverge in chrome/color (`© 2025` vs `© 2026`) | `GuestLanding` vs `DashboardLanding` | prior (not re-verified) |
++| P3-4 | Low | UX | QuickMatch result screen has no winner emphasis; flat 6-button action wall | `MonoQuickMatch.jsx:2700-2701,2796-2817` | prior (not re-verified) |
++| P3-5 | Low | UX | Functional screens hardcode greys (`#111/#888/#666/#bbb`) instead of ink tokens | `MonoQuickMatch.jsx`, `ErrorBoundary.jsx:51-58` | prior (not re-verified) |
++| P3-6 | Low | UX / token drift | DashboardLanding uses off-scale radii (10px badge, 3px skeleton bars) | `DashboardLanding.jsx:251,611,612,614` | confirmed |
++| P3-7 | Low | UX | GuestLanding renders a permanently-hidden nav block (dead in-page anchors + sign-in link) | `GuestLanding.jsx:263-289` | partial (anchors/sign-in still render elsewhere) |
++| P3-8 | Low | UX / token drift | Celebration animations + literals hardcode non-token greens/greys/1.5px borders | `mono.css:1683-1685,1732`; `GuestLanding.jsx:648`; `DashboardLanding.jsx:34-35` | partial (no JSX greens; mostly greys) |
++| P3-9 | Low | UX | "Set Won" toast shows wrong set ordinal (off-by-one) | `MonoSetsLiveScore.jsx:668` | prior (not re-verified) |
++| P3-10 | Low | Performance / UX | No list virtualization/pagination in History/Statistics | `MonoHistory.jsx:788`; `MonoStatistics.jsx:602` | confirmed |
++| P3-13 | Low | UX / code-duplication | Two sets/goals scorer implementations; desktop-only keyboard-shortcut difference | `MonoSetsLiveScore.jsx:372-398` vs `MonoQuickMatch.jsx` | partial (serve/swap parity claim was backwards; vanishes on touch) |
++| P3-14 | Low | Accessibility | Goals scorer aria-labels say "point" when `scoringUnit` is "goal" (football/hockey/handball/futsal) | `MonoGoalsLiveScore.jsx:535,561,598,624` | confirmed |
++| P3-15 | Low | Accessibility | Tennis tiebreak badge + live region drop "Set N of M" context | `MonoTennisLiveScore.jsx:642,653` | confirmed |
++| P3-16 | Low | Accessibility / functionality | No serve/server tracking or indicator anywhere in the tennis scorer | `MonoTennisLiveScore.jsx` (no `server` field; `makeBlankSet:63-74`) | confirmed |
++| P3-17 | Low | Functionality / cricket | Win-by-wickets margin hardcodes `players-1`, ignoring `lastManStands` (off-by-one) | `cricketCalculations.js:272` vs `getMaxWickets:138-142` | confirmed |
++| P3-18 | Low | Functionality / cricket | Super Over keeps accepting deliveries after target passed; runs-tie not broken on wickets | `MonoCricketLiveScore.jsx:319-364,598,660-662` | confirmed |
++| P3-19 | Low | Functionality / cricket | All-out NRR for over-less (No-limit) matches normalizes balls to team-1's count | `cricketCalculations.js:357,304-309` | confirmed |
++| P3-20 | Low | UX / cricket | Target "Need N from M balls" line persists after the match is won | `MonoCricketLiveScore.jsx:781-787` (gated only on `target!==null`) | confirmed |
++| P3-22 | Low | Persistence / cricket | Cricket draft keeps 100 undo snapshots in memory but persists 50; undo depth truncated on resume | `MonoCricketLiveScore.jsx:190,386,529,130` | confirmed |
++| P3-23 | Low | Functionality / cricket-test | Test bundle: draw=0/tie=1 pts; innings shows "/all"; degenerate equal-totals can blank result | `cricketCalculations.js:311-329`; `MonoCricketTestLiveScore.jsx:704,242` | partial (cosmetic + tested-intentional + degenerate-only) |
++| P3-24 | Low | Functionality / dead-config | Cricket `config`/`quickButtons`/`standingsColumns` dead; `noResult`/NR never incremented/shown | `sportRegistry.js:426-449`; `cricketCalculations.js:312-330,336`; `MonoCricketTournament.jsx:533-540` | partial (PP2-mislabel sub-claim is false) |
++| P3-25 | Low | UX / config | Rugby has no standalone "Conversion (2)" button (later conversion not cleanly addable) | `sportRegistry.js:394-399,411` | partial (no +1 correction exists; remedy is clumsier than claimed) |
++| P3-26 | Low | Logic / UX | Points-mode `>=` auto-end overshoots target with multi-value buttons (rugby/kabaddi) | `MonoQuickMatch.jsx:1287-1300` (>=1297), mirrored `:1330` | confirmed |
++| P3-27 | Low | Config / UX | Kabaddi: undeclared `drawPoints`, two redundant `+2` buttons, dead `maxPlayers:7`, off-brand race mode | `sportRegistry.js:351-378` | confirmed |
++| P3-28 | Low | UX / config | Pickleball `serviceRotation:1` flips serve every point (default rally); single-game points `[9,11,15]` is dead config | `sportRegistry.js:135,141`; `MonoSetsLiveScore.jsx:176-178,229-230` | partial |
++| P3-29 | Low | UX / config | Goals "first-to-N" race mode offered to draw-centric hockey/handball | `MonoQuickMatch.jsx:2004-2073,607,1330-1331`; `sportRegistry.js` | confirmed |
++| P3-30 | Low | Data-model / UX | Single-set target stored under two field names (`target` quick vs `points` tournament); validate helper has no 30 cap | `volleyballCalculations.js:13-21`; `MonoQuickMatch.jsx:426`; `MonoTournamentSetup.jsx:1177`; `MonoSetsLiveScore.jsx:140,167` | partial (cap gap non-manifesting; divergence real) |
++| P3-31 | Low | UX / config | Tournament best-of "Sets" picker renders the single-set entry → contradictory "best-of-1" | `MonoTournamentSetup.jsx:1191` vs filtered `MonoQuickMatch.jsx:1949` | confirmed |
++| P3-32 | Low | Functionality / dead-code | Tennis: `tennisScoring.js` dead (tested but unused); `tiebreakAt/tiebreakPoints` config unread; GW/GL standings unbacked | `tennisScoring.js:1`; `MonoTennisLiveScore.jsx:85,89`; `sportRegistry.js:114`; `standingsCalculator.js:10-86` | confirmed |
++| P3-33 | Low | Persistence / offline | `OfflineFallback` "Latest quick match" shows `quick[0]` = the OLDEST (matches append newest-last); + bundle of latent persistence nits | `OfflineFallback.jsx:23`; `storage.js:425` | confirmed |
++
++---
++
++## Proposed implementation waves
++
++Ordered by dependency + impact. Effort is rough (S = hours, M = a day-ish, L = multi-day). Filed beads are marked.
++
++### Wave 1 — Scoring-correctness criticals (engine bugs that produce wrong results) · effort L
++These are the three confirmed criticals plus the High-severity cricket extras bug — all in untested live-scorer component logic, all produce a wrong, user-visible, unrecoverable result.
++- **P0-1** (filed: scoreeasy-m39) — cricket test 3rd-innings premature end. *S–M*
++- **P0-3** (filed: scoreeasy-sjo) — single-set win-by-2 + fix the bug-locking test. *S*
++- **P0-4** (filed: scoreeasy-ayc) — tennis tournament `score1/score2` contract (fold in P1-9 tiebreak 7-6). *M*
++- **P0-5** (filed: scoreeasy-awy) — cricket no-ball/wide runs-off-the-delivery. *M*
++- Pull-in candidates (same engines, cheap to co-fix): **P1-8** (test follow-on label), **P1-9** (tiebreak 7-6, co-fixed with P0-4), **P1-10** (tennis phantom set).
++
++Rationale: highest correctness impact; do first because downstream waves (tournament integrity, stats) consume the values these engines emit.
++
++### Wave 2 — Tournament integrity · effort M–L
++Bracket/standings correctness once the scoring engines are trustworthy.
++- **P1-7** (filed: scoreeasy-7uw) — stale knockout bracket after group edit (the one true remaining High in tournaments). *M*
++- **P1-16** — rugby standings header/body misalignment (add BP `<td>` or drop the column). *S*
++- **P2-9** — cricket knockout card score render. *S*
++- **P1-6** — cricket points-table deterministic tie-break (wins → H2H → NRR → name). *S–M*
++- **P2-10** — unify group-stage "done" definition (one heuristic). *M*
++- **P2-11** — undo-delete re-insert by id instead of snapshot. *S*
++- Config cleanups: **P1-17** (rugby bonus dead config), **P3-24** (cricket dead config/NR), **P3-31** (best-of-1 picker), **P3-32** (tennis GW/GL unbacked), **P2-14** (phantom `played` on legacy data). *S each*
++
++Rationale: depends on Wave 1; groups all bracket-seeding and standings-display fixes so the league tables can be trusted.
++
++### Wave 3 — Persistence / data + offline / sync · effort M–L
++Local-first is solid; the gaps are cloud backfill and multi-writer safety.
++- **P2-4** (High) — offline-completed matches never sync; add `sync.status:'pending'` marker + reconnect backfill via idempotent `clientMatchId`. *M*
++- **P2-3** — failed-sync retry queue (persisted-status replay on `online`). *M*
++- **P2-15** — match IDs → `generateId()` (`crypto.randomUUID()`). *S*
++- **P2-16 / P2-19** — multi-tab consistency + cross-screen reactivity (storage-event refresh / shared store). *M*
++- **P2-22** — one-time guest→cloud match import on first sign-in. *M*
++- **P2-5** — persist + restore timer elapsed for timed tournament resume. *S*
++- **P1-1** — anchor timer to `startedAt` epoch + reconcile on `visibilitychange`. *M*
++- Lower: **P2-18** (quota eviction), **P2-17** (export message copy or real export), **P3-22** (cricket undo persist cap), **P3-33** (`OfflineFallback quick[0]` ordering + nits). *S each*
++
++Rationale: depends on stable ids/shapes from Waves 1–2; clusters everything that touches storage + Convex sync.
++
++### Wave 4 — Navigation + error-handling resilience · effort M
++- **NAV-1** — phase-aware scoring-exit guard (false unsaved-progress prompt + phantom history entry). Fix once with a phase-aware/dirty signal. *M*
++- **P2-23** — preserve `returnTo` on sign-in nav. *S*
++- **P2-25** — wrap always-mounted chrome (GlobalNavigation/OfflineFallback/OnboardingReminder) in its own boundary. *S*
++- **P2-26** — reset ErrorBoundary on location change. *S*
++- **P0-7** (High) — `loadData` shape-coercion so a non-array value can't soft-lock History/Stats/Dashboard. *S*
++- **P1-4** — bound the OnboardingGuard `isLoading` gate with a timeout → degraded local mode (needs-runtime to confirm). *M*
++- **P1-18** — pick one source of truth for `gs_*` (remove dead readers + repoint `/game/:id` CTA). *S–M*
++- **P2-24** — mirror `SignedIn`'s loading handling in `SignedOut`. *S*
++
++Rationale: independent of scoring; protects against white-screens and dead-end navigations that affect every screen.
++
++### Wave 5 — UX / design-system sweep · effort M (one workstream)
++- **P3-1** — the `#0066ff` blue → `var(--primary)`/`getSportAccent()` migration across 19 files. **Treat as a single coordinated workstream**, not 106 separate edits. *M*
++- Token/cosmetic cleanups in the same pass: **P3-2** (1.5px border), **P3-3** (two homepages, `getFullYear()`), **P3-4** (result-screen winner emphasis), **P3-5** (grey literals → ink tokens), **P3-6** (off-scale radii), **P3-7** (dead hidden GuestLanding nav), **P3-8** (celebration greens/greys), **P3-9** (Set-Won ordinal). *S each*
++- Behavioral UX nits that pair naturally with the sweep: **P2-6** (timed-mode keeps scoring), **P2-7** (undefined preset → NaN), **P2-8** (`winPoints` "First to 2" fallback), **P1-14/P1-15** (dead per-sport point presets / tennis custom no-op), **P1-20/P2-1/P2-2/P2-20/P2-21** (statistics correctness + labeling), **P3-13/P3-25/P3-26/P3-27/P3-28/P3-29/P3-30** (per-sport config + scoring-mode polish). *S–M*
++- Cricket display polish: **P1-11** (saveMatch-in-render), **P1-12** (RRR), **P1-13** (follow-on either team), **P3-17/18/19/20/23** (margin, super-over, NRR, target line, test bundle), **P0-6** (free-hit enforcement). *S each*
++
++Rationale: the blue migration is the single highest-visibility consistency regression and is best done as one mechanical sweep with a follow-up token audit; the remaining low-severity UX/config/cricket-display items batch cleanly with it.
++
++### Wave 6 — Accessibility (dedicated pass recommended) · effort M
++The a11y layer is **under-audited** — both dedicated a11y agents failed on both runs, so P3-14/15/16 are incidental catches, not a systematic sweep.
++- Fix the three known incidental items: **P3-14** (goals aria "point"→`scoringUnit`), **P3-15** (tennis tiebreak "Set N of M" context), **P3-16** (tennis serve/server indicator — functionality + a11y). *S each*
++- **Recommendation: run a dedicated accessibility pass** (axe/Lighthouse + keyboard-only + screen-reader walkthrough of score → save → history) rather than treating these three as the full a11y story. Assume more exists.
++
++---
++
++## Still needs runtime/device verification
++
++Carried over; confirmable only by running the app / on a device:
++- **P1-4** — OnboardingGuard infinite spinner under a real Convex outage / hard-offline initial load (exact `useConvexAuth` websocket-stall behavior).
++- **P2-28** — actual notch / Dynamic Island overlap of the scoring header under `viewport-fit=cover` (CSS gap is code-confirmed; visual overlap is device-confirmed).
++- **Timer ticking / pause-on-background** (P1-1 supporting) — confirm the clock advances on a real device and the background-suspension drift reproduces.
++- **Tournament match completion → standings/NRR/points update** end-to-end via UI (couldn't be finished in preview due to scoring lag).
++- **Native Android/iOS device checks (code-audited only):** hardware back button, deep links / App Links + Universal Links server association files, share-sheet cancel (P2-27), splash, safe-area insets, soft-keyboard occlusion, iOS haptics, iOS status-bar style override.
++- **R3** — tournament in-progress card showing a premature set tally ("1 vs 0 · 9-0" with no set won) — needs code confirmation in `MonoTournamentList`/`KnockoutMatchCard`.
++
++> Note: P1-21 was resolvable statically (confirmed) and is no longer runtime-gated.
+-- 
+2.51.0.windows.1
+

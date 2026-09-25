@@ -1,0 +1,228 @@
+From d6a6881f2379050094cac050808e1d9d64b5aa44 Mon Sep 17 00:00:00 2001
+From: harshanandak <harshanandak@users.noreply.github.com>
+Date: Sun, 16 Aug 2026 13:21:33 +0530
+Subject: [PATCH] docs: four more claims corrected against the actual repo
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- validate.md said the lefthook gates run "the same jobs CI runs". ci.yml runs
+  build, test, lint and type-check but never sync:agents --check, so a commit
+  that skips the local hooks, or lands via the web UI or automation, can carry
+  stale generated harness files. Say which gate is local-only and why.
+- verify.md's rules called the command read-only. Its own Steps 6-8 remove a
+  worktree, force-delete a branch, and open/close beads issues. It never
+  touches history, but it is not observation-only — enumerate the mutations.
+- premerge.md still routed convention updates into a CLAUDE.md USER block.
+  CLAUDE.md is a 12-byte @AGENTS.md pointer with no markers; the step could
+  not be followed and risked overwriting the pointer. Points at AGENTS.md now.
+- forge-workflow.md's index linked docs/TOOLCHAIN.md and docs/VALIDATION.md,
+  neither of which exists, and called itself AGENTS.md. Both dead links
+  removed and the file's actual role as a sync source stated.
+
+Found by codex review on PR #132.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ .claude/commands/premerge.md    | 15 ++++++---------
+ .claude/commands/validate.md    |  2 +-
+ .claude/commands/verify.md      |  5 ++++-
+ .clinerules                     | 11 ++++++-----
+ .cursor/rules/project.mdc       | 11 ++++++-----
+ .cursorrules                    | 11 ++++++-----
+ .github/copilot-instructions.md | 11 ++++++-----
+ .roorules                       | 11 ++++++-----
+ docs/agents/forge-workflow.md   | 11 ++++++-----
+ 9 files changed, 47 insertions(+), 41 deletions(-)
+
+diff --git a/.claude/commands/premerge.md b/.claude/commands/premerge.md
+index 5581a4b..d86cabd 100644
+--- a/.claude/commands/premerge.md
++++ b/.claude/commands/premerge.md
+@@ -76,16 +76,13 @@ Check each of the following and update if the feature affects it. Be selective 
+ **D. Architecture docs** (if structural changes):
+ - `docs/architecture/` diagrams, decision records (ADRs)
+ 
+-**E. `CLAUDE.md` — USER section only** (if project conventions changed):
+-```
+-<!-- USER:START - Add project-specific learnings here as you work -->
+-...update only between these markers...
+-<!-- USER:END -->
+-```
+-⚠️  NEVER touch other managed blocks (e.g., `<!-- AGENT:START/END -->`).
++**E. `AGENTS.md`** — the canonical agent file, and the only one you edit. Put project
++conventions, agent capabilities, and cross-agent workflow changes here.
+ 
+-**F. `AGENTS.md`** (if agent config, skills, or cross-agent workflow changed):
+-- Update relevant sections describing agent capabilities or workflow
++⚠️  `CLAUDE.md` is a 12-byte `@AGENTS.md` pointer. It has no USER markers, no AGENT
++markers, and no managed blocks — never edit it, and never write conventions into it.
++Regenerate the other harness mirrors with `bun run sync:agents` instead of hand-editing
++them.
+ 
+ **Commit doc updates to feature branch**:
+ 
+diff --git a/.claude/commands/validate.md b/.claude/commands/validate.md
+index 456275a..4112659 100644
+--- a/.claude/commands/validate.md
++++ b/.claude/commands/validate.md
+@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
+ > **Note:** Three things share the "validate" name in Forge:
+ > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
+ > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
+-> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — runs the same lint, type-check, agent-config-sync, test and build jobs CI runs (does NOT rebase; assumes branch is already current with the base branch)
++> - `lefthook run pre-commit` / `lefthook run pre-push`: Local quality gate — lint, type-check, agent-config-sync, test, build (does NOT rebase; assumes branch is already current with the base branch). CI (`ci.yml`) runs build, test, lint and type-check but **not** `sync:agents --check` — that one is local-only, so a commit made with `--no-verify`, through the GitHub web UI, or by automation can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
+ 
+ Run comprehensive validation including type checking, linting, code review, security review, and tests.
+ 
+diff --git a/.claude/commands/verify.md b/.claude/commands/verify.md
+index c4d514d..3c6565d 100644
+--- a/.claude/commands/verify.md
++++ b/.claude/commands/verify.md
+@@ -249,7 +249,10 @@ Do NOT declare /verify complete until:
+ 
+ ## Rules
+ 
+-- **Never commits** — this command is read-only
++- **Never commits, never pushes, never merges** — it does not touch repository history.
++  It is *not* read-only, though: Steps 6-8 remove the feature worktree, force-delete the
++  local branch, close beads issues on success, and create one on failure. Do not invoke
++  it expecting observation only.
+ - **Never creates PRs** — if fixes are needed, that's a new /dev cycle
+ - **Runs after user confirms merge** — not before
+ - **Reports honestly** — if CI is broken on main, say so clearly
+diff --git a/.clinerules b/.clinerules
+index 1cc7227..5b81eb1 100644
+--- a/.clinerules
++++ b/.clinerules
+@@ -311,11 +311,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+diff --git a/.cursor/rules/project.mdc b/.cursor/rules/project.mdc
+index b1c30eb..9f73fa2 100644
+--- a/.cursor/rules/project.mdc
++++ b/.cursor/rules/project.mdc
+@@ -314,11 +314,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+diff --git a/.cursorrules b/.cursorrules
+index 1cc7227..5b81eb1 100644
+--- a/.cursorrules
++++ b/.cursorrules
+@@ -311,11 +311,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+diff --git a/.github/copilot-instructions.md b/.github/copilot-instructions.md
+index 1d087a8..078bce2 100644
+--- a/.github/copilot-instructions.md
++++ b/.github/copilot-instructions.md
+@@ -309,11 +309,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+diff --git a/.roorules b/.roorules
+index 1cc7227..5b81eb1 100644
+--- a/.roorules
++++ b/.roorules
+@@ -311,11 +311,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+diff --git a/docs/agents/forge-workflow.md b/docs/agents/forge-workflow.md
+index 34ea111..c11227c 100644
+--- a/docs/agents/forge-workflow.md
++++ b/docs/agents/forge-workflow.md
+@@ -168,11 +168,12 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
+ - `docs/plans/YYYY-MM-DD-<slug>-decisions.md` - Decisions log from /dev
+ 
+ **Comprehensive workflow guide:**
+-- This file (AGENTS.md) is the single source of truth for the complete workflow
+-- [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md) - Tool setup and configuration
+-- [docs/VALIDATION.md](docs/VALIDATION.md) - Enforcement and validation details
+-
+-**Load these files when you need detailed instructions for a specific stage.**
++- `AGENTS.md` at the repo root is the single source of truth. **This file is not it** —
++  `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
++  into the harness mirrors.
++- Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
++  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
++  were sent here looking for them, they never existed.
+ 
+ ## Descriptive Context Convention
+ 
+-- 
+2.51.0.windows.1
+
