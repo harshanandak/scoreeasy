@@ -1,5 +1,7 @@
 # ScoreEasy Sport Priority — India-First ICP Strategy
 
+> **Status (2026-10):** the strategy holds. Cricket's bespoke path has shipped its first waves: delivery engine + Guided scorer (PR #129), batter/bowler cards (PR #130), spectator LIVE view (PR #131). `src/models/sportRegistry.js` line numbers below are as of 2026-07-20.
+
 **Date:** 2026-07-20
 **Author:** Fable (product strategy)
 **Status:** Decision — this reshapes build priority for M1–M3

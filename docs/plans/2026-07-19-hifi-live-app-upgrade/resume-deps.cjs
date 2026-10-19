@@ -1,9 +1,11 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 // Adds the remaining dependency edges from missing-edges.json (idempotent).
 const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const DIR = path.join("docs", "plans", "2026-07-19-hifi-live-app-upgrade");
-const FORGE = "C:/Users/harsha_befach/Downloads/forge/bin/forge.js";
+const FORGE = "forge CLI (external)";
 const edges = JSON.parse(fs.readFileSync(path.join(DIR, "missing-edges.json"), "utf8"));
 let added = 0;
 const failures = [];

@@ -1,5 +1,7 @@
 # Cricket — build waves (plan of record)
 
+> **Status (2026-10):** shipped on master: C2 blend tokens (PR #126), C1 delivery engine + Guided scorer behind a flag (PR #129), C5 batter/bowler cards (PR #130), C7 spectator LIVE view (PR #131). Remaining waves are still open.
+
 **Date:** 2026-07-25 · **Epic:** Per-game bespoke experience: Cricket (`bb02d4d1`)
 **Sources:** `cricket-spec.md` (v1 §7 C1–C13 sequence) · `cricket-spec-v2.md` (Guided/Power decision + 14 engine + 4 UI edge fixes) · this session's mockups (setup / scorer / spectator / shot-tracking).
 

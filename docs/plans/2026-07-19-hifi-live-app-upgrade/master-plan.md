@@ -1,5 +1,7 @@
 # ScoreEasy — Brutalist × HiFi Live-App Upgrade · MASTER PLAN
 
+> **Status (2026-10):** some M1 items below have shipped on master: HiFi-blend design tokens + governance (PR #126), the shared MonoSheet primitive (PR #127), and the MonoMatchResult full-time screen + verdict helper (PR #128). Cricket moved to its own track (delivery engine + Guided scorer PR #129, batter/bowler cards PR #130, spectator LIVE view PR #131; see `../2026-07-20-icp-games/cricket/cricket-waves.md`). Live match streaming and sharing were already on master before this plan (PRs #93, #100, #115). Everything else is still open. The plan text is kept as written on 2026-07-19.
+
 _Plan date: 2026-07-19 · Read top-to-bottom. 17 epics · 99 PRs · 3 milestones._
 
 ---

@@ -1,5 +1,7 @@
 # ScoreEasy — Cricket Bespoke Live Experience (LOCKED SPEC, post-critic)
 
+> **Status (2026-10):** C1 (delivery engine, PR #129), C2 (tokens, PR #126), C5 (cards, PR #130) and C7 (spectator LIVE, PR #131) have shipped; MonoSheet (PR #127) is available. The rest of the C-sequence in §7 is still open. UX-mode choice is superseded by `cricket-spec-v2.md`.
+
 **Date:** 2026-07-20 · **Status:** LOCKED for build (critic fixes folded) · **Design system:** design1-mono (brutalist shell × HiFi-blend)
 **Supersedes** `cricket-design.md` and the prior pre-critic spec draft where they conflict.
 **Governance:** `src/designs/design1-mono/BLEND-GOVERNANCE.md` (FROZEN). Mockup `cricket-live-mockup.html` is illustrative only — **this spec is authoritative** on every number, token, and rule.

@@ -1,5 +1,7 @@
 # ScoreEasy — ICP-Driven Per-Game Bespoke Roadmap (Adjusted Plan)
 
+> **Status (2026-10):** the shared foundation started shipping: blend tokens (PR #126), MonoSheet (PR #127), MonoMatchResult match-end (PR #128). Cricket, the first Tier-0 bespoke game, has its delivery engine + Guided scorer (PR #129), batter/bowler cards (PR #130) and spectator LIVE view (PR #131) on master. The other Tier-0 games are still open.
+
 This plan pivots the 17-epic/99-issue HiFi upgrade to an ICP-driven, per-game-bespoke model. The shared brutalist×HiFi design-system infrastructure — foundation primitives, nav, match-end, motion, and spectator primitives — still ships first. On top of it, each PRIORITY game gets a DEDICATED workflow that builds a deep bespoke experience — a game-specific scoring board, live/spectator screen, micro-animations, and signature moments — instead of the old generic "per-sport scorer residual chips." Low-ICP games are deregistered, not parked.
 
 Reference source docs: `docs/plans/2026-07-20-icp-games/icp-game-strategy.md` and `docs/plans/2026-07-19-hifi-live-app-upgrade/{master-plan.md,decomposition.v2.json}`.

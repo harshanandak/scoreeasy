@@ -1,5 +1,7 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 // Files decomposition.v2.json into the Forge kernel issue store.
-// Run from repo root: node docs/plans/2026-07-19-hifi-live-app-upgrade/file-plan.js
+// Run from repo root: node docs/plans/2026-07-19-hifi-live-app-upgrade/file-plan.cjs
 const { execFileSync } = require("child_process");
 const { randomUUID } = require("crypto");
 const fs = require("fs");
@@ -8,7 +10,7 @@ const path = require("path");
 const DIR = path.join("docs", "plans", "2026-07-19-hifi-live-app-upgrade");
 const PLAN = path.join(DIR, "decomposition.v2.json");
 const IDMAP = path.join(DIR, "filing-idmap.json");
-const FORGE = "C:/Users/harsha_befach/Downloads/forge/bin/forge.js";
+const FORGE = "forge CLI (external)";
 
 const d = JSON.parse(fs.readFileSync(PLAN, "utf8"));
 

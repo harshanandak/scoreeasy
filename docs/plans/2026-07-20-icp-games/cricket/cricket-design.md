@@ -1,5 +1,7 @@
 # ScoreEasy — Bespoke Cricket Live Experience (Design)
 
+> **Status (2026-10):** superseded by `cricket-spec.md` / `cricket-spec-v2.md`. Scorer and spectator LIVE surfaces shipped in PRs #129-#131.
+
 **Date:** 2026-07-20 · **Status:** Design draft · **Design system:** design1-mono (brutalist shell × HiFi-blend)
 
 Benchmarked to CricHeroes / Cricbuzz / ESPNcricinfo / Sofascore, expressed entirely in

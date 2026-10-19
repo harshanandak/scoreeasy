@@ -25,10 +25,10 @@
     ],
     "circularFriendlyElements": "99px capsule pills for hero + CTA-section buttons and the sport-switcher; 50% circular green-tint icon medallions seating each SportIcon inside the (still-boxy) sport-grid tiles; soft-rounded 14–16px hero live-preview card with a breathing circular LIVE glow dot and a pill-shaped coaching caption chip. All circular/soft elements are ACCENTS set against the otherwise hard, black-hairline, boxy layout.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/GuestLanding.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/landingTheme.js",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/landingData.js",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/theme/sportsTokens.js"
+      "src/designs/design1-mono/landing/GuestLanding.jsx",
+      "src/designs/design1-mono/landing/landingTheme.js",
+      "src/designs/design1-mono/landing/landingData.js",
+      "src/designs/design1-mono/theme/sportsTokens.js"
     ],
     "newFilesOrComponents": [
       "LivePreviewCard component (extract the hero scorecard mockup so the HiFi treatment + breathing pulse + caption chip lives in one place, reused mobile+desktop)",
@@ -154,9 +154,9 @@
     ],
     "circularFriendlyElements": "99px capsule 'Start playing' CTA (black hairline + offset shadow + green-glow underlay); 50% circular green-tinted icon chips around each featured SportIcon; enlarged 50% get-started step circles with an active-step green fill and soft pulse ring; the pill-shaped 'Guest — sign in to sync' chip in the header. All friendly/circular elements carry a black hairline so they stay inside the brutalist frame; pure-square geometry is retained on the hero card and ghost rows.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/DashboardLanding.jsx (EmptyDashboard function L551-660, plus the shared `s`/btnPrimary tokens and a new capsule-CTA style)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add reusable .mono-capsule-cta + a mono-pulse opacity keyframe + circular icon-chip helper)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/DashboardLanding.test.jsx (update empty-state assertions: welcome title id, hero copy, capsule CTA, ghost rows kept)"
+      "src/designs/design1-mono/landing/DashboardLanding.jsx (EmptyDashboard function L551-660, plus the shared `s`/btnPrimary tokens and a new capsule-CTA style)",
+      "src/designs/design1-mono/mono.css (add reusable .mono-capsule-cta + a mono-pulse opacity keyframe + circular icon-chip helper)",
+      "src/designs/design1-mono/landing/DashboardLanding.test.jsx (update empty-state assertions: welcome title id, hero copy, capsule CTA, ghost rows kept)"
     ],
     "newFilesOrComponents": [
       "mono.css: .mono-capsule-cta class (99px pill + black hairline + offset shadow + green-glow underlay)",
@@ -217,9 +217,9 @@
     ],
     "circularFriendlyElements": "Role selection: three 50% circle tap targets (glyph + mono label), white/black-hairline unselected → green-wash + 1.5px black ring + hard offset shadow when selected. Sports grid: each SportIcon in a circular black-hairline ring (selected = green-wash ring + offset shadow). Play-style: 99px capsule pills. Finish state: circular gold-ringed avatar/first-sport seal. All soft/circular elements keep pure-black hairlines and mono labels so brutalism still frames the friendliness.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoOnboarding.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css"
+      "src/designs/design1-mono/MonoOnboarding.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css"
     ],
     "newFilesOrComponents": [
       "StepWelcome / OnboardingComplete celebratory finish state (inline sub-component in MonoOnboarding.jsx) — big greeting numeral + gold seal + auto hand-off to Home",
@@ -275,10 +275,10 @@
     ],
     "circularFriendlyElements": "Capsule (99px) OAuth/social buttons and the primary submit inside Clerk; a full-capsule 'Continue as guest' button in the frame; a small pill 'SECURE' micro-chip with a breathing glow. Inputs deliberately stay square-ish (4px) with black hairlines so the rounding reads as an intentional action-vs-field contrast, not a wholesale softening that would erase the brutalist identity.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/clerkTheme.js",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoAuthPageFrame.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoLogin.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/clerkTheme.js",
+      "src/designs/design1-mono/MonoAuthPageFrame.jsx",
+      "src/designs/design1-mono/MonoLogin.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "mono.css: new .mono-btn-capsule (99px radius variant of .mono-btn)",
@@ -336,12 +336,12 @@
     ],
     "circularFriendlyElements": "Circular (50%) brand medallion at top with green-tint wash + hard black hairline ring + SportIcon — appears on both the signup frame and the SSO loading screen. Capsule (99px) primary Sign-up CTA, social sign-in buttons, 'Continue as guest' (green-outline capsule), and 'Back to home' pill. Breathing circular glow ring around the medallion on /sso-callback. The account panel and its inputs deliberately stay hard/boxy — circular elements are the brand mark and the tap-actions only, so the brutalist frame still frames soft controls.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/clerkTheme.js",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoAuthPageFrame.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSignUp.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/SSOCallback.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/clerkTheme.js",
+      "src/designs/design1-mono/MonoAuthPageFrame.jsx",
+      "src/designs/design1-mono/MonoSignUp.jsx",
+      "src/designs/design1-mono/SSOCallback.jsx",
+      "src/index.css",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "MonoBrandMedallion.jsx — reusable circular brand mark (green-tint wash + hard black hairline ring + SportIcon), used by auth frame, SSO loader, and future first-run/empty states",
@@ -400,11 +400,11 @@
     "circularFriendlyElements": "Circular 48px icon badges behind each SportIcon in the Guided SportGrid; circular 32px green-tint icon badges in Browse SportRows; the already-circular 36px StepHead step numbers (kept, green only when done); 99px capsule pill toggle thumb; 99px capsule Quick/Start/Create CTA pills; rounded caption chips for selected-sport/mode confirmation. All roundness is confined to icon containers, controls, and chips — the content tiles and page structure stay boxy.",
     "keepsBrutalistNote": "",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoPlayHub.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/NewUserFlow.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSportHome.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoPlayHub.jsx",
+      "src/designs/design1-mono/NewUserFlow.jsx",
+      "src/designs/design1-mono/MonoSportHome.jsx",
+      "src/index.css",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "CapsuleToggle component (shared segmented pill) — extract from MonoPlayHub for reuse across other pick/browse screens",
@@ -462,10 +462,10 @@
     ],
     "circularFriendlyElements": "Circular 60px sport tap-targets in the Popular rail (50% radius, faint-green-wash fill inside a hard-black hairline ring, icon centered, mono name below); 99px capsule Quick CTA with green glow; 99px rounded saved-count chips; gold dot milestone badge on a circle. These soft/round elements are confined to Popular discovery + count/CTA affordances; the category list rows stay hard-edged, preserving the brutalist spine.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSportHome.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSportHome_TABBED.jsx"
+      "src/designs/design1-mono/MonoSportHome.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css",
+      "src/designs/design1-mono/MonoSportHome_TABBED.jsx"
     ],
     "newFilesOrComponents": [
       "PopularRail (in-file component: horizontal scroll of circular sport buttons)",
@@ -528,8 +528,8 @@
     ],
     "circularFriendlyElements": "Circular (50%) sport-icon identity badge in the header; leading 50% team-color dots on each team-name input (also seeds live-scorer team color); the 99px green-glow capsule Start CTA; a circular coin graphic in the cricket Toss bottom-sheet; capsule (99px) secondary chips for Add players / Edit rules. Deliberately NOT circular: the format and rules OPTION tiles stay boxy brutalist — they are precise config choices, not gameplay taps, so softening them would dilute the identity without UX gain.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoQuickMatch.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoQuickMatch.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/setup/MonoQuickSetup.jsx (extract the phase==='setup' render + setup-only state/handlers out of the monolith; MonoQuickMatch keeps dispatch/scoring and renders it)",
@@ -593,8 +593,8 @@
     "circularFriendlyElements": "50%-circle 44px −/+ stepper knobs flanking the big mono numeral for Players-per-side and Ball-limit (replacing 40x40 square buttons); 99px capsule pills for every segmented toggle and preset chip; rounded (10px) expandable Advanced-options sheet. Structural chrome (panels, CTA, dividers, progress bar) stays square/brutalist so the round controls read as a deliberate interactive layer, not a global restyle.",
     "keepsBrutalistNote": "",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoQuickMatch.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoQuickMatch.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "MonoSegment (capsule segmented control with sliding green-tint pill) — extract for reuse across QuickMatch, MonoSetup, MonoTournamentSetup",
@@ -651,9 +651,9 @@
     "circularFriendlyElements": "Central 50%-circular gold coin (warm green-black shadow rgba(20,40,30,.35), NOT pure black) that the user taps to flip — optional friendly moment, purely cosmetic. Two 50%-circular team targets showing mono-caps initials to tap the toss winner. A pair of 99px capsule pills 'Bat' / 'Bowl' for the decision. The confirm affordance is a 16px soft-rounded bottom sheet. These rounded/circular elements are exactly where HiFi welcomes softness (pre-live gameplay), while the frame chrome stays hard-edged brutalist.",
     "keepsBrutalist2": "",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoQuickMatch.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/utils/startActions.js"
+      "src/designs/design1-mono/MonoQuickMatch.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/utils/startActions.js"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/CricketToss.jsx — the toss interstitial (coin, circular team targets, Bat/Bowl pills, coach chip, Skip/Confirm sheet); props: team1Name, team2Name, onConfirm(battingTeam), onSkip",
@@ -712,10 +712,10 @@
     ],
     "circularFriendlyElements": "Circular 50% run keypad buttons (0–6) carrying the brutalist ink border + hard offset shadow; small circular ball-chips in the this-over timeline; 99px capsule coaching chips (Need/RRR/Powerplay/milestone); capsule Skip/Confirm buttons on the 16px-radius attribution bottom-sheet. All friendly/circular elements live strictly inside the live-scoring zone; the outer frame, top bar, and control strip stay hard/boxy.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/AppScoringPrompt.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css"
+      "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/components/AppScoringPrompt.jsx",
+      "src/index.css"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/MonoAttributionSheet.jsx — reusable How-out? / New-batter bottom-sheet (Skip + Confirm), built as a picker variant on AppScoringPromptHost",
@@ -997,9 +997,9 @@
       "placeholder"
     ],
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoLiveGame.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css"
+      "src/designs/design1-mono/MonoLiveGame.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css"
     ],
     "newFilesOrComponents": [
       "mono.css: .mono-arena-live-pill (capsule + breathing pulse) + @keyframes mono-live-breathe",
@@ -1052,14 +1052,14 @@
     ],
     "circularFriendlyElements": "99px grabber handle pill centered at the sheet top; a 34px circular hairline icon chip (50% radius) leading each action row with a CSS-drawn glyph (pencil / share-arrow / swap / stop); a 99px capsule 'Close' button at the sheet bottom. All confined to the overlay content — the scorer's topbar and the sheet's outer frame remain square/brutalist.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoLiveGame.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx"
+      "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx",
+      "src/designs/design1-mono/MonoLiveGame.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/index.jsx"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/MonoMatchMenuSheet.jsx — the ⋯ bottom-sheet overlay component",
@@ -1119,11 +1119,11 @@
     ],
     "circularFriendlyElements": "50% circular player-avatar tap targets (jersey number in mono) for who-scored and new-batter-in pickers; a small circular green check badge stamped on the selected option; the primary 'Confirm' as a 99px capsule pill (but wearing the hard 3px offset shadow, a green-tinted hard shadow, not a blurred green glow); the top grab-handle as a rounded pill; the 'Skip' as a ghost capsule. Option-reason chips stay boxy 4px to hold the brutalist line.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/AppScoringPrompt.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx"
+      "src/designs/design1-mono/components/AppScoringPrompt.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/AppAttributionSheet.jsx — bottom-sheet component + useAttributionSheet() (or a variant:'sheet' branch inside AppScoringPromptHost) reusing appConfirmUtils focus-trap/keydown a11y",
@@ -1300,10 +1300,10 @@
     ],
     "circularFriendlyElements": "Circular go inside the read-only cricket body, never on the top slab: (1) \"This over\" ball-by-ball tokens as 50%-radius circular chips (1·4·W·•·6, W red, boundaries green); (2) a circular RRR-vs-CRR gauge dial in the Momentum tab; (3) 99px capsule coaching-caption chips (Need X off Y, RRR, milestones); (4) a capsule spectator-count pill; (5) soft 12–14px rounded batter/bowler cards with warm-green-black lift. The pinned scorebug stays hard-cornered and hard-bordered.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/.worktrees/live-matches/src/designs/design1-mono/MonoWatchMatch.jsx (add cricket case to ScorecardPanel + make PinnedScorebug cricket-aware runs/wickets/overs/target; add Momentum tab for cricket)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/.worktrees/live-matches/convex/live.ts (extend publicSnapshotValidator + getByToken projection + snapshotFromMatch to expose cricket fields: runs, wickets, overs, balls, target, thisOver, striker/bowler names, CRR/RRR — inside the §7.2 whitelist)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/.worktrees/live-matches/convex/schema (liveMatches: persist cricket snapshot fields written by the scorer)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (capsule coaching-chip, circular ball-token, gauge-dial, worm classes / tokens)",
+      "src/designs/design1-mono/MonoWatchMatch.jsx (add cricket case to ScorecardPanel + make PinnedScorebug cricket-aware runs/wickets/overs/target; add Momentum tab for cricket)",
+      "convex/live.ts (extend publicSnapshotValidator + getByToken projection + snapshotFromMatch to expose cricket fields: runs, wickets, overs, balls, target, thisOver, striker/bowler names, CRR/RRR — inside the §7.2 whitelist)",
+      "convex/schema (liveMatches: persist cricket snapshot fields written by the scorer)",
+      "src/designs/design1-mono/mono.css (capsule coaching-chip, circular ball-token, gauge-dial, worm classes / tokens)",
       "MonoCricketLiveScore + useLiveBroadcast wiring (scorer must emit cricket snapshot fields on each ball so the public view has data)"
     ],
     "newFilesOrComponents": [
@@ -1366,12 +1366,12 @@
     ],
     "circularFriendlyElements": "The 99px capsule possession bar (rounded, green-tint split); a 50% circular Share/QR button in the top bar; per-goal circular minute badges + team-colour dots in the scorer feed; soft 10-16px rounded goal-timeline cards and momentum strip; the green-glow rounded Share CTA in the footer. All soft/circular elements live in the live-context readout zones (possession, goals, momentum, share) while the score core stays square/brutalist.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add lazy import + a new read-only spectator Route, e.g. :sport/tournament/:id/match/:matchId/watch, unguarded/public since spectator is read-only)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add possession-capsule, goal-timeline card, breathing-live-pulse keyframe, momentum-strip, spectator footer classes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx (extract shared read-only score-display + football clock rendering so scorer and spectator share one source of truth)"
+      "src/designs/design1-mono/index.jsx (add lazy import + a new read-only spectator Route, e.g. :sport/tournament/:id/match/:matchId/watch, unguarded/public since spectator is read-only)",
+      "src/designs/design1-mono/mono.css (add possession-capsule, goal-timeline card, breathing-live-pulse keyframe, momentum-strip, spectator footer classes)",
+      "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx (extract shared read-only score-display + football clock rendering so scorer and spectator share one source of truth)"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsSpectator.jsx (the read-only football watch screen)",
+      "src/designs/design1-mono/scoring/MonoGoalsSpectator.jsx (the read-only football watch screen)",
       "A PossessionBar component (capsule split + caption chip)",
       "A GoalTimeline / scorer-feed component (reusable across football spectator + result)",
       "A shared FootballClock/LivePulse helper reused by scorer and spectator",
@@ -1431,9 +1431,9 @@
     ],
     "circularFriendlyElements": "Breathing LIVE dot (50% circle, green glow) in the top bar; a small circular serve-indicator dot beside the serving player's name; the coaching caption as a 99px capsule pill; the 'watching now · N' count as a capsule pill; Share and Back as 99px capsule buttons; the Share-live sheet's Copy / WhatsApp / More actions as capsule pills. All confined to context/annotation and the share sheet — the score halves themselves stay boxy and brutalist.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add lazy import + `:sport/watch/:matchId` route + tournament variant + a tennis SpectatorRoute guard; ensure it is NOT treated as a protected scoring route so no unsaved-changes prompt fires)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add @keyframes mono-live-breathe, .mono-live-dot, .mono-coach-chip capsule, .mono-serve-dot, .mono-spectator-frame, .mono-share-sheet, .mono-momentum-strip)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx (extract the inlined tennis derivation helpers into the new shared util and import them back; add a 'Share live' ⋯ affordance that links to the watch route)"
+      "src/designs/design1-mono/index.jsx (add lazy import + `:sport/watch/:matchId` route + tournament variant + a tennis SpectatorRoute guard; ensure it is NOT treated as a protected scoring route so no unsaved-changes prompt fires)",
+      "src/designs/design1-mono/mono.css (add @keyframes mono-live-breathe, .mono-live-dot, .mono-coach-chip capsule, .mono-serve-dot, .mono-spectator-frame, .mono-share-sheet, .mono-momentum-strip)",
+      "src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx (extract the inlined tennis derivation helpers into the new shared util and import them back; add a 'Share live' ⋯ affordance that links to the watch route)"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/scoring/MonoTennisSpectator.jsx — the read-only spectator component",
@@ -1620,10 +1620,10 @@
     ],
     "circularFriendlyElements": "Three 56px 50%-circular per-channel share targets (WhatsApp/Messages/More) in a row, each a hairline ink circle with a mono micro-label beneath. Capsule (99px pill) Copy link / Share… / Done buttons. Rounded grabber-pill handle at the sheet top. The '● LIVE' status capsule with a breathing dot. Soft 16px-radius green-tint frame card wrapping the (pure-white) QR.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-share-sheet, .mono-share-grabber, .mono-share-channel circular, .mono-btn-pill capsule, .mono-live-pulse + @keyframes breathing, green-tint QR frame, colored-shadow CTA)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css (add @keyframes mono-live-breath + warm green-black shadow token; optional gold token)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/package.json (add qrcode.react dependency if absent in main)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoLiveGame.jsx (wire the ⋯ menu / broadcast trigger to open the sheet)"
+      "src/designs/design1-mono/mono.css (add .mono-share-sheet, .mono-share-grabber, .mono-share-channel circular, .mono-btn-pill capsule, .mono-live-pulse + @keyframes breathing, green-tint QR frame, colored-shadow CTA)",
+      "src/index.css (add @keyframes mono-live-breath + warm green-black shadow token; optional gold token)",
+      "package.json (add qrcode.react dependency if absent in main)",
+      "src/designs/design1-mono/MonoLiveGame.jsx (wire the ⋯ menu / broadcast trigger to open the sheet)"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/live/ShareLiveMatch.jsx (promoted from worktree + blend reskin)",
@@ -1683,17 +1683,17 @@
     ],
     "circularFriendlyElements": "Circular 50% winner medallion (team initial/avatar) with thin black hairline ring + concentric gold victory ring; primary CTA (Rematch/Done) as a 99px capsule that retains the hard black 3px offset shadow; line-score panel gets a soft 8-10px card radius while everything else stays boxy 4px. Gentle one-shot opacity/glow keyframe on mount instead of the harsh 1.5s mono-set-won popup.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoLiveGame.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx"
+      "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
+      "src/designs/design1-mono/MonoLiveGame.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css",
+      "src/designs/design1-mono/index.jsx"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoMatchResult.jsx (shared, sport-agnostic result screen)",
+      "src/designs/design1-mono/scoring/MonoMatchResult.jsx (shared, sport-agnostic result screen)",
       "New .mono-result-* CSS block in mono.css (medallion, verdict, line-score table, capsule CTA, one-shot glow keyframe)",
       "New victory-only gold token in src/index.css (--se-color-victory mapped to warning amber)",
       "Small margin/verdict-string helper (e.g. src/utils/matchResult.js) turning winner + scores into 'X win by N' / 'X win 3-1 in sets'"
@@ -1749,13 +1749,13 @@
     ],
     "circularFriendlyElements": "Circular 50% team-initial avatars flanking the hero result; gold MVP capsule chip; soft-rounded caption chips for match context; 99px capsule action pills at the bottom with green-glow shadow on primary; a 12-16px soft-cornered momentum card. These wrap and soften the celebration and navigation, while the central data ledger stays hard-hairline brutalist — the friendly elements never invade the stat grid itself.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx (route to scorecard on match-complete instead of only navigating back, ~line 365-369)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHistory.jsx (replace/augment the thin mono-history-detail panel at lines 856-894 with a 'View full scorecard' link into the shared component)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add /:sport/match/:id/scorecard route + wiring)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-scorecard-* classes: hero band, hairline ledger, momentum strip, mvp gold chip, capsule action row)"
+      "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx (route to scorecard on match-complete instead of only navigating back, ~line 365-369)",
+      "src/designs/design1-mono/MonoHistory.jsx (replace/augment the thin mono-history-detail panel at lines 856-894 with a 'View full scorecard' link into the shared component)",
+      "src/designs/design1-mono/index.jsx (add /:sport/match/:id/scorecard route + wiring)",
+      "src/designs/design1-mono/mono.css (add .mono-scorecard-* classes: hero band, hairline ledger, momentum strip, mvp gold chip, capsule action row)"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoScorecard.jsx (the shared post-match detail screen, consumed by both Result and History)",
+      "src/designs/design1-mono/MonoScorecard.jsx (the shared post-match detail screen, consumed by both Result and History)",
       "A ScorecardMomentumStrip subcomponent (set-by-set sparkline) — extract so Spectator/Match-graphs can reuse",
       "A ShareCardSheet subcomponent (Copy link + QR) — shared with Share-live",
       ".mono-btn-capsule / .mono-scorecard-hero / .mono-scorecard-ledger CSS classes"
@@ -1813,10 +1813,10 @@
     ],
     "circularFriendlyElements": "Circular gold winner medallion (50% circle, gold fill/hairline) holding a trophy glyph or the winning team's monogram, sitting on the card. Round team avatar/initial bubbles (50%) flanking each side inside the card. Capsule (99px) format-aspect toggle and all sheet action buttons are pills. Per-set results shown as small rounded chips. The card frame itself stays boxy/brutalist — roundness lives only on the avatars, medallion, chips, and the surrounding sheet controls.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoQuickMatch.jsx (result actions ~L2805-2835: add 'Share card' action that opens the new sheet; keep existing text Share as fallback; pass result/isCricket/resultSetSummary into it)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-share-sheet, .mono-share-card, .mono-share-card-medallion, .mono-share-actions, gold/lead-wash card classes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css (:root add --se-color-win-gold + --se-color-lead-wash semantic tokens as inlinable hex-backed values)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/mobile/share.js (extend with shareFiles()/image share via navigator.share({files}) + Capacitor Share file support; keep shareText())"
+      "src/designs/design1-mono/MonoQuickMatch.jsx (result actions ~L2805-2835: add 'Share card' action that opens the new sheet; keep existing text Share as fallback; pass result/isCricket/resultSetSummary into it)",
+      "src/designs/design1-mono/mono.css (add .mono-share-sheet, .mono-share-card, .mono-share-card-medallion, .mono-share-actions, gold/lead-wash card classes)",
+      "src/index.css (:root add --se-color-win-gold + --se-color-lead-wash semantic tokens as inlinable hex-backed values)",
+      "src/mobile/share.js (extend with shareFiles()/image share via navigator.share({files}) + Capacitor Share file support; keep shareText())"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/scoring/MonoShareCard.jsx — the bottom-sheet + fixed-size card graphic component (renders from result + getResultSetSummary), with format toggle and Share/Copy image/Save/Close actions",
@@ -1967,7 +1967,7 @@
   {
     "screen": "Match detail (from history)",
     "effort": "L",
-    "blendDesign": "Promote today's inline expand panel (MonoHistory.jsx L856-894) into a DEDICATED full-screen match-detail view at route /app/history/match/:id, plus an inline \"Match graphs\" module — matching HiFi's distinct detail + graphs frames. The screen is a brutalist \"match report card\" wrapped in HiFi warmth.\n\nSTRUCTURE (top to bottom):\n1. Sticky mono nav header: BackArrow + UPPERCASE mono micro-label \"MATCH DETAIL\" (0.08em tracking) — pure brutalist, keeps existing header idiom.\n2. Hero result block: big score numerals via clamp(3rem, min(22vh,26vw), 8rem) JetBrains Mono tabular-nums; team1/team2 stacked with the winner in weight 900 + a small green \"WON\" lead pill (green reserved for lead only). One HiFi coaching caption chip under it summarizing the result (\"Decided by 2\" / \"Close game\" / \"Draw\"). Winner side gets a warm-green-black soft wash rgba(20,40,30,.06), never pure black.\n3. Set/innings breakdown: hard-hairline mono table (reuse .mono-table-panel) — per-set strip \"25 · 22 · 18\" rows from entry.sets/innings, 1px black hairlines, mono numerals. The substance a brutalist report should carry.\n4. \"Match graphs\" module (NEW): lightweight inline SVG progression graph — set-by-set / innings score line for both sides. Rendered brutalist: 1px hard black axes/gridlines, zero blur, square plot frame (4px radius), one line ink-black vs the other green (lead) — NOT a soft gradient chart. Momentum worm only where data supports; else a clean set-delta bar chart. Designed empty state (\"No per-set data for this match\") when only a final score exists.\n5. Meta row: mono chips sport · source(Quick/Tournament) · date · elapsed (formatElapsed), reusing existing chip styling.\n6. Action bar: brutalist primary Rematch (existing rematchEntry) + Share, PLUS a HiFi \"Share live / Scan\" affordance opening a soft bottom-sheet with QR + copy link (spectator ecosystem), and Delete (quick only) carrying over the existing undo affordance.\n\nCircular/HiFi warmth lives INSIDE the report, not replacing it: 99px capsule action buttons; a 50% circular sport-icon medallion in the hero (gold #b8862e ring on MVP/milestone matches); the coaching caption chip; the share sheet as a 16px-radius soft sheet with upward warm shadow. All scaffolding (header, table, hairlines, ink, hard offset shadow 3px 3px 0 0.5px #000 on the report card) stays strictly brutalist.\n\nNAV CHANGE: history rows (MonoHistory L801-835) navigate to the new route instead of setting selectedEntry; the inline panel is removed.</blendDesign>\n<keepsBrutalist\">[\"Pure-black ink for text, borders, table hairlines and graph axes (#000)\",\"Hard offset drop-shadow 3px 3px 0 0.5px zero blur on the match-report card\",\"Thin 1-1.5px hard black hairlines in the set/innings table and graph gridlines\",\"UPPERCASE JetBrains Mono micro-label header with 0.08em tracking\",\"Big score numerals via clamp(3rem, min(22vh,26vw), 8rem), tabular-nums\",\"Boxy near-square radius (4px controls / 8px card); off-white #F1F4EF canvas\",\"Green reserved strictly for the lead/winner, not decoration\",\"Reuse of existing .mono-table-panel and mono chip idioms\"]</keepsBrutalist>\n<adoptsHifi\">[\"Dedicated full-screen match-detail view (not inline expand) + a Match graphs module\",\"Contextual coaching caption chip summarizing the result\",\"Match momentum/progression graph for scorer+spectator parity\",\"Share-live bottom-sheet with QR Scan-to-watch + copy link\",\"99px capsule action buttons and a soft 16px-radius bottom-sheet\",\"Gold accent for MVP/milestone winner medallion\",\"Designed empty state when a match has no per-set graph data\",\"Warm-green-black soft shadows never pure black on the winner wash\"]</adoptsHifi>\n<circularFriendlyElements\">50% circular sport-icon medallion in the hero (gold-ringed on MVP/milestone matches); 99px capsule Rematch/Share/Delete buttons; soft rounded coaching caption chip; 16px-radius share bottom-sheet with rounded QR tile and circular close handle — soft elements sitting inside an otherwise-brutalist report card, mirroring HiFi allowing rounded controls inside a hard data surface.</circularFriendlyElements>\n<filesToChange\">[\"C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHistory.jsx\",\"C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx\",\"C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css\",\"C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHistory.test.jsx\"]</filesToChange>\n<newFilesOrComponents\">[\"MonoMatchDetail.jsx (dedicated screen; resolves entry by :id from quick+tournament+legacy sources)\",\"MonoMatchGraph.jsx (brutalist inline SVG set/innings progression + momentum graph with empty state)\",\"ShareLiveSheet.jsx (soft bottom-sheet: QR + copy link + share) or extend existing share affordance\",\"mono.css classes: .mono-match-hero, .mono-match-graph, .mono-share-sheet, .mono-medallion\"]</newFilesOrComponents>\n<dependencies\">[\"Extract MonoHistory entry-building helpers (buildTournamentEntries, quick/legacy mapping) into a shared util so the detail route can resolve an entry by id — they currently live inside the component\",\"Add route + lazy import in index.jsx nested under the existing history route\",\"Share-live/QR bottom-sheet should be a single reusable component shared with live-scorer and spectator screens (coordinate with eval-app)\",\"Graph module is reusable by spectator Match-graphs screens — build once, not twice\",\"QR generation needs a lightweight inline/offline generator (CSP-safe, no external CDN)\"]</dependencies>\n<risks\">Per-match timeline data is thin: quick matches store final score / sets / innings but not ball-by-ball or point-by-point events for every sport, so a true momentum worm is not universally feasible — the graph must degrade to set-delta bars + a designed empty state or it looks fake. Extracting entry-building logic out of MonoHistory risks regressions in the existing list/filters (mitigate with existing MonoHistory.test.jsx + new tests). Converting the inline panel to a route changes back-navigation and deep-link expectations. QR must stay CSP-safe/offline (no external lib). Effort is L due to the new graph + shared share-sheet + data plumbing; descoping the graph to a static breakdown table drops it to M.</risks>\n",
+    "blendDesign": "Promote today's inline expand panel (MonoHistory.jsx L856-894) into a DEDICATED full-screen match-detail view at route /app/history/match/:id, plus an inline \"Match graphs\" module — matching HiFi's distinct detail + graphs frames. The screen is a brutalist \"match report card\" wrapped in HiFi warmth.\n\nSTRUCTURE (top to bottom):\n1. Sticky mono nav header: BackArrow + UPPERCASE mono micro-label \"MATCH DETAIL\" (0.08em tracking) — pure brutalist, keeps existing header idiom.\n2. Hero result block: big score numerals via clamp(3rem, min(22vh,26vw), 8rem) JetBrains Mono tabular-nums; team1/team2 stacked with the winner in weight 900 + a small green \"WON\" lead pill (green reserved for lead only). One HiFi coaching caption chip under it summarizing the result (\"Decided by 2\" / \"Close game\" / \"Draw\"). Winner side gets a warm-green-black soft wash rgba(20,40,30,.06), never pure black.\n3. Set/innings breakdown: hard-hairline mono table (reuse .mono-table-panel) — per-set strip \"25 · 22 · 18\" rows from entry.sets/innings, 1px black hairlines, mono numerals. The substance a brutalist report should carry.\n4. \"Match graphs\" module (NEW): lightweight inline SVG progression graph — set-by-set / innings score line for both sides. Rendered brutalist: 1px hard black axes/gridlines, zero blur, square plot frame (4px radius), one line ink-black vs the other green (lead) — NOT a soft gradient chart. Momentum worm only where data supports; else a clean set-delta bar chart. Designed empty state (\"No per-set data for this match\") when only a final score exists.\n5. Meta row: mono chips sport · source(Quick/Tournament) · date · elapsed (formatElapsed), reusing existing chip styling.\n6. Action bar: brutalist primary Rematch (existing rematchEntry) + Share, PLUS a HiFi \"Share live / Scan\" affordance opening a soft bottom-sheet with QR + copy link (spectator ecosystem), and Delete (quick only) carrying over the existing undo affordance.\n\nCircular/HiFi warmth lives INSIDE the report, not replacing it: 99px capsule action buttons; a 50% circular sport-icon medallion in the hero (gold #b8862e ring on MVP/milestone matches); the coaching caption chip; the share sheet as a 16px-radius soft sheet with upward warm shadow. All scaffolding (header, table, hairlines, ink, hard offset shadow 3px 3px 0 0.5px #000 on the report card) stays strictly brutalist.\n\nNAV CHANGE: history rows (MonoHistory L801-835) navigate to the new route instead of setting selectedEntry; the inline panel is removed.</blendDesign>\n<keepsBrutalist\">[\"Pure-black ink for text, borders, table hairlines and graph axes (#000)\",\"Hard offset drop-shadow 3px 3px 0 0.5px zero blur on the match-report card\",\"Thin 1-1.5px hard black hairlines in the set/innings table and graph gridlines\",\"UPPERCASE JetBrains Mono micro-label header with 0.08em tracking\",\"Big score numerals via clamp(3rem, min(22vh,26vw), 8rem), tabular-nums\",\"Boxy near-square radius (4px controls / 8px card); off-white #F1F4EF canvas\",\"Green reserved strictly for the lead/winner, not decoration\",\"Reuse of existing .mono-table-panel and mono chip idioms\"]</keepsBrutalist>\n<adoptsHifi\">[\"Dedicated full-screen match-detail view (not inline expand) + a Match graphs module\",\"Contextual coaching caption chip summarizing the result\",\"Match momentum/progression graph for scorer+spectator parity\",\"Share-live bottom-sheet with QR Scan-to-watch + copy link\",\"99px capsule action buttons and a soft 16px-radius bottom-sheet\",\"Gold accent for MVP/milestone winner medallion\",\"Designed empty state when a match has no per-set graph data\",\"Warm-green-black soft shadows never pure black on the winner wash\"]</adoptsHifi>\n<circularFriendlyElements\">50% circular sport-icon medallion in the hero (gold-ringed on MVP/milestone matches); 99px capsule Rematch/Share/Delete buttons; soft rounded coaching caption chip; 16px-radius share bottom-sheet with rounded QR tile and circular close handle — soft elements sitting inside an otherwise-brutalist report card, mirroring HiFi allowing rounded controls inside a hard data surface.</circularFriendlyElements>\n<filesToChange\">[\"src/designs/design1-mono/MonoHistory.jsx\",\"src/designs/design1-mono/index.jsx\",\"src/designs/design1-mono/mono.css\",\"src/designs/design1-mono/MonoHistory.test.jsx\"]</filesToChange>\n<newFilesOrComponents\">[\"MonoMatchDetail.jsx (dedicated screen; resolves entry by :id from quick+tournament+legacy sources)\",\"MonoMatchGraph.jsx (brutalist inline SVG set/innings progression + momentum graph with empty state)\",\"ShareLiveSheet.jsx (soft bottom-sheet: QR + copy link + share) or extend existing share affordance\",\"mono.css classes: .mono-match-hero, .mono-match-graph, .mono-share-sheet, .mono-medallion\"]</newFilesOrComponents>\n<dependencies\">[\"Extract MonoHistory entry-building helpers (buildTournamentEntries, quick/legacy mapping) into a shared util so the detail route can resolve an entry by id — they currently live inside the component\",\"Add route + lazy import in index.jsx nested under the existing history route\",\"Share-live/QR bottom-sheet should be a single reusable component shared with live-scorer and spectator screens (coordinate with eval-app)\",\"Graph module is reusable by spectator Match-graphs screens — build once, not twice\",\"QR generation needs a lightweight inline/offline generator (CSP-safe, no external CDN)\"]</dependencies>\n<risks\">Per-match timeline data is thin: quick matches store final score / sets / innings but not ball-by-ball or point-by-point events for every sport, so a true momentum worm is not universally feasible — the graph must degrade to set-delta bars + a designed empty state or it looks fake. Extracting entry-building logic out of MonoHistory risks regressions in the existing list/filters (mitigate with existing MonoHistory.test.jsx + new tests). Converting the inline panel to a route changes back-navigation and deep-link expectations. QR must stay CSP-safe/offline (no external lib). Effort is L due to the new graph + shared share-sheet + data plumbing; descoping the graph to a static breakdown table drops it to M.</risks>\n",
     "group": "history-stats",
     "currentState": "partial",
     "verdict": {
@@ -2010,9 +2010,9 @@
     ],
     "circularFriendlyElements": "Circular win% ring gauge (conic-gradient green fill) on the Top-performer hero; 50% circular team avatar/initial medallions in the leaderboard rows; gold/silver/bronze circular rank chips for the top-3; 99px capsule tab pills; rounded caption/insight chips; capsule green-glow CTA. Data tables and their cells stay square/brutalist — softness lives only in the summary/leaderboard/hero layer above the tables.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoStatistics.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoStatistics.test.jsx"
+      "src/designs/design1-mono/MonoStatistics.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/MonoStatistics.test.jsx"
     ],
     "newFilesOrComponents": [
       "components/WinRateRing.jsx — conic ring gauge (win%), a11y title/desc",
@@ -2069,8 +2069,8 @@
     ],
     "circularFriendlyElements": "Rank medallion = 50% circle, black hairline ring + hard offset shadow; podium fills gold, others transparent with black mono numeral. Player/team avatar = circular initials chip (black ring). Win% = 99px capsule pill (green fill when leader/positive, hairline outline otherwise). Form = row of 50% dots (green=W, black-outline=L, hollow=D). MVP crown = small gold capsule chip on rank 1. Chevron affordance is a small rounded tap target. All circles/capsules retain the brutalist black shadow so they read as ScoreEasy, not generic HiFi.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoStatistics.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoStatistics.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "MonoLeaderboard.jsx (new component: ranked list, accepts rows[], variant team|player)",
@@ -2120,9 +2120,9 @@
     ],
     "circularFriendlyElements": "Avatar becomes a true 50% circle with hard black hairline ring. MVP-count and cups render as 50% circular gold medallions (mono count numeral inside). Text milestones render as 99px gold capsule chips in a horizontal-scroll achievement rail. Locked/next milestones are dashed-hairline greyed capsules showing progress. Add-friend CTA is a 99px capsule. Everything circular/capsule is confined to the human/achievement layer; the numeric stat ledger and tables stay boxy.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoProfile.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/theme/sportsTokens.js"
+      "src/designs/design1-mono/MonoProfile.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/theme/sportsTokens.js"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/AchievementRail.jsx — horizontal-scroll rail rendering milestone/MVP/cup tokens (gold capsule + circular medallion variants, earned/locked states, optional breathing glow)",
@@ -2196,10 +2196,10 @@
       "MomentumStrip"
     ],
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoStatistics.jsx (make TeamStatsTable rows tappable → navigate to detail; import shared primitives)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add route, e.g. /stats/team/:teamKey)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-team-crest, .mono-form-dot, .mono-milestone-chip, .mono-stat-ring, .mono-momentum-bar, .mono-live-pill)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHistory.jsx (add entry point to team stats from match detail / leaderboard)"
+      "src/designs/design1-mono/MonoStatistics.jsx (make TeamStatsTable rows tappable → navigate to detail; import shared primitives)",
+      "src/designs/design1-mono/index.jsx (add route, e.g. /stats/team/:teamKey)",
+      "src/designs/design1-mono/mono.css (add .mono-team-crest, .mono-form-dot, .mono-milestone-chip, .mono-stat-ring, .mono-momentum-bar, .mono-live-pill)",
+      "src/designs/design1-mono/MonoHistory.jsx (add entry point to team stats from match detail / leaderboard)"
     ],
     "dependencies": [
       "Sibling 'Player profile' screen — shares the crest, form-dot, milestone-chip, and stat-primitive patterns; build the shared classes/components once and coordinate so the two screens don't diverge",
@@ -2311,9 +2311,9 @@
     "blendDesign_note": "",
     "keepsBrutalist_extra": "",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoTournamentList.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css"
+      "src/designs/design1-mono/MonoTournamentList.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css"
     ],
     "newFilesOrComponents": [
       "MonoCaptionChip.jsx — reusable brutalist coaching/status chip (mono uppercase, hairline, boxy) shared with tournament detail/fixtures screens",
@@ -2371,9 +2371,9 @@
     ],
     "circularFriendlyElements": "Restrained here since this is config, not gameplay. Circular/soft usage limited to: the step-progress dots (keep the existing 24px circles, add breathing pulse on active); team-count / bracket-size selector may become pill-capsule (99px) toggle chips since they are discrete friendly choices; the gold milestone/match-count chip on Review as a soft capsule. The Start Tournament CTA stays a boxy brutalist button (with green-glow shadow) rather than a pill — it must read as the app's signature primary action. Tournament-type option buttons stay boxy/hard to preserve identity.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoTournamentSetup.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css"
+      "src/designs/design1-mono/MonoTournamentSetup.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/index.css"
     ],
     "newFilesOrComponents": [
       "MonoBracketPreview component (brutalist-hairline tournament-tree / round-grid schedule visual for the Review step — extract from the ~1838-ln monolith so Fixtures/Bracket screens can reuse it)",
@@ -2429,11 +2429,11 @@
     ],
     "circularFriendlyElements": "Circular SeedAvatar team monograms in the bracket seeding slots and Teams tab (dashed circle for TBD). Circular round-node markers at bracket junctions. Soft green glow (rounded shadow) on the live Resume CTA. Everything else — match cards, tables, tabs, badges — stays boxy brutalist; circles are confined to team/seed identity and the bracket, matching the 'softer inside gameplay context' rule.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoCricketTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericSetsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericGoalsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/KnockoutMatchCard.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoCricketTournament.jsx",
+      "src/designs/design1-mono/GenericSetsTournament.jsx",
+      "src/designs/design1-mono/GenericGoalsTournament.jsx",
+      "src/designs/design1-mono/KnockoutMatchCard.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "TournamentDetailShell.jsx — shared header + meta + progress segments + tabs + context chip, consumed by all 3 engines to kill the ~90% triplication",
@@ -2492,14 +2492,14 @@
     ],
     "circularFriendlyElements": "Kept where they belong — inside the act of scoring, owned by the shared sport scorers (attribution bottom-sheets with Skip/Confirm, undo affordance, soft press feedback on tap zones). The tournament chrome itself (fixture ribbon, stage chip) stays deliberately boxy/square to read as 'competition context', so the friendly softness reads as 'the game' and the hard edges read as 'the bracket'. The one soft touch on the chrome is the breathing green glow on the LIVE indicator and a gold rounded accent on the advance-to-final result.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoTournamentLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/MonoTournamentLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoSetsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx",
+      "src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx",
+      "src/index.css",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/components/MonoTournamentFixtureRibbon.jsx — stage/round + seeds + advance-to line, rendered in the scorer shell above mono-scorer-topbar; reads tournament/match from params or props",
@@ -2556,12 +2556,12 @@
     ],
     "circularFriendlyElements": "Rank number rendered in a 50% circular chip at the row start (gold-filled for #1, green-tint wash for qualifying positions, plain hairline for the rest); the Pts value in a soft rounded emphasis pill; the desktop/condensed column toggle as a 99px mono capsule button. The grid lines themselves stay hard and square — softness lives only in the per-row chrome, per the brief's rule that rounded/circular elements are welcome inside gameplay-adjacent surfaces.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericSetsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericGoalsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/GenericSetsTournament.jsx",
+      "src/designs/design1-mono/GenericGoalsTournament.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/StandingsTable.jsx (shared, config-driven column renderer + rank chips + qualification rail + caption chips)",
+      "src/designs/design1-mono/StandingsTable.jsx (shared, config-driven column renderer + rank chips + qualification rail + caption chips)",
       "mono.css additions: .mono-standings-row, .mono-rank-chip, .mono-rank-chip--leader, .mono-rank-chip--qualify, .mono-qual-rail, .mono-standings-caption-chip, .mono-pts-pill, .mono-standings-live-pulse"
     ],
     "dependencies": [
@@ -2610,14 +2610,14 @@
     ],
     "circularFriendlyElements": "Circular 50% seed-number badges beside each team; 99px capsule Enter Score / Resume / Edit Score buttons; circular gold champion medallion at top of champion card; small circular join-dots at bracket connector intersections; soft pill caption chips for round context.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/KnockoutMatchCard.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericSetsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoCricketTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericGoalsTournament.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css"
+      "src/designs/design1-mono/KnockoutMatchCard.jsx",
+      "src/designs/design1-mono/GenericSetsTournament.jsx",
+      "src/designs/design1-mono/MonoCricketTournament.jsx",
+      "src/designs/design1-mono/GenericGoalsTournament.jsx",
+      "src/designs/design1-mono/mono.css"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/KnockoutBracket.jsx — bracket-tree layout: round columns + connector lines + champion medallion, consumes getKnockoutRoundGroups + KnockoutMatchCard; absorbs the placeholder 'TBD' bracket; replaces the duplicated blocks in all 3 tournament dispatchers",
+      "src/designs/design1-mono/KnockoutBracket.jsx — bracket-tree layout: round columns + connector lines + champion medallion, consumes getKnockoutRoundGroups + KnockoutMatchCard; absorbs the placeholder 'TBD' bracket; replaces the duplicated blocks in all 3 tournament dispatchers",
       "mono.css classes: .mono-bracket-rail, .mono-bracket-connector, .mono-seed-badge (50%), .mono-champion-medallion, .mono-btn-capsule (99px), plus a LIVE pulse keyframe (reuse if one already exists)"
     ],
     "dependencies": [
@@ -2671,12 +2671,12 @@
     ],
     "circularFriendlyElements": "Team monogram initials as 50% circles on each fixture row; the LIVE breathing dot; per-round circular progress rings on the round-jump chips; the 99px capsule status pills (UPCOMING/LIVE/FT/GOLD-final); the 99px round-jump chips; and the sticky 99px 'Score next match' CTA with green colored-glow shadow. Everything structural (cards, borders, dividers, tab-active fill) stays boxy-brutalist; everything status/navigation/human-voice stays rounded-friendly — the two vocabularies are intentionally juxtaposed cell-by-cell.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (register route `:sport/tournament/:id/fixtures` next to line 1535–1536, wrapped in SportRouteGuard)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-fixture-row, .mono-round-chip, .mono-status-pill + --live/--gold variants, breathing keyframe with prefers-reduced-motion guard, circular progress-ring helper)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericSetsTournament.jsx (mount shared Standings/Fixtures/Bracket tab)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/GenericGoalsTournament.jsx (same tab mount)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoCricketTournament.jsx (same tab mount)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoTournamentList.jsx (optional: add 'View fixtures' link on each tournament row)"
+      "src/designs/design1-mono/index.jsx (register route `:sport/tournament/:id/fixtures` next to line 1535–1536, wrapped in SportRouteGuard)",
+      "src/designs/design1-mono/mono.css (add .mono-fixture-row, .mono-round-chip, .mono-status-pill + --live/--gold variants, breathing keyframe with prefers-reduced-motion guard, circular progress-ring helper)",
+      "src/designs/design1-mono/GenericSetsTournament.jsx (mount shared Standings/Fixtures/Bracket tab)",
+      "src/designs/design1-mono/GenericGoalsTournament.jsx (same tab mount)",
+      "src/designs/design1-mono/MonoCricketTournament.jsx (same tab mount)",
+      "src/designs/design1-mono/MonoTournamentList.jsx (optional: add 'View fixtures' link on each tournament row)"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/MonoTournamentFixtures.jsx (the screen: loads tournament by :id, groups matches by round, renders round rail + sections + sticky CTA + empty state)",
@@ -2912,14 +2912,14 @@
     ],
     "circularFriendlyElements": "40px and 28px 50%-circular friend avatars (reuse MonoUserSearch initial-fallback), an overlapping -8px avatar watcher cluster with hairline rings, a 99px capsule 'Watch' CTA that still carries the hard ZERO-blur black offset shadow (the signature blend), a breathing circular LIVE dot, and soft green (live) / gold (milestone) tint washes confined to those row types.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add <Route path=\"feed\" element={<CloudAuthOnly><MonoActivityFeed /></CloudAuthOnly>} /> near the social routes ~line 1524; add import)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-live-dot + @keyframes breathing pulse, .mono-feed-live wash, .mono-watch-pill capsule-with-hard-shadow, .mono-avatar-cluster, .mono-milestone-chip gold, .mono-feed-filter segmented)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHome.jsx (add an 'Activity' entry link in the top nav so the feed is reachable until bottom-tab nav lands)"
+      "src/designs/design1-mono/index.jsx (add <Route path=\"feed\" element={<CloudAuthOnly><MonoActivityFeed /></CloudAuthOnly>} /> near the social routes ~line 1524; add import)",
+      "src/designs/design1-mono/mono.css (add .mono-live-dot + @keyframes breathing pulse, .mono-feed-live wash, .mono-watch-pill capsule-with-hard-shadow, .mono-avatar-cluster, .mono-milestone-chip gold, .mono-feed-filter segmented)",
+      "src/designs/design1-mono/MonoHome.jsx (add an 'Activity' entry link in the top nav so the feed is reachable until bottom-tab nav lands)"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoActivityFeed.jsx (the screen)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/AvatarCluster.jsx (reusable overlapping circular avatars — shared with Friends list / Notifications)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/LiveDot.jsx (breathing pulse indicator, reused by spectator/live screens)"
+      "src/designs/design1-mono/MonoActivityFeed.jsx (the screen)",
+      "src/designs/design1-mono/components/AvatarCluster.jsx (reusable overlapping circular avatars — shared with Friends list / Notifications)",
+      "src/designs/design1-mono/components/LiveDot.jsx (breathing pulse indicator, reused by spectator/live screens)"
     ],
     "dependencies": [
       "Convex backend: a feed/friends-activity query (e.g. api.feed.list / api.friends.activity) does not exist yet — screen must ship with useQuery(...,'skip') + honest empty state until the data model lands",
@@ -2967,12 +2967,12 @@
     ],
     "circularFriendlyElements": "50% circular avatars with a breathing green live-ring (glow pulse 1.4s) for friends currently scoring; 99px capsule segmented filter (All · Online · Requests); 99px pill '+ Find friends' CTA with green-glow colored shadow; circular check Accept button; circular decline (x). Rounded illustration circle in the empty state.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add lazy MonoFriends + /friends Route; add Friends to bottomNavItems + navItems + isActive + NavIcon 'friends'; include /friends in isAppShellPath so bottom nav shows)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (friend-row, live-ring @keyframes pulse, capsule filter, request-wash card styles)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/convex/schema.ts (add friendships/friendRequests table with indexes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/convex/users.ts (or new friends.ts — expose friend list/status)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoUserSearch.jsx (wire 'Add friend' action onto result rows)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoProfile.jsx (add public Add-friend / friends count to player profile)"
+      "src/designs/design1-mono/index.jsx (add lazy MonoFriends + /friends Route; add Friends to bottomNavItems + navItems + isActive + NavIcon 'friends'; include /friends in isAppShellPath so bottom nav shows)",
+      "src/designs/design1-mono/mono.css (friend-row, live-ring @keyframes pulse, capsule filter, request-wash card styles)",
+      "convex/schema.ts (add friendships/friendRequests table with indexes)",
+      "convex/users.ts (or new friends.ts — expose friend list/status)",
+      "src/designs/design1-mono/MonoUserSearch.jsx (wire 'Add friend' action onto result rows)",
+      "src/designs/design1-mono/MonoProfile.jsx (add public Add-friend / friends count to player profile)"
     ],
     "newFilesOrComponents": [
       "MonoFriends.jsx (the page)",
@@ -3032,9 +3032,9 @@
     ],
     "circularFriendlyElements": "Circular elements are limited to conventional, non-gameplay touches so brutalism stays dominant (this screen is not live scoring): 40px 50%-radius actor avatars on each row; a small filled green 50% unread/status dot at the row's left edge; the breathing green live-alert dot; and a circular gold medallion glyph on milestone rows. Action buttons stay boxy brutalist (4px) rather than 99px capsules — capsule/circular tap targets are reserved for the scoring screens per the identity rules.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add lazy import + <Route path=\"notifications\"> inside CloudAuthOnly; confirm isAppShellPath includes it so the bottom nav shows)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHome.jsx (add bell entry affordance with unread-count badge linking to /notifications)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add notification row/group/filter classes, unread dot, gold-milestone accent, breathing live-dot keyframe gated by prefers-reduced-motion)"
+      "src/designs/design1-mono/index.jsx (add lazy import + <Route path=\"notifications\"> inside CloudAuthOnly; confirm isAppShellPath includes it so the bottom nav shows)",
+      "src/designs/design1-mono/MonoHome.jsx (add bell entry affordance with unread-count badge linking to /notifications)",
+      "src/designs/design1-mono/mono.css (add notification row/group/filter classes, unread dot, gold-milestone accent, breathing live-dot keyframe gated by prefers-reduced-motion)"
     ],
     "newFilesOrComponents": [
       "MonoNotifications.jsx — the screen: header + Mark-all-read, hairline segment filter, time-grouped list, per-type rows, empty/first-run state",
@@ -3093,9 +3093,9 @@
     ],
     "circularFriendlyElements": "44px circular team crest avatars (50% radius, monogram initials on tinted wash); circular '+' FAB bottom-right with green-glow shadow; 99px capsule sport-filter pills; pill-shaped count/most-played chips; large circular outlined placeholder icon in the empty state.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add /teams route + /teams entry; no new bottom-tab, nest under Profile)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoProfile.jsx (add a 'Teams' entry link into the account/profile area since bottom nav has only 4 tabs)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (new classes: mono-team-card, mono-team-crest, mono-sport-group, mono-filter-pill, mono-fab, mono-milestone-chip, teams empty state)"
+      "src/designs/design1-mono/index.jsx (add /teams route + /teams entry; no new bottom-tab, nest under Profile)",
+      "src/designs/design1-mono/MonoProfile.jsx (add a 'Teams' entry link into the account/profile area since bottom nav has only 4 tabs)",
+      "src/designs/design1-mono/mono.css (new classes: mono-team-card, mono-team-crest, mono-sport-group, mono-filter-pill, mono-fab, mono-milestone-chip, teams empty state)"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/MonoTeams.jsx (the grouped list page)",
@@ -3155,13 +3155,13 @@
     ],
     "circularFriendlyElements": "The 56px team-crest avatar/color picker is a true 50% circle (the one sanctioned soft target), and the coaching caption chips use 99px capsule radius with soft green-tint washes. Everything else — inputs, format preset cards, dividers, the CTA, and the capacity progress bar — stays boxy/hard brutalist. Circular warmth is confined to identity/celebration affordances, not to the structural form chrome.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (register new /teams and /teams/new routes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add mono-coach-chip capsule, mono-crest-picker circle, mono-counter/mono-capacity-bar helper classes)"
+      "src/designs/design1-mono/index.jsx (register new /teams and /teams/new routes)",
+      "src/designs/design1-mono/mono.css (add mono-coach-chip capsule, mono-crest-picker circle, mono-counter/mono-capacity-bar helper classes)"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoCreateTeam.jsx (the screen)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/CoachChip.jsx (reusable green-tint capsule caption used across the Teams flow)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/TeamCrestPicker.jsx (circular color/emoji crest)",
+      "src/designs/design1-mono/MonoCreateTeam.jsx (the screen)",
+      "src/designs/design1-mono/components/CoachChip.jsx (reusable green-tint capsule caption used across the Teams flow)",
+      "src/designs/design1-mono/components/TeamCrestPicker.jsx (circular color/emoji crest)",
       "A useTeams hook + team model stub (createTeam) — no team entity exists yet; likely src/hooks/useTeams.js + src/models/types team factory"
     ],
     "dependencies": [
@@ -3207,9 +3207,9 @@
     ],
     "circularFriendlyElements": "Circular: friend and recent-teammate avatars in the horizontal scrollers (50% tap targets), the initial/avatar bubble inside each selected chip, and the x remove buttons. Capsule (99px): each selected PlayerChip and the 'Add to team' commit CTA. These are exactly the 'tap a human' surfaces — the brutalist boxy hairline cards remain for the structural source rows and inputs.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/PlayerChip.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx"
+      "src/designs/design1-mono/components/PlayerChip.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/index.jsx"
     ],
     "newFilesOrComponents": [
       "src/designs/design1-mono/MonoAddPlayers.jsx (new screen, route e.g. /team/add-players)",
@@ -3272,9 +3272,9 @@
     ],
     "circularFriendlyElements": "Circular (50%) player avatars with initials fallback; gold 50% captain ring + C badge; 99px capsule filter pills (All/Squad/Bench) and role/position chips; a 50% circular green-glow '+' FAB for add-player; pill-shaped drag handles; capsule action buttons inside the manage bottom-sheet. Brutalist hard hairlines and mono labels frame these soft elements so the screen still reads as ScoreEasy.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add /teams/:teamId/roster route + guard)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add roster row/list, capsule-pill, circular-avatar, captain-ring, bottom-sheet, FAB-glow classes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/index.css (only if a new gold/status alias token is needed, e.g. --se-color-gold)"
+      "src/designs/design1-mono/index.jsx (add /teams/:teamId/roster route + guard)",
+      "src/designs/design1-mono/mono.css (add roster row/list, capsule-pill, circular-avatar, captain-ring, bottom-sheet, FAB-glow classes)",
+      "src/index.css (only if a new gold/status alias token is needed, e.g. --se-color-gold)"
     ],
     "newFilesOrComponents": [
       "MonoRoster.jsx (the screen)",
@@ -3330,14 +3330,14 @@
     ],
     "circularFriendlyElements": "The hero is a circular avatar/jersey cluster: three overlapping 50% dashed-hairline rings on a ~120px soft green-tint disc, with a small gold dot on the lead ring. Both CTAs are fully-rounded 99px capsules. An optional gentle breathing glow (geGlow-style opacity pulse, 1.4-1.8s) can sit on the green disc to add HiFi warmth without harsh blink. These circular/soft elements are confined to the illustrative hero and buttons; the page shell stays boxy/brutalist.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx (add /teams route)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css (add .mono-empty-hero circular disc + dashed avatar-cluster rings, .mono-btn-capsule pill+offset-shadow classes)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoStatistics.jsx (extract the local EmptyState into the shared component below rather than duplicating)"
+      "src/designs/design1-mono/index.jsx (add /teams route)",
+      "src/designs/design1-mono/mono.css (add .mono-empty-hero circular disc + dashed avatar-cluster rings, .mono-btn-capsule pill+offset-shadow classes)",
+      "src/designs/design1-mono/MonoStatistics.jsx (extract the local EmptyState into the shared component below rather than duplicating)"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoTeams.jsx (new Teams screen that renders the empty state when the squad list is empty; grows into the populated 'My teams grouped' list later)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/EmptyState.jsx (lift the existing MonoStatistics EmptyState into a shared component, extended with an optional illustration slot for the circular hero)",
-      "Optional: C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/BottomTabNav.jsx if a shared nav component does not yet exist"
+      "src/designs/design1-mono/MonoTeams.jsx (new Teams screen that renders the empty state when the squad list is empty; grows into the populated 'My teams grouped' list later)",
+      "src/designs/design1-mono/components/EmptyState.jsx (lift the existing MonoStatistics EmptyState into a shared component, extended with an optional illustration slot for the circular hero)",
+      "Optional: src/designs/design1-mono/components/BottomTabNav.jsx if a shared nav component does not yet exist"
     ],
     "effort": "M",
     "dependencies": [
@@ -3389,7 +3389,7 @@
     ],
     "circularFriendlyElements": "Circular/capsule elements live only in navigation and action chrome, never in the document body: the 99px segmented Privacy/Terms/Contact tab switcher, the 99px capsule PLAY NOW CTA, the 99px capsule 'Email support' mailto button (Contact only), and the 12px rounded outer card around the section list. The reading area itself stays square-cornered with hard hairlines. Circular avatar/tap-target motifs from live scoring are intentionally NOT used here — this is a static document, so warmth is limited to the green-tint contact help panel.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/landing/LegalPage.jsx"
+      "src/designs/design1-mono/landing/LegalPage.jsx"
     ],
     "newFilesOrComponents": [
       "Optional inline LegalTabs segmented-switcher (can live inside LegalPage.jsx — no separate file needed for effort S)",
@@ -3497,14 +3497,14 @@
     "circularFriendlyElements": "Circular 50% emblem badge (hard black hairline outline) holds the CSS-drawn line-icon focal graphic. Primary escape CTA is a 99px capsule with green-tint wash + green glow. Secondary actions are rounded-rect ghost pills. These soft elements sit INSIDE the hard boxy offset-shadow card, and the container/hairlines/numeral stay strictly brutalist — soft is contained, not dominant, appropriate since this is a system/utility screen not live gameplay.",
     "keepsBrutalist2": "",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/RouteRecoveryActions.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/TournamentNotFoundActions.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/components/ErrorBoundary.jsx",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/mono.css",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/index.jsx"
+      "src/designs/design1-mono/components/RouteRecoveryActions.jsx",
+      "src/designs/design1-mono/components/TournamentNotFoundActions.jsx",
+      "src/components/ErrorBoundary.jsx",
+      "src/designs/design1-mono/mono.css",
+      "src/designs/design1-mono/index.jsx"
     ],
     "newFilesOrComponents": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/components/MonoFallbackScreen.jsx — shared recovery layout (eyebrow, circular emblem, hero numeral, title, micro-copy, capsule action stack, optional bottom nav); RouteRecoveryActions/ErrorBoundary/TournamentNotFoundActions all render through it",
+      "src/designs/design1-mono/components/MonoFallbackScreen.jsx — shared recovery layout (eyebrow, circular emblem, hero numeral, title, micro-copy, capsule action stack, optional bottom nav); RouteRecoveryActions/ErrorBoundary/TournamentNotFoundActions all render through it",
       "mono.css additions: .mono-fallback-card (boxy + hard offset shadow), .mono-fallback-emblem (50% hairline badge), .mono-fallback-hero (clamp score numeral), .mono-fallback-cta (99px capsule + green-tint wash + green-glow shadow), .mono-fallback-ghost (rounded ghost pill)"
     ],
     "dependencies": [
@@ -3549,10 +3549,10 @@
     ],
     "circularFriendlyElements": "Already present and preserved in the surviving NewUserFlow: 36px circular step-number badges (borderRadius 50%), 28px circular T/Q mode badges, and pill chips (borderRadius 20) for the selected-sport/mode confirmations. These are exactly where HiFi roundness belongs (progress + attribution chrome), sitting against the brutalist near-square cards. No new circular elements are created — deletion task.",
     "filesToChange": [
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoHome.jsx (DELETE)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSetup.jsx (DELETE)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/MonoSportHome_TABBED.jsx (DELETE)",
-      "C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/NewUserFlow.jsx (KEEP + harden: swap soft blurred preview-card shadow 0 4px 20px rgba(0,0,0,0.08) for hard 3px 3px 0 0.5px #000 / --shadow-2xs)"
+      "src/designs/design1-mono/MonoHome.jsx (DELETE)",
+      "src/designs/design1-mono/MonoSetup.jsx (DELETE)",
+      "src/designs/design1-mono/MonoSportHome_TABBED.jsx (DELETE)",
+      "src/designs/design1-mono/NewUserFlow.jsx (KEEP + harden: swap soft blurred preview-card shadow 0 4px 20px rgba(0,0,0,0.08) for hard 3px 3px 0 0.5px #000 / --shadow-2xs)"
     ],
     "newFilesOrComponents": [],
     "dependencies": [

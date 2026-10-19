@@ -1,5 +1,7 @@
 # ScoreEasy — Cricket Scorer UX (LOCKED v2, post-comparison + edge-audit)
 
+> **Status (2026-10):** the Guided scorer shipped with the delivery engine (PR #129, flag-guarded); Keypad-Power mode is still open.
+
 **Date:** 2026-07-20 · **Status:** LOCKED for build · **Supersedes** `cricket-spec.md` on UX-mode choice + edge rules (v1 stays authoritative on tokens, demo state, signature moments, and the C1–C13 build sequence except where amended in §D below).
 **Design system:** design1-mono (brutalist shell × HiFi-blend) · **Governance:** `src/designs/design1-mono/BLEND-GOVERNANCE.md` (FROZEN).
 

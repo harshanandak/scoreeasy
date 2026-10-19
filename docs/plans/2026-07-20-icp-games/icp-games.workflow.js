@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'icp-games',
   description: 'ICP-driven sport prioritization for ScoreEasy (India schools/colleges/ground play): research the game universe, gap-analyze vs the current 15 sports, Fable synthesizes priority tiers + plan reshape',
@@ -8,7 +10,7 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-20-icp-games'
+const DIR = 'docs/plans/2026-07-20-icp-games'
 
 const CURRENT = `Current ScoreEasy sports (src/models/sportRegistry.js on master), by scoring engine:
 - sets engine (win-by-2 to target, best-of sets): volleyball, badminton, tabletennis, tennis, pickleball, squash

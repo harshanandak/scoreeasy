@@ -1,10 +1,12 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'scorer-variants',
   description: 'Generate 3 distinct, more-efficient cricket-scorer interaction models on the clean baseline (real CSS, brutalist palette), each a separate mockup for comparison',
   phases: [{ title: 'Variants', detail: '3 efficient scorer concepts, each a mockup' }],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-20-icp-games/cricket'
+const DIR = 'docs/plans/2026-07-20-icp-games/cricket'
 const BASE = `${DIR}/cricket-scorer-clean.html`
 
 const VARIANTS = [

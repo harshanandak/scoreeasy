@@ -1,5 +1,7 @@
 # HiFi Interactive Prototype — Design
 
+> **Status (2026-10):** built. The prototype lives in `prototype/` (see `prototype/README.md`); it is design exploration, not shipped app code.
+
 **Date:** 2026-07-07 · **Branch:** `feat/prototype-redesign` · **Status:** approved (user: "go")
 
 ## Goal

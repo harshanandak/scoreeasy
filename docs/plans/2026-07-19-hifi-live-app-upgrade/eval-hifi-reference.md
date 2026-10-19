@@ -1,6 +1,6 @@
 # ScoreEasy Hi-Fi Reference — Design & Flow Inventory
 
-Source: `C:\Users\harsha_befach\Downloads\ScoreEasy App Flow HiFi.dc.html` (~694 KB single-file design-canvas export, `design_doc_mode = canvas`).
+Source: `the HiFi design-canvas export (external, not in repo; split into prototype/reference/)` (~694 KB single-file design-canvas export, `design_doc_mode = canvas`).
 
 Format note: this is a **hand-authored HTML canvas**, not a Figma/design-tool dump. There are **no `<svg>`, no `class=`, no `data-name`** attributes — every screen is an absolutely-positioned `<div>` phone frame (300×600, `border-radius:34px`) built from inline-styled divs. Frames are grouped by `<!-- BAND n -->` comments and section titles; each frame carries a `data-game="<sport>"` attribute and a small drag label (its screen name). 90 labelled frames across 14 bands. The header explicitly frames this as "**every wireframe frame, rendered in the production design language**" and calls out a **Scorer-style toggle** with three co-located variants per live scorer: **refined** (instrument scorers with the FULL option set — the stated design direction), **new** (first instrument exploration), **old** (original cards).
 

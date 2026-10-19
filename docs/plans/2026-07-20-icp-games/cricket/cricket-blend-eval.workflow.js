@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'cricket-blend-eval',
   description: 'Evaluator loop: extract HiFi DNA + audit brutalism fit, define a blend rubric (where brutalism works vs where HiFi softness is needed), then improve all 3 cricket mockups via generate->critic->refine, Fable synthesizes the final blend',
@@ -9,14 +11,14 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-20-icp-games/cricket'
-const HIFI = 'C:/Users/harsha_befach/Downloads/ScoreEasy App Flow HiFi.dc.html'
-const DIRECTIONS = 'C:/Users/harsha_befach/Downloads/Volleyball/prototype/directions-cricket.html'
+const DIR = 'docs/plans/2026-07-20-icp-games/cricket'
+const HIFI = 'the HiFi design-canvas export (external, not in repo; split into prototype/reference/)'
+const DIRECTIONS = 'prototype/directions-cricket.html'
 // HARD CONSTRAINT threaded through every phase: take STRUCTURE / LAYOUT / INTERACTION
 // inspiration from the reference files, but NEVER their colors. The palette stays our
 // current minimal-brutalist token set (src/index.css --se-* + --se-blend-*).
 const PALETTE_RULE = 'PALETTE IS FIXED: use ONLY our current minimal-brutalist tokens (--se-* and --se-blend-* from src/index.css). Take structure, layout, hierarchy, spacing, component and interaction inspiration from the reference files, but NEVER adopt their colors, gradients or color mood. No raw hex. If a reference idea depends on its own colors, re-express it in our palette or drop it.'
-const APP = 'C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono'
+const APP = 'src/designs/design1-mono'
 const GOV = `${APP}/BLEND-GOVERNANCE.md`
 const SPEC = `${DIR}/cricket-spec-v2.md`
 

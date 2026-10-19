@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'cricket-refine',
   description: 'Cricket UX variability + edge-case rigor: design 3 distinct scorer/live UX options, adversarial edge-case audit, Fable judges/synthesizes the best + folds fixes into the locked spec',
@@ -8,8 +10,8 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-20-icp-games/cricket'
-const APP = 'C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono'
+const DIR = 'docs/plans/2026-07-20-icp-games/cricket'
+const APP = 'src/designs/design1-mono'
 const GOV = `${APP}/BLEND-GOVERNANCE.md`
 const SPEC = `${DIR}/cricket-spec.md`
 const DESIGN = `${DIR}/cricket-design.md`

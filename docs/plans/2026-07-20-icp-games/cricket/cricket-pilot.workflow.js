@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'cricket-pilot',
   description: 'Cricket per-game bespoke experience (pilot of the per-game template): authentic + competitor live-screen research, bespoke board/live/spectator design vs market bar, critic, Fable spec + build issues',
@@ -9,8 +11,8 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-20-icp-games/cricket'
-const APP = 'C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono'
+const DIR = 'docs/plans/2026-07-20-icp-games/cricket'
+const APP = 'src/designs/design1-mono'
 const GOV = `${APP}/BLEND-GOVERNANCE.md`
 
 const RESEARCH = [

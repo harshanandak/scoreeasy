@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'hifi-revise',
   description: 'Revise the ScoreEasy upgrade plan: fix the 4 degenerate screens, reconcile kernel debt, recompose the decomposition folding Fable 10 revisions + 13 flow/IA directives, write master plan, Fable final vet',
@@ -9,7 +11,7 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-19-hifi-live-app-upgrade'
+const DIR = 'docs/plans/2026-07-19-hifi-live-app-upgrade'
 const DECOMP = `${DIR}/decomposition.json`
 const SCREENS = `${DIR}/screen-designs.json`
 const FABLE = `${DIR}/fable-evaluation.md`
@@ -77,11 +79,11 @@ const TO_FIX = [
 phase('Fixes')
 const fixes = await parallel([
   ...TO_FIX.map((f) => () => agent(
-    `Re-do the per-screen blend design + adversarial verify for ONE ScoreEasy screen that the earlier workflow produced a DEGENERATE (placeholder) output for. Do real, file:line-grounded work — reject any placeholder.\n\nScreen: ${f.screen}\nWhy it needs redo: ${f.why}\n\nRead the screen's current entry in ${SCREENS} (find the object whose "screen" matches) and the relevant source under C:/Users/harsha_befach/Downloads/design1-mono — actually C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/. The app BLENDS its brutalist identity (pure-black ink+borders, hard 3px 3px 0-blur offset shadow, tight 4-8px radii, Inter + JetBrains Mono, uppercase mono micro-labels) with friendlier HiFi UX (rounded/circular scoring controls, plain-language prompts, soft green warmth) — preserve brutalism, do not dilute it; circular/soft elements are welcome inside scoring. Produce a concrete blendDesign narrative + keepsBrutalist + adoptsHifi + a real adversarial verdict (preservesBrutalistIdentity, capturesHifiUxWin, buildableAsOnePr, scopeVerdict, issues with file:line where possible, revisedEffort). If too-big, say concretely how to split.`,
+    `Re-do the per-screen blend design + adversarial verify for ONE ScoreEasy screen that the earlier workflow produced a DEGENERATE (placeholder) output for. Do real, file:line-grounded work — reject any placeholder.\n\nScreen: ${f.screen}\nWhy it needs redo: ${f.why}\n\nRead the screen's current entry in ${SCREENS} (find the object whose "screen" matches) and the relevant source under src/designs/design1-mono/. The app BLENDS its brutalist identity (pure-black ink+borders, hard 3px 3px 0-blur offset shadow, tight 4-8px radii, Inter + JetBrains Mono, uppercase mono micro-labels) with friendlier HiFi UX (rounded/circular scoring controls, plain-language prompts, soft green warmth) — preserve brutalism, do not dilute it; circular/soft elements are welcome inside scoring. Produce a concrete blendDesign narrative + keepsBrutalist + adoptsHifi + a real adversarial verdict (preservesBrutalistIdentity, capturesHifiUxWin, buildableAsOnePr, scopeVerdict, issues with file:line where possible, revisedEffort). If too-big, say concretely how to split.`,
     { label: `fix:${f.screen.split(' ')[0].toLowerCase()}`, phase: 'Fixes', schema: SCREEN_FIX_SCHEMA, model: 'opus', effort: 'high' }
   )),
   () => agent(
-    `Kernel design-debt reconciliation for the ScoreEasy upgrade (Fable revision #5). The design-debt issues I-013/I-044/I-047/I-049/I-051/I-052/I-053/I-066/I-068/I-086 were migrated into the FORGE KERNEL (not beads — bd is empty). Several already have fix-comments shipped in code.\n\nDo this: (1) list the kernel issues via \`node C:/Users/harsha_befach/Downloads/forge/bin/forge.js issue list\` (and \`forge issue show <id>\` as needed) to find each I-xxx's current status; (2) grep the source under C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/ for fix-comments / evidence each is already resolved; (3) classify each I-xxx as ALREADY-FIXED (close/annotate, do not refile), PARTIAL (residual work only), or OPEN (needs full work). Also decide keep-vs-remove for I-068 (the green 4/6 cricket run-button accent). Write findings to ${DIR}/debt-reconciliation.md via the native Write tool.\n\nReturn a JSON summary object: {alreadyFixed:[ids], partial:[{id,residual}], open:[ids], i068Decision:string, docPath:string}.`,
+    `Kernel design-debt reconciliation for the ScoreEasy upgrade (Fable revision #5). The design-debt issues I-013/I-044/I-047/I-049/I-051/I-052/I-053/I-066/I-068/I-086 were migrated into the FORGE KERNEL (not beads — bd is empty). Several already have fix-comments shipped in code.\n\nDo this: (1) list the kernel issues via \`node forge CLI (external) issue list\` (and \`forge issue show <id>\` as needed) to find each I-xxx's current status; (2) grep the source under src/designs/design1-mono/ for fix-comments / evidence each is already resolved; (3) classify each I-xxx as ALREADY-FIXED (close/annotate, do not refile), PARTIAL (residual work only), or OPEN (needs full work). Also decide keep-vs-remove for I-068 (the green 4/6 cricket run-button accent). Write findings to ${DIR}/debt-reconciliation.md via the native Write tool.\n\nReturn a JSON summary object: {alreadyFixed:[ids], partial:[{id,residual}], open:[ids], i068Decision:string, docPath:string}.`,
     { label: 'debt-audit', phase: 'Fixes', model: 'opus', effort: 'high', schema: {
       type: 'object',
       properties: {

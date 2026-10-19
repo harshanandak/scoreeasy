@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'hifi-plan',
   description: 'Plan the brutalist x HiFi blend upgrade of the ScoreEasy live app: per-screen blend designs, adversarial verify, epic/PR decomposition',
@@ -9,8 +11,8 @@ export const meta = {
   ],
 }
 
-const EVAL_HIFI = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-19-hifi-live-app-upgrade/eval-hifi-reference.md'
-const EVAL_APP = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-19-hifi-live-app-upgrade/eval-current-app.md'
+const EVAL_HIFI = 'docs/plans/2026-07-19-hifi-live-app-upgrade/eval-hifi-reference.md'
+const EVAL_APP = 'docs/plans/2026-07-19-hifi-live-app-upgrade/eval-current-app.md'
 
 // --- degenerate-output guard (Fable pre-build fix #2) ------------------------
 // Throws loudly if an agent result is degenerate, so a future rerun cannot
@@ -148,7 +150,7 @@ phase('Screen designs')
 const planned = await pipeline(
   screens,
   (s) => agent(
-    `You are designing the UPGRADED version of ONE screen of the ScoreEasy sports-scoring app. The app keeps its existing BRUTALIST visual identity; we BLEND it with the friendlier HiFi flow to get best-of-both-worlds. Do NOT replace brutalism. Softer / rounded / circular elements are welcome INSIDE game scoring and live gameplay.\n\nBrutalist identity to preserve: ${disco.brutalistIdentity}\nHiFi UX traits to adopt: ${disco.hifiTraits}\n\nSCREEN: ${JSON.stringify(s)}\n\nRead the relevant current source files (under C:/Users/harsha_befach/Downloads/Volleyball/src/designs/design1-mono/) and consult the HiFi reference eval doc (${EVAL_HIFI}) as needed. Produce a CONCRETE blend design for this screen: what it keeps from brutalism, what HiFi UX it adopts, where circular/friendly elements go, the exact files/components to change or create, effort (S|M|L), dependencies on other screens or cross-cutting work, and risks.`,
+    `You are designing the UPGRADED version of ONE screen of the ScoreEasy sports-scoring app. The app keeps its existing BRUTALIST visual identity; we BLEND it with the friendlier HiFi flow to get best-of-both-worlds. Do NOT replace brutalism. Softer / rounded / circular elements are welcome INSIDE game scoring and live gameplay.\n\nBrutalist identity to preserve: ${disco.brutalistIdentity}\nHiFi UX traits to adopt: ${disco.hifiTraits}\n\nSCREEN: ${JSON.stringify(s)}\n\nRead the relevant current source files (under src/designs/design1-mono/) and consult the HiFi reference eval doc (${EVAL_HIFI}) as needed. Produce a CONCRETE blend design for this screen: what it keeps from brutalism, what HiFi UX it adopts, where circular/friendly elements go, the exact files/components to change or create, effort (S|M|L), dependencies on other screens or cross-cutting work, and risks.`,
     { label: `design:${s.name}`, phase: 'Screen designs', schema: SCREEN_DESIGN_SCHEMA, model: 'opus', effort: 'high' }
   ),
   (design, s) => agent(

@@ -1,3 +1,5 @@
+// ARCHIVED generator script, kept for provenance of the docs in this folder.
+// Paths are repo-relative and external tools are named, not located: not runnable as-is.
 export const meta = {
   name: 'flow-ia',
   description: 'Evaluate ScoreEasy end-to-end flow / IA / navigation seamlessness: trace core journeys, critique for lost-risk + simplicity, IA analysis, Fable synthesis',
@@ -9,7 +11,7 @@ export const meta = {
   ],
 }
 
-const DIR = 'C:/Users/harsha_befach/Downloads/Volleyball/docs/plans/2026-07-19-hifi-live-app-upgrade'
+const DIR = 'docs/plans/2026-07-19-hifi-live-app-upgrade'
 const DISCOVERY = `${DIR}/discovery.json`
 const EVAL_HIFI = `${DIR}/eval-hifi-reference.md`
 const EVAL_APP = `${DIR}/eval-current-app.md`
