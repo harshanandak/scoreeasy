@@ -2,6 +2,8 @@
 
 **Date:** 2026-07-26 · **Status:** SYNTHESIS (distilled from the 7 non-cricket bespoke briefs) · **Design system:** design1-mono (brutalist shell × HiFi-blend) · **Governance:** `BLEND-GOVERNANCE.md` (FROZEN) + cricket `blend-rubric.md`.
 
+> **Superseded where they differ** by `README-deep-synthesis.md` (decide-once list grew from 10 to 12; mode-vocabulary recommendation is now *Guided default ↔ Detailed/Power*) and `README-adaptive-system.md`. Kept as the first-pass record.
+
 **Purpose.** The 7 briefs (kabaddi, volleyball, badminton, football, basketball, throwball, kho-kho) each re-derive the same shell, tokens, rubric, and surface anatomy from cricket. This document factors out what is genuinely shared so the 7 games do **not** each reinvent it — one screen skeleton set, one component + token contract, one build sequence, one list of decisions to make once. Cricket is the frozen exemplar underneath all of it: *the record is brutalist, the conversation is soft; detail-by-surface (scorer lean, spectator/scorecard richer).*
 
 **The one structural truth every brief agrees on:** every game = a pure single-source-of-truth engine `derive(log, format)` (cricket's `deriveInnings`/`deriveChase` pattern), with 4 presentation surfaces reading off it and never recomputing. The log + format is the only persisted truth; LIFO undo and edit-past-replay-forward fall out of that. **All divergence between games is (1) the scoring MODEL inside the engine and (2) the primary-action verb set on the scorer.** Everything else is shared.

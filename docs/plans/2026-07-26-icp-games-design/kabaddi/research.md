@@ -84,7 +84,7 @@ Beyond the persistent bug, PKL/Star Sports fires **event overlays** — these ar
 ### 3.1 The variants that are real (and drive presets)
 - **Ruleset is uniformly standard mat kabaddi** across the ICP: KIUG/AIU inter-university, SGFI school, and Pro-style ground play all use 7-a-side, Sanjeevani revival, all-out +2, do-or-die, bonus line, 30s raid. One engine covers all three.
 - **Duration is the biggest real variable.** Elite/college = 2×20. School & casual ground = routinely **2×10, 2×7, 2×15**, sometimes a **points-target** or **single half**. Half-length MUST be a preset field, never hardcoded. (uno confirms "duration can vary".)
-- **Do-or-die trigger** — official = 3rd consecutive empty; **some school/ground circuits play 2 empties.** Configurable. (Note: uno phrases the official rule itself loosely as "two consecutive rounds → third" — evidence that even reference material blurs this, so the preset must make it explicit.)
+- **Do-or-die trigger** — official (PKL/AKFI) = after **2 consecutive empty raids the 3rd raid is do-or-die**; **some school/ground circuits arm it after 1 empty.** Configurable. (uno states it the same way: "two consecutive rounds → third". The preset must make it explicit.)
 - **Bonus-line eligibility** — official ≥6 defenders; some house rules require all 7 (kabaddi.eu literally implements "6 or 7"). Configurable.
 - **Super-tackle value** — official +2 total; some local circuits give +1. Configurable, official default.
 - **Technical/foul points** are frequently *ignored* by casual scorers. A "track fouls" toggle (default ON college, OFF for a quick school game) keeps jargon out of the hot path.

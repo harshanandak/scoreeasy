@@ -19,7 +19,7 @@ Cricket forced a bespoke engine because a "delivery" carries compound state (run
 - **Point values: 1 / 2 / 3.** Free throw = 1; field goal inside the three-point arc = 2; field goal behind the arc = 3.
 - **Time:** FIBA = 4 quarters × 10 min (NBA = 4 × 12; NCAA men = 2 halves × 20). Indian schools frequently run **2 halves** or shorter **8-min quarters**. Halftime after period 2; teams **swap baskets** at half.
 - **Shot clock:** 24 sec, reset to **14** on an offensive rebound of a live ball or after certain fouls.
-- **Team fouls → bonus:** the **5th team foul in a period** puts the opponent "in the bonus" — every subsequent defensive foul the rest of that period yields **2 free throws** (no more 1-and-1 in FIBA; NCAA/high-school still use the 1-and-1 on the 7th, double bonus on the 10th — a real ruleset fork). Team-foul count **resets to 0 each period**.
+- **Team fouls → bonus:** once a team has **4 team fouls in a period**, the opponent is "in the bonus" — the **5th and every later defensive foul** that period yields **2 free throws** (no 1-and-1 in FIBA; NCAA men's still uses the 1-and-1 on the 7th, double bonus on the 10th — a real ruleset fork). Team-foul count **resets to 0 each period**.
 - **Player fouls → foul-out:** a player is disqualified on their **5th personal foul** (FIBA/college) or **6th** (NBA). Bench-critical: fouling out changes who is on the floor.
 - **Special fouls:** technical foul (1 FT + possession), unsportsmanlike/flagrant (2 FT + possession) — these also count toward team and personal totals and can eject.
 - **Timeouts, substitutions, possession arrow** (alternating possession on held balls).

@@ -83,7 +83,7 @@ Do-or-die variant (raiding side, band swaps to warning; context line becomes the
 │  RAIDERS  ▸ DO-OR-DIE      30            SULTANS         │   ← panel band
 │   38  (warning-soft band)                          31   │     --se-color-warning-soft
 │ ───────────────────────────────────────────────────────│
-│                    DO-OR-DIE · 3RD EMPTY                 │   ← context line = state word
+│                    DO-OR-DIE · 3RD RAID                  │   ← context line = state word
 ```
 
 ### 3.2 Fuller live-screen hero (State B) — spectator/stadium

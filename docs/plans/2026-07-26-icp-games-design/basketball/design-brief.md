@@ -1,7 +1,7 @@
 # ScoreEasy — Basketball Design Brief (BESPOKE)
 
 **Date:** 2026-07-26 · **Status:** DESIGN BRIEF (no code, no mockups) · **Market:** Indian college / university / school / ground scorers.
-**Design system:** design1-mono (brutalist shell × HiFi-blend) · **Governance:** `BLEND-GOVERNANCE.md` (FROZEN) · **Rubric:** `../cricket/blend-rubric.md`.
+**Design system:** design1-mono (brutalist shell × HiFi-blend) · **Governance:** `BLEND-GOVERNANCE.md` (FROZEN) · **Rubric:** `../../2026-07-20-icp-games/cricket/blend-rubric.md`.
 **Method:** follows the cricket exemplar — one engine underneath, presentation-only surfaces on top, *detail-by-surface* (scorer lean, spectator/scorecard richer), and **THE RECORD IS BRUTALIST, THE CONVERSATION IS SOFT**.
 
 Grounding on what exists today (`src/designs/design1-mono/`): basketball currently falls through to the **generic "goals" scorer** — `MonoLiveGame.jsx` gives one `+/-` button per team over a single `pointIncrement` (default 1) with LIFO undo; `GenericGoalsTournament.jsx` stores a single integer `score1`/`score2` per match with goals-for/against standings. It has **no concept of 1/2/3-point values, quarters/halves, team or player fouls, bonus/free-throws, shot clock, timeouts, or player box scores.** Basketball needs a bespoke engine + surfaces, not a re-skin.

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-26 · **Status:** DESIGN SPEC (the operator tool) · **Game:** Association Football — Indian college / university / turf ICP.
 **Design system:** design1-mono (brutalist shell × HiFi-blend) · **Governance:** `src/designs/design1-mono/BLEND-GOVERNANCE.md` (FROZEN).
-**Grounds on:** `research.md` §1.2 (the exact events an operator must capture), §3.2 (what the casual scorer actually needs), `main-scoreboard.md` (the board this console feeds), and the cricket lean-scorer pattern `cricket/cricket-scorer-alt-big5.html` (thumb-zone via CSS `order`, most-tapped keys at the bottom, big one-tap primaries, rare actions tucked into a compact strip + a More sheet).
+**Grounds on:** `research.md` §1.2 (the exact events an operator must capture), §3.2 (what the casual scorer actually needs), `main-scoreboard.md` (the board this console feeds), and the cricket lean-scorer pattern `../../2026-07-20-icp-games/cricket/cricket-scorer-alt-big5.html` (thumb-zone via CSS `order`, most-tapped keys at the bottom, big one-tap primaries, rare actions tucked into a compact strip + a More sheet).
 
 **What this document is:** the definition of the *console the operator holds* — a student volunteer, one phone, sun glare, no tripod, pitch-side. Its job is exactly one thing: **capture the honest event ledger — goals (attributed), cards, subs, clock — fast and un-fumbleably.** It is deliberately lean. It does **not** display the match; the glance-surface is the board (`main-scoreboard.md`) and the detail is the scorecard/timeline. If a thing can be *read* rather than *entered*, it does not belong here.
 

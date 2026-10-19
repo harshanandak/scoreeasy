@@ -19,7 +19,7 @@ A Kabaddi match is a sequence of **raids**. Teams alternate: one team sends a **
 - **Tackle point** — defenders stop the raider from returning → **+1 to defending team**; the **raider is OUT**; one defender out-player revives.
 - **Super tackle** — a tackle made when the defending side has **≤3 players** on the mat → an **extra point** (total commonly 2; the exact bonus value is a config, see §9). Auto-detected from on-mat count — the scorer never computes it.
 - **Empty raid** — raider returns with no points and causes none → no score, but it **increments that team's consecutive-empty counter** (feeds do-or-die).
-- **Do-or-die raid** — a team's **3rd consecutive empty raid** (2nd in some local rules) *must* yield a point; if the raider fails, the **raider is declared OUT and the opponents get +1**. The engine, not the scorer, must know a raid is do-or-die and enforce the fail penalty.
+- **Do-or-die raid** — a team's **3rd raid after two consecutive empty raids** (the 2nd raid after one empty in some local rules) *must* yield a point; if the raider fails, the **raider is declared OUT and the opponents get +1**. The engine, not the scorer, must know a raid is do-or-die and enforce the fail penalty.
 - **All-out (+2)** — when an entire side (all on-mat players) is put out, the opponents get **+2** and the emptied team is **fully revived** (all players back on the mat). Auto-detected from the out roster; never a manual "+2" tap.
 - **Technical / self-out points (+1)** — line-out (raider or defender steps out of bounds), raid without cant, illegal defender entry, etc. → +1 to the other side and the offender out where applicable. Casual scorers rarely name these — surface as a single plain-English "Out of bounds / foul" branch, not jargon.
 - **Super raid** — raider scores **3+ points in a single raid** (a stat/celebration tag, not a separate score).
@@ -30,7 +30,7 @@ On-mat count per side · out-order queue per side (for revival order) · consecu
 ### India / college / ICP nuances (these drive the presets)
 - **Ruleset is Standard mat kabaddi (Sanjeevani).** College (KIUG / AIU inter-university), school (SGFI) and Pro-Kabaddi-influenced ground play all use the **standard mat game**: 7-a-side, Sanjeevani revival, all-out +2, do-or-die, bonus line, 30s raid. **Circle kabaddi** (Punjab/Amar/Gaminee styles) is a genuinely different game — **out of scope for v1**, flag as a future ruleset, do not half-model it.
 - **Duration varies wildly by level.** Elite/college is 2×20 min; **school and casual ground matches routinely play 2×10, 2×7, or 2×15**, sometimes points-target or single-half. Half length must be a preset field, not hardcoded.
-- **Do-or-die trigger is a live local variant** — official is 3rd empty raid; some school/ground circuits play **2 empty raids**. Configurable.
+- **Do-or-die trigger is a live local variant** — official arms do-or-die after **2 consecutive empty raids** (the 3rd raid); some school/ground circuits arm it after **1 empty raid**. Configurable.
 - **Bonus-line eligibility** — 6+ defenders (official) vs 7-only in some house rules. Configurable.
 - **Super-tackle value** — 1 vs 2 total points varies by circuit. Configurable, default to official.
 - **Technical points are often skipped by casual scorers.** Provide a preset toggle "Track fouls / technical points" (default ON for college, can be OFF for a quick school game) so the scorer isn't forced through jargon it doesn't use.
@@ -47,7 +47,7 @@ Configure the match so the engine is fully armed. Must do:
 - **Rosters:** 7 starters + jersey numbers per team; optional subs. Roster is *optional depth* — a quick game can start with just team names and "7 players" placeholders and name players later (never block the whistle on data entry).
 - **Ruleset preset picker:** `College/Standard` · `School (short halves)` · `Pro-style` · `Custom`. Preset sets the defaults below; Custom exposes them:
   - Half length + number of halves (or points-target mode), half-time break.
-  - Do-or-die trigger (2 / 3 empty raids).
+  - Do-or-die trigger (armed after 2 empty raids, official / after 1, local).
   - Bonus-line eligibility (6+ / 7-only).
   - Super-tackle value (+1 / +2 total).
   - Track technical/foul points (on/off).
@@ -173,7 +173,7 @@ Use ONLY existing `--se-*` / `--se-blend-*` tokens — **no new colours**; keep 
 ## 9. Open questions / product decisions
 
 1. **Super-tackle value:** +1 or +2 total, and does "≤3 defenders" use on-mat count at the moment of tackle? Set the official default, expose in Custom.
-2. **Do-or-die trigger:** default 3 empty raids (official) vs offer 2 for school/ground presets — confirm per-preset defaults.
+2. **Do-or-die trigger:** default armed after 2 consecutive empty raids (official — the 3rd raid is do-or-die) vs after 1 for school/ground presets — confirm per-preset defaults.
 3. **Bonus-line eligibility:** 6+ vs 7 defenders — default + whether Custom exposes it.
 4. **Technical/foul granularity:** one plain "Out of bounds / foul" branch vs itemised (line-out, cant, lobby, illegal entry) — how much does the casual ICP need, and is bowler-credit-equivalent (which defender gets a tackle point on a technical) tracked?
 5. **Substitutes & injuries:** model sub-in/out and injury-revive, or ignore subs for v1 (casual games do)?

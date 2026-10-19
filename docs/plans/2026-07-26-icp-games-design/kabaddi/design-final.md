@@ -28,7 +28,7 @@ One short form, safe defaults, every advanced field collapsed. A casual scorer t
 2. **Match title** (optional, e.g. "Sunday Cup · Semi-final").
 3. **Half length preset** → `2×20 (college)` · `2×10 (school)` · `2×7 (quick)` · `Custom mins`. **[LOCKED] never hardcoded.** Default `2×10`.
 4. **Advanced (collapsed by default):**
-   - `Do-or-die trigger` → **3rd empty (official, default)** / 2nd empty.
+   - `Do-or-die trigger` → **3rd raid after 2 consecutive empties (official, default)** / 2nd raid after 1 empty (local variant).
    - `Bonus eligibility` → **≥6 defenders (official, default)** / 7 only.
    - `Super-tackle value` → **+2 (official, default)** / +1.
    - `Track fouls / out-of-bounds` → **OFF for quick, ON for college** (surfaces SELF-OUT in the rare strip). Default OFF.

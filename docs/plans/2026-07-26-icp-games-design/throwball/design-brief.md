@@ -144,7 +144,7 @@ Keep the minimal-brutalist palette + single green accent. Every value below is a
 - `mono.css` tokens, `.mono-card`, badges, transitions, press physics — verbatim.
 - `GenericSetsTournament.jsx` **tournament wrapper** (standings, knockout, tabs) — Throwball plugs into the existing sets-engine tournament; standings/knockout are already sets-aware. Keep.
 - The sets standings calculator + `format: {type, sets}` storage shape — extend, don't replace.
-- Result/share trio pattern from cricket (`MonoMatchResult` / `Scorecard` / `Share`) once available — shared primitive.
+- Result/share trio pattern from cricket (`MonoMatchResult` / `Scorecard` / `Share`) — shared primitive, already on master.
 - Blend tokens (frozen) + line-divided-keypad primitive (cricket) — the two-target point bar is a thin variant.
 
 **Build bespoke (redesign — the generic scorer cannot do these):**

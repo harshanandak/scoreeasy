@@ -62,7 +62,7 @@ Every event is one atomic, LIFO-undoable unit. Undo is the most-used action and 
 | Values | 1 (FT) / 2 (FG) / 3 (arc) | 1 (inside) / 2 (behind arc) — **no 3** |
 | Structure | 2 or 4 periods, length set at setup | one period; **first to 21** OR 10-min cap |
 | OT | tied after regulation → OT period | first to +2 |
-| Team-foul → bonus | **5th team foul in period → 2 FT** on every later defensive foul (period resets to 0) | fouls 7–9 → 2 FT; **10th+ → 2 FT + possession** |
+| Team-foul → bonus | **From the 5th team foul in a period, every defensive foul → 2 FT** (FIBA; period resets to 0) | fouls 7–9 → 2 FT; **10th+ → 2 FT + possession** |
 | Player foul-out | **5th personal foul** (config 6 for NBA) | none by personal count |
 | Win check | at end of final period | after **every** scoring event (target/cap) |
 
@@ -117,7 +117,7 @@ Per column: **`+2 FIELD GOAL`** = HUGE, lowest (the 55–60% tap). **`+3 THREE`*
 │  │  FT  │ │ THREE  │  │  │ THREE  │ │  FT  │  │
 │  └──────┘ └────────┘  │  └────────┘ └──────┘  │
 │  ┌─────────────────┐  │  ┌─────────────────┐  │
-│  │       +2        │  │  │       +2        │  │   +2 HUGE — 90% tap, best reach
+│  │       +2        │  │  │       +2        │  │   +2 HUGE — most-frequent tap, best reach
 │  │   FIELD GOAL    │  │  │   FIELD GOAL    │  │
 │  └─────────────────┘  │  └─────────────────┘  │
 │  ┌──────┐   ┌──────┐  │  ┌──────┐   ┌──────┐  │
@@ -137,7 +137,7 @@ The pad **physically drops the third key** — no greyed slot. **`+1 INSIDE`** i
 │  │  ARC   │           │           │  ARC   │  │
 │  └────────┘           │           └────────┘  │
 │  ┌─────────────────┐  │  ┌─────────────────┐  │
-│  │       +1        │  │  │       +1        │  │   +1 INSIDE HUGE — the 90% tap
+│  │       +1        │  │  │       +1        │  │   +1 INSIDE HUGE — most-frequent tap
 │  │     INSIDE      │  │  │     INSIDE      │  │
 │  └─────────────────┘  │  └─────────────────┘  │
 │  ┌──────┐   ┌──────┐  │  ┌──────┐   ┌──────┐  │

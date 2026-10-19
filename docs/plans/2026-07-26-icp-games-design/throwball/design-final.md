@@ -46,7 +46,7 @@ Single source of truth. Everything else renders off it.
 |---|---|---|---|---|---|
 | **College** | 15 | 17 | 2 (bo3) | 11 | off |
 | **School** | 15 | 17 | 2 (bo3) | — | off |
-| **Federation** | 25 | 27 | 3 (bo5) | 15 (cap 17→hmm: 25/27) | on |
+| **Federation** | 25 | 27 | 3 (bo5) | 15 (cap 17) | on |
 
 *(Federation decider = 15, cap 17; sets 1–4 = 25, cap 27. Deciding-set target/cap are their own fields — never global.)*
 
@@ -162,7 +162,7 @@ Escalation ladder is the only state encoding; set completion freezes the final i
 Reached from the scorer footer, the spectator tab, or match end. Read-a-fact-off-a-row → brutalist table grammar.
 
 - **Per-set breakdown table:** one row per set — final score, duration, longest run, set-point saves. Mono chips.
-- **Result line:** `Madras win 2–1 · 25–22, 23–25, 11–8` — plain margin, mono set line.
+- **Result line:** `Madras win 2–1 · 15–12, 9–15, 11–8` (College preset) — plain margin, mono set line.
 - **Result / POTM card = the single designed peak:** gold milestone + the ONE glow of the whole product, reduced-motion → static gold, no glow. Auto-nominated Player-of-the-Match (from point stream / optional zone tags) the operator one-tap confirms; POTM is skippable and absent-safe without rosters.
 - **Share:** the result card renders to a branded image (mono record grammar, house colours, exact score line) — replaces the incumbent's plain text-dump.
 
