@@ -81,8 +81,16 @@
           h('div', { style: 'flex:1;background:#fff;border-radius:14px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(20,40,30,.06)' },
             h('div', { class: 'mono', style: 'font-size:16px;font-weight:500' }, String(events.length)),
             h('div', { style: 'font-size:9px;color:#9aa8a0;font-weight:600;margin-top:2px' }, 'EVENTS')),
-          def.headline ? h('div', { style: 'flex:1;background:#fff;border-radius:14px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(20,40,30,.06)' },
-            h('div', { class: 'mono', style: 'font-size:16px;font-weight:500' }, def.headline(m)),
+          (def.finalSummary || def.headline) ? h('div', { style: 'flex:1;background:#fff;border-radius:14px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(20,40,30,.06)' },
+            // finalSummary = { score, detail } from archived sets/games/innings; sports whose
+            // headline is already the final score (clock sports, kabaddi) fall back to it.
+            (function () {
+              var fin = def.finalSummary ? def.finalSummary(m) : { score: def.headline(m), detail: '' };
+              return [
+                h('div', { class: 'mono', style: 'font-size:16px;font-weight:500' }, fin.score),
+                fin.detail ? h('div', { class: 'mono', style: 'font-size:10px;color:#6b7a72;margin-top:2px' }, fin.detail) : null,
+              ];
+            })(),
             h('div', { style: 'font-size:9px;color:#9aa8a0;font-weight:600;margin-top:2px' }, 'FINAL')) : null
         ),
 

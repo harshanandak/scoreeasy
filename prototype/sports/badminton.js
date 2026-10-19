@@ -176,6 +176,13 @@
       };
     },
 
+    // FINAL tile on the result screen: games won + every archived game score.
+    finalSummary: function (m) {
+      var snap = m.snapshot, wins = gamesWon(snap);
+      var games = snap.games.map(function (g) { return g.scores[0] + '–' + g.scores[1]; }).join(' ');
+      return { score: wins[0] + '–' + wins[1], detail: games };
+    },
+
     headline: function (m) {
       var snap = m.snapshot, cfg = m.config;
       var st = pointStatus(snap, cfg);

@@ -16,11 +16,53 @@
       elapsedMs: snap.elapsedMs,
       raidingTeam: snap.raidingTeam,
       raidStartedTs: snap.raidStartedTs,
+      empties: (snap.empties || [0, 0]).slice(), // consecutive empty raids per team
     };
   }
 
   function endRaid(s) { s.raidStartedTs = null; s.raidingTeam = 1 - s.raidingTeam; }
   function teamTag(i) { return i === 0 ? 'Team 1' : 'Team 2'; }
+
+  // Rules (all derived here, inside the one action that resolves a raid, so undo
+  // = replay stays exact):
+  //  - do-or-die: the raiding team's 3rd raid after 2 consecutive empty raids.
+  //  - super tackle: a tackle made with <=3 defenders on the mat is worth 2.
+  //  - all-out: a side left with 0 on the mat gives the other side +2 and is
+  //    revived to the full 7, in the same event.
+  function isDoOrDie(snap) { return (snap.empties || [0, 0])[snap.raidingTeam] >= 2; }
+  function isSuperTackle(snap) { return snap.onMat[1 - snap.raidingTeam] <= 3; }
+
+  // put `n` players of `team` out; the other side revives one per player out (cap 7).
+  function putOut(s, team, n) {
+    var outs = Math.min(n, s.onMat[team]);
+    s.onMat[team] -= outs;
+    s.onMat[1 - team] = Math.min(MAT_SIZE, s.onMat[1 - team] + outs);
+    return outs;
+  }
+  // all-out check: returns a label suffix ('' when nothing fired).
+  function applyAllOut(s) {
+    var suffix = '';
+    for (var t = 0; t < 2; t++) {
+      if (s.onMat[t] === 0) {
+        s.points[1 - t] += 2;
+        s.onMat[t] = MAT_SIZE;
+        suffix += ' · ' + teamTag(t) + ' all out · ' + teamTag(1 - t) + ' +2';
+      }
+    }
+    return suffix;
+  }
+  // shared by Tackle and Super Tackle: the value comes from the mat, never the button.
+  function resolveTackle(snap) {
+    var s = copySnap(snap);
+    var raider = s.raidingTeam, def = 1 - raider;
+    var sup = isSuperTackle(s);
+    s.points[def] += sup ? 2 : 1;
+    putOut(s, raider, 1);
+    s.empties[raider] = 0;
+    var label = teamTag(def) + (sup ? ' super tackle +2' : ' tackle +1') + applyAllOut(s);
+    endRaid(s);
+    return { snap: s, label: label };
+  }
 
   function elapsedSecs(s) {
     var ms = s.elapsedMs + (s.running ? Date.now() - s.clockStartTs : 0);
@@ -48,7 +90,7 @@
   // actions that end a raid and flip who's raiding — used to reconstruct raider
   // identity per past event for the spectator's raid log/dots (nothing in the
   // event itself records who was raiding when it happened).
-  var RAID_END_ACTIONS = { raidPoint: 1, bonus: 1, tackle: 1, superTackle: 1, allOut: 1, emptyRaid: 1 };
+  var RAID_END_ACTIONS = { raidPoint: 1, bonus: 1, tackle: 1, superTackle: 1, emptyRaid: 1 };
   function raidHistory(match) {
     var raider = 0;
     var log = [];
@@ -73,11 +115,10 @@
       var s = copySnap(snap);
       var touches = payload || 1;
       var raider = s.raidingTeam, def = 1 - raider;
-      var outs = Math.min(touches, s.onMat[def]);
-      s.points[raider] += outs; // can't touch out more defenders than are on the mat
-      s.onMat[def] -= outs;
-      s.onMat[raider] = Math.min(MAT_SIZE, s.onMat[raider] + outs); // revival: one per opponent out
-      var label = teamTag(raider) + ' raid +' + touches;
+      var outs = putOut(s, def, touches); // can't touch out more defenders than are on the mat
+      s.points[raider] += outs;
+      s.empties[raider] = 0;
+      var label = teamTag(raider) + ' raid +' + outs + applyAllOut(s);
       endRaid(s);
       return { snap: s, label: label };
     },
@@ -85,30 +126,16 @@
       var s = copySnap(snap);
       var raider = s.raidingTeam;
       s.points[raider] += 1;
+      s.empties[raider] = 0;
       var label = teamTag(raider) + ' bonus +1';
       endRaid(s);
       return { snap: s, label: label };
     },
-    tackle: function (snap, cfg, payload) {
-      var s = copySnap(snap);
-      var raider = s.raidingTeam, def = 1 - raider;
-      s.points[def] += 1;
-      s.onMat[raider] = Math.max(0, s.onMat[raider] - 1);
-      s.onMat[def] = Math.min(MAT_SIZE, s.onMat[def] + 1); // revival: one per opponent out
-      var label = teamTag(def) + ' tackle +1';
-      endRaid(s);
-      return { snap: s, label: label };
-    },
-    superTackle: function (snap, cfg, payload) {
-      var s = copySnap(snap);
-      var raider = s.raidingTeam, def = 1 - raider;
-      s.points[def] += 2;
-      s.onMat[raider] = Math.max(0, s.onMat[raider] - 1);
-      s.onMat[def] = Math.min(MAT_SIZE, s.onMat[def] + 1); // one raider out = one revival
-      var label = teamTag(def) + ' super tackle +2';
-      endRaid(s);
-      return { snap: s, label: label };
-    },
+    tackle: function (snap, cfg, payload) { return resolveTackle(snap); },
+    // kept for the fragment's button; same rule as tackle (+2 only when <=3 defenders).
+    superTackle: function (snap, cfg, payload) { return resolveTackle(snap); },
+    // manual correction only: normal all-outs fire inside the raid/tackle that caused
+    // them. Does not touch possession (the raid that caused it already flipped it).
     allOut: function (snap, cfg, payload) {
       var s = copySnap(snap);
       var raider = s.raidingTeam, def = 1 - raider;
@@ -117,13 +144,22 @@
       var winner = 1 - outTeam;
       s.points[winner] += 2;
       s.onMat[outTeam] = MAT_SIZE;
-      var label = teamTag(winner) + ' all out +2';
-      endRaid(s);
-      return { snap: s, label: label };
+      return { snap: s, label: teamTag(winner) + ' all out +2 (manual)' };
     },
     emptyRaid: function (snap, cfg, payload) {
       var s = copySnap(snap);
-      var label = teamTag(s.raidingTeam) + ' empty raid';
+      var raider = s.raidingTeam, def = 1 - raider;
+      var label;
+      if (isDoOrDie(s)) {
+        // empty do-or-die raid: raider out, defending side +1, counter resets.
+        s.points[def] += 1;
+        putOut(s, raider, 1);
+        s.empties[raider] = 0;
+        label = teamTag(raider) + ' do-or-die fail · ' + teamTag(def) + ' +1' + applyAllOut(s);
+      } else {
+        s.empties[raider] += 1;
+        label = teamTag(raider) + ' empty raid';
+      }
       endRaid(s);
       return { snap: s, label: label };
     },
@@ -138,7 +174,7 @@
       var s = copySnap(snap);
       var now = payload || Date.now();
       if (s.running) { s.elapsedMs += now - s.clockStartTs; s.running = false; s.clockStartTs = null; }
-      if (s.half < 2) { s.half += 1; s.elapsedMs = 0; }
+      if (s.half < 2) { s.half += 1; s.elapsedMs = 0; s.empties = [0, 0]; }
       return { snap: s, label: 'Half-time' };
     },
     // referee-style manual correction: hand the raid to the other side without scoring.
@@ -177,6 +213,7 @@
         elapsedMs: 0,
         raidingTeam: 0,
         raidStartedTs: null,
+        empties: [0, 0],
       };
     },
 
@@ -242,7 +279,8 @@
       }
 
       var defIdx = 1 - raider;
-      var doOrDie = snap.onMat[raider] <= 3;
+      var doOrDie = isDoOrDie(snap);
+      var superArmed = isSuperTackle(snap);
       var banner = h('div', { style: 'flex:none;text-align:center;font-size:11px;font-weight:700;color:#12936a;padding:0 0 4px' },
         teams[raider].name + ' is raiding → ' + teams[defIdx].name + "'s half",
         doOrDie ? h('span', { style: 'color:#6b7a72;font-weight:600' }, ' · do-or-die') : null
@@ -258,11 +296,13 @@
           h('span', { style: 'font-size:8px;font-weight:700;letter-spacing:.12em' }, small)
         );
       }
+      var superCell = gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+2', 'SUPER TACKLE', function () { api.dispatch('superTackle'); });
+      if (!superArmed) superCell.style.opacity = '.4'; // only worth 2 with <=3 defenders
       var grid = h('div', { style: 'flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:7px;padding:4px 13px 0' },
         gridCell('#e7f4ee', '#12936a', null, '+1', 'RAID POINT', function () { api.dispatch('raidPoint', 1); }),
-        gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+1', 'TACKLE', function () { api.dispatch('tackle'); }),
+        gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', superArmed ? '+2' : '+1', 'TACKLE', function () { api.dispatch('tackle'); }),
         gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+1', 'BONUS', function () { api.dispatch('bonus'); }),
-        gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+2', 'SUPER TACKLE', function () { api.dispatch('superTackle'); })
+        superCell
       );
 
       var row2 = h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
@@ -383,9 +423,11 @@
 
       function raidDot(r, isLast) {
         var style, content = null;
-        if (r.action === 'emptyRaid') style = 'background:#eef1ee;border:1px solid #d7ded9';
-        else if (r.action === 'tackle' || r.action === 'allOut') style = 'background:#b8862e';
-        else if (r.action === 'superTackle') { style = 'background:#12936a;color:#fff;font-family:\'DM Mono\',monospace;font-size:8px;display:inline-flex;align-items:center;justify-content:center'; content = 'S'; }
+        var lbl = String(r.label || '').toLowerCase();
+        if (lbl.indexOf('super tackle') >= 0) { style = 'background:#12936a;color:#fff;font-family:\'DM Mono\',monospace;font-size:8px;display:inline-flex;align-items:center;justify-content:center'; content = 'S'; }
+        else if (lbl.indexOf('do-or-die fail') >= 0) style = 'background:#b8862e';
+        else if (r.action === 'emptyRaid') style = 'background:#eef1ee;border:1px solid #d7ded9';
+        else if (r.action === 'tackle' || r.action === 'superTackle') style = 'background:#b8862e';
         else style = 'background:#12936a';
         return h('span', { style: 'width:19px;height:19px;border-radius:50%;' + style + (isLast && isLive ? ';animation:geP 1.4s infinite' : '') }, content);
       }
@@ -401,9 +443,9 @@
 
       var keyHeader = h('div', null,
         h('span', { style: 'font-size:11px;font-weight:700;letter-spacing:.06em;color:#9aa8a0;text-transform:uppercase' }, 'Key moments'));
-      var keyEvents = match.events.filter(function (ev) { return ev.action === 'superTackle' || ev.action === 'allOut'; }).slice(-2);
+      var keyEvents = match.events.filter(function (ev) { var l = String(ev.label || '').toLowerCase(); return l.indexOf('super tackle') >= 0 || l.indexOf('all out') >= 0; }).slice(-2);
       function momentCard(ev, i) {
-        var tag = ev.action === 'superTackle' ? h('b', { style: 'color:#12936a' }, 'SUPER TACKLE! ') : h('b', { style: 'color:#d64f43' }, 'ALL OUT ');
+        var tag = String(ev.label || '').toLowerCase().indexOf('super tackle') >= 0 ? h('b', { style: 'color:#12936a' }, 'SUPER TACKLE! ') : h('b', { style: 'color:#d64f43' }, 'ALL OUT ');
         var t = SE.fmtClock(Math.max(0, (ev.ts - match.startedAt) / 1000));
         return h('div', { style: 'background:#fff;border-radius:13px;padding:9px 12px;box-shadow:0 1px 3px rgba(20,40,30,.06);display:flex;gap:9px;align-items:center;' + (i > 0 ? 'opacity:.65' : '') },
           h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:9px;color:#9aa8a0;width:30px;flex:none' }, t),

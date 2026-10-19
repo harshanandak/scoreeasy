@@ -261,7 +261,7 @@
         ),
 
         h('div', { style: 'font-size:11px;color:#6b7a72;padding:0 2px' },
-          'Saved as ', h('b', { style: 'color:#14201a' }, '"' + active.label + ' setup"'), ' — reused automatically next time you play here.'
+          'Saved as ', h('b', { style: 'color:#14201a' }, '"' + active.label + ' setup"'), ' — kept as your notes for this ground. Applying them to new matches is coming soon.'
         ),
 
         h('div', { style: 'flex:1' }),

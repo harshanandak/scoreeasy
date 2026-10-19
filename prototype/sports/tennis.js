@@ -191,6 +191,14 @@
       return null;
     },
 
+    // FINAL tile on the result screen: sets won + every completed set score
+    // (headline() appends the fresh 0–0 set/point after a natural finish).
+    finalSummary: function (m) {
+      var snap = m.snapshot, wins = setWins(snap);
+      var sets = snap.sets.map(function (s) { return s[0] + '–' + s[1]; }).join(' ');
+      return { score: wins[0] + '–' + wins[1], detail: sets };
+    },
+
     headline: function (m) {
       var snap = m.snapshot;
       var parts = snap.sets.map(function (s) { return s[0] + '–' + s[1]; });

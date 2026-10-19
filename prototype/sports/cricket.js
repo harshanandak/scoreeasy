@@ -209,6 +209,16 @@
       return null;
     },
 
+    // FINAL tile on the result screen: both innings totals (headline() shows a
+    // chase line like "need 12 off 0" when the bowling side wins).
+    finalSummary: function (m) {
+      var inns = m.snapshot.innings.filter(Boolean);
+      return {
+        score: inns.map(function (inn) { return inn.runs + '/' + inn.wickets; }).join(' · '),
+        detail: inns.map(function (inn) { return oversStr(inn.balls) + ' ov'; }).join(' · '),
+      };
+    },
+
     headline: function (m) {
       var s = m.snapshot, cfg = m.config;
       var inn = s.innings[s.inningsIdx];

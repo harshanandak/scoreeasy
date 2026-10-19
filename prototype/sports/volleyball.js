@@ -145,6 +145,14 @@
       return null;
     },
 
+    // FINAL tile on the result screen: sets won + every archived set score
+    // (headline() would show the next, empty set after a natural finish).
+    finalSummary: function (m) {
+      var snap = m.snapshot, wins = setsWon(snap);
+      var sets = snap.setHistory.map(function (s) { return s.a + '–' + s.b; }).join(' ');
+      return { score: wins[0] + '–' + wins[1], detail: sets };
+    },
+
     headline: function (match) {
       var snap = match.snapshot;
       var st = pointStatus(snap, match.config);
