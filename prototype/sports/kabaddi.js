@@ -73,8 +73,10 @@
       var s = copySnap(snap);
       var touches = payload || 1;
       var raider = s.raidingTeam, def = 1 - raider;
-      s.points[raider] += touches;
-      s.onMat[def] = Math.max(0, s.onMat[def] - touches);
+      var outs = Math.min(touches, s.onMat[def]);
+      s.points[raider] += outs; // can't touch out more defenders than are on the mat
+      s.onMat[def] -= outs;
+      s.onMat[raider] = Math.min(MAT_SIZE, s.onMat[raider] + outs); // revival: one per opponent out
       var label = teamTag(raider) + ' raid +' + touches;
       endRaid(s);
       return { snap: s, label: label };
@@ -92,6 +94,7 @@
       var raider = s.raidingTeam, def = 1 - raider;
       s.points[def] += 1;
       s.onMat[raider] = Math.max(0, s.onMat[raider] - 1);
+      s.onMat[def] = Math.min(MAT_SIZE, s.onMat[def] + 1); // revival: one per opponent out
       var label = teamTag(def) + ' tackle +1';
       endRaid(s);
       return { snap: s, label: label };
@@ -101,6 +104,7 @@
       var raider = s.raidingTeam, def = 1 - raider;
       s.points[def] += 2;
       s.onMat[raider] = Math.max(0, s.onMat[raider] - 1);
+      s.onMat[def] = Math.min(MAT_SIZE, s.onMat[def] + 1); // one raider out = one revival
       var label = teamTag(def) + ' super tackle +2';
       endRaid(s);
       return { snap: s, label: label };

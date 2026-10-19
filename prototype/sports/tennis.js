@@ -73,7 +73,7 @@
       sets: snap.sets.map(function (x) { return [x[0], x[1]]; }),
       games: [snap.games[0], snap.games[1]],
       points: [snap.points[0], snap.points[1]],
-      tiebreak: snap.tiebreak, tbCount: snap.tbCount, server: snap.server,
+      tiebreak: snap.tiebreak, tbCount: snap.tbCount, server: snap.server, tbFirst: snap.tbFirst,
     };
   }
 
@@ -86,7 +86,8 @@
       var winnerGames = s.games[i] + 1, loserGames = s.games[o];
       s.sets.push(i === 0 ? [winnerGames, loserGames] : [loserGames, winnerGames]);
       s.games = [0, 0]; s.points = [0, 0]; s.tiebreak = false; s.tbCount = 0;
-      s.server = 1 - s.server;
+      // next set opens with the player who RECEIVED first in the tiebreak
+      s.server = 1 - s.tbFirst;
       return 'Tiebreak to P' + (i + 1);
     }
     var isBreak = (i !== s.server);
@@ -95,7 +96,7 @@
       s.sets.push([s.games[0], s.games[1]]); s.games = [0, 0];
       return (isBreak ? 'Break! ' : '') + 'Set to P' + (i + 1);
     } else if (s.games[0] === 6 && s.games[1] === 6) {
-      s.tiebreak = true; s.tbCount = 0; s.points = [0, 0];
+      s.tiebreak = true; s.tbCount = 0; s.points = [0, 0]; s.tbFirst = s.server;
       return 'Tiebreak';
     }
     return (isBreak ? 'Break! ' : '') + 'Game to P' + (i + 1);
@@ -168,6 +169,7 @@
         tiebreak: false,
         tbCount: 0,         // points played in current tiebreak (drives serve alternation)
         server: 0,          // index of the team serving the current game/tiebreak point
+        tbFirst: 0,         // who served point 1 of the current tiebreak (sets next set's server)
       };
     },
 

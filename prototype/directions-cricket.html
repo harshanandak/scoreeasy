@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy — cricket scorer, three directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@400;500;600;700&family=Archivo:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --gap:34px; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 20% -10%, #22303f 0%, transparent 60%),
+      #14181d;
+    color:#e7ecf1; min-height:100vh; padding:44px 24px 80px;
+  }
+  .head{ max-width:1180px; margin:0 auto 40px; }
+  .head .kicker{ font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.4em; text-transform:uppercase; color:#7d8a97; }
+  .head h1{ font-size:30px; font-weight:600; letter-spacing:-.02em; margin-top:8px; }
+  .head p{ color:#9aa7b2; max-width:660px; margin-top:12px; line-height:1.5; font-size:15px; }
+  .head .state{ font-family:'DM Mono',monospace; font-size:12px; color:#6f7c88; margin-top:14px; letter-spacing:.04em; }
+  .grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap); }
+  @media(max-width:1080px){ .grid{ grid-template-columns:1fr; justify-items:center; } }
+  .col{ display:flex; flex-direction:column; gap:16px; align-items:center; }
+  .meta{ text-align:center; max-width:340px; }
+  .meta .num{ font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.3em; color:#6f7c88; }
+  .meta .name{ font-size:20px; font-weight:600; margin-top:4px; letter-spacing:-.01em; }
+  .meta .desc{ font-size:13px; color:#93a0ab; margin-top:7px; line-height:1.5; }
+  .meta .cricket{ font-size:12px; color:#6f7c88; margin-top:8px; line-height:1.5; font-style:italic; }
+  .phone{ width:340px; height:760px; border-radius:40px; overflow:hidden; position:relative;
+          box-shadow:0 40px 80px -30px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.05); }
+  .scr{ position:absolute; inset:0; display:flex; flex-direction:column; }
+
+  /* ============================================================
+     A · FLOODLIGHT  — stadium jumbotron. dark, amber, condensed.
+     ============================================================ */
+  .A{ background:radial-gradient(120% 80% at 50% -20%, #10202b 0%, #070b0f 70%); color:#f2f5f8;
+      font-family:'Oswald',sans-serif; }
+  .A .top{ display:flex; align-items:center; justify-content:space-between; padding:22px 20px 10px; }
+  .A .glyph{ width:34px;height:34px;border:1px solid #2a3b49;border-radius:9px;display:grid;place-items:center;color:#9fb3c4;font-size:20px; }
+  .A .title{ text-align:center; }
+  .A .title b{ font-weight:600; font-size:15px; letter-spacing:.08em; text-transform:uppercase; }
+  .A .title span{ display:block; font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.22em; color:#5f7285; margin-top:3px; }
+  .A .sp{ margin:6px 20px 0; text-align:center; font-size:12.5px; font-weight:500; letter-spacing:.34em;
+          text-transform:uppercase; color:#ffc300; padding:8px 0; border-top:1px solid #ffc30022; border-bottom:1px solid #ffc30022;
+          text-shadow:0 0 22px #ffc30066; }
+
+  .A .score{ display:flex; align-items:flex-end; justify-content:center; gap:8px; padding:16px 0 2px; }
+  .A .score .runs{ font-family:'Teko',sans-serif; font-weight:600; font-size:132px; line-height:.74; color:#fff;
+                   text-shadow:0 0 44px #ffffff2e; font-variant-numeric:tabular-nums; }
+  .A .score .wkt{ font-family:'Teko',sans-serif; font-weight:500; font-size:74px; line-height:.9; color:#42505d; }
+  .A .score .ov{ font-family:'DM Mono',monospace; font-size:12px; color:#7c8d9c; padding-bottom:12px; letter-spacing:.06em; }
+  .A .rates{ display:flex; justify-content:center; gap:18px; font-family:'DM Mono',monospace; font-size:10.5px;
+             letter-spacing:.12em; color:#5f7285; padding-bottom:12px; }
+  .A .rates b{ color:#c9d6e1; font-weight:500; }
+
+  .A .bat{ margin:0 20px; border-top:1px solid #ffffff10; }
+  .A .bat .r{ display:flex; align-items:center; gap:9px; padding:10px 0; border-bottom:1px solid #ffffff0a; }
+  .A .bat .dot{ width:7px;height:7px;border-radius:50%;background:#ffc300;box-shadow:0 0 12px #ffc300;flex:none; }
+  .A .bat .dot.off{ background:transparent; box-shadow:none; }
+  .A .bat .nm{ font-size:14.5px; letter-spacing:.1em; text-transform:uppercase; color:#dbe6ef; flex:1; }
+  .A .bat .r.off .nm{ color:#8ea1b2; }
+  .A .bat .v{ font-family:'Teko',sans-serif; font-size:30px; line-height:1; color:#fff; font-variant-numeric:tabular-nums; }
+  .A .bat .r.off .v{ color:#8ea1b2; }
+  .A .bat .b{ font-family:'DM Mono',monospace; font-size:10px; color:#5f7285; width:52px; text-align:right; }
+  .A .bowl{ display:flex; align-items:center; gap:9px; padding:10px 0 12px; }
+  .A .bowl .ball{ width:7px;height:7px;border-radius:50%;background:#e4572e;flex:none; }
+  .A .bowl .nm{ font-size:14.5px; letter-spacing:.1em; text-transform:uppercase; color:#8ea1b2; flex:1; }
+  .A .bowl .fig{ font-family:'DM Mono',monospace; font-size:11.5px; color:#c9d6e1; }
+
+  .A .over{ display:flex; align-items:center; gap:6px; padding:0 20px 12px; }
+  .A .over .lb{ font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.2em; color:#5f7285; margin-right:2px; }
+  .A .over .p{ width:26px;height:26px;border-radius:50%;border:1px solid #2a3b49;display:grid;place-items:center;
+               font-family:'DM Mono',monospace;font-size:11px;color:#9fb3c4; }
+  .A .over .p.hit{ border-color:#ffc300; color:#ffc300; }
+  .A .over .p.out{ background:#e4572e; border-color:#e4572e; color:#0a0f14; font-weight:500; }
+  .A .over .p.dim{ border-style:dashed; border-color:#1e2b36; color:#2f3d4a; }
+
+  .A .pad{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 20px; align-content:center; }
+  .A .pad .k{ border:1px solid #2a3b49; border-radius:12px; display:flex; flex-direction:column; align-items:center;
+              justify-content:center; padding:12px 0 10px; color:#e7eef5; }
+  .A .pad .k .n{ font-family:'Teko',sans-serif; font-size:38px; line-height:.8; }
+  .A .pad .k .t{ font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:.18em; color:#5f7285; margin-top:5px; }
+  .A .pad .k.big{ border-color:#ffc30055; color:#ffc300; }
+  .A .pad .k.wkt{ grid-column:span 2; border-color:#e4572e66; color:#ff8a63; flex-direction:row; gap:10px; }
+  .A .pad .k.wkt .n{ font-size:30px; }
+  .A .pad .k.sw{ font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#9fb3c4; }
+  .A .extras{ display:flex; gap:7px; padding:12px 20px 0; }
+  .A .extras .x{ flex:1; text-align:center; border:1px solid #223140; border-radius:9px; padding:9px 0;
+                 font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:#8ea1b2; }
+  .A .foot{ display:flex; gap:8px; padding:12px 20px 22px; }
+  .A .foot .u{ width:52px; border:1px solid #2a3b49; border-radius:12px; display:grid; place-items:center; color:#9fb3c4; font-size:18px; }
+  .A .foot .end{ flex:1; text-align:center; padding:14px 0; border-radius:12px; background:#ffc300; color:#0a0f14;
+                 font-weight:600; font-size:14px; letter-spacing:.14em; text-transform:uppercase; box-shadow:0 12px 30px -10px #ffc30070; }
+
+  /* ============================================================
+     B · LEDGER — cricket scorebook / red-margin register. paper, ink, serif.
+     ============================================================ */
+  .B{ background:#efe7d4; color:#23252b; font-family:'Spectral',serif;
+      background-image:repeating-linear-gradient(#efe7d4 0 30px, #e3dac4 30px 31px); }
+  .B::before{ content:''; position:absolute; top:0; bottom:0; left:44px; width:1.5px; background:#bf3b32; opacity:.55; }
+  .B .top{ padding:22px 20px 6px 58px; display:flex; align-items:baseline; justify-content:space-between; }
+  .B .brand{ font-family:'Playfair Display',serif; font-weight:900; font-size:20px; letter-spacing:-.01em; }
+  .B .brand i{ color:#bf3b32; font-style:normal; }
+  .B .folio{ font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; color:#8a7f68; }
+  .B .match{ padding:2px 20px 0 58px; }
+  .B .match h2{ font-family:'Playfair Display',serif; font-weight:700; font-size:25px; line-height:1.1; }
+  .B .match .sub{ font-size:12.5px; font-style:italic; color:#75705f; margin-top:2px; }
+  .B .rule{ margin:10px 20px 4px 58px; border-bottom:2px solid #23252b; }
+  .B .sp{ margin:4px 20px 0 58px; font-style:italic; font-size:14.5px; color:#bf3b32; }
+  .B .sp b{ font-style:normal; font-weight:700; letter-spacing:.06em; text-transform:uppercase; font-size:12.5px; }
+
+  .B .total{ padding:8px 20px 0 58px; display:flex; align-items:flex-end; gap:10px; }
+  .B .total .n{ font-family:'Playfair Display',serif; font-weight:900; font-size:66px; line-height:.78;
+                font-variant-numeric:tabular-nums; }
+  .B .total .n em{ font-style:normal; color:#bf3b32; }
+  .B .total .ov{ font-style:italic; font-size:13px; color:#75705f; padding-bottom:8px; }
+  .B .rr{ padding:6px 20px 0 58px; font-family:'DM Mono',monospace; font-size:10.5px; color:#75705f; letter-spacing:.04em; }
+  .B .rr b{ color:#23252b; font-weight:500; }
+
+  .B .card{ padding:10px 20px 0 58px; }
+  .B .card .hd{ display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:9px;
+                letter-spacing:.18em; text-transform:uppercase; color:#a2977c; border-bottom:1px solid #cabfa4; padding-bottom:4px; }
+  .B .card .ln{ display:flex; align-items:baseline; justify-content:space-between; padding:8px 0; border-bottom:1px solid #d8cdb2; }
+  .B .card .ln .who{ font-family:'Playfair Display',serif; font-size:17px; font-weight:500; }
+  .B .card .ln .who .s{ display:block; font-family:'Spectral',serif; font-style:italic; font-size:11px; color:#857a63; margin-top:1px; }
+  .B .card .ln.strike .who::before{ content:'* '; color:#bf3b32; font-weight:700; }
+  .B .card .ln .fig{ font-family:'Playfair Display',serif; font-weight:700; font-size:22px; font-variant-numeric:tabular-nums; }
+  .B .card .ln .fig s{ text-decoration:none; font-family:'Spectral',serif; font-style:italic; font-weight:400; font-size:12px; color:#857a63; }
+
+  .B .register{ padding:10px 20px 0 58px; }
+  .B .register .lb{ font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:#a2977c; }
+  .B .register .cells{ display:flex; gap:0; margin-top:5px; border:1px solid #23252b; }
+  .B .register .c{ flex:1; text-align:center; padding:7px 0; font-family:'DM Mono',monospace; font-size:12px;
+                   border-right:1px solid #cabfa4; }
+  .B .register .c:last-child{ border-right:0; }
+  .B .register .c.w{ background:#bf3b32; color:#efe7d4; font-weight:500; }
+  .B .register .c.four{ font-weight:500; text-decoration:underline; text-underline-offset:2px; }
+  .B .register .c.e{ color:#bcb098; }
+
+  .B .pad{ flex:1; padding:12px 20px 0 58px; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; align-content:center; }
+  .B .pad .k{ border:1px solid #23252b; background:#f6f0e2; text-align:center; padding:10px 0;
+              font-family:'Playfair Display',serif; font-weight:700; font-size:24px; font-variant-numeric:tabular-nums; }
+  .B .pad .k small{ display:block; font-family:'DM Mono',monospace; font-size:8px; font-weight:400; letter-spacing:.14em;
+                    color:#8a7f68; margin-top:3px; }
+  .B .pad .k.big{ color:#bf3b32; }
+  .B .pad .k.wkt{ grid-column:span 2; background:#23252b; color:#efe7d4; font-size:18px; letter-spacing:.06em; padding:14px 0; }
+  .B .pad .k.wkt small{ color:#b3a992; }
+  .B .pad .k.sw{ font-family:'Spectral',serif; font-style:italic; font-size:15px; font-weight:400; padding:14px 0; }
+  .B .extras{ display:flex; gap:14px; padding:10px 20px 0 58px; font-style:italic; font-size:12.5px; color:#5b5647; }
+  .B .extras span{ text-decoration:underline; text-underline-offset:3px; }
+  .B .foot{ margin-top:auto; padding:12px 20px 24px 58px; display:flex; align-items:center; gap:14px; }
+  .B .foot .u{ font-size:13.5px; font-style:italic; text-decoration:underline; text-underline-offset:3px; color:#5b5647; }
+  .B .foot .end{ margin-left:auto; font-family:'Playfair Display',serif; font-weight:700; font-size:14.5px; color:#efe7d4;
+                 background:#23252b; padding:11px 18px; }
+  .B .foot .end::after{ content:' ✓'; color:#e0b84a; }
+
+  /* ============================================================
+     C · COURT — bold, youthful, color-blocked. thick frames, flat ink.
+     ============================================================ */
+  .C{ background:#f7f4ec; color:#141414; font-family:'Archivo',sans-serif; }
+  .C .top{ display:flex; align-items:center; gap:12px; padding:18px 16px 12px; }
+  .C .glyph{ width:36px;height:36px;border:2.5px solid #141414;display:grid;place-items:center;font-size:18px;font-weight:900;background:#fff; }
+  .C .title b{ font-weight:900; font-size:16px; letter-spacing:-.02em; text-transform:uppercase; display:block; }
+  .C .title span{ font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:#6b6b6b; }
+  .C .sp{ margin:0 16px; background:#141414; color:#f7f4ec; text-align:center; font-weight:900; font-size:12.5px;
+          letter-spacing:.16em; text-transform:uppercase; padding:9px 0; }
+
+  .C .hero{ margin:12px 16px 0; border:2.5px solid #141414; background:#e4572e; color:#fff; box-shadow:7px 7px 0 #141414;
+            padding:14px 16px 12px; }
+  .C .hero .n{ display:flex; align-items:flex-end; gap:6px; }
+  .C .hero .n b{ font-weight:900; font-size:74px; line-height:.8; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+  .C .hero .n i{ font-style:normal; font-weight:900; font-size:38px; line-height:.9; opacity:.75; }
+  .C .hero .n span{ font-family:'DM Mono',monospace; font-size:12px; padding-bottom:8px; opacity:.85; }
+  .C .hero .rates{ display:flex; gap:12px; margin-top:8px; font-family:'DM Mono',monospace; font-size:10px;
+                   letter-spacing:.06em; opacity:.9; }
+  .C .hero .rates b{ font-weight:700; }
+
+  .C .who{ display:flex; gap:8px; margin:12px 16px 0; }
+  .C .who .p{ flex:1; border:2.5px solid #141414; background:#fff; padding:9px 10px; }
+  .C .who .p.on{ background:#ffd43b; }
+  .C .who .p .nm{ font-weight:900; font-size:12.5px; text-transform:uppercase; letter-spacing:-.01em; }
+  .C .who .p .v{ font-weight:900; font-size:26px; line-height:1; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .C .who .p .v s{ text-decoration:none; font-family:'DM Mono',monospace; font-size:10px; font-weight:400; color:#5c5c5c; }
+  .C .bowler{ margin:8px 16px 0; border:2.5px solid #141414; background:#141414; color:#f7f4ec; padding:8px 10px;
+              display:flex; align-items:center; justify-content:space-between; }
+  .C .bowler .nm{ font-weight:900; font-size:12.5px; text-transform:uppercase; }
+  .C .bowler .fig{ font-family:'DM Mono',monospace; font-size:11px; }
+
+  .C .over{ display:flex; gap:5px; margin:10px 16px 0; }
+  .C .over .b{ flex:1; border:2px solid #141414; background:#fff; text-align:center; padding:6px 0;
+               font-family:'DM Mono',monospace; font-size:11px; font-weight:500; }
+  .C .over .b.four{ background:#2d3a8c; color:#fff; border-color:#2d3a8c; }
+  .C .over .b.w{ background:#e4572e; color:#fff; }
+  .C .over .b.e{ color:#b8b8b8; border-color:#d5d1c6; }
+
+  .C .pad{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px 16px 0; align-content:center; }
+  .C .pad .k{ border:2.5px solid #141414; background:#fff; text-align:center; padding:10px 0; font-weight:900; font-size:26px;
+              line-height:1; font-variant-numeric:tabular-nums; box-shadow:4px 4px 0 #141414; }
+  .C .pad .k small{ display:block; font-family:'DM Mono',monospace; font-size:8px; font-weight:400; letter-spacing:.12em;
+                    color:#6b6b6b; margin-top:4px; }
+  .C .pad .k.big{ background:#2d3a8c; color:#fff; }
+  .C .pad .k.big small{ color:#c3caf0; }
+  .C .pad .k.wkt{ grid-column:span 2; background:#e4572e; color:#fff; font-size:20px; letter-spacing:.08em; padding:14px 0; }
+  .C .pad .k.wkt small{ color:#ffd9cd; }
+  .C .pad .k.sw{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; padding:16px 0; }
+  .C .extras{ display:flex; gap:6px; padding:10px 16px 0; }
+  .C .extras .x{ flex:1; text-align:center; border:2px solid #141414; background:#f0ece0; padding:8px 0;
+                 font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.04em; }
+  .C .foot{ display:flex; gap:10px; padding:12px 16px 22px; }
+  .C .foot .u{ width:54px; border:2.5px solid #141414; background:#fff; display:grid; place-items:center; font-size:18px; }
+  .C .foot .end{ flex:1; text-align:center; padding:15px 0; background:#2d3a8c; color:#fff; font-weight:900; font-size:13.5px;
+                 letter-spacing:.1em; text-transform:uppercase; border:2.5px solid #141414; box-shadow:5px 5px 0 #141414; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="kicker">ScoreEasy · cricket scorer · design directions</div>
+  <h1>The hardest screen, three ways</h1>
+  <p>Cricket is the densest scorer we have — runs, wickets, overs, two batters, a bowler, the current over,
+     the chase maths and the extras pad all live on one thumb-reachable screen. If a design language survives
+     cricket, it survives every other sport. Same ball, same moment, three languages.</p>
+  <div class="state">STATE — Reds v Blues · T20 · 84/3 after 4.2 · chasing 157 · need 73 off 44 · R. Sharma 34(22)* on strike</div>
+</div>
+
+<div class="grid">
+
+  <!-- A -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION A</div>
+      <div class="name">Floodlight</div>
+      <div class="desc">A stadium jumbotron in your hand. Near-black, one electric amber, monumental condensed numerals (Teko). Reads across a noisy ground from arm's length — built for the person actually scoring.</div>
+      <div class="cricket">Cricket test: the total owns the screen; batters, bowler and the over track read as a quiet instrument panel beneath it.</div>
+    </div>
+    <div class="phone"><div class="scr A">
+      <div class="top">
+        <div class="glyph">‹</div>
+        <div class="title"><b>Reds · Blues</b><span>T20 — OVER 4.2 — CHASING 157</span></div>
+        <div class="glyph">≣</div>
+      </div>
+      <div class="sp">Need 73 off 44 — RRR 9.95</div>
+
+      <div class="score">
+        <div class="runs">84</div><div class="wkt">/3</div><div class="ov">(4.2)</div>
+      </div>
+      <div class="rates"><span>CRR <b>8.40</b></span><span>P'SHIP <b>41(28)</b></span><span>LAST WKT <b>ROY 8</b></span></div>
+
+      <div class="bat">
+        <div class="r">
+          <div class="dot"></div><div class="nm">R. Sharma</div>
+          <div class="v">34</div><div class="b">22b · SR 154</div>
+        </div>
+        <div class="r off">
+          <div class="dot off"></div><div class="nm">K. Patel</div>
+          <div class="v">12</div><div class="b">9b · SR 133</div>
+        </div>
+        <div class="bowl">
+          <div class="ball"></div><div class="nm">J. Khan</div>
+          <div class="fig">3.2 – 0 – 24 – 1</div>
+        </div>
+      </div>
+
+      <div class="over">
+        <span class="lb">OVER 5</span>
+        <div class="p">1</div><div class="p hit">4</div><div class="p out">W</div><div class="p">2</div>
+        <div class="p dim">·</div><div class="p dim">·</div>
+      </div>
+
+      <div class="pad">
+        <div class="k"><div class="n">0</div><div class="t">DOT</div></div>
+        <div class="k"><div class="n">1</div><div class="t">SINGLE</div></div>
+        <div class="k"><div class="n">2</div><div class="t">TWO</div></div>
+        <div class="k"><div class="n">3</div><div class="t">THREE</div></div>
+        <div class="k big"><div class="n">4</div><div class="t">FOUR</div></div>
+        <div class="k big"><div class="n">6</div><div class="t">SIX</div></div>
+        <div class="k wkt"><div class="n">W</div><div class="t">WICKET</div></div>
+        <div class="k sw">⇄ Strike</div>
+      </div>
+
+      <div class="extras">
+        <div class="x">WIDE</div><div class="x">NO-BALL</div><div class="x">BYE</div><div class="x">LEG BYE</div>
+      </div>
+      <div class="foot"><div class="u">↩</div><div class="end">End Innings</div></div>
+    </div></div>
+  </div>
+
+  <!-- B -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION B</div>
+      <div class="name">Ledger</div>
+      <div class="desc">The cricket scorebook every Indian school already owns — cream paper, the red margin rule of a ruled register, Playfair ink serifs. Warm, credible, unmistakably ours. A record, not an app screen.</div>
+      <div class="cricket">Cricket test: this is the one language cricket <em>invented</em> — the batting card and the over register are literally the book's own rows and boxes.</div>
+    </div>
+    <div class="phone"><div class="scr B">
+      <div class="top"><div class="brand">Score<i>Easy</i></div><div class="folio">FOL. 07 · 2nd INNS</div></div>
+      <div class="match"><h2>Reds <i>v</i> Blues</h2><div class="sub">Twenty overs · chasing 157 · second innings</div></div>
+      <div class="rule"></div>
+      <div class="sp"><b>Need</b> 73 off 44 — required 9.95</div>
+
+      <div class="total"><div class="n">84<em>–3</em></div><div class="ov">in 4.2 overs</div></div>
+      <div class="rr"><span>Run rate <b>8.40</b> · partnership <b>41 (28)</b> · last wicket <b>Roy 8 (6)</b></span></div>
+
+      <div class="card">
+        <div class="hd"><span>Batsmen</span><span>R (B)</span></div>
+        <div class="ln strike">
+          <div class="who">R. Sharma<span class="s">on strike · strike rate 154</span></div>
+          <div class="fig">34 <s>(22)</s></div>
+        </div>
+        <div class="ln">
+          <div class="who">K. Patel<span class="s">non-striker</span></div>
+          <div class="fig">12 <s>(9)</s></div>
+        </div>
+        <div class="ln">
+          <div class="who">J. Khan<span class="s">bowling · 3.2–0–24–1</span></div>
+          <div class="fig">1 <s>wkt</s></div>
+        </div>
+      </div>
+
+      <div class="register">
+        <div class="lb">This over</div>
+        <div class="cells">
+          <div class="c">1</div><div class="c four">4</div><div class="c w">W</div><div class="c">2</div>
+          <div class="c e">·</div><div class="c e">·</div>
+        </div>
+      </div>
+
+      <div class="pad">
+        <div class="k">0<small>DOT</small></div>
+        <div class="k">1<small>SINGLE</small></div>
+        <div class="k">2<small>TWO</small></div>
+        <div class="k">3<small>THREE</small></div>
+        <div class="k big">4<small>FOUR</small></div>
+        <div class="k big">6<small>SIX</small></div>
+        <div class="k wkt">OUT<small>RECORD WICKET</small></div>
+        <div class="k sw">swap ends</div>
+      </div>
+
+      <div class="extras"><span>wide</span><span>no-ball</span><span>bye</span><span>leg bye</span></div>
+      <div class="foot"><div class="u">undo last ball</div><div class="end">Close innings</div></div>
+    </div></div>
+  </div>
+
+  <!-- C -->
+  <div class="col">
+    <div class="meta">
+      <div class="num">DIRECTION C</div>
+      <div class="name">Court</div>
+      <div class="desc">Loud and young. Saturated colour blocks, thick black frames, hard offset shadows, chunky Archivo. Feels like a sticker on a college notice board — energetic, but disciplined, not chaotic.</div>
+      <div class="cricket">Cricket test: the strike batter is highlighted in yellow, the bowler is a black bar, and every run button is a physical key you can hit without looking.</div>
+    </div>
+    <div class="phone"><div class="scr C">
+      <div class="top">
+        <div class="glyph">‹</div>
+        <div class="title"><b>Reds vs Blues</b><span>T20 · OVER 4.2 · CHASING 157</span></div>
+      </div>
+      <div class="sp">▲ Need 73 off 44 · RRR 9.95</div>
+
+      <div class="hero">
+        <div class="n"><b>84</b><i>/3</i><span>4.2 ov</span></div>
+        <div class="rates"><span>CRR <b>8.40</b></span><span>P'SHIP <b>41 (28)</b></span><span>LAST W <b>ROY 8</b></span></div>
+      </div>
+
+      <div class="who">
+        <div class="p on"><div class="nm">R. Sharma ●</div><div class="v">34 <s>(22)</s></div></div>
+        <div class="p"><div class="nm">K. Patel</div><div class="v">12 <s>(9)</s></div></div>
+      </div>
+      <div class="bowler"><div class="nm">J. Khan — bowling</div><div class="fig">3.2-0-24-1</div></div>
+
+      <div class="over">
+        <div class="b">1</div><div class="b four">4</div><div class="b w">W</div><div class="b">2</div>
+        <div class="b e">·</div><div class="b e">·</div>
+      </div>
+
+      <div class="pad">
+        <div class="k">0<small>DOT</small></div>
+        <div class="k">1<small>SINGLE</small></div>
+        <div class="k">2<small>TWO</small></div>
+        <div class="k">3<small>THREE</small></div>
+        <div class="k big">4<small>FOUR</small></div>
+        <div class="k big">6<small>SIX</small></div>
+        <div class="k wkt">OUT<small>WICKET FALLS</small></div>
+        <div class="k sw">⇄ Strike</div>
+      </div>
+
+      <div class="extras">
+        <div class="x">WIDE</div><div class="x">NO-BALL</div><div class="x">BYE</div><div class="x">LB</div>
+      </div>
+      <div class="foot"><div class="u">↩</div><div class="end">End Innings ✓</div></div>
+    </div></div>
+  </div>
+
+</div>
+</body>
+</html>

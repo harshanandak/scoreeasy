@@ -156,10 +156,11 @@
   var rendering = false;
   function render() {
     if (rendering) return; // dispatch inside render guard
+    var root = document.getElementById('app');
+    if (!root) return; // host pages (compare.html) load core.js for the store only
     rendering = true;
     cleanups.forEach(function (fn) { try { fn(); } catch (e) {} });
     cleanups = [];
-    var root = document.getElementById('app');
     root.innerHTML = '';
     var r = route();
     var fn = SE.screens[r.name] || SE.screens.home;
