@@ -89,6 +89,14 @@
           label: 'Clock started',
         };
       },
+      // payload: now (ms). Full-time freeze, dispatched by SE.endMatch; no-op when paused.
+      stopClock: function (snap, cfg, payload) {
+        if (!snap.clockRunning) return { snap: snap, label: 'Full time' };
+        return {
+          snap: Object.assign({}, snap, { clockRunning: false, clockStartedAt: null, elapsedMs: foldElapsed(snap, payload) }),
+          label: 'Full time',
+        };
+      },
       nextPeriod: function (snap, cfg, payload) {
         if (snap.quarter >= 4) return { snap: snap, label: 'Final quarter' };
         foldElapsed(snap, payload); // fold is informational only; period reset zeroes the clock

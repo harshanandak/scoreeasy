@@ -11,8 +11,10 @@
     return p === 5 ? 'OT' : 'OT' + (p - 4);
   }
 
+  var OT_MINUTES = 5; // FIBA: every overtime period is 5 minutes, whatever the quarter length
+
   function remainingSecs(snap, cfg) {
-    var total = cfg.quarterMinutes * 60;
+    var total = (snap.period > 4 ? OT_MINUTES : cfg.quarterMinutes) * 60;
     var elapsed = snap.elapsedMs + (snap.running ? (Date.now() - snap.startedAt) : 0);
     var rem = total - Math.floor(elapsed / 1000);
     return rem < 0 ? 0 : rem;
@@ -94,6 +96,14 @@
         };
       }
       return { snap: Object.assign({}, snap, { running: true, startedAt: ts }), label: 'Clock started' };
+    },
+    // payload: now (ms). Full-time freeze, dispatched by SE.endMatch; no-op when paused.
+    stopClock: function (snap, cfg, payload) {
+      if (!snap.running) return { snap: snap, label: 'Full time' };
+      return {
+        snap: Object.assign({}, snap, { running: false, elapsedMs: snap.elapsedMs + (payload - snap.startedAt), startedAt: null }),
+        label: 'Full time'
+      };
     },
     nextPeriod: function (snap, cfg, payload) {
       var periodPoints = snap.periodPoints.map(function (pp) { return pp.slice(); });
@@ -226,10 +236,6 @@
         return h('div', { style: (style || 'flex:1;') + 'height:44px;border-radius:14px;background:#12936a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 10px 18px -10px rgba(18,147,106,.7);cursor:pointer', onclick: onclick }, label);
       }
 
-      function secondaryBtn(label, onclick) {
-        return h('div', { style: 'flex:1;height:44px;border-radius:14px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#46554d;cursor:pointer', onclick: onclick }, label);
-      }
-
       function periodStatLine() {
         var maxP = Math.max(4, snap.periodPoints.length);
         var cols = [];
@@ -265,10 +271,9 @@
       if (snap.period < 4) {
         footer = primaryBtn('End ' + periodLabel(snap.period) + ' ✓', function () { api.dispatch('nextPeriod'); });
       } else if (tied) {
-        footer = h('div', { style: 'flex:1;display:flex;gap:8px' },
-          secondaryBtn('Start ' + periodLabel(snap.period + 1), function () { api.dispatch('nextPeriod'); }),
-          primaryBtn('End (tie)', endMatch)
-        );
+        // Basketball can't end level: a tie at the end of Q4 (or of any OT) goes to
+        // another 5-minute overtime period. No End control until someone leads.
+        footer = primaryBtn('Tied · Start ' + periodLabel(snap.period + 1) + ' (5 min) ▸', function () { api.dispatch('nextPeriod'); });
       } else {
         footer = primaryBtn('End match ✓', endMatch);
       }

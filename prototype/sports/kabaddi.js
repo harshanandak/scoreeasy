@@ -193,6 +193,13 @@
       else { s.running = true; s.clockStartTs = now; }
       return { snap: s, label: s.running ? 'Clock started' : 'Clock paused' };
     },
+    // payload: now (ms). Full-time freeze, dispatched by SE.endMatch; no-op when paused.
+    stopClock: function (snap, cfg, payload) {
+      if (!snap.running) return { snap: snap, label: 'Full time' };
+      var s = copySnap(snap);
+      s.elapsedMs += payload - s.clockStartTs; s.running = false; s.clockStartTs = null;
+      return { snap: s, label: 'Full time' };
+    },
     nextHalf: function (snap, cfg, payload) {
       var s = copySnap(snap);
       var now = payload || Date.now();

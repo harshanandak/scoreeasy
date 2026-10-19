@@ -121,7 +121,15 @@
   SE.undo = function (matchId) {
     SE.store.update(function (s) {
       var m = s.matches[matchId];
-      if (!m || !m.events.length) return;
+      if (!m) return;
+      // Undo of a manual End match only reopens it (and drops the full-time clock
+      // event it logged); it must never pop the last scoring event.
+      if (m.status === 'done' && m.manualEnd) {
+        if (m.manualEnd.loggedStop) { m.events.pop(); m.snapshot = SE.replay(m); }
+        m.status = 'live'; m.endedAt = null; m.result = null; m.manualEnd = null;
+        return;
+      }
+      if (!m.events.length) return;
       m.events.pop();
       m.snapshot = SE.replay(m);
       if (m.status === 'done') { m.status = 'live'; m.endedAt = null; m.result = null; }
@@ -132,8 +140,24 @@
     SE.store.update(function (s) {
       var m = s.matches[matchId];
       if (!m) return;
+      var now = Date.now();
+      // Clocked sports expose a stopClock(snap, cfg, now) action. If the clock is
+      // still running at full time, fold the elapsed time into the snapshot as a
+      // logged event, so the result screen reads a frozen clock and undo of the
+      // end (which pops this event and replays) restores the running clock exactly.
+      var def = SE.sports[m.sport];
+      var loggedStop = false;
+      if (m.status === 'live' && def && def.actions.stopClock) {
+        var out = def.actions.stopClock(m.snapshot, m.config, now);
+        if (out.snap !== m.snapshot) {
+          m.snapshot = out.snap;
+          m.events.push({ action: 'stopClock', payload: now, label: nameify(m, out.label || 'Full time'), ts: now });
+          loggedStop = true;
+        }
+      }
+      if (m.status === 'live') m.manualEnd = { loggedStop: loggedStop };
       m.status = 'done';
-      m.endedAt = Date.now();
+      m.endedAt = now;
       m.result = result || { summary: 'Match ended', winnerIndex: null };
       m.result.summary = nameify(m, m.result.summary);
     });

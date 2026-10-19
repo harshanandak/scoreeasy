@@ -55,6 +55,12 @@
           : (snap.period === 2 && snap.elapsedBase === cfg.halfMinutes * 60) ? '2nd half underway' : 'Clock resumed';
         return { snap: patch(snap, { clockRunning: true, clockStartedTs: payload.now }), label: label };
       },
+      // payload: now (ms). Full-time freeze, dispatched by SE.endMatch; no-op when paused.
+      stopClock: function (snap, cfg, now) {
+        if (!snap.clockRunning) return { snap: snap, label: 'Full time' };
+        var banked = snap.elapsedBase + (now - snap.clockStartedTs) / 1000;
+        return { snap: patch(snap, { clockRunning: false, clockStartedTs: null, elapsedBase: banked }), label: 'Full time' };
+      },
       // payload: { now } — pauses (if running) and jumps straight to the 2nd-half mark.
       halfTime: function (snap, cfg, payload) {
         if (snap.period !== 1) return { snap: snap, label: 'Half-time' };
