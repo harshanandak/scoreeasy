@@ -1,0 +1,1221 @@
+{
+  "epics": [
+    {
+      "title": "Foundation — shared token + component layer (brutalist × HiFi blend)",
+      "goal": "Define the blend design system ONCE (tokens, keyframes, shared primitives) so every screen composes the two aesthetics instead of forking hex/keyframes per screen.",
+      "rationale": "Nearly every screen verdict flags cross-cutting token coordination as a rework risk: gold, green-wash (#e7f4ee), warm-green-black + green-glow shadows, capsule/circle radii, and the breathing LIVE pulse are hardcoded hex today while the app is oklch-tokenized. Landing these once, derived from oklch, is the keystone the priority arc requires before any screen.",
+      "screens": [
+        "cross-cutting"
+      ],
+      "issues": [
+        {
+          "title": "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+          "type": "chore",
+          "priority": "P0",
+          "description": "Add --se-color-gold/-soft, --se-color-green-wash, --se-shadow-glow (green), --se-shadow-soft/warm-green-black, capsule(999px)/circle(50%) radius aliases, and a single prefers-reduced-motion-gated breathing-pulse @keyframes to index.css/mono.css, all derived from the oklch action token via color-mix/relative color so they behave in dark/theme modes. Canonical source; no per-screen hex.",
+          "prBoundary": "One PR adding the token+keyframe layer with a dark-mode smoke check; no screen consumes yet.",
+          "effort": "M"
+        },
+        {
+          "title": "Shared MonoSheet bottom-sheet primitive",
+          "type": "feature",
+          "priority": "P0",
+          "description": "One bottom-sheet host (backdrop dim+blur, 16px top radius, upward warm shadow, grab-handle, Skip/Confirm footer, focus-trap parity with appConfirmUtils, reduced-motion) reused by attribution, cricket toss, in-match menu, share sheets. Generalize the .app-confirm focus-trap selector so sheets qualify.",
+          "prBoundary": "Sheet primitive + hook + a11y tests; no consumer wired.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Shared CaptionChip / CoachChip + capsule-CTA classes",
+          "type": "feature",
+          "priority": "P0",
+          "description": "Presentational rounded caption/coaching chip (ink default, green=lead, gold=milestone) and .mono-cta-capsule (99px + optional green-glow) consumed by scorers, spectator, history, tournament. Chip is fed a label; never embeds sport rules.",
+          "prBoundary": "Chip + capsule CTA components/classes + tests.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "S"
+        },
+        {
+          "title": "Shared SegmentedToggle (capsule segmented control)",
+          "type": "feature",
+          "priority": "P0",
+          "description": "99px capsule segmented pill with sliding thumb + brutalist hairline/offset shadow, active=black-ink fill. Reused by History type filter, Play hub, Stats tabs, team-only mode, standings condensed toggle.",
+          "prBoundary": "Component + CSS + tests.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "S"
+        },
+        {
+          "title": "Shared AvatarCircle + SportMedallion + LiveDot",
+          "type": "feature",
+          "priority": "P0",
+          "description": "Size-parametrized 50% initials/monogram avatar (hairline ring, gold/green ring variants), circular tinted SportIcon medallion, and breathing LiveDot pulse component. Shared across profile, social, teams, rosters, spectator, live-now.",
+          "prBoundary": "Three presentational components + tests.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Shared EmptyState component (extract from MonoStatistics)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Lift the inline MonoStatistics EmptyState into a shared component with optional illustration/medallion + teaser slot; reused by History-empty, Teams-empty, Home-first-run. Keep contract minimal until 2nd consumer.",
+          "prBoundary": "Extraction refactor (update MonoStatistics call sites + tests), no new screen.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Shared BottomTabNav + information-architecture consolidation",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Build one app-shell bottom nav and resolve the 5→target-tab IA (Home·Play·History·Friends/More), reworking isActive/isAppShellPath/navItems and fixing I-066 Stats-vs-Statistics label. Screens degrade gracefully until it lands; owned here, consumed everywhere.",
+          "prBoundary": "Nav component + IA rework across app-shell paths + regression check on every shell screen; no per-screen features.",
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Onboarding, auth & first-run",
+      "goal": "Warm the guest→auth→first-run funnel with capsule CTAs, plain-language prompts, medallion/loader moments and designed empty states while keeping the brutalist auth scaffold.",
+      "rationale": "High-traffic top of funnel; verdicts confirm all buildable as single-screen PRs once foundation tokens exist. Onboarding wizard carries real design-debt (off-brand #0066ff/greys to migrate).",
+      "screens": [
+        "Guest landing / marketing",
+        "Login",
+        "Signup",
+        "Onboarding first-run",
+        "Home first-run (empty state)"
+      ],
+      "issues": [
+        {
+          "title": "Guest landing blend (hero pills, live-preview card, sport medallions)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Capsule hero/CTA pills with green-glow on the single primary START, HiFi live-preview card (soft card, breathing LIVE, coach chip that absorbs the existing footer line), circular sport medallions on boxy tiles, plain-language prompts. Base numeral/shadow bumps on ACTUAL current values (radius.pill=999px, hero buttons currently shadowless).",
+          "prBoundary": "GuestLanding + landingData + LivePreviewCard/PillCTA/SportMedallion/CoachChip locally, consuming shared tokens.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Login blend (capsule OAuth/guest CTAs, question copy)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Clerk appearance capsule radii + green-glow primary, full-capsule guest escape, plain-language subtitle. Inputs stay square. Clarify the --wash lands outside the hidden Clerk header; SECURE chip is the first cut candidate. Re-verify /signup in same pass since clerkTheme is shared.",
+          "prBoundary": "clerkTheme + MonoAuthPageFrame + MonoLogin + mono.css capsule/secure-chip.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Signup blend (brand medallion, capsule CTAs, SSO loading state)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Circular brand medallion, capsule primary/social/guest, MonoAuthLoading wrapping the ACTUALLY-visible AuthenticateWithRedirectCallback branch (not just the momentary null branch). Drop the gold completion accent (Clerk DOM). Screenshot both login+signup.",
+          "prBoundary": "clerkTheme + shared frame + MonoSignUp + SSOCallback + MonoBrandMedallion/MonoAuthLoading.",
+          "dependsOn": [
+            "Login blend (capsule OAuth/guest CTAs, question copy)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Onboarding wizard reskin + celebratory finish (fix #0066ff debt)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Retokenize StepIndicator/Name/Username/Preferences/Games off hardcoded blue/grey to --se-*; circular role targets, capsule play-style, green-wash selected-only, breathing current-step tick, gold celebratory finish (auto-advance + skippable, reduced-motion gated). Keep sports as boxy tiles (not full circles). Scope divider retokenization locally.",
+          "prBoundary": "MonoOnboarding + local mono.css classes; data/validation flow untouched.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Home first-run empty (EmptyDashboard upgrade)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Upgrade existing EmptyDashboard (NOT a new file): capsule CTA, breathing READY dot, active-step progress ring, guest-sync pill. Reconcile the actual colored offset shadow; define capsule+pulse LOCALLY (inline t.* tokens) to stay self-contained. Drop either hero wash or icon chips to avoid over-softening. Update DashboardLanding.test copy in lockstep.",
+          "prBoundary": "DashboardLanding EmptyDashboard + tests; self-contained, no shared-mono.css dependency.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Signed-in dashboard — Live now band",
+      "goal": "Insert the HiFi 'Live now' feed into the brutalist dashboard using only data available today (self active sessions), deferring social/watch to when those backends land.",
+      "rationale": "Verdict: too-big as written; only the self active-session restyle is data-backed. Split into a standalone PR1 and a dependent PR2.",
+      "screens": [
+        "Dashboard / signed-in home"
+      ],
+      "issues": [
+        {
+          "title": "Dashboard Live-now band (self active sessions)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "LiveNowFeed from getActiveSessions(): breathing pulse, capsule Resume, gold milestone chip, green-tint wash card, designed empty state. NO ActivityTeaser, friends-live, Watch, Share, or coaching chip. liveFeed.js is a thin self-only helper with a merge seam stub. Confirm --primary hue before 'green' copy.",
+          "prBoundary": "DashboardLanding + LiveNowFeed + liveFeed.js + tests.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Dashboard social band (activity teaser, friends-live, watch, share)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "ActivityTeaser, friends'-live merge in liveFeed.js, Watch routing, Share-QR, coaching selector — wired once /activity, /spectator, social layer and the shared coaching selector exist.",
+          "prBoundary": "Follow-up wiring PR.",
+          "dependsOn": [
+            "Dashboard Live-now band (self active sessions)",
+            "Activity feed screen",
+            "Friends backend (schema + convex/friends.ts)",
+            "Spectator — tennis (read-only screen)",
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Play & Setup",
+      "goal": "Blend the pick/setup flow (play hub, sport home, quick setup, customize rules, cricket toss) and decompose the MonoQuickMatch monolith so setup screens can be built cleanly.",
+      "rationale": "Verdicts require the I-085 setup extraction as a pure lift BEFORE restyle, and carve MonoSheet/toss/bottom-nav out. Play hub/sport home UX wins are thin (copy exists) so keep them as restyle-only.",
+      "screens": [
+        "Play hub (pick a sport)",
+        "Sport home (per-sport entry)",
+        "Match setup (quick)",
+        "Customize & rules (from Setup)",
+        "Cricket toss (Setup → Live)"
+      ],
+      "issues": [
+        {
+          "title": "Extract MonoQuickSetup from MonoQuickMatch (lift, zero visual change)",
+          "type": "chore",
+          "priority": "P1",
+          "description": "Pure lift of the phase==='setup' render + setup-only state/handlers into MonoQuickSetup.jsx via props/callbacks; MonoQuickMatch keeps scoring and renders it. Screenshot-verify resume-draft + cricket + volleyball + goals paths against the persistence effects. No restyle.",
+          "prBoundary": "Extraction refactor with regression screenshots; behavior identical.",
+          "effort": "M"
+        },
+        {
+          "title": "Play hub blend (capsule mode toggle, badges, chips)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Restyle the guided/browse mode toggle into the shared SegmentedToggle, circular icon badges (responsive shrink at 360px, 4-col gap), caption chips, green-restricted CTA/step. StepHead 'green only on done' needs a new non-green active color. Target play-mode toggle only, not ModeCards. Inline primitives if extraction contends.",
+          "prBoundary": "MonoPlayHub + NewUserFlow + MonoSportHome touch-points consuming shared toggle/chip.",
+          "dependsOn": [
+            "Shared SegmentedToggle (capsule segmented control)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Sport home blend + delete _TABBED duplicate",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Brutalize the currently-Swiss spine (hard hairlines, 4px input, boxy Tournament button) + add centered popular row (3 priority sports, NOT a scroll rail) of circular tap-targets, one green-glow Quick CTA, count chips, empty state, oklch tokens. Delete dead MonoSportHome_TABBED (off-palette #0066ff). BottomTabNav consumed, not built here.",
+          "prBoundary": "MonoSportHome + mono.css + delete _TABBED; nav consumed.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Match setup restyle (on extracted MonoQuickSetup)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Identity badge, team-color dots, selected-tile hard offset shadow, capsule Start CTA, plain-language H1s, coaching caption chip, first-run suggested-team state. Reuse existing team-suggestion + setupStep state (don't re-implement). Rules-sheet + toss are separate issues.",
+          "prBoundary": "MonoQuickSetup restyle only; consumes MonoSheet for rules 'Edit rules' entry.",
+          "dependsOn": [
+            "Extract MonoQuickSetup from MonoQuickMatch (lift, zero visual change)",
+            "Shared MonoSheet bottom-sheet primitive",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Customize & rules capsule controls (MonoSegment/MonoStepper/RuleSummaryChip)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Capsule segmented controls + circular ±44px steppers + preset capsule chips + live rule-summary moved to the edit step; explicit value+onChange per call site across cricket/sets/goals. Tests: players 2..11, solo clamp 10, ball-floor 6. Drop no-op green progress-bar tint. Apply to QuickMatch Step 2 ONLY; adopt in Setup/Tournament later.",
+          "prBoundary": "MonoQuickMatch Step 2 + MonoSegment/MonoStepper/RuleSummaryChip + tokens; no sibling adoption.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared SegmentedToggle (capsule segmented control)"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Cricket toss interstitial (Setup → Live)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "New 'toss' phase for regular in-page cricket only (isCricket, insert after setPhase branch, before scoring); tap winner + Bat/Bowl, static gold accent (drop the tappable coin to trim a11y), Skip=physical-toss copy. Exclude 'toss' from autosave; commit battingTeam at Confirm. Guard so volleyball/goals/test-cricket/tennis never see it.",
+          "prBoundary": "MonoQuickMatch + startActions + CricketToss component + mono.css; consumes MonoSheet + CoachChip.",
+          "dependsOn": [
+            "Extract MonoQuickSetup from MonoQuickMatch (lift, zero visual change)",
+            "Shared MonoSheet bottom-sheet primitive",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Live scorers — visual blend",
+      "goal": "Blend HiFi warmth (coaching chips, plain-language prompts, breathing LIVE, boundary/press accents) into all scorers WITHOUT touching scoring logic, sharing one coaching-status selector.",
+      "rationale": "Every scorer verdict is too-big because it bundles attribution + tokens + shared selectors; splitting the pure visual reskin from the shared coaching selector and from attribution keeps each a focused PR. Multiple false 'keeps' claims (nonexistent 3px shadows) must be treated as new work.",
+      "screens": [
+        "Cricket scorer (limited overs)",
+        "Cricket scorer (test / multi-innings)",
+        "Tennis scorer",
+        "Sets scorer (volleyball/badminton/TT/pickleball/squash)",
+        "Goals scorer",
+        "Generic live game view",
+        "Tournament match score"
+      ],
+      "issues": [
+        {
+          "title": "Shared coaching-status selectors (per-sport)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Pure helpers deriving deuce/set/match/break-point, lead/trail/follow-on/new-ball/declare, RRR/need-X-off-Y, bonus/quarter/full-time-soon from existing engine state (sportConfig-driven, no config.target). Consumed by every scorer's coaching chip + spectator + dashboard, so labels can't drift. Tested against all sport configs.",
+          "prBoundary": "setsCoaching.js + cricket/tennis/goals selector utils + tests; presentational chip fed labels.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Cricket LO scorer visual blend",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Circular run keypad (verify hard offset on a circle reads right — it does NOT exist today, it's new), NEED-X-OFF-Y/RRR/powerplay/gold chips (neutral ink, green only for RRR-lead), micro-copy prompt, tokenized free-hit, breathing LIVE. Mirror across all 4 render branches (main/pending-extra/super-over/super-over-pending-extra). Over-timeline + attribution are separate issues.",
+          "prBoundary": "MonoCricketLiveScore CSS/markup + MonoCoachChips; no behavior change.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Cricket test scorer visual blend",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Test-tuned chips (LEAD/TRAIL/level/follow-on/new-ball-80ov from innings.balls/DECLARE), boundary green-wash on 4/6 cells only, breathing innings badge, circular undo, reskinned follow-on/complete states. NO limited-overs chips. Reskin only; innings/result logic untouched.",
+          "prBoundary": "MonoCricketTestLiveScore CSS/markup + shared chips.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Tennis scorer visual blend (Part A)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "TAP-THE-POINT-WINNER prompt, coaching chip (scoped LIVE pulse to non-tiebreak state — badge is paused in tiebreak), press-ring, toast reshading + NEW match-won toast (none exists). Reconcile multi-green sources. Credit-point sheet + share are separate.",
+          "prBoundary": "MonoTennisLiveScore CSS/markup + chips.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Sets scorer visual blend (prompt, per-set strip, coaching chip)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Per-sport prompt chip, live per-set strip (gold on set/match-point, hide single-set, no 320px overflow), coaching caption via setsCoaching (derive target from getCurrentSetTarget), soft serve dot, breathing badge. Credit-point sheet is a separate issue.",
+          "prBoundary": "MonoSetsLiveScore CSS/markup + setsCoaching + chips.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Goals scorer visual blend (Mode A/B + quick-button chips)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Seam prompt + coaching chips (clock/quarter/bonus), breathing LIVE dot, and Mode-B capsule/circular .mono-arena-chip point tokens keeping I-051/I-052 uniformity + I-049 role=img. Per-sport QA across all 7 sports; respect max-height:540px compaction. Attribution separate.",
+          "prBoundary": "MonoGoalsLiveScore CSS/markup + chips.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Generic live game rebuild on arena system",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Resolve routing (generic fallback vs retire) FIRST, then rebuild MonoLiveGame on mono-arena-*, migrate all hardcoded hex (#0066ff/#111/#888/#eee) to --se-*, add capsule LIVE pill, optional session-fed caption, circular correction FAB, gold completed state. Extract MonoScorerChrome if shared.",
+          "prBoundary": "MonoLiveGame + mono.css; routing decision confirmed with main.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)",
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Tournament match fixture ribbon + advance-to-final finish",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Add a shared slot/children to MonoTournamentLiveScore so ONE MonoTournamentFixtureRibbon (stage/round/seeds/advance-to) + gold advance finish inject above all 5 scorer topbars without per-sport copy. Needs knockoutManager next-round naming. Coaching pulse/chip consumed from shared, not re-authored.",
+          "prBoundary": "MonoTournamentLiveScore slot refactor + FixtureRibbon; scorer edits minimal.",
+          "dependsOn": [
+            "Shared coaching-status selectors (per-sport)",
+            "Tournament dispatch shell extraction + blue-to-token migration"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Undo confirmation feedback (shared UndoControl + single toast slot)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Standardize 'Undo last ball/point/goal' across 5 engines calling each existing undo() verbatim (preserve freeHit/pendingExtra/keyboard-U/disabled). Add a 'what was reverted' toast via a single-slot mutual-exclusion guard with the resume-match pill (NOT a full queue). Keep the flat zero-radius tile; make the pill optional. Defer redo + Edit-sheet.",
+          "prBoundary": "UndoControl + useUndoFeedback + 5 scorers markup swap + mono.css.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Attribution & team-only mode",
+      "goal": "Build the who/how/credit-point capture as a shared bottom-sheet feeding a real player-stats model, plus a first-class team-only (no-roster) mode that hard-gates attribution off.",
+      "rationale": "Verdicts show the stat sink and roster-in-scoring model DO NOT EXIST — attribution is an epic, not a scorer detail. Team-only is its OFF state and must share one gate seam.",
+      "screens": [
+        "Attribution mini-flows (who scored / how out / credit point / new batter)",
+        "Team-only scorer variants (no player names)"
+      ],
+      "issues": [
+        {
+          "title": "Player-stats + roster-in-scoring data model",
+          "type": "feature",
+          "priority": "P2",
+          "description": "New persisted model for goals/assists, dismissal+fielder, winners/forced/unforced/double-fault, plus roster availability in scoring state. Prerequisite for every attribution sheet; verified absent today (scorers track team scores only).",
+          "prBoundary": "Schema/types + storage + engine write-paths; no UI.",
+          "effort": "L"
+        },
+        {
+          "title": "AppAttributionSheet primitive + one sport (goals who-scored)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Sheet variant on AppScoringPromptHost (not the centered dialog) with circular player picker (team-only degrades to Skip-only), Skip always commits base score, no double-count, undo reverts stat. Wire ONE sport (goals) as reference. a11y focus-trap parity.",
+          "prBoundary": "AppAttributionSheet + attributionOptions + goals wiring + tests.",
+          "dependsOn": [
+            "Player-stats + roster-in-scoring data model",
+            "Shared MonoSheet bottom-sheet primitive"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Attribution rollout (cricket/tennis/sets) + confirm toggle + undo revert",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Extend the sheet to how-out/new-batter and credit-point across remaining scorers, reconcile with 150ms debounce/isInteractionLocked/advanceInnings timing, gate behind the Confirm-wicket/goal setting.",
+          "prBoundary": "Per-sport wiring PRs consuming the primitive.",
+          "dependsOn": [
+            "AppAttributionSheet primitive + one sport (goals who-scored)",
+            "Settings / More screen core"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Team-only mode (flag + gate + toggle + prompt caption)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Explicit teamOnly flag (canonical, not 'rosters empty'), useTeamOnlyMode gate seam, hide roster-tagging in setup, MonoModeToggle capsule, TEAM ONLY badge, per-sport prompt caption, AppScoringPrompt no-op guard. Keep players-per-side at setup for all-out logic. Team-only spectator deferred to spectator epic.",
+          "prBoundary": "teamOnly flag threaded through scorers + hook + toggle + roster-hide; no spectator.",
+          "dependsOn": [
+            "Shared SegmentedToggle (capsule segmented control)",
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Match-end flow (Result / Scorecard / Share)",
+      "goal": "Build the entirely-missing terminal states: FULL TIME result gate, post-match scorecard, and shareable result card.",
+      "rationale": "Cross-cutting gap: scorers auto-navigate with no designed terminal state. Verdicts require sport-agnostic lineScores[] contracts and splitting rollout/rasterization.",
+      "screens": [
+        "Result (FULL TIME)",
+        "Scorecard (post-match detail)",
+        "Share result card"
+      ],
+      "issues": [
+        {
+          "title": "MonoMatchResult shared screen + verdict helper (Sets wiring)",
+          "type": "feature",
+          "priority": "P1",
+          "description": "Sport-agnostic result screen (lineScores[] handling per-set/per-game/innings), plain-language verdict helper, winner medallion, capsule CTAs (Done/Share/Scorecard/Rematch), victory-only gold token, one-shot celebration + confetti dedupe. Wire Sets only as reference; Done routes tournament→bracket vs quick→home. Preserve AppOwnedScoringPrompts/MonoHistory tests + back-button logic.",
+          "prBoundary": "MonoMatchResult + matchResult util + Sets completion wiring + tests.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Result rollout (Goals/Tennis/Cricket + MonoLiveGame)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Wire the result gate into remaining completion flows; MonoLiveGame is a different session engine, handle separately. Prove cricket innings lineScores shape.",
+          "prBoundary": "Per-engine wiring; MonoLiveGame in its own follow-up.",
+          "dependsOn": [
+            "MonoMatchResult shared screen + verdict helper (Sets wiring)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "MonoScorecard shared screen",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Read-only scorecard from Result + History: celebration hero, hairline ledger (overflow-x on 320px), meta chips, Rematch/Share/Done, empty/legacy/error states. Both entry points wire ONE shared component. Momentum strip + QR share are follow-ups; MVP/stat sub-rows strictly data-gated (team-level only today).",
+          "prBoundary": "MonoScorecard + route + wiring from match-complete and History + tests.",
+          "dependsOn": [
+            "MonoMatchResult shared screen + verdict helper (Sets wiring)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Share result card sheet (static render + shareFiles)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "MonoShareCard bottom-sheet + fixed-size brutalist card (hard artifact: use single-layer 0-blur shadow, ZERO oklch/color-mix in the card subtree — inline hex), format toggle, shareFiles() primitive. Keep existing text-share fallback (buildResultShareText).",
+          "prBoundary": "MonoShareCard + shareFiles primitive; no rasterization.",
+          "dependsOn": [
+            "MonoMatchResult shared screen + verdict helper (Sets wiring)",
+            "Shared MonoSheet bottom-sheet primitive"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Share result card image export (rasterization)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "shareCardImage.js: hand-rolled canvas (preferred over html-to-image to sidestep oklch failures) with embedded fonts, fixed px (no clamp), same-origin avatars, navigator.share({files}) with Save-image fallback.",
+          "prBoundary": "Rasterization util + test; high-risk spike isolated.",
+          "dependsOn": [
+            "Share result card sheet (static render + shareFiles)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Live & Spectator infrastructure",
+      "goal": "Land the live-broadcast backend to production, then build public snapshot queries, share-live QR, shared spectator primitives and per-sport spectator screens.",
+      "rationale": "Cross-cutting gap: the entire live stack exists only in worktrees. Every spectator/share screen is BLOCKED on landing it + a public read query; momentum needs a persisted event log. Resolve canonical worktree first.",
+      "screens": [
+        "Share live link (QR)",
+        "Spectator — cricket",
+        "Spectator — football",
+        "Spectator — tennis",
+        "Spectator — other sports (basketball/hockey/volleyball/badminton)",
+        "Spectator graphs / momentum / point-by-point / box score"
+      ],
+      "issues": [
+        {
+          "title": "Land live-broadcast stack to production",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Promote LiveBroadcastBar/ShareLiveMatch/LiveMatchCard/convex/live.ts/watchUrl/useLiveBroadcast from the canonical worktree (resolve wf_5fe79697 vs .worktrees/live-matches ambiguity first) into src/ and convex/. Foundational for all spectator/share work.",
+          "prBoundary": "Worktree→prod promotion PR with existing tests.",
+          "effort": "L"
+        },
+        {
+          "title": "Public per-match snapshot query + share-token guard",
+          "type": "feature",
+          "priority": "P2",
+          "description": "getByMatchId/getByToken public projection with §7.2 minimization + youth-match name-hiding; unguarded read-only /watch route excluded from isProtectedScoringRoute. Scorers already write draftState continuously (read query is the gap).",
+          "prBoundary": "convex query + schema fields + route guard; no per-sport UI.",
+          "dependsOn": [
+            "Land live-broadcast stack to production"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Share live link QR sheet reskin",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Reskin promoted ShareLiveMatch as brutalist shell + HiFi controls: top-edge hard shadow, capsule buttons, breathing LIVE chip, ink-on-hairline channel circles (green only on WhatsApp glyph), pure-white QR quiet-zone. Add qrcode.react. Drop the auto-share Settings hint (stub-to-nowhere).",
+          "prBoundary": "ShareLiveMatch reskin + mono.css + qrcode dep + ⋯ trigger wiring.",
+          "dependsOn": [
+            "Land live-broadcast stack to production",
+            "Shared MonoSheet bottom-sheet primitive"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Build the reusable spectator layer once (breathing badge + watching-count, share-live+QR sheet, set/period-by-period momentum strip, caption chip) so per-sport screens consume, not fork.",
+          "prBoundary": "Four primitives + CSS + tests; no screen.",
+          "dependsOn": [
+            "Public per-match snapshot query + share-token guard",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Spectator — tennis (read-only screen)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Read-only /watch view reusing arena furniture verbatim; extract untested tennis derivation helpers into tennisScore.js WITH characterization tests first (no MonoTennisLiveScore.test today), deriveTennisContext for coaching chip. Route excluded from scoring guard. Shared sheet/QR/momentum consumed from primitives.",
+          "prBoundary": "MonoTennisSpectator + tennisScore.js (+ characterization tests) + route.",
+          "dependsOn": [
+            "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)",
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Spectator — other sports (sets/goals engines)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "MonoSpectatorOtherSports: sport-driven SETS vs GOALS read-only body (basketball quarters/OT/BONUS), role=img displays, status captions. Consumes shared primitives + public query.",
+          "prBoundary": "One screen with two branches consuming primitives.",
+          "dependsOn": [
+            "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)",
+            "Shared coaching-status selectors (per-sport)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Spectator — football",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Read-only football shell (breathing LIVE + getFootballClockState + read-only score row + footer) with HONEST empty states for possession/goal-timeline/momentum (no source data until goal-attribution + capture land). Extract shared clock/score helper from MonoGoalsLiveScore.",
+          "prBoundary": "MonoGoalsSpectator shell + empty states; possession/timeline gated on attribution.",
+          "dependsOn": [
+            "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)",
+            "AppAttributionSheet primitive + one sport (goals who-scored)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Spectator — cricket (backend fields + scorebug + chase chips + this-over)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Widen public snapshot for cricket (runs/wkts/overs/target/thisOver/CRR/RRR, names respecting youth-hiding — product sign-off) + scorer emission in lockstep, then cricket-aware scorebug + ChaseChips + ThisOverStrip + ScorecardPanel cricket case. Chase fields hide in 1st innings/Test/D-L.",
+          "prBoundary": "Backend cricket fields PR then cricket scorebug UI PR (sequence).",
+          "dependsOn": [
+            "Public per-match snapshot query + share-token guard",
+            "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Spectator momentum / graphs tab",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Worm/manhattan + RRR/CRR gauge + point-by-point + box score, gated on the persisted per-point event log; shared MomentumChart co-built with History Match-graphs. Circular set (capsule tabs/FAB/dots) kept exactly as scoped.",
+          "prBoundary": "Viz components PR after the event log lands.",
+          "dependsOn": [
+            "Persisted per-point/ball event log (cross-engine)",
+            "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)"
+          ],
+          "effort": "L"
+        }
+      ]
+    },
+    {
+      "title": "History & Statistics",
+      "goal": "Blend the ledger screens (history, match detail, statistics, leaderboard, profiles, team stats) and add the missing visualization layer.",
+      "rationale": "Foundation shared primitives (SegmentedToggle, EmptyState, chips, avatars) unblock most; verdicts split out cross-cutting extractions and gate all viz on a persisted event log.",
+      "screens": [
+        "History (past matches)",
+        "History empty state",
+        "Match detail (from history)",
+        "Statistics overview + per-sport",
+        "Players leaderboard",
+        "Player profile (career records/milestones)",
+        "Team stats",
+        "Match graphs / momentum viz"
+      ],
+      "issues": [
+        {
+          "title": "Persisted per-point/ball event log (cross-engine)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Retain a trimmed per-event log at completion across all engines (today draftState is discarded on complete; undo snapshots capped at 50 and are full-state clones). Prerequisite for momentum, point-by-point, spectator graphs. Start volleyball/sets, sport-pluggable builder.",
+          "prBoundary": "Engine completion write-paths + storage/types; no UI.",
+          "effort": "L"
+        },
+        {
+          "title": "History screen blend (I-086 filter, I-053 loading)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Single horizontal-scroll capsule filter row (fix I-086), keep summary cards AS the type filter (don't add a redundant toggle), bottom-sheet detail, gold winner cue (not per-row green wash), soft undo toast. Split the I-053 loaded-flag+skeleton fix into its own small PR.",
+          "prBoundary": "MonoHistory + HistoryDetailSheet consuming shared toggle/chip/tokens; I-053 separate.",
+          "dependsOn": [
+            "Shared SegmentedToggle (capsule segmented control)",
+            "Shared MonoSheet bottom-sheet primitive",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "History empty state (medallion + CTA)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "totalCount===0 designed state via shared EmptyState (medallion + micro-label + capsule CTA); KEEP the filtered-empty compact 'Clear filters' path distinct. Cut the teaser stat row from v1 (empty placeholders read broken). Update 3 test assertions.",
+          "prBoundary": "MonoHistory zero branch + EmptyState + tests.",
+          "dependsOn": [
+            "Shared EmptyState component (extract from MonoStatistics)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Match detail dedicated screen (from history)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Promote inline panel to /history/match/:id: report-card hero + set breakdown RE-PLUMBED from raw quick/tournament storage (entries carry only a flattened score string), meta chips, Rematch/Share/Delete, coaching caption chip. Graph + share-QR are separate PRs. Drop the 'watch live' semantic (finished match).",
+          "prBoundary": "MonoMatchDetail + route + raw-data resolution; graph/share deferred.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Statistics overview blend",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Rename H1→Stats (I-066), capsule tabs (new .mono-pill-tab, don't mutate .mono-tab), Top-performer hero + WinRateRing (a11y title/desc), leaderboard framing, form sparkline/head-to-head (needs new W/L/D + rivalry derivation — not just re-render). Strict green=positive/lead, gold=rank-1. Bottom nav consumed.",
+          "prBoundary": "MonoStatistics + WinRateRing/FormSparkline/StatChip; nav consumed.",
+          "dependsOn": [
+            "Shared SegmentedToggle (capsule segmented control)",
+            "Shared BottomTabNav + information-architecture consolidation"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Players leaderboard (team-ranked)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Ranked leaderboard-of-cards from buildQuickTeamRows: rank medallions (gold/silver/bronze), circular avatars, form pips, Win% capsule. Drop MVP crown (no player data). Keep W-first sort or add min-games guard (Win%-first ranks 1-0 over 9-1). Chevron only if a detail target exists.",
+          "prBoundary": "MonoLeaderboard + gold token + /statistics only.",
+          "dependsOn": [
+            "Shared AvatarCircle + SportMedallion + LiveDot",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Player profile career visual slice",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Buildable-now slice: true-circle avatar + ring, Win% clamp hero (still boxy card), green-tint winner-row wash, plain-language identity line + empty state. CAREER milestone rail and Add-friend are gated on backend/social epics (separate issues), NOT shipped here.",
+          "prBoundary": "MonoProfile visual polish; no new data.",
+          "dependsOn": [
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Team stats screen + stable team-key + aggregation util",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Foundation PR: stable team key (teamMap keyed by name today = data bug) + extend teamStats aggregation (H2H/streak/momentum) + extract StatCard/InsightCard/EmptyState. Then MonoTeamStats layout PR. Momentum strip and LIVE-watch pill deferred/degrade gracefully.",
+          "prBoundary": "Split: (a) key+util+primitive extraction; (b) MonoTeamStats screen.",
+          "dependsOn": [
+            "Shared EmptyState component (extract from MonoStatistics)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Match graphs momentum viz (set-level fallback)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Hand-rolled inline-SVG brutalist worm (1.5px black axes, mono labels, green lead-fill only, opacity-only live pulse) on set-level cumulative + live draftState.history; shared MomentumChart. Cross-engine point-log persistence is the separate blocking issue for true point-by-point; verify MonoQuickMatch persistence gap.",
+          "prBoundary": "MonoMatchGraphs + MomentumChart + momentum.js (volleyball/sets) + History affordance.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Tournament & Schedule",
+      "goal": "Blend the tournament group (list, setup, dispatch, standings, bracket, fixtures), killing the ~90% triplication and off-palette blue while fixing standings column correctness.",
+      "rationale": "Verdicts require extracting TournamentDetailShell + blue-to-token migration BEFORE the HiFi blend, and the standings config-driven rewrite is a real 14-sport correctness fix separable from aesthetics.",
+      "screens": [
+        "Tournament list",
+        "Tournament setup / create",
+        "Tournament dispatch (per-engine)",
+        "Standings",
+        "Bracket",
+        "Schedule / fixtures calendar"
+      ],
+      "issues": [
+        {
+          "title": "Tournament dispatch shell extraction + blue-to-token migration",
+          "type": "chore",
+          "priority": "P2",
+          "description": "Extract TournamentDetailShell (header/meta/progress/tabs) from the 3 ~90%-dup engine files and migrate ~113 hardcoded hex (#0066ff/#111/#888) to --se-* with NO new visuals. Run TournamentDestructiveSafety.test. Confirm --se-color-action intent with eval-app.",
+          "prBoundary": "Pure refactor + token migration; visual parity.",
+          "effort": "L"
+        },
+        {
+          "title": "Tournament list blend",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Add hard offset shadow to the currently-flat Swiss cards, coaching status chips, capsule count badge, MonoProgressBar (black default / green at 100% / gold=all-complete — redefine gold from 'won cup' to avoid champion logic), fix off-palette blue. Ship chip/progress INLINE-first; defer sibling adoption + gold governance.",
+          "prBoundary": "MonoTournamentList + local components; nav consumed.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Standings shared config-driven table + column correctness",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Extract one StandingsTable driven by sportConfig.standingsColumns via a column→field map (current body hardcodes sets columns; football D/GF/GA/GD, rugby BP, cricket NR/NRR render wrong). Verify all 13 GenericSets/Goals sports (cricket custom-cricket is a separate path). Keep true hairline rows; drop leader breathing pulse; graceful no-knockout fallback. HiFi chrome (rank chips/rail/captions) is a follow-up.",
+          "prBoundary": "PR1 correctness+extraction; PR2 qualification rail/chips.",
+          "dependsOn": [
+            "Tournament dispatch shell extraction + blue-to-token migration"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Tournament setup reskin",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Re-skin the 1838-line wizard (surface classes only, no logic refactor): plain-language prompts, self-explaining type descriptors, celebratory match-count numeral + gold, green-glow Start CTA, preset empty state, coaching-chip validation that RETAINS role=alert severity. MonoBracketPreview is a separate PR.",
+          "prBoundary": "MonoTournamentSetup restyle + coaching chips.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Tournament dispatch HiFi blend (bracket, champion, chips)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "On the extracted shell: context caption chip, breathing LIVE (reduced-motion gated), gold ChampionBanner (replaces #0066ff box), soft green-glow on live Resume CTA only, SeedAvatar. BracketView is a separate issue.",
+          "prBoundary": "Shell-consuming visual blend across 3 engines.",
+          "dependsOn": [
+            "Tournament dispatch shell extraction + blue-to-token migration",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Bracket tree view",
+          "type": "feature",
+          "priority": "P3",
+          "description": "KnockoutBracket: generic round columns (play-in/QF/SF/Final + 3rd-place + no-semi direct-final formats, NOT just SF→Final) with hairline connectors + vertical spine on 300px, SeedAvatars, gold champion medallion, cricket score branch (missing today). Absorbs duplicated TBD placeholder from all 3 dispatchers.",
+          "prBoundary": "KnockoutBracket + KnockoutMatchCard restyle; getKnockoutRoundGroups unchanged.",
+          "dependsOn": [
+            "Tournament dispatch shell extraction + blue-to-token migration",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Schedule / fixtures screen (round-axis)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "New round-axis Fixtures screen (matches carry no date/time — deliberately NOT a date grid): round-jump capsule rail + progress rings, coaching chips, FixtureRow with capsule status pills, gold Final treatment, sticky Score-next CTA, empty state. Extract tournamentSchedule util (keep MonoTournamentList's 'Score next' working). TournamentTabs is a separate cross-cutting PR.",
+          "prBoundary": "MonoTournamentFixtures + route + util extraction + 'View fixtures' link.",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes",
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Settings, account & appearance",
+      "goal": "Build the missing Settings/More surface, activate dark mode, and warm the account profile — deferring the inert-toggle wiring and nav fold to their own tracks.",
+      "rationale": "Cross-cutting gap: no Settings screen, dark mode declared-but-unused. Verdict: split dark-token system, nav IA, and toggle-consumer wiring from the settings screen itself.",
+      "screens": [
+        "Settings / More",
+        "Your profile (account)"
+      ],
+      "issues": [
+        {
+          "title": "Dark mode token system (.dark oklch overrides)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Author the .dark {} oklch override block (only @custom-variant dark exists today; zero .dark rules). Own issue owned by the token layer so the Appearance toggle isn't a dead switch.",
+          "prBoundary": "index.css .dark token set + smoke check across shell screens.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Settings / More screen core",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Grouped brutalist settings list + MonoSwitch capsule toggle + settingsPrefs util + sign-in-sync hero + default-sport chips + Export history (client JSON Blob) + Clear-all behind MonoSheet confirm (typed/undo for guests). Ship Dark-mode toggle disabled/coming-soon until .dark lands; behavior toggles persist but their consumer wiring is a separate PR. 'More' added as a plain tab; IA fold is separate.",
+          "prBoundary": "MonoSettings + MonoSwitch + settingsPrefs + /settings route + tests.",
+          "dependsOn": [
+            "Shared SegmentedToggle (capsule segmented control)",
+            "Shared MonoSheet bottom-sheet primitive"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Wire se_settings into scorers + share sheet",
+          "type": "chore",
+          "priority": "P3",
+          "description": "Make Confirm-wicket/goal and Auto-share-live actually read se_settings in the scorers/share sheet (inert until wired).",
+          "prBoundary": "Consumer wiring PR.",
+          "dependsOn": [
+            "Settings / More screen core",
+            "AppAttributionSheet primitive + one sport (goals who-scored)",
+            "Share live link QR sheet reskin"
+          ],
+          "effort": "S"
+        },
+        {
+          "title": "Your profile account (social row, circle avatar)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Buildable-now: 72px circle avatar (green/gold ring), plain-language role line, capsule CTAs, expand Games/Win% cards, green-tint winner-row wash, empty/first-run state. Friends/Teams/Cups chips + Add-friend render only when the social/teams backends exist (conditional, degrade like gamesOperated). Drop Message (no messaging system).",
+          "prBoundary": "MonoProfile own-profile polish; social chips conditional.",
+          "dependsOn": [
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Social layer",
+      "goal": "Build the friends backend then the social screens (find, list, activity, notifications) — the entire layer is missing today.",
+      "rationale": "Cross-cutting gap: no friendships schema/queries. Every social CTA is a dead button until convex/friends.ts lands; verdicts require gating add-friend behind the backend + feature flag.",
+      "screens": [
+        "User search / find friends",
+        "Friends list",
+        "Activity feed (social / live)",
+        "Notifications"
+      ],
+      "issues": [
+        {
+          "title": "Friends backend (schema + convex/friends.ts)",
+          "type": "feature",
+          "priority": "P2",
+          "description": "New friendships/friendRequests tables + send/accept/decline/remove/getFriends/status mutations+queries + notifications source, cloud-auth-gated. Prerequisite for all social UI.",
+          "prBoundary": "Convex schema + functions + tests; no UI.",
+          "effort": "L"
+        },
+        {
+          "title": "Find friends screen (add CTA gated)",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Reskin MonoUserSearch: question prompts, empty/first-run, on-app vs invite-by-link segments, capsule Add (rendered-but-disabled behind flag until backend). Wire Add + Mutual/MVP chips live once friends.ts lands. Invite/QR sheet reuses the share component. Preserve the guest 'Start guest match' escape.",
+          "prBoundary": "MonoUserSearch reskin + FriendResultRow; Add gated.",
+          "dependsOn": [
+            "Friends backend (schema + convex/friends.ts)",
+            "Shared AvatarCircle + SportMedallion + LiveDot",
+            "Share live link QR sheet reskin"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Friends list screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Requests/Online/All with green-wash request card + Skip/Confirm accept flow, question copy, empty/signed-out states. Resolve the CTA shadow contradiction (hard black offset OR glow, not both); keep boxy filter to avoid soft-signal pile-up. Live-ring/Watch deferred to a gated phase (no live signal). Requests are the single source of truth vs Notifications.",
+          "prBoundary": "MonoFriends page + nav entry; live-ring deferred.",
+          "dependsOn": [
+            "Friends backend (schema + convex/friends.ts)",
+            "Shared BottomTabNav + information-architecture consolidation",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "L"
+        },
+        {
+          "title": "Activity feed screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Pinned live hero + friend rows, breathing dot, avatar cluster, gold milestone rows, empty state. Ship route + CSS primitives against a skip-query/dev-mock (no fake data); populate once feed/friends queries + spectator Watch destination exist. Build primitives inline (extract on 2nd consumer).",
+          "prBoundary": "MonoActivityFeed + empty state + MonoHome-entry; data wired later.",
+          "dependsOn": [
+            "Friends backend (schema + convex/friends.ts)",
+            "Public per-match snapshot query + share-token guard"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Notifications screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Time-grouped brutalist feed with per-type inline actions (accept/decline/join/watch stubbed optimistic for now), breathing live dot, gold milestones, unread dots, empty state. Bell entry in the global-nav header (MonoHome is orphaned); add 'notifications' to APP_SHELL_PREFIXES. Requests reconcile with Friends as one source.",
+          "prBoundary": "MonoNotifications + route + APP_SHELL_PREFIXES + header bell.",
+          "dependsOn": [
+            "Friends backend (schema + convex/friends.ts)",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "title": "Teams management",
+      "goal": "Build the missing teams flow (data model, My teams, Create, Add players, Roster, empty state) on the existing Convex teams table.",
+      "rationale": "Cross-cutting gap: teams tables exist but no membership model/functions and no screens. Verdicts require landing the model+queries before any leaf screen and gating anon users behind sign-in-to-sync.",
+      "screens": [
+        "My teams (grouped)",
+        "Create team (limits)",
+        "Add players (sources)",
+        "Roster (squad & bench)",
+        "Teams empty state"
+      ],
+      "issues": [
+        {
+          "title": "Team membership data model + convex/teams functions",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Extend schema (members/role/jersey/captain/order/bench) + listMyTeams (grouped, matchCount aggregation) + createTeam + roster CRUD mutations, cloud-auth-gated with local/anon fallback or explicit sign-in gate. Prerequisite trunk for all team screens.",
+          "prBoundary": "Schema + convex/teams functions + useTeams hook; no screen.",
+          "effort": "L"
+        },
+        {
+          "title": "My teams grouped list",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Sport-grouped team cards (circular crest, caption chips, matchCount numeral, gold MOST-PLAYED=all-complete not champion), capsule sport filter, FAB/CTA, empty state. Nested under Account (IA), stub tap→detail / FAB→create until those land.",
+          "prBoundary": "MonoTeams list consuming model.",
+          "dependsOn": [
+            "Team membership data model + convex/teams functions",
+            "Shared AvatarCircle + SportMedallion + LiveDot",
+            "Shared EmptyState component (extract from MonoStatistics)"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Create team screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Brutalist form + circular crest picker + live char/roster-capacity counters framed as coaching (not errors), disabled-CTA reason. Drop the empty capacity meter (no players here). CoachChip/TeamCrestPicker components. Captain gold token deferred.",
+          "prBoundary": "MonoCreateTeam + TeamCrestPicker + route; stub add-players target.",
+          "dependsOn": [
+            "Team membership data model + convex/teams functions",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Add players sources screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Core shell (header, capsule PlayerChips re-skinned brutalist, SourceCard, Search + Guest sources, commit CTA) first; Friends/Recent scrollers deferred to backend queries; Invite/QR sheet + qrcode dep a separate PR. Guest-vs-cloud dedup merge rule in the selected tray.",
+          "prBoundary": "MonoAddPlayers core + SourceCard + PlayerChip upgrade.",
+          "dependsOn": [
+            "Team membership data model + convex/teams functions",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Roster squad & bench screen",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Squad/Bench borderless hairline rows (not soft cards), circular avatars, gold captain ring, capsule filter, PlayerManageSheet (move via sheet, NOT drag in v1), reduced-opacity bench, add-player FAB, empty state. Gold captain token hard-gated.",
+          "prBoundary": "MonoRoster + RosterPlayerRow + PlayerManageSheet; no drag.",
+          "dependsOn": [
+            "Team membership data model + convex/teams functions",
+            "Shared MonoSheet bottom-sheet primitive",
+            "Shared AvatarCircle + SportMedallion + LiveDot"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Teams empty state",
+          "type": "feature",
+          "priority": "P3",
+          "description": "First-run Teams hero (avatar-cluster medallion, serif headline, capsule CTAs) via shared EmptyState. CTAs stub/disable until Create/Add land; nav consolidation is separate. Constrain gold to one accent.",
+          "prBoundary": "MonoTeams empty branch consuming EmptyState.",
+          "dependsOn": [
+            "Shared EmptyState component (extract from MonoStatistics)"
+          ],
+          "effort": "S"
+        }
+      ]
+    },
+    {
+      "title": "Utility, legal & cleanup",
+      "goal": "Reconcile orphans, warm the static/utility surfaces (legal, 404 recovery), and build the internal design-system lab.",
+      "rationale": "Low-risk, mostly self-contained; legacy deletion is a pro-brutalist token-cleanup move; showcases must sequence after tokens + a scorer land.",
+      "screens": [
+        "Legal (privacy/terms/contact)",
+        "Route recovery / 404",
+        "Dev showcases",
+        "Legacy orphans (unwired)"
+      ],
+      "issues": [
+        {
+          "title": "Delete legacy orphans + harden NewUserFlow shadow",
+          "type": "chore",
+          "priority": "P2",
+          "description": "Delete verified-dead MonoHome/MonoSetup/MonoSportHome_TABBED (grep-clean, no importers/tests). Do NOT delete NewUserFlow (live at /play). Fix NewUserFlow preview cards to use t.cardShadow (var(--shadow-2xs)) instead of the hardcoded blurred shadow. File a follow-up to port _TABBED category-tabs into live MonoSportHome.",
+          "prBoundary": "Three deletions + one-line shadow token fix.",
+          "effort": "S"
+        },
+        {
+          "title": "Route recovery / 404 MonoFallbackScreen",
+          "type": "feature",
+          "priority": "P2",
+          "description": "Shared brutalist recovery family: boxy hard-shadow card + circular emblem + clamp() 404 hero + capsule escape; migrate hardcoded #888/#111/#666 to --se-color-ink-muted etc. ErrorBoundary stays design-agnostic (CSS classes only, does NOT import the mono JSX — resolve the spec contradiction). Compact/embedded variant for TournamentNotFound. Neutral CTA on crash, green only on benign 404. Render optional nav outside the crash subtree.",
+          "prBoundary": "MonoFallbackScreen + 3 consumers via CSS; ErrorBoundary decoupled.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "M"
+        },
+        {
+          "title": "Legal pages blend",
+          "type": "feature",
+          "priority": "P3",
+          "description": "Segmented capsule Privacy/Terms/Contact switcher, plain-language intro lines, rounded card around square-hairline sections, capsule PLAY NOW/Email-support, green-tint contact panel via --se-color-action-soft token (add actionSoft to landingTokenBridge, not raw hex). Keep bottom-nav OUT (legal is in PUBLIC_SHELL_PREFIXES — enabling nav is a separate shell change).",
+          "prBoundary": "LegalPage.jsx single-file (+ token bridge key).",
+          "dependsOn": [
+            "Shared CaptionChip / CoachChip + capsule-CTA classes"
+          ],
+          "effort": "S"
+        },
+        {
+          "title": "Dev showcases hub + ShowcaseFrame",
+          "type": "feature",
+          "priority": "P3",
+          "description": "PR-A (now): ShowcaseHub + shared ShowcaseFrame chrome + rewire the 4 orphan showcase pages off ad-hoc hex, fix the dead back-link. DesignSystemExplainer that documents tokens + embeds real scorer surfaces is PR-B, gated on tokens + at least one upgraded scorer landing (drop the 'never drifts' guarantee if it must re-mock).",
+          "prBoundary": "PR-A hub+frame+reframe; internal-only, proportionate effort.",
+          "dependsOn": [
+            "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)"
+          ],
+          "effort": "M"
+        }
+      ]
+    }
+  ],
+  "prOrder": [
+    "Blend design tokens (gold, green-wash, warm/glow shadows, breathing-pulse keyframe, capsule/circle radii)",
+    "Shared MonoSheet bottom-sheet primitive",
+    "Shared CaptionChip / CoachChip + capsule-CTA classes",
+    "Shared SegmentedToggle (capsule segmented control)",
+    "Shared AvatarCircle + SportMedallion + LiveDot",
+    "Shared EmptyState component (extract from MonoStatistics)",
+    "Shared BottomTabNav + information-architecture consolidation",
+    "Delete legacy orphans + harden NewUserFlow shadow",
+    "Extract MonoQuickSetup from MonoQuickMatch (lift, zero visual change)",
+    "Shared coaching-status selectors (per-sport)",
+    "Guest landing blend (hero pills, live-preview card, sport medallions)",
+    "Home first-run empty (EmptyDashboard upgrade)",
+    "Dashboard Live-now band (self active sessions)",
+    "Login blend (capsule OAuth/guest CTAs, question copy)",
+    "Signup blend (brand medallion, capsule CTAs, SSO loading state)",
+    "Onboarding wizard reskin + celebratory finish (fix #0066ff debt)",
+    "Play hub blend (capsule mode toggle, badges, chips)",
+    "Sport home blend + delete _TABBED duplicate",
+    "Match setup restyle (on extracted MonoQuickSetup)",
+    "Customize & rules capsule controls (MonoSegment/MonoStepper/RuleSummaryChip)",
+    "Cricket toss interstitial (Setup → Live)",
+    "Cricket LO scorer visual blend",
+    "Cricket test scorer visual blend",
+    "Tennis scorer visual blend (Part A)",
+    "Sets scorer visual blend (prompt, per-set strip, coaching chip)",
+    "Goals scorer visual blend (Mode A/B + quick-button chips)",
+    "Generic live game rebuild on arena system",
+    "Undo confirmation feedback (shared UndoControl + single toast slot)",
+    "Team-only mode (flag + gate + toggle + prompt caption)",
+    "MonoMatchResult shared screen + verdict helper (Sets wiring)",
+    "Result rollout (Goals/Tennis/Cricket + MonoLiveGame)",
+    "MonoScorecard shared screen",
+    "Land live-broadcast stack to production",
+    "Public per-match snapshot query + share-token guard",
+    "Share live link QR sheet reskin",
+    "Tournament match fixture ribbon + advance-to-final finish",
+    "Shared spectator primitives (LiveBadge, ShareLiveSheet, MomentumStrip, SpectatorCaptionChip)",
+    "Spectator — tennis (read-only screen)",
+    "Player-stats + roster-in-scoring data model",
+    "AppAttributionSheet primitive + one sport (goals who-scored)",
+    "Persisted per-point/ball event log (cross-engine)",
+    "History screen blend (I-086 filter, I-053 loading)",
+    "History empty state (medallion + CTA)",
+    "Match detail dedicated screen (from history)",
+    "Statistics overview blend",
+    "Players leaderboard (team-ranked)",
+    "Player profile career visual slice",
+    "Match graphs momentum viz (set-level fallback)",
+    "Team stats screen + stable team-key + aggregation util",
+    "Tournament dispatch shell extraction + blue-to-token migration",
+    "Tournament list blend",
+    "Standings shared config-driven table + column correctness",
+    "Tournament setup reskin",
+    "Tournament dispatch HiFi blend (bracket, champion, chips)",
+    "Bracket tree view",
+    "Schedule / fixtures screen (round-axis)",
+    "Dark mode token system (.dark oklch overrides)",
+    "Settings / More screen core",
+    "Your profile account (social row, circle avatar)",
+    "Wire se_settings into scorers + share sheet",
+    "Route recovery / 404 MonoFallbackScreen",
+    "Friends backend (schema + convex/friends.ts)",
+    "Find friends screen (add CTA gated)",
+    "Friends list screen",
+    "Notifications screen",
+    "Activity feed screen",
+    "Dashboard social band (activity teaser, friends-live, watch, share)",
+    "Team membership data model + convex/teams functions",
+    "My teams grouped list",
+    "Create team screen",
+    "Add players sources screen",
+    "Roster squad & bench screen",
+    "Teams empty state",
+    "Spectator — other sports (sets/goals engines)",
+    "Spectator — football",
+    "Spectator — cricket (backend fields + scorebug + chase chips + this-over)",
+    "Spectator momentum / graphs tab",
+    "Attribution rollout (cricket/tennis/sets) + confirm toggle + undo revert",
+    "Share result card sheet (static render + shareFiles)",
+    "Share result card image export (rasterization)",
+    "Legal pages blend",
+    "Dev showcases hub + ShowcaseFrame"
+  ],
+  "crossCutting": [
+    "Shared token + component layer is the keystone: gold, green-wash (#e7f4ee), warm-green-black + green-glow shadows, capsule/circle radii and the breathing-pulse keyframe must be defined ONCE (derived from oklch via color-mix so they work in dark/theme) plus shared MonoSheet, CaptionChip, SegmentedToggle, AvatarCircle/SportMedallion/LiveDot, EmptyState. Every screen consumes these; nothing forks per-screen hex or keyframes.",
+    "Real-time / live / spectator infrastructure is missing from production (LiveBroadcastBar, ShareLiveMatch, LiveMatchCard, convex/live.ts, watchUrl exist only in worktrees). Resolve the canonical worktree, land it to src/ + convex/, then add a public per-match snapshot query + share-token guard (respecting §7.2 minimization + youth name-hiding) before ANY spectator/share/live-feed screen.",
+    "Shared coaching-status selectors (per-sport) must be a single util consumed by every scorer chip, spectator screen and the dashboard live band so labels can't drift; presentational chips are fed labels and never embed sport rules.",
+    "Player-stats + roster-in-scoring data model and a persisted per-point/ball event log are prerequisite backends: attribution sheets, momentum/point-by-point viz, spectator graphs, and team-stats depth are all hollow until these land (draftState is discarded on completion today; scorers track team scores only).",
+    "Social layer (friends schema + convex/friends.ts) and Teams membership model + convex/teams functions are prerequisite backends; every add-friend CTA and team screen is a dead button until they exist and must be feature-flagged/cloud-auth-gated with anon sign-in-to-sync fallbacks.",
+    "Bottom-nav information architecture (Home·Play·History·Friends/More) is cross-cutting: it reworks isActive/isAppShellPath/navItems across every shell screen and fixes I-066 Stats-vs-Statistics; screens must degrade gracefully until it lands and it should NOT be built inside any per-screen PR.",
+    "Monolith decomposition first: extract MonoQuickSetup from MonoQuickMatch (I-085) as a pure lift before restyling Setup/Toss/Customize; treat Tournament shell extraction + ~113-instance blue→--se-* migration as its own no-visual PR before the tournament blend.",
+    "Dark mode is declared-but-unused (@custom-variant only, zero .dark rules) — author the .dark oklch token set as its own issue so the Settings Appearance toggle isn't a dead switch; ship the toggle disabled/coming-soon until it lands, and wire the inert Confirm-wicket/goal + Auto-share toggles into their consumers in a separate PR.",
+    "Match-end flow (Result → Scorecard → Share card) is entirely missing; build the sport-agnostic MonoMatchResult with a lineScores[] contract first, wire Sets as reference, then roll out — MonoLiveGame is a different session engine and rolls out separately.",
+    "Attribution capture, share-card rasterization, momentum charts, and share/QR sheets are shared primitives repeatedly requested across scorers/spectator/history — build each ONCE (AppAttributionSheet, shareCardImage/canvas, MomentumChart, MonoShareLiveSheet) and consume, never fork per screen.",
+    "Empty/first-run states and team-only (anonymous, no-roster) casual mode are cross-cutting UX gaps: reuse the shared EmptyState everywhere and make team-only the single OFF gate (useTeamOnlyMode) that future attribution shares.",
+    "Verify open status in the kernel before re-fixing design-debt (I-044 tiny fonts, I-047 CTA feedback, I-049 disabled-look, I-051/I-052 non-uniform score buttons, I-068 ad-hoc green 4/6, I-053 perpetual-loading, I-086 filter-heavy history) — several already have fix-comments shipped; fold the still-open ones into their screen issue rather than a separate pass.",
+    "Numerous verified factual slips in the source designs must be honored at build time (many 'keeps brutalist' hard-offset shadows do NOT exist today and are new work; radius.pill=999px not 99px; --shadow-md is not zero-blur; several 'reuse' claims target absent components/tests) — treat invented preservation as new work and write characterization tests before extracting untested logic (e.g. tennis derivation helpers)."
+  ]
+}

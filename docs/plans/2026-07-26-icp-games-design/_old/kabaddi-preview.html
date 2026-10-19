@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kabaddi — design preview</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from the refined cricket screens
+   (design1-mono: brutalist record × HiFi-soft). No new colours.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Merriweather, ui-serif, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: color-mix(in oklch, var(--muted-foreground) 62%, var(--background));
+  --se-color-line: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-motion-standard: 250ms;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 32px 20px 60px;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.mono { font-family: var(--se-font-mono); font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ============================================================
+   PREVIEW page chrome
+   ============================================================ */
+.page-head { max-width: 1300px; margin: 0 auto 30px; }
+.page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.01em; }
+.page-title .em { color: var(--se-color-ink-muted); font-weight: 700; }
+.page-sub { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-top: 8px; }
+.page-sub .g { color: var(--primary); }
+
+.frames { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; }
+.frame-col { display: flex; flex-direction: column; gap: 11px; width: 380px; }
+.frame-cap { display: flex; align-items: baseline; justify-content: space-between; font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--se-color-ink); padding: 0 4px; }
+.frame-cap .n { color: var(--se-color-ink-faint); font-weight: 700; }
+.frame { position: relative; width: 380px; min-height: 760px; border: 1.5px solid var(--se-color-line); border-radius: 24px; background: var(--se-color-canvas); box-shadow: 6px 6px 0 0 var(--se-color-ink); padding: 13px 13px calc(13px + env(safe-area-inset-bottom,0px)); display: flex; flex-direction: column; overflow: hidden; }
+
+/* ============================================================
+   Shared component grammar (verbatim tokens / cricket mono.css)
+   ============================================================ */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+.topbar .grp { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.topbar .actions { display: flex; align-items: center; gap: 8px; }
+.tb-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+.ico { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; cursor: pointer; }
+.badge-live { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border-radius: var(--radius); background: var(--se-color-action-soft); color: var(--se-color-action); }
+.badge-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-action); }
+.live-red { display: inline-flex; align-items: center; gap: 5px; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-danger); }
+.live-red .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-danger); }
+
+/* ---------- the black record hero (State A & State B) ---------- */
+.hero { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); overflow: hidden; }
+.hero-eyebrow { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px 0; }
+.hero-eyebrow .t { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.hero-eyebrow .live-red { color: color-mix(in oklch, var(--se-color-danger) 78%, var(--se-color-inverse)); }
+
+.board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px 14px 4px; }
+.side { min-width: 0; }
+.side.r { text-align: right; }
+.side .nm { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.09em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); display: flex; align-items: center; gap: 6px; }
+.side.r .nm { justify-content: flex-end; }
+.side .raidmark { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.06em; color: var(--primary); }
+.side .raidmark.dod { color: var(--se-color-warning); }
+.side .sc { font-family: var(--se-font-mono); font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.side .sc.lead { color: var(--primary); }
+
+/* raid clock — centre ring */
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ring { display: block; }
+.ring .rt { font-family: var(--se-font-mono); font-weight: 800; fill: var(--se-color-inverse); }
+.ring-lbl { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); }
+/* compact boxed clock (State A) */
+.clockbox { display: inline-flex; flex-direction: column; align-items: center; }
+.clockbox .n { font-family: var(--se-font-mono); font-size: 1.5rem; font-weight: 800; line-height: 1; padding: 3px 10px; border: 1px solid color-mix(in oklch, var(--se-color-inverse) 34%, transparent); border-radius: 8px; }
+.clockbox .l { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); margin-top: 3px; }
+
+/* dolls — 7 pips / side */
+.dolls-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 8px; padding: 4px 14px 2px; }
+.dolls { display: flex; gap: 5px; }
+.dolls.r { justify-content: flex-end; }
+.doll { width: 11px; height: 11px; border-radius: 50%; background: var(--se-color-inverse); flex: none; }
+.doll.out { background: transparent; border: 1px dashed color-mix(in oklch, var(--se-color-inverse) 42%, transparent); }
+.doll.big { width: 15px; height: 15px; }
+.onmat { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); margin-top: 5px; }
+.onmat.r { text-align: right; }
+
+.star-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px 14px 2px; }
+.star { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; color: color-mix(in oklch, var(--se-color-inverse) 78%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.star.r { text-align: right; }
+.star .k { color: var(--primary); font-weight: 800; }
+.star b { color: var(--se-color-inverse); }
+
+.hero-ctx { margin-top: 6px; padding: 8px 14px 10px; border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); text-align: center; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; }
+.hero-ctx.dod { color: var(--se-color-warning); }
+.hero-ctx .clk { color: var(--se-color-inverse); }
+
+/* do-or-die band tint behind raiding side (warning-soft) */
+.band-dod { position: relative; }
+.band-dod::before { content: ''; position: absolute; inset: 8px auto 8px 8px; width: 42%; border-radius: 8px; background: color-mix(in oklch, var(--se-color-warning) 26%, transparent); pointer-events: none; }
+.band-dod > * { position: relative; }
+
+/* ============================================================
+   SCORER — last-raid narration, rare strip, Big-4
+   ============================================================ */
+.narr { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 9px 11px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 12px; background: var(--se-color-surface); }
+.narr .undo { flex: none; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); font-size: 1.15rem; cursor: pointer; }
+.narr .tx { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 600; line-height: 1.35; color: var(--se-color-ink-soft); }
+.narr .tx b { color: var(--se-color-ink); font-weight: 800; }
+
+/* rare zone — MULTI (inline-expanding) + SELF-OUT, one hairline strip */
+.rare-zone { margin-top: 8px; }
+.multi-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.rare { --line: color-mix(in oklch, var(--se-color-line) 46%, transparent); display: grid; grid-template-columns: 1fr 1fr; background-image: linear-gradient(to right, transparent, var(--line), transparent), linear-gradient(to right, transparent, var(--line), transparent); background-size: 100% 1px, 100% 1px; background-position: 0 0, 0 100%; background-repeat: no-repeat; }
+.rare-key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 46px; border: none; background: transparent; color: var(--se-color-ink-soft); font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; }
+.rare-key small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; color: var(--se-color-ink-faint); }
+.rare-key + .rare-key::before, .rare-key.self::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 56%; background: linear-gradient(to bottom, transparent, var(--line), transparent); }
+.rare-key .chev { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: var(--se-color-ink-faint); transition: transform 0.2s ease; }
+.multi-cb:checked ~ .rare .rare-key.multi .chev { transform: translateY(-50%) rotate(180deg); }
+.multi-cb:checked ~ .rare .rare-key.multi { color: var(--primary); }
+
+/* inline MULTI composer — opens in place, never a modal */
+.multi-panel { display: none; }
+.multi-cb:checked ~ .multi-panel { display: block; border: 1px solid color-mix(in oklch, var(--primary) 40%, var(--se-color-line)); border-top: none; border-radius: 0 0 12px 12px; background: color-mix(in oklch, var(--se-color-action-soft) 22%, var(--se-color-surface)); padding: 10px 12px 11px; }
+.multi-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.mc { flex: 1 1 auto; min-height: 38px; border: 1px solid color-mix(in oklch, var(--se-color-line) 38%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 6px 14px; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.mc.on { background: var(--se-color-ink); color: var(--se-color-inverse); border-color: var(--se-color-ink); }
+.mc.bon { color: var(--primary); border-color: color-mix(in oklch, var(--primary) 44%, var(--se-color-line)); }
+.multi-guard { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 9px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.multi-guard .sum b { color: var(--primary); font-weight: 800; }
+.multi-commit { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 10px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+
+/* Big-4 grid — bottom thumb zone, fills the column */
+.big4 { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.k4 { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: clamp(92px, 15vh, 118px); border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-mono); font-size: 1.625rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1; cursor: pointer; transition: background 120ms ease; }
+.k4 small { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; color: var(--se-color-ink-faint); }
+.k4:active { transform: translateY(1px); background: var(--accent); }
+.k4-touch, .k4-bonus { color: var(--primary); border-color: var(--primary); }
+.k4-bonus { background: color-mix(in oklch, var(--se-color-action-soft) 40%, var(--se-color-surface)); }
+.k4-touch small, .k4-bonus small { color: inherit; opacity: 0.82; }
+.k4-tackle { color: var(--se-color-danger); border-color: var(--se-color-danger); background: color-mix(in oklch, var(--se-color-danger-soft) 40%, var(--se-color-surface)); }
+.k4-tackle small { color: inherit; opacity: 0.82; }
+.k4-empty { color: var(--se-color-ink); }
+
+.scorer-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 11px; padding-top: 2px; font-family: var(--se-font-mono); font-size: 0.6875rem; }
+.scorer-footer .left { color: var(--primary); font-weight: 700; cursor: pointer; }
+.scorer-footer .right { color: var(--se-color-ink-muted); font-weight: 600; }
+.scorer-footer .right .go { color: var(--primary); }
+
+.spacer { flex: 1 1 0; min-height: 8px; }
+
+/* ============================================================
+   FLAT SCORER — elevations OFF (flat surfaces, hairline dividers,
+   soft radii). The card shadow is reserved for the read-only
+   boards (Frames 1 & 3), never the scorer's own surface/keys.
+   ============================================================ */
+.frame.scorer .hero,
+.frame.scorer .narr,
+.frame.scorer .k4,
+.frame.scorer .ico,
+.frame.scorer .badge-live,
+.frame.scorer .k4:active { box-shadow: none !important; }
+
+/* ============================================================
+   ⋯ MORE — bottom-sheet for rare / management actions
+   (Timeout · Sub · Correct last raid · Rosters · Setup · Share
+   · End half / End match). Merged off the hot surface.
+   ============================================================ */
+.sheet-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.sheet-backdrop { display: none; }
+.sheet-cb:checked ~ .sheet-backdrop { display: block; position: absolute; inset: 0; z-index: 40; background: color-mix(in oklch, black 42%, transparent); border-radius: 22px; }
+.menu-panel { display: none; }
+.sheet-cb:checked ~ .menu-panel { display: flex; flex-direction: column; gap: 11px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 50; padding: 8px 15px 16px; background: var(--se-color-surface); border-top: 1px solid var(--se-color-line); border-radius: 18px 18px 22px 22px; box-shadow: 0 -10px 30px -14px rgba(20,40,30,.5); }
+.sheet-grab { width: 36px; height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); margin: 2px auto 4px; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.sheet-title { font-size: 0.9375rem; font-weight: 700; }
+.sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
+.menu-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); margin-bottom: 6px; }
+.menu-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.menu-row .pill { flex: 1 1 auto; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); background: var(--se-color-surface); color: var(--se-color-ink); border-radius: 999px; padding: 7px 14px; font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.menu-actions { display: flex; gap: 8px; margin-top: 2px; }
+.menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
+
+/* ============================================================
+   LIVE spectator surface — tabs / now-card / momentum / feed
+   ============================================================ */
+.tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin: 12px 0; }
+.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
+
+.now-card { border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; margin-bottom: 13px; }
+.nc-head { padding: 7px 12px; background: color-mix(in oklch, var(--se-color-line) 5%, transparent); font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.nc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; font-family: var(--se-font-mono); font-size: 0.75rem; }
+.nc-row + .nc-row { border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.nc-row .who { font-family: var(--se-font-sans); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nc-row .who .dot { color: var(--primary); margin-right: 5px; }
+.nc-row .who .role { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-ink-faint); margin-right: 7px; }
+.nc-row .fig { color: var(--se-color-ink); font-weight: 700; white-space: nowrap; }
+.nc-row .fig .mut { color: var(--se-color-ink-muted); font-weight: 500; }
+.nc-mat { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.nc-mat b { color: var(--se-color-ink); }
+
+.mom-d { margin-bottom: 13px; border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); }
+.mom-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 9px 12px; }
+.mom-d > summary::-webkit-details-marker { display: none; }
+.mom-d > summary .mi { font-size: 0.9rem; }
+.mom-d > summary .r { margin-left: auto; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.mom-d > summary .r b { color: var(--se-color-ink); }
+.mom-d > summary .chev { color: var(--se-color-ink-muted); transition: transform 0.2s ease; }
+.mom-d[open] > summary .chev { transform: rotate(180deg); }
+.eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.mom { display: flex; align-items: flex-end; gap: 4px; height: 52px; padding: 2px 12px 12px; }
+.bar { flex: 1; background: color-mix(in oklch, var(--se-color-line) 16%, transparent); border-radius: 2px 2px 0 0; }
+.bar.hi { background: var(--primary); }
+.bar.wk { background: color-mix(in oklch, var(--se-color-danger) 80%, transparent); }
+.bar.now { background: transparent; border: 1px dashed color-mix(in oklch, var(--se-color-line) 40%, transparent); }
+
+.feed { margin-bottom: 13px; }
+.feed-hd { margin-bottom: 6px; }
+.moment { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.moment .ov { font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-faint); flex: none; width: 38px; padding-top: 1px; }
+.moment .tx { font-size: 0.8125rem; line-height: 1.35; }
+.moment .tx .g { color: var(--primary); font-weight: 800; }
+.moment .tx .d { color: var(--se-color-danger); font-weight: 800; }
+.moment .tx b { font-weight: 700; }
+
+.pres { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 6px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <div class="page-title">Kabaddi <span class="em">— design preview</span></div>
+  <div class="page-sub">design1-mono · brutalist record × hifi-soft · <span class="g">Warriors 34 – Titans 29</span> · H2 08:12 · do-or-die armed</div>
+</div>
+
+<div class="frames">
+
+  <!-- ============================================================
+       FRAME 1 — MAIN SCOREBOARD (glanceable record, room-readable)
+       ============================================================ -->
+  <div class="frame-col">
+    <div class="frame-cap"><span>Main Scoreboard</span><span class="n">read across a room</span></div>
+    <div class="frame">
+      <div class="topbar">
+        <div class="grp">
+          <span class="ico" aria-hidden="true">&#8249;</span>
+          <div style="min-width:0;">
+            <div class="tb-title">Warriors vs Titans</div>
+            <div class="tb-sub">Sunday Cup &middot; Semi-final</div>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="live-red"><span class="d"></span>Live</span>
+          <span class="ico" aria-hidden="true">&#8599;</span>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="hero">
+        <div class="hero-eyebrow">
+          <span class="t">H2 &middot; Standard mat &middot; 7-a-side</span>
+          <span class="live-red"><span class="d"></span>Live</span>
+        </div>
+
+        <div class="board band-dod">
+          <div class="side">
+            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="sc lead" style="font-size:3.6rem;">34</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring" width="66" height="66" viewBox="0 0 66 66" aria-label="Raid clock 18 seconds">
+              <circle cx="33" cy="33" r="28" fill="none" stroke="color-mix(in oklch, var(--se-color-inverse) 20%, transparent)" stroke-width="4"/>
+              <circle cx="33" cy="33" r="28" fill="none" stroke="var(--primary)" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="70.4" transform="rotate(-90 33 33)"/>
+              <text class="rt" x="33" y="34" text-anchor="middle" dominant-baseline="middle" font-size="19">18</text>
+            </svg>
+            <span class="ring-lbl">Raid</span>
+          </div>
+          <div class="side r">
+            <div class="nm">TITANS</div>
+            <div class="sc" style="font-size:3.6rem;">29</div>
+          </div>
+        </div>
+
+        <div class="dolls-row">
+          <div>
+            <div class="dolls">
+              <span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big out"></span><span class="doll big out"></span>
+            </div>
+            <div class="onmat">5 on mat</div>
+          </div>
+          <div></div>
+          <div>
+            <div class="dolls r">
+              <span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span><span class="doll big"></span>
+            </div>
+            <div class="onmat r">7 on mat</div>
+          </div>
+        </div>
+
+        <div class="star-row">
+          <div class="star"><span class="k">&#9733;R</span> P. Narwal <b>9</b></div>
+          <div class="star r">N. Kumar <b>4</b> <span class="k">&#9733;D</span></div>
+        </div>
+
+        <div class="hero-ctx dod">DO-OR-DIE &middot; 3RD EMPTY</div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="scorer-footer">
+        <span class="left">Open scorecard &rsaquo;</span>
+        <span class="right">Share live <span class="go">&#8599;</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FRAME 2 — LEAN SCORER (flat, thumb-zone, Big-4 pinned low)
+       ============================================================ -->
+  <div class="frame-col">
+    <div class="frame-cap"><span>Lean Scorer</span><span class="n">one question / raid</span></div>
+    <div class="frame scorer">
+      <input type="checkbox" id="kMore" class="sheet-cb" aria-hidden="true">
+
+      <div class="topbar">
+        <div class="grp">
+          <span class="ico" aria-hidden="true">&#8249;</span>
+          <div style="min-width:0;">
+            <div class="tb-title">Sunday Cup &middot; Semi-final</div>
+            <div class="tb-sub">H2 &middot; 08:12 &middot; guided</div>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="badge-live"><span class="d"></span>Live</span>
+          <label for="kMore" class="ico" aria-label="More">&#8943;</label>
+        </div>
+      </div>
+
+      <!-- pinned compact board (State A) — never scrolls -->
+      <div class="hero">
+        <div class="board band-dod" style="padding-top:12px;">
+          <div class="side">
+            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="sc lead" style="font-size:2rem;">34</div>
+          </div>
+          <div class="clockbox">
+            <span class="n">18</span>
+            <span class="l">Raid</span>
+          </div>
+          <div class="side r">
+            <div class="nm">TITANS</div>
+            <div class="sc" style="font-size:2rem;">29</div>
+          </div>
+        </div>
+        <div class="dolls-row">
+          <div>
+            <div class="dolls">
+              <span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll out"></span><span class="doll out"></span>
+            </div>
+            <div class="onmat">5 on mat</div>
+          </div>
+          <div></div>
+          <div>
+            <div class="dolls r">
+              <span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span>
+            </div>
+            <div class="onmat r">7 on mat</div>
+          </div>
+        </div>
+        <div class="hero-ctx dod">DO-OR-DIE &middot; 3RD EMPTY</div>
+      </div>
+
+      <!-- last-raid narration + fat Undo -->
+      <div class="narr">
+        <span class="undo" aria-hidden="true">&#8617;</span>
+        <span class="tx"><b>Tackle</b> — Titans +1, raider out &middot; Warriors down to <b>5 on mat</b>. Possession &#8594; Warriors <b>(do-or-die)</b>.</span>
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- rare zone: MULTI expands inline in place · SELF-OUT · hairline strip -->
+      <div class="rare-zone">
+        <input type="checkbox" id="multiCb" class="multi-cb" aria-hidden="true">
+        <div class="rare">
+          <label for="multiCb" class="rare-key multi">MULTI<small>multi-point raid</small><span class="chev">&#9662;</span></label>
+          <button class="rare-key self" type="button">SELF-OUT<small>out of bounds</small></button>
+        </div>
+        <div class="multi-panel">
+          <div class="multi-opts">
+            <button class="mc on" type="button">+2</button>
+            <button class="mc" type="button">+3</button>
+            <button class="mc" type="button">+4</button>
+            <button class="mc" type="button">+5</button>
+            <button class="mc bon" type="button">+ Bonus</button>
+          </div>
+          <div class="multi-guard">
+            <span class="sum">Touch &times;2 = <b>+2 raiders &middot; 2 back</b></span>
+            <button class="multi-commit" type="button">Add raid</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Big-4 semantic grid — thumb zone -->
+      <div class="big4">
+        <button class="k4 k4-touch" type="button">TOUCH<small>+1 &middot; 1 OUT</small></button>
+        <button class="k4 k4-tackle" type="button">TACKLE<small>RAIDER OUT &middot; +1</small></button>
+        <button class="k4 k4-bonus" type="button">BONUS<small>+1</small></button>
+        <button class="k4 k4-empty" type="button">EMPTY<small>0</small></button>
+      </div>
+
+      <div class="scorer-footer">
+        <span class="left">Full scorecard &rsaquo;</span>
+        <span class="right">Share live <span class="go">&#8599;</span></span>
+      </div>
+
+      <!-- ⋯ More bottom-sheet (rare / management) -->
+      <label for="kMore" class="sheet-backdrop" aria-hidden="true"></label>
+      <div class="menu-panel" role="menu">
+        <div class="sheet-grab"></div>
+        <div class="sheet-head"><span class="sheet-title">Match options</span><label for="kMore" class="sheet-x" aria-label="Close">&#10005;</label></div>
+        <div>
+          <span class="menu-lbl">Fix</span>
+          <div class="menu-row"><button class="pill">Correct last raid</button></div>
+        </div>
+        <div>
+          <span class="menu-lbl">Manage</span>
+          <div class="menu-row">
+            <button class="pill">Timeout</button>
+            <button class="pill">Substitution</button>
+            <button class="pill">Add / edit rosters</button>
+          </div>
+        </div>
+        <div>
+          <span class="menu-lbl">Match</span>
+          <div class="menu-row">
+            <button class="pill">Edit setup</button>
+            <button class="pill">Share live &#8599;</button>
+          </div>
+        </div>
+        <div class="menu-actions">
+          <button class="menu-end">End half</button>
+          <button class="menu-end danger">End match</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FRAME 3 — LIVE (spectator surface: hero + tabs + LIVE body)
+       ============================================================ -->
+  <div class="frame-col">
+    <div class="frame-cap"><span>Live</span><span class="n">watch experience</span></div>
+    <div class="frame">
+      <div class="topbar">
+        <div class="grp">
+          <span class="ico" aria-hidden="true">&#8249;</span>
+          <div style="min-width:0;">
+            <div class="tb-title">Sunday Cup &middot; Semi-final</div>
+            <div class="tb-sub">Warriors vs Titans</div>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="live-red"><span class="d"></span>Live</span>
+          <span class="ico" aria-hidden="true">&#8599;</span>
+        </div>
+      </div>
+
+      <!-- State-B hero (the record) -->
+      <div class="hero">
+        <div class="board band-dod" style="padding-top:12px;">
+          <div class="side">
+            <div class="nm">WARRIORS <span class="raidmark dod">&#9656; DO-OR-DIE</span></div>
+            <div class="sc lead" style="font-size:2.6rem;">34</div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring" width="56" height="56" viewBox="0 0 66 66" aria-label="Raid clock 18 seconds">
+              <circle cx="33" cy="33" r="28" fill="none" stroke="color-mix(in oklch, var(--se-color-inverse) 20%, transparent)" stroke-width="4"/>
+              <circle cx="33" cy="33" r="28" fill="none" stroke="var(--primary)" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="70.4" transform="rotate(-90 33 33)"/>
+              <text class="rt" x="33" y="34" text-anchor="middle" dominant-baseline="middle" font-size="19">18</text>
+            </svg>
+            <span class="ring-lbl">Raid</span>
+          </div>
+          <div class="side r">
+            <div class="nm">TITANS</div>
+            <div class="sc" style="font-size:2.6rem;">29</div>
+          </div>
+        </div>
+        <div class="dolls-row">
+          <div>
+            <div class="dolls">
+              <span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll out"></span><span class="doll out"></span>
+            </div>
+            <div class="onmat">5 on mat</div>
+          </div>
+          <div></div>
+          <div>
+            <div class="dolls r">
+              <span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span><span class="doll"></span>
+            </div>
+            <div class="onmat r">7 on mat</div>
+          </div>
+        </div>
+        <div class="star-row">
+          <div class="star"><span class="k">&#9733;R</span> P. Narwal <b>9</b></div>
+          <div class="star r">N. Kumar <b>4</b> <span class="k">&#9733;D</span></div>
+        </div>
+        <div class="hero-ctx dod">DO-OR-DIE &middot; 3RD EMPTY</div>
+      </div>
+
+      <div class="tabs">
+        <span class="tab on">Live</span>
+        <span class="tab">Raid map</span>
+        <span class="tab">Scorecard</span>
+        <span class="tab">Info</span>
+      </div>
+
+      <!-- (a) NOW ON THE MAT -->
+      <div class="now-card">
+        <div class="nc-head">Now on the mat</div>
+        <div class="nc-row">
+          <span class="who"><span class="dot">&#9679;</span><span class="role">Raiding</span>P. Narwal</span>
+          <span class="fig">RAID 9 &middot; <span class="mut">SR 71%</span></span>
+        </div>
+        <div class="nc-row">
+          <span class="who"><span class="role">Defence</span>N. Kumar</span>
+          <span class="fig">R-corner &middot; <span class="mut">4 tackles</span></span>
+        </div>
+        <div class="nc-mat"><span>On mat</span><span><b>Warriors 5</b> &middot; <b>Titans 7</b></span></div>
+      </div>
+
+      <!-- (b) MOMENTUM — collapsed behind an icon toggle -->
+      <details class="mom-d">
+        <summary><span class="mi">&#128202;</span><span class="eyebrow">Momentum &middot; net pts / 2-min</span><span class="r">RAIDS <b>41</b> &middot; ALL-OUTS <b>2</b></span><span class="chev">&#9662;</span></summary>
+        <div class="mom">
+          <div class="bar" style="height:40%"></div><div class="bar hi" style="height:66%"></div>
+          <div class="bar" style="height:32%"></div><div class="bar wk" style="height:52%"></div>
+          <div class="bar hi" style="height:88%"></div><div class="bar" style="height:44%"></div>
+          <div class="bar hi" style="height:74%"></div><div class="bar wk" style="height:60%"></div>
+          <div class="bar hi" style="height:96%"></div><div class="bar now" style="height:46%"></div>
+        </div>
+      </details>
+
+      <!-- (c) KEY RAIDS feed -->
+      <div class="feed">
+        <div class="feed-hd eyebrow">Key raids</div>
+        <div class="moment"><span class="ov">08:12</span><span class="tx"><span class="g">SUPER RAID</span> Narwal &times;3 — bonus + 2 touches, <b>Titans &#8594; 4</b></span></div>
+        <div class="moment"><span class="ov">07:40</span><span class="tx"><span class="d">ALL OUT</span> Titans emptied — <b>Warriors +2</b>, mat re-set 7&ndash;7</span></div>
+        <div class="moment"><span class="ov">06:55</span><span class="tx"><span class="g">SUPER TACKLE</span> N. Kumar stops Narwal (3 on mat) — <b>+2</b></span></div>
+        <div class="moment"><span class="ov">06:20</span><span class="tx"><span class="d">DO-OR-DIE &#10007;</span> empty raid — <b>Titans +1</b></span></div>
+      </div>
+
+      <!-- (d) presence -->
+      <div class="pres">
+        <span>&#128065; 312 watching &middot; &#128293; 41</span>
+        <span class="follow">Following &#10003;</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1105 @@
+[
+  {
+    "journey": "activation",
+    "persona": "first-time signed-out visitor",
+    "trace": {
+      "goal": "Understand the app and score a first volleyball match as a first-time signed-out visitor.",
+      "persona": "First-time signed-out visitor (guest), no account, arrives cold at the marketing site.",
+      "journey": "Reality diverges from the anchor path: there is NO onboarding/auth step on the critical path. Root \"/\" → AppEntryRoute → getAppEntryTarget() sends an unauthenticated guest to /marketing (MonoLanding). From there the guest goes landing → Play hub → sport-home grid → Quick setup → live scorer with ZERO auth gate. /play is a bare Route; :sport/quick is wrapped only in SportRouteGuard (validates the sport slug, not identity); the \"protected scoring\" logic in mobile/backButton.js is a leave-the-match confirm dialog, not a sign-in wall. The guest's match is created and saved locally (MonoQuickMatch.jsx:692 handles the !isAuthenticated branch; :716 sets sync:'idle'). So \"score a first match\" is genuinely friction-free and no-signup — a real strength. But the journey has holes at BOTH bookends: the HiFi-intended first-run Onboarding→Home(empty) is skipped entirely (Home first-run empty state is currentState=missing), and the match ends on a cliff because the Result/FULL TIME screen is currentState=missing — no celebratory summary, no share card, no rematch. The \"understand the app\" half is carried solely by the marketing landing, never reinforced in-app. Core scoring works in ~4 taps; the surrounding activation loop is unfinished.",
+      "steps": [
+        {
+          "screen": "Guest landing — /marketing (MonoLanding.jsx → landing/GuestLanding.jsx)",
+          "action": "Read hero + how-it-works + sport grid; tap the primary CTA 'START VOLLEYBALL' (or 'START SCORING' / 'CHOOSE SPORT'). CTAs resolve via sportPlayPath() to /play?sport=<id>.",
+          "screen_note": "This is where 'understand the app' happens — the only explainer surface.",
+          "transitionTo": "/play?sport=volleyball",
+          "friction": "Hero rotating CTA AND a full sport grid both let you pick a sport; the choice you make here is not final — the very next screen re-asks it."
+        },
+        {
+          "screen": "Play hub — /play (MonoPlayHub.jsx → renders MonoSportHome.jsx grid in default Browse mode)",
+          "action": "Sport is highlighted from ?sport=volleyball, but you still tap the 'Quick ▸' button on the volleyball card (navigate(`/${sport.id}/quick`)).",
+          "transitionTo": "/volleyball/quick",
+          "friction": "The whole 14-sport grid is shown again even though you already picked volleyball on the landing — a redundant re-pick. A Guided/Browse mode toggle sits on top; 'Guided' renders NewUserFlow, flagged in the eval as a legacy/orphan surface."
+        },
+        {
+          "screen": "Quick setup — step 1 (format) — /volleyball/quick (MonoQuickMatch.jsx, 2850-line monolith)",
+          "action": "Pick a format/preset; a step progress bar shows 2 steps (3 only if custom rules). Tap to advance.",
+          "transitionTo": "Quick setup step 2 (team setup) — same route, internal setupStep state",
+          "friction": "Setup+dispatch+multiple start paths conflated in one 2850-line component (I-085). Rules/Customize step is implicit, not the dedicated HiFi 'Customize & rules' screen."
+        },
+        {
+          "screen": "Quick setup — team step — /volleyball/quick (MonoQuickMatch.jsx)",
+          "action": "Optionally type the two team names, then tap the 'Start scoring' CTA. startMatch() creates the match id and navigates.",
+          "transitionTo": "/volleyball/quick/live/:matchId",
+          "friction": "Team-name entry has no obvious 'skip / use defaults'; no team-only/anonymous shortcut (HiFi Band 8 team-only mode is missing). No cricket-style toss for other sports, which is fine here."
+        },
+        {
+          "screen": "Volleyball live scorer — /volleyball/quick/live/:matchId (scoring/MonoSetsLiveScore.jsx, sets engine)",
+          "action": "Tap a side to add points; per-set scoring runs. GOAL REACHED: a first match is being scored.",
+          "transitionTo": "(intended) Result / FULL TIME — but that screen is MISSING",
+          "friction": "HiFi coaching copy ('Tap who won the rally') + per-set strip may be absent; Undo-last-point and attribution mini-flows are only partial across engines."
+        }
+      ],
+      "totalTaps": 4,
+      "seamlessness": 6,
+      "intuitiveness": 7,
+      "deadEnds": [
+        "Result / FULL TIME screen is currentState=missing — the match simply ends with no summary, no share card, no rematch. The single biggest activation payoff moment does not exist.",
+        "Play-hub 'Guided' mode renders NewUserFlow.jsx, flagged in eval-current-app as a legacy/unwired orphan — a first-timer who taps 'Guided' expecting hand-holding can land in a stale/dead path.",
+        "Home first-run empty state (Band 13 HiFi) is missing — there is no in-app welcome/empty-home; the guest is dropped from marketing straight into a sport grid."
+      ],
+      "lostRisks": [
+        "Redundant sport pick: the guest chooses volleyball on the landing CTA, then the Play hub shows the entire 14-sport grid again and asks them to pick + tap 'Quick'. The ?sport param only highlights, it does not skip the grid.",
+        "Guided vs Browse toggle on the Play hub has no explanation of intent; a new user may reasonably expect 'Guided' to help and instead fork into the orphan NewUserFlow.",
+        "Guest mode is invisible: nothing explains that the match is saved only locally (sync:'idle') and not to any account — the user has no idea their first match isn't in the cloud and could be lost.",
+        "If the guest explores tabs, the nav says 'Stats' while the page says 'Statistics' (I-066), and History/Statistics carry a perpetual-loading risk for empty/guest data (I-053) — exploration feels broken."
+      ],
+      "dropOffRisks": [
+        "End-of-match cliff: with no Result screen there is no reward, no share hook, and no 'play again' — the highest-intent moment (just finished a match) has nothing to convert or retain on.",
+        "No account nudge anywhere in the flow: the guest is never prompted to sign in (before, during, or after the match), so there is no path to cross-device sync, notifications, or return — near-zero retention capture.",
+        "Setup monolith friction: the conflated 2850-line MonoQuickMatch and ambiguous format step can stall users who aren't sure which preset to choose.",
+        "Redundant re-pick + Guided orphan can shed users between the landing and the scorer before they ever score."
+      ],
+      "fixes": [
+        "Ship the Result (FULL TIME) screen: final score summary + Share card + Rematch + a soft 'Sign in to save this match' — this closes the activation loop and creates the viral share hook the HiFi intends.",
+        "Deep-link the landing 'START <SPORT>' CTA straight to /<sport>/quick when a sport is already chosen, bypassing the redundant Play-hub sport grid (keep the grid only for the 'CHOOSE SPORT' path).",
+        "Fix or remove the Guided/Browse toggle: either wire 'Guided' to a real guided setup, or drop it — never route a first-timer into the orphan NewUserFlow.",
+        "Add a non-blocking 'Playing as guest — sign in to sync' chip after the first match (and optionally a first-run empty-state Home) so guest data status is visible and an account is offered without gating scoring.",
+        "Bring the sets scorer up to HiFi: add 'Tap who won the rally' coaching copy + per-set strip, and unify Undo-last-point / attribution across engines so the core scoring feels finished.",
+        "Clean up exploration debt: unify the nav label to 'Statistics' (I-066) and fix the History/Statistics loading guards (I-053) so a curious guest doesn't hit dead-feeling tabs."
+      ]
+    },
+    "critique": {
+      "journey": "activation — first-time signed-out guest: understand the app + score a first volleyball match. The core is genuinely strong: no-signup, local-save scoring in ~4 taps is the right call and should be protected. But the honest tap count is optimistic (landing CTA → Play-hub Quick → format select+advance → team/Start = 4–5 meaningful taps, one of which is pure redundancy), and BOTH bookends are unfinished. The scores (seamlessness 6 / intuitiveness 7) read generous: a whole redundant screen, an orphan that baits the exact persona, a missing terminal screen, and invisible guest state argue for seamlessness closer to 4–5. Not too many steps by COUNT — the problem is a removable redundant step + dead-ends, not length.",
+      "verdict": "needs-work",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "CONFIRMED — Guided/Browse toggle baits the exact persona: a first-timer taps 'Guided' expecting hand-holding and forks into the orphan NewUserFlow. Worst trap in the flow because the label perfectly matches the need.",
+        "CONFIRMED — Redundant sport re-pick: the sport chosen on the landing (?sport=volleyball) is ignored by the Play hub, which re-shows the full 14-sport grid. 'Didn't I just pick this?' confusion plus a wasted tap.",
+        "CONFIRMED — Guest state is invisible: nothing signals the match is local-only (sync:'idle'). The guest has no mental model that their first match isn't in any account and can silently vanish — trust erosion they discover only when it's gone.",
+        "CONFIRMED — Exploration tabs feel broken: Stats-vs-Statistics label mismatch (I-066) + perpetual-loading on empty guest data (I-053) punish any curious guest who taps around before/after scoring."
+      ],
+      "deadEndsConfirmed": [
+        "CONFIRMED (highest severity) — Missing Result/FULL TIME screen: the match ends on a cliff with no summary, no share card, no rematch, no next action at the single highest-intent moment. This is the activation-killer; every retention/virality hook lives here and none of it exists.",
+        "CONFIRMED — Guided mode renders the NewUserFlow orphan: a live, tappable route into a stale/unwired surface.",
+        "SKEPTICAL / NOT A REAL DEAD-END — The 'missing first-run empty Home' is not a hole on the cold-activation path. Dropping a guest from marketing straight into scoring is a STRENGTH. Do not 'fix' it by inserting a pre-scoring empty Home; that would ADD friction to the one path that currently works. Reserve the empty Home for returning/authed users."
+      ],
+      "simplificationOpportunities": [
+        "Deep-link the landing 'START <SPORT>' CTA straight to /<sport>/quick when a sport is already chosen — removes the entire redundant Play-hub grid from the critical path (keep the grid only for the explicit 'CHOOSE SPORT' entry).",
+        "Collapse the format step + team step into one setup screen with a prominent 'Quick start (defaults)' express button; make team-name entry explicitly skippable.",
+        "Remove one of the two landing sport-pickers — the rotating hero CTA AND the full sport grid both pick a sport; that's a redundant double-choice before the app even opens.",
+        "Remove or wire the Guided/Browse toggle — never leave a first-timer a live route into an orphan. If Guided isn't a real guided setup, delete it."
+      ],
+      "missingConnectiveScreens": [
+        "Result / FULL TIME screen — final score summary + share card + Rematch + a soft, non-blocking 'Sign in to save this match'. This is the terminal connective screen that closes the activation loop and creates the share hook.",
+        "An express 'Quick start with defaults' lane that bypasses format selection and team naming entirely — get a guest into the scorer in ~2 taps.",
+        "A non-blocking 'Playing as guest — sign in to sync' chip surfaced AFTER the first match (the natural account moment), never as a gate before or during scoring.",
+        "In-scorer orientation: 'Tap who won the rally' coaching copy + a per-set strip so a first-timer isn't guessing what the two tap-targets mean."
+      ],
+      "stepReductionIdeas": [
+        "Landing CTA → /<sport>/quick directly, skipping the Play hub = -1 whole screen (3 pre-scorer screens → 2).",
+        "Auto-advance on format selection (tap preset = select + next in one gesture) instead of select-then-advance = -1 tap.",
+        "'Quick start with defaults' that skips team naming = another step gone; reaches the scorer in ~2 meaningful taps.",
+        "Reality check: today's honest count is ~4–5 taps with one fully wasted redundant re-pick. Target ~2–3 meaningful taps to the scorer."
+      ],
+      "transitionGuidance": "Landing → Quick setup: forward push carrying sport in state; should feel like entering the app, not restarting a choice. WITHIN setup (format ↔ team): animate as internal setupStep transitions (horizontal slide + progress bar advancing), NOT route changes — and sync setupStep to history or intercept system-back to DECREMENT the step; otherwise back from the team step blows out of the entire setup and loses typed names (a real back-stack bug risk here). 'Start scoring' → live scorer is a COMMITTING transition: navigate with replace so the user can't swipe back into a torn-down setup and re-run startMatch()/create a duplicate match. Back from the scorer must fire the existing leave-match confirm (backButton.js) and resolve to a safe hub with the local match recoverable — never an orphaned matchId. Live scorer → Result: forward/celebratory, layered ABOVE the finished scorer so points can't still be tapped underneath; 'Rematch' starts fresh, system-back goes to a safe home, not back into the completed match. Guided/Browse, if kept, is an in-place mode switch — never a navigation into a separate orphan route. Global rule: no system-back from setup, scorer, or result may ever land on a broken, empty, or orphan screen."
+    }
+  },
+  {
+    "journey": "core-loop",
+    "persona": "casual scorer",
+    "trace": {
+      "goal": "Quick-score a volleyball match start to finish, then share the result or rematch",
+      "persona": "Casual scorer — opens the app to score a pickup volleyball match on their phone, wants zero setup friction and a fast way to share/replay at the end",
+      "journey": "The core loop is functionally COMPLETE today and, surprisingly, lives almost entirely inside ONE component. Only a single real route change happens (`/play` → `/:sport/quick`); everything after that — setup, live scoring, and the match-end result — is driven by internal `phase` state (`setup | scoring | result`, MonoQuickMatch.jsx:325) with no further navigation. That makes the in-match experience genuinely seamless (no route thrash, plus auto-save/resume via `se_quickmatch_draft_*`), but it also means the celebratory/terminal moments are flat inline states rather than the dedicated FULL-TIME Result, Scorecard, Share-card, or Spectator screens the HiFi reference intends (all currentState=missing). The casual scorer CAN reach their goal: score → see winner + set breakdown → Rematch or Share. But \"Share\" is a bare OS text handoff (buildResultShareText via navigator.share), not a graphic card or a live watch-link, and there is NO spectator/watch-live path at all — so \"someone watches my match live\" is a hard dead-end. The riskiest UX moment is the in-match bottom bar [Undo · Swap · Discard · Finish]: Discard destroys the match and jumps home (MonoQuickMatch.jsx:759-760) sitting one tap away from Finish, which advances to the result — an easy, unrecoverable mis-tap. Entry also has two soft forks (Browse vs Guided mode on /play; and each sport card exposing both Quick match AND Tournament) that add small decisions a \"just let me play\" user doesn't want.",
+      "steps": [
+        {
+          "screen": "Bottom nav / any app screen",
+          "action": "Tap the 'Play' tab",
+          "transitionTo": "/play (MonoPlayHub)",
+          "friction": "Nav label is fine, but the tab set is Play/History/Stats — no Home/Friends, so the casual entry point is just 'Play'. Low friction."
+        },
+        {
+          "screen": "/play — MonoPlayHub (embeds MonoSportHome)",
+          "action": "App shows a Browse/Guided mode toggle, then a sport grid. Casual user stays on Browse and looks for Volleyball",
+          "transitionTo": "stays on /play (MonoSportHome is rendered inline, no route change)",
+          "friction": "The Browse vs Guided toggle (line 99, Guided = NewUserFlow, a legacy/orphan component) is an unnecessary fork for a casual scorer; default mode determines which path they get. Mild confusion about why there are two ways to start."
+        },
+        {
+          "screen": "/play — Volleyball sport card (MonoSportHome)",
+          "action": "Tap the 'Quick match' button on the Volleyball card",
+          "transitionTo": "/volleyball/quick (MonoQuickMatch, phase='setup')",
+          "friction": "Each sport card exposes TWO CTAs — 'Quick match' AND 'Tournament' (MonoSportHome.jsx:88,91). A casual user just wants to play; the dual button forces a micro-decision and 'Tournament' is noise."
+        },
+        {
+          "screen": "/volleyball/quick — Setup (MonoQuickMatch phase=setup)",
+          "action": "Optionally rename teams / pick best-of format in the rules + team-name inputs, then tap 'Start'",
+          "transitionTo": "same route, phase flips to 'scoring' (setPhase('scoring'), line 870)",
+          "friction": "Setup + Customize/rules are fused into one dense screen (the 2850-line monolith). Fine for casual (defaults work, can skip typing), but no clean separated 'Customize' step; team-name fields invite typing the user may not want to do."
+        },
+        {
+          "screen": "/volleyball/quick — Scorer (phase=scoring)",
+          "action": "Tap the big borderless side zones to add points; use bottom bar [Undo · Swap · Discard · Finish] as needed",
+          "transitionTo": "stays in phase='scoring'; sets auto-track toward completion",
+          "friction": "DANGER: 'Discard' (destroys match → navigate('/app'), line 759) sits one tap from 'Finish'. Also an ambiguity: both a 'Finish' button AND a separate 'End Match' chip (line 195) exist — two ways to end. No plain-language 'Tap a side to score' coaching prompt like HiFi."
+        },
+        {
+          "screen": "/volleyball/quick — Scorer (match point reached)",
+          "action": "Tap 'Finish' (or the End Match chip) to end the match",
+          "transitionTo": "same route, phase flips to 'result' (setPhase('result'), line 723)",
+          "friction": "The terminal transition is MANUAL and uncelebrated — no FULL-TIME moment, no confirmation. A casual user may not realize the match is 'won' and keep tapping, or hunt for how to end it."
+        },
+        {
+          "screen": "/volleyball/quick — Result (phase=result)",
+          "action": "Read winner + score + set breakdown; tap 'Rematch' or 'Share'",
+          "transitionTo": "Rematch → resetMatchState('scoring') (same teams, back to scorer, line 2810); Share → navigator.share text sheet (shareResult, line 1424)",
+          "friction": "Result is an inline flat panel, not the celebratory HiFi Result/Scorecard. 'Share' produces a raw TEXT blob (buildResultShareText), not a share-card graphic or QR; on browsers without navigator.share it fails to 'Could not share result.' (line 1433) — a share dead-end. Six action buttons (Rematch/Share/History/Stats/New Match/Home) is a lot of choice at the finish line."
+        }
+      ],
+      "totalTaps": 5,
+      "seamlessness": 8,
+      "intuitiveness": 6,
+      "lostRisks": [
+        "Discard vs Finish adjacency in the scorer bottom bar — one mis-tap on 'Discard' destroys the match and dumps the user to /app with no undo (MonoQuickMatch.jsx:759-760)",
+        "Two ways to end a match (the 'Finish' button and the separate 'End Match' chip, line 195) — unclear which one saves vs discards",
+        "Manual, uncelebrated match end — no FULL-TIME state; a casual user may not realize the match is over or how to trigger the result",
+        "Browse vs Guided mode toggle on /play routes to two different start experiences (Guided = the legacy NewUserFlow orphan), so two users can have inconsistent first steps",
+        "Sport card's dual 'Quick match' / 'Tournament' CTAs make a casual 'just play' user pause and choose",
+        "Wanting a friend to WATCH live: there is no spectator/share-live affordance anywhere, so the user searches for it and finds nothing"
+      ],
+      "dropOffRisks": [
+        "Accidental 'Discard' mid-match = total loss of an in-progress match → rage-quit",
+        "Share fails silently on desktop / unsupported browsers (navigator.share absent → 'Could not share result.'), so the share goal dies at the last step",
+        "'See Stats' / 'View History' from the result land a brand-new one-match user on Statistics/History which carry the I-053 perpetual-loading risk (undefined-vs-empty query state) — a blank/spinning screen right after their first win",
+        "Guided mode dropping the user into the legacy NewUserFlow path could be rougher/less finished than the Browse path"
+      ],
+      "deadEnds": [
+        "Watch-live / Spectator: NO path exists in production — all spectator screens + ShareLiveMatch + convex/live.ts live only in a .claude/worktrees branch. A scorer who wants others to watch live hits a wall.",
+        "Share-card graphic + QR: not built — only an OS text share. No visual result card to post.",
+        "Share on a browser without navigator.share: ends in 'Could not share result.' with no fallback (copy-to-clipboard etc.)",
+        "Dedicated Scorecard / detailed post-match breakdown screen: missing — result panel is the terminal, no deeper drill-in"
+      ],
+      "fixes": [
+        "Separate 'Discard' from 'Finish' in the scorer bottom bar — move Discard behind a confirm (ConfirmActionPanel already exists) or into an in-match ⋯ menu, and visually demote it (destructive red, not a peer of Finish)",
+        "Collapse the two end-match affordances ('Finish' button + 'End Match' chip) into ONE clear control, and auto-detect match completion to surface a celebratory FULL-TIME result automatically instead of requiring a manual tap",
+        "Make the sport card a single primary 'Play' action (default to Quick match); tuck 'Tournament' under a secondary/overflow so the casual path is one tap",
+        "Reconsider the Browse/Guided toggle on /play — pick one default flow for casual scorers; if Guided stays, replace the legacy NewUserFlow orphan with a maintained path",
+        "Give Share a real fallback: when navigator.share is unavailable, copy a formatted result text to clipboard (and, per HiFi, generate a share-card graphic) so the share never dead-ends",
+        "Add a spectator/share-live affordance — land the worktree live/ + convex/live.ts into production so 'someone watches my match' stops being a dead end; at minimum add a public read-only link + QR from the Result screen",
+        "Guard History/Statistics for the fresh one-match user (distinguish undefined-loading from empty) so 'See Stats' after a first win doesn't spin forever (I-053)",
+        "Add plain-language coaching prompts on the sets scorer ('Tap who won the rally', per-set strip) to match HiFi and make the score-tap target obvious to first-timers"
+      ]
+    },
+    "critique": {
+      "journey": "core-loop (Quick-score a volleyball match → share/rematch)",
+      "verdict": "needs-work",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "CONFIRMED + WORSE THAN STATED: Discard is a single raw tap (onDiscard={discardQuickMatch}, :2562/:2643 → clearData + navigate('/app'), :758-761) with NO confirm, sitting beside Finish — which DOES route through a confirm dialog (onEnd=requestEndMatch → showEndConfirm :2318). The hierarchy is inverted: the safe result-saving action is guarded, the unrecoverable destructive one is not. This is the single most dangerous moment in the loop.",
+        "Spectator / watch-live is a hard dead-end in production: live code exists only in .worktrees/live-matches and .claude/worktrees, not shipped. A user who wants a friend to watch finds nothing.",
+        "Share dead-ends on any browser without navigator.share: falls to 'Could not share result.' with no clipboard/graphic fallback — the share goal dies at the final step, exactly where the casual persona's intent peaks.",
+        "Fresh one-match user tapping 'See Stats' / 'View History' from the result can hit the I-053 perpetual-loading (undefined-vs-empty) state — a spinner right after their first win.",
+        "Browse vs Guided toggle routes to inconsistent first-run experiences; Guided drops users into the legacy/orphan NewUserFlow, so two users get divergent, unequally-finished onboarding."
+      ],
+      "deadEndsConfirmed": [
+        "Watch-live/Spectator: no production path (verified: only worktree branches contain the live feature).",
+        "Share-card graphic + QR: not built — OS text handoff only, no visual card to post.",
+        "navigator.share-absent browsers: terminal 'Could not share result.' with no fallback.",
+        "Dedicated Scorecard / post-match drill-in: absent; the inline result panel is the terminus."
+      ],
+      "missingConnectiveScreens": [
+        "Auto-detected FULL-TIME moment: at match point the app does NOT auto-surface a result — end is manual (requestEndMatch) even though a win is deterministically detectable. A celebratory terminal state (confetti/winner reveal) is the missing bridge between scoring and result; without it a casual user keeps tapping a decided match.",
+        "A destructive-action confirm on Discard (ConfirmActionPanel already exists in the codebase and is used for the SAFE end action but not the destructive one — the guard is on the wrong control).",
+        "Share fallback surface: a copy-to-clipboard + generated share-card/QR panel for when navigator.share is unavailable.",
+        "Public read-only live/watch link screen (land the worktree live/ + convex/live.ts) so 'someone watches my match' resolves.",
+        "Empty/loading-distinct Stats & History states so a first-match user isn't dumped on a spinner."
+      ],
+      "transitionGuidance": "Because setup→scoring→result are internal phase state on ONE route (no route thrash — genuinely good), the app must MANUFACTURE the sense of progression that routing normally gives: animate each phase change (setup→scoring slide-in; scoring→result a celebratory FULL-TIME overlay, not an inline swap) so the user feels the match ended. Define back-stack behavior explicitly per phase, since the OS/browser Back button maps to nothing here: Back during scoring must NOT silently destroy the match — prompt resume (auto-save already exists, wire Back to it); Back from result should go to /play (home), NOT re-enter scoring and resurrect a finished match. Make Discard and Finish visually non-peer — Discard destructive-red, demoted into a ⋯ overflow, behind a confirm; Finish primary. Match-completion should trigger the result transition automatically at match point rather than waiting for a manual tap.",
+      "simplificationOpportunities": [
+        "Fix the inverted confirm: move the confirm dialog OFF Finish (or keep it light) and put a real destructive confirm ON Discard; visually demote Discard into an overflow menu so it's not one tap from Finish.",
+        "Collapse the redundant end controls: the Finish button and the End chip both call the identical requestEndMatch — keep ONE control, drop the other.",
+        "Kill or replace the Browse/Guided toggle; pick one default flow for casual scorers and retire the legacy NewUserFlow orphan rather than shipping two unequal onboardings.",
+        "Reduce each sport card to a single primary 'Play' (default Quick match); tuck 'Tournament' under a secondary/overflow so the 'just play' path is one unambiguous tap.",
+        "Auto-detect match completion to fire FULL-TIME automatically, removing the manual end-tap for the common case.",
+        "Give Share a fallback chain (clipboard → generated card/QR) so it never terminates in an error."
+      ],
+      "stepReductionIdeas": [
+        "Deep-link the Play tab straight into Volleyball quick-scoring when it's the primary/last-used sport, skipping the sport grid for repeat casual users.",
+        "Make Setup skippable-by-default: a 'Quick start' that boots straight to scoring with default team names/format, with rename available inline during play — removes the setup screen from the critical path for the zero-friction persona.",
+        "Auto-advance to the FULL-TIME result on match point instead of the manual Finish tap, removing one deliberate step at the emotional peak."
+      ]
+    }
+  },
+  {
+    "journey": "in-match",
+    "persona": "person scoring a live game",
+    "trace": {
+      "goal": "Score a live volleyball game smoothly — including per-point attribution, undo, an in-match menu, and share-live mid-match.",
+      "persona": "A person scoring a live volleyball (sets) game on their phone, wanting to keep score and let friends watch.",
+      "journey": "The core scoring loop is genuinely strong, but the journey as defined breaks after two steps. A user lands on MonoSetsLiveScore (dispatched from :sport/quick via the 2850-line MonoQuickMatch monolith — the sets engine has no clean route of its own). Scoring is excellent: two huge tap halves ('mono-arena-half'), one tap per point, with haptic pulse (triggerHaptic(50)), a score pop animation, a serving-dot indicator, auto-save to history, and even keyboard shortcuts (Q/P/U). Undo works — a bottom-bar button plus the U key, reverting the last history entry. But three of the five anchor steps are missing in production: (1) NO per-point attribution — addPoint (line 193) just increments; the 'Tap who won the rally' / Ace-Block-Error sheet the HiFi calls for never fires (useAppScoringPrompt is wired ONLY to the exit-confirm dialog, not to scoring events). (2) NO in-match ⋯ menu (discovery currentState=missing) — functions are scattered across a cryptic top-right Side-out/Rally toggle and a flat 4-button bottom row (Undo · Swap · Discard · Finish). (3) NO share-live at all — ShareLiveMatch and convex/live.ts exist only in .claude/worktrees/wf_*, never shipped; there is no Share affordance anywhere on the scorer, and no Spectator route for a link to even resolve. So a person scoring a live game to let friends watch hits a wall: they can score and undo beautifully, then the 'attribution / menu / share-live' half of the goal is simply unreachable.",
+      "steps": [
+        {
+          "screen": "MonoSetsLiveScore (dispatched from :sport/quick)",
+          "action": "Arrive in the live volleyball scorer — top bar shows sport + 'Set 1 of 3' badge + Side-out/Rally toggle; two big score halves; bottom row Undo/Swap/Discard/Finish",
+          "friction": "Reached via the MonoQuickMatch 2850-line monolith, not a clean Setup→Live flow; sets engine has no dedicated route",
+          "transitionTo": "stays on scorer"
+        },
+        {
+          "screen": "MonoSetsLiveScore",
+          "action": "Tap a team's half to score a point (addPoint) — haptic + pop animation + serving dot",
+          "friction": "None on the tap itself; but NO attribution sheet fires — the anchor step 'who/how' does not happen for volleyball",
+          "transitionTo": "stays on scorer (should open attribution sheet — it doesn't)"
+        },
+        {
+          "screen": "Attribution sheet (who won the rally / Ace·Block·Error)",
+          "action": "INTENDED: pick point reason + optional player, Skip/Confirm",
+          "friction": "DEAD END — does not exist for the sets scorer; addPoint only increments (discovery: attribution=partial)",
+          "transitionTo": "unreachable"
+        },
+        {
+          "screen": "MonoSetsLiveScore",
+          "action": "Mistap correction: tap 'Undo' in the bottom row (or press U)",
+          "friction": "Undo is one of four visually identical plain-text buttons (Undo/Swap/Discard/Finish) — easy to miss or confuse",
+          "transitionTo": "stays on scorer, reverts last point"
+        },
+        {
+          "screen": "In-match ⋯ menu",
+          "action": "INTENDED: open menu for Edit setup / Share / End match",
+          "friction": "DEAD END — no ⋯ menu surface exists (currentState=missing); user must infer that 'Finish' ends and 'Discard' exits, with no clarity on which saves",
+          "transitionTo": "unreachable"
+        },
+        {
+          "screen": "Share live link (QR + WhatsApp)",
+          "action": "INTENDED: share a public spectator link mid-match",
+          "friction": "DEAD END — no Share button anywhere; ShareLiveMatch/convex live.ts only in a worktree branch; even a link would have no Spectator route to resolve to",
+          "transitionTo": "unreachable"
+        }
+      ],
+      "transitionTo": "stays on scorer",
+      "totalTaps": 3,
+      "seamlessness": 4,
+      "intuitiveness": 5,
+      "deadEnds": [
+        "In-match ⋯ menu — no consolidated menu surface exists at all (discovery currentState=missing); Edit setup / End match / Share are not grouped anywhere",
+        "Share live link — missing from production; ShareLiveMatch + convex/live.ts live only in .claude/worktrees/wf_*, so 'share-live mid-match' is completely unreachable",
+        "Spectator views (all sports) — missing, so even a manually shared link has no destination to open",
+        "Per-point attribution (who won the rally / Ace-Block-Error) — never fires in MonoSetsLiveScore.addPoint; the HiFi 'Tap who won the rally' sheet is absent for volleyball"
+      ],
+      "lostRisks": [
+        "Discard vs Finish ambiguity — both exit the scorer and it's unclear which one saves the result; no confirming labels distinguish them",
+        "Undo is undifferentiated — a plain text button identical to Swap/Discard/Finish in a flat 4-button row; a panicked scorer may not spot it",
+        "Side-out/Rally toggle top-right is cryptic jargon for a casual scorer and can silently change scoring behaviour",
+        "No back/pause/menu affordance mid-match — a user who wants to fix the setup or step away has no obvious control",
+        "No Share icon anywhere — a user whose goal is to let friends watch scans the screen, finds nothing, and doesn't know the feature is missing vs hidden"
+      ],
+      "dropOffRisks": [
+        "User scoring specifically so friends can watch finds zero share path → abandons (the core HiFi 'watch live' promise is entirely unmet)",
+        "Accidental 'Discard' at or near match end could wipe the result; the Discard-vs-Finish confusion risks losing a completed game",
+        "Volleyball scorer wanting per-rally stats (aces/blocks) gets none → feels the app is a bare counter, not the instrument scorer the HiFi promises"
+      ],
+      "fixes": [
+        "Wire the existing AppScoringPrompt (already a11y-tested) into MonoSetsLiveScore.addPoint as a per-point 'Tap who won the rally → Ace/Block/Kill/Error + optional player' sheet with Skip+Confirm, feeding player stats (closes attribution=partial)",
+        "Build the In-match ⋯ menu overlay (currentState=missing): consolidate Edit setup, Share live, Undo/history, and End match; rename bottom actions to 'End & Save' vs 'Exit without saving' to kill the Discard/Finish ambiguity",
+        "Promote ShareLiveMatch + convex/live.ts from .claude/worktrees/wf_* into src/designs/design1-mono + convex; add a Share entry in the in-match menu (Public link + Copy + QR + WhatsApp/Messages) and an Auto-share default in Settings",
+        "Ship at least one Spectator route (per-sport read-only live view) so shared links resolve instead of 404ing — start with the sets/volleyball spectator",
+        "Differentiate Undo in the bottom bar — give it an icon and larger hit target, separate it from the exit actions, and surface the U-key hint on touch devices too"
+      ]
+    },
+    "critique": {
+      "journey": "in-match (Score a live volleyball sets game — attribution, undo, in-match menu, share-live)",
+      "verdict": "broken",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "Discard vs Finish is the sharpest confirmed hazard: two twin exit buttons, neither labelled as saving, sitting adjacent in a flat row — a mistap near match end can wipe a completed game. This is data loss, not just confusion; highest severity in the whole journey.",
+        "Undo is undifferentiated — identical plain-text button beside Swap/Discard/Finish. A panicked scorer correcting a mistap during a fast rally may hit the wrong one and, worse, land on Discard.",
+        "Side-out/Rally toggle is cryptic jargon for a casual scorer and can silently change scoring behaviour with no feedback — a lost-state trap where the number moves 'wrong' and the user can't tell why.",
+        "No mid-match back/pause/menu affordance — combined with an undefined hardware/gesture-back behaviour (dropped in from the MonoQuickMatch dispatch, no clean back-stack), pressing the OS back button mid-match likely pops the whole match with no confirm = silent data loss. The trace omits back-press entirely; this is a real gap.",
+        "No Share icon anywhere — the persona opened the app specifically so friends could watch; they scan the scorer, find nothing, and cannot tell whether the feature is missing or hidden. The journey's stated core goal has zero entry point."
+      ],
+      "deadEndsConfirmed": [
+        "Share-live — confirmed unreachable: ShareLiveMatch + convex/live.ts exist only in .claude/worktrees/wf_*, never shipped. This is THE headline defect because it is the persona's primary goal, not a nice-to-have.",
+        "Spectator/read-only route — confirmed missing; even a hand-copied link 404s, so share-live is doubly dead (no source, no destination).",
+        "In-match ⋯ menu — confirmed missing (currentState=missing); Edit setup / End / Share are not grouped anywhere, so there is no home for the very affordances the journey needs.",
+        "Per-point attribution sheet — confirmed absent (addPoint only increments). BUT this dead end must not be 'fixed' as specified: a blocking Ace/Block/Error sheet with Skip+Confirm on every rally would roughly triple the tap count and destroy the one-tap loop the trace rightly praises. The gap is real; the proposed inline-blocking fix contradicts the SIMPLE goal."
+      ],
+      "missingConnectiveScreens": [
+        "Setup→Live entry flow: the sets engine has no clean route and is reached via a 2850-line monolith dispatch, so there is no forward transition to anchor a back-stack on — the root cause of the back-press data-loss risk.",
+        "In-match overflow menu: the single missing surface that would house Edit setup, Share, history/Undo, and End — building it resolves three separate dead ends at once.",
+        "Between-sets / set-won interstitial: the trace shows a 'Set 1 of 3' badge but NEVER covers what happens at set point — swap sides, confirm set winner, start next set. For a sets game this is a mandatory screen the trace itself overlooks.",
+        "End-of-match save confirmation: after Finish there is no 'Saved to history' acknowledgement, which is exactly what makes Discard-vs-Finish ambiguous — the user never sees which action preserved the result.",
+        "Share sheet (link + QR + WhatsApp) and its Spectator read-only mirror: both absent; needed as a matched pair or neither works.",
+        "Back-press / exit guard: an intercept that turns hardware/gesture back into a 'Pause & save or discard?' confirm instead of silently popping the match."
+      ],
+      "simplificationOpportunities": [
+        "Do NOT ship attribution as a blocking per-point sheet. Keep scoring at one tap; make attribution optional — a long-press on the scoring half to quick-tag Ace/Block/Kill/Error, or post-hoc tagging from the history list. This preserves the loop the trace calls 'excellent' instead of tripling taps.",
+        "Collapse the flat 4-button row. Keep Undo as a large, iconed, visually distinct control separated from exits; move Swap/Edit/Share/End into ONE overflow menu. Bottom bar goes from 4 ambiguous look-alike buttons to 1 clear Undo + 1 menu — less to parse mid-rally.",
+        "Replace the Discard/Finish twins with a single 'End match' that opens one explicit confirm ('Save result' / 'Exit without saving'). One decision point, clearly labelled, kills the data-loss trap.",
+        "Hide or auto-manage the Side-out/Rally toggle in casual mode — most casual scorers should never see rally-vs-sideout jargon; default it and expose it only in an advanced setting.",
+        "Give Share a first-class persistent top-bar icon (one tap), not a buried menu item — it's the persona's core goal, so it shouldn't cost a menu dive even after the menu exists."
+      ],
+      "stepReductionIdeas": [
+        "Share in one tap via a persistent top-bar affordance, since letting friends watch is the whole reason the persona is here — burying it behind an unbuilt menu under-serves the primary goal.",
+        "Attribution as optional post-hoc tagging from history rather than inline per point — removes 2 taps/point from the scoring loop while still feeding player stats for those who want them.",
+        "Auto-swap sides at set transitions (with a single confirm) instead of relying on the manual Swap button, removing a step and a source of Swap/Discard confusion."
+      ],
+      "transitionGuidance": "Give the sets scorer a real Setup→Live forward transition so the match sits on the back stack; hardware/gesture back must then be intercepted mid-match into a 'Pause — save or discard?' confirm, NEVER a silent pop. Share and the (kept-optional) attribution tag should present as bottom sheets/native share overlaid on the scorer, dismissing back to the exact preserved score state with no re-mount. Set-won should trigger a brief interstitial (confirm set → swap sides → next set) with a clear animated transition so the score reset reads as intentional, not a bug. On Finish, animate to a 'Saved to history' confirmation so the save is visible. Spectator links open a read-only mirror; scorer writes push live so the watcher stays in sync. Undo should give a distinct micro-animation (reverse of the score-pop) so the correction is legible at a glance. totalTaps=3 in the trace is a misleading seamlessness proxy: it measures taps to score, but the journey cannot be completed at all (3 of 6 steps dead-end), so seamlessness=4/intuitiveness=5 overstate a flow whose primary goal is unreachable."
+    }
+  },
+  {
+    "journey": "spectator",
+    "persona": "friend who receives a share link (no account)",
+    "trace": {
+      "journey": "test",
+      "steps": [
+        {
+          "screen": "a",
+          "action": "b"
+        }
+      ],
+      "seamlessness": 1,
+      "intuitiveness": 1,
+      "lostRisks": [
+        "x"
+      ],
+      "fixes": [
+        "y"
+      ]
+    },
+    "critique": {
+      "journey": "spectator",
+      "verdict": "broken",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "The trace is placeholder data, not a real journey: one step, screen 'a' with action 'b', journey labeled 'test'. It traces nothing — a spectator cannot get anywhere because there is no entry point, no match list, no live view, and no exit.",
+        "No discovery surface: a spectator lands with zero way to find a match. If step 1 is not 'browse/find live or upcoming matches', the user is lost on screen one.",
+        "No live-score screen is present. The entire reason a spectator opens ScoreEasy — watch a match score update live — is absent from the trace.",
+        "No 'no matches right now' / empty-state path. A spectator who opens the app between games hits a blank wall with no guidance on what to do next.",
+        "No way back. A single step with no back-stack means once a spectator taps into anything, there is no modeled return to the match list — a classic dead-end."
+      ],
+      "deadEndsConfirmed": [
+        "Terminal single step: action 'b' on screen 'a' leads nowhere — no next screen, no back, no home. This is a literal dead-end.",
+        "Implied post-match dead-end: when a followed match ends, nothing routes the spectator to final score, other live matches, or a rematch/next-game prompt."
+      ],
+      "missingConnectiveScreens": [
+        "Entry / home with a Live Now rail and Upcoming list (the spectator's front door).",
+        "Match discovery / search-and-filter (by team, tournament, court, date) so a spectator can locate the specific game they came for.",
+        "Live match detail — the core spectator screen: big current score, set score, serving indicator, momentum, updating in real time.",
+        "Empty state: 'No live matches — here's what's upcoming' with a follow/notify CTA so an early spectator is not stranded.",
+        "Set-history / box-score expansion reachable from the live view without leaving it (bottom sheet, not a new page).",
+        "Match-ended summary screen: final result, set breakdown, and a clear 'back to matches' / 'watch another' path.",
+        "Follow-a-team / notify-me confirmation, so a spectator who cannot watch now has a reason to return.",
+        "Reconnect / stale-data banner for when the live feed drops — spectators on flaky connections must know the score is stale, not wrong."
+      ],
+      "simplificationOpportunities": [
+        "Collapse discovery into the home screen: Live Now + Upcoming on one scrollable surface, so the common spectator path is one tap (home to live match), not a separate browse page.",
+        "Make the live score the destination, not a hub — put set history, box score, and lineups behind a single expandable sheet on the live view instead of separate navigable screens.",
+        "Auto-route: if exactly one match is live, deep-link the spectator straight into it and skip the list entirely.",
+        "Kill any login/onboarding gate for spectators — watching a score should require zero account. Defer sign-in to the moment they follow a team.",
+        "One persistent 'watch another match' affordance means you never need a distinct navigation tree for the second, third match a spectator views."
+      ],
+      "stepReductionIdeas": [
+        "Target spectator path in 2 taps: open app (auto-lands on Live Now) to tap match (live score). Everything else is optional depth behind that screen.",
+        "Deep-link/QR entry: scanning a court QR or opening a shared link drops the spectator directly onto the live match, zero intermediate steps.",
+        "Persist last-watched match so a returning spectator resumes in one tap.",
+        "Use notifications as the step-zero shortcut: a 'Match starting' push opens straight to the live view."
+      ],
+      "transitionGuidance": "Live score updates must animate in place (number tick / brief highlight flash on the changed score), never as a full screen reload — the score screen is a persistent live surface, not a re-fetched page. Home-to-match should be a forward push with a shared-element transition on the match card (team names/score scale up into the header) so the spectator keeps spatial context. Depth panels (set history, box score) open as bottom sheets over the live view — the live score stays visible and keeps updating behind them; dismissing is a downward swipe, no navigation. Back-stack must be shallow and honest: home is always root; match detail is one level; any sheet is modal (does not add to the stack). Hardware/gesture back from a match always returns to the same scroll position in Live Now, never exits the app. On feed drop, do NOT navigate away — show a non-blocking 'reconnecting / score may be stale' banner and silently resume. Match-end should transition the live view into a summary in place (score locks, banner slides up), with a clear forward action to another live match — never strand the spectator on a frozen live screen."
+    }
+  },
+  {
+    "journey": "returning-live",
+    "persona": "returning signed-in user",
+    "trace": {
+      "goal": "Open app, see friends' live matches, watch a friend live (spectator).",
+      "persona": "Returning signed-in user (has account, opens app to see live action)",
+      "journey": "returning-live",
+      "steps": [
+        {
+          "screen": "/dashboard — DashboardLanding.jsx (signed-in home)",
+          "action": "App opens to home. User scans for 'what's live now among my friends'.",
+          "friction": "The only LIVE-badged content is the 'Active' band (lines 226-297) which renders the USER'S OWN in-progress/paused sessions, not friends'. There is no friends-live band, no activity feed, no 'X friends watching' row. HiFi's intended live/upcoming + Activity feed is absent (discovery.json: 'not present yet').",
+          "transitionTo": "Nowhere valid — nothing on this screen represents a friend's live match."
+        },
+        {
+          "screen": "/dashboard — 'Active' card (own session)",
+          "action": "User taps a LIVE/PAUSED card believing it's a live match to watch.",
+          "friction": "Card is the user's own game and routes to /game/:id (a resume/recovery path per index.jsx *, /game/:id → RouteRecoveryActions), not a spectator view. Misleads: 'LIVE' label reads as watchable content but is a self-resume.",
+          "transitionTo": "/game/:id resume/recovery — dead end for this goal; user backs out."
+        },
+        {
+          "screen": "Bottom nav (Home/Play/History/Stats/Account)",
+          "action": "User looks in the tab bar for Friends / Activity / Live.",
+          "friction": "Tabs are Play, History, Stats (index.jsx:566-568) — none social. No Friends or Activity tab exists. Nothing here leads toward watching a friend.",
+          "transitionTo": "No transition — no social tab to tap."
+        },
+        {
+          "screen": "/profile → /users/search (MonoUserSearch.jsx)",
+          "action": "As a last resort user opens Account, then finds user search to locate the friend.",
+          "friction": "189-line search with no live indicator, no 'watching now', no invite/add-friend, no 'Watch' affordance. Even opening a friend's /profile/:username shows no live match and no spectator entry (Profile is 394 ln, no live wiring).",
+          "transitionTo": "Dead end — friend profile has no live/watch path."
+        },
+        {
+          "screen": "Spectator view (any sport)",
+          "action": "Intended final step: land on read-only live spectator screen for the friend's match.",
+          "friction": "MISSING in production. All Spectator screens (cricket/football/tennis/others + graphs), Share-live link, and convex/live.ts exist ONLY in a worktree branch, not shipped. There is no route to reach.",
+          "transitionTo": "Unreachable — journey cannot complete."
+        }
+      ],
+      "seamlessness": 2,
+      "intuitiveness": 2,
+      "totalTaps": 0,
+      "lostRisks": [
+        "'Active' band LIVE badge (DashboardLanding.jsx:236) means the user's OWN session — a returning user reads 'LIVE' as watchable friend content and taps it expecting a spectator view.",
+        "No Friends/Activity tab in bottom nav, so the user has no obvious place to look for 'what friends are doing' and wanders into Account/search.",
+        "/users/search looks like the social hub but offers no live/watch/invite — user assumes the feature is hidden rather than absent.",
+        "A shared live link (e.g. from WhatsApp) has no spectator route to open, so an inbound 'watch' link 404s / route-recovers, confusing the user about whether the app even supports watching."
+      ],
+      "dropOffRisks": [
+        "Home shows zero friend-live signal on open — the returning-live user's core reason to open the app is invisible, so they bounce immediately.",
+        "Tapping the own-session 'LIVE' card dumps them in a resume/recovery flow (/game/:id) unrelated to their intent — frustration + exit.",
+        "After exhausting nav + search with no result, user concludes 'you can't watch friends here' and stops returning for live.",
+        "Any friend who shares a live link finds it dead, killing the viral/spectator acquisition loop entirely."
+      ],
+      "deadEnds": [
+        "Own-session LIVE/PAUSED card → /game/:id resume/RouteRecoveryActions (not a friend spectator view).",
+        "Bottom nav (Play/History/Stats) — no social/live destination.",
+        "/users/search and /profile/:username — no live indicator, no Watch button, no invite.",
+        "Spectator screens for ALL sports — currentState=missing; no route exists (only in worktree branch).",
+        "Share-live link / QR — missing; inbound watch links have no target route.",
+        "Activity feed, Friends list, Notifications — all currentState=missing; the entire discovery→watch chain is unbuilt."
+      ],
+      "fixes": [
+        "Ship a real production Spectator route per engine (sets/goals/cricket/tennis) by porting live/ components + convex/live.ts out of the worktree branch into src/designs/design1-mono/ and convex/ — this is the terminal screen the whole journey needs and it does not exist today.",
+        "Add a 'Live now' band to DashboardLanding.jsx ABOVE the own-session 'Active' band, sourced from friends' live matches (HiFi 'Eagles vs Hawks is live · 3 friends watching · Watch'), with a Watch CTA that deep-links to the spectator route.",
+        "Visually separate 'your matches' from 'friends live' — relabel/restyle the own-session badge so 'LIVE' on the Active band is not confused with watchable friend content (fixes the primary lost-risk).",
+        "Add an Activity/Friends destination to the bottom nav (or a home entry point) so there is an obvious place to discover live friends; today nav is Play/History/Stats only.",
+        "Wire a Watch/live affordance into /profile/:username and /users/search so a found friend who is live is one tap from the spectator view.",
+        "Implement Share-live link + QR with a public spectator route so inbound shared links resolve instead of hitting route-recovery — closes the acquisition loop.",
+        "Design the empty state: when no friend is live, the Live-now band should say so gracefully (Band-13 empty-home pattern) rather than showing nothing, so the user knows the feature exists and is just quiet."
+      ]
+    },
+    "critique": {
+      "journey": "returning-live — Verdict: BROKEN, and the trace is right to score it near-floor. This is not a \"too many steps\" problem in the ordinary sense; it is a \"the destination does not exist and the entrance is a false door\" problem. The user's entire reason for opening the app (see a friend live, watch as spectator) has zero representation on any shipped screen, and the one thing wearing a LIVE badge on home is the user's OWN session — a false affordance that actively misleads before the app even admits the feature is absent.\n\nOn \"is it too many steps\": YES, but read it correctly. The 5-screen wander (home → own LIVE card → /game recovery → back → nav → Account → /users/search → friend /profile → nowhere) is 4-5 steps of pure fruitless motion for zero payoff. The correct journey, once built, is ~2 taps: open app → tap Watch on a friends' Live-now band → spectator. Every screen the current trace visits past home is a symptom of the missing direct path, not legitimate depth. So: too many steps to reach a dead end; far too few real ones exist to reach the goal.\n\nAdversarial critique of the TRACE itself — its fixes are sound but it underweights the ROOT missing primitive: a friend/following graph. \"Live now among my friends\" and \"3 friends watching\" are impossible without a friend-edge data model, yet the app only exposes username SEARCH (MonoUserSearch) and a Profile with no follow/add-friend affordance. The trace lists \"Friends list = missing\" as a dead-end but frames the remedy as UI bands. A Live-now band has no data source until the friend graph exists. Correct sequencing is: (1) friend/follow edge + convex live query → (2) home Live-now discovery band → (3) production Spectator route (port from worktree) → (4) share-live public route. Shipping the Spectator screen first (the trace's fix #1) is necessary but NOT sufficient — without discovery + a friend graph it stays unreachable except via a pasted link.\n\nThe single most damaging moment is the own-session LIVE badge: it is worse than showing nothing, because it converts \"feature absent\" into \"feature present but frustrating,\" costing a tap and dumping the user into /game/:id RouteRecoveryActions — an unrelated resume flow whose back behavior is undefined.",
+      "verdict": "broken",
+      "lostRisksConfirmed": [
+        "CONFIRMED: Own-session LIVE/PAUSED card (DashboardLanding.jsx ~236) reads as watchable friend content — a returning user's mental model is 'LIVE = something I can watch', so the first tap goes to a self-resume/recovery flow, not a spectator view. This is a false affordance and the primary lostRisk.",
+        "CONFIRMED: No Friends/Activity/Live destination in bottom nav (only Play/History/Stats), so the user has no conventional place to look for 'what friends are doing' and is pushed into Account → search — the wrong surface for discovery.",
+        "CONFIRMED: /users/search looks like the social hub but offers no live indicator, no Watch, no add-friend — the user concludes the feature is HIDDEN rather than ABSENT and keeps hunting, deepening the lost state.",
+        "CONFIRMED: an inbound shared 'watch' link (WhatsApp/QR) has no spectator route to resolve to, so it 404s/route-recovers — the user cannot tell whether the app even supports watching, and cold-start deep links have no synthesized back-stack.",
+        "ADDED: there is no friend/follow relationship surfaced anywhere (search + profile are username-lookup only), so even the intended Live-now band would have no data source — the user can find a person but never establish the 'friend' edge that 'friends' live' depends on."
+      ],
+      "deadEndsConfirmed": [
+        "Own-session LIVE/PAUSED card → /game/:id RouteRecoveryActions — a resume/recovery path, not a friend spectator view; back behavior from recovery is undefined.",
+        "Bottom nav (Play/History/Stats) — no social/live destination exists to tap.",
+        "/users/search and /profile/:username — no live indicator, no Watch button, no add-friend/follow affordance; the friend, even if found and live, is a terminal node.",
+        "Spectator screens for ALL sports (cricket/football/tennis/graphs) — exist only in a worktree branch, no production route; the terminal screen the whole journey needs is unshipped.",
+        "Share-live link / QR — no public spectator route, so inbound watch links have no target.",
+        "Activity feed + Friends list + Notifications — entire discovery→watch chain unbuilt, including the friend-graph primitive underneath it."
+      ],
+      "missingConnectiveScreens": [
+        "Friend/follow graph + add-friend affordance on /profile/:username and in search — the prerequisite data model; without it no 'friends live' query is possible (deeper than any UI band).",
+        "Home 'Live now' friends band ABOVE the own-session Active band, backed by a convex live query, with a Watch CTA deep-linking to the spectator route.",
+        "A Friends/Activity destination (nav tab or prominent home entry) — the obvious, conventional place to discover live friends.",
+        "Production Spectator route per engine (sets/goals/cricket/tennis) ported from the worktree — the terminal screen.",
+        "Public/authless share-live route so inbound WhatsApp/QR links resolve to a spectator view with a synthesized back → home/sign-up CTA.",
+        "Empty state for the Live-now band ('No friends live right now') so the feature is visibly present-but-quiet, not invisible.",
+        "Live-start push notification → deep-link into spectator, so a returning user doesn't even need to hunt.",
+        "Watch affordance on a live friend's profile and in search results, so a found-live friend is one tap from spectating."
+      ],
+      "simplificationOpportunities": [
+        "Collapse the 5-screen wander to a single home Live-now band + one Watch tap; delete the reliance on Account→search as the social path entirely.",
+        "Stop using /users/search as the discovery hub — search is a find-a-specific-person tool; move discovery to home where the app already opens.",
+        "Visually and structurally separate 'your matches' from 'friends live' so the own-session LIVE badge can never be mistaken for watchable content (relabel own sessions e.g. 'Resume', reserve 'LIVE · Watch' for friends).",
+        "Ship the friend graph + Live query + discovery band + spectator route as ONE vertical slice; a spectator screen shipped alone stays unreachable and adds no user-visible value.",
+        "One canonical spectator route reused across sports (engine-parameterized) rather than divergent per-sport screens, to keep the terminal surface and its back-stack consistent."
+      ],
+      "stepReductionIdeas": [
+        "Target-state path: open app → tap Watch on Live-now band → spectator = 2 taps (from current 4-5 taps to a dead end).",
+        "Notification-first path: live-start push → deep-link straight to spectator = 1 tap, bypassing home discovery entirely for the highest-intent case.",
+        "Shared-link path: WhatsApp/QR → public spectator route = 0 in-app navigation; the link IS the entry, no hunting.",
+        "Eliminate the own-session-card detour tap by removing 'LIVE' semantics from self-sessions so users never spend a tap round-tripping through /game recovery."
+      ],
+      "tooManySteps": true,
+      "transitionGuidance": "Discovery band must be live-subscribed: a friend going live should slide INTO the Live-now band in real time (subscription, not manual refresh), and scores should tick in-place on the spectator screen rather than full-reloading. Home → Watch → Spectator should be a forward PUSH with a clear titled back that returns to the home Live band (never unwinds through Account/search). The own-session card → /game/:id recovery is effectively a modal recovery flow — its back must return to home cleanly, and it should not share the same visual treatment or transition as the friend-Watch push, so the two intents feel distinct. Critical back-stack gap: a cold-start shared/deep link lands the spectator with NO history — synthesize a back entry (→ home if signed-in, → sign-up/CTA if not) so back never dead-ends or exits the app. If a watched match ends while spectating, transition gracefully to a post-match summary with a 'back to Live now' CTA rather than a hard route change. Keep the spectator screen read-only and reactive: incoming events animate; no navigation churn."
+    }
+  },
+  {
+    "journey": "social",
+    "persona": "user growing their network",
+    "trace": {
+      "goal": "Find friends, follow/add them, get notified, browse an activity feed + public player profiles",
+      "persona": "A user growing their network on ScoreEasy",
+      "journey": "The social journey is effectively a hole in the shipped app. Of the five anchor screens, three do not exist (Activity feed, Friends list, Notifications are all currentState=missing with route \"(missing)\"), and the two that do exist are read-only dead-ends. There is NO social entry point in the app shell: the bottom nav is Home / Play / History / Stats / Account (index.jsx:578-585) — no Friends tab, no notifications bell, no activity feed. The ONLY path to \"find friends\" is buried: the user must go to Account (/profile), then tap a link that MonoProfile exposes to /users/search (MonoProfile.jsx:89 and :385 are the only two links to it in the entire codebase). User search (MonoUserSearch.jsx) requires an exact username (\"Search cloud profiles when online\"), offers no browse/contacts-import/invite, and its results only Link to /profile/:username. That public profile (MonoProfile.jsx) contains ZERO social affordances — a grep for friend/follow/add/request/invite/notif returns nothing — so the terminal, defining action of the whole journey (add friend / follow) simply does not exist. The user reaches a read-only stranger's profile in ~3 taps and then hits a wall: they cannot add, cannot follow, cannot be notified, and there is no feed to browse. The goal is unachievable in the current app; only \"view a public profile\" is reachable.",
+      "steps": [
+        {
+          "screen": "Signed-in home /dashboard (landing/DashboardLanding.jsx)",
+          "action": "Look for a way to find or follow friends",
+          "friction": "No social entry point on home at all — no Friends tab, no activity feed, no find-friends link. DashboardLanding only navigates to /profile, /play, /history, tournaments, quick match (verified DashboardLanding.jsx). User has no signposted way to start the social journey and must guess that 'Account' is the door.",
+          "transitionTo": "Bottom-nav 'Account' tab -> /profile"
+        },
+        {
+          "screen": "Your profile / Account /profile (MonoProfile.jsx, 394 ln)",
+          "action": "Tap the search/find-players link",
+          "friction": "Find-friends is hidden inside the Account screen (MonoProfile.jsx:89 button, :385 Link). These are the ONLY two links to /users/search anywhere in the app. It is discoverable only by chance, and the labelling is about 'cloud profiles/sync', not 'friends'.",
+          "transitionTo": "/users/search"
+        },
+        {
+          "screen": "User search /users/search (MonoUserSearch.jsx, 189 ln)",
+          "action": "Type an exact username, submit, tap a result",
+          "friction": "Requires knowing the exact username ('Search cloud profiles when online, or start a guest match'). No browse, no suggestions, no contacts/phone import, no 'invite' despite HiFi calling this 'Find & invite friends'. Results only Link to /profile/:username.",
+          "transitionTo": "/profile/:username"
+        },
+        {
+          "screen": "Player profile (public) /profile/:username (MonoProfile.jsx)",
+          "action": "Try to add friend / follow",
+          "friction": "DEAD END. MonoProfile has zero add-friend/follow/request affordances (grep for friend|follow|add|request|invite = 0 hits). Same component as own account, rendered read-only. The single defining action of this journey is not implemented. No career-records/MVP/Win% add-friend variant that HiFi specifies.",
+          "transitionTo": "none — goal fails here"
+        },
+        {
+          "screen": "Friends list — MISSING",
+          "action": "View who you've added",
+          "friction": "currentState=missing, route '(missing)'. No route in index.jsx. Cannot be reached.",
+          "transitionTo": "n/a"
+        },
+        {
+          "screen": "Notifications — MISSING",
+          "action": "Get notified of friend requests / match invites / live alerts",
+          "friction": "currentState=missing, route '(missing)'. No route, no bell icon in nav. 'Get notified' is impossible in the current app.",
+          "transitionTo": "n/a"
+        },
+        {
+          "screen": "Activity feed — MISSING",
+          "action": "Browse friends' activity ('Eagles vs Hawks is live · 3 friends watching · Watch')",
+          "friction": "currentState=missing, route '(missing)'. The whole social/live feed layer is absent; Dashboard notes explicitly say the live/upcoming+Activity feed is 'not present yet'.",
+          "transitionTo": "n/a"
+        }
+      ],
+      "totalTaps": 3,
+      "seamlessness": 2,
+      "intuitiveness": 2,
+      "deadEnds": [
+        "Player profile /profile/:username has NO add-friend/follow/request button (MonoProfile.jsx: zero social affordances) — the terminal action of the journey does not exist",
+        "Friends list is missing (no route in index.jsx) — cannot view or manage a network",
+        "Notifications is missing (no route, no nav bell) — 'get notified' is impossible",
+        "Activity feed is missing (no route) — no way to browse friends' live/recent activity",
+        "User search offers no 'invite' path despite HiFi naming it 'Find & invite friends' — MonoUserSearch results only link to a read-only profile or 'start a guest match'"
+      ],
+      "lostRisks": [
+        "No social affordance in the app shell — bottom nav (Home/Play/History/Stats/Account) gives the user no clue where 'friends' lives; they cannot even begin the journey without guessing 'Account'",
+        "The only find-friends links (MonoProfile.jsx:89, :385) are buried in the Account screen and framed as 'search cloud profiles / sync', not 'find friends'",
+        "On a stranger's profile the user will hunt for an add/follow button that isn't there and assume the app is broken",
+        "Search demands an exact username with no autocomplete/browse — user who doesn't know a friend's handle is stuck"
+      ],
+      "dropOffRisks": [
+        "User abandons at the home screen because there is no visible social entry point",
+        "User abandons on the public profile when no add-friend button exists — the single most important tap in the journey is missing",
+        "User abandons at search after failing to guess an exact username",
+        "Because notifications/feed don't exist, even a user who manually connected would get no re-engagement loop — high long-term churn"
+      ],
+      "fixes": [
+        "Add an 'Add friend' / 'Follow' primary CTA to /profile/:username (public variant of MonoProfile) — the highest-priority fix; the journey cannot complete without it. Introduce a friendships/follows Convex table + mutation.",
+        "Build the three missing screens as real routes: /friends (Friends list), /notifications (Notifications), and an Activity feed on /dashboard ('is live · N friends watching · Watch') — all currentState=missing today.",
+        "Add a social entry point to the app shell: a Friends tab and/or a notifications bell in the bottom nav (index.jsx:578-585), so the journey is discoverable without going through Account.",
+        "Promote find-friends out of the Account screen: surface it on Home and relabel /users/search from 'Search cloud profiles' to 'Find & invite friends', adding browse/suggestions and an actual invite/share-link path.",
+        "Wire notifications for friend requests, match invites, and live alerts so the network the user builds produces a re-engagement loop (currently none exists)."
+      ]
+    },
+    "critique": {
+      "journey": "social — find friends, follow/add, get notified, browse an activity feed + public profiles. VERIFIED against source: the trace is factually correct. Bottom nav (index.jsx bottomNavItems) is Home/Play/History/Stats/Account with no social slot; /users/search is reachable ONLY from MonoProfile.jsx:89 and :385; MonoProfile renders public profiles with zero add/follow/request affordances (the grep \"add\" hits are all the CSS word `padding`); no /friends, /notifications, or activity routes exist. The journey is not merely rough — its terminal action is absent, so it cannot complete. My critique therefore targets not the 3-tap path as drawn but two deeper problems the trace under-weights: (1) the \"3 taps to a profile\" figure is optimistic — exact-username search means most users reach NOTHING, so real completion is ~0; (2) the fix set risks over-building (two social graphs, a bloated tab bar, four new surfaces at once) when a single asymmetric-follow slice would ship the loop far cheaper.",
+      "verdict": "broken",
+      "tooManySteps": true,
+      "lostRisksConfirmed": [
+        "CONFIRMED — no social affordance in the app shell: bottom nav is Home/Play/History/Stats/Account (verified index.jsx). The user cannot even begin without guessing that 'Account' is the door to finding people.",
+        "CONFIRMED — the only find-friends links (MonoProfile.jsx:89, :385) are buried in Account and framed as 'search cloud profiles/sync', not 'find friends'. Discoverable only by accident.",
+        "CONFIRMED and WORSE than stated — on a stranger's profile the user hunts for an add/follow button that isn't there; because it is the SAME MonoProfile component rendered read-only, they may not even realize they're on someone else's profile vs their own, compounding the 'app is broken' read.",
+        "CONFIRMED — exact-username search with no autocomplete/browse means the '3-tap' path only works for a user who already knows the handle. Everyone else is lost at search, so the trace's totalTaps=3 overstates reachability; effective completion rate is near zero.",
+        "ADDED — even a user who somehow connects gets NO re-engagement: with notifications and feed missing there is no loop back into the app, so the 'lost' risk is not just first-session but permanent silent churn."
+      ],
+      "deadEndsConfirmed": [
+        "CONFIRMED — /profile/:username has no add-friend/follow/request CTA (MonoProfile.jsx; only `padding` matches). The single defining action of the journey does not exist. This is the one blocking dead-end.",
+        "CONFIRMED — Friends list has no route registered in index.jsx; cannot be viewed or managed.",
+        "CONFIRMED — Notifications has no route and no nav bell; 'get notified' is impossible.",
+        "CONFIRMED — Activity feed has no route; no way to browse friends' live/recent activity.",
+        "CONFIRMED — search offers no invite path despite HiFi's 'Find & invite friends' naming; results only Link to a read-only profile, so even a failed search dead-ends with no share/invite escape hatch."
+      ],
+      "missingConnectiveScreens": [
+        "Relationship STATE machine on the public profile — none/requested/following/friends/blocked. Today there isn't even one button; a real flow needs the button to change (Follow -> Following, or Add -> Requested/Pending) plus an unfollow path. Without this the profile can't represent connection at all.",
+        "Search empty/no-result state with an invite CTA — 'No user named X · Invite them' (share link). This is the connective screen that turns a failed exact-match search from a dead-end into a growth action.",
+        "A suggestions / people-you-may-know bridge between search and profile — contacts import, recent opponents, or friends-of-friends — so users who don't know a handle have any path forward.",
+        "Empty states for the three missing screens — an empty Friends list, empty feed, and empty notifications each need an onboarding empty state ('Find players' CTA), not a blank route, or the new screens just relocate the dead-end.",
+        "Confirmation feedback — a toast/inline state after Follow/Add, and a request-received surface, so the action registers. Currently there is no success signal because there is no action.",
+        "A friend-requests / pending inbox (only if a mutual-friend model is chosen) — the accept/decline screen that a symmetric graph requires. Choosing follow instead removes the need for this entire screen (see simplifications)."
+      ],
+      "simplificationOpportunities": [
+        "Pick ONE social graph, not both. The goal text and fixes say 'add friend / follow' — that is two different systems (symmetric+approval vs asymmetric+instant). Ship asymmetric FOLLOW only: no pending state, no accept/decline inbox, no request notification-to-approve. This deletes an entire screen and a notification sub-flow while still delivering the feed and re-engagement loop.",
+        "Keep MonoProfile as the single profile component for own+public (don't add a 5th screen) — just branch a read-only public variant that injects the Follow CTA and a clear 'viewing @handle' header. Reuse is correct here; the fix is a variant, not a new route.",
+        "Don't add both a Friends tab AND a notifications bell to the bottom nav — that pushes it to 6-7 items and crowds it. Put the notifications bell in the TOP app bar and give social ONE bottom-nav slot (or embed the feed in Home). Bottom nav stays <=5.",
+        "Embed the Activity feed as a Home module rather than a separate /activity route. It makes the feed the most discoverable surface, gives Home a reason to be re-opened, and avoids a fourth new route. Resolve the trace's own 'feed on /dashboard vs missing route' ambiguity in favor of Home-embedded.",
+        "Phase the build: do NOT ship all four missing pieces at once. Phase 1 = Follow CTA on public profile + a /friends (following) list + surface search on Home. Phase 2 = feed + notifications. This makes the graph exist and be viewable before investing in the re-engagement layer."
+      ],
+      "stepReductionIdeas": [
+        "Make social a 1-tap destination. Today it is Home -> Account -> (hunt) -> search = 3+ taps before a query, with the entry hidden and mislabeled. A single 'Friends'/'Social' nav slot (or a Home search entry) collapses discovery to one tap.",
+        "Surface a search/find-people affordance directly on Home so the journey starts where the user lands, eliminating the Account detour entirely.",
+        "On the public profile, make Follow the primary CTA reachable without scrolling, so view->connect is 1 tap, not a hunt that currently never resolves.",
+        "Relabel /users/search from 'Search cloud profiles' to 'Find & invite friends' and add browse/suggestions so a user who doesn't know an exact handle isn't forced into extra failed attempts (each failed exact-match is a wasted step)."
+      ],
+      "transitionGuidance": "Root-level social surfaces (Friends list, Activity feed if routed) must be tab-switch destinations that RESET the stack and scroll — no back-button accumulation between tabs; tapping the active tab scrolls-to-top/refreshes. Search -> profile is a forward push with a slide-in; the back gesture MUST return to the search results with the query and scroll position preserved (don't drop the user back to Account). Because the public profile reuses the own-account MonoProfile component, give the public variant a distinct pushed-header treatment ('< @handle') so it never reads as the user's own account, and ensure Back leaves it cleanly. Notifications should open as a lightweight overlay/sheet from a top-bar bell (dismiss returns to the current screen, no navigation), while a DEEP-LINK from a notification (e.g. new follower) pushes the relevant profile with a synthesized back-stack that lands on the feed/Home, never a dead push. The Follow action must be optimistic with an immediate button-state flip (Follow -> Following) and a toast, reverting on error — the transition is the success feedback. Avoid modal-on-modal: search results -> profile -> follow should all live in one stack."
+    }
+  },
+  {
+    "journey": "tournament",
+    "persona": "organiser",
+    "trace": {
+      "goal": "Create a tournament, run fixtures, score them, track standings/bracket",
+      "persona": "Tournament organiser",
+      "journey": "The end-to-end path exists and is built for the happy path, but it is sport-scoped and buried. An organiser enters at /play, must first pick a SPORT, then finds \"Tournament\" inside the per-sport home (MonoSportHome, within /play) — tournaments are not a top-level destination. From there: Tournament list (:sport/tournament, MonoTournamentList, 312 ln — the app's de-facto \"Fixtures\" screen) -> Create (:sport/tournament/new, MonoTournamentSetup — an 1838-line monolith mixing name/format/teams/generate) -> Tournament dispatch (:sport/tournament/:id, TournamentDispatcher picks the per-engine view showing fixtures/bracket) -> tap a fixture -> Tournament match score (:sport/tournament/:id/match/:matchId/score, MonoTournamentLiveScore) -> back to dispatch to read Standings / Bracket. The two payoff screens the organiser came for — Standings and Bracket — are both currentState=partial: standingsColumns config exists but a cleanly rendered standings table is unverified, and the bracket is 'present in setup' but the HiFi semifinals/final bracket view is not confirmed rendered. A standalone schedule/fixtures calendar is currentState=missing. The biggest structural hole is re-entry: nav tabs are Play/History/Stats with NO Tournaments tab, so resuming a running tournament forces the organiser to re-walk Play -> sport -> tournament list every time. Creation is heavy (monolith), the payoff is thin (partial standings/bracket), and re-entry is friction-heavy — so the journey completes but feels effortful and uncertain at exactly the moments that matter to an organiser.",
+      "steps": [
+        {
+          "screen": "Play hub — /play (MonoPlayHub, hifiRef Start·Browse)",
+          "action": "Pick a sport from the sport grid",
+          "transitionTo": "Sport home (within /play)",
+          "friction": "Organiser must commit to ONE sport before tournaments are even visible; a tournament is inherently sport-scoped (:sport/tournament) so cross-sport events aren't modelled."
+        },
+        {
+          "screen": "Sport home — within /play (MonoSportHome, hifiRef Start·Guided)",
+          "action": "Choose 'Tournament' (vs Quick match)",
+          "transitionTo": "Tournament list (:sport/tournament)",
+          "friction": "Tournament entry is a secondary option nested under a sport, not a first-class tab; two MonoSportHome variants exist (_TABBED unwired) so layout is unsettled."
+        },
+        {
+          "screen": "Tournament list — :sport/tournament (MonoTournamentList, 312 ln, hifiRef Fixtures)",
+          "action": "Tap 'New / Create tournament'",
+          "transitionTo": "Tournament setup (:sport/tournament/new)",
+          "friction": "This one screen doubles as both the tournament list AND the 'Fixtures' surface (hifiRef=Fixtures) — the two concepts are conflated."
+        },
+        {
+          "screen": "Tournament setup / create — :sport/tournament/new (MonoTournamentSetup, 1838 ln monolith)",
+          "action": "Enter name, pick bracket vs round-robin, add teams one by one, generate fixtures",
+          "transitionTo": "Tournament dispatch (:sport/tournament/:id)",
+          "friction": "1838-line monolith conflates name/format/team-entry/generate in one dense screen — no guided stepper; adding N teams is many repetitive taps and is the heaviest friction point in the whole journey."
+        },
+        {
+          "screen": "Tournament dispatch — :sport/tournament/:id (TournamentDispatcher -> per-engine, hifiRef Fixtures/Bracket)",
+          "action": "Review generated fixtures, tap a fixture to score",
+          "transitionTo": "Tournament match score (:sport/tournament/:id/match/:matchId/score)",
+          "friction": "Engine-selected view; whether fixtures, standings and bracket coexist clearly here is uncertain — bracket/standings are only partial."
+        },
+        {
+          "screen": "Tournament match score — :sport/tournament/:id/match/:matchId/score (MonoTournamentLiveScore)",
+          "action": "Score the fixture to completion, finish match",
+          "transitionTo": "Back to tournament dispatch",
+          "friction": "In-match scoring itself is many taps; no live-share/spectator for tournament matches (live/spectator missing in prod), so an organiser can't broadcast the fixture."
+        },
+        {
+          "screen": "Tournament dispatch — Standings / Bracket (currentState=partial)",
+          "action": "Read updated standings table and/or bracket progression",
+          "transitionTo": "(loop back to next fixture, or exit)",
+          "friction": "Standings render is unverified against config; bracket semifinals/final view is only 'present in setup', not confirmed; unclear if the just-scored result auto-updated standings and auto-advanced the bracket winner."
+        }
+      ],
+      "totalTaps": 22,
+      "seamlessness": 6,
+      "intuitiveness": 5,
+      "lostRisks": [
+        "No top-level Tournaments tab (nav = Play/History/Stats): to resume a running tournament the organiser must re-walk Play -> pick sport -> tournament list every session — easy to feel lost or think the tournament vanished.",
+        "Tournaments are sport-scoped (:sport/tournament) and entered only after picking a sport; an organiser thinking 'I want to run my tournament' has no obvious cross-sport home for it.",
+        "Tournament list IS the 'Fixtures' surface (hifiRef=Fixtures) — a user looking for a separate fixtures/schedule screen won't find one and may not realise the list already is it.",
+        "After scoring a fixture, it's ambiguous whether the result registered: standings/bracket are partial, so no clear confirmation that the score advanced the bracket or updated the table.",
+        "Standings vs Bracket both live 'within tournament' (dispatch) with no explicit labelled tabs surfaced — the organiser may not know where to look for each."
+      ],
+      "dropOffRisks": [
+        "The 1838-line MonoTournamentSetup monolith is the primary drop-off: heavy, dense, repetitive team entry with no stepper before any payoff.",
+        "Re-entry friction (no Tournaments tab / no resume card) causes drop-off across a multi-day tournament — organisers running real events won't tolerate re-navigating every time.",
+        "Partial Standings + partial Bracket mean the core payoff (tracking who's winning / who advances) may underdeliver or render incompletely, causing abandonment right after the work of scoring.",
+        "No live-share/spectator for tournament matches removes the social pull that would keep an organiser and audience engaged."
+      ],
+      "deadEnds": [
+        "Schedule / fixtures calendar — currentState=MISSING: no standalone upcoming-fixtures calendar; the tournament list is the only schedule surface.",
+        "Bracket semifinals/final view — currentState=PARTIAL: bracket 'present in setup' but the HiFi semifinals/final visualization isn't confirmed to render, so tapping toward a bracket can dead-end without a real bracket.",
+        "Standings table — currentState=PARTIAL: standingsColumns config exists but a rendered, HiFi-matching standings table is unverified — a potential empty/incomplete dead-end.",
+        "Tournament live-share / spectator — MISSING in production (live/ + convex/live.ts exist only in a worktree branch): no path to broadcast a tournament match."
+      ],
+      "fixes": [
+        "Add a top-level 'Tournaments' entry (nav tab or a resume card on DashboardLanding) so organisers re-enter an in-progress tournament in one tap instead of Play -> sport -> list.",
+        "Break MonoTournamentSetup (1838 ln) into a guided stepper: Name -> Format (bracket/round-robin) -> Add teams (inline, bulk/paste) -> Review & generate — cutting the heaviest-friction step.",
+        "Finish Standings into a real rendered table driven by the existing per-sport standingsColumns config, and complete the Bracket into a semifinals/final view that auto-advances the winner immediately after each fixture is scored.",
+        "After a fixture is scored, return to dispatch with an explicit confirmation + highlight the updated standings row / advanced bracket slot so result registration is unmistakable.",
+        "Add a dedicated fixtures/schedule screen (or clearly split the tournament list into Upcoming vs Completed) so 'run fixtures' has a purpose-built surface rather than reusing the list.",
+        "Reconsider sport-scoping: either surface the sport choice explicitly as part of tournament creation, or allow a tournament home that isn't gated behind picking a sport first."
+      ]
+    },
+    "critique": {
+      "tournament": "tournament",
+      "journey": "tournament",
+      "verdict": "needs-work",
+      "tooManySteps": true,
+      "lostRisksConfirmed": [
+        "CONFIRMED — No Tournaments nav tab (Play/History/Stats). Re-entry to a running event forces Play -> sport -> list every session; across a multi-day tournament the organiser will feel the event 'vanished'. This is the single most damaging lost-risk.",
+        "CONFIRMED — Sport-gate mental-model mismatch. Tournaments live at :sport/tournament and are only reachable after committing to one sport. An organiser thinking 'run MY tournament' has no cross-sport home, and cross-sport events aren't modelled at all.",
+        "CONFIRMED — Tournament list doubles as the 'Fixtures' surface (hifiRef=Fixtures). A user hunting for a separate fixtures/schedule screen won't find one and won't realise the list already is it — the concepts are conflated on one screen.",
+        "CONFIRMED — Ambiguous result registration after scoring. With standings/bracket only partial, there is no explicit confirmation that a finished match updated the table or advanced the bracket winner; the organiser can't trust the payoff.",
+        "CONFIRMED — Standings vs Bracket both hang off the engine-selected dispatch with no explicit labelled tabs. There is no stable 'tournament workspace' shell, so the organiser has no reliable place to look for each payoff even inside a single tournament — this is the deeper structural version of the two above.",
+        "ADDED — Deep-link/back-stack ambiguity: nothing guarantees that leaving a match returns to the tournament rather than unwinding toward Play, compounding the re-entry problem."
+      ],
+      "deadEndsConfirmed": [
+        "CONFIRMED — Schedule/fixtures calendar is MISSING; the tournament list is the only schedule surface, so 'run fixtures' has no purpose-built home.",
+        "CONFIRMED — Bracket semifinals/final view is PARTIAL ('present in setup', HiFi render unconfirmed). Tapping toward a bracket can dead-end on an unrendered view.",
+        "CONFIRMED — Standings table is PARTIAL (standingsColumns config exists, rendered HiFi table unverified). Risk of an empty/incomplete table exactly after the work of scoring — worst possible moment for a blank state.",
+        "CONFIRMED — Tournament live-share/spectator is MISSING in production (live/ + convex/live.ts only in a worktree branch); no path to broadcast a tournament match, removing the social pull.",
+        "NUANCE — These are partials, not hard dead-ends, but without designed empty/loading states a partial render reads to the user exactly like a dead-end. The fix is as much about honest empty states as about finishing the feature."
+      ],
+      "missingConnectiveScreens": [
+        "A persistent Tournament workspace shell with explicit internal tabs (Fixtures | Standings | Bracket) wrapping :sport/tournament/:id — the biggest missing pattern. Today TournamentDispatcher engine-selects a view, so there is no stable container the three payoff surfaces coexist in.",
+        "A top-level re-entry surface: a 'Tournaments' nav tab AND/OR an in-progress resume card on DashboardLanding that deep-links straight to :sport/tournament/:id in one tap.",
+        "A post-score confirmation/return pattern: on finishing a match, land back on the workspace (Standings or Bracket tab) with the updated row / advanced slot highlighted — closes the 'did it register?' loop.",
+        "Designed empty/loading/partial states for Standings and Bracket so an unfinished render communicates 'no data yet' instead of reading as a dead-end.",
+        "Sport-selection folded INTO the create flow (a field/step) rather than a hard gate — removes the standalone sport-home hop and the mental-model mismatch.",
+        "A settled Sport home layout — the two MonoSportHome variants (_TABBED unwired) mean the entry layout is genuinely undecided; pick one before wiring transitions."
+      ],
+      "stepReductionIdeas": [
+        "Resume card / Tournaments tab collapses the 4-tap re-entry (Play -> sport -> sport home -> list) to a single deep-link tap — the highest-leverage tap reduction.",
+        "Bulk/paste team entry in creation removes the many repetitive single-team taps that dominate the 22-tap count and are the heaviest friction point.",
+        "Fold sport pick into creation to drop one whole screen (Sport home) from the first-run path.",
+        "Deep-link back-stack so leaving a match pops to the tournament workspace, not toward Play — no re-navigation taps on every score loop.",
+        "Break MonoTournamentSetup into a stepper (Name -> Format -> Add teams -> Review & generate) — doesn't cut total fields but replaces one dense error-prone screen with guided, recoverable steps."
+      ],
+      "simplificationOpportunities": [
+        "Remove the sport gate as a hard prerequisite: make sport a field/step inside creation (or a filter on a cross-sport tournament home), so tournaments become a first-class destination rather than something buried under a per-sport home.",
+        "Split the conflated Tournament-list/Fixtures screen cleanly: either name it 'Tournaments' and give fixtures their own tab inside the workspace, or split the list into Upcoming vs Completed — one screen should not silently wear two identities.",
+        "Decompose the 1838-line MonoTournamentSetup monolith into a guided stepper with bulk team paste — the single biggest friction and drop-off reduction.",
+        "Consolidate the two MonoSportHome variants (_TABBED unwired) into one settled layout before adding transitions on top of an unsettled surface.",
+        "Replace the engine-selected TournamentDispatcher-as-home with a stable tabbed workspace shell so Fixtures/Standings/Bracket are always in the same place regardless of engine.",
+        "Finish (or honestly empty-state) Standings and Bracket so the core payoff isn't 'partial' at the exact moment the organiser has done the most work."
+      ],
+      "transitionGuidance": "\"Establish a single stable route (:sport/tournament/:id) as a Tournament workspace with three internal tabs (Fixtures/Standings/Bracket); switching tabs is instant cross-fade, never a re-dispatch or re-navigation. Scoring a match is a forward push (slide-in) onto the workspace; finishing pops back to the workspace on the Standings (round-robin) or Bracket (knockout) tab — NOT to Play — with the just-updated standings row or advanced bracket slot briefly highlighted/animated so registration is unmistakable. Back from any match must pop exactly one level to the tournament, never unwind the whole Play->sport->list chain. Resume (nav tab or landing card) deep-links straight to the workspace, bypassing the entry chain entirely; the back-stack from a resumed deep-link should synthesize a sane parent (Tournaments list) rather than dead-ending. Creation stepper steps use lightweight horizontal slide with all entered data preserved on back, so the organiser can revise Format or Teams without losing work.\""
+    }
+  },
+  {
+    "journey": "records",
+    "persona": "stats-minded user",
+    "trace": {
+      "persona": "Stats-minded user — wants to review past matches, drill into a match, see player stats, a players leaderboard, and career milestones.",
+      "goal": "Review records end-to-end: past matches → match detail → player stats → players leaderboard → player profile → milestones.",
+      "journey": "The reachable half works but is shallow, and the stats-heavy half of the goal has no screens. From the signed-in home the bottom-nav 'History' tab lands cleanly on /history (MonoHistory.jsx), but a filter block + 3-col summary (I-086) eat the top of the mobile viewport before any match appears. Tapping a match row does NOT navigate — it opens an inline sheet via setSelectedEntry (line 805) offering only Rematch / Share / Close. There is no scorecard, no per-match player breakdown, no match graphs (Scorecard + Match·graphs are currentState=missing), so 'match detail' dead-ends for a stats user. Switching to the 'Stats' bottom tab lands on /statistics (MonoStatistics.jsx), whose tabs (overview / per-sport / quick) are ALL team-level tables (TeamStatsTable/QuickTeamTable: name, won, pointsFor, winRate). There is no Players/Leaderboard tab and no player row anywhere, so the 'players leaderboard' and 'player stats' legs have no destination. Player profile (/profile/:username) exists but is not linked from history or stats — it is reachable only by direct URL or /users/search, invisible in this journey — and even when reached, MonoProfile (394 ln) shows account basics with no milestones/MVP/Win%/cups. Net: the journey completes ~40% of the goal (browse matches + a thin match sheet + team stats) and has three hard holes (leaderboard, player drill-down, milestones).",
+      "steps": [
+        {
+          "screen": "Home / Dashboard (/dashboard)",
+          "action": "Tap bottom-nav 'History' tab (nav labels: Play / History / Stats)",
+          "transitionTo": "/history",
+          "friction": "None — instant tab switch. Clear entry."
+        },
+        {
+          "screen": "History (/history, MonoHistory.jsx, 899 ln)",
+          "action": "Scroll past filter block + 3-col summary, then tap a match row",
+          "transitionTo": "Inline match sheet (setSelectedEntry state, same screen — no route change)",
+          "friction": "I-086: collapsible filters + summary dominate the mobile fold before results; I-053 perpetual-loading risk when useQuery returns undefined vs [] for guests/no-data. Row is tappable but gives no visual cue it's a drill target."
+        },
+        {
+          "screen": "Match detail sheet (selectedEntry overlay)",
+          "action": "Read final score; options are only Rematch / Share / Close (lines 871/880/888)",
+          "transitionTo": "Dead-end — Close returns to /history; Rematch navigates to /:sport/quick",
+          "friction": "DEAD-END for a stats user: no scorecard, no per-player line stats, no match graphs (all currentState=missing). 'Detail' is a 3-button sheet, not the HiFi Match-detail + Match·graphs screen."
+        },
+        {
+          "screen": "Bottom-nav 'Stats' tab",
+          "action": "Tap 'Stats'",
+          "transitionTo": "/statistics",
+          "friction": "I-066: nav says 'Stats' but the page title/tablist says 'Statistics' — minor label mismatch."
+        },
+        {
+          "screen": "Statistics (/statistics, MonoStatistics.jsx, 891 ln)",
+          "action": "Look through tabs (overview / per-sport / quick) for player stats or a leaderboard",
+          "transitionTo": "DEAD-END — no leaderboard, no player rows; empty-data path shows EmptyState CTA pushing back to 'Start quick match' (out of the records journey)",
+          "friction": "HOLE: every tab is TEAM-level (TeamStatsTable/QuickTeamTable). No Players/Leaderboard tab exists in the real code. The stats-minded user's core target simply is not here, with no cue where to go."
+        },
+        {
+          "screen": "Player profile (/profile/:username, MonoProfile.jsx, 394 ln)",
+          "action": "Not reachable from this journey — no link from history or stats; only via direct URL or /users/search",
+          "transitionTo": "n/a — off-path",
+          "friction": "Unreachable in-flow, and even if reached it lacks milestones/MVP/Win%/cups (HiFi partial). Milestones have no screen anywhere."
+        }
+      ],
+      "transitionTo": "n/a",
+      "totalTaps": 4,
+      "seamlessness": 4,
+      "intuitiveness": 4,
+      "deadEnds": [
+        "Match detail sheet: terminal overlay with only Rematch / Share / Close — no scorecard, no per-match player stats, no match graphs (Scorecard + Match·graphs currentState=missing).",
+        "Statistics /statistics: team-only tables (overview/per-sport/quick); NO players leaderboard tab and no player rows — the 'players leaderboard' + 'player stats' legs have no screen.",
+        "Statistics empty-data path: EmptyState CTA routes the user to 'Start quick match' / 'Create tournament', ejecting them from the records journey into scoring.",
+        "Milestones/career records: no surface anywhere in the app (missing)."
+      ],
+      "lostRisks": [
+        "On /history, filters + 3-col summary (I-086) fill the mobile fold; a user may think there are no matches and never scroll to the list.",
+        "Match row gives no affordance that tapping opens a detail sheet (looks like a static card).",
+        "'Stats' (nav) vs 'Statistics' (page title/tabs) mismatch (I-066) creates a momentary 'is this the right place?' doubt.",
+        "On /statistics a stats-minded user hunts for a players leaderboard / player stats and finds only team tables — concludes the feature is missing or hidden, with zero navigation cue.",
+        "No player name is tappable anywhere in the flow, so the expected 'tap a player → profile' pattern (HiFi 'Tap a player to open their profile ›') never appears; profile feels unreachable."
+      ],
+      "dropOffRisks": [
+        "I-053 perpetual-loading on History/Statistics (undefined vs empty-array not distinguished) — guest/no-data users may bounce at a spinner that never resolves.",
+        "Shallow match-detail sheet: a stats user expecting a scorecard gives up after seeing only 3 action buttons.",
+        "Statistics EmptyState pushes users back into scoring instead of deeper into records — bounce out of the journey.",
+        "History empty state is plain text ('No match history yet'), not the designed Band-13 encouraging empty — weak recovery for first-run users."
+      ],
+      "fixes": [
+        "Promote match rows to a real Match-detail route (e.g. /history/:matchId) rendering the missing Scorecard (per-player line stats) + a link to Match·graphs, replacing the 3-button setSelectedEntry sheet.",
+        "Add a 'Players' / Leaderboard tab to MonoStatistics (today only overview/per-sport/quick, all team-level) with ranked players (Win%, MVP, milestones), each row navigating to /profile/:username.",
+        "Make player names tappable everywhere (match detail, leaderboard, scorecard) → /profile/:username, matching HiFi 'Tap a player to open their profile ›'.",
+        "Add a career milestones / MVP / Win% / cups module to MonoProfile (394 ln, currently account-only) so the milestones leg has a home.",
+        "Fix I-066: unify the bottom-nav label ('Stats') with the page title ('Statistics').",
+        "I-086: default History filters collapsed (showFilters=false) and render the match list above the summary so results are the first thing on mobile.",
+        "Add a loading guard distinguishing undefined (loading) vs [] (empty) to kill I-053 perpetual loading, and ship the designed Band-13 empty states for History."
+      ]
+    },
+    "critique": {
+      "journey": "records — Stats-minded user reviewing past matches end-to-end (matches → match detail → player stats → leaderboard → profile → milestones).\n\nVERDICT RATIONALE: broken, not merely shallow. The trace's own math is the tell: ~40% goal completion with THREE hard holes on the exact legs that define a \"stats-minded\" persona (leaderboard, player drill-down, milestones). A journey where the persona's core destinations do not exist as screens is broken for that persona, regardless of how clean the reachable 40% feels. The 4-tap / seamlessness-4 / intuitiveness-4 numbers flatter it — low tap count here reflects too FEW reachable screens, not efficiency.\n\nSTRUCTURAL DIAGNOSIS the trace under-weights: this is not a collection of bugs, it is an information-architecture failure. The records journey is forcibly split across TWO bottom-nav tabs (History = matches, Stats = team tables) plus an unlinked third area (/profile), with zero connective tissue between them. A records/stats user holds ONE mental model (\"my records\"); the app scatters it across three disconnected surfaces and never bridges them. That single-spine gap is the root cause; the missing leaderboard/milestones screens and the dead-end sheet are its symptoms.\n\nThe trace also over-weights cosmetic issues: I-066 (Stats vs Statistics label) and I-053 (perpetual-loading) are a rename and an implementation bug — they should not sit at the same severity as \"the leaderboard does not exist.\" Fix them, but they are not why the journey fails.\n\nOne nuance the trace's fix gets right and should be preserved: the inline sheet (Rematch/Share/Close) is the correct pattern for QUICK ACTIONS — it is only wrong as the primary tap target for \"detail.\" Don't delete the sheet; demote it. Tap-row → detail route; quick actions move to the detail screen's overflow.",
+      "verdict": "broken",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "CONFIRMED (highest): On /statistics the stats-minded user finds only team tables (overview/per-sport/quick), no player rows, no leaderboard, and zero navigational cue — they conclude the feature is absent and bounce. This is the single biggest lost-risk in the flow.",
+        "CONFIRMED: Records journey is split across History and Stats tabs with no bridge — a user who wants player stats has no signal they live under a different tab, and profiles live under neither. No single 'records' spine.",
+        "CONFIRMED: On /history the collapsible filter block + 3-col summary fill the mobile fold before any match row, so a first-run user can read it as 'no matches' and never scroll to the list.",
+        "CONFIRMED: The match row carries no affordance (looks like a static card) that tapping opens anything — the drill target is invisible.",
+        "CONFIRMED: No player name is tappable anywhere in the entire flow, so the expected 'tap a player → profile' pattern never surfaces and /profile feels unreachable even though the route exists.",
+        "CONFIRMED: The /statistics empty-data EmptyState CTA routes to 'Start quick match' / 'Create tournament' — it ejects the user OUT of records into scoring instead of deeper into stats.",
+        "CONFIRMED (low weight): 'Stats' nav label vs 'Statistics' page title creates momentary 'am I in the right place' doubt — cosmetic, not structural."
+      ],
+      "deadEndsConfirmed": [
+        "CONFIRMED: Match detail is a terminal inline sheet (Rematch / Share / Close, lines 871/880/888) — no scorecard, no per-match player stats, no match graphs (Scorecard + Match·graphs currentState=missing). For a stats user this is a hard dead-end masquerading as 'detail'.",
+        "CONFIRMED: /statistics has team-only tables and no Players/Leaderboard tab and no player rows — the 'players leaderboard' and 'player stats' legs have literally no destination screen.",
+        "CONFIRMED: /statistics empty-data path's EmptyState CTA pushes the user back into scoring, ejecting them from the records journey.",
+        "CONFIRMED: Milestones / career records have no surface anywhere in the app — the final leg terminates in a non-existent screen.",
+        "CONFIRMED: /profile/:username is off-path — reachable only by direct URL or /users/search, unlinked from history or stats, and even when reached shows account basics only (no milestones/MVP/Win%/cups), so it is a dead-end for the goal even if stumbled upon."
+      ],
+      "missingConnectiveScreens": [
+        "A real Match-detail route (/history/:matchId) rendering the missing Scorecard (per-player line stats) and a link into Match·graphs — replacing the 3-button sheet as the primary drill target.",
+        "A Players / Leaderboard surface (as a tab in Statistics or a dedicated screen) with ranked players (Win%, MVP, milestones), each row navigating to /profile/:username — currently there is NO player-level screen anywhere.",
+        "A career-milestones / MVP / Win% / cups module folded INTO MonoProfile (not a separate screen) so the milestones leg has a home without adding surface area.",
+        "Tappable player-name links as a cross-cutting pattern in match detail, leaderboard, and scorecard → /profile/:username — the connective glue that stitches the three scattered areas into one spine (matches HiFi 'Tap a player to open their profile ›').",
+        "A bridge from a match into its participants' stats (match detail → tap player → profile) and from a player back to their matches — so History, Stats, and Profile stop being three islands.",
+        "A designed Band-13 empty state for History/Statistics that keeps the user in-journey instead of the current plain text and the scoring-CTA ejection."
+      ],
+      "simplificationOpportunities": [
+        "Do NOT build a standalone Milestones screen — fold milestones/MVP/Win%/cups into the existing MonoProfile. One destination, less surface, exactly where a user expects a player's records.",
+        "Demote, don't delete, the inline sheet: keep Rematch/Share as quick actions in the detail screen's overflow menu; make the row tap open the detail route. Reuses existing sheet code for its correct purpose.",
+        "Clarify the Statistics tab IA so team-stats, player-stats, and leaderboard aren't three confused peers — a records user wants Players front-and-center; team tables are secondary. Reorder rather than add.",
+        "I-086: default filters collapsed (showFilters=false) and render the match list ABOVE the 3-col summary (or compress the summary to a one-line strip) so results are the first thing on the mobile fold.",
+        "Trivial unify: make bottom-nav 'Stats' and page title 'Statistics' the same word (I-066) — a rename, not a redesign.",
+        "Collapse the History→match-sheet→dead-end detour by making the match row itself the drill affordance (chevron / pressed state), removing the wasted tap into a sheet that offers no detail."
+      ],
+      "stepReductionIdeas": [
+        "Add a first-class 'Leaderboard' entry (nav or a pinned Statistics tab) so a stats-minded user reaches player rankings directly instead of hunting through team-level tabs and giving up.",
+        "Deep-link player names everywhere so 'match → player profile' is one tap, eliminating the /users/search detour that is currently the only path to a profile.",
+        "Surface a 'View full scorecard' affordance on the match row / detail so the scorecard is one hop, not gated behind a sheet that lacks it.",
+        "Tap-count is NOT the problem here — the flow is under-stepped because destinations are missing; adding the three missing screens INCREASES useful steps and is the correct move, not a regression."
+      ],
+      "transitionGuidance": "Bottom-nav tab switches (Play/History/Stats) are lateral peers — keep them instant with no slide/directional animation; a horizontal transition would falsely imply hierarchy. Drilling History list → Match-detail route should be a forward push (slide-in from trailing edge, or a shared-element expand from the tapped row) so the back gesture reads as 'return to list'. CRITICAL back-stack rule: when match detail becomes a route, Back MUST restore /history at the prior scroll position with filters preserved — a naive route push that resets scroll/filter state creates a NEW lost-risk worse than today's sheet (the sheet at least preserves list state on Close). Leaderboard → Profile is also a forward push; Profile Back returns to the leaderboard at position. Quick actions (Rematch/Share) invoked from detail should still animate up as a bottom sheet — that pattern is correct for actions, wrong for navigation. Rematch, which leaves records for /:sport/quick, should be a full context switch (not a push onto the records stack) so Back from scoring doesn't dump the user mid-records-stack. Replace the empty-state scoring-CTA jump with an in-place, non-navigating encouraging empty so users are never silently teleported out of the journey."
+    }
+  },
+  {
+    "journey": "teams",
+    "persona": "team manager",
+    "trace": {
+      "goal": "Create a team, add players, manage roster, view team stats",
+      "persona": "Team manager",
+      "journey": "The teams journey does not exist in the shipped app (design1-mono). All five anchor screens — My Teams, Create Team, Add Players, Roster, Team Stats — are currentState=missing in discovery.json, and this is confirmed at the code level: the router (src/designs/design1-mono/index.jsx, 34 routes) has ZERO team/roster/squad references, the bottom nav is only Play/History/Stats (no Teams tab), and no team/roster UI component file exists anywhere under src/. A Convex backend stub (convex/teams.ts) exists but exposes only a read-only `search` query — there is no createTeam, addPlayer, or getRoster mutation, and no schema for a persistent roster (matchPlayers is per-match, not a managed squad). So a team manager cannot even begin: there is no entry point, no screen, and no backend write path. The only place a human name can be typed is per-match player entry in MonoQuickMatch (ad-hoc, match-scoped, discarded after the game) or the orphaned, un-routed legacy MonoSetup.jsx. The realistic user walk is a hunt-and-abandon: open app -> scan nav -> check Profile -> try Play setup -> give up, hitting a dead end at every turn. Because the goal is 0% completable, seamlessness and intuitiveness both bottom out.",
+      "steps": [
+        {
+          "screen": "Dashboard landing (/dashboard -> landing/DashboardLanding.jsx) with bottom nav Play / History / Stats",
+          "action": "Manager opens the app and scans the nav for a way into team management",
+          "transitionTo": "Nowhere — there is no Teams tab or menu. First dead end.",
+          "friction": "No entry point. HiFi has a full Teams band (My teams -> Create -> Add players -> Roster); the app surfaces none of it in nav or home."
+        },
+        {
+          "screen": "Profile (/profile -> MonoProfile.jsx, 394 ln)",
+          "action": "Manager taps the avatar expecting 'My Teams' to live on the profile (the HiFi profile shows friends/teams/cups)",
+          "transitionTo": "Stays on Profile — no teams section exists.",
+          "friction": "MonoProfile only renders match history rows ('team1 vs team2', line 358) which are opponent text labels, not managed teams. No create-team CTA, no team list. Misleading: 'team' text appears but means match opponent."
+        },
+        {
+          "screen": "Play hub -> Sport home -> Quick match setup (/:sport/quick -> MonoQuickMatch.jsx, 2850 ln)",
+          "action": "Manager enters match setup, the only place player names can be typed, hoping to build a reusable squad",
+          "transitionTo": "Into a live scorer for a single match; player names are discarded after the game.",
+          "friction": "Players here are match-scoped ad-hoc entries, never saved to a team or roster. The one handleAddPlayer in the codebase (MonoSetup.jsx) is an un-routed legacy orphan. No path from here to a persistent roster."
+        },
+        {
+          "screen": "Manual URL guess (/teams or /my-teams) -> catch-all * route",
+          "action": "Manager types a guessed team URL",
+          "transitionTo": "NotFoundRoute / RouteRecoveryActions (404 recovery).",
+          "friction": "No such Route is registered, so any guessed team URL 404s. Confirms there is no hidden/unlinked screen to reach."
+        }
+      ],
+      "transitionTo": "",
+      "totalTaps": 4,
+      "seamlessness": 1,
+      "intuitiveness": 1,
+      "deadEnds": [
+        "Bottom nav (Play/History/Stats) has no Teams entry — the journey has no front door.",
+        "Profile has no teams section; 'team1 vs team2' rows are match opponents, not managed teams (MonoProfile.jsx:358).",
+        "MonoQuickMatch player entry is match-scoped and discarded — never becomes a saved roster.",
+        "convex/teams.ts has only a read-only search query — no createTeam/addPlayer/roster mutation, so even a hacked-in UI could not persist a team.",
+        "No /teams, /roster, or /team-stats route exists; guessed URLs fall to NotFoundRoute (404)."
+      ],
+      "lostRisks": [
+        "Manager assumes teams must exist somewhere and wastes time hunting through Profile and Play before concluding the feature is absent.",
+        "'team1/team2' fields in schema and match history strongly imply team support that isn't actually there — a classic false-affordance trap.",
+        "A manager who types players into a Quick Match setup may believe they created a reusable team, then find nothing saved next session (silent data loss of intent)."
+      ],
+      "dropOffRisks": [
+        "100% drop-off: the goal is not completable at all — every path terminates in a dead end within ~4 taps.",
+        "Team managers (a core persona for league/club use) cannot onboard their squad, so the whole persona churns before any match value is delivered.",
+        "Repeat per-match re-entry of the same player names (no roster) creates high friction that pushes managers to abandon the app for a spreadsheet or a competitor."
+      ],
+      "fixes": [
+        "Ship the Teams journey end-to-end (HiFi Bands 5/9): My Teams (grouped) -> Create Team (limits) -> Add Players (sources) -> Roster (squad & bench) -> Team Stats, plus the Teams empty state (Band 13).",
+        "Add a Teams entry point to navigation — either a 4th/5th bottom-nav tab or a 'My Teams' section on the Profile screen (matches HiFi profile showing teams/cups).",
+        "Build the Convex write layer: add teams table fields + createTeam, addPlayer/removePlayer, updateRoster mutations and a getRoster/getTeamStats query (today convex/teams.ts only has search).",
+        "Register routes: /teams (list), /teams/new (create), /teams/:id/roster (add/manage), /teams/:id/stats — the router currently has none.",
+        "Wire Quick Match to reuse saved rosters (pick from My Teams) so player entry stops being throwaway and feeds Team Stats.",
+        "Add a Teams empty-state with a single prominent 'Create your first team' CTA so first-run managers have an obvious start, mirroring the I-013 CTA-first pattern used on Statistics."
+      ]
+    },
+    "critique": {
+      "journey": "teams — Create a team, add players, manage roster, view team stats (persona: Team manager). Verified against design1-mono: router has zero team routes, bottom nav is Play/History/Stats only, no team/roster UI component exists, and convex/teams.ts exposes only a read-only search query. The feature is genuinely absent, not merely hard to reach.",
+      "verdict": "broken",
+      "tooManySteps": false,
+      "lostRisksConfirmed": [
+        "CONFIRMED false-affordance: matches.team1Id/team2Id (schema:37-38) and 'team1 vs team2' history rows (MonoProfile.jsx:358) strongly imply team support that does not exist — a manager will hunt for it.",
+        "CONFIRMED silent loss-of-intent: MonoQuickMatch player names are match-scoped (matchPlayers is per-match, schema:46) and never persist as a squad; a manager who 'sets up my team' there loses it next session.",
+        "CONFIRMED no front door: nav (Play/History/Stats) and Profile expose no Teams entry, so the manager concludes the feature is absent only after wasted hunting.",
+        "SHARPENING the trace understates the backend: the teams table already EXISTS (schema:56, with by_creator index + matchCount) — what is missing is a roster/membership junction table linking players to a team, plus createTeam/addPlayer/getRoster mutations. 'Add teams table fields' mis-frames the gap."
+      ],
+      "deadEndsConfirmed": [
+        "Bottom nav has no Teams tab — no entry point (index.jsx nav = Play/History/Stats).",
+        "Profile has no teams section; 'team' text is match-opponent labels only.",
+        "Quick Match player entry is discarded — never becomes a roster.",
+        "convex/teams.ts is read-only search — no write path, so even a hacked UI cannot persist a roster.",
+        "No /teams, /roster, /team-stats route — guessed URLs 404 to NotFoundRoute."
+      ],
+      "missingConnectiveScreens": [
+        "Teams entry point in nav or Profile (the missing front door).",
+        "My Teams list + first-run empty state with one 'Create your first team' CTA (mirror the Statistics CTA-first pattern).",
+        "Create Team screen (name + sport).",
+        "Add Players / Roster screen — with player SOURCES (invite existing users via MonoUserSearch, add guest names, import from prior match players).",
+        "Team detail / Team Stats view — should REUSE MonoStatistics filtered by teamId, not a bespoke new screen.",
+        "Keystone connective pattern (buried last in the trace's fixes): a roster PICKER inside MonoQuickMatch so saved teams flow into scoring and back into Team Stats. Without this, teams is a dead data silo and not worth building.",
+        "Backend: teamMembers/roster junction table + createTeam/addPlayer/removePlayer/getRoster/getTeamStats functions."
+      ],
+      "stepReductionIdeas": [
+        "The trace's 'Manual URL guess' (step 4) is not a real mobile-user step — no manager types /teams into a URL bar on a phone. It pads totalTaps to 4 and inflates the hunt; keep it only as a code-level 404 confirmation, not a journey step.",
+        "Do NOT ship 5 separate anchor screens for v1. Collapse Create Team + Add Players into ONE create flow (name the team, then add players inline on the same screen) — a manager thinks in one action, not two.",
+        "Defer a bespoke Team Stats screen — derive it by filtering the existing MonoStatistics by team, removing a whole screen from v1 scope.",
+        "MVP is 3 screens, not 6: My Teams (with empty state) -> Create+Add (combined) -> Roster. Everything else is v2."
+      ],
+      "simplificationOpportunities": [
+        "Reframe the finding: this is a MISSING FEATURE, not a journey with 'too many steps'. seamlessness/intuitiveness=1 is correct but the diagnosis should be 'no journey exists', so the fix is 'build the minimum spine', not 'reduce steps'.",
+        "Lead the build with the keystone (Quick Match reuses saved rosters), not with 5 CRUD screens — otherwise you ship teams nobody's match flow touches.",
+        "Reuse existing primitives instead of net-new: MonoUserSearch for add-players, MonoStatistics for team stats, the Statistics empty-state/CTA pattern for the Teams empty state. This cuts the surface roughly in half.",
+        "Backend is closer than the trace implies — the teams table + indexes exist; scope the write layer to a roster junction + ~4 functions rather than 'build the schema'."
+      ],
+      "transitionGuidance": "Nothing exists yet, so this is how it MUST behave once built. Entry (nav Teams tab or Profile 'My Teams') -> My Teams list is a tab root: switching to it is a cross-fade, no back arrow, and it must own its own back-stack root. From My Teams, Create and open-Team are forward pushes (slide-in from right) with a real back arrow returning to the list. On a first-run empty state, the CTA pushes into Create; back from Create must return to the empty My Teams, NOT to Dashboard — never drop the user out of the section. Deep links (/teams/:id/roster) must synthesize the parent stack (My Teams -> Team) so Back walks up sensibly rather than exiting to home. After Create succeeds, replace (not push) so Back doesn't return to a stale empty form — land on the new team's Roster with the list beneath it. The roster picker inside Quick Match should be a modal sheet (dismissable, non-destructive) so picking a saved team overlays rather than derails the scoring flow."
+    }
+  },
+  {
+    "journey": "settings",
+    "persona": "user configuring defaults",
+    "trace": {
+      "goal": "Set scoring defaults (default sport, Confirm wicket/goal), toggle Auto-share live link, switch Appearance to dark, and Export/Clear data.",
+      "persona": "User configuring app defaults / power user who wants to customize scoring, sharing, theme, and data.",
+      "journey": "The Settings journey is a HOLE in the current app — none of the four sub-goals is reachable. HiFi Band 7 (\"More · settings\": Sign-in-to-sync, Scoring defaults, Sharing/Auto-share, Appearance/dark, Data export+clear) has NO corresponding screen shipped; discovery.json marks \"Settings / More\" as currentState=missing, route=(missing), sourceFiles=[]. The bottom nav (index.jsx:565-585) offers only Home/Play/History/Stats/Account — no Settings, no More, no gear icon. A user hunting for defaults follows the only settings-scented affordances: the \"Account\" nav tab and the Dashboard \"Account — Sync and profile settings →\" card (DashboardLanding.jsx:212). Both dump the user at /profile (MonoProfile.jsx), which shows a profile header, stats, recent matches, and a lone \"Find players\" link — and not a single toggle. The word \"settings\" in the dashboard card is an unfulfilled promise. A determined user then tries the Clerk avatar \"Account menu\" (AuthUserButton, index.jsx:641), which only manages auth (email/password/sign-out). After 3-4 taps across two different \"Account\" surfaces, the user exhausts the app without setting a single default. Every goal — default sport, Confirm wicket/goal, Auto-share, dark mode, Export/Clear — is unreachable. This is not a rough or hidden flow; the destination screen does not exist.",
+      "steps": [
+        {
+          "screen": "App shell (any tab) — bottom nav Home/Play/History/Stats/Account (index.jsx:565-585)",
+          "action": "Scan nav for Settings / gear / More to configure defaults",
+          "friction": "No Settings, More, or gear entry point exists anywhere in the shell. First instinct has no target.",
+          "transitionTo": "User guesses 'Account' is where settings live"
+        },
+        {
+          "screen": "'Account' bottom-nav item (or Dashboard 'Account — Sync and profile settings →' card, DashboardLanding.jsx:212)",
+          "action": "Tap Account, expecting a settings surface (card literally says 'profile settings')",
+          "friction": "Label promises 'settings' but only routes to the profile page. Misleading affordance.",
+          "transitionTo": "/profile"
+        },
+        {
+          "screen": "/profile — MonoProfile.jsx (394 ln)",
+          "action": "Look for scoring defaults, auto-share, appearance/dark, data export/clear",
+          "friction": "DEAD-END. Screen has profile header, stats, recent matches, and a 'Find players' link (line 384) — zero preferences/toggles. None of the four goals is present.",
+          "transitionTo": "Back out; try the avatar menu"
+        },
+        {
+          "screen": "Clerk 'Account menu' avatar (AuthUserButton, index.jsx:641)",
+          "action": "Open avatar popover hoping app settings are there",
+          "friction": "DEAD-END + confusion: this is a SECOND thing called 'Account' but only manages auth (email/password/security/sign-out) — no app scoring/sharing/appearance/data settings.",
+          "transitionTo": "Give up — goal unreachable"
+        }
+      ],
+      "seamlessness": 2,
+      "intuitiveness": 2,
+      "totalTaps": 4,
+      "deadEnds": [
+        "/profile (MonoProfile.jsx): the app's only 'Account' destination, promises settings via the dashboard card but contains no preferences at all — dead-end for every goal",
+        "Clerk 'Account menu' avatar (AuthUserButton, index.jsx:641): manages auth only, not app defaults — a second dead-end that looks like it should have settings",
+        "The four goals themselves — default sport, Confirm wicket/goal, Auto-share, dark mode, Export/Clear — have NO screen (discovery.json: Settings/More currentState=missing, route=(missing), sourceFiles=[])"
+      ],
+      "lostRisks": [
+        "No Settings/More/gear anywhere in nav or on any screen — the user has no correct place to even start; every path is a guess",
+        "Two different surfaces both called 'Account' (bottom-nav Account → /profile, and avatar 'Account menu' → Clerk popover) mean different things; user can't tell which holds settings, and neither does",
+        "DashboardLanding.jsx:212 card says 'Sync and profile settings →' but /profile has no settings — the one explicit 'settings' label in the app actively misleads",
+        "Appearance/dark: a .dark theme is declared in index.css but never wired to a toggle, so even the built styling is invisible/unreachable to users"
+      ],
+      "dropOffRisks": [
+        "Power users who want to skip Confirm-wicket/goal or set a default sport cannot — high abandonment risk for repeat scorers who expect customization",
+        "Auto-share live link (HiFi Band 7 + ShareLiveMatch worktree) has no settings default, so the share ecosystem can't be turned on by preference — feature effectively invisible",
+        "Users wanting dark mode conclude the app has none (it's coded but unreachable), a common reason to churn to a competitor",
+        "No Export history / Clear all data means privacy- or data-conscious users have no self-serve control — a trust and retention risk"
+      ],
+      "fixes": [
+        "Ship the missing Settings screen: add a /settings (or /more) route mirroring HiFi Band 7 sections — Scoring defaults (Default sport picker + Confirm wicket/goal toggles), Sharing (Auto-share live link toggle), Appearance (dark-mode toggle wiring the existing .dark theme in index.css), Data (Export history, Clear all data)",
+        "Add a real entry point: either a 5th nav slot / overflow 'More', or a gear icon in the MonoProfile header linking to /settings — the shell currently has no settings affordance at all",
+        "Fix the misleading label: DashboardLanding.jsx:212 'Sync and profile settings →' should point to the new /settings (or stop saying 'settings' until it exists)",
+        "Consolidate the two 'Account' surfaces: make bottom-nav 'Account' open a profile+settings hub, and keep the Clerk avatar popover for auth only, with a clear 'App settings' link bridging them so users aren't split across two Accounts",
+        "Wire the dead .dark theme (declared in index.css) to the Appearance toggle so dark mode is actually selectable",
+        "Surface Export/Clear (Data section) backed by the Convex matches store so users get self-serve data control, matching HiFi's destructive-red 'Clear all data'"
+      ]
+    },
+    "critique": {
+      "journey": "Settings — configure scoring defaults (default sport, Confirm wicket/goal), Auto-share toggle, dark mode, and Export/Clear data.\n\nThis is not a \"too many steps\" problem — it is an ABSENCE problem, and the trace diagnoses it correctly. The destination screen does not exist (discovery.json: Settings/More currentState=missing, route=(missing), sourceFiles=[]), and there is no entry affordance anywhere in the shell (bottom nav index.jsx:565-585 = Home/Play/History/Stats/Account, no gear/More). Every one of the four sub-goals is unreachable. The 4 taps the trace records are all wasted motion across two mutually-confusable \"Account\" surfaces that both dead-end. So the honest verdict is BROKEN, not merely rough: you cannot \"get lost on the way\" to a room that was never built.\n\nTwo adversarial notes on the trace's own framing: (1) totalTaps=4 and seamlessness/intuitiveness scores imply a traversable-but-poor flow; more accurate is 0 valid steps exist — the metric to report is \"flow does not terminate in success.\" (2) The single most damaging item is DashboardLanding.jsx:212 \"Sync and profile settings →\" — this is worse than a plain missing feature, because it is an active false promise that spends the user's trust and routes them to a toggle-free /profile. A silent gap disappoints; a mislabeled affordance actively misleads.\n\nThe right target state is ~2 taps (open Account/Settings hub → flip toggle), with the app fully usable WITHOUT ever visiting settings via sane defaults + system-preference dark mode — settings should be for overrides, not required setup.",
+      "verdict": "broken",
+      "lostRisksConfirmed": [
+        "CONFIRMED: No Settings/More/gear anywhere in nav or on any screen — the user's first instinct has zero target, so every path taken is a blind guess (index.jsx:565-585).",
+        "CONFIRMED: Two different surfaces both named 'Account' (bottom-nav Account → /profile, and Clerk avatar 'Account menu' popover) mean different things and neither holds app settings — the user cannot disambiguate and both dead-end.",
+        "CONFIRMED and most severe: DashboardLanding.jsx:212 'Sync and profile settings →' is the app's only explicit 'settings' label and it lies — /profile (MonoProfile.jsx) has no preferences. A false affordance is worse than an absent one; it burns trust before the dead-end.",
+        "CONFIRMED: Appearance/dark — a .dark theme exists in index.css but is wired to no control, so functioning styling ships completely invisible/unreachable. Users will conclude the app has no dark mode (churn trigger) when it half-exists."
+      ],
+      "deadEndsConfirmed": [
+        "CONFIRMED: /profile (MonoProfile.jsx, ~394 ln) — the app's only 'Account' destination; header + stats + recent matches + a lone 'Find players' link (line ~384), zero toggles. Dead-end for all four goals.",
+        "CONFIRMED: Clerk 'Account menu' avatar (AuthUserButton, index.jsx:641) — manages auth only (email/password/security/sign-out). A second surface that looks like it should hold settings but cannot; compounds the two-Account confusion.",
+        "CONFIRMED: The four goals themselves (default sport, Confirm wicket/goal, Auto-share, dark mode, Export/Clear) have NO screen at all — this is the root dead-end; the other two are just where a hunting user is misdirected before failing."
+      ],
+      "missingConnectiveScreens": [
+        "The Settings screen/hub itself — the destination. Ship one route grouping HiFi Band 7 sections: Scoring defaults (default sport picker + Confirm wicket/goal toggles), Sharing (Auto-share live link), Appearance (dark toggle), Data (Export history / Clear all data).",
+        "A single entry affordance — currently there is NONE. Do NOT add a 6th bottom-nav slot (5 is the mobile comfort ceiling and adding one crowds the bar); instead fold settings INTO the Account tab as a hub (profile on top, settings sections below) so the existing 'Account' promise finally resolves. One entry point, not three competing ones.",
+        "Section headers / grouped list rows to separate the four domains — without them a flat toggle dump re-creates the 'where is X' hunt inside the settings page itself.",
+        "A destructive-action confirmation modal + undo snackbar for 'Clear all data' — a raw instant-clear is a data-loss trap; HiFi's destructive-red styling implies a guarded action, which needs a confirm step + reversible window.",
+        "The theme control itself — the style layer (.dark in index.css) exists but the toggle UI does not; the missing piece is the control, plus a System/Light/Dark tri-state so system preference is respected by default.",
+        "A back-stack / return path from settings to origin — the tab shell has no push/pop concept, so a settings page needs an explicit back that returns to the tab the user launched from, not a silent tab-swap that loses context."
+      ],
+      "simplificationOpportunities": [
+        "Consolidate the two 'Account' surfaces into ONE hub: bottom-nav Account → profile + app settings; keep the Clerk avatar popover for AUTH ONLY (email/password/sign-out). This kills the single biggest source of lostness (which Account holds settings?) without adding nav real estate.",
+        "Fix or remove the misleading label NOW even before the full screen ships: DashboardLanding.jsx:212 should either point at the real /settings or stop saying 'settings' — a truthful 'Profile →' is better than a lying 'settings →'.",
+        "Make the app fully usable WITHOUT visiting settings: ship sane defaults (a default sport, Confirm-wicket/goal ON, Auto-share OFF) so settings is an override surface, not mandatory setup. This removes settings from the critical path entirely for new users.",
+        "Default dark mode to system preference (prefers-color-scheme) and make the toggle a System/Light/Dark override — most users get correct theming automatically and never need to touch it.",
+        "Don't build /settings AND /more AND a gear AND a 5th tab (the fix list proposes several parallel entries). Pick exactly one entry (the Account hub) to avoid re-fragmenting discovery.",
+        "Toggles should be instant-apply with no Save button (optimistic Convex mutation + subtle confirmation) — a settings page with a Save/Cancel modal is unnecessary ceremony for independent preferences."
+      ],
+      "stepReductionIdeas": [
+        "Target ~2 taps: open Account/Settings hub → flip the toggle. Currently it is 4 wasted taps ending in failure; the win is not shaving a step but making the steps terminate in success.",
+        "Because the flow is broken, the highest-leverage 'reduction' is eliminating the wasted exploratory taps across two Accounts — a single labeled hub collapses the 3-4 tap hunt into a direct 1-tap entry.",
+        "Live-preview dark mode (apply on toggle, no confirm/navigation) so Appearance is a zero-follow-up-step change.",
+        "Sane defaults mean the default-sport / confirm-toggle goals need ZERO taps for the common case — the user only opens settings to override, not to initialize."
+      ],
+      "transitionGuidance": "Settings should be a PUSH (slide-in from right on mobile), not a tab-swap or a modal — it has its own back-stack and a back button that returns to the exact tab/screen the user launched from, preserving scroll and context. Independent toggles apply instantly and optimistically (Convex mutation), with a subtle inline confirmation and rollback-on-failure — no global Save/Cancel. Appearance/dark must apply LIVE on toggle (animate the color transition, ~150ms, respecting prefers-reduced-motion) so the user sees the result immediately; persist the choice and re-apply on next launch. 'Clear all data' is the exception to instant-apply: it opens a confirmation modal (destructive-red, typed or explicit confirm) and, after execution, shows an undo snackbar for a reversible window before the delete is final. Keep the Clerk avatar as a POPOVER (auth only) — do not convert it to a page; that preserves the mental split of 'account/auth = quick popover' vs 'app settings = full pushed page'. Back navigation from settings must never dump the user on Home; honor the origin.",
+      "tooManySteps": false
+    }
+  }
+]
