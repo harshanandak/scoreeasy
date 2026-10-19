@@ -124,20 +124,15 @@
       }, 'Edit')
     );
 
-    // Reminder toggle
-    var remindOn = true;
-    var remindKnob = h('div', { style: 'position:absolute;top:2px;width:17px;height:17px;border-radius:50%;background:#fff;right:2px' });
-    var remindTrack = h('div', {
-      style: 'width:36px;height:21px;border-radius:11px;position:relative;cursor:pointer;background:#12936a',
-      onclick: function () {
-        remindOn = !remindOn;
-        remindTrack.setAttribute('style', 'width:36px;height:21px;border-radius:11px;position:relative;cursor:pointer;background:' + (remindOn ? '#12936a' : '#dfe7e1'));
-        remindKnob.setAttribute('style', 'position:absolute;top:2px;width:17px;height:17px;border-radius:50%;background:#fff;' + (remindOn ? 'right:2px' : 'left:2px'));
-      }
-    }, remindKnob);
-    var reminderRow = h('div', { style: 'display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 1px 3px rgba(20,40,30,.06)' },
-      h('span', { style: 'font-size:12px;font-weight:600' }, 'Remind both teams 1 hr before'),
-      remindTrack
+    // Reminder: no reminder delivery exists, so the toggle is rendered disabled (off) and
+    // labelled "coming soon" rather than advertising a function that doesn't exist.
+    var reminderRow = h('div', { 'aria-disabled': 'true', 'data-reminder': 'soon', style: 'display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 1px 3px rgba(20,40,30,.06);opacity:.55;cursor:not-allowed' },
+      h('div', null,
+        h('div', { style: 'font-size:12px;font-weight:600' }, 'Remind both teams 1 hr before'),
+        h('div', { style: 'font-size:10px;color:#6b7a72;margin-top:1px' }, 'Coming soon')
+      ),
+      h('div', { role: 'switch', 'aria-checked': 'false', 'aria-disabled': 'true', 'aria-label': 'Reminders (coming soon)', style: 'width:36px;height:21px;border-radius:11px;position:relative;background:#dfe7e1' },
+        h('div', { style: 'position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff' }))
     );
 
     var saveBtn = h('div', {

@@ -31,6 +31,9 @@
   //    revived to the full 7, in the same event.
   function isDoOrDie(snap) { return (snap.empties || [0, 0])[snap.raidingTeam] >= 2; }
   function isSuperTackle(snap) { return snap.onMat[1 - snap.raidingTeam] <= 3; }
+  //  - bonus: only available when the defending side has 6 or more on the mat.
+  var BONUS_MIN_DEFENDERS = 6;
+  function bonusAvailable(snap) { return snap.onMat[1 - snap.raidingTeam] >= BONUS_MIN_DEFENDERS; }
 
   // put `n` players of `team` out; the other side revives one per player out (cap 7).
   function putOut(s, team, n) {
@@ -91,18 +94,35 @@
   // identity per past event for the spectator's raid log/dots (nothing in the
   // event itself records who was raiding when it happened).
   var RAID_END_ACTIONS = { raidPoint: 1, bonus: 1, tackle: 1, superTackle: 1, emptyRaid: 1 };
+  // Replays this module's own reducers so a no-op event (e.g. a rejected bonus) never
+  // counts as a raid.
   function raidHistory(match) {
-    var raider = 0;
+    var snap = initSnap();
     var log = [];
     match.events.forEach(function (ev) {
-      if (RAID_END_ACTIONS[ev.action]) {
-        log.push({ action: ev.action, label: ev.label, ts: ev.ts, raider: raider });
-        raider = 1 - raider;
-      } else if (ev.action === 'switchRaid') {
-        raider = 1 - raider;
+      var fn = ACTIONS[ev.action];
+      if (!fn) return;
+      var next = fn(snap, match.config, ev.payload).snap;
+      if (RAID_END_ACTIONS[ev.action] && next !== snap) {
+        log.push({ action: ev.action, label: ev.label, ts: ev.ts, raider: snap.raidingTeam });
       }
+      snap = next;
     });
     return log;
+  }
+
+  function initSnap() {
+    return {
+      points: [0, 0],
+      onMat: [MAT_SIZE, MAT_SIZE],
+      half: 1,
+      running: false,
+      clockStartTs: null,
+      elapsedMs: 0,
+      raidingTeam: 0,
+      raidStartedTs: null,
+      empties: [0, 0],
+    };
   }
 
   var ACTIONS = {
@@ -123,6 +143,9 @@
       return { snap: s, label: label };
     },
     bonus: function (snap, cfg, payload) {
+      // engine owns the 6-on-mat rule: an ineligible bonus awards nothing and leaves the
+      // raid live (snap returned unchanged).
+      if (!bonusAvailable(snap)) return { snap: snap, label: 'No bonus · needs 6 on mat' };
       var s = copySnap(snap);
       var raider = s.raidingTeam;
       s.points[raider] += 1;
@@ -203,19 +226,7 @@
       ] },
     ],
 
-    init: function (config) {
-      return {
-        points: [0, 0],
-        onMat: [MAT_SIZE, MAT_SIZE],
-        half: 1,
-        running: false,
-        clockStartTs: null,
-        elapsedMs: 0,
-        raidingTeam: 0,
-        raidStartedTs: null,
-        empties: [0, 0],
-      };
-    },
+    init: function (config) { return initSnap(); },
 
     actions: ACTIONS,
 
@@ -298,10 +309,19 @@
       }
       var superCell = gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+2', 'SUPER TACKLE', function () { api.dispatch('superTackle'); });
       if (!superArmed) superCell.style.opacity = '.4'; // only worth 2 with <=3 defenders
+      var bonusOk = bonusAvailable(snap);
+      var bonusCell = gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+1', bonusOk ? 'BONUS' : 'BONUS · NEEDS 6 ON MAT',
+        bonusOk ? function () { api.dispatch('bonus'); } : null);
+      if (!bonusOk) {
+        bonusCell.style.opacity = '.4';
+        bonusCell.style.cursor = 'not-allowed';
+        bonusCell.setAttribute('aria-disabled', 'true');
+        bonusCell.setAttribute('data-disabled', 'bonus');
+      }
       var grid = h('div', { style: 'flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:7px;padding:4px 13px 0' },
         gridCell('#e7f4ee', '#12936a', null, '+1', 'RAID POINT', function () { api.dispatch('raidPoint', 1); }),
         gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', superArmed ? '+2' : '+1', 'TACKLE', function () { api.dispatch('tackle'); }),
-        gridCell('#fff', null, '0 1px 2px rgba(20,40,30,.08)', '+1', 'BONUS', function () { api.dispatch('bonus'); }),
+        bonusCell,
         superCell
       );
 

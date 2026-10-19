@@ -1,7 +1,8 @@
 /* Cricket sport definition. Two-innings limited-overs game: team-level runs/wickets/overs
-   only (no per-player roster — setup only collects two team names), so batsman/bowler
-   figures and partnership ("P'SHIP") from the reference fragments are intentionally dropped
-   — same simplification the original build made, kept through the fidelity pass.
+   only (no per-player roster — setup only collects two team names), so named batsman/bowler
+   figures and partnership ("P'SHIP") from the reference fragments are intentionally dropped.
+   The two unnamed batters at the crease keep runs/balls and strike, so extras and strike
+   rotation follow the Laws.
    Scorer and spectator are 1:1 ports of fragments 5a/6a (see renderScorer/renderSpectator). */
 (function () {
   'use strict';
@@ -24,52 +25,70 @@
     return {
       battingTeam: battingTeam, runs: 0, wickets: 0, balls: 0,
       thisOver: [], overHistory: [], curOverRuns: 0, curOverWicket: false,
-      fallOfWickets: [], extras: { wide: 0, noball: 0, bye: 0, legbye: 0 },
+      fallOfWickets: [], extras: { wide: 0, noball: 0, bye: 0, legbye: 0 }, // runs, not counts
+      // the two batters at the crease, unnamed (no roster): runs off the bat + balls faced.
+      // `strike` is the index of the batter on strike.
+      bat: [{ r: 0, b: 0 }, { r: 0, b: 0 }], strike: 0,
       closed: false,
     };
   }
 
-  function chipLabel(runsScored, isWicket, extra) {
-    if (extra === 'wide') return 'wd';
-    if (extra === 'noball') return 'nb';
-    if (extra === 'bye') return 'b';
-    if (extra === 'legbye') return 'lb';
-    if (isWicket) return 'W';
-    return String(runsScored);
+  // `runs` = runs off the bat (plain / no-ball) or runs run (wide / bye / leg-bye).
+  function deliveryTotal(runs, extra) {
+    return (extra === 'wide' || extra === 'noball') ? 1 + runs : runs;
   }
-  function ballLabel(runsScored, isWicket, extra) {
-    if (extra === 'wide') return 'Wide +1';
-    if (extra === 'noball') return 'No-ball +1';
-    if (extra === 'bye') return 'Bye +1';
-    if (extra === 'legbye') return 'Leg bye +1';
+  function chipLabel(runs, isWicket, extra) {
+    var t = deliveryTotal(runs, extra);
+    if (extra === 'wide') return (t > 1 ? t : '') + 'wd';
+    if (extra === 'noball') return (t > 1 ? t : '') + 'nb';
+    if (extra === 'bye') return (t > 1 ? t : '') + 'b';
+    if (extra === 'legbye') return (t > 1 ? t : '') + 'lb';
+    if (isWicket) return 'W';
+    return String(runs);
+  }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  function ballLabel(runs, isWicket, extra) {
+    var t = deliveryTotal(runs, extra);
+    if (extra === 'wide') return runs === 4 ? 'Wide to the boundary +' + t : 'Wide +' + t;
+    if (extra === 'noball') return runs ? 'No-ball +1 · ' + plural(runs, 'run', 'runs') + ' off the bat' : 'No-ball +1';
+    if (extra === 'bye') return (runs === 1 ? 'Bye' : 'Byes') + ' +' + runs;
+    if (extra === 'legbye') return (runs === 1 ? 'Leg bye' : 'Leg byes') + ' +' + runs;
     if (isWicket) return 'WICKET!';
-    if (runsScored === 4) return 'FOUR!';
-    if (runsScored === 6) return 'SIX!';
-    if (runsScored === 0) return 'Dot ball';
-    return runsScored + (runsScored === 1 ? ' run' : ' runs');
+    if (runs === 4) return 'FOUR!';
+    if (runs === 6) return 'SIX!';
+    if (runs === 0) return 'Dot ball';
+    return plural(runs, 'run', 'runs');
   }
 
-  // Applies one ball (runs / wicket / wide / no-ball / bye / leg-bye) to the current innings,
-  // auto-starting innings 2 when innings 1 finishes. Never mutates the incoming snap.
-  // wide/noball are illegal deliveries (ball doesn't count, +1 extra run); bye/legbye are
-  // legal deliveries that add a run without it being scored off the bat.
-  function applyBall(snap, cfg, runsScored, isWicket, extra) {
+  // Applies ONE delivery (runs / wicket / wide / no-ball / bye / leg-bye, with any runs
+  // attached) to the current innings, auto-starting innings 2 when innings 1 finishes.
+  // Never mutates the incoming snap. Laws: wide/no-ball = +1 penalty and not a legal ball
+  // (over doesn't advance); runs off a no-ball go to the batter; wide runs are all wides;
+  // byes/leg-byes are legal balls faced by the striker but credited to neither batter nor
+  // bowler; odd runs run rotate strike, and so does the end of an over.
+  function applyBall(snap, cfg, runs, isWicket, extra) {
     var s = clone(snap);
     var idx = s.inningsIdx;
     var inn = s.innings[idx];
-    var illegal = extra === 'wide' || extra === 'noball';
-    var legal = !illegal;
-    var runsAdded = illegal ? 1 + runsScored : runsScored;
+    if (!inn.bat) { inn.bat = [{ r: 0, b: 0 }, { r: 0, b: 0 }]; inn.strike = 0; }
+    var legal = !(extra === 'wide' || extra === 'noball');
+    var runsAdded = deliveryTotal(runs, extra);
+    var striker = inn.bat[inn.strike];
 
     inn.runs += runsAdded;
     inn.curOverRuns += runsAdded;
-    if (extra) inn.extras[extra] = (inn.extras[extra] || 0) + 1;
+    if (extra === 'noball') inn.extras.noball += 1;
+    else if (extra) inn.extras[extra] = (inn.extras[extra] || 0) + runsAdded;
+    if (extra !== 'wide') striker.b += 1;              // a wide is not a ball faced
+    if (!extra || extra === 'noball') striker.r += runs; // off the bat
     if (isWicket) {
       inn.wickets += 1;
       inn.curOverWicket = true;
       inn.fallOfWickets.push({ score: inn.runs, overs: oversStr(inn.balls + (legal ? 1 : 0)) });
+      inn.bat[inn.strike] = { r: 0, b: 0 }; // new batter takes strike
     }
-    inn.thisOver.push(chipLabel(runsScored, isWicket, extra));
+    if (runs % 2 === 1) inn.strike = 1 - inn.strike;
+    inn.thisOver.push(chipLabel(runs, isWicket, extra));
     if (legal) {
       inn.balls += 1;
       if (inn.balls % BALLS_PER_OVER === 0) {
@@ -77,6 +96,7 @@
         inn.thisOver = [];
         inn.curOverRuns = 0;
         inn.curOverWicket = false;
+        inn.strike = 1 - inn.strike; // ends change
       }
     }
 
@@ -86,22 +106,28 @@
       s.inningsIdx = 1;
       s.innings[1] = freshInnings(1);
     }
-    return { snap: s, label: ballLabel(runsScored, isWicket, extra) };
+    return { snap: s, label: ballLabel(runs, isWicket, extra) };
   }
 
-  function noop(label) {
-    return function (snap, cfg, payload) {
-      return { snap: snap, label: (payload && payload.label) || label };
-    };
+  // Runs attached to an extra, clamped to what the pending-extra grid offers. Older events
+  // carry no payload: wide/no-ball then meant +0, bye/leg-bye meant 1.
+  var EXTRA_RUNS = { wide: [0, 1, 2, 3, 4], noball: [0, 1, 2, 3, 4, 6], bye: [1, 2, 3, 4], legbye: [1, 2, 3, 4] };
+  function extraRuns(extra, payload) {
+    var n = payload && typeof payload.runs === 'number' ? payload.runs : EXTRA_RUNS[extra][0];
+    return EXTRA_RUNS[extra].indexOf(n) >= 0 ? n : EXTRA_RUNS[extra][0];
+  }
+  function extraAction(extra) {
+    return function (snap, cfg, payload) { return applyBall(snap, cfg, extraRuns(extra, payload), false, extra); };
   }
 
   var ACTIONS = {
     runs: function (snap, cfg, payload) { return applyBall(snap, cfg, payload.runs, false, null); },
     wicket: function (snap, cfg) { return applyBall(snap, cfg, 0, true, null); },
-    wide: function (snap, cfg) { return applyBall(snap, cfg, 0, false, 'wide'); },
-    noball: function (snap, cfg) { return applyBall(snap, cfg, 0, false, 'noball'); },
-    bye: function (snap, cfg) { return applyBall(snap, cfg, 1, false, 'bye'); },
-    legbye: function (snap, cfg) { return applyBall(snap, cfg, 1, false, 'legbye'); },
+    // one event per delivery: payload { runs } comes from the pending-extra run grid.
+    wide: extraAction('wide'),
+    noball: extraAction('noball'),
+    bye: extraAction('bye'),
+    legbye: extraAction('legbye'),
     // Manual declare/close-out — forces the current innings to finish immediately.
     endInnings: function (snap, cfg) {
       var s = clone(snap);
@@ -114,9 +140,13 @@
       }
       return { snap: s, label: 'Innings closed' };
     },
-    // No natural rule change (no per-player roster to track strike) — pure no-op so it
-    // still lands in the event feed. See fragment 5a's "⇄ Strike" control.
-    swapStrike: noop('⇄ Strike swapped'),
+    // manual strike override (fragment 5a's "⇄ Strike" control).
+    swapStrike: function (snap) {
+      var s = clone(snap);
+      var inn = s.innings[s.inningsIdx];
+      inn.strike = 1 - (inn.strike || 0);
+      return { snap: s, label: '⇄ Strike swapped' };
+    },
   };
 
   /* ---------- render helpers (raw fragment hex, not tokens.css vars — matches
@@ -125,7 +155,7 @@
     var bg = '#fff', color = '#14201a', shadow = '0 1px 2px rgba(20,40,30,.08)', weight = 400, size = 10;
     if (c === 'W') { bg = '#fdeceb'; color = '#d64f43'; shadow = 'none'; weight = 700; size = 9; }
     else if (c === '4' || c === '6') { bg = '#e7f4ee'; color = '#12936a'; shadow = 'none'; weight = 700; }
-    else if (c === 'wd' || c === 'nb' || c === 'b' || c === 'lb') { bg = '#f7efdb'; color = '#b98a1d'; shadow = 'none'; weight = 700; size = 9; }
+    else if (/(wd|nb|b|lb)$/.test(c)) { bg = '#f7efdb'; color = '#b98a1d'; shadow = 'none'; weight = 700; size = 9; }
     return h('span', {
       style: 'width:20px;height:20px;border-radius:50%;background:' + bg + ';color:' + color + ';box-shadow:' + shadow
         + ';display:inline-flex;align-items:center;justify-content:center;font-family:\'DM Mono\',monospace;font-size:' + size + 'px;font-weight:' + weight,
@@ -169,6 +199,10 @@
   var spectatorTab = {};
   var spectatorReactions = {};
   var spectatorFollowed = {};
+  // per-match pending extra on the scorer (WD/NB/B/LB tapped, awaiting its runs) — UI-only,
+  // never in the snapshot: the delivery is committed as ONE event once the runs are picked.
+  var pendingExtra = {};
+  var extraCommittedAt = {}; // double-tap guard: swallow a run tap right after an extra commit
 
   SE.registerSport({
     key: 'cricket', label: 'Cricket', icon: '🏏', priority: 1,
@@ -275,7 +309,7 @@
         ) : null
       );
 
-      var legalCount = inn.thisOver.filter(function (c) { return c !== 'wd' && c !== 'nb'; }).length;
+      var legalCount = inn.thisOver.filter(function (c) { return !/(wd|nb)$/.test(c); }).length;
       var empties = [];
       for (var i = 0; i < Math.max(0, BALLS_PER_OVER - legalCount); i++) empties.push(emptyChip());
       var lastWkt = inn.fallOfWickets.length ? inn.fallOfWickets[inn.fallOfWickets.length - 1] : null;
@@ -286,13 +320,25 @@
         h('span', { style: 'flex:1' }),
         lastWkt ? h('span', { style: 'font-size:10px;color:#6b7a72' }, 'Last wkt · ' + lastWkt.score + ' (ov ' + lastWkt.overs + ')') : null
       );
+      var bat = inn.bat || [{ r: 0, b: 0 }, { r: 0, b: 0 }], st = inn.strike || 0;
+      function batterSpan(i) {
+        return h('span', { 'data-batter': String(i), 'data-striker': i === st ? '1' : '0', style: i === st ? 'color:#14201a;font-weight:700' : 'color:#6b7a72' },
+          (i === st ? '● ' : '') + bat[i].r + ' (' + bat[i].b + ')');
+      }
+      var batRow = h('div', { style: 'flex:none;display:flex;align-items:center;gap:10px;padding:6px 15px 0;font-family:\'DM Mono\',monospace;font-size:11px' },
+        h('span', { style: 'font-size:9px;font-weight:700;letter-spacing:.06em;color:#9aa8a0;text-transform:uppercase' }, 'Bat'),
+        batterSpan(0), batterSpan(1)
+      );
 
       function runCell(n) {
         var boundary = n === 4 || n === 6;
         return h('div', {
           style: 'border-radius:14px;background:' + (boundary ? '#e7f4ee;color:#12936a;' : '#fff;box-shadow:0 1px 2px rgba(20,40,30,.08);')
             + 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent',
-          onclick: function () { api.dispatch('runs', { runs: n }); },
+          onclick: function () {
+            if (Date.now() - (extraCommittedAt[match.id] || 0) < 350) return;
+            api.dispatch('runs', { runs: n });
+          },
         },
           h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:20px;font-weight:600' }, String(n)),
           boundary ? h('span', { style: 'font-size:8px;font-weight:700;letter-spacing:.12em' }, n === 4 ? 'FOUR' : 'SIX') : null
@@ -301,6 +347,51 @@
       var runGrid = h('div', { style: 'flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:7px;padding:8px 13px 0' },
         [0, 1, 2, 3, 4, 6].map(runCell)
       );
+
+      // pending-extra run grid: replaces the run grid until the runs are picked (or cancelled).
+      var pending = pendingExtra[match.id] || null;
+      var EXTRA_TITLE = {
+        wide: ['WIDE', '+1 penalty · not a legal ball · runs ran?'],
+        noball: ['NO-BALL', '+1 penalty · not a legal ball · runs off the bat?'],
+        bye: ['BYE', 'legal ball · to neither batter nor bowler · how many?'],
+        legbye: ['LEG BYE', 'legal ball · to neither batter nor bowler · how many?'],
+      };
+      function setPending(x) { if (x) pendingExtra[match.id] = x; else delete pendingExtra[match.id]; SE.render(); }
+      function commitExtra(n) {
+        if (pendingExtra[match.id] !== pending) return; // already committed
+        delete pendingExtra[match.id];
+        extraCommittedAt[match.id] = Date.now();
+        api.dispatch(pending, { runs: n });
+      }
+      function pendingCell(n) {
+        var total = deliveryTotal(n, pending);
+        var sub = pending === 'wide' ? (n === 4 ? 'BOUNDARY · ' : '') + total + ' WD'
+          : pending === 'noball' ? total + ' TOTAL'
+          : (pending === 'bye' ? 'BYES' : 'LEG BYES');
+        return h('div', {
+          'data-extra-runs': String(n),
+          style: 'min-height:44px;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(20,40,30,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent',
+          onclick: function () { commitExtra(n); },
+        },
+          h('span', { style: 'font-family:\'DM Mono\',monospace;font-size:20px;font-weight:600' }, (pending === 'wide' || pending === 'noball') ? '+' + n : String(n)),
+          h('span', { style: 'font-size:8px;font-weight:700;letter-spacing:.12em;color:#b98a1d' }, sub)
+        );
+      }
+      var pendingGrid = pending ? h('div', { style: 'flex:1;min-height:0;display:flex;flex-direction:column;gap:7px;padding:8px 13px 0' },
+        h('div', { style: 'flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px' },
+          h('div', null,
+            h('div', { style: 'font-size:12px;font-weight:700;letter-spacing:.06em;color:#b98a1d' }, EXTRA_TITLE[pending][0]),
+            h('div', { style: 'font-size:10.5px;color:#6b7a72' }, EXTRA_TITLE[pending][1])
+          ),
+          h('div', {
+            'data-extra-cancel': '1',
+            style: 'flex:none;min-width:64px;height:44px;border-radius:12px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#46554d;cursor:pointer',
+            onclick: function () { setPending(null); },
+          }, 'Cancel')
+        ),
+        h('div', { style: 'flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:7px' },
+          EXTRA_RUNS[pending].map(pendingCell))
+      ) : null;
 
       var outRow = h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
         h('div', {
@@ -313,25 +404,30 @@
         }, '⇄ Strike')
       );
 
-      function extraCell(label, onclick) {
+      // WD / NB / B / LB open the pending-extra run grid (tap again to cancel); nothing is
+      // dispatched until its runs are picked.
+      function extraCell(label, extra) {
+        var on = pending === extra;
         return h('div', {
-          style: 'flex:1;height:36px;border-radius:12px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#46554d;cursor:pointer;user-select:none',
-          onclick: onclick,
+          'data-extra': extra,
+          style: 'flex:1;height:44px;border-radius:12px;border:1.5px solid ' + (on ? '#b98a1d' : '#e4e9e5') + ';background:' + (on ? '#f7efdb' : '#fff')
+            + ';display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:' + (on ? 700 : 600) + ';color:' + (on ? '#b98a1d' : '#46554d') + ';cursor:pointer;user-select:none',
+          onclick: function () { setPending(on ? null : extra); },
         }, label);
       }
-      // 5th cell replaces the fragment's static "5/7" sample with the innings' real
-      // bye/leg-bye tally (derived, not a control — nothing to dispatch for a plain count).
+      // 5th cell: the innings' real extras total (derived, not a control).
+      var ex = inn.extras;
       var extrasRow = h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
-        extraCell('Wide', function () { api.dispatch('wide'); }),
-        extraCell('No-ball', function () { api.dispatch('noball'); }),
-        extraCell('Bye', function () { api.dispatch('bye'); }),
-        extraCell('LB', function () { api.dispatch('legbye'); }),
-        h('div', { style: 'flex:1;height:36px;border-radius:12px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#9aa8a0' },
-          inn.extras.bye + '/' + inn.extras.legbye)
+        extraCell('Wide', 'wide'),
+        extraCell('No-ball', 'noball'),
+        extraCell('Bye', 'bye'),
+        extraCell('LB', 'legbye'),
+        h('div', { style: 'flex:1;height:44px;border-radius:12px;border:1.5px solid #e4e9e5;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;color:#9aa8a0' },
+          'Ex ' + (ex.wide + ex.noball + ex.bye + ex.legbye))
       );
 
       var bottomRow = h('div', { style: 'flex:none;display:flex;gap:7px;padding:8px 13px 0' },
-        h('div', { style: 'width:64px;height:44px;border-radius:14px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:16px;color:#46554d;cursor:pointer', onclick: function () { api.undo(); } }, '↩'),
+        h('div', { style: 'width:64px;height:44px;border-radius:14px;background:#eef1ee;display:flex;align-items:center;justify-content:center;font-size:16px;color:#46554d;cursor:pointer', onclick: function () { delete pendingExtra[match.id]; api.undo(); } }, '↩'),
         h('div', { style: 'flex:1;height:44px;border-radius:14px;background:#12936a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-shadow:0 10px 18px -10px rgba(18,147,106,.7);cursor:pointer', onclick: function () { api.dispatch('endInnings'); } }, 'End innings ⋯')
       );
 
@@ -342,7 +438,7 @@
       );
 
       el.appendChild(h('div', { style: 'flex:1;display:flex;flex-direction:column;background:#f4f6f3;color:#14201a' },
-        header, scoreCard, overRow, runGrid, outRow, extrasRow, bottomRow, footer
+        header, scoreCard, overRow, batRow, pendingGrid || runGrid, outRow, extrasRow, bottomRow, footer
       ));
     },
 

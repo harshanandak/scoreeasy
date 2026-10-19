@@ -107,7 +107,7 @@ Kabaddi has far fewer forced interruptions than cricket. The only true breaks ar
 | **Turn / possession flip** | every resolve | **Zero taps.** Automatic. `RAID ▸` and dolls update; scorer is instantly ready for the next raid. |
 | **Do-or-die armed** | empty-counter hits the configured trigger (default 3rd, school 2nd) | **Zero taps.** Board context line flips to `DO-OR-DIE`, raiding panel goes warning-band. Scorer just scores the raid as normal; the engine enforces the penalty on an empty. Purely informational. |
 | **All-out** | a side hits 0 on mat | **Zero taps.** Engine fires +2, re-lights all 7 dolls, plays the one gold `ALL OUT · +2` beat, narrates it in the confirm line. Scoring continues. |
-| **Half-time** | match clock reaches half | Inline banner replaces the rare strip: **`HALF TIME · ▸ START 2ND HALF`** — **one tap.** Engine swaps sides, keeps scores, resets both rosters to 7, resets the empty counter. No modal. |
+| **Half-time** | match clock reaches half | Inline banner replaces the rare strip: **`HALF TIME · ▸ START 2ND HALF`** — **one tap.** Engine swaps sides, keeps scores, carries each side's players-on-mat into the 2nd half unchanged (rules: the 2nd half continues with the same number of players as the end of the 1st), resets the empty counter. No modal. |
 | **Timeout** | scorer-initiated | `⋯ More → Timeout (Team)`. One tap; pauses the match clock, decrements that team's remaining. Rare, so it lives in the sheet. |
 | **Substitution** | scorer-initiated (optional) | `⋯ More → Sub` → pick off / on. Never a setup blocker; casual games skip it entirely. |
 | **End half / match** | scorer-initiated | `⋯ More → End half / End match` → routes to the scorecard. |

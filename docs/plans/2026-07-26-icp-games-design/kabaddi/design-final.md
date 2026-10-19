@@ -98,7 +98,7 @@ One short form, safe defaults, every advanced field collapsed. A casual scorer t
 - Possession flip: **zero taps**, automatic every resolve (kabaddi's biggest ergonomic win over cricket — no strike-swap).
 - Do-or-die armed: **zero taps** — board context flips to `DO-OR-DIE`, raiding band → warning. Scorer scores normally; engine enforces the empty→penalty.
 - All-out: **zero taps** — engine fires +2, re-lights 7 dolls, plays the gold beat, narrates it.
-- Half-time: **one tap** — inline banner `HALF TIME · ▸ START 2ND HALF` (swaps sides, keeps scores, resets rosters to 7, resets empty counter).
+- Half-time: **one tap** — inline banner `HALF TIME · ▸ START 2ND HALF` (swaps sides, keeps scores, carries players-on-mat over unchanged — the 2nd half continues with the same number of players as the end of the 1st — resets empty counter).
 - Timeout / sub / end: `⋯ More`.
 
 **Guided (default) vs Power:** Guided shows the narration+Undo confirm line every resolve, collapses MULTI, suppresses jargon, makes illegal taps structurally impossible. Power suppresses the confirm ceremony, inlines the MULTI count row on TOUCH, surfaces fouls by default. **Same engine, same correctness** — Power removes hand-holding, never rules.
