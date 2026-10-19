@@ -80,7 +80,7 @@ body {
    ============================================================ */
 .mono-badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 0.6875rem; font-family: var(--se-font-mono); border-radius: var(--radius); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
 .mono-badge-live { background: var(--accent); color: var(--primary); }
-.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; }
+.ck-icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); font-size: 1rem; flex: none; }
 .mono-scorer-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .mono-scorer-topbar-actions { display: flex; align-items: center; gap: 8px; }
 .ck-topbar-title { font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -257,7 +257,7 @@ body {
 .moment .tx b { font-weight: 700; }
 
 .pres { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 2px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
-.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 16px; min-height: 44px; display: inline-flex; align-items: center; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); }
 
 @keyframes kkpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 @keyframes kkledpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -323,7 +323,7 @@ body {
               <span>GUJARAT lead <b>+4</b></span>
             </div>
             <!-- THIS-TURN outs counter — glanceable mid-turn -->
-            <div class="kk-this"><span class="lbl">THIS TURN</span><span class="v">10</span></div>
+            <div class="kk-this"><span class="lbl">THIS TURN</span><span class="v">14</span></div>
             <!-- the ONE derived dream-run datum (state, not a feed) -->
             <div class="kk-dream"><span class="star">&#9733;</span> DREAM RUN &middot; <b>S. Kadam 2:38</b> unbroken on the mat</div>
           </div>
@@ -384,7 +384,7 @@ body {
               <span>batch <b>2 of 3</b></span>
             </div>
             <!-- lull drama: derived dream-run watch datum (static demo text) -->
-            <div class="kk-dream"><span class="star">&#9733;</span> Runner on mat <b>1:47</b> &mdash; longest today</div>
+            <div class="kk-dream"><span class="star">&#9733;</span> Runner on mat <b>2:38</b> &mdash; longest today</div>
           </div>
 
           <!-- rare strip — two optional items, hairline, quiet (design-final §3.1) -->
@@ -483,7 +483,7 @@ body {
 
         <!-- momentum — one-line collapsed toggle, outs / minute -->
         <details class="mom-d">
-          <summary><span class="mi">&#128202;</span><span class="eyebrow">Momentum &middot; outs / minute</span><span class="r">THIS TURN <b>10</b> vs <b>16</b></span><span class="chev">&#9662;</span></summary>
+          <summary><span class="mi">&#128202;</span><span class="eyebrow">Momentum &middot; outs / minute</span><span class="r">THIS TURN <b>14</b> vs <b>18</b></span><span class="chev">&#9662;</span></summary>
           <div class="mom">
             <div class="bar hi" style="height:82%"></div><div class="bar" style="height:48%"></div>
             <div class="bar wk" style="height:22%"></div><div class="bar hi" style="height:96%"></div>
@@ -505,9 +505,9 @@ body {
         <!-- key moments — trimmed to three (newest first) -->
         <div class="blk">
           <div class="blk-hd"><span class="eyebrow">Key moments</span></div>
-          <div class="moment"><span class="ov mono">T3 2:38</span><span class="tx"><span class="hi">DREAM RUN</span> &mdash; Kadam survives 2:38 unbroken, band climbing</span></div>
-          <div class="moment"><span class="ov mono">T3 3:05</span><span class="tx"><span class="wkt">OUT</span> &mdash; More tagged by Jaydeep S. &middot; batch 2/3 down</span></div>
-          <div class="moment"><span class="ov mono">T3 4:12</span><span class="tx"><span class="hi">LONA!</span> All out &mdash; order restarts &times;1 &middot; order recycles</span></div>
+          <div class="moment"><span class="ov mono">T3 3:12</span><span class="tx"><span class="hi">DREAM RUN</span> &mdash; Kadam survives 2:38 unbroken, band climbing</span></div>
+          <div class="moment"><span class="ov mono">T3 3:41</span><span class="tx"><span class="wkt">OUT</span> &mdash; More tagged by Jaydeep S. &middot; batch 2/3 down</span></div>
+          <div class="moment"><span class="ov mono">T3 5:50</span><span class="tx"><span class="hi">LONA!</span> All out &mdash; order restarts &times;1 &middot; order recycles</span></div>
         </div>
 
         <div class="pres">

@@ -63,7 +63,7 @@ header.top {
 .jump a:hover, .jump a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
 
 .zoom { display: flex; align-items: center; gap: .35rem; margin-left: auto; }
-.zoom label { color: var(--ink-faint); font: 700 .64rem/1 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; }
+.zoom .lbl { color: var(--ink-faint); font: 700 .64rem/1 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; }
 .zoom button {
   min-width: 2rem;
   height: 2rem;
@@ -75,6 +75,8 @@ header.top {
   cursor: pointer;
 }
 .zoom button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+.zoom button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 640px) { header.top { position: static; } }
 
 /* ---- the wall: every game side by side ---- */
 .wall {
@@ -214,16 +216,16 @@ header.top {
   </nav>
 
   <div class="zoom" role="group" aria-label="Compare mode">
-    <label>Compare</label>
+    <span class="lbl" aria-hidden="true">Compare</span>
     <button type="button" data-mode="new" aria-pressed="true">New</button>
     <button type="button" data-mode="old" aria-pressed="false">Old</button>
     <button type="button" data-mode="split" aria-pressed="false">Side by side</button>
   </div>
 
   <div class="zoom" role="group" aria-label="Wall thumbnail size">
-    <label for="zoom-s">Wall</label>
+    <span class="lbl" aria-hidden="true">Wall</span>
     <button type="button" data-zoom="0.20" aria-pressed="false">S</button>
-    <button type="button" id="zoom-s" data-zoom="0.27" aria-pressed="true">M</button>
+    <button type="button" data-zoom="0.27" aria-pressed="true">M</button>
     <button type="button" data-zoom="0.36" aria-pressed="false">L</button>
   </div>
 </header>
@@ -310,7 +312,7 @@ function rescale() {
 
 function setMode(mode) {
   MODE = mode;
-  localStorage.setItem('wall-mode', mode);
+  try { localStorage.setItem('wall-mode', mode); } catch (e) { /* storage blocked (file:// in some browsers) */ }
   wall.querySelectorAll('.tile').forEach((t) => {
     t.querySelector('iframe').src = srcFor(t.dataset.game);
   });
@@ -329,8 +331,9 @@ document.querySelectorAll('[data-mode]').forEach((b) => {
     setMode(b.dataset.mode);
   });
 });
-const savedMode = localStorage.getItem('wall-mode');
-if (savedMode && savedMode !== 'new') {
+let savedMode = null;
+try { savedMode = localStorage.getItem('wall-mode'); } catch (e) { /* storage blocked */ }
+if (savedMode === 'old' || savedMode === 'split') {
   document.querySelector(`[data-mode="${savedMode}"]`)?.click();
 }
 
