@@ -1,4 +1,4 @@
-<!doctype html><html lang="en" data-theme="dark" data-sport="kabaddi" data-motif="game"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="en" data-theme="dark" data-sport="kabaddi" data-motif="court"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kabaddi · E · Broadcast blend</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
@@ -253,7 +253,7 @@ const R=document.documentElement;
 const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`;
 for(const k in M){R.style.setProperty(`--motif-${k}`,u(svg(k)));R.style.setProperty(`--motif-${k}-a`,u(half(k,0)));R.style.setProperty(`--motif-${k}-b`,u(half(k,200)));}
 window.SEMotifs={markup:M,label:LABEL,svg};
-})();</script><script>/* ===== Game scenes (default motif):  Olympic-pictogram players + equipment, viewBox 400x260, team A left facing right, B right facing left.
+})();</script><script>/* ===== Game scenes (experimental; court is the default):  Olympic-pictogram players + equipment, viewBox 400x260, team A left facing right, B right facing left.
    Same mask contract as the court drawings; SEMotifs.use('game'|'court') swaps the set. ===== */
 (function(){
 const P=(...pts)=>'M'+pts.map(p=>p.join(' ')).join('L');
@@ -318,7 +318,7 @@ const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`,R=document.docum
 for(const k in G){sets.court[k]=['','-a','-b'].map(s=>R.style.getPropertyValue(`--motif-${k}${s}`));sets.game[k]=[u(svg(k)),u(half(k,0)),u(half(k,200))];}
 /* point --motif-<sport> at the chosen set: 'game' (default) or 'court' */
 C.use=style=>{const S=sets[style==='court'?'court':'game'];for(const k in S)['','-a','-b'].forEach((s,i)=>R.style.setProperty(`--motif-${k}${s}`,S[k][i]));};
-C.scenes=G;C.sceneLabel=LABEL;C.use('game');
+C.scenes=G;C.sceneLabel=LABEL;
 })();
 </script><script>/* ===== Colour engine: any team hex -> safe, bold, blended tokens ===== */
 (function(){
@@ -425,7 +425,7 @@ window.SEColor={derive,report,contrast,dE,lch,NEUTRAL};
 const PRESETS={'Red v Blue':['#d62828','#1d4ed8'],'Red v Maroon':['#e11d2a','#7a1020'],'Yellow v White':['#facc15','#ffffff'],
   'Black v Green':['#111111','#16a34a'],'Purple v Orange':['#6d28d9','#f97316'],'Sky v Navy':['#38bdf8','#1e2a5a']};
 window.SEPresets=PRESETS;
-const st={theme:'dark',a:PRESETS['Red v Blue'][0],b:PRESETS['Red v Blue'][1],preset:'Red v Blue',motif:'game'};
+const st={theme:'dark',a:PRESETS['Red v Blue'][0],b:PRESETS['Red v Blue'][1],preset:'Red v Blue',motif:'court'};
 function apply(){const d=derive(st.a,st.b,st.theme,st.motif!=='off'),R=document.documentElement;R.dataset.theme=st.theme;R.dataset.motif=st.motif;SEMotifs.use(st.motif);
   for(const[k,p]of[['A','a'],['B','b']]){const t=d[k];
     R.style.setProperty(`--${p}-hi`,t.hi);R.style.setProperty(`--${p}-core`,t.core);R.style.setProperty(`--${p}-lo`,t.lo);
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="tb" role="toolbar" aria-label="Preview controls">
 <h1>Score Easy · E · Broadcast blend<small>Kabaddi · team colours are user-picked; every token below is derived live</small></h1>
 <div class="seg-t" role="group" aria-label="Theme"><button data-theme-btn="dark" aria-pressed="true">Dark</button><button data-theme-btn="light" aria-pressed="false">Light</button></div>
-<div class="seg-t" role="group" aria-label="Sport motif"><span class="seg-l">Motif</span><button data-motif-btn="game" aria-pressed="true">Game</button><button data-motif-btn="court" aria-pressed="false">Court</button><button data-motif-btn="off" aria-pressed="false">Off</button></div>
+<div class="seg-t" role="group" aria-label="Sport motif"><span class="seg-l">Motif</span><button data-motif-btn="court" aria-pressed="true">Court</button><button data-motif-btn="game" aria-pressed="false">Game</button><button data-motif-btn="off" aria-pressed="false">Off</button></div>
 <div class="picks"><label>Warriors <input type="color" id="pickA" value="#d62828" aria-label="Warriors colour"></label><label>Titans <input type="color" id="pickB" value="#1d4ed8" aria-label="Titans colour"></label></div>
 <div class="presets"><button data-preset="Red v Blue"><i style="background:linear-gradient(90deg,#d62828 50%,#1d4ed8 50%)"></i>Red v Blue</button><button data-preset="Red v Maroon"><i style="background:linear-gradient(90deg,#e11d2a 50%,#7a1020 50%)"></i>Red v Maroon</button><button data-preset="Yellow v White"><i style="background:linear-gradient(90deg,#facc15 50%,#ffffff 50%)"></i>Yellow v White</button><button data-preset="Black v Green"><i style="background:linear-gradient(90deg,#111111 50%,#16a34a 50%)"></i>Black v Green</button><button data-preset="Purple v Orange"><i style="background:linear-gradient(90deg,#6d28d9 50%,#f97316 50%)"></i>Purple v Orange</button><button data-preset="Sky v Navy"><i style="background:linear-gradient(90deg,#38bdf8 50%,#1e2a5a 50%)"></i>Sky v Navy</button></div>
 <div class="readout" id="readout"></div></div>

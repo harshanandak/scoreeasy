@@ -1,4 +1,4 @@
-<!doctype html><html lang="en" data-theme="dark" data-motif="game"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="en" data-theme="dark" data-motif="court"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sport motifs · E · Broadcast blend</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
@@ -276,7 +276,7 @@ const R=document.documentElement;
 const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`;
 for(const k in M){R.style.setProperty(`--motif-${k}`,u(svg(k)));R.style.setProperty(`--motif-${k}-a`,u(half(k,0)));R.style.setProperty(`--motif-${k}-b`,u(half(k,200)));}
 window.SEMotifs={markup:M,label:LABEL,svg};
-})();</script><script>/* ===== Game scenes (default motif):  Olympic-pictogram players + equipment, viewBox 400x260, team A left facing right, B right facing left.
+})();</script><script>/* ===== Game scenes (experimental; court is the default):  Olympic-pictogram players + equipment, viewBox 400x260, team A left facing right, B right facing left.
    Same mask contract as the court drawings; SEMotifs.use('game'|'court') swaps the set. ===== */
 (function(){
 const P=(...pts)=>'M'+pts.map(p=>p.join(' ')).join('L');
@@ -341,7 +341,7 @@ const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`,R=document.docum
 for(const k in G){sets.court[k]=['','-a','-b'].map(s=>R.style.getPropertyValue(`--motif-${k}${s}`));sets.game[k]=[u(svg(k)),u(half(k,0)),u(half(k,200))];}
 /* point --motif-<sport> at the chosen set: 'game' (default) or 'court' */
 C.use=style=>{const S=sets[style==='court'?'court':'game'];for(const k in S)['','-a','-b'].forEach((s,i)=>R.style.setProperty(`--motif-${k}${s}`,S[k][i]));};
-C.scenes=G;C.sceneLabel=LABEL;C.use('game');
+C.scenes=G;C.sceneLabel=LABEL;
 })();
 </script>
 <script>/* ===== Colour engine: any team hex -> safe, bold, blended tokens ===== */
@@ -449,11 +449,11 @@ window.SEColor={derive,report,contrast,dE,lch,NEUTRAL};
 <div class="tb" role="toolbar" aria-label="Preview controls">
 <h1>Score Easy · E · Broadcast blend<small>Sport motifs · one line drawing per game, inside the blended score area</small></h1>
 <div class="seg-t" role="group" aria-label="Page theme"><button data-theme-btn="dark" aria-pressed="true">Dark</button><button data-theme-btn="light" aria-pressed="false">Light</button></div>
-<div class="seg-t" role="group" aria-label="Sport motif"><span class="seg-l">Motif</span><button data-motif-btn="game" aria-pressed="true">Game</button><button data-motif-btn="court" aria-pressed="false">Court</button><button data-motif-btn="off" aria-pressed="false">Off</button></div>
+<div class="seg-t" role="group" aria-label="Sport motif"><span class="seg-l">Motif</span><button data-motif-btn="court" aria-pressed="true">Court</button><button data-motif-btn="game" aria-pressed="false">Game</button><button data-motif-btn="off" aria-pressed="false">Off</button></div>
 <div class="readout" id="readout"></div></div>
 <main class="sheet">
 <div class="lede"><h2>Know the game before you read the score.</h2>
-<p>Each sport shows the game being played behind the two numbers: two pictogram players mid-action (a spike and a block, a raid and a tackle, a ball and a bat) with team A's player on the left and team B's on the right. Switch to <b>Court</b> to compare the earlier line drawings of the court, mat or pitch. It is a mask, so its colour comes from the engine: white chalk on deep fills with contrast to spare, black engraving on deep fills without it, ink on bright fills. It fades under the numerals and every label is re-checked against it.</p>
+<p>Each sport gets its court, mat or pitch as a line drawing behind the two numbers — team A's half on the left, team B's on the right, the net or midline under the centre pill. <b>Game</b> shows an experimental pictogram-player version for comparison. It is a mask, so its colour comes from the engine: white chalk on deep fills with contrast to spare, black engraving on deep fills without it, ink on bright fills. It fades under the numerals and every label is re-checked against it.</p>
 <p class="sum" id="sum"></p></div>
 
 <section class="srow" aria-label="Volleyball motif">
@@ -571,7 +571,7 @@ window.SEColor={derive,report,contrast,dE,lch,NEUTRAL};
 </main>
 <script>
 (function(){
-const st={motif:'game',theme:'dark'};
+const st={motif:'court',theme:'dark'};
 const set=(el,p,t)=>{el.style.setProperty('--'+p+'-hi',t.hi);el.style.setProperty('--'+p+'-core',t.core);el.style.setProperty('--'+p+'-lo',t.lo);el.style.setProperty('--'+p+'-on',t.on);
   el.style.setProperty('--'+p+'-scrim',t.veil==='#000000'?'rgba(0,0,0,'+t.scrimA+')':'rgba(255,255,255,'+t.scrimA+')');
   const mc=t.motifCol.match(/\w\w/g).map(x=>parseInt(x,16));el.style.setProperty('--'+p+'-motif','rgba('+mc.join(',')+','+t.motifA+')');};
