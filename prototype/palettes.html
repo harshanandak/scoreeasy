@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy — green palettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Oswald',sans-serif; background:#1b1f24; color:#e7ecf1; padding:44px 24px 80px; }
+  .head{ max-width:1180px; margin:0 auto 40px; }
+  .head .kicker{ font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.4em; text-transform:uppercase; color:#8a97a3; }
+  .head h1{ font-size:30px; font-weight:600; letter-spacing:-.02em; margin-top:8px; }
+  .head p{ color:#9aa7b2; max-width:660px; margin-top:12px; line-height:1.5; font-size:15px; }
+  .grid{ max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:34px; }
+  @media(max-width:1080px){ .grid{ grid-template-columns:1fr; justify-items:center; } }
+  .col{ display:flex; flex-direction:column; gap:16px; align-items:center; }
+  .meta{ text-align:center; max-width:340px; }
+  .meta .name{ font-size:20px; font-weight:600; }
+  .meta .desc{ font-size:13px; color:#93a0ab; margin-top:7px; line-height:1.5; }
+  .phone{ width:340px; height:720px; border-radius:40px; overflow:hidden; position:relative; box-shadow:0 40px 80px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06); }
+
+  /* ---- shared scorer structure (themed by CSS vars) ---- */
+  .s{ position:absolute; inset:0; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); font-family:'Oswald',sans-serif; }
+  .s .top{ display:flex; align-items:center; justify-content:space-between; padding:24px 20px 12px; }
+  .s .ic{ width:34px;height:34px;border:1px solid var(--line2);border-radius:9px;display:grid;place-items:center;color:var(--dim);font-size:19px; }
+  .s .title{ text-align:center; }
+  .s .title b{ font-weight:600; font-size:16px; letter-spacing:.07em; text-transform:uppercase; }
+  .s .title span{ display:block; font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:.2em; color:var(--faint); margin-top:3px; text-transform:uppercase; }
+  .s .sp{ margin:6px 20px 0; text-align:center; font-size:13px; font-weight:500; letter-spacing:.32em; text-transform:uppercase; color:var(--green); padding:9px 0; border-top:1px solid var(--greenline); border-bottom:1px solid var(--greenline); }
+  .s .board{ flex:1; display:flex; }
+  .s .side{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  .s .side.l{ border-right:1px solid var(--line); }
+  .s .team{ font-size:15px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; color:var(--dim); }
+  .s .side.serve .team{ color:var(--green); }
+  .s .num{ font-family:'Teko',sans-serif; font-weight:600; font-size:148px; line-height:.78; font-variant-numeric:tabular-nums; }
+  .s .side.lead .num{ color:var(--ink-strong); }
+  .s .side.trail .num{ color:var(--lose); }
+  .s .dot{ width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);margin-bottom:4px; }
+  .s .cue{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-top:4px; }
+  .s .chips{ display:flex; justify-content:center; flex-wrap:wrap; gap:16px; padding:14px 16px 2px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.08em; color:var(--faint); }
+  .s .chips b{ color:var(--ink); font-weight:500; }
+  .s .acts{ display:flex; gap:8px; padding:10px 18px 0; }
+  .s .btn{ flex:1; text-align:center; border:1px solid var(--line2); border-radius:10px; padding:11px 0; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+  .s .foot{ display:flex; gap:8px; padding:10px 18px 0; }
+  .s .u{ width:52px; border:1px solid var(--line2); border-radius:12px; display:grid; place-items:center; color:var(--dim); font-size:18px; }
+  .s .end{ flex:1; text-align:center; padding:15px 0; border-radius:12px; background:var(--green); color:var(--on-green); font-weight:600; font-size:14px; letter-spacing:.14em; text-transform:uppercase; box-shadow:0 12px 26px -12px var(--green); }
+  .s .meta{ display:flex; align-items:center; justify-content:space-between; padding:12px 20px 22px; font-family:'DM Mono',monospace; font-size:11px; color:var(--faint); }
+  .s .meta .g{ color:var(--green); }
+
+  /* ===== A · CEMENT + GREEN ===== */
+  .cement{
+    --bg:#cbc8bd; --ink:#242720; --ink-strong:#15170f; --dim:#6a6a5c; --faint:#8a8a7a; --lose:#a7a494;
+    --line:rgba(30,30,20,.14); --line2:rgba(30,30,20,.22);
+    --green:#1c7a44; --greenline:rgba(28,122,68,.3); --on-green:#f4f2e9;
+    background-image:linear-gradient(135deg, rgba(255,255,255,.10) 0%, transparent 40%), radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.12), transparent 55%);
+  }
+  /* ===== B · WHITE + GREEN ===== */
+  .white{
+    --bg:#f4f2ec; --ink:#191b16; --ink-strong:#0d0f0a; --dim:#6f7268; --faint:#9a9d90; --lose:#c4c6bb;
+    --line:rgba(20,22,16,.10); --line2:rgba(20,22,16,.16);
+    --green:#15803d; --greenline:rgba(21,128,61,.26); --on-green:#ffffff;
+  }
+  /* ===== C · SLATE + GREEN ===== */
+  .slate{
+    --bg:#282f36; --ink:#e9edf0; --ink-strong:#ffffff; --dim:#8b97a2; --faint:#69747e; --lose:#525c66;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+    --green:#34c977; --greenline:rgba(52,201,119,.24); --on-green:#0c1410;
+    background:radial-gradient(120% 70% at 50% -10%, #313943 0%, #232930 65%);
+  }
+</style>
+</head>
+<body>
+<div class="head">
+  <div class="kicker">ScoreEasy · palette</div>
+  <h1>Green, grounded — three neutrals</h1>
+  <p>Same Floodlight scorer, recoloured. Green stays as the live/action colour; the difference is the field it sits on. Pick a neutral and I'll swap it across the whole app in one edit (every screen reads one stylesheet).</p>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+  var THEMES = [
+    ['cement', 'Cement + Green', 'Raw-concrete canvas, deep pitch green. Architectural and grounded — a scoreboard painted on a school’s cement wall. Warm, Indian-institutional, unmistakably physical.'],
+    ['white',  'White + Green',  'Clean off-white paper, crisp black ink, one confident green. Minimal and federation-grade. Reads bright outdoors; the calmest of the three.'],
+    ['slate',  'Slate + Green',  'Cool dark slate (not black), fresh green (not amber). The night version — premium and focused, but softer and more modern than pure black.'],
+  ];
+  function scorer(theme){
+    return '' +
+    '<div class="s '+theme+'">' +
+      '<div class="top"><div class="ic">‹</div><div class="title"><b>Hawks vs Wolves</b><span>SET 3 · SETS 1‑1 · TO 15</span></div><div class="ic">👁</div></div>' +
+      '<div class="sp">Match Point · Hawks</div>' +
+      '<div class="board">' +
+        '<div class="side l serve lead"><div class="dot"></div><div class="team">Hawks</div><div class="num">14</div><div class="cue">serving · tap</div></div>' +
+        '<div class="side trail"><div class="team">Wolves</div><div class="num">13</div><div class="cue">tap +1</div></div>' +
+      '</div>' +
+      '<div class="chips"><span>SET 1 <b>25–19</b></span><span>SET 2 <b>21–25</b></span><span>ACES <b>4</b></span><span>BLK <b>6</b></span></div>' +
+      '<div class="acts"><div class="btn">Time</div><div class="btn">Sides</div><div class="btn">Rotate</div><div class="btn">Libero</div></div>' +
+      '<div class="foot"><div class="u">↩</div><div class="end">End Set</div></div>' +
+      '<div class="meta"><span>Set history</span><span class="g">👁 8 · Share live ↗</span></div>' +
+    '</div>';
+  }
+  document.getElementById('grid').innerHTML = THEMES.map(function(t){
+    return '<div class="col"><div class="meta"><div class="name">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div><div class="phone">'+scorer(t[0])+'</div></div>';
+  }).join('');
+</script>
+</body>
+</html>

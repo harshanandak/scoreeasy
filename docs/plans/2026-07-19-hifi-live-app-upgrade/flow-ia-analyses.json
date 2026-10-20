@@ -1,0 +1,206 @@
+[
+  {
+    "focus": "Primary navigation and bottom-tab information architecture for ScoreEasy: what the tab bar should hold, tabs vs hub vs profile, label clarity (I-066), and the Home/Play/History/Friends/More question — grounded in the real 60-screen inventory.",
+    "navModel": "Recommend a 5-slot bottom tab bar with Play as an emphasized center action: Home · History · [Play] · Watch/Friends · Profile. Rationale: (1) This is a mobile-first phone app (300x600 HiFi frames, device-chrome fidelity) — a persistent bottom tab bar is the correct primary model, and the current 3-tab bar (Play/History/Stats) under-uses it. (2) 'Start & score a match' is the app's core job, so Play belongs in the center as a raised/emphasized CTA rather than a peer tab — it is the one action every session funnels through. (3) Home must become a real tab: today Dashboard (landing/DashboardLanding.jsx) exists but is NOT in the tab bar, so signed-in users have no persistent 'home' anchor for the live/upcoming feed HiFi wants. (4) Stats should NOT hold a scarce tab slot — it is low-frequency and empty for new users (I-013); fold it under History or Profile. (5) The 4th slot is the growth axis: today it should hold Profile/account (avatar target promoted to a tab), and as the social layer lands it becomes Watch/Friends with Profile moving behind the avatar or into a More sheet. PHASING: ship now as Home · History · [Play] · Profile (4 real destinations that exist); add the Watch/Friends tab only once Activity feed + spectator ship, so you never show a tab that opens an empty shell. Everything account/settings/teams/notifications hangs off Profile as a hub (profile-as-hub) rather than eating tab slots — HiFi's 'More/Settings' is a Profile sub-surface, not a 5th tab, until social forces the split.",
+    "discoverabilityIssues": [
+      "No Home tab: DashboardLanding.jsx (the signed-in home) is reachable via /dashboard redirect but absent from the tab bar (index.jsx:566-582 = Play/History/Stats only), so users have no persistent anchor to return to.",
+      "Profile is not a tab: /profile is reachable only by tapping the avatar — account, and therefore any future settings/friends/teams that hang off it, are one undiscoverable tap deep with no label.",
+      "User search (/users/search, MonoUserSearch.jsx) has NO entry point in the primary nav — the closest thing to 'find friends' is effectively orphaned.",
+      "Settings has no route at all — scoring defaults, dark mode, auto-share, data export/clear (all in HiFi's More·settings) have nowhere to live and nowhere to be discovered.",
+      "Watch-live / spectator has no nav home — even setting aside the missing feature, there is no tab or entry where a 'friends are live now' feed would surface.",
+      "Tournament entry is buried inside the per-sport Play flow (:sport/tournament) — there is no top-level path to competitions; a user in History or Home cannot reach fixtures/standings.",
+      "Stats occupies a top-level tab but for a new user it renders empty (I-013), so a prime tab slot leads to a dead-end on first run.",
+      "Notifications (friend requests, live alerts, milestones) have no bell/entry anywhere."
+    ],
+    "simplicityRecommendations": [
+      "Cap the tab bar at 4-5 slots and make Play the emphasized center action, not a plain peer tab — this both simplifies and signals the core job.",
+      "Collapse Stats into History (a segmented 'Games / Stats' toggle inside the History surface) so records live in one place and free a tab slot; MonoHistory.jsx and MonoStatistics.jsx are both ~890 ln siblings querying the same match data.",
+      "Adopt a single profile-as-hub pattern: avatar -> Profile, and Profile hosts Settings/More, Teams, Friends, and account until each earns its own surface — avoids scattering account functions across the shell.",
+      "Do NOT ship a tab that opens an empty/unbuilt screen — gate the Watch/Friends tab behind the social+spectator features landing; show 4 real tabs now, grow to 5 later.",
+      "Delete the legacy orphans (MonoHome.jsx, MonoSetup.jsx, NewUserFlow.jsx, MonoSportHome_TABBED.jsx) so there is one canonical component per nav destination and no ambiguity about which Home/Setup is live.",
+      "Keep dev showcases (/showcase/*) gated behind SHOW_INTERNAL_ROUTES and out of any user-facing nav."
+    ],
+    "navModelReason": "Bottom tab bar with emphasized center Play, because the app is phone-first and every session funnels through starting/scoring a match; hub-and-spoke (Profile as hub for settings/teams/friends) keeps low-frequency surfaces off the scarce tab slots.",
+    "namingIssues": [
+      "I-066 confirmed: bottom-nav label reads 'Stats' (index.jsx:568,582) while the destination's title/tablist and route say 'Statistics' (MonoStatistics.jsx:362,490; route /statistics with /stats redirect). Pick ONE token end-to-end. If Stats survives as a destination, use 'Stats' everywhere (shorter, matches the simple-command-names principle) and make /statistics the redirect, not the canonical route.",
+      "If Stats is merged into History (recommended), the label question dissolves — remove the standalone 'Stats/Statistics' nav label entirely.",
+      "'Play' is a good tab label and should be kept over HiFi's 'Start' — it reads as the ongoing activity, not just creation, and covers both quick match and tournament entry.",
+      "HiFi's 4th-slot label is ambiguous ('Friends/More') — decide deliberately: 'Watch' if the primary job is the live/spectator feed, 'Friends' if it's the social graph. Do not ship a slash-label."
+    ],
+    "entryPointGaps": [
+      "Settings/More: no route exists (settings-account group, currentState missing) — needs a home under Profile.",
+      "Friends / social: Activity feed, Friends list, Find & invite, Notifications all missing with zero entry points.",
+      "Watch-live / spectator: no tab, no entry, and no share-live entry in the shell.",
+      "User search: screen exists (/users/search) but has no nav entry — wire it under Profile or the future Friends tab.",
+      "Tournaments/competitions: no top-level entry; only reachable via a sport-scoped Play sub-route.",
+      "Teams management: no entry (My teams/Create/Roster all missing despite Convex teams tables).",
+      "Post-match Result/Scorecard: no terminal screen and thus no entry after a match ends.",
+      "Notifications: no bell/entry in the shell."
+    ],
+    "promoteScreens": [
+      "Dashboard / signed-in Home (landing/DashboardLanding.jsx) -> promote to the first tab slot 'Home' with the live/upcoming + activity feed HiFi specifies.",
+      "Your profile (MonoProfile.jsx, /profile) -> promote to a tab (or a consistent, labeled avatar entry) and make it the hub for Settings, Teams, Friends, account.",
+      "Settings/More -> create the screen and give it a stable entry under Profile (it currently does not exist at all).",
+      "User search (MonoUserSearch.jsx) -> promote out of orphan status into the Profile hub now, and into the Friends tab once social ships.",
+      "Watch/Friends feed -> promote to the 5th tab once the spectator + activity-feed features land."
+    ],
+    "demoteOrMergeScreens": [
+      "Statistics (MonoStatistics.jsx) -> demote from top-level tab; merge into History as a 'Games / Stats' segmented view (frees a tab slot and removes the I-066 label mismatch).",
+      "MonoSportHome_TABBED.jsx -> delete (unwired alternate of MonoSportHome.jsx).",
+      "MonoHome.jsx, MonoSetup.jsx, NewUserFlow.jsx -> delete/merge (legacy orphans not referenced by the router).",
+      "Dev showcases (/showcase/*) -> keep demoted behind SHOW_INTERNAL_ROUTES, never in user nav.",
+      "Duplicate cricket start paths (MonoQuickMatch quick-dispatch vs :sport/quick/test-match/:matchId, I-085) -> consolidate the entry so Play has one start flow per sport, not two."
+    ],
+    "clutterOrHiddenUseful": [
+      "Hidden-useful: User search (find friends) — a real, built screen with no nav entry point.",
+      "Hidden-useful: Tournament list/fixtures/standings — capable competition flows buried under a sport-scoped Play sub-route with no top-level access.",
+      "Hidden-useful: Profile/account — the only account surface, reachable only via an unlabeled avatar tap.",
+      "Clutter: Stats as a top-level tab that dead-ends empty for new users (I-013) while occupying prime real estate.",
+      "Clutter: legacy orphan components (MonoHome, MonoSetup, NewUserFlow, MonoSportHome_TABBED) that duplicate live destinations and muddy which screen a nav slot should point to.",
+      "Clutter: two cricket start paths (I-085) presenting redundant entry points into the same scorer engine."
+    ]
+  },
+  {
+    "focus": "Discoverability + surfacing useful screens: are the high-value surfaces (Play, Live-now, Share-live, Watch) easy to reach, what's buried, what dev/legacy clutter should be demoted.",
+    "navModel": "Move from today's 3-tab bottom nav (Play / History / Stats) to the HiFi-intended 4-tab model: HOME / PLAY / HISTORY / MORE, plus one persistent primary \"Score\" CTA (center action) as the single highest-value surface. HOME becomes the real signed-in dashboard carrying a Live-now strip + Start CTA + activity feed (today Play doubles as home, and /, /dashboard, /play triple up on \"home\"). PLAY stays the create-match hub. HISTORY absorbs Stats/Leaderboard/Match-detail as sub-tabs (kills the Stats-vs-Statistics split and the empty-overview problem). MORE holds Profile, Settings, Friends, Teams — a hub for everything currently unreachable. Watch/Spectator is deliberately link-first (deep-linked from share links + the Home Live-now feed), not a tab. Rationale: the app's entire value proposition — live scoring you share and others watch — currently has zero home surface; a Home-with-live-feed + always-visible Score CTA + a share entry inside the scorer is what makes Live-now / Share-live / Watch reachable at all.",
+    "discoverabilityIssues": [
+      "Only 3 bottom tabs (Play/History/Stats, index.jsx:566-582); no Home, no Friends/social, no Settings/More entry — three of HiFi's four intended tabs have no home.",
+      "The entire Watch/Spectator branch (6 screens) is unreachable — not just unbuilt: there is no route, no link, no activity-feed 'Watch' affordance anywhere.",
+      "Share-live has no entry point: the in-match '⋯' menu is missing, so share-link/QR/auto-share can never be triggered from a live scorer.",
+      "Live-now / activity feed is absent, so a spectator or friend has no way to discover a match that is happening right now.",
+      "After a match finishes there is no destination — Result and Scorecard are missing, so the score flow dead-ends instead of routing to share/rematch.",
+      "No Settings screen at all — scoring defaults, auto-share, dark-mode toggle (declared unused in index.css) have no surface; Profile is the only account screen.",
+      "User search / find-friends (/users/search) has no tab or nav entry — reachable only by typing the URL.",
+      "Players leaderboard, Match detail, and Match graphs are buried inside Stats/History with no direct entry.",
+      "Tournaments live only under per-sport routes (:sport/tournament); there is no cross-sport tournaments entry, and Standings/Bracket/Schedule are buried inside the dispatcher.",
+      "Teams (My teams, Roster, Add players) have no entry point at all."
+    ],
+    "simplicityRecommendations": [
+      "Collapse the three home-ish screens (Guest landing /, Dashboard /dashboard, Play /play) into one Home surface with a signed-out vs signed-in variant, so 'where do I start' has a single answer.",
+      "Merge Play hub ('Start · Browse') and Sport home ('Start · Guided') — today they read as two confusing pick steps; make one hub with a Guided/Browse toggle.",
+      "Delete legacy orphans not wired to the router: MonoHome, MonoSetup, NewUserFlow, MonoSportHome_TABBED — dead weight that confuses maintenance and duplicates flows.",
+      "Remove /showcase/* dev routes from the production router/bundle (gate at build, not at runtime SHOW_INTERNAL_ROUTES).",
+      "Break up the MonoQuickMatch 2850-line monolith that conflates setup + dispatch + multiple cricket start paths (I-085); one setup screen, one dispatcher.",
+      "Fold Stats into History as sub-tabs rather than a peer top-level tab — stats are a lens on history, not a separate destination, and this fixes the empty-overview-for-new-users problem.",
+      "Introduce ONE in-match '⋯' menu that centralizes Share, Undo, Edit setup, End match — instead of scattering those affordances or omitting them."
+    ],
+    "clutterOrHiddenUseful": [
+      "HIDDEN-USEFUL: Players leaderboard — real value, buried inside /statistics as an internal tab.",
+      "HIDDEN-USEFUL: Match detail + Match graphs/momentum — buried in/absent from History with no direct link.",
+      "HIDDEN-USEFUL: Standings + Bracket — buried inside the per-sport tournament dispatcher.",
+      "HIDDEN-USEFUL: User search / find-friends (/users/search) — no nav entry despite being the seed of the whole social layer.",
+      "HIDDEN-USEFUL: Player-profile career records/milestones (/profile/:username) — reachable only by direct URL.",
+      "CLUTTER: Dev showcases (/showcase/* — MatchCard, SetDisplay, BrutalistColor, Dashboard) shipped in the router.",
+      "CLUTTER: Legacy orphans MonoHome / MonoSetup / NewUserFlow / MonoSportHome_TABBED — unwired dead screens.",
+      "CLUTTER: Generic live game view (MonoLiveGame, partial) — redundant with the per-sport scorers.",
+      "CLUTTER: Route-recovery / 404 plumbing is fine but should never be a discoverable surface."
+    ],
+    "demoteOrMergeScreens": [
+      "Merge: Guest landing (/) + Dashboard (/dashboard) + Play-as-home (/play) → one Home.",
+      "Merge: Play hub ('Start · Browse') + Sport home ('Start · Guided') → single create-match hub with a Guided/Browse toggle.",
+      "Merge: Generic live game view (MonoLiveGame) into the per-sport scorers — remove the standalone.",
+      "Merge: the two cricket start paths (limited-overs dispatch vs :sport/quick/test-match) into one setup→dispatch (I-085).",
+      "Merge: Statistics overview + Players leaderboard + per-sport tabs → History sub-tabs.",
+      "Demote/remove from router: /showcase/* dev showcases (build-time gate only).",
+      "Demote/delete: legacy orphans MonoHome, MonoSetup, NewUserFlow, MonoSportHome_TABBED.",
+      "Demote: Legal (privacy/terms/contact) — keep, but move behind Settings/More footer, not a peer surface."
+    ],
+    "entryPointGaps": [
+      "Watch / Spectator — no route, no share-link handler, no 'Watch' affordance in any feed.",
+      "Share-live (link + QR + auto-share) — no in-match '⋯' menu to launch it.",
+      "Live-now strip / Activity feed — no Home surface to host 'X is live · Watch'.",
+      "Result + Scorecard — no destination when a match ends (score flow dead-ends).",
+      "Settings / More — no route (scoring defaults, auto-share, dark-mode toggle all unreachable).",
+      "Friends / Notifications — no tab or entry into the social layer.",
+      "Teams (My teams / Roster / Add players) — no entry point anywhere.",
+      "Cross-sport Tournaments + standalone Schedule/Fixtures calendar — reachable only per-sport, deeply nested.",
+      "In-match Undo / Edit-setup / End-match — no consolidated menu."
+    ],
+    "namingIssues": [
+      "Nav says 'Stats' (index.jsx:568,582) but the destination titles itself 'Statistics' (/statistics, MonoStatistics.jsx) — label/destination mismatch (I-066).",
+      "'Dashboard' vs 'Landing' vs 'Play hub' all mean 'home' — no consistent Home vocabulary; HiFi just calls it Home.",
+      "'Play hub' vs 'Sport home' expose internal component names as two pick steps; HiFi's clearer 'Start · Guided / Start · Browse' intent is lost.",
+      "'Statistics' as a top-level tab overloads leaderboard + per-sport + overview under one ambiguous word; rename/relocate as History sub-tabs (Games / Players / Trends).",
+      "Profile carries no 'Settings' or 'More' label even though it is the de-facto account hub — users won't find preferences under 'Profile'."
+    ],
+    "promoteScreens": [
+      "Home (signed-in dashboard with Live-now strip + Start CTA + activity feed) — promote to the first tab; today Play impersonates it.",
+      "A persistent primary 'Score / Start' CTA — the single highest-value action, always visible.",
+      "Spectator / Watch (per-sport + graphs) — build and make it the link-first destination of every share.",
+      "Share-live (link/QR/auto-share) via a new in-match '⋯' menu.",
+      "Result + Scorecard — the terminal surface of every match, with Share/Rematch.",
+      "Settings / More — new top-level hub (account, scoring defaults, auto-share, appearance/dark mode).",
+      "Cross-sport Tournaments entry (with Standings/Bracket/Schedule) — lift out of per-sport nesting.",
+      "Players leaderboard + Match detail/graphs — surface directly as History sub-tabs, not buried.",
+      "Friends / Find-friends / Notifications — promote /users/search out of URL-only into a discoverable social hub."
+    ]
+  },
+  {
+    "focus": "Simplicity, cognitive load, and first-run clarity — how ScoreEasy's IA overwhelms, where the next action is unclear, and where progressive disclosure/defaults/empty-state guidance are missing.",
+    "navModel": "Adopt the HiFi 4-tab bottom nav — Home · Play · History · More — with Home as the signed-in default, not Play. Rationale: today the app shell has only 3 tabs (Play / History / Stats, index.jsx:566-582) and lands signed-in users straight into a \"pick a sport\" chore with no orientation. A Home tab (live/upcoming feed + recent activity + one primary \"Start a match\" CTA) gives a low-cognitive-load entry that answers \"what now?\" in one glance, and absorbs the thin /dashboard. Play stays the single funnel into match creation. History subsumes Stats/leaderboard/profile behind one tab (they are all \"the record\"), fixing the Stats-vs-Statistics split. More becomes the home for Settings, Profile/account, Friends, Teams — all the low-frequency surfaces that currently have no shelf. Keep it 4 tabs max; do NOT add Friends as a 5th top-level tab until the social layer actually exists — nest it under More/Home-feed first.",
+    "discoverabilityIssues": [
+      "Signed-in users land on Play (pick-a-sport) with no Home/orientation surface — Dashboard exists (landing/DashboardLanding.jsx) but is thin and not the tab default; the HiFi live/upcoming/Activity feed is absent, so there is no 'what's happening' entry point.",
+      "No Settings route exists at all — scoring defaults, the 'Confirm wicket/goal' toggle, auto-share, dark mode (declared-but-unused .dark in index.css), and data export are undiscoverable because they have nowhere to live; Profile (MonoProfile 394ln) is the only account surface.",
+      "Match-end is a dead end: no Result/Scorecard/Share-card screen ships, so after the final point the scorer has no designed terminal state and no obvious next action (Done/Rematch/Share are undiscoverable).",
+      "Share-live / spectator / QR only exist in a worktree branch, not production — the entire 'let someone watch' capability is invisible to real users.",
+      "Two cricket start paths (I-085: :sport/quick/test-match vs dispatched limited-overs inside MonoQuickMatch 2850ln) mean the same intent forks unpredictably — the user can't tell which door leads where.",
+      "Customize & rules is embedded/implicit inside MonoQuickMatch rather than a labeled step, so rule customization is hidden behind the setup monolith.",
+      "Statistics depth (charts/trends/head-to-head/leaderboard) is buried inside one table-heavy /statistics screen with no visualization layer anywhere in the app."
+    ],
+    "simplicityRecommendations": [
+      "Design the three empty/first-run states HiFi calls for (Home-empty, History-empty, Teams-empty) — today the app renders zero-grids or risks perpetual loading (I-053). Each empty state should carry ONE primary CTA ('Start your first match') so first-run has an obvious next action instead of a blank grid.",
+      "Simplify onboarding to the HiFi shape: Continue with Google / Apple / phone → Home. MonoOnboarding.jsx is 922ln — heavy for a first impression; strip it to auth + land on the empty Home.",
+      "Collapse the Play → Sport home → Quick match layering. There are two 'pick' layers (MonoPlayHub then MonoSportHome) plus a 2850ln setup monolith. Make Play one screen: pick sport → clean Setup → (optional Customize & rules) → scorer. Split MonoQuickMatch so Setup/Toss/Customize are distinct, minimal screens.",
+      "Use defaults + progressive disclosure to reduce choices: default sport (from Settings) so returning users skip the sport picker; make 'Confirm wicket/goal' a settings toggle (not an always-on interrupt); keep rare inputs behind long-press (Cricket long-press No-ball→runs) so the primary scorer stays clean.",
+      "Make attribution optional-by-default: every who-scored/how-out/credit-point sheet must have a prominent Skip alongside Confirm so casual scorers are never forced through stat entry.",
+      "Add the team-only (no-roster) casual mode HiFi Band 8 specifies — the fastest path to 'just keep score' with zero player-setup cognitive load.",
+      "Do NOT expose the refined/new/old scorer-style toggle to end users — it is a design-exploration mechanism; shipping three co-located scorer variants would multiply choice and overwhelm. Pick 'refined' and hide the rest.",
+      "Fix history's mobile overload (I-086): the 3-col summary + search/filter block consumes the viewport before any result. Demote filters behind a collapsed control and lead with results.",
+      "Reduce top-level tabs to 4 and push low-frequency surfaces (Settings, Teams, Friends, account Profile) under More, so the primary surface stays glanceable."
+    ],
+    "clutterOrHiddenUseful": [
+      "HIDDEN-USEFUL: Spectator views, ShareLiveMatch, QR, LiveMatchCard, convex/live.ts — high-value 'watch live' capability trapped in a .claude/worktrees/wf_* branch, invisible in production.",
+      "HIDDEN-USEFUL: standingsColumns config exists per sport (sportRegistry.js) but a rendered Standings table matching HiFi may not surface — the data model is ahead of the UI.",
+      "HIDDEN-USEFUL: Convex teams tables exist but there is zero teams-management UI (My teams/Create/Add players/Roster) — a whole built backend is undiscoverable.",
+      "CLUTTER: Dev showcase routes (/showcase/*: MatchCard/SetDisplay/BrutalistColor/Dashboard) — keep gated by SHOW_INTERNAL_ROUTES, never surface to users.",
+      "CLUTTER: Legacy orphans (MonoHome, MonoSetup, NewUserFlow, MonoSportHome_TABBED) unwired dead-weight that confuses the codebase and risks accidental exposure — delete/merge.",
+      "CLUTTER: MonoLiveGame.jsx (309ln generic) has unclear routing role — reconcile or remove so there aren't two 'live view' concepts.",
+      "CLUTTER: I-068 ad-hoc green 4/6 accent on cricket run buttons breaks the scoring surface's visual uniformity, adding an inconsistent emphasis users must parse."
+    ],
+    "demoteOrMergeScreens": [
+      "Merge /dashboard (DashboardLanding) INTO the new Home tab — one signed-in home, not a redirect + thin landing.",
+      "Merge Sport home (MonoSportHome) into the Play hub — two 'pick a sport' layers should be one.",
+      "Delete/merge legacy orphans: MonoHome.jsx, MonoSetup.jsx, NewUserFlow.jsx, MonoSportHome_TABBED.jsx (unwired).",
+      "Demote Statistics/leaderboard/Profile out of a top-level tab — fold Stats into History (the record) and account Profile into More; resolves the Stats-vs-Statistics tab split (I-066).",
+      "Merge the two cricket start paths (limited-overs + test) into one setup that branches on a format choice, killing the I-085 duplicate entry.",
+      "Demote History's filters/search behind a collapsed control (I-086) rather than occupying the top of the mobile viewport.",
+      "Consolidate MonoLiveGame's generic live view into the per-engine scorers — remove the redundant surface."
+    ],
+    "entryPointGaps": [
+      "No entry point to Settings — needs a route and a home under More.",
+      "No entry point to a signed-in Home feed / Activity (live + upcoming + recent) — the primary orientation surface is missing.",
+      "No entry point from a finished match to Result → Scorecard/Share/Rematch (terminal state missing entirely).",
+      "No entry point to Share-live / Spectator from the in-match ⋯ menu (⋯ menu itself is not a distinct surface today).",
+      "No entry point to Teams (My teams/Create/Roster) despite backend existing.",
+      "No entry point to the social layer (Friends list, Find & invite, Notifications, public add-friend profiles) — User search (/users/search, 189ln) is the only nearby surface and lacks invite flow.",
+      "No standalone Schedule/Fixtures entry beyond the tournament list.",
+      "No in-match ⋯ menu entry for edit-setup / share / end-match."
+    ],
+    "namingIssues": [
+      "Nav label 'Stats' vs destination title 'Statistics' and route /statistics (I-066) — pick one word; if History subsumes it, the tab is 'History'.",
+      "'Quick match' / MonoQuickMatch conflates setup + dispatch + multiple start flows — the name hides that it's really the whole creation funnel; rename/split into 'Setup'.",
+      "'Sport home' vs 'Play hub' — two names for overlapping pick-a-sport surfaces; unify under 'Play'.",
+      "'More · settings' vs current 'Profile' — the account/settings shelf needs a clear single label ('More' or 'Settings'), not overloaded onto Profile.",
+      "Dashboard vs Home — HiFi calls it Home; 'Dashboard' reads as a different, heavier concept. Standardize on 'Home'."
+    ],
+    "promoteScreens": [
+      "Signed-in Home (with live/upcoming feed + primary Start CTA) — promote to the default tab and build the empty-state variant.",
+      "Settings/More — promote from nonexistent to a first-class tab-nested surface (scoring defaults, Confirm-toggle, auto-share, dark mode, data export).",
+      "Result / Scorecard — promote the match-end terminal state so scoring has an obvious finish + next action (Done/Rematch/Share).",
+      "Share-live + Spectator (incl. QR) — promote from worktree branch into production; it's the app's differentiating 'watch' loop.",
+      "Explicit empty states (Home/History/Teams) — promote first-run guidance from absent to designed, each with one CTA.",
+      "Clean Setup + Customize & rules — promote out of the MonoQuickMatch monolith into distinct, minimal steps.",
+      "Player profile career milestones/MVP/Win% — promote from partial to the HiFi-rich profile as a rewarding record surface."
+    ]
+  }
+]

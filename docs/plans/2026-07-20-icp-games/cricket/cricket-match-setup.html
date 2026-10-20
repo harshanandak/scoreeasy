@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket — new match setup</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+:root{
+  --background:oklch(0.9782 0.0039 145.5458);--foreground:oklch(0 0 0);--card:oklch(0.9855 0.0026 145.5558);
+  --primary:oklch(0.6230 0.1688 149.1777);--primary-foreground:oklch(1 0 0);--muted-foreground:oklch(0.5103 0 0);
+  --accent:oklch(0.9231 0.0773 156.7494);--destructive:oklch(0.5308 0.2178 29.2339);--border:oklch(0 0 0);
+  --font-sans:Inter,ui-sans-serif,sans-serif,system-ui;--font-mono:JetBrains Mono,ui-monospace,monospace;
+  --se-ink:var(--foreground);--se-muted:var(--muted-foreground);--se-faint:color-mix(in oklch,var(--muted-foreground) 62%,var(--background));
+  --se-line:var(--border);--se-surface:var(--card);--se-canvas:var(--background);--se-green:var(--primary);--se-danger:oklch(0.49 0.17 29);
+  --wash:oklch(0.955 0.03 150);--radius:0.25rem;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--se-canvas);color:var(--se-ink);font-family:var(--se-font-sans);-webkit-font-smoothing:antialiased;display:flex;justify-content:center}
+.screen{width:100%;max-width:390px;padding:14px 14px 90px}
+/* topbar */
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--se-line);border-radius:10px;background:var(--se-surface);font-size:1rem;flex:none}
+.topbar h1{font-size:1.0625rem;font-weight:800;margin:0}
+.topbar .sub{font-family:var(--se-font-mono);font-size:.625rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--se-muted);margin-top:2px}
+/* section */
+.sec{margin-top:16px}
+.sec-lbl{display:block;font-family:var(--se-font-mono);font-size:.625rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--se-faint);margin-bottom:8px}
+/* teams */
+.teams{display:flex;align-items:center;gap:9px}
+.team{flex:1;border:1px solid var(--se-line);border-radius:12px;background:var(--se-surface);padding:11px 12px}
+.team .cap{font-family:var(--se-font-mono);font-size:.5625rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--se-faint)}
+.team .val{font-size:.9375rem;font-weight:800;margin-top:3px}
+.vs{font-family:var(--se-font-mono);font-size:.75rem;font-weight:800;color:var(--se-muted)}
+/* segmented */
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:40px;border:1px solid color-mix(in oklch,var(--se-line) 40%,transparent);background:var(--se-surface);border-radius:999px;font-family:var(--se-font-sans);font-size:.8125rem;font-weight:700;color:var(--se-ink);cursor:pointer}
+.seg button.on{background:var(--se-ink);color:var(--primary-foreground);border-color:var(--se-ink)}
+.overs{display:flex;align-items:center;justify-content:space-between;margin-top:9px;border:1px solid color-mix(in oklch,var(--se-line) 40%,transparent);border-radius:12px;background:var(--se-surface);padding:8px 12px}
+.overs .k{font-family:var(--se-font-mono);font-size:.75rem;font-weight:700;color:var(--se-muted)}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:30px;height:30px;border:1px solid var(--se-line);border-radius:8px;background:var(--se-surface);font-size:1rem;font-weight:800;cursor:pointer}
+.stepper .n{font-family:var(--se-font-mono);font-size:1rem;font-weight:800;min-width:22px;text-align:center}
+/* ground */
+.ground-card{border:1px solid var(--se-line);border-radius:14px;background:var(--se-surface);padding:12px}
+.gt{display:flex;gap:6px}
+.gt button{flex:1;min-height:38px;border:1px solid color-mix(in oklch,var(--se-line) 40%,transparent);background:var(--se-surface);border-radius:999px;font-family:var(--se-font-sans);font-size:.75rem;font-weight:700;color:var(--se-ink);cursor:pointer}
+.gt button.on{background:var(--se-ink);color:var(--primary-foreground);border-color:var(--se-ink)}
+.dims{margin-top:11px}
+.dims-lbl{display:block;font-family:var(--se-font-mono);font-size:.5625rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--se-faint);margin-bottom:7px}
+.dims-row{display:flex;gap:6px;flex-wrap:wrap}
+.dim{flex:1 1 0;min-height:32px;border:1px solid color-mix(in oklch,var(--se-line) 40%,transparent);background:var(--se-surface);border-radius:999px;padding:5px 6px;font-family:var(--se-font-mono);font-size:.625rem;font-weight:700;color:var(--se-ink);cursor:pointer;white-space:nowrap}
+.dim.on{background:var(--se-green);border-color:var(--se-green);color:var(--primary-foreground)}
+.preview{width:100%;max-width:210px;margin:12px auto 2px}
+.preview svg{width:100%;height:auto;display:block}
+.preview-cap{text-align:center;font-family:var(--se-font-mono);font-size:.625rem;color:var(--se-faint);margin-top:4px}
+/* tracking toggle row */
+.trow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:11px;border-top:1px solid color-mix(in oklch,var(--se-line) 18%,transparent);padding-top:12px}
+.trow .t{font-size:.8125rem;font-weight:700}
+.trow .d{font-family:var(--se-font-mono);font-size:.625rem;color:var(--se-muted);margin-top:2px;max-width:210px;line-height:1.45}
+.sw{width:44px;height:26px;border-radius:99px;border:1px solid var(--se-line);background:var(--se-surface);position:relative;cursor:pointer;flex:none;transition:background 150ms ease}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--se-muted);transition:transform 150ms ease,background 150ms ease}
+.sw.on{background:var(--primary);border-color:var(--primary)}
+.sw.on::after{transform:translateX(18px);background:var(--primary-foreground)}
+/* start CTA */
+.cta{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:390px;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--se-canvas) 72%,transparent)}
+.start{width:100%;min-height:50px;border:1px solid var(--primary);border-radius:12px;background:var(--primary);color:var(--primary-foreground);font-family:var(--se-font-sans);font-size:.9375rem;font-weight:800;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="topbar">
+    <span class="icon">&#8249;</span>
+    <div><h1>New match</h1><div class="sub">Setup &middot; step 1 of 1</div></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div class="sec">
+    <span class="sec-lbl">Teams</span>
+    <div class="teams">
+      <div class="team"><div class="cap">Batting first</div><div class="val">Royals</div></div>
+      <span class="vs">vs</span>
+      <div class="team"><div class="cap">Bowling first</div><div class="val">Strikers</div></div>
+    </div>
+  </div>
+
+  <!-- FORMAT -->
+  <div class="sec">
+    <span class="sec-lbl">Format</span>
+    <div class="seg">
+      <button>T10</button>
+      <button class="on">T20</button>
+      <button>ODI</button>
+      <button>Custom</button>
+    </div>
+    <div class="overs">
+      <span class="k">Overs per side</span>
+      <div class="stepper"><button>&minus;</button><span class="n">20</span><button>+</button></div>
+    </div>
+  </div>
+
+  <!-- GROUND (the pre-match choice) -->
+  <div class="sec">
+    <span class="sec-lbl">Ground &amp; shape</span>
+    <div class="ground-card">
+      <div class="gt">
+        <button data-g="g">Round</button>
+        <button data-g="oval">Oval</button>
+        <button class="on" data-g="box">Box</button>
+        <button data-g="gully">Gully</button>
+      </div>
+
+      <div class="dims" id="dims" style="display:none">
+        <span class="dims-lbl">Mark your ground &middot; pick the closest size</span>
+        <div class="dims-row" id="dimsRow"></div>
+      </div>
+
+      <div class="preview">
+        <svg id="g" viewBox="0 0 300 300" aria-label="Round ground" style="display:none">
+          <circle cx="150" cy="150" r="146" fill="var(--wash)" stroke="var(--se-line)" stroke-width="2"/>
+          <circle cx="150" cy="150" r="88" fill="none" stroke="color-mix(in oklch,var(--se-line) 22%,transparent)" stroke-width="1.5" stroke-dasharray="4 5"/>
+          <g stroke="color-mix(in oklch,var(--se-line) 14%,transparent)" stroke-width="1.5">
+            <line x1="150" y1="4" x2="150" y2="296"/><line x1="4" y1="150" x2="296" y2="150"/>
+            <line x1="46" y1="46" x2="254" y2="254"/><line x1="254" y1="46" x2="46" y2="254"/>
+          </g>
+          <rect x="142" y="118" width="16" height="64" rx="2" fill="color-mix(in oklch,var(--se-line) 12%,var(--se-surface))" stroke="color-mix(in oklch,var(--se-line) 30%,transparent)" stroke-width="1.5"/>
+          <circle cx="150" cy="150" r="5" fill="var(--se-ink)"/>
+        </svg>
+        <svg id="oval" viewBox="0 0 300 300" aria-label="Oval ground" style="display:none">
+          <ellipse cx="150" cy="150" rx="144" ry="106" fill="var(--wash)" stroke="var(--se-line)" stroke-width="2"/>
+          <ellipse cx="150" cy="150" rx="86" ry="62" fill="none" stroke="color-mix(in oklch,var(--se-line) 22%,transparent)" stroke-width="1.5" stroke-dasharray="4 5"/>
+          <g stroke="color-mix(in oklch,var(--se-line) 14%,transparent)" stroke-width="1.5">
+            <line x1="150" y1="44" x2="150" y2="256"/><line x1="6" y1="150" x2="294" y2="150"/>
+          </g>
+          <rect x="142" y="120" width="16" height="60" rx="2" fill="color-mix(in oklch,var(--se-line) 12%,var(--se-surface))" stroke="color-mix(in oklch,var(--se-line) 30%,transparent)" stroke-width="1.5"/>
+          <circle cx="150" cy="150" r="5" fill="var(--se-ink)"/>
+        </svg>
+        <svg id="rect" viewBox="0 0 300 300" aria-label="Rectangular ground"></svg>
+        <div class="preview-cap" id="previewCap">Box &middot; &asymp;20×18 m</div>
+      </div>
+
+      <div class="trow">
+        <div>
+          <div class="t">Track shots</div>
+          <div class="d">Optional. Tap where each ball goes to build a wagon wheel. Skippable every ball.</div>
+        </div>
+        <div class="sw on" id="trackSw" role="switch" aria-checked="true"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta"><button class="start">Start match &rsaquo;</button></div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var grounds={g:document.getElementById('g'),oval:document.getElementById('oval'),rect:document.getElementById('rect')};
+  var chips=document.querySelectorAll('.gt button');
+  var dims=document.getElementById('dims'),dimsRow=document.getElementById('dimsRow'),rectSvg=grounds.rect,cap=document.getElementById('previewCap');
+  var PRESETS={
+    box:[{w:16,h:16,t:'16×16'},{w:20,h:18,t:'20×18'},{w:24,h:20,t:'24×20'},{w:30,h:22,t:'30×22'}],
+    gully:[{w:5,h:22,t:'5×22'},{w:6,h:30,t:'6×30'},{w:7,h:40,t:'7×40'},{w:9,h:50,t:'9×50'}]
+  };
+  var LABEL={g:'Round',oval:'Oval',box:'Box',gully:'Gully'};
+  var state={type:'box',idx:1};
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function drawRect(){
+    while(rectSvg.firstChild) rectSvg.removeChild(rectSvg.firstChild);
+    var p=PRESETS[state.type][state.idx], pad=18, span=300-pad*2;
+    var s=span/Math.max(p.w,p.h), w=p.w*s, h=p.h*s, x=(300-w)/2, y=(300-h)/2;
+    var isGully=state.type==='gully', wall=isGully?5:7;
+    rectSvg.appendChild(el('rect',{x:x,y:y,width:w,height:h,rx:isGully?7:12,fill:'var(--wash)',stroke:'var(--se-line)','stroke-width':wall}));
+    rectSvg.appendChild(el('rect',{x:x+6,y:y+6,width:w-12,height:h-12,rx:5,fill:'none',stroke:'color-mix(in oklch,var(--se-line) 16%,transparent)','stroke-width':1.5}));
+    var batY=y+h-24, pitchH=Math.min(h*0.5,116);
+    rectSvg.appendChild(el('rect',{x:142,y:batY-pitchH+16,width:16,height:pitchH,rx:2,fill:'color-mix(in oklch,var(--se-line) 12%,var(--se-surface))',stroke:'color-mix(in oklch,var(--se-line) 30%,transparent)','stroke-width':1.5}));
+    var top=el('text',{x:150,y:y+19,'text-anchor':'middle','font-family':'var(--se-font-mono)','font-size':11,'font-weight':800,fill:'var(--se-danger)'});
+    top.textContent=(isGully?'STRAIGHT':'BACK WALL')+' · 6/OUT'; rectSvg.appendChild(top);
+    rectSvg.appendChild(el('circle',{cx:150,cy:batY,r:5,fill:'var(--se-ink)'}));
+  }
+  function buildDims(){
+    dimsRow.innerHTML='';
+    PRESETS[state.type].forEach(function(p,i){
+      var b=document.createElement('button');
+      b.className='dim'+(i===state.idx?' on':''); b.textContent='≈ '+p.t;
+      b.addEventListener('click',function(){state.idx=i; buildDims(); drawRect(); setCap();});
+      dimsRow.appendChild(b);
+    });
+  }
+  function setCap(){
+    var g=chips[0]; // unused
+    var isRect=(state.type==='box'||state.type==='gully');
+    var label=isRect?LABEL[state.type]:LABEL[curShape];
+    cap.innerHTML=label+(isRect?' &middot; &asymp;'+PRESETS[state.type][state.idx].t+' m':'');
+  }
+  var curShape='box';
+  function show(which){ for(var k in grounds) grounds[k].style.display=(k===which?'block':'none'); dims.style.display=(which==='rect'?'block':'none'); }
+  chips.forEach(function(c){ c.addEventListener('click',function(){
+    chips.forEach(function(x){x.classList.remove('on');}); c.classList.add('on');
+    var g=c.getAttribute('data-g'); curShape=g;
+    if(g==='box'||g==='gully'){ state.type=g; state.idx=1; buildDims(); drawRect(); show('rect'); }
+    else { show(g); }
+    setCap();
+  });});
+  var sw=document.getElementById('trackSw');
+  sw.addEventListener('click',function(){ var on=sw.classList.toggle('on'); sw.setAttribute('aria-checked',on?'true':'false'); });
+  // init — Box
+  buildDims(); drawRect(); show('rect'); setCap();
+})();
+</script>
+</body>
+</html>

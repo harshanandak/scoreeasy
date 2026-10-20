@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScoreEasy — all game designs</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18221c;
+      --muted: #667168;
+      --paper: #f5f1e8;
+      --surface: #fffdf7;
+      --line: #c9cec7;
+      --accent: #147447;
+      --accent-soft: #dcebdd;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+
+    button,
+    a { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      height: 100dvh;
+    }
+
+    .toolbar {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: .7rem .9rem;
+      border-bottom: 1px solid var(--line);
+      background: rgb(245 241 232 / 96%);
+      box-shadow: 0 8px 30px rgb(24 34 28 / 7%);
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+      white-space: nowrap;
+    }
+
+    .brand__name {
+      margin: 0;
+      font: 700 1.25rem/1 Georgia, serif;
+      letter-spacing: -.025em;
+    }
+
+    .brand__meta {
+      color: var(--accent);
+      font: 700 .62rem/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .games {
+      display: flex;
+      gap: .35rem;
+      min-width: 0;
+      padding: .1rem;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .game-tab {
+      flex: 0 0 auto;
+      min-height: 2.25rem;
+      padding: .45rem .7rem;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      font-size: .76rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .game-tab:hover,
+    .game-tab:focus-visible {
+      border-color: var(--line);
+      color: var(--ink);
+      background: var(--surface);
+      outline: none;
+    }
+
+    .game-tab[aria-selected="true"] {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .pager__count {
+      min-width: 3rem;
+      color: var(--muted);
+      font: 700 .68rem/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      text-align: center;
+    }
+
+    .icon-button,
+    .open-link {
+      display: inline-grid;
+      min-width: 2.25rem;
+      height: 2.25rem;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--surface);
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus-visible,
+    .open-link:hover,
+    .open-link:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+      outline: none;
+    }
+
+    .viewer {
+      position: relative;
+      min-height: 0;
+      padding: .65rem;
+      overflow: hidden;
+      background:
+        linear-gradient(rgb(24 34 28 / 4%) 1px, transparent 1px),
+        var(--paper);
+      background-size: 100% 32px;
+    }
+
+    .viewer__frame {
+      position: absolute;
+      top: .65rem;
+      left: .65rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 14px 44px rgb(24 34 28 / 11%);
+      transform-origin: top left;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      z-index: 1;
+      margin: 0;
+      color: var(--muted);
+      font: 700 .72rem/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      transform: translate(-50%, -50%);
+    }
+
+    .viewer__frame[data-loaded="true"] + .loading { display: none; }
+
+    @media (max-width: 980px) {
+      .toolbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .55rem;
+      }
+
+      .games {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+
+      .pager { grid-column: 2; grid-row: 1; }
+      .brand__meta { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .toolbar { padding: .55rem; }
+      .viewer { padding: .35rem; }
+      .viewer__frame {
+        top: .35rem;
+        left: .35rem;
+        border-radius: 10px;
+      }
+      .open-link { display: none; }
+      .pager__count { min-width: 2.5rem; }
+      .game-tab { min-height: 2.1rem; padding: .4rem .6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="toolbar">
+      <div class="brand">
+        <h1 class="brand__name">Game designs</h1>
+        <span class="brand__meta">ScoreEasy review</span>
+      </div>
+
+      <nav class="games" aria-label="Choose a game" role="tablist">
+        <button class="game-tab" type="button" role="tab" data-game="volleyball">Volleyball</button>
+        <button class="game-tab" type="button" role="tab" data-game="throwball">Throwball</button>
+        <button class="game-tab" type="button" role="tab" data-game="badminton">Badminton</button>
+        <button class="game-tab" type="button" role="tab" data-game="kabaddi">Kabaddi</button>
+        <button class="game-tab" type="button" role="tab" data-game="football">Football</button>
+        <button class="game-tab" type="button" role="tab" data-game="basketball">Basketball</button>
+        <button class="game-tab" type="button" role="tab" data-game="kho-kho">Kho-Kho</button>
+      </nav>
+
+      <div class="pager">
+        <button class="icon-button" id="previous" type="button" aria-label="Previous game">←</button>
+        <span class="pager__count" id="count" aria-live="polite">1 / 7</span>
+        <button class="icon-button" id="next" type="button" aria-label="Next game">→</button>
+        <a class="open-link" id="open" href="volleyball/volleyball-preview.html" target="_blank" rel="noopener" aria-label="Open current preview in a new tab">↗</a>
+      </div>
+    </header>
+
+    <main class="viewer">
+      <iframe class="viewer__frame" id="preview" title="Volleyball design preview"></iframe>
+      <p class="loading">Loading preview</p>
+    </main>
+  </div>
+
+  <script>
+    const games = [
+      { id: 'volleyball', label: 'Volleyball', src: 'volleyball/volleyball-preview.html' },
+      { id: 'throwball', label: 'Throwball', src: 'throwball/throwball-preview.html' },
+      { id: 'badminton', label: 'Badminton', src: 'badminton/badminton-preview.html' },
+      { id: 'kabaddi', label: 'Kabaddi', src: 'kabaddi/kabaddi-preview.html' },
+      { id: 'football', label: 'Football', src: 'football/football-preview.html' },
+      { id: 'basketball', label: 'Basketball', src: 'basketball/basketball-preview.html' },
+      { id: 'kho-kho', label: 'Kho-Kho', src: 'kho-kho/kho-kho-preview.html' }
+    ];
+
+    const frame = document.querySelector('#preview');
+    const viewer = document.querySelector('.viewer');
+    const count = document.querySelector('#count');
+    const openLink = document.querySelector('#open');
+    const tabs = [...document.querySelectorAll('[data-game]')];
+    const designCanvasWidth = 1400;
+    let currentIndex = Math.max(0, games.findIndex((game) => game.id === location.hash.slice(1)));
+
+    function fitPreview() {
+      const styles = getComputedStyle(frame);
+      const left = Number.parseFloat(styles.left) || 0;
+      const top = Number.parseFloat(styles.top) || 0;
+      const availableWidth = Math.max(1, viewer.clientWidth - (left * 2));
+      const availableHeight = Math.max(1, viewer.clientHeight - (top * 2));
+      const scale = Math.min(1, availableWidth / designCanvasWidth);
+
+      frame.style.width = `${designCanvasWidth}px`;
+      frame.style.height = `${availableHeight / scale}px`;
+      frame.style.transform = `scale(${scale})`;
+    }
+
+    function showGame(index, updateHash = true) {
+      currentIndex = (index + games.length) % games.length;
+      const game = games[currentIndex];
+
+      frame.dataset.loaded = 'false';
+      frame.src = game.src;
+      frame.title = `${game.label} design preview`;
+      count.textContent = `${currentIndex + 1} / ${games.length}`;
+      openLink.href = game.src;
+
+      tabs.forEach((tab) => {
+        const selected = tab.dataset.game === game.id;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        if (selected) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
+
+      if (updateHash) history.replaceState(null, '', `#${game.id}`);
+    }
+
+    frame.addEventListener('load', () => {
+      const document = frame.contentDocument;
+
+      if (document && !document.querySelector('#scoreeasy-fit-all-screens')) {
+        const style = document.createElement('style');
+        style.id = 'scoreeasy-fit-all-screens';
+        style.textContent = `
+          .pv-page { min-width: 1280px !important; }
+          .pv-row { flex-wrap: nowrap !important; }
+        `;
+        document.head.append(style);
+      }
+
+      frame.dataset.loaded = 'true';
+      fitPreview();
+    });
+    tabs.forEach((tab) => tab.addEventListener('click', () => showGame(games.findIndex((game) => game.id === tab.dataset.game))));
+    document.querySelector('#previous').addEventListener('click', () => showGame(currentIndex - 1));
+    document.querySelector('#next').addEventListener('click', () => showGame(currentIndex + 1));
+
+    document.addEventListener('keydown', (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'ArrowLeft') showGame(currentIndex - 1);
+      if (event.key === 'ArrowRight') showGame(currentIndex + 1);
+    });
+
+    window.addEventListener('hashchange', () => {
+      const index = games.findIndex((game) => game.id === location.hash.slice(1));
+      if (index >= 0 && index !== currentIndex) showGame(index, false);
+    });
+
+    window.addEventListener('resize', fitPreview);
+
+    fitPreview();
+    showGame(currentIndex, !location.hash);
+  </script>
+</body>
+</html>

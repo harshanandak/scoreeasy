@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Badminton — design preview</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from cricket-scorer-alt-big5.html
+   (src/index.css :root) — --se-* / --primary / --font-mono,
+   ONE hard 3px offset shadow (cards only), mono tabular numerals.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --card-foreground: oklch(0 0 0);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Merriweather, ui-serif, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: color-mix(in oklch, var(--muted-foreground) 62%, var(--background));
+  --se-color-line: var(--border);
+  --se-color-line-strong: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-color-warning: oklch(0.54 0.12 78);
+  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-shadow-card: var(--shadow-xs);
+  --se-motion-standard: 250ms;
+  --wash: oklch(0.955 0.03 150);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 32px 24px 56px;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.mono { font-family: var(--se-font-mono); font-variant-numeric: tabular-nums; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ---- page shell ---- */
+.page-head { max-width: 1260px; margin: 0 auto 30px; }
+.page-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
+.page-sub { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 8px; }
+.page-sub .g { color: var(--primary); }
+
+.deck { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; max-width: 1260px; margin: 0 auto; }
+.slot { width: 380px; flex: 0 0 380px; }
+.slot-cap { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--se-color-ink-faint); margin: 0 4px 9px; display: flex; align-items: baseline; justify-content: space-between; }
+.slot-cap .n { color: var(--se-color-ink-muted); }
+.frame { border: 1px solid var(--se-color-line); border-radius: 22px; background: var(--se-color-canvas); box-shadow: var(--shadow); min-height: 760px; padding: 14px; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ---- shared chrome ---- */
+.eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.ico { width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface); font-size: 1rem; }
+.livepill { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; color: var(--se-color-danger); display: inline-flex; align-items: center; gap: 5px; }
+.livepill .d { width: 7px; height: 7px; border-radius: 50%; background: var(--se-color-danger); }
+
+/* the court chip R/L — grammar-2, squarer than a pill */
+.court-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--primary); background: color-mix(in oklch, var(--primary) 16%, transparent); color: var(--primary); font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.02em; }
+.shuttle { color: var(--primary); }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.topbar-title { font-size: 0.8125rem; font-weight: 700; line-height: 1.15; }
+.topbar-sub { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ============================================================
+   FRAME 1 — MAIN SCOREBOARD (State B stadium / cast hero)
+   A glanceable RECORD: two scores dominate, one green = leader,
+   pips + names + phase band. No feed, no chart, no second colour.
+   The hero is a card, so it keeps the ONE hard shadow.
+   ============================================================ */
+.sb { flex: 1; display: flex; flex-direction: column; background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); overflow: hidden; }
+.sb-strip { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 15px; border-bottom: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); }
+.sb-strip .ev { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.sb-strip .live { color: var(--se-color-inverse); }
+.sb-strip .live .d { background: var(--primary); }
+
+.sb-body { flex: 1; display: grid; grid-template-columns: 1fr 1px 1fr; }
+.sb-rule { background: color-mix(in oklch, var(--se-color-inverse) 20%, transparent); }
+.sb-col { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px; gap: 13px; min-width: 0; }
+.sb-pips { display: flex; gap: 6px; }
+.sb-pip { width: 16px; height: 16px; border-radius: 3px; border: 1.5px solid color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.sb-pip.on { background: var(--primary); border-color: var(--primary); }
+.sb-name { font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; display: flex; align-items: center; gap: 7px; color: color-mix(in oklch, var(--se-color-inverse) 88%, transparent); }
+.sb-name .shuttle { font-size: 0.95rem; }
+.sb-score { font-family: var(--se-font-mono); font-size: clamp(4rem, 15vw, 5.4rem); font-weight: 800; line-height: 0.82; font-variant-numeric: tabular-nums; }
+.sb-score.lead { color: var(--primary); }
+.sb-score.trail { color: var(--se-color-inverse); }
+
+.sb-band { display: grid; grid-template-columns: auto 1fr auto; align-items: stretch; border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); }
+.sb-prev { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 11px 13px; min-width: 74px; }
+.sb-prev .k { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); }
+.sb-prev .v { font-family: var(--se-font-mono); font-size: 0.9375rem; font-weight: 800; }
+.sb-prev .v .w { color: var(--primary); }
+.sb-phase { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 11px 8px; border-left: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); border-right: 1px solid color-mix(in oklch, var(--se-color-inverse) 16%, transparent); }
+.sb-phase .g { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; color: color-mix(in oklch, var(--se-color-inverse) 70%, transparent); }
+.sb-phase .gp { font-family: var(--se-font-mono); font-size: 0.875rem; font-weight: 800; letter-spacing: 0.1em; color: var(--se-color-warning-soft); display: inline-flex; align-items: center; gap: 6px; }
+.sb-prev.spacer { visibility: hidden; }
+
+/* ============================================================
+   FRAME 2 — LEAN SCORER (thumb-zone: read on top, tap at bottom)
+   FLAT surfaces — no elevation on any scorer key (cricket law).
+   Two primaries fill the whole lower column: biggest, lowest.
+   ============================================================ */
+.sc { flex: 1; display: flex; flex-direction: column; }
+
+/* compact read-only mini-board (black hero, 5 facts) — FLAT, no shadow */
+.mini { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: 14px; padding: 12px 14px; }
+.mini-pips { display: flex; align-items: center; justify-content: space-between; }
+.mini-pipset { display: flex; gap: 5px; }
+.mini-pip { width: 11px; height: 11px; border-radius: 2px; border: 1.5px solid color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.mini-pip.on { background: var(--primary); border-color: var(--primary); }
+.mini-names { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 9px; }
+.mini-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 82%, transparent); display: flex; align-items: center; gap: 5px; min-width: 0; }
+.mini-name.r { justify-content: flex-end; }
+.mini-scores { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 4px; }
+.mini-score { font-family: var(--se-font-mono); font-size: 2.5rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.mini-score.lead { color: var(--primary); }
+.mini-score.trail { color: var(--se-color-inverse); }
+.mini-score.r { text-align: right; }
+.mini-seam { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 10px; }
+.mini-seam .ph { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.08em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); white-space: nowrap; }
+.mini-seam .gp { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.06em; color: var(--se-color-warning-soft); background: color-mix(in oklch, var(--se-color-warning-soft) 18%, transparent); border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+
+/* derived-truth serve line — the wedge on the operator tool, calm + flat.
+   One plain-English line: who serves, from which box. Zero input. */
+.serveline { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 9px 12px; border: 1px solid color-mix(in oklch, var(--se-color-line) 32%, transparent); border-radius: 12px; background: var(--se-color-surface); }
+.serveline .lbl { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em; color: var(--primary); }
+.serveline .tx { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink); }
+.serveline .tx b { font-weight: 800; }
+
+/* control strip — Undo big fixed key, Let / More small. FLAT. */
+.ctrls { display: flex; gap: 8px; margin-top: 10px; }
+.ctrl { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border: 1px solid var(--se-color-line); border-radius: 10px; background: var(--se-color-surface); color: var(--se-color-ink); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.ctrl.undo { flex: 1.6; gap: 7px; font-size: 0.875rem; }
+.ctrl.small { flex: 1; font-size: 0.75rem; font-weight: 600; color: var(--se-color-ink-soft); border-color: color-mix(in oklch, var(--se-color-line) 46%, transparent); }
+.ctrl:active { transform: translateY(1px); background: var(--accent); }
+
+/* THE TWO PRIMARIES — fill the whole lower column, 50/50, thumb zone.
+   FLAT (no shadow) — flat targets, green border = serving side. */
+.primaries { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.prim { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 220px; border: 1px solid var(--se-color-line); border-radius: 16px; background: var(--se-color-surface); color: var(--se-color-ink); cursor: pointer; padding: 16px 10px; }
+.prim.serving { border-color: var(--primary); border-width: 1.5px; }
+.prim-name { font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; text-align: center; display: flex; align-items: center; gap: 6px; color: var(--se-color-ink); }
+.prim-score { font-family: var(--se-font-mono); font-size: 4rem; font-weight: 800; line-height: 0.85; font-variant-numeric: tabular-nums; }
+.prim.lead .prim-score { color: var(--primary); }
+.prim-cta { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.14em; color: var(--se-color-ink-faint); }
+.prim:active { transform: translateY(1px); background: var(--accent); }
+
+/* ============================================================
+   FRAME 3 — LIVE (spectator: board + now-strip + momentum + feed)
+   Balanced detail: glanceable card, tight now-strip, COLLAPSED
+   momentum behind an icon toggle, short key-moments feed.
+   ============================================================ */
+.lv { flex: 1; display: flex; flex-direction: column; }
+.tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px; background: var(--se-color-surface); margin-bottom: 12px; }
+.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); cursor: pointer; }
+.tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
+
+/* State A compact live board (score bug) — a card, keeps the ONE shadow */
+.board { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card); box-shadow: var(--shadow); padding: 13px 15px; }
+.board-pips { display: flex; align-items: center; justify-content: space-between; }
+.board-names { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.board-name { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 82%, transparent); display: flex; align-items: center; gap: 6px; }
+.board-name.r { justify-content: flex-end; }
+.board-scores { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 6px; }
+.board-score { font-family: var(--se-font-mono); font-size: 3rem; font-weight: 800; line-height: 0.86; font-variant-numeric: tabular-nums; }
+.board-score.lead { color: var(--primary); }
+.board-score.trail { color: var(--se-color-inverse); }
+.board-score.r { text-align: right; }
+.board-seam { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0 10px; }
+.board-seam .ph { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.1em; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.board-seam .gp { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.06em; color: var(--se-color-warning-soft); background: color-mix(in oklch, var(--se-color-warning-soft) 18%, transparent); border-radius: 4px; padding: 2px 8px; }
+
+/* serve/court NOW-strip — the wedge in plain English, green, one line */
+.nowstrip { margin-top: 12px; border: 1px solid var(--primary); border-radius: 12px; background: color-mix(in oklch, var(--primary) 8%, var(--se-color-surface)); padding: 10px 13px; }
+.nowstrip .l1 { font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink); display: flex; align-items: center; gap: 7px; }
+.nowstrip .l1 .lbl { color: var(--primary); font-weight: 800; letter-spacing: 0.06em; }
+.nowstrip .l1 b { font-weight: 800; }
+.nowstrip .l2 { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 600; color: var(--se-color-ink-muted); margin-top: 4px; }
+
+/* momentum — COLLAPSED behind an icon toggle (cricket .mom-d) */
+.mom-d { margin-top: 12px; border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent); border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); }
+.mom-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 9px 12px; }
+.mom-d > summary::-webkit-details-marker { display: none; }
+.mom-d > summary .mi { font-size: 0.9rem; }
+.mom-d > summary .r { margin-left: auto; font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--primary); }
+.mom-d > summary .chev { color: var(--se-color-ink-muted); transition: transform 0.2s ease; }
+.mom-d[open] > summary .chev { transform: rotate(180deg); }
+.mom { display: flex; align-items: flex-end; gap: 3px; height: 54px; padding: 2px 12px 12px; }
+.mbar { flex: 1; background: color-mix(in oklch, var(--se-color-line) 16%, transparent); border-radius: 2px 2px 0 0; }
+.mbar.hi { background: var(--primary); }
+.mbar.lo { background: color-mix(in oklch, var(--se-color-danger) 62%, transparent); }
+
+/* key moments feed — beats only, newest on top */
+.feed { margin-top: 12px; }
+.feed-hd { margin-bottom: 4px; }
+.moment { display: flex; gap: 11px; padding: 9px 0; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.moment .rail { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 700; color: var(--se-color-ink-faint); flex: none; width: 30px; padding-top: 1px; }
+.moment .tx { font-size: 0.8125rem; line-height: 1.35; }
+.moment .tx .gp { color: var(--se-color-warning); font-weight: 800; }
+.moment .tx .run { color: var(--primary); font-weight: 800; }
+.moment .tx b { font-weight: 700; }
+
+.pres { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 14px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: var(--se-color-ink-muted); }
+.follow { border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 15px; font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<h1 class="sr-only">Badminton design preview — three key screens</h1>
+
+<div class="page-head">
+  <p class="page-title">Badminton — design preview</p>
+  <p class="page-sub">design1-mono · brutalist × HiFi blend &middot; <span class="g">Sharma vs Verma</span> · games 1&ndash;0 · 19&ndash;18 · game point</p>
+</div>
+
+<div class="deck">
+
+  <!-- ============ FRAME 1 — MAIN SCOREBOARD (State B stadium hero) ============ -->
+  <div class="slot">
+    <div class="slot-cap"><span>Main scoreboard</span><span class="n">State B · stadium</span></div>
+    <div class="frame">
+      <div class="sb">
+        <div class="sb-strip">
+          <span class="ev">Sunday Cup &middot; Semi-Final &middot; Court 2</span>
+          <span class="livepill live"><span class="d"></span>LIVE</span>
+        </div>
+        <div class="sb-body">
+          <div class="sb-col">
+            <div class="sb-pips"><span class="sb-pip on"></span><span class="sb-pip"></span></div>
+            <div class="sb-name"><span class="shuttle" aria-hidden="true">&#127992;</span>A. SHARMA <span class="court-chip">R</span></div>
+            <div class="sb-score lead mono">19</div>
+          </div>
+          <div class="sb-rule"></div>
+          <div class="sb-col">
+            <div class="sb-pips"><span class="sb-pip"></span><span class="sb-pip"></span></div>
+            <div class="sb-name">R. VERMA</div>
+            <div class="sb-score trail mono">18</div>
+          </div>
+        </div>
+        <div class="sb-band">
+          <div class="sb-prev">
+            <span class="k">GAME 1</span>
+            <span class="v mono"><span class="w">21</span>&ndash;18</span>
+          </div>
+          <div class="sb-phase">
+            <span class="g">GAME 2</span>
+            <span class="gp">&#9873; GAME POINT</span>
+          </div>
+          <div class="sb-prev spacer"><span class="k">&nbsp;</span><span class="v">&nbsp;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FRAME 2 — LEAN SCORER ============ -->
+  <div class="slot">
+    <div class="slot-cap"><span>Lean scorer</span><span class="n">Guided · one tap / rally</span></div>
+    <div class="frame">
+      <div class="sc">
+
+        <!-- top bar (chrome) -->
+        <div class="topbar">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+            <span class="ico" aria-hidden="true">&#8249;</span>
+            <div style="min-width:0;">
+              <div class="topbar-title">Sunday Cup &middot; SF</div>
+              <div class="topbar-sub">Court 2 &middot; Singles</div>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <span class="livepill"><span class="d"></span>LIVE</span>
+            <span class="ico" aria-hidden="true">&#8801;</span>
+          </div>
+        </div>
+
+        <!-- compact READ-ONLY readout (mini-board, 5 facts) — flat -->
+        <div class="mini">
+          <div class="mini-pips">
+            <span class="mini-pipset"><span class="mini-pip on"></span><span class="mini-pip"></span></span>
+            <span class="mini-pipset"><span class="mini-pip"></span><span class="mini-pip"></span></span>
+          </div>
+          <div class="mini-names">
+            <span class="mini-name"><span class="shuttle" aria-hidden="true">&#127992;</span>A. SHARMA</span>
+            <span class="mini-name r">R. VERMA</span>
+          </div>
+          <div class="mini-scores">
+            <span class="mini-score lead mono">19</span>
+            <span class="mini-seam">
+              <span class="ph">GAME 2 &middot; <span class="court-chip" style="border-color:color-mix(in oklch,var(--se-color-inverse) 45%,transparent);color:color-mix(in oklch,var(--se-color-inverse) 82%,transparent);background:transparent;">R</span></span>
+              <span class="gp">GAME POINT</span>
+            </span>
+            <span class="mini-score trail r mono">18</span>
+          </div>
+        </div>
+
+        <!-- derived-truth serve line — calm, plain English, always useful -->
+        <div class="serveline">
+          <span class="shuttle" aria-hidden="true">&#127992;</span>
+          <span class="lbl">SERVING</span>
+          <span class="tx"><b>Sharma</b> &middot; from the RIGHT box</span>
+        </div>
+
+        <!-- control strip — Undo big fixed key; Let / More small (⋯More = sheet) -->
+        <div class="ctrls">
+          <button class="ctrl undo" type="button"><span aria-hidden="true">&#8617;</span> Undo</button>
+          <button class="ctrl small" type="button">Let</button>
+          <button class="ctrl small" type="button">&#8943; More</button>
+        </div>
+
+        <!-- THE TWO PRIMARIES — fill the lower column, thumb zone -->
+        <div class="primaries">
+          <button class="prim serving lead" type="button">
+            <span class="prim-name"><span class="shuttle" aria-hidden="true">&#127992;</span>A. SHARMA</span>
+            <span class="prim-score mono">19</span>
+            <span class="prim-cta">+ POINT</span>
+          </button>
+          <button class="prim" type="button">
+            <span class="prim-name">R. VERMA</span>
+            <span class="prim-score mono">18</span>
+            <span class="prim-cta">+ POINT</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FRAME 3 — LIVE ============ -->
+  <div class="slot">
+    <div class="slot-cap"><span>Live</span><span class="n">Spectator · 3 tabs</span></div>
+    <div class="frame">
+      <div class="lv">
+
+        <div class="topbar">
+          <span class="ico" aria-hidden="true">&#8249;</span>
+          <div style="text-align:center; flex:1; min-width:0;">
+            <div class="topbar-title">Sunday Cup &middot; SF &middot; Court 2</div>
+            <div class="livepill" style="justify-content:center; margin-top:2px;"><span class="d"></span>LIVE</div>
+          </div>
+          <span class="ico" aria-hidden="true">&#8599;</span>
+        </div>
+
+        <div class="tabs">
+          <span class="tab on">Live</span>
+          <span class="tab">Court</span>
+          <span class="tab">Stats</span>
+        </div>
+
+        <!-- fixed black hero board (State A) -->
+        <div class="board">
+          <div class="board-pips">
+            <span class="mini-pipset"><span class="mini-pip on"></span><span class="mini-pip"></span></span>
+            <span class="mini-pipset"><span class="mini-pip"></span><span class="mini-pip"></span></span>
+          </div>
+          <div class="board-names">
+            <span class="board-name"><span class="shuttle" aria-hidden="true">&#127992;</span>A. SHARMA</span>
+            <span class="board-name r">R. VERMA</span>
+          </div>
+          <div class="board-scores">
+            <span class="board-score lead mono">19</span>
+            <span class="board-seam">
+              <span class="ph">GAME 2 &middot; R</span>
+              <span class="gp">GAME POINT</span>
+            </span>
+            <span class="board-score trail r mono">18</span>
+          </div>
+        </div>
+
+        <!-- serve/court NOW-strip — the wedge, plain English, one clean line -->
+        <div class="nowstrip">
+          <div class="l1"><span class="lbl">SERVING</span> <span class="shuttle" aria-hidden="true">&#127992;</span> <b>Sharma</b> &middot; from the RIGHT box</div>
+          <div class="l2">Receiving &middot; Verma &middot; diagonal, left box</div>
+        </div>
+
+        <!-- momentum — COLLAPSED, opens on tap -->
+        <details class="mom-d">
+          <summary>
+            <span class="mi" aria-hidden="true">&#128202;</span>
+            <span class="eyebrow">Momentum &middot; this game</span>
+            <span class="r">4 in a row &#9650;</span>
+            <span class="chev" aria-hidden="true">&#9662;</span>
+          </summary>
+          <div class="mom">
+            <span class="mbar hi" style="height:60%"></span><span class="mbar lo" style="height:34%"></span>
+            <span class="mbar hi" style="height:72%"></span><span class="mbar hi" style="height:50%"></span>
+            <span class="mbar lo" style="height:40%"></span><span class="mbar lo" style="height:28%"></span>
+            <span class="mbar hi" style="height:66%"></span><span class="mbar hi" style="height:82%"></span>
+            <span class="mbar lo" style="height:38%"></span><span class="mbar hi" style="height:58%"></span>
+            <span class="mbar hi" style="height:76%"></span><span class="mbar hi" style="height:64%"></span>
+            <span class="mbar hi" style="height:88%"></span><span class="mbar hi" style="height:100%"></span>
+          </div>
+        </details>
+
+        <!-- key moments feed — beats only, newest on top -->
+        <div class="feed">
+          <div class="feed-hd"><span class="eyebrow">Key moments</span></div>
+          <div class="moment"><span class="rail mono">19</span><span class="tx"><span class="gp">GAME POINT</span> &middot; Sharma leads <b>19&ndash;18</b>, serving right</span></div>
+          <div class="moment"><span class="rail mono">18</span><span class="tx"><span class="run">4 IN A ROW</span> &middot; Sharma edges ahead from 15&ndash;18</span></div>
+          <div class="moment"><span class="rail mono">&mdash;</span><span class="tx"><b>GAME 1</b> &rarr; A. Sharma &middot; 21&ndash;18</span></div>
+        </div>
+
+        <div class="pres">
+          <span>&#128065; 128 watching &middot; &#128293; 34</span>
+          <span class="follow">Following &#10003;</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

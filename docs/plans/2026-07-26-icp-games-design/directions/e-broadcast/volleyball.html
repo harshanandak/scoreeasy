@@ -1,0 +1,563 @@
+<!doctype html><html lang="en" data-theme="dark" data-sport="volleyball" data-motif="court"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Volleyball · E · Broadcast blend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>:root{--num:'Barlow Condensed',system-ui,sans-serif;--ui:'Archivo',system-ui,sans-serif;
+  --r-hero:22px;--r-card:16px;--r-key:24px;
+  --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+:root[data-theme=dark]{--page:#08080a;--bg:#0e0e10;--surface:#18181b;--surface-2:#222226;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.12);
+  --ink:#f5f5f6;--ink-2:#b4b4bb;--ink-3:#8e8e96;--live:#3ddc84;--live-tint:rgba(61,220,132,.13);--warn:#f5b83d;--warn-tint:rgba(245,184,61,.13);
+  --lift:0 18px 40px -12px rgba(0,0,0,.6);--frame:0 0 0 1px rgba(255,255,255,.06),0 40px 80px -30px rgba(0,0,0,.8);color-scheme:dark}
+:root[data-theme=light]{--page:#e4e4e7;--bg:#f4f4f5;--surface:#ffffff;--surface-2:#ececef;--hair:rgba(0,0,0,.07);--hair-2:rgba(0,0,0,.11);
+  --ink:#0c0c0e;--ink-2:#45454d;--ink-3:#5f5f67;--live:#0f6a32;--live-tint:rgba(15,106,50,.09);--warn:#874d00;--warn-tint:rgba(217,119,6,.12);
+  --lift:0 16px 36px -14px rgba(20,20,30,.35);--frame:0 0 0 1px rgba(0,0,0,.06),0 40px 80px -30px rgba(20,20,30,.35);color-scheme:light}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font:15px/1.4 var(--ui);-webkit-font-smoothing:antialiased;transition:background .25s}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* toolbar */
+.tb{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 24px;
+  background:color-mix(in oklab,var(--page) 82%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--hair)}
+.tb h1{font:700 15px/1 var(--ui);letter-spacing:-.01em;margin-right:auto}
+.tb h1 small{display:block;font-weight:500;font-size:12px;color:var(--ink-3);margin-top:4px}
+.seg-t{display:flex;background:var(--surface-2);border-radius:999px;padding:3px}
+.seg-t button{padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.seg-t button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.picks{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--ink-2)}
+.picks label{display:flex;gap:6px;align-items:center}
+.picks input{width:34px;height:34px;border:0;border-radius:10px;background:none;padding:0;cursor:pointer}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--hair)}
+.presets button[aria-pressed=true]{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.presets i{width:22px;height:12px;border-radius:6px;display:inline-block}
+.readout{flex-basis:100%;font-size:12px;color:var(--ink-3)}
+
+/* page */
+.wrap{padding:28px 24px 56px;max-width:1360px;margin:0 auto}
+.lede{max-width:760px;margin-bottom:24px}
+.lede h2{font:800 30px/1.05 var(--ui);letter-spacing:-.03em}
+.lede p{color:var(--ink-2);margin-top:8px;font-size:14.5px}
+.row3{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+.col{width:390px}
+.cap{font-size:13px;font-weight:600;color:var(--ink-2);margin:0 0 10px 6px}
+.cap span{color:var(--ink-3);font-weight:500}
+.note{font-size:12.5px;color:var(--ink-3);margin:12px 6px 0;line-height:1.45}
+
+/* phone */
+.phone{width:390px;height:844px;background:var(--bg);border-radius:44px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:var(--frame)}
+@media (max-width:440px){.wrap{padding:16px 0 40px}.phone{border-radius:0;box-shadow:none}.cap,.note{margin-left:16px;margin-right:16px}}
+.status{height:46px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font:600 15px var(--ui)}
+.status i{width:66px;height:12px;border-radius:6px;background:linear-gradient(90deg,var(--ink) 0 60%,var(--ink-3) 60% 70%,transparent 70%);opacity:.85}
+.top{height:56px;flex:none;display:flex;align-items:center;gap:6px;padding:0 10px}
+.ib{width:48px;height:48px;border-radius:24px;display:grid;place-items:center;font-size:22px;color:var(--ink-2)}
+.tt{flex:1;min-width:0}
+.tt b{display:block;font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.tt small{display:block;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:var(--live-tint);color:var(--live);font-weight:700;font-size:12.5px}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--live);box-shadow:0 0 0 3px color-mix(in oklab,var(--live) 25%,transparent)}
+
+/* ===== the hero: two-team blend ===== */
+.hero{position:relative;margin:4px 12px 0;border-radius:var(--r-hero);overflow:hidden;isolation:isolate;
+  background:linear-gradient(in oklab 102deg,var(--a-hi) 0%,var(--a-core) 24%,var(--a-lo) 41%,var(--b-lo) 59%,var(--b-core) 76%,var(--b-hi) 100%);
+  box-shadow:var(--lift),inset 0 0 0 1px rgba(255,255,255,.06)}
+:root[data-theme=light] .hero{box-shadow:var(--lift),inset 0 0 0 1px rgba(0,0,0,.06)}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 42%),
+             radial-gradient(120% 90% at 50% -20%,rgba(255,255,255,.08),transparent 60%)}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--noise);opacity:.07;mix-blend-mode:overlay}
+.sa{color:var(--a-on)} .sb{color:var(--b-on)}
+.h-names{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:20px 22px 0;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.h-names>:last-child{text-align:right}
+.h-nums{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 10px}
+.h-nums .n{position:relative;text-align:center;font:800 128px/1 var(--num);letter-spacing:-.03em;padding:6px 0 8px}
+.h-nums .n::before{content:"";position:absolute;inset:-6% 2%;z-index:-1;border-radius:50%;filter:blur(18px)}
+.h-nums .sa::before{background:var(--a-scrim)} .h-nums .sb::before{background:var(--b-scrim)}
+.pill{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;background:rgba(12,12,14,.78);color:#fff;font-weight:600;font-size:12.5px;white-space:nowrap;backdrop-filter:blur(8px)}
+.pill.warn{color:#f5b83d}
+.h-foot{display:flex;justify-content:center;gap:8px;padding:2px 16px 18px}
+.srv{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:8px;vertical-align:1px;box-shadow:0 0 0 3px color-mix(in oklab,currentColor 28%,transparent)}
+
+/* neutral blocks */
+.blk{margin:12px 12px 0;background:var(--surface);border-radius:var(--r-card);box-shadow:inset 0 0 0 1px var(--hair)}
+.qrow{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 16px;font-size:14px;color:var(--ink-2)}
+.qrow b{color:var(--ink);font-weight:700}
+.qrow .chev{color:var(--ink-3);font-size:18px}
+.qrow+.qrow{box-shadow:inset 0 1px 0 var(--hair)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:600;color:var(--ink)}
+.chip.a{background:var(--a-tint)} .chip.b{background:var(--b-tint)}
+.chip i{width:8px;height:8px;border-radius:50%}
+.chip.a i{background:var(--a-line)} .chip.b i{background:var(--b-line)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.dot.a{background:var(--a-line)} .dot.b{background:var(--b-line)}
+.grow{flex:1}
+.foot{display:flex;justify-content:space-between;padding:10px 22px 24px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.foot a{min-height:44px;display:flex;align-items:center}
+
+/* sets strip */
+.sets{display:grid;grid-template-columns:repeat(3,1fr);margin:12px 12px 0;gap:8px}
+.set{background:var(--surface);border-radius:14px;padding:10px 12px;box-shadow:inset 0 0 0 1px var(--hair);position:relative;overflow:hidden}
+.set small{display:block;font-size:11.5px;color:var(--ink-3);font-weight:600}
+.set .num{font-size:24px;font-weight:700;line-height:1.1;color:var(--ink)}
+.set .num em{font-style:normal;color:var(--ink-3)}
+.set .w{position:absolute;left:0;right:0;bottom:0;height:3px}
+.set .w.a{background:linear-gradient(90deg,var(--a-core),var(--a-hi))} .set .w.b{background:linear-gradient(90deg,var(--b-core),var(--b-hi))}
+.set.now{background:var(--surface-2)}
+.set.now small{color:var(--live)}
+
+/* scorer */
+.band{margin:4px 12px 0;border-radius:18px}
+.band .h-names{padding:14px 18px;font-size:15px}
+.narr{padding:18px 22px 0;font-size:19px;line-height:1.35;letter-spacing:-.015em;color:var(--ink-2)}
+.narr b{color:var(--ink);font-weight:700}
+.undo{display:flex;align-items:center;gap:12px;width:calc(100% - 24px);margin:0 12px;height:56px;padding:0 18px;border-radius:16px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair)}
+.undo .g{font-size:22px;color:var(--ink)}
+.undo .t{font-weight:700;font-size:16px}
+.undo .w{margin-left:auto;font-size:13px;color:var(--ink-3)}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px 0}
+.key{position:relative;isolation:isolate;overflow:hidden;height:336px;border-radius:var(--r-key);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;
+  box-shadow:var(--lift);transition:transform .08s}
+.key:active{transform:scale(.98)}
+.key.a{background:linear-gradient(in oklab 165deg,var(--a-hi),var(--a-core) 48%,var(--a-lo));color:var(--a-on)}
+.key.b{background:linear-gradient(in oklab 195deg,var(--b-hi),var(--b-core) 48%,var(--b-lo));color:var(--b-on)}
+.key::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%)}
+.key::after{content:"";position:absolute;inset:0;z-index:-1;background:var(--noise);opacity:.07;mix-blend-mode:overlay}
+.key .who{font-weight:700;font-size:17px;letter-spacing:-.01em}
+.key .big{position:relative;font:800 132px/1 var(--num);letter-spacing:-.03em;margin:4px 0}
+.key .big::before{content:"";position:absolute;inset:4% -14%;z-index:-1;border-radius:50%;filter:blur(18px)}
+.key.a .big::before{background:var(--a-scrim)} .key.b .big::before{background:var(--b-scrim)}
+.key .word{font-weight:600;font-size:14px}
+.key .srvtag{position:absolute;top:16px;left:16px;display:flex;align-items:center;font-size:12.5px;font-weight:600}
+.small-keys{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px 0}
+.mk{min-height:64px;border-radius:16px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);text-align:left;padding:10px 14px}
+.mk b{display:block;font-weight:700;font-size:15px}
+.mk small{display:block;font-size:12px;color:var(--ink-3);margin-top:2px}
+.mk.warnk{background:var(--warn-tint);box-shadow:none}
+.mk.warnk small{color:var(--warn)}
+.rare{display:flex;gap:8px;padding:0 12px 10px}
+.rare button{height:44px;padding:0 16px;border-radius:22px;background:var(--surface-2);font-size:13.5px;font-weight:600;color:var(--ink-2)}
+
+/* live */
+.segc{display:flex;margin:2px 12px 10px;background:var(--surface-2);border-radius:12px;padding:3px}
+.segc span{flex:1;text-align:center;height:38px;line-height:38px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--ink-3)}
+.segc .on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.hero.md .h-nums .n{font-size:100px}
+.hero.md .h-names{padding-top:16px;font-size:16px}
+.card{margin:12px 12px 0;padding:14px 16px;background:var(--surface);border-radius:var(--r-card);box-shadow:inset 0 0 0 1px var(--hair)}
+.k{font-size:12px;font-weight:600;color:var(--ink-3);display:flex;align-items:center;justify-content:space-between}
+.now-v{font-size:17px;font-weight:600;letter-spacing:-.01em;margin-top:4px}
+.now-s{font-size:13px;color:var(--ink-2);margin-top:3px}
+.chart{display:block;width:100%;height:auto;margin-top:8px}
+.chart .base{stroke:var(--hair-2)}
+.chart .lbl{font:600 10.5px var(--ui);fill:var(--ink-3)}
+.mom{display:grid;grid-template-columns:40px 1fr;gap:10px;padding:9px 0;font-size:13.5px;color:var(--ink-2);align-items:baseline}
+.mom+.mom{box-shadow:inset 0 1px 0 var(--hair)}
+.mom .t{font:700 16px var(--num);color:var(--ink-3)}
+.mom b{color:var(--ink)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);margin-right:4px;vertical-align:1px}
+.tag.w{background:var(--warn-tint);color:var(--warn)}
+.lfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 22px 22px;font-size:13px;color:var(--ink-3)}
+.lfoot .f{color:var(--live);font-weight:700}
+
+/* kabaddi */
+.ring{width:72px;height:72px;position:relative;display:grid;place-items:center}
+.ring svg{position:absolute;inset:0}
+.ring .rn{position:relative;font:800 24px/1 var(--num);color:#fff}
+.ring .rl{position:absolute;z-index:1;bottom:13px;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.86)}
+.mat{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 22px 4px;font-size:13px;font-weight:600}
+.mat>:last-child{justify-self:end;text-align:right}
+.d7{display:flex;gap:4px;margin-bottom:5px}
+.mat>:last-child .d7{justify-content:flex-end}
+.d7 i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.d7 i.out{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor;opacity:.6}
+.kctx{display:flex;justify-content:space-between;padding:4px 24px 8px;font-size:13px;color:var(--ink-3);font-weight:600}
+.kctx b{color:var(--ink);font-family:var(--num);font-size:16px}
+
+.hero.xl .h-names{padding-top:24px;font-size:19px}
+.hero.xl .h-nums{padding:18px 10px 14px}
+.hero.xl .h-nums .n{font-size:148px}
+.hero.xl .h-foot{padding-bottom:24px}
+.key.kk{height:212px;gap:0}
+.key .verb{font:800 54px/1 var(--num);letter-spacing:-.01em;margin:6px 0 4px}
+.ring.sm{width:52px;height:52px}
+/* sport motif: the game's court/pitch as a line drawing inside the blend. Colour = each team's
+   veil side (black on deep fills, ink on bright fills) so it reads as texture, never as text. */
+.motif{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(in oklab 90deg,var(--a-motif) 40%,var(--b-motif) 60%);
+  -webkit-mask:var(--sport-motif) center/100% auto no-repeat,linear-gradient(90deg,#000,rgba(0,0,0,.5) 25%,#000 50%,rgba(0,0,0,.5) 75%,#000);
+  -webkit-mask-composite:source-in;
+  mask:var(--sport-motif) center/100% auto no-repeat,linear-gradient(90deg,#000,rgba(0,0,0,.5) 25%,#000 50%,rgba(0,0,0,.5) 75%,#000);
+  mask-composite:intersect}
+:root[data-motif=off] .motif{display:none}
+:root[data-sport=volleyball]{--sport-motif:var(--motif-volleyball);--sport-motif-a:var(--motif-volleyball-a);--sport-motif-b:var(--motif-volleyball-b)} :root[data-sport=kabaddi]{--sport-motif:var(--motif-kabaddi);--sport-motif-a:var(--motif-kabaddi-a);--sport-motif-b:var(--motif-kabaddi-b)}
+:root[data-sport=throwball]{--sport-motif:var(--motif-throwball);--sport-motif-a:var(--motif-throwball-a);--sport-motif-b:var(--motif-throwball-b)} :root[data-sport=badminton]{--sport-motif:var(--motif-badminton);--sport-motif-a:var(--motif-badminton-a);--sport-motif-b:var(--motif-badminton-b)}
+:root[data-sport=football]{--sport-motif:var(--motif-football);--sport-motif-a:var(--motif-football-a);--sport-motif-b:var(--motif-football-b)} :root[data-sport=basketball]{--sport-motif:var(--motif-basketball);--sport-motif-a:var(--motif-basketball-a);--sport-motif-b:var(--motif-basketball-b)}
+:root[data-sport=khokho]{--sport-motif:var(--motif-khokho);--sport-motif-a:var(--motif-khokho-a);--sport-motif-b:var(--motif-khokho-b)} :root[data-sport=cricket]{--sport-motif:var(--motif-cricket);--sport-motif-a:var(--motif-cricket-a);--sport-motif-b:var(--motif-cricket-b)}
+.key .motif{background:var(--a-motif);opacity:.8;
+  -webkit-mask:var(--sport-motif-a) center/cover no-repeat,radial-gradient(60% 34% at 50% 50%,rgba(0,0,0,.35),#000);-webkit-mask-composite:source-in;
+  mask:var(--sport-motif-a) center/cover no-repeat,radial-gradient(60% 34% at 50% 50%,rgba(0,0,0,.35),#000);mask-composite:intersect}
+.key.a .motif{-webkit-mask-position:right center,0 0;mask-position:right center,0 0}
+.key.b .motif{background:var(--b-motif);-webkit-mask-image:var(--sport-motif-b),radial-gradient(60% 34% at 50% 50%,rgba(0,0,0,.35),#000);mask-image:var(--sport-motif-b),radial-gradient(60% 34% at 50% 50%,rgba(0,0,0,.35),#000);-webkit-mask-position:left center,0 0;mask-position:left center,0 0}
+.seg-l{align-self:center;padding:0 6px 0 10px;font-size:12px;font-weight:600;color:var(--ink-3)}
+</style><script>/* ===== Sport motifs: one line drawing per sport (viewBox 400x260, team A's half left, B's right).
+   Drawn in black on transparent and used as a CSS mask, so the colour always comes from custom
+   properties (--a-motif / --b-motif). To swap per sport: set --sport-motif: var(--motif-<sport>). ===== */
+(function(){
+const mir=s=>`${s}<g transform='matrix(-1 0 0 1 400 0)'>${s}</g>`;
+const dots=(pts,r)=>pts.map(([x,y])=>`<circle cx='${x}' cy='${y}' r='${r}' fill='#000' stroke='none'/>`).join('');
+const M={
+  /* court 18 x 9 m, net band with mesh + posts, 3 m attack lines with their dashed extensions */
+  volleyball:`<rect x='30' y='45' width='340' height='170'/>`+
+    mir(`<path d='M143.3 45V215'/><path d='M143.3 41V22M143.3 219V238' stroke-dasharray='4 4'/>`)+
+    `<rect x='195' y='24' width='10' height='212' stroke-width='1.6'/>`+
+    `<path d='${Array.from({length:20},(_,i)=>`M195 ${34+i*10}H205`).join('')}' stroke-width='1'/>`+dots([[200,18],[200,242]],4),
+  /* mat 13 x 10 m + 1 m lobbies, midline, baulk lines, dashed bonus lines */
+  kabaddi:`<rect x='30' y='16' width='340' height='228'/><path d='M30 35H370M30 225H370'/>`+
+    `<path d='M200 16V244' stroke-width='3.4'/>`+
+    mir(`<path d='M102 35V225'/><path d='M75.7 35V225' stroke-dasharray='7 6'/>`),
+  /* court + net, hatched neutral zone either side of the net, dashed throw arc ending in a ball */
+  throwball:`<defs><pattern id='h' width='7' height='7' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><path d='M0 0V7' stroke='#000' stroke-width='1.3'/></pattern></defs>`+
+    `<rect x='40' y='24' width='320' height='212'/><rect x='182.5' y='24' width='35' height='212' fill='url(#h)' stroke-width='1.4'/>`+
+    `<path d='M200 8V252' stroke-width='3.2'/>`+dots([[200,6],[200,254]],4)+
+    `<path d='M92 214Q200 -70 302 200' stroke-dasharray='3 8' stroke-width='2.2'/><circle cx='308' cy='212' r='9' stroke-width='2.2'/><path d='M300 208q8 6 16 0M302 217q6 -4 12 0' stroke-width='1.4'/>`,
+  /* doubles court 13.4 x 6.1 m: singles + doubles sidelines, short/long service lines, centre line, net, shuttle */
+  badminton:`<rect x='30' y='52' width='340' height='156'/><path d='M30 63.7H370M30 196.3H370'/>`+
+    mir(`<path d='M149.7 52V208M49.3 52V208M30 130H149.7'/>`)+
+    `<path d='M200 38V222' stroke-width='3'/>`+dots([[200,36],[200,224]],3.5)+
+    `<g transform='translate(268 236) rotate(-58)' stroke-width='1.8'><path d='M-5 0a5 5 0 0 0 10 0Z' fill='#000'/><path d='M-5 0L-11 -22H11L5 0M-2 0L-4 -22M2 0L4 -22M-9 -14H9'/></g>`,
+  /* pitch 105 x 68 m: halfway, centre circle, boxes, spots, D, goals, corner arcs */
+  football:`<rect x='20' y='13' width='360' height='234'/><path d='M200 13V247'/><circle cx='200' cy='130' r='31.4'/>`+dots([[200,130]],2.4)+
+    mir(`<path d='M20 61H76.6V199H20M20 98.6H38.9V161.4H20M76.6 104.9A31.4 31.4 0 0 1 76.6 155.1M20 117.5H13V142.5H20M20 16.4A3.4 3.4 0 0 0 23.4 13M23.4 247A3.4 3.4 0 0 0 20 243.6'/>`+dots([[57.7,130]],2)),
+  /* court 28 x 15 m: keys, free-throw circles, 3-point arcs, hoops, centre circle (no backboard glyph: it read as a letter beside the numerals) */
+  basketball:`<rect x='20' y='33.5' width='360' height='193'/><path d='M200 33.5V226.5'/><circle cx='200' cy='130' r='23'/>`+
+    mir(`<path d='M20 98.5H94.6V161.5H20M94.6 107A23 23 0 0 1 94.6 153'/><path d='M94.6 107A23 23 0 0 0 94.6 153' stroke-dasharray='4 4'/>`+
+      `<path d='M20 45.1H58.3A86.8 86.8 0 0 1 58.3 214.9H20'/><circle cx='40.3' cy='130' r='3.2' stroke-width='1.8'/>`),
+  /* field 27 x 16 m: central lane between two posts, 8 cross lanes with their squares, free zones */
+  khokho:`<rect x='20' y='23.5' width='360' height='213'/><path d='M40 23.5V236.5M360 23.5V236.5'/>`+
+    `<path d='M40 126H360M40 134H360' stroke-width='2.8'/>`+
+    [1,2,3,4,5,6,7,8].map(i=>{const x=(40+320*i/9).toFixed(1);return `<path d='M${x} 23.5V119M${x} 141V236.5' stroke-width='1.4' stroke-dasharray='2 7'/><rect x='${(x-11).toFixed(1)}' y='119' width='22' height='22' stroke-width='2.6'/>`}).join('')+
+    dots([[40,130],[360,130]],6.5),
+  /* oval boundary, dashed 30-yard circle, pitch strip with creases and stumps */
+  cricket:`<ellipse cx='200' cy='130' rx='192' ry='124'/><ellipse cx='200' cy='130' rx='118' ry='84' stroke-dasharray='5 7'/>`+
+    `<rect x='132' y='116' width='136' height='28'/>`+
+    mir(`<path d='M143 116V144M155 104V156M136 120H160M136 140H160'/>`+dots([[143,125.5],[143,130],[143,134.5]],1.8)),
+};
+const LABEL={volleyball:'court · net band · 3 m lines',kabaddi:'mat · midline · baulk + bonus lines · lobbies',throwball:'court · net · neutral zone · throw arc',
+  badminton:'doubles court · service lines · net · shuttle',football:'pitch · halfway · centre circle · boxes',basketball:'court · keys · 3-point arcs · hoops',
+  khokho:'central lane · posts · cross-lane squares',cricket:'oval · 30-yard circle · pitch + creases'};
+const svg=k=>`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260' fill='none' stroke='#000' stroke-width='2.5' stroke-linecap='round'>${M[k]}</svg>`;
+/* half drawings for the two point keys: team A's half (left) and B's half (right), net/midline at the inner edge */
+const half=(k,x)=>`<svg xmlns='http://www.w3.org/2000/svg' viewBox='${x} 0 200 260' preserveAspectRatio='xMidYMid slice' fill='none' stroke='#000' stroke-width='2.5' stroke-linecap='round'>${M[k]}</svg>`;
+const R=document.documentElement;
+const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`;
+for(const k in M){R.style.setProperty(`--motif-${k}`,u(svg(k)));R.style.setProperty(`--motif-${k}-a`,u(half(k,0)));R.style.setProperty(`--motif-${k}-b`,u(half(k,200)));}
+window.SEMotifs={markup:M,label:LABEL,svg};
+})();</script><script>/* ===== Game scenes (experimental; court is the default):  Olympic-pictogram players + equipment, viewBox 400x260, team A left facing right, B right facing left.
+   Same mask contract as the court drawings; SEMotifs.use('game'|'court') swaps the set. ===== */
+(function(){
+const P=(...pts)=>'M'+pts.map(p=>p.join(' ')).join('L');
+const fig=f=>`<g stroke-linejoin='round' stroke-linecap='round'><path d='${P(f.n,f.p)}' stroke-width='17'/>`+
+  [f.a1,f.a2].map(a=>`<path d='${P(f.n,...a)}' stroke-width='10'/>`).join('')+
+  [f.l1,f.l2].map(l=>`<path d='${P(f.p,...l)}' stroke-width='12'/>`).join('')+
+  `<circle cx='${f.h[0]}' cy='${f.h[1]}' r='12.5' fill='#000' stroke='none'/></g>`;
+const mir=s=>`<g transform='matrix(-1 0 0 1 400 0)'>${s}</g>`;
+const ground=`<path d='M14 246H386' stroke-width='2.5'/>`;
+const racket=(x,y,deg)=>`<g transform='translate(${x} ${y}) rotate(${deg})' stroke-linecap='round'><path d='M0 0V-17' stroke-width='4'/><ellipse cx='0' cy='-31' rx='9.5' ry='14' stroke-width='3'/></g>`;
+const bat=(x,y,deg)=>`<g transform='translate(${x} ${y}) rotate(${deg})'><path d='M0 0V20' stroke-width='5' stroke-linecap='round'/><path d='M0 22V84' stroke-width='13' stroke-linecap='round'/></g>`;
+const stumps=x=>`<path d='M${x-7} 246V192M${x} 246V192M${x+7} 246V192' stroke-width='3'/><path d='M${x-9} 188H${x+9}' stroke-width='3'/>`;
+const vball=(x,y,r)=>`<circle cx='${x}' cy='${y}' r='${r}' stroke-width='3'/><path d='M${x-r*.9} ${y-r*.3}Q${x} ${y-r*.1} ${x+r*.5} ${y-r*.85}M${x-r*.2} ${y+r*.95}Q${x-r*.05} ${y+r*.1} ${x+r*.95} ${y-r*.15}M${x-r*.55} ${y-r*.8}Q${x-r*.3} ${y+r*.2} ${x-r*.75} ${y+r*.65}' stroke-width='2'/>`;
+const bball=(x,y,r)=>`<circle cx='${x}' cy='${y}' r='${r}' stroke-width='3'/><path d='M${x-r} ${y}H${x+r}M${x} ${y-r}V${y+r}M${x-r*.7} ${y-r*.7}Q${x-r*.25} ${y} ${x-r*.7} ${y+r*.7}M${x+r*.7} ${y-r*.7}Q${x+r*.25} ${y} ${x+r*.7} ${y+r*.7}' stroke-width='2'/>`;
+const fball=(x,y,r)=>`<circle cx='${x}' cy='${y}' r='${r}' stroke-width='3'/><path d='M${x} ${y-r*.42}L${x+r*.4} ${y-r*.13}L${x+r*.25} ${y+r*.34}H${x-r*.25}L${x-r*.4} ${y-r*.13}Z' fill='#000' stroke-width='1.5'/><path d='M${x} ${y-r*.42}V${y-r}M${x+r*.4} ${y-r*.13}L${x+r*.95} ${y-r*.3}M${x+r*.25} ${y+r*.34}L${x+r*.58} ${y+r*.8}M${x-r*.25} ${y+r*.34}L${x-r*.58} ${y+r*.8}M${x-r*.4} ${y-r*.13}L${x-r*.95} ${y-r*.3}' stroke-width='2'/>`;
+const dot=(x,y,r)=>`<circle cx='${x}' cy='${y}' r='${r}' fill='#000' stroke='none'/>`;
+const shuttle=(x,y,deg)=>`<g transform='translate(${x} ${y}) rotate(${deg})' stroke-width='1.8'><path d='M-5 0a5 5 0 0 0 10 0Z' fill='#000'/><path d='M-5 0L-11 -22H11L5 0M-2 0L-4 -22M2 0L4 -22M-9 -14H9'/></g>`;
+const net=(top,bot,pTop)=>`<path d='M200 ${pTop}V246' stroke-width='3.5'/><rect x='194' y='${top}' width='12' height='${bot-top}' stroke-width='1.6'/><path d='${Array.from({length:Math.floor((bot-top)/8)},(_,i)=>`M194 ${top+4+i*8}H206`).join('')}' stroke-width='1'/>`;
+const G={
+  /* spiker attacking the ball at the net v a two-hand block */
+  volleyball: ground+net(96,150,92)+
+    fig({h:[124,66],n:[121,91],p:[110,146],a1:[[146,76],[166,54]],a2:[[136,108],[148,124]],l1:[[128,176],[110,202]],l2:[[98,178],[84,202]]})+vball(176,42,11)+
+    mir(fig({h:[154,72],n:[163,95],p:[160,150],a1:[[176,76],[184,50]],a2:[[170,74],[176,46]],l1:[[170,182],[168,212]],l2:[[156,182],[154,212]]})),
+  /* raider lunging with a hand out, defender crouched to tackle, midline on the mat */
+  kabaddi: ground+`<path d='M200 236V256' stroke-width='5'/>`+
+    fig({h:[152,104],n:[140,124],p:[108,154],a1:[[164,122],[188,114]],a2:[[122,138],[106,128]],l1:[[140,184],[148,240]],l2:[[82,194],[56,238]]})+
+    mir(fig({h:[148,120],n:[136,140],p:[112,172],a1:[[156,150],[176,144]],a2:[[150,160],[170,170]],l1:[[140,200],[136,240]],l2:[[96,206],[92,240]]})),
+  /* one-hand throw over the net, catcher waiting with both hands */
+  throwball: ground+net(110,160,104)+`<path d='M108 30Q200 -36 268 70' stroke-dasharray='3 8' stroke-width='2.4'/>`+
+    fig({h:[130,66],n:[124,91],p:[114,148],a1:[[106,70],[98,44]],a2:[[146,96],[164,92]],l1:[[130,192],[138,240]],l2:[[100,194],[84,240]]})+vball(96,32,13)+
+    mir(fig({h:[124,72],n:[120,97],p:[114,152],a1:[[140,92],[154,78]],a2:[[138,102],[154,90]],l1:[[120,196],[122,240]],l2:[[102,196],[98,240]]})),
+  /* jump smash v a low lunge, shuttle over the net */
+  badminton: ground+net(150,184,146)+
+    fig({h:[124,74],n:[118,99],p:[106,154],a1:[[134,76],[142,56]],a2:[[136,114],[148,126]],l1:[[120,186],[104,214]],l2:[[92,188],[80,214]]})+racket(142,56,18)+shuttle(214,58,-120)+
+    mir(fig({h:[150,128],n:[140,148],p:[110,170],a1:[[160,160],[176,154]],a2:[[122,140],[104,146]],l1:[[142,200],[150,240]],l2:[[84,206],[58,240]]})+racket(176,154,40)),
+  /* striker kicking, keeper spread in front of the goal */
+  football: ground+
+    fig({h:[128,72],n:[124,97],p:[116,152],a1:[[106,112],[90,116]],a2:[[142,110],[150,128]],l1:[[110,198],[112,240]],l2:[[146,184],[170,206]]})+fball(188,228,14)+
+    mir(fig({h:[100,72],n:[100,97],p:[100,152],a1:[[120,80],[132,56]],a2:[[80,80],[68,56]],l1:[[116,196],[124,240]],l2:[[84,196],[76,240]]})+
+      `<path d='M22 246V112H58' stroke-width='4'/><path d='M22 112L44 246M58 112L52 150' stroke-width='1.4' stroke-dasharray='3 4'/>`),
+  /* jump shot arcing to the hoop, defender with a hand up */
+  basketball: ground+`<path d='M160 50Q240 -20 334 72' stroke-dasharray='3 8' stroke-width='2.4'/>`+
+    fig({h:[112,86],n:[116,109],p:[110,164],a1:[[136,94],[146,68]],a2:[[132,98],[142,72]],l1:[[120,196],[114,222]],l2:[[100,196],[96,222]]})+bball(150,56,13)+
+    mir(fig({h:[124,86],n:[128,109],p:[124,164],a1:[[144,92],[156,68]],a2:[[144,124],[156,136]],l1:[[132,204],[132,240]],l2:[[114,204],[110,240]]})+
+      `<path d='M14 34V96' stroke-width='4'/><ellipse cx='36' cy='80' rx='20' ry='4.5' stroke-width='3'/><path d='M18 82L26 104H46L54 82M30 84L34 104M42 84L38 104' stroke-width='1.4'/>`),
+  /* chaser sprinting off the line past a sitting team-mate, runner sprinting away */
+  khokho: ground+`<path d='M30 246V170' stroke-width='7' stroke-linecap='round'/><path d='M370 246V170' stroke-width='7' stroke-linecap='round'/>`+
+    fig({h:[74,162],n:[72,187],p:[66,234],a1:[[88,204],[100,212]],a2:[[86,208],[96,220]],l1:[[94,212],[102,240]],l2:[[88,220],[90,242]]})+
+    fig({h:[160,74],n:[152,99],p:[138,152],a1:[[172,112],[184,96]],a2:[[130,112],[116,100]],l1:[[164,174],[158,212]],l2:[[118,190],[94,200]]})+
+    fig({h:[314,74],n:[306,99],p:[292,152],a1:[[326,112],[338,96]],a2:[[284,112],[270,100]],l1:[[318,174],[312,212]],l2:[[272,190],[248,200]]}),
+  /* batter driving in front of the stumps, bowler in the delivery stride */
+  cricket: ground+stumps(40)+
+    fig({h:[100,86],n:[96,111],p:[86,162],a1:[[112,128],[126,140]],a2:[[108,130],[124,144]],l1:[[118,190],[126,240]],l2:[[70,202],[58,240]]})+bat(125,142,-14)+
+    mir(fig({h:[112,68],n:[106,93],p:[96,148],a1:[[110,62],[114,34]],a2:[[128,106],[142,122]],l1:[[124,192],[140,240]],l2:[[76,194],[56,232]]})+dot(115,24,7)+stumps(40)),
+};
+const LABEL={volleyball:'spike v block at the net',kabaddi:'raider reaching v defender crouched',throwball:'one-hand throw over the net v catcher',
+  badminton:'jump smash v lunge · shuttle',football:'striker kicking v keeper in goal',basketball:'jump shot to the hoop v defender',
+  khokho:'chaser off the line v runner · posts',cricket:'batter at the stumps v bowler'};
+const svg=k=>`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260' fill='none' stroke='#000' stroke-width='2.5' stroke-linecap='round'>${G[k]}</svg>`;
+const half=(k,x)=>`<svg xmlns='http://www.w3.org/2000/svg' viewBox='${x} 0 200 260' preserveAspectRatio='xMidYMid slice' fill='none' stroke='#000' stroke-width='2.5' stroke-linecap='round'>${G[k]}</svg>`;
+const u=x=>`url("data:image/svg+xml,${encodeURIComponent(x)}")`,R=document.documentElement,C=window.SEMotifs,sets={court:{},game:{}};
+for(const k in G){sets.court[k]=['','-a','-b'].map(s=>R.style.getPropertyValue(`--motif-${k}${s}`));sets.game[k]=[u(svg(k)),u(half(k,0)),u(half(k,200))];}
+/* point --motif-<sport> at the chosen set: 'game' (default) or 'court' */
+C.use=style=>{const S=sets[style==='court'?'court':'game'];for(const k in S)['','-a','-b'].forEach((s,i)=>R.style.setProperty(`--motif-${k}${s}`,S[k][i]));};
+C.scenes=G;C.sceneLabel=LABEL;
+})();
+</script><script>/* ===== Colour engine: any team hex -> safe, bold, blended tokens ===== */
+(function(){
+const toLin=c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4;
+const toGam=c=>c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055;
+const hexToRgb=h=>{h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');const n=parseInt(h,16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]};
+const rgbToHex=rgb=>'#'+rgb.map(v=>Math.round(Math.min(1,Math.max(0,v))*255).toString(16).padStart(2,'0')).join('');
+function toLab(hex){const [r,g,b]=hexToRgb(hex).map(toLin);
+  const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+  return[.2104542553*l+.7936177850*m-.0040720468*s,1.9779984951*l-2.4285922050*m+.4505937099*s,.0259040371*l+.7827717662*m-.8086757660*s]}
+function labToLin([L,a,b]){const l=(L+.3963377774*a+.2158037573*b)**3,m=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.2914855480*b)**3;
+  return[4.0767416621*l-3.3077115913*m+.2309699292*s,-1.2684380046*l+2.6097574011*m-.3413193965*s,-.0041960863*l-.7034186147*m+1.7076147010*s]}
+const lab=(L,C,h)=>[L,C*Math.cos(h*Math.PI/180),C*Math.sin(h*Math.PI/180)];
+const inG=lin=>lin.every(v=>v>=-1e-4&&v<=1+1e-4);
+function lch(hex){const [L,a,b]=toLab(hex);let h=Math.atan2(b,a)*180/Math.PI;if(h<0)h+=360;return{L,C:Math.hypot(a,b),h}}
+function hex({L,C,h}){L=Math.min(.995,Math.max(.05,L));let lo=0,hi=C;
+  if(!inG(labToLin(lab(L,C,h)))){for(let i=0;i<22;i++){const m=(lo+hi)/2;inG(labToLin(lab(L,m,h)))?lo=m:hi=m}C=lo}
+  return rgbToHex(labToLin(lab(L,C,h)).map(v=>toGam(Math.min(1,Math.max(0,v)))))}
+const lum=h=>{const [r,g,b]=hexToRgb(h).map(toLin);return .2126*r+.7152*g+.0722*b};
+const contrast=(a,b)=>{const A=lum(a),B=lum(b);return(Math.max(A,B)+.05)/(Math.min(A,B)+.05)};
+const over=(base,top,al)=>{const B=hexToRgb(base),T=hexToRgb(top);return rgbToHex(B.map((v,i)=>v*(1-al)+T[i]*al))};
+const dE=(x,y)=>{const p=toLab(x),q=toLab(y);return Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2])};
+
+const WHITE='#ffffff', INK='#0b0b0d', SHEEN=.07, TXT=4.6, NUM=8;
+/* sport motif line. Deep fills: white chalk where the fill has contrast headroom (graphite, navy), else black
+   engraving, which can only raise white-text contrast. Bright fills: ink. Every case is gated in report(). */
+const MOTIF={chalk:{col:WHITE,a:.10},deep:{col:'#000000',a:.17},bright:{col:INK,a:.11}};let motifOn=true;
+const motifFor=(S,b)=>{if(b!=='deep')return MOTIF.bright;const surf=[S.hi,S.core,S.lo,over(S.hi,WHITE,SHEEN)];
+  return Math.min(...surf.map(x=>contrast(WHITE,over(x,WHITE,MOTIF.chalk.a))))>=5.5?MOTIF.chalk:MOTIF.deep};  // text on fill >=4.6:1; numerals (with scrim) >=8:1
+
+/* 1 · pick a band. Bright colours (yellow, white, sky, orange) stay bright and take dark text;
+       everything else becomes a rich deep colour that takes white text. */
+function band(c){return (c.L>=.72 || (c.h>=45&&c.h<=125&&c.L>=.62&&c.C>=.08)) ? 'bright' : 'deep'}
+
+/* 2 · build hi/core/lo stops for one team at core lightness L */
+function stops(c,L,b){const C=c.C<.035?0:Math.max(.09,Math.min(c.C,b==='deep'?.205:.19));
+  const hiL=b==='deep'?L+.065:Math.min(.975,L+.045), loL=b==='deep'?Math.max(.17,L-.10):L-.05;
+  return{core:hex({L,C,h:c.h}),hi:hex({L:hiL,C,h:c.h}),lo:hex({L:loL,C:C*.94,h:c.h+3})}}
+function passes(s,b){const on=b==='deep'?WHITE:INK;const surf=[s.hi,s.core,s.lo,over(s.hi,WHITE,SHEEN)];
+  return Math.min(...surf.map(x=>contrast(on,x)))>=(b==='deep'?TXT:6.5)}
+/* 3 · normalise lightness in OKLCH until the on-colour clears the gate on every stop (incl. sheen) */
+function normalise(srcHex,forceL){const c=lch(srcHex),b=band(c);let L;
+  if(b==='deep'){ // tame light/neon by darkening, lift near-black to graphite
+    L=forceL??Math.max(.34,Math.min(c.L,.66)); while(L>.2&&!passes(stops(c,L,b),b))L-=.005;
+  }else{ // deepen near-white to silver, lift dull mids until dark text clears
+    L=forceL??Math.min(.93,Math.max(c.L,.66)); if(c.C<.035)L=Math.min(L,.90);
+    while(L<.97&&!passes(stops(c,L,b),b))L+=.005;
+  }
+  const S=stops(c,L,b),on=b==='deep'?WHITE:INK,veil=b==='deep'?'#000000':'#ffffff',worst=b==='deep'?over(S.hi,WHITE,SHEEN):S.lo;
+  const mo=motifFor(S,b),cands=motifOn?[worst,over(worst,mo.col,mo.a)]:[worst];   // a motif line can pass under a numeral: gate both
+  const low=a=>cands.map(x=>over(x,veil,a)).reduce((p,x)=>contrast(on,x)<contrast(on,p)?x:p);
+  let al=0;while(al<.6&&contrast(on,low(al))<NUM)al+=.01;   // numeral scrim: just enough veil to clear 8:1
+  return{src:srcHex,c,b,L,...S,on,veil,scrimA:+al.toFixed(2),numSurf:low(al),motifCol:mo.col,motifA:mo.a}}
+
+/* 4 · per-theme accents: soft chip tint + chart/line colour */
+function accents(t,theme){const c=t.c,C=c.C<.035?0:Math.min(c.C,.17);
+  const tint=theme==='dark'?hex({L:.30,C:Math.min(C,.07),h:c.h}):hex({L:.945,C:Math.min(C,.045),h:c.h});
+  const N=NEUTRAL[theme],ok=x=>contrast(x,N.bg)>=3.2&&contrast(x,N.surface)>=3.2;
+  let Ll=theme==='dark'?Math.max(.62,Math.min(c.L,.86)):Math.min(.72,Math.max(c.L,.40));   // keep own lightness where it reads
+  while(!ok(hex({L:Ll,C,h:c.h}))&&Ll>.2&&Ll<.95)Ll+=theme==='dark'?.01:-.01;          // then walk just far enough for 3.2:1
+  return{tint,lineL:Ll,line:hex({L:Ll,C,h:c.h})}}
+
+const CLASH=.15;
+function derive(aHex,bHex,theme,motif=true){motifOn=motif;
+  let A=normalise(aHex),B=normalise(bHex);const before=dE(A.core,B.core);let note='';
+  /* 5 · clash: same band and too close -> spread lightness apart (keep hue = keep identity) */
+  if(before<CLASH){
+    const darkFirst=A.L<=B.L, D=darkFirst?A:B, Lt=darkFirst?B:A;
+    if(D.b==='deep'&&Lt.b==='deep'){const nD=normalise(D.src,.31);const nL=normalise(Lt.src,Math.max(Lt.L,.50));
+      darkFirst?(A=nD,B=nL):(B=nD,A=nL);}
+    else if(D.b==='bright'&&Lt.b==='bright'){const nD=normalise(D.src,.80);const nL=normalise(Lt.src,.93);darkFirst?(A=nD,B=nL):(B=nD,A=nL);}
+    else{const nD=normalise(D.src,.28);darkFirst?A=nD:B=nD;}
+    note=`clash ΔE ${before.toFixed(2)} → ${dE(A.core,B.core).toFixed(2)} (lightness split)`;
+  }
+  let a=accents(A,theme),b=accents(B,theme);
+  if(dE(a.line,b.line)<.12){ // chart clash: darker source team -> quieter, lower line; other -> brighter
+    const [lo,hi]=theme==='dark'?[.60,.76]:[.38,.60], dA=A.c.L<=B.c.L, dk=dA?a:b, lt=dA?b:a, dS=dA?A:B, lS=dA?B:A;
+    dk.line=hex({L:lo,C:Math.min(dS.c.C,.11),h:dS.c.h}); lt.line=hex({L:hi,C:Math.min(lS.c.C,.17),h:lS.c.h});}
+  return{A:{...A,...a},B:{...B,...b},note,before};
+}
+
+const NEUTRAL={dark:{bg:'#0e0e10',surface:'#18181b',surface2:'#222226',ink:'#f5f5f6',ink2:'#b4b4bb',ink3:'#8e8e96',live:'#3ddc84',warn:'#f5b83d'},
+              light:{bg:'#f4f4f5',surface:'#ffffff',surface2:'#ececef',ink:'#0c0c0e',ink2:'#45454d',ink3:'#5f5f67',live:'#0f6a32',warn:'#874d00'}};
+
+function report(d,theme){const N=NEUTRAL[theme],rows=[];
+  for(const k of['A','B']){const t=d[k];
+    for(const s of['hi','core','lo'])rows.push([`${k} label text on ${s}`,contrast(t.on,t[s]),4.5]);
+    rows.push([`${k} label text on sheen`,contrast(t.on,over(t.hi,WHITE,SHEEN)),4.5]);
+    if(motifOn){for(const s of['hi','core','lo'])rows.push([`${k} label text on ${s} + motif line`,contrast(t.on,over(t[s],t.motifCol,t.motifA)),4.5]);
+      rows.push([`${k} label text on sheen + motif line`,contrast(t.on,over(over(t.hi,WHITE,SHEEN),t.motifCol,t.motifA)),4.5]);}
+    rows.push([`${k} numeral on scrim (worst stop${motifOn?', incl. motif line':''})`,contrast(t.on,t.numSurf),7.5]);
+    rows.push([`${k} chip text on tint`,contrast(N.ink,t.tint),4.5]);
+    for(const s of['bg','surface'])rows.push([`${k} chart line on ${s}`,contrast(t.line,N[s]),3]);}
+  const glass=over('#ffffff','#0c0c0e',.78); // centre pill worst case: over pure white
+  rows.push(['centre pill text (worst case)',contrast('#ffffff',glass),4.5]);
+  rows.push(['do-or-die on pill (worst case)',contrast('#f5b83d',glass),4.5]);
+  for(const[fg,bgk,min]of[['ink','surface',4.5],['ink2','surface',4.5],['ink3','surface',4.5],['ink3','bg',4.5],['ink3','surface2',4.5],['live','surface',4.5],['warn','surface',4.5],['ink2','surface2',4.5]])
+    rows.push([`${fg} on ${bgk}`,contrast(N[fg],N[bgk]),min]);
+  return rows}
+
+window.SEColor={derive,report,contrast,dE,lch,NEUTRAL};
+
+/* ===== wire-up ===== */
+const PRESETS={'Red v Blue':['#d62828','#1d4ed8'],'Red v Maroon':['#e11d2a','#7a1020'],'Yellow v White':['#facc15','#ffffff'],
+  'Black v Green':['#111111','#16a34a'],'Purple v Orange':['#6d28d9','#f97316'],'Sky v Navy':['#38bdf8','#1e2a5a']};
+window.SEPresets=PRESETS;
+const st={theme:'dark',a:PRESETS['Red v Blue'][0],b:PRESETS['Red v Blue'][1],preset:'Red v Blue',motif:'court'};
+function apply(){const d=derive(st.a,st.b,st.theme,st.motif!=='off'),R=document.documentElement;R.dataset.theme=st.theme;R.dataset.motif=st.motif;SEMotifs.use(st.motif);
+  for(const[k,p]of[['A','a'],['B','b']]){const t=d[k];
+    R.style.setProperty(`--${p}-hi`,t.hi);R.style.setProperty(`--${p}-core`,t.core);R.style.setProperty(`--${p}-lo`,t.lo);
+    R.style.setProperty(`--${p}-on`,t.on);R.style.setProperty(`--${p}-scrim`,t.veil==='#000000'?`rgba(0,0,0,${t.scrimA})`:`rgba(255,255,255,${t.scrimA})`);R.style.setProperty(`--${p}-tint`,t.tint);R.style.setProperty(`--${p}-line`,t.line);
+    const mc=t.motifCol.match(/\w\w/g).map(x=>parseInt(x,16));R.style.setProperty(`--${p}-motif`,`rgba(${mc.join(',')},${t.motifA})`);}
+  const q=s=>document.querySelector(s);
+  if(q('#pickA'))q('#pickA').value=st.a; if(q('#pickB'))q('#pickB').value=st.b;
+  document.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.preset===st.preset));
+  document.querySelectorAll('[data-theme-btn]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeBtn===st.theme));
+  document.querySelectorAll('[data-motif-btn]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.motifBtn===st.motif));
+  const rep=report(d,st.theme),fails=rep.filter(r=>r[1]<r[2]);
+  if(q('#readout'))q('#readout').textContent=`${d.A.b==='deep'?'deep · white text':'bright · dark text'} / ${d.B.b==='deep'?'deep · white text':'bright · dark text'}${d.note?' · '+d.note:''} · contrast: ${fails.length?fails.length+' FAIL':'all '+rep.length+' checks pass'} (text ≥4.5, numerals ≥7.5, lines ≥3) · motif ${st.motif}`;
+  window.SEState={...st,derived:d};
+  if(window.drawCharts)window.drawCharts();
+}
+window.SESet=o=>{Object.assign(st,o);apply()};
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const[a,bb]=PRESETS[b.dataset.preset];SESet({a,b:bb,preset:b.dataset.preset})});
+  document.querySelectorAll('[data-theme-btn]').forEach(b=>b.onclick=()=>SESet({theme:b.dataset.themeBtn}));
+  document.querySelectorAll('[data-motif-btn]').forEach(b=>b.onclick=()=>SESet({motif:b.dataset.motifBtn}));
+  document.querySelectorAll('.hero,.key.a,.key.b').forEach(h=>h.insertAdjacentHTML('afterbegin','<span class="motif" aria-hidden="true"></span>'));
+  document.querySelector('#pickA').oninput=e=>SESet({a:e.target.value,preset:''});
+  document.querySelector('#pickB').oninput=e=>SESet({b:e.target.value,preset:''});
+  apply();
+});
+})();
+</script></head><body>
+<div class="tb" role="toolbar" aria-label="Preview controls">
+<h1>Score Easy · E · Broadcast blend<small>Volleyball · team colours are user-picked; every token below is derived live</small></h1>
+<div class="seg-t" role="group" aria-label="Theme"><button data-theme-btn="dark" aria-pressed="true">Dark</button><button data-theme-btn="light" aria-pressed="false">Light</button></div>
+<div class="seg-t" role="group" aria-label="Sport motif"><span class="seg-l">Motif</span><button data-motif-btn="court" aria-pressed="true">Court</button><button data-motif-btn="game" aria-pressed="false">Game</button><button data-motif-btn="off" aria-pressed="false">Off</button></div>
+<div class="picks"><label>Royals <input type="color" id="pickA" value="#d62828" aria-label="Royals colour"></label><label>Strikers <input type="color" id="pickB" value="#1d4ed8" aria-label="Strikers colour"></label></div>
+<div class="presets"><button data-preset="Red v Blue"><i style="background:linear-gradient(90deg,#d62828 50%,#1d4ed8 50%)"></i>Red v Blue</button><button data-preset="Red v Maroon"><i style="background:linear-gradient(90deg,#e11d2a 50%,#7a1020 50%)"></i>Red v Maroon</button><button data-preset="Yellow v White"><i style="background:linear-gradient(90deg,#facc15 50%,#ffffff 50%)"></i>Yellow v White</button><button data-preset="Black v Green"><i style="background:linear-gradient(90deg,#111111 50%,#16a34a 50%)"></i>Black v Green</button><button data-preset="Purple v Orange"><i style="background:linear-gradient(90deg,#6d28d9 50%,#f97316 50%)"></i>Purple v Orange</button><button data-preset="Sky v Navy"><i style="background:linear-gradient(90deg,#38bdf8 50%,#1e2a5a 50%)"></i>Sky v Navy</button></div>
+<div class="readout" id="readout"></div></div>
+<div class="wrap">
+<div class="lede"><h2>Volleyball · E · Broadcast blend</h2>
+<p>Royals vs Strikers · Sunday Cup Final · sets 1–1 · set 3 · Royals 22–19, serving, on a 4-point run. Team colour lives in one place per screen — the blended score area and the two point keys. Everything else is neutral.</p></div>
+<div class="row3">
+
+<!-- 1 main scoreboard -->
+<div class="col"><div class="cap">1 · Main scoreboard <span>· focal: the score</span></div>
+<div class="phone">
+  <div class="status"><span>9:41</span><i></i></div>
+  <div class="top"><button class="ib" aria-label="Back">‹</button><div class="tt"><b>Sunday Cup · Final</b><small>Best of 5 · to 25</small></div><span class="live">Live</span><button class="ib" aria-label="Share">↗</button></div>
+  <div class="hero xl" style="margin-top:8px">
+    <div class="h-names"><span class="sa"><i class="srv" aria-label="serving"></i>Royals</span><span></span><span class="sb">Strikers</span></div>
+    <div class="h-nums"><span class="n num sa">22</span><span class="pill">Set 3</span><span class="n num sb">19</span></div>
+    <div class="h-foot"><span class="pill">Sets <b class="num" style="font-size:15px">1–1</b></span><span class="pill">Royals serving · 4 in a row</span></div>
+  </div>
+  <div class="sets">
+    <div class="set"><small>Set 1</small><span class="num">25<em>–</em>21</span><span class="w a" aria-label="Royals won"></span></div>
+    <div class="set"><small>Set 2</small><span class="num">23<em>–</em>25</span><span class="w b" aria-label="Strikers won"></span></div>
+    <div class="set now"><small>Set 3 · now</small><span class="num">22<em>–</em>19</span></div>
+  </div>
+  <div class="blk"><div class="qrow"><span>Timeouts · Royals <b>2</b> · Strikers <b>1</b> left</span><span class="chev">›</span></div></div>
+  <div class="grow"></div>
+  <div class="foot"><a href="#">Open scorecard ›</a><a href="#">Share live ↗</a></div>
+</div>
+<p class="note">Kept loud: two numbers on the blend, who serves. Set history drops to neutral tiles; the only colour there is a thin winner bar. Timeouts fold to one row.</p></div>
+
+<!-- 2 lean scorer -->
+<div class="col"><div class="cap">2 · Lean scorer <span>· focal: the two keys</span></div>
+<div class="phone">
+  <div class="status"><span>9:41</span><i></i></div>
+  <div class="top"><button class="ib" aria-label="Back">‹</button><div class="tt"><b>Sunday Cup · Final</b><small>BO5 · Set 3 · to 25 · win by 2</small></div><span class="live">Live</span><button class="ib" aria-label="Match options">⋯</button></div>
+  <div class="hero band">
+    <div class="h-names"><span class="sa"><i class="srv"></i>Royals</span><span class="pill">Set 3 · Sets 1–1</span><span class="sb">Strikers</span></div>
+  </div>
+  <p class="narr">Point <b>Royals</b> · <span class="num" style="font-size:22px;color:var(--ink)">22–19</span>.<br><b>Royals keep serve</b>, 4 in a row.</p>
+  <div class="grow"></div>
+  <div class="blk" style="margin-bottom:10px"><div class="qrow"><span>Sets · Timeouts · Rally log</span><span class="chev">›</span></div></div>
+  <button class="undo" aria-label="Undo last rally"><span class="g">↶</span><span class="t">Undo</span><span class="w">removes Royals' point</span></button>
+  <div class="keys">
+    <button class="key a" aria-label="Point to Royals"><span class="srvtag"><i class="srv"></i>Serving</span><span class="who">Royals</span><span class="big num">22</span><span class="word">+1 point</span></button>
+    <button class="key b" aria-label="Point to Strikers"><span class="who">Strikers</span><span class="big num">19</span><span class="word">+1 point</span></button>
+  </div>
+  <div class="foot" style="padding-top:4px;padding-bottom:16px"><a href="#">Full scorecard ›</a><a href="#">Share live ↗</a></div>
+</div>
+<p class="note">The keys <em>are</em> the score: each is its team's own gradient, light to deep. Header band carries the blend and set context; narration is a plain sentence. Undo never folds.</p></div>
+
+<!-- 3 live -->
+<div class="col"><div class="cap">3 · Live <span>· focal: score + this moment</span></div>
+<div class="phone">
+  <div class="status"><span>9:41</span><i></i></div>
+  <div class="top"><button class="ib" aria-label="Back">‹</button><div class="tt"><b>Royals vs Strikers</b><small>Sunday Cup · Final</small></div><span class="live">Live</span><button class="ib" aria-label="Share">↗</button></div>
+  <div class="segc"><span class="on">Live</span><span>Sets</span><span>Stats</span></div>
+  <div class="hero md">
+    <div class="h-names"><span class="sa"><i class="srv"></i>Royals</span><span></span><span class="sb">Strikers</span></div>
+    <div class="h-nums"><span class="n num sa">22</span><span class="pill">Set 3</span><span class="n num sb">19</span></div>
+    <div class="h-foot"><span class="pill">Sets 1–1 · 25–21 · 23–25</span></div>
+  </div>
+  <div class="card">
+    <div class="k"><span><span class="dot a"></span>Now</span><span>Set 3</span></div>
+    <div class="now-v">Royals serving · 4 straight</div>
+    <div class="now-s">3 points from the set · last point: kill by A. Menon, line 4</div>
+  </div>
+  <div class="card" style="padding-bottom:10px">
+    <div class="k"><span>Momentum · set 3</span><span>lead swing · <b style="color:var(--ink)">Royals +4</b></span></div>
+    <svg class="chart" id="chart" viewBox="0 0 334 104" role="img" aria-label="Set 3 lead by rally: Strikers led by up to 4 mid-set, Royals lead by 3 now"></svg>
+  </div>
+  <div class="card" style="padding-top:8px;padding-bottom:4px">
+    <div class="mom"><span class="t">22</span><span><span class="tag">RUN</span> Royals <b>4 straight</b> on R. Nair's serve</span></div>
+    <div class="mom"><span class="t">20</span><span>Strikers timeout, Royals on a run</span></div>
+  </div>
+  <div class="grow"></div>
+  <div class="lfoot"><span>208 watching · Timeouts ROY 2 · STR 1</span><span class="f">Following ✓</span></div>
+</div>
+<p class="note">One blended hero, then quiet neutral cards. Team colour appears again only as the chart fill (labelled, so colour is never the only cue).</p></div>
+</div></div>
+<script>
+/* set 3 rally sequence (R = Royals, S = Strikers) → 22–19, ending S R S R R R R */
+const RALLIES='RSSRSSRSSRRSSRSSRRSRRSRRSRSRRSRSSRSRSRRRR';
+window.drawCharts=function(){
+  const svg=document.getElementById('chart');if(!svg)return;
+  let d=0,pts=[[0,0]];for(const c of RALLIES){d+=c==='R'?1:-1;pts.push(d)}
+  const W=334,H=104,top=10,bot=94,mid=(top+bot)/2,M=Math.max(4,...pts.slice(1).map(Math.abs)),
+    x=i=>4+i*(W-60)/(pts.length-1),y=v=>mid-v*(bot-top)/2/M;
+  const ys=pts.map((p,i)=>i===0?0:p);
+  const line=ys.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  const area=`${line}L${x(ys.length-1).toFixed(1)},${mid}L${x(0)},${mid}Z`;
+  const last=ys.length-1;
+  svg.innerHTML=`<defs><clipPath id="up"><rect x="0" y="0" width="${W}" height="${mid}"/></clipPath><clipPath id="dn"><rect x="0" y="${mid}" width="${W}" height="${H}"/></clipPath>
+   <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--a-line)" stop-opacity=".55"/><stop offset="1" stop-color="var(--a-line)" stop-opacity=".08"/></linearGradient>
+   <linearGradient id="gb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="var(--b-line)" stop-opacity=".55"/><stop offset="1" stop-color="var(--b-line)" stop-opacity=".08"/></linearGradient></defs>
+   <line class="base" x1="4" x2="${W-56}" y1="${mid}" y2="${mid}" stroke-width="1"/>
+   <path d="${area}" fill="url(#ga)" clip-path="url(#up)"/><path d="${area}" fill="url(#gb)" clip-path="url(#dn)"/>
+   <path d="${line}" fill="none" stroke="var(--a-line)" stroke-width="2.2" stroke-linejoin="round" clip-path="url(#up)"/>
+   <path d="${line}" fill="none" stroke="var(--b-line)" stroke-width="2.2" stroke-linejoin="round" clip-path="url(#dn)"/>
+   <circle cx="${x(last)}" cy="${y(ys[last])}" r="4" fill="var(--a-line)" stroke="var(--surface)" stroke-width="2"/>
+   <text class="lbl" x="${W-50}" y="${top+8}">Royals</text><text class="lbl" x="${W-50}" y="${top+21}">ahead</text>
+   <text class="lbl" x="${W-50}" y="${bot-13}">Strikers</text><text class="lbl" x="${W-50}" y="${bot}">ahead</text>`;
+};
+</script>
+
+</body></html>

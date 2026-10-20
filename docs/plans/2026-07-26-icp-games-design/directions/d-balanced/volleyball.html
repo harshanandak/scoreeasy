@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-palette="pitch">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volleyball · D · Balanced</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   D · BALANCED — palette proposal
+   Neutral grey surfaces (no cream). One brand accent = state (live, serve,
+   raid, following). Two team hues = identity. Nothing else carries colour.
+   Dark is the reference (Cricbuzz-like raised panels); light is the same
+   system inverted on neutral grey/white.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+  /* neutrals — dark (reference) */
+  --bg: #0C0E10;          /* app canvas */
+  --surface-1: #16191C;   /* raised section panel */
+  --surface-2: #1F2327;   /* quiet rows, chips, tab track */
+  --surface-3: #2A2F34;   /* pressed / selected / chart track */
+  --line: rgba(255,255,255,.07); /* interior divider only */
+  --ink: #F3F5F7;
+  --ink-2: #B5BCC4;
+  --ink-3: #959DA6;
+  /* palette 1 · Pitch (default) */
+  --accent: #22C46B;      /* fills: live pill, run marker */
+  --accent-ink: #45DB88;  /* accent as text/glyph on surfaces */
+  --on-accent: #03160A;   /* text on accent fill */
+  --team-a: #FF9B3D;      /* orange */
+  --team-b: #4FA6FF;      /* azure */
+  /* state */
+  --warn: #F7BC45;
+  --danger: #FF6B6B;
+  /* derived softs */
+  --team-a-soft: color-mix(in srgb, var(--team-a) 20%, var(--surface-1));
+  --team-b-soft: color-mix(in srgb, var(--team-b) 20%, var(--surface-1));
+  --warn-soft: color-mix(in srgb, var(--warn) 16%, var(--surface-1));
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--surface-1));
+  /* shape */
+  --r-sm: 10px;   /* chips, tags */
+  --r-md: 14px;   /* rows, small tiles */
+  --r-lg: 20px;   /* section panels */
+  --r-xl: 28px;   /* score keys */
+  --r-pill: 999px;
+  /* elevation: dark = tone step only, no shadow */
+  --elev-1: none;
+  --elev-2: 0 8px 24px rgba(0,0,0,.35);
+  --phone-shadow: 0 30px 80px rgba(0,0,0,.55);
+  --page: #08090A;
+}
+[data-palette="floodlight"] { --team-a: #F4C430; --team-b: #A98BFF; }
+[data-palette="volt"] {
+  --accent: #C9F23E; --accent-ink: #D2F55C; --on-accent: #141A00;
+  --team-a: #FF6B7D; --team-b: #6E9BFF;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ECEEF1;
+  --surface-1: #FFFFFF;
+  --surface-2: #F3F4F6;
+  --surface-3: #E3E6EA;
+  --line: rgba(15,20,25,.08);
+  --ink: #0E1114;
+  --ink-2: #434A52;
+  --ink-3: #5B636C;
+  --accent: #0A7C43;
+  --accent-ink: #087340;
+  --on-accent: #FFFFFF;
+  --team-a: #B23C0A;
+  --team-b: #1C62C6;
+  --warn: #8A5A00;
+  --danger: #C62828;
+  --team-a-soft: color-mix(in srgb, var(--team-a) 11%, #fff);
+  --team-b-soft: color-mix(in srgb, var(--team-b) 11%, #fff);
+  --warn-soft: color-mix(in srgb, #F2B000 18%, #fff);
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, #fff);
+  --elev-1: 0 1px 2px rgba(16,24,32,.05), 0 4px 14px rgba(16,24,32,.05);
+  --elev-2: 0 10px 30px rgba(16,24,32,.12);
+  --phone-shadow: 0 30px 70px rgba(16,24,32,.18);
+  --page: #DADDE1;
+}
+[data-theme="light"][data-palette="floodlight"] { --team-a: #8A6100; --team-b: #6A43D8; }
+[data-theme="light"][data-palette="volt"] {
+  --accent: #3D7A00; --accent-ink: #346A00; --on-accent: #FFFFFF;
+  --team-a: #C4203A; --team-b: #2853CF;
+}
+
+/* ---------- presentation page ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--page); }
+body { font-family: "Barlow", system-ui, sans-serif; color: var(--ink); background: var(--page);
+  -webkit-font-smoothing: antialiased; min-height: 100vh; transition: background .25s; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+.num { font-family: "Barlow Condensed", "Barlow", sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.toolbar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center;
+  padding: 12px 32px; background: color-mix(in srgb, var(--page) 86%, transparent); backdrop-filter: blur(14px); }
+.toolbar h1 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; margin-right: auto; }
+.toolbar h1 span { color: var(--ink-3); font-weight: 500; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: var(--r-pill); }
+.seg button { min-height: 36px; padding: 0 14px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 8px; }
+.seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--ink); box-shadow: var(--elev-1); }
+.seg .sw { display: inline-flex; }
+.seg .sw i { width: 10px; height: 10px; border-radius: 3px; margin-left: -2px; box-shadow: 0 0 0 2px var(--surface-2); }
+
+.intro { padding: 20px 32px 8px; max-width: 1360px; margin: 0 auto; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.stage { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px 36px; padding: 18px 24px 64px; }
+figure { width: 390px; }
+figcaption { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); padding: 0 6px 12px; }
+figcaption b { color: var(--ink); font-weight: 700; }
+.note { font-size: 13px; color: var(--ink-3); line-height: 1.5; padding: 14px 6px 0; }
+
+/* ---------- phone ---------- */
+.phone { width: 390px; height: 844px; background: var(--bg); border-radius: 46px; overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 9px #050607, 0 0 0 10px #2a2d31, var(--phone-shadow); transition: background .25s; }
+.status { height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0; font-size: 15px; font-weight: 700; }
+.status i { width: 26px; height: 12px; border-radius: 4px; background: var(--ink); opacity: .9; }
+.appbar { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px 16px 10px; }
+.ib { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 20px; color: var(--ink); }
+.titles { flex: 1; min-width: 0; }
+.titles b { display: block; font-size: 17px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titles span { display: block; font-size: 13px; color: var(--ink-3); margin-top: 1px; white-space: nowrap; }
+.live { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border-radius: var(--r-pill);
+  background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700; letter-spacing: .02em; flex: none; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.scroll { flex: 1; min-height: 0; overflow: auto; padding: 4px 14px 14px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* sections = raised panels */
+.panel { background: var(--surface-1); border-radius: var(--r-lg); padding: 16px; box-shadow: var(--elev-1); }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.ph span { font-size: 13px; color: var(--ink-2); }
+.quiet { min-height: 52px; display: flex; justify-content: flex-start; align-items: center; gap: 10px; padding: 0 16px; border-radius: var(--r-md);
+  background: var(--surface-2); color: var(--ink-2); font-size: 15px; width: 100%; text-align: left; }
+.quiet b { color: var(--ink); font-weight: 600; }
+.quiet .chev { margin-left: auto; color: var(--ink-3); font-size: 18px; }
+.foot { flex: none; display: flex; justify-content: space-between; align-items: center; padding: 6px 22px 22px; font-size: 14px; color: var(--ink-2); }
+.foot a { color: var(--ink-2); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.foot .follow { color: var(--accent-ink); font-weight: 700; }
+
+/* team identity */
+.tname { display: inline-flex; align-items: center; gap: 7px; font-size: 17px; font-weight: 700; letter-spacing: -.005em; }
+.tname::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: currentColor; }
+.ta { color: var(--team-a); } .tb { color: var(--team-b); }
+.badge { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--r-pill);
+  background: var(--accent-soft); color: var(--accent-ink); font-size: 12px; font-weight: 700; letter-spacing: .03em; }
+
+/* hero score */
+.hero { padding: 18px 18px 16px; }
+.score-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; }
+.score-row .side { display: flex; flex-direction: column; gap: 4px; }
+.score-row .side.r { align-items: flex-end; }
+.digits { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; line-height: .82; letter-spacing: -.02em; color: var(--ink); }
+.split { display: flex; height: 6px; gap: 3px; margin: 16px 0 12px; }
+.split i { border-radius: 3px; }
+.split .a { background: var(--team-a); } .split .b { background: var(--team-b); }
+.mid { text-align: center; color: var(--ink-3); font-size: 13px; padding-bottom: 14px; }
+.mid b { display: block; color: var(--ink); font-size: 15px; font-weight: 700; }
+.dots { display: inline-flex; gap: 5px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.dots.a i.on { background: var(--team-a); box-shadow: none; } .dots.b i.on { background: var(--team-b); box-shadow: none; }
+.meta { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); align-items: center; }
+.meta b { color: var(--ink); }
+.sets { display: flex; justify-content: center; gap: 14px; font-size: 15px; color: var(--ink-2); padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--line); }
+.sets b { color: var(--ink); }
+
+/* chips */
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px; border-radius: var(--r-pill); font-size: 14px; font-weight: 700; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.warn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; background: var(--surface-3); color: var(--ink-2); flex: none; }
+.tag.acc { background: var(--accent-soft); color: var(--accent-ink); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* feeds */
+.feed { list-style: none; }
+.feed li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; padding: 10px 0; font-size: 15px; line-height: 1.4; color: var(--ink-2); border-top: 1px solid var(--line); }
+.feed li:first-child { border-top: 0; padding-top: 2px; }
+.feed .t { font-family: "Barlow Condensed"; font-weight: 600; font-size: 16px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.feed b { color: var(--ink); font-weight: 700; }
+.feed .tag { margin-right: 6px; vertical-align: 1px; }
+
+/* scorer */
+.narr { font-size: 18px; line-height: 1.4; color: var(--ink-2); }
+.narr b { color: var(--ink); font-weight: 700; }
+.rally { display: flex; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--ink-3); }
+.rally i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; }
+.rally i.a { background: var(--team-a-soft); color: var(--team-a); }
+.rally i.b { background: var(--team-b-soft); color: var(--team-b); }
+.undo { min-height: 56px; display: flex; justify-content: flex-start; align-items: center; gap: 12px; padding: 0 16px; border-radius: var(--r-md); background: var(--surface-1);
+  box-shadow: var(--elev-1); width: 100%; text-align: left; font-size: 16px; font-weight: 700; }
+.undo .ic { font-size: 20px; }
+.undo > span:last-child { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--ink-3); }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.key { position: relative; overflow: hidden; border-radius: var(--r-xl); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+.key::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; }
+.key.a { background: var(--team-a-soft); } .key.a::before { background: var(--team-a); }
+.key.b { background: var(--team-b-soft); } .key.b::before { background: var(--team-b); }
+.key:active { filter: brightness(1.1); transform: scale(.985); }
+.key .sub { font-size: 15px; color: var(--ink-2); font-weight: 600; }
+.tile { min-height: 64px; border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--elev-1); display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 0 16px; text-align: left; }
+.tile b { font-size: 18px; font-weight: 700; }
+.tile span { font-size: 13px; color: var(--ink-2); }
+.minis { display: flex; gap: 8px; }
+.mini { min-height: 48px; padding: 0 16px; border-radius: var(--r-pill); background: var(--surface-2); font-size: 15px; font-weight: 600; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+
+/* tabs */
+.tabs { display: flex; background: var(--surface-2); border-radius: var(--r-pill); padding: 4px; flex: none; }
+.tabs b { flex: 1; min-height: 40px; display: grid; place-items: center; font-size: 15px; font-weight: 600; color: var(--ink-2); border-radius: var(--r-pill); }
+.tabs b.on { background: var(--surface-1); color: var(--ink); box-shadow: var(--elev-1); }
+[data-theme="dark"] .tabs b.on, :root:not([data-theme="light"]) .tabs b.on { background: var(--surface-3); }
+
+/* charts */
+svg.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.c-grid { stroke: var(--ink-3); stroke-opacity: .28; stroke-width: 1; }
+.c-base { stroke: var(--ink-3); stroke-opacity: .55; stroke-width: 1; }
+.c-txt { fill: var(--ink-3); font: 600 11px "Barlow", sans-serif; }
+.c-txt2 { fill: var(--ink-2); font: 600 12px "Barlow", sans-serif; }
+.c-a { fill: var(--team-a); } .c-b { fill: var(--team-b); }
+.c-a-area { fill: var(--team-a); fill-opacity: .28; } .c-b-area { fill: var(--team-b); fill-opacity: .28; }
+.c-a-line { fill: none; stroke: var(--team-a); stroke-width: 2.25; stroke-linejoin: round; }
+.c-b-line { fill: none; stroke: var(--team-b); stroke-width: 2.25; stroke-linejoin: round; }
+.c-acc { fill: none; stroke: var(--accent); stroke-width: 2; }
+.c-accfill { fill: var(--accent); }
+.c-ring { fill: var(--surface-1); stroke-width: 2.5; }
+.c-ring.a { stroke: var(--team-a); } .c-ring.b { stroke: var(--team-b); }
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 4px; border-radius: 2px; }
+
+/* compare bars */
+.cmp { display: grid; grid-template-columns: 28px 1fr 64px 1fr 28px; align-items: center; gap: 8px; font-size: 14px; padding: 5px 0; }
+.cmp .l { text-align: center; color: var(--ink-2); font-size: 13px; }
+.cmp .v { font-family: "Barlow Condensed"; font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; }
+.cmp .v.r { text-align: right; }
+.bar { height: 8px; border-radius: 4px; background: var(--surface-3); display: flex; overflow: hidden; }
+.bar.l2r { justify-content: flex-end; }
+.bar i { display: block; height: 100%; border-radius: 4px; }
+
+@media (max-width: 860px) {
+  .toolbar { padding: 10px 14px; }
+  .toolbar h1 { width: 100%; }
+  .intro { padding: 14px 16px 0; }
+  .stage { padding: 14px 0 40px; gap: 32px; }
+  .phone { border-radius: 0; box-shadow: none; }
+  figcaption, .note { padding-left: 16px; padding-right: 16px; }
+}
+
+</style>
+</head>
+<body>
+
+
+<div class="toolbar">
+  <h1>Volleyball <span>· D · Balanced</span></h1>
+  <div class="seg" role="group" aria-label="Theme">
+    <button data-set="theme" data-v="dark">Dark</button><button data-set="theme" data-v="light">Light</button>
+  </div>
+  <div class="seg" role="group" aria-label="Accent pairing">
+    <button data-set="palette" data-v="pitch"><span class="sw"><i style="background:#22C46B"></i><i style="background:#FF9B3D"></i><i style="background:#4FA6FF"></i></span>Pitch</button>
+    <button data-set="palette" data-v="floodlight"><span class="sw"><i style="background:#22C46B"></i><i style="background:#F4C430"></i><i style="background:#A98BFF"></i></span>Floodlight</button>
+    <button data-set="palette" data-v="volt"><span class="sw"><i style="background:#C9F23E"></i><i style="background:#FF5A6E"></i><i style="background:#5B8DFF"></i></span>Volt</button>
+  </div>
+</div>
+<p class="intro">Royals vs Strikers · Sunday Cup Final · sets 1–1 · set 3 · Royals 22–19, serving, on a 4-point run. Neutral grey panels, one green for state (live, serve, following), orange / azure for the two teams. Switch theme and pairing above.</p>
+<main class="stage">
+<figure><figcaption><b>1 · Main scoreboard</b><span>focal: the score</span></figcaption>
+<div class="phone"><div class="status"><span>9:41</span><i></i></div>
+  <div class="appbar"><button class="ib" aria-label="Back">‹</button><div class="titles"><b>Royals vs Strikers</b><span>Sunday Cup · Final · best of 5</span></div><span class="live">Live</span><button class="ib" aria-label="Share">↗</button></div>
+  <div class="scroll" style="justify-content:center">
+    
+<section class="panel hero">
+  <div class="ph"><span class="eyebrow">Set 3 · to 25</span><span>Sets <b style="color:var(--ink)">1–1</b></span></div>
+  <div class="score-row">
+    <div class="side"><span class="tname ta">Royals</span><span class="digits" style="font-size:150px">22</span></div>
+    <div class="mid"></div>
+    <div class="side r"><span class="tname tb">Strikers</span><span class="digits" style="font-size:150px">19</span></div>
+  </div>
+  <div class="split" aria-hidden="true"><i class="a" style="flex:22"></i><i class="b" style="flex:19"></i></div>
+  <div class="meta"><span style="display:inline-flex;gap:8px;align-items:center"><span class="badge">▸ Serving</span><span class="dots a"><i class="on"></i><i class=""></i><i class=""></i></span></span><span style="display:inline-flex;gap:8px;align-items:center"><span class="dots b"><i class="on"></i><i class=""></i><i class=""></i></span></span></div>
+  <div class="sets"><span>Set 1 <b>25–21</b></span><span>Set 2 <b>23–25</b></span><span>Set 3 <b style="color:var(--accent-ink)">live</b></span></div>
+</section>
+    <button class="quiet"><span>Timeouts · Royals <b>2</b> · Strikers <b>1</b> left</span><span class="chev">›</span></button>
+  </div>
+  <div class="foot"><a>Open scorecard ›</a><a>Share live ↗</a></div>
+</div>
+<p class="note">One raised panel holds everything that matters. Team colour = name, swatch and the lead split bar; green only marks live + serve. Timeouts fold into one quiet row.</p></figure>
+
+<figure><figcaption><b>2 · Lean scorer</b><span>focal: the two keys</span></figcaption>
+<div class="phone"><div class="status"><span>9:41</span><i></i></div>
+  <div class="appbar"><button class="ib" aria-label="Back">‹</button><div class="titles"><b>Sunday Cup · Final</b><span>BO5 · Set 3 · to 25 · win by 2</span></div><span class="live">Live</span><button class="ib" aria-label="More">⋯</button></div>
+  <div class="scroll">
+    <section class="panel">
+      <div class="ph"><span class="eyebrow">Set 3 · Sets 1–1</span><span>saved on device</span></div>
+      <p class="narr">Point <b class="ta">Royals</b> · 22–19.<br><b>Royals keep serve</b>, 4 in a row.</p>
+      <div class="rally">Last 7 <i class="b">S</i><i class="a">R</i><i class="b">S</i><i class="a">R</i><i class="a">R</i><i class="a">R</i><i class="a">R</i></div>
+    </section>
+    <button class="quiet">Sets · Timeouts · Rally log <span class="chev">›</span></button>
+    <div style="flex:1"></div>
+    <button class="undo"><span class="ic">↶</span><b>Undo</b><span>removes Royals' point</span></button>
+    <div class="keys" style="height:318px">
+      <button class="key a"><span class="tname ta">Royals</span><span class="digits" style="font-size:120px">22</span><span class="badge">▸ Serving</span><span class="sub">Point Royals</span></button>
+      <button class="key b"><span class="tname tb">Strikers</span><span class="digits" style="font-size:120px">19</span><span class="badge" style="visibility:hidden">▸</span><span class="sub">Point Strikers</span></button>
+    </div>
+  </div>
+</div>
+<p class="note">The keys are the score: no second scoreboard on top. Each key is a team-tinted surface with a solid team band; Undo sits directly above, never folded.</p></figure>
+
+<figure><figcaption><b>3 · Live</b><span>focal: score + this moment</span></figcaption>
+<div class="phone"><div class="status"><span>9:41</span><i></i></div>
+  <div class="appbar"><button class="ib" aria-label="Back">‹</button><div class="titles"><b>Royals vs Strikers</b><span>Sunday Cup · Final</span></div><span class="live">Live</span><button class="ib" aria-label="Share">↗</button></div>
+  <div class="scroll">
+    <div class="tabs"><b class="on">Live</b><b>Sets</b><b>Stats</b></div>
+    
+<section class="panel hero">
+  <div class="ph"><span class="eyebrow">Set 3 · to 25</span><span>Sets <b style="color:var(--ink)">1–1</b></span></div>
+  <div class="score-row">
+    <div class="side"><span class="tname ta">Royals</span><span class="digits" style="font-size:112px">22</span></div>
+    <div class="mid"></div>
+    <div class="side r"><span class="tname tb">Strikers</span><span class="digits" style="font-size:112px">19</span></div>
+  </div>
+  <div class="split" aria-hidden="true"><i class="a" style="flex:22"></i><i class="b" style="flex:19"></i></div>
+  <div class="meta"><span style="display:inline-flex;gap:8px;align-items:center"><span class="badge">▸ Serving</span><span class="dots a"><i class="on"></i><i class=""></i><i class=""></i></span></span><span style="display:inline-flex;gap:8px;align-items:center"><span class="dots b"><i class="on"></i><i class=""></i><i class=""></i></span></span></div>
+  <div class="sets"><span>Set 1 <b>25–21</b></span><span>Set 2 <b>23–25</b></span><span>Set 3 <b style="color:var(--accent-ink)">live</b></span></div>
+</section>
+    <section class="panel">
+      <div class="ph"><span class="eyebrow">Momentum · set 3</span><span>lead, point by point</span></div>
+      <svg class="chart" viewBox="0 -6 326 144" role="img" aria-label="Set 3 point-by-point lead: Strikers led by up to 3, Royals now lead by 3 after a 4-point run">
+  <defs><clipPath id="vtop"><rect x="0" y="-6" width="326" height="66"/></clipPath><clipPath id="vbot"><rect x="0" y="60" width="326" height="120"/></clipPath></defs>
+  <line class="c-grid" x1="0" x2="326" y1="36" y2="36" stroke-dasharray="2 4"/><line class="c-grid" x1="0" x2="326" y1="84" y2="84" stroke-dasharray="2 4"/><line class="c-grid" x1="0" x2="326" y1="12" y2="12" stroke-dasharray="2 4"/><line class="c-grid" x1="0" x2="326" y1="108" y2="108" stroke-dasharray="2 4"/>
+  <rect x="294.1951219512195" y="-6" width="31.804878048780495" height="126" rx="4" class="c-accfill" fill-opacity=".12"/>
+  <path d="M0.0 60.0 L8.0 48.0 L15.9 36.0 L23.9 48.0 L31.8 36.0 L39.8 24.0 L47.7 12.0 L55.7 24.0 L63.6 36.0 L71.6 48.0 L79.5 60.0 L87.5 48.0 L95.4 60.0 L103.4 72.0 L111.3 84.0 L119.3 96.0 L127.2 84.0 L135.2 72.0 L143.1 60.0 L151.1 72.0 L159.0 60.0 L167.0 48.0 L174.9 60.0 L182.9 72.0 L190.8 60.0 L198.8 72.0 L206.7 84.0 L214.7 72.0 L222.6 60.0 L230.6 72.0 L238.5 60.0 L246.5 48.0 L254.4 60.0 L262.4 72.0 L270.3 60.0 L278.3 72.0 L286.2 60.0 L294.2 72.0 L302.1 60.0 L310.1 48.0 L318.0 36.0 L326.0 24.0 L326 60 L0 60 Z" class="c-a-area" clip-path="url(#vtop)"/><path d="M0.0 60.0 L8.0 48.0 L15.9 36.0 L23.9 48.0 L31.8 36.0 L39.8 24.0 L47.7 12.0 L55.7 24.0 L63.6 36.0 L71.6 48.0 L79.5 60.0 L87.5 48.0 L95.4 60.0 L103.4 72.0 L111.3 84.0 L119.3 96.0 L127.2 84.0 L135.2 72.0 L143.1 60.0 L151.1 72.0 L159.0 60.0 L167.0 48.0 L174.9 60.0 L182.9 72.0 L190.8 60.0 L198.8 72.0 L206.7 84.0 L214.7 72.0 L222.6 60.0 L230.6 72.0 L238.5 60.0 L246.5 48.0 L254.4 60.0 L262.4 72.0 L270.3 60.0 L278.3 72.0 L286.2 60.0 L294.2 72.0 L302.1 60.0 L310.1 48.0 L318.0 36.0 L326.0 24.0 L326 60 L0 60 Z" class="c-b-area" clip-path="url(#vbot)"/>
+  <path d="M0.0 60.0 L8.0 48.0 L15.9 36.0 L23.9 48.0 L31.8 36.0 L39.8 24.0 L47.7 12.0 L55.7 24.0 L63.6 36.0 L71.6 48.0 L79.5 60.0 L87.5 48.0 L95.4 60.0 L103.4 72.0 L111.3 84.0 L119.3 96.0 L127.2 84.0 L135.2 72.0 L143.1 60.0 L151.1 72.0 L159.0 60.0 L167.0 48.0 L174.9 60.0 L182.9 72.0 L190.8 60.0 L198.8 72.0 L206.7 84.0 L214.7 72.0 L222.6 60.0 L230.6 72.0 L238.5 60.0 L246.5 48.0 L254.4 60.0 L262.4 72.0 L270.3 60.0 L278.3 72.0 L286.2 60.0 L294.2 72.0 L302.1 60.0 L310.1 48.0 L318.0 36.0 L326.0 24.0" class="c-a-line" clip-path="url(#vtop)"/><path d="M0.0 60.0 L8.0 48.0 L15.9 36.0 L23.9 48.0 L31.8 36.0 L39.8 24.0 L47.7 12.0 L55.7 24.0 L63.6 36.0 L71.6 48.0 L79.5 60.0 L87.5 48.0 L95.4 60.0 L103.4 72.0 L111.3 84.0 L119.3 96.0 L127.2 84.0 L135.2 72.0 L143.1 60.0 L151.1 72.0 L159.0 60.0 L167.0 48.0 L174.9 60.0 L182.9 72.0 L190.8 60.0 L198.8 72.0 L206.7 84.0 L214.7 72.0 L222.6 60.0 L230.6 72.0 L238.5 60.0 L246.5 48.0 L254.4 60.0 L262.4 72.0 L270.3 60.0 L278.3 72.0 L286.2 60.0 L294.2 72.0 L302.1 60.0 L310.1 48.0 L318.0 36.0 L326.0 24.0" class="c-b-line" clip-path="url(#vbot)"/>
+  <line class="c-base" x1="0" x2="326" y1="60" y2="60"/>
+  <text class="c-txt" x="2" y="32">+2</text><text class="c-txt" x="2" y="96">−2</text>
+  <circle cx="119.26829268292683" cy="96" r="4" class="c-ring b"/>
+  <text class="c-txt2" x="119.26829268292683" y="114" text-anchor="middle">STR +3</text>
+  <circle cx="326" cy="24" r="4.5" class="c-ring a"/>
+  <text class="c-txt2" x="318" y="14" text-anchor="end">ROY +3</text>
+  <text class="c-txt" x="0" y="136">0–0</text><text class="c-txt" x="290.1951219512195" y="136" text-anchor="end">18–19</text><text class="c-txt" x="326" y="136" text-anchor="end">22–19</text>
+</svg>
+      <div class="legend"><span><i style="background:var(--team-a)"></i>Royals ahead</span><span><i style="background:var(--team-b)"></i>Strikers ahead</span><span><i style="background:var(--accent)"></i>4-point run</span></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><span class="eyebrow">Now</span><span>3 points from the set</span></div>
+      <p class="narr" style="font-size:17px"><b>Royals serving</b> · 4 straight. Last point: kill by <b>A. Menon</b>, line 4.</p>
+    </section>
+    <section class="panel">
+      <div class="ph"><span class="eyebrow">Key moments</span></div>
+      <ul class="feed">
+        <li><span class="t">22</span><span><span class="tag acc">RUN</span><b>Royals</b> 4 straight on R. Nair's serve</span></li>
+        <li><span class="t">20</span><span><span class="tag">TIMEOUT</span>Strikers timeout, Royals on a run</span></li>
+      </ul>
+    </section>
+    <button class="quiet">3 more · set 2 and set point <span class="chev">›</span></button>
+  </div>
+  <div class="foot"><span>208 watching · Timeouts ROY 2 · STR 1</span><span class="follow">Following ✓</span></div>
+</div>
+<p class="note">Sections are raised panels on a dark grey canvas; a compact Cricbuzz-style worm sits between them. The momentum chart uses only the two team hues plus green for the run.</p></figure>
+</main>
+<script>
+(function(){var h=document.documentElement,q=new URLSearchParams(location.search),s={};
+try{s=JSON.parse(localStorage.getItem('se-d')||'{}')}catch(e){}
+h.dataset.theme=q.get('theme')||s.theme||'dark';h.dataset.palette=q.get('palette')||s.palette||'pitch';
+function sync(){document.querySelectorAll('[data-set]').forEach(function(b){b.setAttribute('aria-pressed',h.dataset[b.dataset.set]===b.dataset.v)})}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-set]');if(!b)return;h.dataset[b.dataset.set]=b.dataset.v;
+try{localStorage.setItem('se-d',JSON.stringify({theme:h.dataset.theme,palette:h.dataset.palette}))}catch(e){}sync()});sync();})();
+</script>
+</body>
+</html>

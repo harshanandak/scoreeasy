@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Score Easy · light directions</title>
+<style>
+  :root { --canvas:#f4f3ef; --ink:#14171a; --ink-2:#5a5f66; --pill:#e9e7e1; --on:#ffffff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font:15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position:sticky; top:0; z-index:2; display:flex; flex-wrap:wrap; gap:12px 24px; align-items:center; padding:16px 24px; background:color-mix(in srgb, var(--canvas) 88%, transparent); backdrop-filter:blur(14px); }
+  h1 { font-size:18px; margin:0; font-weight:700; letter-spacing:-0.01em; }
+  .seg { display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:var(--pill); }
+  .seg button { min-height:40px; padding:0 16px; border:0; border-radius:999px; background:transparent; font:inherit; color:var(--ink-2); cursor:pointer; }
+  .seg button[aria-pressed="true"] { background:var(--on); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .seg button:focus-visible { outline:2px solid #1d7a46; outline-offset:2px; }
+  .hint { color:var(--ink-2); font-size:13px; }
+  main { padding:8px 24px 48px; display:grid; gap:28px; }
+  section h2 { font-size:15px; margin:0 0 4px; font-weight:650; }
+  section p { margin:0 0 10px; color:var(--ink-2); font-size:13px; max-width:820px; }
+  section .open { font-size:13px; color:#1d7a46; text-decoration:none; margin-left:8px; }
+  iframe { width:100%; height:960px; border:0; border-radius:20px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 30px rgba(0,0,0,.05); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Light directions</h1>
+  <div class="seg" role="group" aria-label="Game">
+    <button type="button" data-game="volleyball" aria-pressed="true">Volleyball</button>
+    <button type="button" data-game="kabaddi" aria-pressed="false">Kabaddi</button>
+  </div>
+  <span class="hint">Same match data in every version. Scroll inside a frame to see the full screen set; "Open" shows it full size.</span>
+</header>
+<main>
+  <section>
+    <h2>E · Broadcast blend — current proposal</h2>
+    <p>Pro-sports style (Apple Sports, ESPN, broadcast scorebugs): neutral graphite/white chrome, the two teams' colours blended into one bold gradient on the score and as the two point keys. Pick any team colours with the pickers or the 6 test pairs; dark and light.</p>
+    <a class="open" data-dir="e-broadcast" href="#">Open ↗</a>
+    <iframe title="Direction E, broadcast blend" data-dir="e-broadcast" loading="lazy" style="background:#0e0e10"></iframe>
+  </section>
+  <section>
+    <h2>D · Balanced (dark + light)</h2>
+    <p>A's section division + C's single focal zone + B's character, with few colours: neutral greys, one green for state, two team colours. Dark first (Cricbuzz-like), light from the same system, inline charts on the live screen. Use the Dark/Light and Pitch/Floodlight/Volt switches at the top of the frame.</p>
+    <a class="open" data-dir="d-balanced" href="#">Open ↗</a>
+    <iframe title="Direction D, balanced dark and light" data-dir="d-balanced" loading="lazy" style="background:#0C0E10"></iframe>
+  </section>
+  <section>
+    <h2>A · Soft cards</h2>
+    <p>iOS-like. Off-white canvas, white rounded cards on soft shadows, no borders. One hero card with a light green wash; everything else is quiet grouped rows.</p>
+    <a class="open" data-dir="a-soft-cards" href="#">Open ↗</a>
+    <iframe title="Direction A, soft cards" data-dir="a-soft-cards" loading="lazy"></iframe>
+  </section>
+  <section>
+    <h2>B · Tinted wash</h2>
+    <p>The screen carries the colour: mint for one side, apricot for the other, blended across the background. Score sits on the wash; secondary info in light frosted panels.</p>
+    <a class="open" data-dir="b-tinted-wash" href="#">Open ↗</a>
+    <iframe title="Direction B, tinted wash" data-dir="b-tinted-wash" loading="lazy"></iframe>
+  </section>
+  <section>
+    <h2>C · Calm focus</h2>
+    <p>One focal zone per screen (the score, or the two big keys). Everything else is smaller, greyer, or folded behind one quiet row; expanded examples shown below each set.</p>
+    <a class="open" data-dir="c-calm-focus" href="#">Open ↗</a>
+    <iframe title="Direction C, calm focus" data-dir="c-calm-focus" loading="lazy"></iframe>
+  </section>
+  <section>
+    <h2>Current design (for reference)</h2>
+    <p>What the 7-game previews look like today.</p>
+    <a class="open" data-dir="current" href="#">Open ↗</a>
+    <iframe title="Current design" data-dir="current" loading="lazy"></iframe>
+  </section>
+</main>
+<script>
+  const src = (dir, game) => dir === 'current' ? `../${game}/${game}-preview.html` : `${dir}/${game}.html`;
+  function show(game) {
+    document.querySelectorAll('[data-game]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.game === game)));
+    document.querySelectorAll('iframe[data-dir]').forEach(f => { f.src = src(f.dataset.dir, game); });
+    document.querySelectorAll('a.open').forEach(a => { a.href = src(a.dataset.dir, game); });
+  }
+  document.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', () => show(b.dataset.game)));
+  show('volleyball');
+</script>
+</body>
+</html>

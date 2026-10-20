@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScoreEasy — HiFi vs Prototype audit</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:'Hanken Grotesk',sans-serif; background:#e7ece7; color:#14201a; }
+  header { padding:14px 20px; display:flex; align-items:center; gap:14px; }
+  h1 { font-size:16px; margin:0; }
+  button { font:inherit; font-weight:700; padding:8px 14px; border-radius:10px; border:1px solid #cfd8cf; background:#fff; cursor:pointer; }
+  .row { display:flex; gap:24px; align-items:flex-start; padding:18px 20px; border-top:1px solid #d8e0d8; }
+  .cell { display:flex; flex-direction:column; gap:8px; }
+  .cell .tag { font-family:'DM Mono',monospace; font-size:11px; color:#6b7a72; }
+  .frag { width:300px; min-height:600px; position:relative; }
+  .frag > div { position:static !important; width:300px !important; }
+  .frag [data-drags-parent] { display:none; }
+  iframe { width:300px; height:600px; border:0; border-radius:34px; background:#f4f6f3;
+           box-shadow:0 18px 40px -20px rgba(20,40,30,.35),0 0 0 1px rgba(20,40,30,.06); }
+  @keyframes geP{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes geGlow{0%,100%{box-shadow:0 8px 16px -10px rgba(18,147,106,.7)}50%{box-shadow:0 8px 22px -8px rgba(18,147,106,.95)}}
+  @keyframes hfP{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<header>
+  <h1>HiFi fragment (left) vs live prototype (right)</h1>
+  <button onclick="seed()">Seed demo data + reload</button>
+  <span class="tag" id="status"></span>
+</header>
+<div id="rows"></div>
+
+<script src="js/core.js"></script>
+<script src="sports/cricket.js"></script>
+<script src="sports/football.js"></script>
+<script src="sports/basketball.js"></script>
+<script src="sports/volleyball.js"></script>
+<script src="sports/kabaddi.js"></script>
+<script src="sports/badminton.js"></script>
+<script src="sports/tennis.js"></script>
+<script src="sports/hockey.js"></script>
+<script>
+// map: fragment file -> live route (routes with :id resolved after seeding)
+var PAIRS = [
+  ['5a-cricket-scorer-refined.html',      'score',  'cricket'],
+  ['6a-spectator-cricket-refined.html',   'watch',  'cricket'],
+  ['5b-football-scorer-refined.html',     'score',  'football'],
+  ['6b-spectator-football-refined.html',  'watch',  'football'],
+  ['5c-basketball-scorer-refined.html',   'score',  'basketball'],
+  ['6c-spectator-basketball-refined.html','watch',  'basketball'],
+  ['5d-volleyball-scorer-refined.html',   'score',  'volleyball'],
+  ['6d-spectator-volleyball-refined.html','watch',  'volleyball'],
+  ['5e-kabaddi-scorer-refined.html',      'score',  'kabaddi'],
+  ['6e-spectator-kabaddi-refined.html',   'watch',  'kabaddi'],
+  ['5f-badminton-scorer-refined.html',    'score',  'badminton'],
+  ['6f-spectator-badminton-refined.html', 'watch',  'badminton'],
+  ['5g-tennis-scorer-refined.html',       'score',  'tennis'],
+  ['6g-spectator-tennis-refined.html',    'watch',  'tennis'],
+  ['5h-hockey-scorer-refined.html',       'score',  'hockey'],
+  ['6h-spectator-hockey-refined.html',    'watch',  'hockey'],
+  ['3a-result-moment.html',               'result', '__done'],
+  ['3b-rematch-sheet.html',               'rematch','__done'],
+  ['3c-streaks-and-records.html',         'records', null],
+  ['4a-match-scheduler.html',             'schedule', null],
+  ['4b-ground-type.html',                 'ground', null],
+  ['4c-home-with-upcoming.html',          'home', null],
+];
+
+// one live match per sport (fresh), one finished badminton for result/rematch/records
+function seed() {
+  SE.store.reset();
+  var ids = {};
+  Object.keys(SE.sports).forEach(function (k) {
+    var def = SE.sports[k];
+    var t = def.sampleTeams || ['Alpha', 'Beta'];
+    ids[k] = SE.newMatch(k, [{ name: t[0] }, { name: t[1] }], JSON.parse(JSON.stringify(def.defaultConfig)));
+  });
+  var done = SE.newMatch('badminton', [{ name: 'Priya' }, { name: 'Meera' }], { games: 1, target: 11 });
+  for (var i = 0; i < 11; i++) SE.dispatch(done, 'point', { side: 0, name: 'Priya' });
+  ids.__done = done;
+  SE.store.update(function (s) {
+    s.scheduled.push({ sport: 'cricket', title: 'Reds vs Blues', when: 'Sat 5 PM' });
+    s.scheduled.push({ sport: 'volleyball', title: 'Hawks vs Wolves', when: '' });
+  });
+  localStorage.setItem('se-compare-ids', JSON.stringify(ids));
+  location.reload();
+}
+
+var ids = JSON.parse(localStorage.getItem('se-compare-ids') || '{}');
+document.getElementById('status').textContent = Object.keys(ids).length ? 'seeded' : 'not seeded — click Seed';
+
+var rows = document.getElementById('rows');
+PAIRS.forEach(function (p) {
+  var route = '#/' + p[1] + (p[2] ? '/' + (ids[p[2]] || '') : '');
+  var row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML =
+    '<div class="cell"><span class="tag">' + p[0] + '</span><div class="frag" data-src="reference/screens/' + p[0] + '"></div></div>' +
+    '<div class="cell"><span class="tag">' + route + '</span><iframe src="index.html' + route.replace('#', '%23').replace('%23', '#') + '"></iframe></div>';
+  rows.appendChild(row);
+});
+
+// fetch + inject fragments (self-contained inline-styled HTML)
+document.querySelectorAll('.frag').forEach(function (el) {
+  fetch(el.getAttribute('data-src')).then(function (r) { return r.text(); }).then(function (html) {
+    el.innerHTML = html;
+  });
+});
+</script>
+</body>
+</html>

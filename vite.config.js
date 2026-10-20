@@ -145,6 +145,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/.worktrees/**',
+      '**/.claude/**',
       '**/android/**/build/**',
       '**/ios/App/App/public/**',
     ],

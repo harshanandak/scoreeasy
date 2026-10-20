@@ -1,0 +1,584 @@
+<title>Basketball — design preview</title>
+<style>
+/* ============================================================
+   REAL app tokens — verbatim from the cricket refined screens
+   (--se-* / --primary / --font-mono, one hard 3px offset shadow)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --background: oklch(0.9782 0.0039 145.5458);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.9855 0.0026 145.5558);
+  --primary: oklch(0.6230 0.1688 149.1777);
+  --primary-foreground: oklch(1.0000 0 0);
+  --muted: oklch(0.9398 0.0035 145.5478);
+  --muted-foreground: oklch(0.5103 0 0);
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --destructive: oklch(0.5308 0.2178 29.2339);
+  --border: oklch(0 0 0);
+  --chart-5: oklch(0.3211 0 0);
+  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  --se-color-action: var(--primary);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: color-mix(in oklch, var(--muted-foreground) 62%, var(--background));
+  --se-color-line: var(--border);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-danger: oklch(0.49 0.17 29);
+  --se-color-danger-soft: oklch(0.96 0.04 29);
+  --se-radius-card: calc(var(--radius) + 4px);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.mono { font-family: var(--se-font-mono); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   PAGE — light landscape canvas, a rail of three phone frames
+   ============================================================ */
+.page { padding: 34px 30px 60px; }
+.page-head { max-width: 1300px; margin: 0 auto 26px; }
+.page-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+.page-sub { font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 7px; }
+.page-sub b { color: var(--se-color-ink); }
+.page-sub .g { color: var(--primary); }
+
+.rail { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.frame-cap { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--se-color-ink-faint); padding-left: 2px; }
+.frame-cap b { color: var(--se-color-ink); }
+.frame {
+  width: 380px; min-height: 760px;
+  border: 1px solid var(--se-color-line); border-radius: 22px;
+  background: var(--se-color-canvas); box-shadow: var(--shadow);
+  padding: 14px 14px 16px; display: flex; flex-direction: column;
+}
+
+/* ============================================================
+   Shared brutalist bits — icons, badge, topbar, tabs
+   ============================================================ */
+.ico { width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--se-color-line); border-radius: var(--radius); background: var(--se-color-surface);
+  font-size: 0.95rem; }
+.badge-live { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: var(--radius);
+  background: var(--accent); color: var(--se-color-action);
+  font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.badge-live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--se-color-action); }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+.topbar .t-mid { min-width: 0; }
+.topbar-title { font-size: 0.8125rem; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-sub { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--se-color-ink-muted); margin-top: 2px; }
+.topbar-actions { display: flex; align-items: center; gap: 7px; }
+
+.tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--se-color-line); border-radius: 999px;
+  background: var(--se-color-surface); margin-bottom: 13px; }
+.tab { flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--se-color-ink-muted); }
+.tab.on { background: var(--se-color-ink); color: var(--se-color-inverse); }
+
+/* ============================================================
+   BLACK HERO BOARD — the glance (State B, 3x3 reshape)
+   flat black · 1px ink border · ONE hard 3px shadow (cards only).
+   ============================================================ */
+.hero { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card); box-shadow: var(--shadow); padding: 14px 16px; }
+.hero-top { display: flex; align-items: center; justify-content: space-between; font-family: var(--se-font-mono);
+  font-size: 0.625rem; font-weight: 700; letter-spacing: 0.08em; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.hero-top .live { display: inline-flex; align-items: center; gap: 5px; color: var(--primary); text-transform: uppercase; font-weight: 800; }
+.hero-top .live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.hero-top .live b { color: color-mix(in oklch, var(--se-color-inverse) 78%, transparent); font-weight: 700; }
+
+.hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.team { min-width: 0; }
+.team .nm { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em;
+  color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
+.team .sc { font-family: var(--se-font-mono); font-size: 3.1rem; font-weight: 800; line-height: 0.9; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.team.r { text-align: right; }
+.team.lead .sc { color: var(--primary); }         /* leader green — the only accent */
+.hero-mid { text-align: center; padding: 0 4px; flex: none; }
+.hero-mid .pill { display: inline-block; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 800;
+  padding: 4px 10px; border: 1px solid color-mix(in oklch, var(--se-color-inverse) 40%, transparent); border-radius: var(--radius); }
+.hero-mid .k { font-family: var(--se-font-mono); font-size: 0.5rem; font-weight: 700; letter-spacing: 0.14em;
+  color: color-mix(in oklch, var(--se-color-inverse) 50%, transparent); margin-bottom: 5px; }
+
+.hero-to { display: flex; align-items: center; justify-content: space-between; margin-top: 10px;
+  font-family: var(--se-font-mono); font-size: 0.625rem; letter-spacing: 0.06em;
+  color: color-mix(in oklch, var(--se-color-inverse) 55%, transparent); }
+.hero-to .pips { letter-spacing: 0.12em; color: color-mix(in oklch, var(--se-color-inverse) 78%, transparent); }
+
+/* BONUS stamp — hard status rectangle on danger-soft, never green */
+.hero-bonus { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.stamp { font-family: var(--se-font-mono); font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 5px 10px; border-radius: 3px;
+  border: 1px solid var(--se-color-danger); background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+.hero-bonus .exp { font-family: var(--se-font-mono); font-size: 0.6875rem;
+  color: color-mix(in oklch, var(--se-color-inverse) 66%, transparent); }
+.hero-bonus .exp b { color: color-mix(in oklch, var(--se-color-inverse) 90%, transparent); font-weight: 700; }
+
+/* ONE context line — never stacked (precedence: final→bonus→run→margin) */
+.hero-note { margin-top: 12px; padding-top: 10px; text-align: center; font-family: var(--se-font-mono); font-size: 0.75rem;
+  border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 18%, transparent);
+  color: color-mix(in oklch, var(--se-color-inverse) 70%, transparent); }
+.hero-note b { color: var(--primary); font-weight: 800; }
+.hero-note .ink { color: color-mix(in oklch, var(--se-color-inverse) 92%, transparent); font-weight: 700; }
+
+/* quiet board footer — cast / share the board (no spectator noise on the board) */
+.board-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+  font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--se-color-ink-muted); }
+.board-foot .go { color: var(--primary); }
+
+/* ============================================================
+   SCORER — FLAT. No drop-shadows anywhere on the scoring console.
+   Read-only readout (State A) + foul micro-strip + mirrored pads.
+   ============================================================ */
+.readout { background: var(--se-color-ink); color: var(--se-color-inverse); border: 1px solid var(--se-color-line);
+  border-radius: var(--se-radius-card); padding: 11px 14px; }        /* FLAT — no shadow */
+.readout-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.readout .sc { font-family: var(--se-font-mono); font-size: 2rem; font-weight: 800; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.readout .nm { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.12em;
+  color: color-mix(in oklch, var(--se-color-inverse) 58%, transparent); }
+.readout .r { text-align: right; }
+.readout .lead .sc { color: var(--primary); }
+.readout .mid .pill { display: inline-block; font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800;
+  padding: 3px 9px; border: 1px solid color-mix(in oklch, var(--se-color-inverse) 40%, transparent); border-radius: var(--radius); }
+.readout .ctx { margin-top: 9px; padding-top: 8px; text-align: center; font-family: var(--se-font-mono); font-size: 0.6875rem;
+  border-top: 1px solid color-mix(in oklch, var(--se-color-inverse) 18%, transparent);
+  color: color-mix(in oklch, var(--se-color-inverse) 70%, transparent); }
+.readout .ctx b { color: var(--primary); font-weight: 800; }
+
+/* foul / bonus micro-strip — the one live state the board under-surfaces (FLAT, hairline) */
+.foulstrip { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px;
+  padding: 8px 11px; border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent);
+  border-radius: var(--se-radius-card); background: var(--se-color-surface); }
+.fteam { display: flex; align-items: center; gap: 7px; font-family: var(--se-font-mono); font-size: 0.5625rem;
+  font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-muted); }
+.fteam.r { flex-direction: row-reverse; text-align: right; }
+.pips { display: inline-flex; gap: 3px; }
+.pip { width: 8px; height: 8px; border-radius: 50%; border: 1px solid color-mix(in oklch, var(--se-color-line) 45%, transparent); background: transparent; }
+.pip.on { background: var(--se-color-ink); border-color: var(--se-color-ink); }
+.pip.warn { background: var(--se-color-danger); border-color: var(--se-color-danger); }
+.bonus-mini { font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em;
+  padding: 2px 6px; border-radius: 3px; border: 1px solid var(--se-color-danger);
+  background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+
+/* pads — two mirrored self-contained columns; fill the space, biggest key LOWEST */
+.pad { display: flex; gap: 12px; margin-top: 12px; flex: 1 1 auto; }
+.pad-div { width: 1px; align-self: stretch; background: color-mix(in oklch, var(--se-color-line) 30%, transparent); }
+.pcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pcol-lbl { text-align: center; font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink); margin-bottom: 1px; }
+
+/* secondary Foul / T-O — rare, so pinned to the TOP of the thumb-zone */
+.util { display: flex; gap: 8px; align-items: stretch; }
+.util-key { flex: 1; min-height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 46%, transparent); border-radius: 10px; background: var(--se-color-surface);
+  color: var(--se-color-ink-soft); font-family: var(--se-font-mono); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; cursor: pointer; }
+.util-key:active { background: var(--accent); }
+
+/* inline guided "Shooting foul?" — opens in place, pushes the pad down. NO modal. */
+.foul-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.foul-pop { display: none; }
+.foul-cb:checked ~ .foul-pop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 9px 10px; border: 1px solid color-mix(in oklch, var(--se-color-danger) 40%, var(--se-color-line));
+  border-radius: 10px; background: color-mix(in oklch, var(--se-color-danger-soft) 30%, var(--se-color-surface)); }
+.foul-q { width: 100%; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--se-color-danger); }
+.foul-opt { flex: 1 1 auto; min-height: 34px; border: 1px solid color-mix(in oklch, var(--se-color-danger) 34%, var(--se-color-line));
+  border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-ink);
+  font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+.foul-opt:active { background: var(--accent); }
+
+.key { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 1px solid var(--se-color-line); border-radius: 12px; background: var(--se-color-surface);
+  color: var(--se-color-ink); font-family: var(--se-font-mono); font-weight: 800; line-height: 0.9; cursor: pointer; }
+.key small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.12em; color: var(--se-color-ink-faint); }
+.key:active { transform: translateY(1px); background: var(--accent); }
+/* +2 ARC — the marquee value, green-inked, large (secondary), outer-aligned */
+.key-arc { width: 66%; min-height: 60px; font-size: 1.75rem; color: var(--primary); border-color: var(--primary); }
+.key-arc small { color: inherit; opacity: 0.85; }
+.pcol.l .key-arc { align-self: flex-start; }
+.pcol.r .key-arc { align-self: flex-end; }
+/* +1 INSIDE — the HUGE lowest key, the 90% 3x3 tap; grows to fill the column bottom */
+.key-inside { flex: 1 1 auto; min-height: 120px; font-size: 2.9rem; }
+
+/* control row — Undo (big, left thumb) · ⋯More (opens an inline sheet) */
+.ctrls { display: flex; gap: 8px; margin-top: 12px; }
+.ctrl { min-height: 46px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--se-color-line); border-radius: 10px; background: transparent; color: var(--se-color-ink);
+  font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+.ctrl-undo { flex: 0 0 74px; font-size: 1.05rem; }        /* FLAT — no shadow */
+.ctrl-more { flex: 1; }
+
+/* ⋯More — rare/management actions merged here; opens inline as a sheet (no blocking modal) */
+.more-cb { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.more-panel { display: none; }
+.more-cb:checked ~ .more-panel { display: block; margin-top: 10px; padding: 10px 12px 12px;
+  border: 1px solid var(--se-color-line); border-radius: 14px 14px 10px 10px; background: var(--se-color-surface); }
+.more-grab { width: 34px; height: 4px; border-radius: 99px; margin: 0 auto 8px;
+  background: color-mix(in oklch, var(--se-color-line) 30%, transparent); }
+.more-lbl { display: block; font-family: var(--se-font-mono); font-size: 0.5625rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--se-color-ink-faint); margin: 8px 0 6px; }
+.more-lbl:first-of-type { margin-top: 0; }
+.more-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.more-pill { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; flex: 1 1 auto;
+  border: 1px solid color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 999px; background: var(--se-color-surface);
+  color: var(--se-color-ink-soft); font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.more-pill:active { background: var(--accent); }
+.more-pill.end { border-color: var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-weight: 700; }
+
+/* ============================================================
+   LIVE tab — momentum (collapsed) · now-card · moments · presence
+   ============================================================ */
+.mom-d { margin-top: 13px; border: 1px solid color-mix(in oklch, var(--se-color-line) 22%, transparent);
+  border-radius: var(--se-radius-card); background: var(--se-color-surface); box-shadow: var(--shadow-2xs); }
+.mom-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 9px 12px; }
+.mom-d > summary::-webkit-details-marker { display: none; }
+.mom-d > summary .mi { font-size: 0.9rem; }
+.mom-d > summary .eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.mom-d > summary .r { margin-left: auto; font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-muted); }
+.mom-d > summary .r b { color: var(--se-color-ink); }
+.mom-d > summary .chev { color: var(--se-color-ink-muted); transition: transform 0.2s ease; }
+.mom-d[open] > summary .chev { transform: rotate(180deg); }
+.mom { display: flex; align-items: center; gap: 3px; height: 52px; padding: 2px 12px 12px; }
+.bar { flex: 1; border-radius: 2px; background: color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.bar.up { align-self: flex-start; background: var(--primary); }        /* leader extends — green up */
+.bar.dn { align-self: flex-end; background: color-mix(in oklch, var(--se-color-danger) 78%, transparent); }
+.bar.now { background: transparent; border: 1px dashed color-mix(in oklch, var(--se-color-line) 40%, transparent); align-self: stretch; }
+
+.now-card { margin-top: 13px; border: 1px solid var(--se-color-line); border-radius: var(--se-radius-card);
+  background: var(--se-color-surface); box-shadow: var(--shadow-2xs); overflow: hidden; }
+.nrow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; padding: 8px 12px;
+  font-family: var(--se-font-mono); font-size: 0.75rem; align-items: center; }
+.nrow + .nrow { border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.nrow .who { font-family: var(--se-font-sans); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nrow .who .dot { color: var(--primary); margin-right: 4px; }
+.nrow .mut { color: var(--se-color-ink-muted); }
+.nrow.head { background: color-mix(in oklch, var(--se-color-line) 5%, transparent); font-size: 0.5625rem; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-faint); }
+.nrow.head .who { font-family: var(--se-font-mono); }
+.nfloor { padding: 7px 12px; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent);
+  font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-muted); display: flex; justify-content: space-between; }
+.nfloor b { color: var(--se-color-ink); }
+
+.moments { margin-top: 14px; }
+.moments .eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--se-color-ink-faint); }
+.moment { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid color-mix(in oklch, var(--se-color-line) 16%, transparent); }
+.moment:first-of-type { border-top: none; }
+.moment .tm { font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-faint); flex: none; width: 44px; padding-top: 1px; }
+.moment .tx { font-size: 0.8125rem; line-height: 1.35; }
+.moment .tx .grn { color: var(--primary); font-weight: 800; }
+.moment .tx .dgr { color: var(--se-color-danger); font-weight: 800; }
+.moment .tx b { font-weight: 700; }
+
+.pres { display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+  font-family: var(--se-font-mono); font-size: 0.625rem; color: var(--se-color-ink-muted); }
+.follow { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--se-color-action);
+  background: var(--se-color-action); color: var(--se-color-inverse); border-radius: 999px; padding: 7px 15px;
+  font-family: var(--se-font-sans); font-size: 0.75rem; font-weight: 700; box-shadow: var(--shadow-2xs); }
+
+.spacer { flex: 1 1 auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .key:active, .ctrl:active { transform: none; }
+}
+</style>
+
+<div class="page">
+  <div class="page-head">
+    <div class="page-title">Basketball &mdash; design preview</div>
+    <div class="page-sub">3&times;3 half-court &middot; <b>Ballers 18</b> vs <b>Hoopers 15</b> &middot; first to 21 &middot; <span class="g">Ballers on a 6&ndash;0 run</span> &middot; Ballers in bonus</div>
+  </div>
+
+  <div class="rail">
+
+    <!-- ============================================================
+         FRAME 1 — MAIN SCOREBOARD (glance; one record, banned-list clean)
+         ============================================================ -->
+    <div class="col">
+      <div class="frame-cap">Main <b>scoreboard</b></div>
+      <div class="frame">
+        <div class="hero">
+          <div class="hero-top">
+            <span class="live"><span class="d"></span>Live <b>&middot; Sunday Cup 3&times;3 &mdash; Final</b></span>
+            <span>1st to 21</span>
+          </div>
+          <div class="hero-row">
+            <div class="team lead">
+              <div class="nm">BAL</div>
+              <div class="sc">18</div>
+            </div>
+            <div class="hero-mid">
+              <div class="k">TARGET</div>
+              <div class="pill">&rarr;21</div>
+            </div>
+            <div class="team r">
+              <div class="nm">HOO</div>
+              <div class="sc">15</div>
+            </div>
+          </div>
+          <div class="hero-to">
+            <span>TO <span class="pips">&#9670;&#9671;</span></span>
+            <span class="pips">&#9671;&#9670; TO</span>
+          </div>
+          <div class="hero-bonus">
+            <span class="stamp">Bonus</span>
+            <span class="exp">Ballers in bonus &middot; <b>next foul = 2 FT</b></span>
+          </div>
+          <!-- ONE context line (run wins precedence over margin) -->
+          <div class="hero-note">Ballers on a <b>6&ndash;0 run</b> &middot; biggest lead <span class="ink">+3</span></div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="board-foot">
+          <span>Cast to screen <span class="go">&#8599;</span></span>
+          <span>Share live link <span class="go">&#8599;</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         FRAME 2 — LEAN SCORER (flat · thumb-zone · inline sub-flows)
+         ============================================================ -->
+    <div class="col">
+      <div class="frame-cap">Lean <b>scorer</b></div>
+      <div class="frame">
+        <!-- top bar (thin, top-reach) -->
+        <div class="topbar">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <span class="ico" aria-hidden="true">&#8249;</span>
+            <div class="t-mid">
+              <div class="topbar-title">Ballers vs Hoopers</div>
+              <div class="topbar-sub">Sunday Cup 3&times;3 &middot; &rarr;21</div>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <span class="badge-live"><span class="d"></span>Live</span>
+            <span class="ico" aria-hidden="true">&#8801;</span>
+          </div>
+        </div>
+
+        <!-- read-only compact board mirror (never tapped) -->
+        <div class="readout">
+          <div class="readout-row">
+            <div class="lead">
+              <div class="nm">BAL</div>
+              <div class="sc">18</div>
+            </div>
+            <div class="mid"><span class="pill">&rarr;21</span></div>
+            <div class="r">
+              <div class="nm">HOO</div>
+              <div class="sc">15</div>
+            </div>
+          </div>
+          <div class="ctx"><b>Ballers +3</b> &middot; win by 2</div>
+        </div>
+
+        <!-- foul / bonus micro-strip (glance, not tap) -->
+        <div class="foulstrip">
+          <div class="fteam">
+            <span>BAL</span>
+            <span class="pips">
+              <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+              <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip warn"></span>
+            </span>
+            <span class="bonus-mini">Bonus</span>
+          </div>
+          <div class="fteam r">
+            <span>HOO</span>
+            <span class="pips">
+              <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+              <span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- scoring pads — mirrored columns. Rare Foul/T-O on TOP; +2 ARC marquee;
+             +1 INSIDE huge, fills the bottom of the thumb-zone. -->
+        <div class="pad">
+          <div class="pcol l">
+            <div class="pcol-lbl">Ballers</div>
+            <input type="checkbox" id="foulL" class="foul-cb" aria-hidden="true">
+            <div class="util">
+              <label for="foulL" class="util-key">Foul</label>
+              <button class="util-key" type="button">T/O</button>
+            </div>
+            <div class="foul-pop">
+              <span class="foul-q">Shooting foul?</span>
+              <button class="foul-opt" type="button">+1 FT</button>
+              <button class="foul-opt" type="button">+2 FT</button>
+              <button class="foul-opt" type="button">Personal</button>
+            </div>
+            <button class="key key-arc" type="button">+2<small>ARC</small></button>
+            <button class="key key-inside" type="button">+1<small>INSIDE</small></button>
+          </div>
+          <div class="pad-div"></div>
+          <div class="pcol r">
+            <div class="pcol-lbl">Hoopers</div>
+            <input type="checkbox" id="foulR" class="foul-cb" aria-hidden="true">
+            <div class="util">
+              <label for="foulR" class="util-key">Foul</label>
+              <button class="util-key" type="button">T/O</button>
+            </div>
+            <div class="foul-pop">
+              <span class="foul-q">Shooting foul?</span>
+              <button class="foul-opt" type="button">+1 FT</button>
+              <button class="foul-opt" type="button">+2 FT</button>
+              <button class="foul-opt" type="button">Personal</button>
+            </div>
+            <button class="key key-arc" type="button">+2<small>ARC</small></button>
+            <button class="key key-inside" type="button">+1<small>INSIDE</small></button>
+          </div>
+        </div>
+
+        <!-- control row: Undo (big, left thumb) · ⋯More (inline sheet) -->
+        <input type="checkbox" id="moreSheet" class="more-cb" aria-hidden="true">
+        <div class="ctrls">
+          <button class="ctrl ctrl-undo" type="button" aria-label="Undo last score">&#8617;</button>
+          <label for="moreSheet" class="ctrl ctrl-more">&#8943; More</label>
+        </div>
+        <!-- rare / management actions merged into More (never on the main surface) -->
+        <div class="more-panel" role="menu">
+          <div class="more-grab"></div>
+          <span class="more-lbl">Correct</span>
+          <div class="more-row">
+            <button class="more-pill" type="button">Correct last</button>
+            <button class="more-pill" type="button">Change points</button>
+          </div>
+          <span class="more-lbl">Match</span>
+          <div class="more-row">
+            <button class="more-pill" type="button">Substitution</button>
+            <button class="more-pill" type="button">Technical foul</button>
+            <button class="more-pill" type="button">Edit setup</button>
+            <button class="more-pill" type="button">Share live &#8599;</button>
+          </div>
+          <span class="more-lbl">Finish</span>
+          <div class="more-row">
+            <button class="more-pill end" type="button">End game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         FRAME 3 — LIVE spectator tab (hero + collapsed momentum + now + feed)
+         ============================================================ -->
+    <div class="col">
+      <div class="frame-cap"><b>Live</b></div>
+      <div class="frame">
+        <div class="topbar">
+          <span class="ico" aria-hidden="true">&#8249;</span>
+          <div style="text-align:center;flex:1;min-width:0;">
+            <div class="topbar-title">Sunday Cup 3&times;3 &middot; Final</div>
+            <div class="badge-live" style="margin-top:4px;"><span class="d"></span>Live</div>
+          </div>
+          <span class="ico" aria-hidden="true">&#8599;</span>
+        </div>
+
+        <div class="tabs">
+          <span class="tab on">Live</span>
+          <span class="tab">Box</span>
+          <span class="tab">Stats</span>
+        </div>
+
+        <!-- HERO = glanceable record (State B) -->
+        <div class="hero">
+          <div class="hero-top">
+            <span class="live"><span class="d"></span>Live</span>
+            <span>1st to 21</span>
+          </div>
+          <div class="hero-row">
+            <div class="team lead">
+              <div class="nm">BALLERS</div>
+              <div class="sc">18</div>
+            </div>
+            <div class="hero-mid">
+              <div class="k">TARGET</div>
+              <div class="pill">&rarr;21</div>
+            </div>
+            <div class="team r">
+              <div class="nm">HOOPERS</div>
+              <div class="sc">15</div>
+            </div>
+          </div>
+          <div class="hero-bonus">
+            <span class="stamp">Bonus</span>
+            <span class="exp">Ballers in bonus &middot; <b>next foul = 2 FT</b></span>
+          </div>
+          <div class="hero-note">Ballers on a <b>6&ndash;0 run</b> &middot; biggest lead <span class="ink">+3</span></div>
+        </div>
+
+        <!-- momentum · run & lead tracker — collapsed behind an icon toggle -->
+        <details class="mom-d">
+          <summary>
+            <span class="mi">&#128202;</span>
+            <span class="eyebrow">Momentum &middot; run &amp; lead</span>
+            <span class="r">biggest lead <b>+3</b> &middot; <b>2</b> lead changes</span>
+            <span class="chev">&#9662;</span>
+          </summary>
+          <div class="mom">
+            <div class="bar dn" style="height:30%"></div>
+            <div class="bar up" style="height:44%"></div>
+            <div class="bar dn" style="height:26%"></div>
+            <div class="bar up" style="height:58%"></div>
+            <div class="bar up" style="height:70%"></div>
+            <div class="bar dn" style="height:22%"></div>
+            <div class="bar up" style="height:82%"></div>
+            <div class="bar up" style="height:64%"></div>
+            <div class="bar up" style="height:92%"></div>
+            <div class="bar up" style="height:78%"></div>
+            <div class="bar now" style="height:50%"></div>
+          </div>
+        </details>
+
+        <!-- now-card: who's hot right now -->
+        <div class="now-card">
+          <div class="nrow head"><span class="who">Top scorers</span><span>PTS</span><span>ARC</span><span>PF</span></div>
+          <div class="nrow"><span class="who"><span class="dot">&#9679;</span>Arjun Nair</span><span>9</span><span class="mut">2</span><span class="mut">1</span></div>
+          <div class="nrow"><span class="who">Sameer Rao</span><span>8</span><span class="mut">2</span><span class="mut">1</span></div>
+          <div class="nfloor"><span>On floor &middot; <b>BAL 3</b> &middot; <b>HOO 3</b></span><span>Ballers +3</span></div>
+        </div>
+
+        <!-- key moments feed -->
+        <div class="moments">
+          <div class="eyebrow" style="display:block;margin-bottom:4px;">Key moments</div>
+          <div class="moment"><span class="tm">18&ndash;15</span><span class="tx"><span class="grn">ARC 2!</span> Arjun from behind the arc &mdash; <b>Ballers +3</b></span></div>
+          <div class="moment"><span class="tm">17&ndash;15</span><span class="tx"><b>&#9650; 6&ndash;0 RUN</b> since the Hoopers timeout</span></div>
+          <div class="moment"><span class="tm">15&ndash;15</span><span class="tx"><span class="dgr">BONUS</span> &mdash; Ballers over the foul limit</span></div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="pres">
+          <span>&#128065; 118 watching</span>
+          <span class="follow">Following &#10003;</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
