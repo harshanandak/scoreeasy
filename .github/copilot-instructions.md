@@ -32,7 +32,7 @@ Reject your own diff if it breaks one of these.
 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
 3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
-5. **Assuming the folder name.** This directory is `Downloads/Volleyball`; the project is Score Easy and volleyball is one sport among several.
+5. **Assuming the folder name.** This directory is `scoreeasy` (it was `Volleyball` until 2026-09); the project is Score Easy and volleyball is one sport among several.
 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
 7. **Leaving work stranded locally.** Config and code both need pushing; a session that ends unpushed loses the work.
 
