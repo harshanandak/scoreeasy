@@ -77,3 +77,42 @@ This is the v1 release cut: ship it, don't polish it (see the shipping regime in
 
 Use the 7-dimension rubric per the `/dev` decision gate. Confidence ≥ 80%: proceed and document
 the choice in the PR. Below 80%: stop and ask Harsha.
+
+## Technical Research
+
+**Sources:** the approved mockups (the engine is already proven against 280 contrast checks in
+`e-broadcast/arena.html`), the codebase map (below), and a check on StyleX vs Tailwind (StyleX would
+add `@stylexjs/unplugin` to Vite; Tailwind v4 is already wired through `@theme` in `src/index.css`).
+The `parallel-deep-research` skill is not installed in this environment, so web research was
+limited to that check. The colour maths is standard OKLab/OKLCH + WCAG 2.x relative luminance.
+
+### Codebase facts this plan depends on
+
+- One design: `src/designs/design1-mono/` (mounted at `src/App.jsx:5`).
+- Shared score surface: `<button className="mono-arena-half">` in `MonoQuickMatch.jsx` (~2940), `scoring/MonoSetsLiveScore.jsx` (~706–750) and `scoring/MonoGoalsLiveScore.jsx`; styles in `mono.css` (`.mono-arena-*` ~892–1112, `--score-accent`).
+- `teamAccent()` (lead colouring) is duplicated in `MonoQuickMatch.jsx:2764`, `MonoSetsLiveScore.jsx:593`, `MonoGoalsLiveScore.jsx:452`, `MonoTennisLiveScore.jsx:752` (tennis is out of scope and stays as is).
+- Team colour data: `convex/live.ts:101-102` (`create` args) and `teamMetaValidator` (`:620`) already carry an optional `color`; `MonoQuickMatch.jsx:772-773` never sends it.
+- Draft persistence: `saveData('se_quickmatch_draft_${sport}')` effect, `MonoQuickMatch.jsx:586-619`.
+- DRY: the only colour helper in `src` is `theme/sportsTokens.js:153-204` (`getReadableTextColor`, WCAG only, no OKLCH normalisation). The new engine is a superset and lives in `src/lib/teamColour.js`; `getReadableTextColor` keeps its current callers.
+- Tests: vitest via `vite.config.js` (`test` block, jsdom, `src/test/setup.js`), co-located `*.test.js(x)`. The exclude list has `**/.worktrees/**`; the baseline run confirms whether tests run inside this worktree.
+
+### OWASP Top 10
+
+| Category | Applies? | Mitigation |
+|---|---|---|
+| A03 Injection (CSS) | **Yes.** A scorer-typed colour is rendered into `style` on the spectator page. A crafted string (`red;background:url(//x)`) could inject CSS or trigger outside requests. | Client: `normaliseHex()` accepts only `^#?[0-9a-f]{6}$` (or 3-digit), otherwise the default colour; only engine-computed values ever reach `style`. Server: `live.create` drops a non-hex `color` before storing it. |
+| A01 Broken access control | Low. `live.create` is already an `authedMutation`; meta is a whitelisted projection. | No new read paths; colour rides the existing whitelist. |
+| A04 Insecure design | Low. Readability is a safety property for a courtside scorer. | Contrast gates are unit tests over presets plus edge colours. |
+| A05 Misconfiguration / A06 Vulnerable components | No new dependency. | No new dependency. |
+| A09 Logging | No. | — |
+| Others (A02, A07, A08, A10) | Not applicable. | — |
+
+### TDD scenarios
+
+1. **Happy path:** `deriveTeamColours('#d62828','#1d4ed8','light')` → both teams `deep`, white on-colour, every label ≥ 4.5:1 on hi/core/lo/sheen, numeral on scrim ≥ 7.5:1.
+2. **All presets:** for each of Red v Blue, Red v Maroon, Yellow v White, Black v Green, Purple v Orange, Sky v Navy, every contrast row from `report()` passes.
+3. **Clash:** `#e11d2a` v `#e11d2b` (near-identical) → ΔE between cores ≥ 0.15 after the split, and each team keeps its hue (within ±10°).
+4. **Bad input:** `normaliseHex('red;background:url(x)')` → `null`; `deriveTeamColours` with invalid input falls back to the defaults, never throws.
+5. **Extremes:** `#000000` v `#000000`, `#ffffff` v `#ffff00`, neon `#39ff14` → all gates pass.
+6. **Integration:** the quick-match volleyball scoring screen renders both halves with `--team-a-core`/`--team-b-core`. A tap still adds a point and undo still restores it (existing tests stay green). After a refresh the colours restore from the draft.
+7. **Server:** `live.create` with `color: 'url(x)'` stores no colour; with `'#1d4ed8'` it stores it.
