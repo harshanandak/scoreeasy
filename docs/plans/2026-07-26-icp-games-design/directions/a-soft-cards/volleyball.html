@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volleyball — Direction A · Soft cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DIRECTION A · SOFT CARDS — palette proposal
+   Contrast (WCAG, measured): ink on surface 18.5:1 · ink on hero wash 16.4:1
+   ink-2 on canvas 5.9:1 · ink-3 on canvas 4.5:1 · white on accent 5.4:1
+   accent-ink on surface 6.7:1 · warn-ink on warn-soft 5.4:1 · danger-ink on danger-soft 5.8:1
+   ============================================================ */
+:root {
+  --canvas: #f6f4ef;          /* warm off-white page */
+  --surface: #ffffff;         /* cards */
+  --surface-sunk: #efede7;    /* segmented-control track, pressed */
+  --ink: #121417;             /* score digits + primary text */
+  --ink-2: #5a5f66;           /* secondary text */
+  --ink-3: #6b7077;           /* tertiary labels (still AA on canvas) */
+  --hairline: rgba(18, 20, 23, 0.07);
+  --accent: #1d7a46;          /* field green, deepened so white text passes */
+  --accent-ink: #166a3b;      /* green used as text */
+  --accent-live: #22a35a;     /* live dot only (non-text) */
+  --accent-soft: #e8f5ed;     /* soft green fill */
+  --hero-wash: linear-gradient(150deg, #e9f6ee 0%, #f3faf6 46%, #e6f5f1 100%);
+  --team-a: #4f78b5;          /* Royals / Warriors pip */
+  --team-a-tint: #e7eef8;
+  --team-b: #c27a43;          /* Strikers / Titans pip */
+  --team-b-tint: #f8ede3;
+  --warn-ink: #8a5a00;  --warn-soft: #fff3dc;
+  --danger-ink: #a8322a; --danger-soft: #fdeceb;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --shadow: 0 1px 2px rgba(18,20,23,.04), 0 10px 30px -12px rgba(18,20,23,.14);
+  --shadow-soft: 0 1px 2px rgba(18,20,23,.03), 0 6px 18px -10px rgba(18,20,23,.10);
+  --font: Geist, -apple-system, "SF Pro Text", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font); background: #ebe8e1; color: var(--ink); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+/* ---------- presentation page ---------- */
+.page { max-width: 1320px; margin: 0 auto; padding: 32px 24px 48px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.page-title { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.page-sub { margin-top: 4px; font-size: 14px; color: var(--ink-2); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-2); background: var(--surface); padding: 4px 9px 4px 4px; border-radius: 99px; box-shadow: var(--shadow-soft); }
+.sw i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--hairline); }
+.frames { display: flex; gap: 28px; justify-content: center; align-items: flex-start; }
+.col { flex: 0 0 390px; }
+.cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin: 0 6px 10px; }
+.cap b { color: var(--ink); font-weight: 600; }
+.phone { position: relative; width: 390px; height: 844px; background: var(--canvas); border-radius: 40px; overflow: hidden; box-shadow: 0 30px 60px -30px rgba(18,20,23,.35), 0 0 0 1px rgba(18,20,23,.05); display: flex; flex-direction: column; }
+.phone .scroll { flex: 1; overflow-y: auto; padding: 0 16px 24px; scrollbar-width: none; }
+.status { height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 14px; font-weight: 600; }
+.status .r { letter-spacing: 1px; font-size: 11px; }
+@media (max-width: 1260px) { .frames { flex-wrap: wrap; } }
+@media (max-width: 440px) {
+  .page { padding: 0; }
+  .page-head { padding: 20px 16px 4px; }
+  .frames { gap: 32px; }
+  .col { flex: 1 1 100%; }
+  .cap { margin: 0 16px 8px; }
+  .phone { width: 100%; height: 844px; border-radius: 0; box-shadow: none; }
+}
+
+/* ---------- shared app pieces ---------- */
+.nav { display: flex; align-items: center; gap: 10px; padding: 6px 0 14px; }
+.back { width: 44px; height: 44px; margin-left: -10px; display: grid; place-items: center; font-size: 30px; line-height: 1; color: var(--ink); font-weight: 300; }
+.nav-t { flex: 1; min-width: 0; }
+.nav-t .t { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.nav-t .s { font-size: 13px; color: var(--ink-2); margin-top: 1px; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-soft); font-size: 18px; color: var(--ink); }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--accent-ink); }
+.live .d { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-live); box-shadow: 0 0 0 4px rgba(34,163,90,.16); }
+
+.card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hero { background: var(--hero-wash); border-radius: 24px; box-shadow: var(--shadow); padding: 18px 20px 20px; }
+
+/* volleyball hero */
+.vb-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--ink-2); }
+.teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; margin-top: 14px; }
+.team { display: flex; flex-direction: column; gap: 2px; }
+.team.r { align-items: flex-end; text-align: right; }
+.code { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.pip { width: 9px; height: 9px; border-radius: 50%; }
+.pip.a { background: var(--team-a); } .pip.b { background: var(--team-b); }
+.srv { color: var(--accent); font-size: 17px; line-height: 1; }
+.big { font-size: 96px; font-weight: 600; letter-spacing: -0.05em; line-height: 0.95; color: var(--ink); }
+.big.trail { color: var(--ink); opacity: 1; }
+.lead-bar { height: 4px; width: 44px; border-radius: 4px; background: var(--accent); margin-top: 8px; }
+.phase { align-self: center; text-align: center; padding: 0 6px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.dots { display: inline-flex; gap: 4px; vertical-align: middle; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(18,20,23,.14); }
+.dots i.on { background: var(--ink); }
+.dots i.g.on { background: var(--accent); }
+.facts { display: grid; grid-template-columns: 1fr auto 1fr; row-gap: 8px; margin-top: 18px; font-size: 13px; color: var(--ink-2); }
+.facts .r { text-align: right; }
+.facts .m { text-align: center; color: var(--ink-3); padding: 0 8px; }
+.setline { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(18,20,23,.06); display: flex; justify-content: center; gap: 14px; font-size: 14px; color: var(--ink-2); }
+.setline .now { color: var(--ink); font-weight: 600; }
+
+.note { margin: 22px 4px 0; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.note .k { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgba(29,122,70,.25); vertical-align: -1px; margin-right: 4px; }
+
+/* grouped list (iOS inset-grouped) */
+.group-h { font-size: 13px; color: var(--ink-2); margin: 26px 4px 8px; }
+.group { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-soft); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px; font-size: 15px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--hairline); }
+.row .k { width: 78px; flex: 0 0 auto; font-size: 13px; color: var(--ink-2); }
+.row .v { flex: 1; line-height: 1.4; }
+.row .mut { color: var(--ink-2); }
+.chev { color: var(--ink-3); margin-left: auto; font-size: 13px; }
+
+/* segmented control */
+.seg { display: flex; background: var(--surface-sunk); border-radius: 12px; padding: 3px; margin: 2px 0 16px; }
+.seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 500; color: var(--ink-2); padding: 9px 0; border-radius: 9px; min-height: 40px; }
+.seg span.on { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(18,20,23,.10); }
+
+/* details */
+details.mom { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-soft); margin-top: 12px; }
+details.mom summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 12px 16px; font-size: 15px; cursor: pointer; }
+details.mom summary::-webkit-details-marker { display: none; }
+details.mom summary .lbl { color: var(--ink-2); font-size: 13px; }
+details.mom summary .v { flex: 1; text-align: right; }
+details.mom[open] .chev { transform: rotate(180deg); }
+.worm-cap { display: flex; justify-content: space-between; padding: 0 16px; font-size: 12px; color: var(--ink-2); }
+.worm-cap b { color: var(--accent-ink); font-weight: 600; }
+.worm { display: flex; align-items: flex-end; gap: 6px; height: 64px; padding: 8px 16px 16px; }
+.worm .bar { flex: 1; border-radius: 5px; background: rgba(18,20,23,.08); }
+.worm .bar.hi { background: #7cc59a; }
+.worm .bar.wk { background: #e7b2ab; }
+.worm .bar.now { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(18,20,23,.12); }
+
+.moment .t { flex: 0 0 34px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.moment .t .srv { font-size: 13px; }
+.tag { font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 6px; margin-right: 4px; }
+.tag.g { background: var(--accent-soft); color: var(--accent-ink); }
+.tag.w { background: var(--warn-soft); color: var(--warn-ink); }
+.tag.d { background: var(--danger-soft); color: var(--danger-ink); }
+.tag.n { background: var(--surface-sunk); color: var(--ink); }
+
+.pres { display: flex; justify-content: space-between; margin: 22px 4px 0; font-size: 14px; color: var(--ink-2); }
+.pres .follow { color: var(--accent-ink); font-weight: 600; }
+
+.foot { display: flex; justify-content: space-between; padding: 14px 4px 4px; font-size: 14px; color: var(--ink-2); }
+.foot span { min-height: 44px; display: inline-flex; align-items: center; }
+
+/* ---------- scorer ---------- */
+.scorer { display: flex; flex-direction: column; height: 100%; padding: 0 16px calc(12px + env(safe-area-inset-bottom)); }
+.mini { padding: 14px 18px; border-radius: 22px; }
+.mini .teams { margin-top: 0; }
+.mini .big { font-size: 60px; }
+.mini .facts { margin-top: 10px; }
+.narr { margin: 14px 4px 0; font-size: 16px; line-height: 1.4; color: var(--ink); }
+.narr b { font-weight: 600; }
+.rallies { display: flex; align-items: center; gap: 6px; margin: 12px 4px 0; font-size: 13px; color: var(--ink-2); }
+.rallies .lbl { margin-right: 4px; }
+.rallies i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 600; }
+.rallies i.l { background: var(--team-a-tint); color: #2d4f80; }
+.rallies i.r { background: var(--team-b-tint); color: #7a4518; }
+.rallies i.next { box-shadow: inset 0 0 0 1.5px rgba(18,20,23,.14); }
+.spacer { flex: 1; min-height: 12px; }
+.ctrl { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+.ctrl button { min-height: 56px; border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 6px 8px; }
+.ctrl .undo { flex-direction: row; gap: 8px; justify-content: flex-start; padding-left: 12px; text-align: left; }
+.ctrl .undo .g { font-size: 20px; }
+.ctrl .undo .w { font-size: 12px; line-height: 1.25; color: var(--ink-2); }
+.ctrl .undo .w b { display: block; font-size: 16px; font-weight: 600; color: var(--ink); }
+.ctrl .to .l { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+.caps { display: flex; justify-content: space-between; margin: 16px 6px 6px; font-size: 13px; color: var(--ink-2); }
+.targets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.target { min-height: clamp(168px, 26vh, 210px); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.target .tc { display: inline-flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 600; }
+.target .tb { font-size: 72px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+.target .tw { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.target.serving { background: var(--hero-wash); box-shadow: var(--shadow), inset 0 0 0 1.5px rgba(29,122,70,.35); }
+.target.serving .tw { color: var(--accent-ink); }
+
+/* more sheet (CSS-only) */
+.sheet-cb { position: absolute; opacity: 0; pointer-events: none; }
+.backdrop { position: absolute; inset: 0; background: rgba(18,20,23,.22); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
+.sheet { position: absolute; left: 8px; right: 8px; bottom: 8px; background: var(--canvas); border-radius: 28px; padding: 10px 16px 18px; transform: translateY(110%); transition: transform .25s ease; z-index: 6; box-shadow: 0 -10px 40px -10px rgba(18,20,23,.25); }
+.sheet-cb:checked ~ .backdrop { opacity: 1; pointer-events: auto; }
+.sheet-cb:checked ~ .sheet { transform: none; }
+.grab { width: 36px; height: 5px; border-radius: 3px; background: rgba(18,20,23,.16); margin: 0 auto 10px; }
+.sheet-h { display: flex; justify-content: space-between; align-items: center; font-size: 17px; font-weight: 600; }
+.sheet .group-h { margin-top: 16px; }
+.sheet .row { min-height: 48px; }
+.sheet .end { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.sheet .end button { min-height: 50px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-soft); font-weight: 600; }
+.sheet .end .danger { color: var(--danger-ink); }
+.switch { margin-left: auto; width: 44px; height: 26px; border-radius: 13px; background: var(--surface-sunk); position: relative; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <div>
+      <div class="page-title">Volleyball · Direction A — Soft cards</div>
+      <div class="page-sub">Royals vs Strikers · sets 1–1 · set 3 · ROY 22–19, serving, on a 4-point run</div>
+    </div>
+    <div class="swatches" aria-label="Palette">
+      <span class="sw"><i style="background:var(--canvas)"></i>canvas</span>
+      <span class="sw"><i style="background:var(--surface)"></i>surface</span>
+      <span class="sw"><i style="background:var(--ink)"></i>ink</span>
+      <span class="sw"><i style="background:var(--ink-2)"></i>ink-2</span>
+      <span class="sw"><i style="background:var(--accent)"></i>accent</span>
+      <span class="sw"><i style="background:var(--hero-wash)"></i>hero wash</span>
+      <span class="sw"><i style="background:var(--team-a)"></i>team A</span>
+      <span class="sw"><i style="background:var(--team-b)"></i>team B</span>
+    </div>
+  </div>
+
+  <div class="frames">
+
+    <!-- ========== 1 · MAIN SCOREBOARD ========== -->
+    <div class="col">
+      <div class="cap"><b>1 · Main scoreboard</b><span>read across a room</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="r">●●● ▮</span></div>
+        <div class="scroll" style="display:flex;flex-direction:column;">
+          <div style="flex:1;min-height:40px"></div>
+          <div class="hero">
+            <div class="vb-top"><span>Sunday Cup · Final</span><span class="live"><span class="d"></span>Live</span></div>
+            <div class="teams">
+              <div class="team">
+                <span class="code"><span class="srv">▸</span><span class="pip a"></span>ROY</span>
+                <span class="big num">22</span>
+                <span class="lead-bar" title="Leading"></span>
+              </div>
+              <div class="phase">Set 3</div>
+              <div class="team r">
+                <span class="code">STR<span class="pip b"></span></span>
+                <span class="big num">19</span>
+                <span style="height:12px"></span>
+              </div>
+            </div>
+            <div class="facts">
+              <span>Sets <span class="dots"><i class="on"></i><i></i><i></i></span></span>
+              <span class="m">—</span>
+              <span class="r"><span class="dots"><i class="on"></i><i></i><i></i></span> Sets</span>
+              <span>Timeouts <span class="dots"><i class="g on"></i><i class="g on"></i></span></span>
+              <span class="m"></span>
+              <span class="r"><span class="dots"><i class="g on"></i><i></i></span> Timeouts</span>
+            </div>
+            <div class="setline num"><span>25–21</span><span>·</span><span>23–25</span><span>·</span><span class="now">22▸</span></div>
+          </div>
+          <p class="note"><span class="k"></span>Green bar = leading side · <span class="srv">▸</span> serve glyph flips on side-out.<br>Reads across a room · never computes. No feed, no charts, one accent.</p>
+          <div style="flex:1.4;min-height:40px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 2 · LEAN SCORER ========== -->
+    <div class="col">
+      <div class="cap"><b>2 · Lean scorer</b><span>thumb-zone, one tap per rally</span></div>
+      <div class="phone">
+        <input type="checkbox" id="more" class="sheet-cb" aria-hidden="true">
+        <div class="status"><span>9:41</span><span class="r">●●● ▮</span></div>
+        <div class="scorer">
+          <div class="nav">
+            <span class="back" aria-hidden="true">‹</span>
+            <div class="nav-t"><div class="t">Sunday Cup · Final</div><div class="s">BO5 · Set 3 · To 25 · Win by 2</div></div>
+            <span class="live"><span class="d"></span>Live</span>
+            <label for="more" class="icon-btn" aria-label="More">⋯</label>
+          </div>
+
+          <div class="hero mini" aria-label="Score (read-only)">
+            <div class="teams">
+              <div class="team">
+                <span class="code"><span class="srv">▸</span><span class="pip a"></span>ROY</span>
+                <span class="big num">22</span>
+              </div>
+              <div class="phase">Set 3</div>
+              <div class="team r">
+                <span class="code">STR<span class="pip b"></span></span>
+                <span class="big num">19</span>
+              </div>
+            </div>
+            <div class="facts">
+              <span>Sets <span class="dots"><i class="on"></i><i></i><i></i></span></span>
+              <span class="m num" style="color:var(--ink);font-weight:600">1–1</span>
+              <span class="r"><span class="dots"><i class="on"></i><i></i><i></i></span> Sets</span>
+            </div>
+          </div>
+
+          <p class="narr">Point <b>ROY</b> · 22–19 · <b>ROY keeps serve</b>.</p>
+          <div class="rallies" aria-label="Recent rallies">
+            <span class="lbl">Rallies</span>
+            <i class="r">R</i><i class="l">L</i><i class="r">R</i><i class="l">L</i><i class="l">L</i><i class="l">L</i><i class="l">L</i><i class="next"></i>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="ctrl">
+            <button class="undo" aria-label="Undo last rally"><span class="g">↩</span><span class="w"><b>Undo</b>removes ROY's point</span></button>
+            <button class="to"><span class="l">Timeout · ROY</span><span class="dots"><i class="g on"></i><i class="g on"></i></span></button>
+            <button class="to"><span class="l">Timeout · STR</span><span class="dots"><i class="g on"></i><i></i></span></button>
+          </div>
+
+          <div class="caps"><span>Point to</span><span>Point to</span></div>
+          <div class="targets">
+            <button class="target serving">
+              <span class="tc"><span class="srv">▸</span><span class="pip a"></span>ROY</span>
+              <span class="tb num">22</span>
+              <span class="tw">Point</span>
+            </button>
+            <button class="target">
+              <span class="tc"><span class="pip b"></span>STR</span>
+              <span class="tb num">19</span>
+              <span class="tw">Point</span>
+            </button>
+          </div>
+          <div class="foot"><span>Full scorecard ›</span><span>Share live ↗</span></div>
+        </div>
+
+        <label for="more" class="backdrop" aria-hidden="true"></label>
+        <div class="sheet" role="menu">
+          <div class="grab"></div>
+          <div class="sheet-h"><span>Match options</span><label for="more" class="icon-btn" aria-label="Close">✕</label></div>
+          <div class="group-h">Correct</div>
+          <div class="group"><div class="row">Correct score<span class="chev">›</span></div><div class="row">Fix first server<span class="chev">›</span></div></div>
+          <div class="group-h">Match</div>
+          <div class="group"><div class="row">Quick mode<span class="switch"></span></div><div class="row">Subs / libero<span class="chev">›</span></div><div class="row">Share live ↗<span class="chev">›</span></div></div>
+          <div class="end"><button>End set</button><button class="danger" title="Asks for confirmation — nothing ends on one tap">End match…</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 3 · LIVE ========== -->
+    <div class="col">
+      <div class="cap"><b>3 · Live</b><span>spectator watch surface</span></div>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span class="r">●●● ▮</span></div>
+        <div class="scroll">
+          <div class="nav">
+            <span class="back" aria-hidden="true">‹</span>
+            <div class="nav-t"><div class="t">Sunday Cup · Final</div><div class="s"><span class="live" style="font-size:13px"><span class="d"></span>Live</span></div></div>
+            <span class="icon-btn" aria-hidden="true">↗</span>
+          </div>
+
+          <div class="seg"><span class="on">Live</span><span>Sets</span><span>Stats</span></div>
+
+          <div class="hero">
+            <div class="teams" style="margin-top:0">
+              <div class="team">
+                <span class="code"><span class="srv">▸</span><span class="pip a"></span>ROY</span>
+                <span class="big num" style="font-size:84px">22</span>
+                <span class="lead-bar"></span>
+              </div>
+              <div class="phase">Set 3</div>
+              <div class="team r">
+                <span class="code">STR<span class="pip b"></span></span>
+                <span class="big num" style="font-size:84px">19</span>
+                <span style="height:12px"></span>
+              </div>
+            </div>
+            <div class="facts">
+              <span>Sets <span class="dots"><i class="on"></i><i></i><i></i></span></span>
+              <span class="m">—</span>
+              <span class="r"><span class="dots"><i class="on"></i><i></i><i></i></span> Sets</span>
+              <span>Timeouts <span class="dots"><i class="g on"></i><i class="g on"></i></span></span>
+              <span class="m"></span>
+              <span class="r"><span class="dots"><i class="g on"></i><i></i></span> Timeouts</span>
+            </div>
+            <div class="setline num"><span>25–21</span><span>·</span><span>23–25</span><span>·</span><span class="now">22▸</span></div>
+          </div>
+
+          <details class="mom">
+            <summary><span class="lbl">Momentum</span><span class="v"><span class="srv">▸</span> ROY on serve · <b>4▸</b> run</span><span class="chev">⌄</span></summary>
+            <div class="worm-cap"><span>Set swing · this set</span><span>lead ± <b>ROY +4</b></span></div>
+            <div class="worm">
+              <div class="bar wk" style="height:30%"></div><div class="bar hi" style="height:52%"></div>
+              <div class="bar wk" style="height:40%"></div><div class="bar hi" style="height:70%"></div>
+              <div class="bar wk" style="height:26%"></div><div class="bar hi" style="height:60%"></div>
+              <div class="bar hi" style="height:100%"></div><div class="bar now" style="height:44%"></div>
+            </div>
+          </details>
+
+          <div class="group" style="margin-top:12px">
+            <div class="row"><span class="k">Now</span><span class="v"><span class="srv">▸</span> Serving <b>ROY</b> · 4 straight · <span class="mut">3 from the set</span></span></div>
+            <div class="row"><span class="k">Last point</span><span class="v">Kill · A. Menon <span class="mut">· line 4</span></span></div>
+          </div>
+
+          <div class="group-h">Key moments</div>
+          <div class="group">
+            <div class="row moment"><span class="t num">22<span class="srv">▸</span></span><span class="v"><span class="tag g">Run</span> ROY <b>4 straight</b> on R. Nair's serve</span></div>
+            <div class="row moment"><span class="t num">20</span><span class="v"><span class="tag n">Tech</span> STR timeout — ROY momentum</span></div>
+            <div class="row moment"><span class="t">—</span><span class="v"><span class="tag n">Set 2</span> STR take it <b>25–23</b></span></div>
+            <div class="row moment"><span class="t num">24</span><span class="v"><span class="tag w">Set point</span> STR led 24–23, serving</span></div>
+            <div class="row moment"><span class="t num">23</span><span class="v"><span class="tag g">Saved</span> ROY erase set point, K. Reddy kill</span></div>
+          </div>
+
+          <div class="pres"><span>👁 208 watching</span><span class="follow">Following ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

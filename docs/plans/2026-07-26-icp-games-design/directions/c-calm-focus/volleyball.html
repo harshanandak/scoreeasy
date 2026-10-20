@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volleyball · C · Calm focus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   C · CALM FOCUS — palette proposal
+   One focal zone per screen. Everything else: smaller, lighter, uncontained,
+   or collapsed behind one quiet row. No borders; tone does the separating.
+   ========================================================================== */
+:root {
+  /* canvas + tonal surfaces (M3-style, neutral with a breath of green) */
+  --canvas:        #F6F7F4;   /* app background */
+  --surface-1:     #FFFFFF;   /* lifted sheet / card when one is truly needed */
+  --surface-2:     #EEF0EB;   /* quiet tonal fill: chips, collapsed rows */
+  --surface-3:     #E4E7E1;   /* pressed / selected quiet fill */
+
+  /* ink (all AA on canvas and surface-2) */
+  --ink:           #14171A;   /* score digits, primary text   16.7:1 */
+  --ink-2:         #474D53;   /* secondary text               8.0:1 */
+  --ink-3:         #60666C;   /* tertiary / labels            5.4:1 */
+
+  /* the one accent: field green, spent on live + serve only */
+  --accent:        #1C7349;   /* text/dots                    5.4:1 */
+  --accent-container: #DCEEE2;
+  --on-accent-container: #0E4229;
+
+  /* team containers — soft tints, near-black content on top */
+  --team-a:        #FBE6D6;   /* Royals: apricot */
+  --team-a-press:  #F4D2B8;
+  --on-team-a:     #7A3410;   /* team label on tint           7.5:1 */
+  --team-b:        #DEE7F7;   /* Strikers: mist blue */
+  --team-b-press:  #C6D5EF;
+  --on-team-b:     #1F3D72;   /*                              8.6:1 */
+
+  /* state (used once, never decoratively) */
+  --warn-container: #FBEDC9;
+  --on-warn-container: #5E4300;
+
+  /* shape + elevation */
+  --radius-key:    32px;      /* score keys */
+  --radius-card:   22px;      /* sheets, lifted cards */
+  --radius-chip:   999px;
+  --elev-1: 0 1px 2px rgba(22,28,20,.04), 0 2px 8px rgba(22,28,20,.04);
+  --elev-2: 0 -1px 0 rgba(22,28,20,.03), 0 -12px 40px rgba(22,28,20,.10);
+
+  --font-ui:  "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-num: "Outfit", "Figtree", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: #E8EAE5;
+  -webkit-font-smoothing: antialiased;
+  padding: 40px 24px 64px;
+}
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* ---------- presentation page ---------- */
+.pv-head { max-width: 1250px; margin: 0 auto 28px; }
+.pv-title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.pv-sub { margin-top: 6px; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.pv-row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; max-width: 1310px; margin: 0 auto; }
+.pv-row + .pv-head { margin-top: 64px; }
+.pv-col { width: 390px; }
+.pv-cap { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 4px 12px; display: flex; justify-content: space-between; }
+.pv-cap span { font-weight: 500; color: var(--ink-3); }
+.pv-note { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin: 14px 6px 0; }
+
+.phone {
+  position: relative; width: 390px; height: 844px; overflow: hidden;
+  background: var(--canvas); border-radius: 44px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 24px 60px -20px rgba(30,40,30,.25);
+  display: flex; flex-direction: column;
+}
+.status { height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 34px; font-size: 14px; font-weight: 600; }
+.status i { display: inline-block; width: 22px; height: 11px; border-radius: 3px; background: var(--ink); opacity: .85; }
+
+/* ---------- shared chrome ---------- */
+.topbar { height: 56px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; }
+.icon-btn { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: var(--ink-2); }
+.icon-btn:active { background: var(--surface-2); }
+.tb-text { flex: 1; min-width: 0; }
+.tb-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 1px; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--accent); padding: 0 8px; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-container); }
+.serve { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-container); vertical-align: middle; }
+
+/* quiet disclosure row — the "everything else lives here" handle */
+details.quiet { margin: 0 16px; }
+details.quiet > summary {
+  list-style: none; min-height: 48px; display: flex; align-items: center; gap: 8px;
+  padding: 0 16px; border-radius: 16px; background: var(--surface-2);
+  font-size: 14px; color: var(--ink-2); cursor: pointer;
+}
+details.quiet > summary::-webkit-details-marker { display: none; }
+details.quiet > summary .lbl { flex: 1; }
+details.quiet > summary .lbl b { color: var(--ink); font-weight: 600; }
+details.quiet > summary .chev { color: var(--ink-3); transition: transform .2s; font-size: 18px; }
+details.quiet[open] > summary .chev { transform: rotate(90deg); }
+details.quiet[open] > summary { border-radius: 16px 16px 0 0; }
+.qbody { background: var(--surface-2); border-radius: 0 0 16px 16px; padding: 4px 16px 14px; }
+.qline { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 14px; color: var(--ink-2); }
+.qline b { color: var(--ink); font-weight: 600; }
+
+/* ================= 1 · MAIN SCOREBOARD ================= */
+.board { flex: 1; display: flex; flex-direction: column; padding: 0 24px 28px; }
+.board-ctx { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 0; font-size: 13px; color: var(--ink-3); }
+.board-core { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.b-teams { display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 17px; font-weight: 600; color: var(--ink-2); }
+.b-teams span { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.b-nums { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; text-align: center; margin-top: 2px; }
+.b-nums div { font-size: 118px; font-weight: 600; line-height: 1; color: var(--ink); }
+.b-phase { margin: 18px auto 0; display: inline-flex; align-self: center; gap: 8px; align-items: center; padding: 8px 16px; border-radius: var(--radius-chip); background: var(--surface-2); font-size: 14px; color: var(--ink-2); }
+.b-phase b { color: var(--ink); font-weight: 600; }
+.b-sets { margin-top: 16px; text-align: center; font-size: 14px; color: var(--ink-3); }
+.b-sets .num { color: var(--ink-2); }
+.b-foot { display: flex; justify-content: space-between; padding: 14px 4px 0; font-size: 14px; color: var(--ink-2); }
+.b-foot a, .s-foot a { color: inherit; text-decoration: none; min-height: 48px; display: inline-flex; align-items: center; }
+
+/* ================= 2 · LEAN SCORER ================= */
+.scorer { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.s-ctx { padding: 4px 24px 0; font-size: 14px; color: var(--ink-3); display: flex; gap: 10px; }
+.s-ctx b { color: var(--ink-2); font-weight: 600; }
+.s-narr { padding: 14px 24px 0; font-size: 19px; line-height: 1.4; color: var(--ink-2); letter-spacing: -0.005em; }
+.s-narr b { color: var(--ink); font-weight: 600; }
+.s-space { flex: 1; }
+.s-actions { display: flex; gap: 10px; padding: 12px 16px 10px; align-items: center; }
+.undo {
+  flex: 1; min-height: 52px; border-radius: 18px; padding: 0 18px;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--surface-1); box-shadow: var(--elev-1);
+}
+.undo:active { background: var(--surface-3); }
+.undo .g { font-size: 20px; color: var(--ink); }
+.undo .t { font-size: 15px; font-weight: 600; }
+.undo .w { font-size: 13px; color: var(--ink-3); margin-left: auto; }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
+.key {
+  height: 340px; border-radius: var(--radius-key); position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 22px 12px 22px; transition: background .12s, transform .12s;
+}
+.key.a { background: var(--team-a); }
+.key.b { background: var(--team-b); }
+.key.a:active { background: var(--team-a-press); transform: scale(.985); }
+.key.b:active { background: var(--team-b-press); transform: scale(.985); }
+.key .code { font-size: 16px; font-weight: 700; letter-spacing: .04em; display: inline-flex; gap: 8px; align-items: center; }
+.key.a .code, .key.a .word { color: var(--on-team-a); }
+.key.b .code, .key.b .word { color: var(--on-team-b); }
+.key .big { font-size: 112px; font-weight: 600; line-height: 1; color: var(--ink); }
+.key .word { font-size: 14px; font-weight: 600; }
+.key .srvtag { position: absolute; top: 16px; right: 16px; }
+.s-foot { display: flex; justify-content: space-between; padding: 2px 24px 14px; font-size: 14px; color: var(--ink-3); }
+
+/* ================= 3 · LIVE ================= */
+.livev { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.seg { display: flex; gap: 4px; margin: 4px 16px 0; padding: 4px; border-radius: var(--radius-chip); background: var(--surface-2); }
+.seg span { flex: 1; text-align: center; min-height: 44px; line-height: 44px; border-radius: var(--radius-chip); font-size: 14px; font-weight: 600; color: var(--ink-3); }
+.seg span.on { background: var(--surface-1); color: var(--ink); box-shadow: var(--elev-1); }
+.l-hero { padding: 26px 24px 8px; }
+.l-hero .b-nums div { font-size: 104px; }
+.l-hero .b-teams { font-size: 16px; }
+.l-under { text-align: center; font-size: 14px; color: var(--ink-3); margin-top: 10px; }
+.l-under .num { color: var(--ink-2); }
+.moment-now { margin: 18px 16px 0; padding: 18px 20px; border-radius: var(--radius-card); background: var(--surface-1); box-shadow: var(--elev-1); }
+.mn-k { font-size: 12.5px; font-weight: 600; color: var(--accent); letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+.mn-v { font-size: 18px; line-height: 1.4; margin-top: 6px; color: var(--ink); }
+.mn-v .mut { color: var(--ink-3); }
+.mn-sub { font-size: 14px; color: var(--ink-2); margin-top: 8px; }
+.l-list { padding: 18px 24px 0; }
+.l-list h4 { font-size: 13px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px; }
+.mrow { display: grid; grid-template-columns: 36px 1fr; gap: 8px; padding: 9px 0; font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
+.mrow .t { color: var(--ink-3); font-size: 13.5px; }
+.mrow b { color: var(--ink); font-weight: 600; }
+.tag { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; margin-right: 4px; background: var(--surface-2); color: var(--ink-2); }
+.tag.g { background: var(--accent-container); color: var(--on-accent-container); }
+.tag.w { background: var(--warn-container); color: var(--on-warn-container); }
+.l-space { flex: 1; }
+.l-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px 18px; font-size: 13.5px; color: var(--ink-3); }
+.l-foot .follow { color: var(--accent); font-weight: 600; min-height: 48px; display: inline-flex; align-items: center; }
+.more-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--ink-2); font-weight: 600; }
+
+/* momentum (inside expanded) */
+.worm { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-top: 8px; }
+.worm i { flex: 1; border-radius: 6px; background: var(--team-b); }
+.worm i.a { background: #EBB894; }
+.worm i.now { background: var(--accent); }
+
+/* ================= sheet (expanded example) ================= */
+.scrim { position: absolute; inset: 0; background: rgba(20,24,20,.18); }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface-1);
+  border-radius: 28px 28px 44px 44px; box-shadow: var(--elev-2); padding: 10px 20px 22px;
+}
+.grab { width: 36px; height: 4px; border-radius: 2px; background: var(--surface-3); margin: 0 auto 12px; }
+.sh-title { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.sh-sec { margin-top: 16px; }
+.sh-lbl { font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin-bottom: 8px; }
+.sets-tbl { display: grid; grid-template-columns: 1fr repeat(3, 56px); row-gap: 6px; font-size: 15px; align-items: center; }
+.sets-tbl .h { font-size: 12.5px; color: var(--ink-3); text-align: center; }
+.sets-tbl .c { text-align: center; color: var(--ink-2); }
+.sets-tbl .c.w { color: var(--ink); font-weight: 600; }
+.sets-tbl .c.now { color: var(--accent); font-weight: 600; }
+.sets-tbl .n { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.sw-a, .sw-b { width: 10px; height: 10px; border-radius: 3px; }
+.sw-a { background: #EBB894; } .sw-b { background: #A9C0E8; }
+.to-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.to-btn { min-height: 56px; border-radius: 16px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; font-size: 14.5px; font-weight: 600; }
+.to-btn.a { background: var(--team-a); color: var(--on-team-a); }
+.to-btn.b { background: var(--team-b); color: var(--on-team-b); }
+.to-btn small { font-weight: 500; font-size: 13px; color: var(--ink-2); }
+.rally { display: flex; gap: 6px; align-items: center; }
+.rally i { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 700; }
+.rally i.a { background: var(--team-a); color: var(--on-team-a); }
+.rally i.b { background: var(--team-b); color: var(--on-team-b); }
+.rally small { margin-left: 6px; font-size: 13px; color: var(--ink-3); }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { min-height: 44px; padding: 0 16px; border-radius: var(--radius-chip); background: var(--surface-2); font-size: 14px; font-weight: 500; color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
+.ends { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.end { min-height: 52px; border-radius: 16px; background: var(--surface-2); font-weight: 600; font-size: 15px; }
+.end.danger { color: #9A2B1E; background: #FBE5E1; }
+
+@media (max-width: 860px) {
+  body { padding: 20px 0 40px; }
+  .pv-head { padding: 0 20px; }
+  .pv-row { gap: 36px; }
+}
+</style>
+</head>
+<body>
+
+<header class="pv-head">
+  <div class="pv-title">Volleyball · C · Calm focus</div>
+  <div class="pv-sub">Royals vs Strikers · Sunday Cup Final · sets 1–1 · set 3 · ROY 22–19, serving, on a 4-point run.<br>
+  One focal zone per screen. Everything else is smaller, greyer, uncontained, or folded behind one quiet row.</div>
+</header>
+
+<div class="pv-row">
+
+  <!-- =========================== 1 · MAIN SCOREBOARD =========================== -->
+  <div class="pv-col">
+    <div class="pv-cap">1 · Main scoreboard <span>focal: the score</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="topbar">
+        <button class="icon-btn" aria-label="Back">‹</button>
+        <div class="tb-text"><div class="tb-title">Sunday Cup · Final</div><div class="tb-sub">Best of 5 · to 25</div></div>
+        <span class="live">Live</span>
+        <button class="icon-btn" aria-label="Share">↗</button>
+      </div>
+      <div class="board">
+        <div class="board-core">
+          <div class="b-teams"><span><i class="serve" aria-label="serving"></i>Royals</span><span>Strikers</span></div>
+          <div class="b-nums num"><div>22</div><div>19</div></div>
+          <div class="b-phase">Set <b class="num">3</b> · Sets <b class="num">1–1</b></div>
+          <div class="b-sets">Earlier sets <span class="num">25–21 · 23–25</span></div>
+        </div>
+        <details class="quiet" style="margin:0">
+          <summary><span class="lbl">Timeouts · Royals <b>2</b> · Strikers <b>1</b> left</span><span class="chev">›</span></summary>
+          <div class="qbody">
+            <div class="qline"><span>Royals</span><b>2 of 2 left</b></div>
+            <div class="qline"><span>Strikers</span><b>1 of 2 left</b></div>
+          </div>
+        </details>
+        <div class="b-foot"><a href="#">Open scorecard ›</a><a href="#">Share live ↗</a></div>
+      </div>
+    </div>
+    <p class="pv-note">Kept loud: two numbers, who serves. Receded: set count + earlier sets as one grey line. Collapsed: timeouts (one quiet row; tap to open).</p>
+  </div>
+
+  <!-- =========================== 2 · LEAN SCORER =========================== -->
+  <div class="pv-col">
+    <div class="pv-cap">2 · Lean scorer <span>focal: the two keys</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="topbar">
+        <button class="icon-btn" aria-label="Back">‹</button>
+        <div class="tb-text"><div class="tb-title">Sunday Cup · Final</div><div class="tb-sub">BO5 · Set 3 · to 25 · win by 2</div></div>
+        <span class="live">Live</span>
+        <button class="icon-btn" aria-label="Match options">⋯</button>
+      </div>
+      <div class="scorer">
+        <div class="s-ctx"><span>Set <b class="num">3</b></span><span>Sets <b class="num">1–1</b></span></div>
+        <p class="s-narr">Point <b>Royals</b> · <span class="num">22–19</span>.<br><b>Royals keep serve</b>, 4 in a row.</p>
+        <div class="s-space"></div>
+        <details class="quiet">
+          <summary><span class="lbl">Sets · Timeouts · Rally log</span><span class="chev">›</span></summary>
+        </details>
+        <div class="s-actions">
+          <button class="undo" aria-label="Undo last rally"><span class="g">↶</span><span class="t">Undo</span><span class="w">removes Royals' point</span></button>
+        </div>
+        <div class="keys">
+          <button class="key a" aria-label="Point to Royals">
+            <span class="srvtag"><i class="serve" aria-label="serving"></i></span>
+            <span class="code">ROY</span>
+            <span class="big num">22</span>
+            <span class="word">Point Royals</span>
+          </button>
+          <button class="key b" aria-label="Point to Strikers">
+            <span class="code">STR</span>
+            <span class="big num">19</span>
+            <span class="word">Point Strikers</span>
+          </button>
+        </div>
+        <div class="s-foot"><a href="#">Full scorecard ›</a><a href="#">Share live ↗</a></div>
+      </div>
+    </div>
+    <p class="pv-note">The keys <em>are</em> the score — no second scoreboard on top. Narration stays as plain sentence. Rally strip, set scores and timeouts fold into one row (opened below). Undo never folds.</p>
+  </div>
+
+  <!-- =========================== 3 · LIVE =========================== -->
+  <div class="pv-col">
+    <div class="pv-cap">3 · Live <span>focal: score + this moment</span></div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="topbar">
+        <button class="icon-btn" aria-label="Back">‹</button>
+        <div class="tb-text"><div class="tb-title">Royals vs Strikers</div><div class="tb-sub">Sunday Cup · Final</div></div>
+        <span class="live">Live</span>
+        <button class="icon-btn" aria-label="Share">↗</button>
+      </div>
+      <div class="livev">
+        <div class="seg"><span class="on">Live</span><span>Sets</span><span>Stats</span></div>
+        <div class="l-hero">
+          <div class="b-teams"><span><i class="serve"></i>Royals</span><span>Strikers</span></div>
+          <div class="b-nums num"><div>22</div><div>19</div></div>
+          <div class="l-under">Set 3 · Sets <span class="num">1–1</span> · <span class="num">25–21 · 23–25</span></div>
+        </div>
+        <div class="moment-now">
+          <div class="mn-k"><i class="serve"></i>Now</div>
+          <div class="mn-v"><b>Royals</b> serving · 4 straight</div>
+          <div class="mn-sub">3 points from the set · last point: kill by A. Menon, line 4</div>
+        </div>
+        <div class="l-list">
+          <h4>Key moments</h4>
+          <div class="mrow"><span class="t num">22</span><span><span class="tag g">RUN</span> Royals <b>4 straight</b> on R. Nair's serve</span></div>
+          <div class="mrow"><span class="t num">20</span><span>Strikers timeout, Royals on a run</span></div>
+          <a class="more-link" href="#">3 more · momentum ›</a>
+        </div>
+        <div class="l-space"></div>
+        <div class="l-foot"><span>208 watching · Timeouts ROY 2 · STR 1</span><span class="follow">Following ✓</span></div>
+      </div>
+    </div>
+    <p class="pv-note">One lifted card (the moment) — the only elevation on screen. Key moments show the latest two; the rest + momentum chart sit behind “3 more”.</p>
+  </div>
+</div>
+
+<!-- =========================== EXPANDED EXAMPLES =========================== -->
+<header class="pv-head" style="margin-top:64px">
+  <div class="pv-title" style="font-size:20px">Expanded examples</div>
+  <div class="pv-sub">What lives behind the quiet rows. Nothing is removed — each is one tap away and closes back to the calm state; the score never leaves the screen behind it.</div>
+</header>
+<div class="pv-row">
+  <div class="pv-col">
+    <div class="pv-cap">2b · Scorer · “Sets · Timeouts · Rally log” open</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="topbar">
+        <button class="icon-btn">‹</button>
+        <div class="tb-text"><div class="tb-title">Sunday Cup · Final</div><div class="tb-sub">BO5 · Set 3 · to 25 · win by 2</div></div>
+        <span class="live">Live</span><button class="icon-btn">⋯</button>
+      </div>
+      <div class="scorer">
+        <div class="s-ctx"><span>Set <b class="num">3</b></span><span>Sets <b class="num">1–1</b></span></div>
+        <p class="s-narr">Point <b>Royals</b> · <span class="num">22–19</span>.<br><b>Royals keep serve</b>, 4 in a row.</p>
+      </div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="grab"></div>
+        <div class="sh-title">Sets · Timeouts · Rally log <button class="icon-btn" aria-label="Close" style="width:44px;height:44px;font-size:18px">✕</button></div>
+        <div class="sh-sec">
+          <div class="sets-tbl num">
+            <span></span><span class="h">Set 1</span><span class="h">Set 2</span><span class="h">Set 3</span>
+            <span class="n"><i class="sw-a"></i>Royals</span><span class="c w">25</span><span class="c">23</span><span class="c now">22</span>
+            <span class="n"><i class="sw-b"></i>Strikers</span><span class="c">21</span><span class="c w">25</span><span class="c">19</span>
+          </div>
+        </div>
+        <div class="sh-sec">
+          <div class="sh-lbl">Timeout</div>
+          <div class="to-row">
+            <button class="to-btn a">Royals <small>2 left</small></button>
+            <button class="to-btn b">Strikers <small>1 left</small></button>
+          </div>
+        </div>
+        <div class="sh-sec">
+          <div class="sh-lbl">Last 7 rallies</div>
+          <div class="rally"><i class="b">S</i><i class="a">R</i><i class="b">S</i><i class="a">R</i><i class="a">R</i><i class="a">R</i><i class="a">R</i><small>newest →</small></div>
+        </div>
+        <div class="sh-sec">
+          <div class="sh-lbl">Correct · Match</div>
+          <div class="pills"><button class="pill">Correct score</button><button class="pill">Fix first server</button><button class="pill">Quick mode</button><button class="pill">Subs / libero</button><button class="pill">Share live ↗</button></div>
+        </div>
+        <div class="ends"><button class="end">End set</button><button class="end danger">End match…</button></div>
+      </div>
+    </div>
+    <p class="pv-note">Also serves as the ⋯ sheet: one place for every rarity. End match still confirms.</p>
+  </div>
+
+  <div class="pv-col">
+    <div class="pv-cap">3b · Live · “3 more · momentum” open</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="topbar">
+        <button class="icon-btn">‹</button>
+        <div class="tb-text"><div class="tb-title">Royals vs Strikers</div><div class="tb-sub">Sunday Cup · Final</div></div>
+        <span class="live">Live</span><button class="icon-btn">↗</button>
+      </div>
+      <div class="livev">
+        <div class="seg"><span class="on">Live</span><span>Sets</span><span>Stats</span></div>
+        <div class="l-hero" style="padding-top:16px">
+          <div class="b-teams"><span><i class="serve"></i>Royals</span><span>Strikers</span></div>
+          <div class="b-nums num"><div style="font-size:72px">22</div><div style="font-size:72px">19</div></div>
+        </div>
+        <div class="l-list" style="padding-top:8px">
+          <h4>Momentum · this set</h4>
+          <div class="worm" aria-label="Set swing, Royals +4"><i style="height:30%"></i><i class="a" style="height:52%"></i><i style="height:40%"></i><i class="a" style="height:70%"></i><i style="height:26%"></i><i class="a" style="height:60%"></i><i class="a" style="height:100%"></i><i class="now" style="height:44%"></i></div>
+          <div class="mrow" style="padding-top:6px"><span class="t"></span><span style="text-align:right;color:var(--ink-3);font-size:13px">lead swing · <b>Royals +4</b></span></div>
+          <h4 style="margin-top:8px">Key moments</h4>
+          <div class="mrow"><span class="t num">22</span><span><span class="tag g">RUN</span> Royals <b>4 straight</b> on R. Nair's serve</span></div>
+          <div class="mrow"><span class="t num">20</span><span>Strikers timeout, Royals on a run</span></div>
+          <div class="mrow"><span class="t">—</span><span><span class="tag">SET 2</span> Strikers take it <b>25–23</b></span></div>
+          <div class="mrow"><span class="t num">24</span><span><span class="tag w">SET POINT</span> Strikers led 24–23, serving</span></div>
+          <div class="mrow"><span class="t num">23</span><span><span class="tag g">SAVED</span> Royals erase set point, K. Reddy kill</span></div>
+        </div>
+        <div class="l-space"></div>
+        <div class="l-foot"><span>208 watching</span><span class="follow">Following ✓</span></div>
+      </div>
+    </div>
+    <p class="pv-note">Expanded, the score shrinks but never leaves. Tags use tone, not colour shouting; only one green family.</p>
+  </div>
+</div>
+</body>
+</html>
