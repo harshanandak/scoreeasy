@@ -54,6 +54,11 @@ cricket completion section of quick match. Master `28ada35` (PR #170) was merged
 after the lane was released. Limited, Test and guided completion retain its
 `completeProtectedScoring` navigation, with the shared hook owning the commit and
 single navigation. Test quick completion retains its `/history` destination.
+The later tests-only master update `5dc93bf` (PR #171) was also merged normally.
+Its SA-07 test was temporarily run as an ordinary test to inspect the failure:
+the initial point-save assertion passed, then the final undo persistence assertion
+failed with expected 0, received 1 (line 126). The test was restored byte-for-byte
+with `it.fails` retained. Completion locking does not fix undo-to-empty autosave.
 
 ## Acceptance and demo
 
@@ -106,6 +111,12 @@ bun run test src/designs/design1-mono/scoring src/designs/design1-mono/MonoQuick
 `bun run lint` passed with zero errors and 29 warnings. `bun run type-check` passed.
 The palette test still requires equality with **669**, and passed unchanged.
 `git diff --check` and the staged equivalent passed.
+
+The first normal pre-push hook passed **130 files, 1,510 tests and 10 expected
+failures (1,520 total)** in 443.26 seconds. Its production build transformed
+**658 modules**, compiled in 43.03 seconds and generated **70 PWA precache entries
+(1,246.57 KiB)**. After master moved to PR #171, the focused selection and normal
+push hooks were rerun; their final results are recorded in the PR.
 
 Failing-before evidence was captured for goals' three completion modes across all
 four sports (12 cases), sets/tennis/limited-overs cricket (3 cases), guided cricket,
