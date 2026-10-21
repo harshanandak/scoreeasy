@@ -89,11 +89,13 @@
      Additive only. These rounded/soft/gold/live properties sit ON TOP of the
      brutalist Mono tokens above (pure-black ink & borders, hard `3px 3px 0`
      zero-blur shadow, tight 4-8px radii, Inter/JetBrains Mono) — none of which
-     change. Downstream screens opt into blend; they never lose the hard shell.
+     change. Downstream screens opt into blend; scoring/live exceptions follow
+     rule 7 below.
 
      ── BLEND-GOVERNANCE CONTRACT (full text: BLEND-GOVERNANCE.md) ──────────────
      1. GREEN is for LEAD / LIVE only — the leading team, a live badge, an
         active/primary CTA. Never decorative, never a resting-state fill.
+        On scoring and live surfaces the teams' own colours take over (rule 7).
      2. GOLD is ONE milestone accent PER SCREEN — a single moment (match won,
         record, podium). Two golds on a screen is a bug.
      3. CAPSULES & CIRCLES are for INTERACTIVE elements only (buttons, chips,
@@ -105,6 +107,11 @@
         ALWAYS reduced-motion gated. Never use it for idle/decorative emphasis.
      6. PER-SCREEN SOFT-ELEMENT BUDGET — cap soft-styled elements per screen (see
         doc); overuse dissolves the brutalist backbone the blend depends on.
+     7. TEAM COLOUR is identity on SCORING / LIVE surfaces. Use the colour
+        engine's contrast-gated values for team surfaces and point keys, never
+        raw hex. App green stays with LIVE / actions; lead and tie are not
+        colour-coded. The scorer's design decides its framing; rule 4 governs
+        the rest of the app.
      ========================================================================== */
 
   /* Rounded radius scale — interactive elements only (contract §3) */

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { MonoStatisticsPanel } from './MonoStatistics';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
@@ -67,7 +67,10 @@ function readQuickMatches() {
 function renderStatistics() {
   return render(
     <MemoryRouter initialEntries={['/history']}>
-      <MonoStatisticsPanel />
+      <Routes>
+        <Route path="/history" element={<MonoStatisticsPanel />} />
+        <Route path="/play" element={<p>Play hub</p>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -101,6 +104,18 @@ describe('MonoStatistics', () => {
     const falconsRow = screen.getByRole('row', { name: /Falcons/ });
     expect(falconsRow).toHaveTextContent('67%');
     expect(within(falconsRow).getByText('2')).toBeInTheDocument();
+  });
+
+  it('opens the Play hub (not a fixed sport) from the empty-state quick-match CTA', async () => {
+    renderStatistics();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start quick match' }));
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
+  });
+
+  it('opens the Play hub to pick a sport before creating a tournament', async () => {
+    renderStatistics();
+    fireEvent.click(await screen.findByRole('button', { name: 'Create tournament' }));
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
   });
 
   it('leads the empty Overview with a CTA and skips the zero-value stat grids', async () => {

@@ -78,6 +78,22 @@ describe('deriveTeamColours', () => {
     expect(hueGap(d.B.core, '#e11d2b')).toBeLessThanOrEqual(10);
   });
 
+  it.each([
+    ['yellow v yellow', '#facc15', '#facc15'],
+    ['white v white', '#ffffff', '#ffffff'],
+    ['white v off-white', '#ffffff', '#f4f4f5'],
+    ['sky v sky', '#38bdf8', '#38bdf8'],
+    ['orange v orange', '#f97316', '#f97316'],
+    ['neon v neon', '#39ff14', '#39ff14'],
+    ['black v black', '#000000', '#000000'],
+    ['blue v blue', '#1d4ed8', '#1d4ed8'],
+    ['maroon v maroon', '#7a1020', '#7a1020'],
+  ])('keeps %s distinguishable (dE >= 0.15) and every gate green', (_name, a, b) => {
+    const d = deriveTeamColours(a, b);
+    expect(deltaE(d.A.core, d.B.core)).toBeGreaterThanOrEqual(0.15);
+    expect(failing(d)).toEqual([]);
+  });
+
   it('keeps two distinct colours as they are (no clash note)', () => {
     expect(deriveTeamColours('#d62828', '#1d4ed8').note).toBe('');
   });

@@ -10,7 +10,8 @@ const decode = (url) => {
 
 const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml');
 
-const SCORED_SPORTS = [...getSetsSports(), ...getGoalsSports()].map((s) => s.id);
+// Throwball is a Tier-0 sets game about to join the registry; its drawing must exist either way.
+const SCORED_SPORTS = [...new Set([...getSetsSports(), ...getGoalsSports()].map((s) => s.id).concat('throwball'))];
 
 describe('court motifs', () => {
   it('covers every sets and goals sport in the registry', () => {

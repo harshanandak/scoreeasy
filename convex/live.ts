@@ -84,6 +84,20 @@ function snapshotPatch(snap: {
   };
 }
 
+// Team colours are rendered into CSS on the spectator page, so only a strict
+// #rrggbb hex is ever stored (OWASP A03 — CSS injection). Anything else
+// (`url(...)`, `red;background:...`, short/long hex, named colours) is dropped
+// rather than rejected, so a bad colour never blocks the scorer's match. Valid
+// hex is normalised to lower case. Applied on write (create) and on every public
+// read (getMeta, listLiveFeed), so rows stored before this rule are safe too.
+const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
+function sanitizeTeamMeta(team: { name: string; color?: string }) {
+  const { name, color } = team;
+  return color !== undefined && HEX_COLOUR.test(color)
+    ? { name, color: color.toLowerCase() }
+    : { name };
+}
+
 // Moderation floor knobs (§7.1). Lightweight, index-counted — no rate-limiter
 // component for v1.
 const CREATE_CAP = 20; // max new live matches per owner per window
@@ -166,8 +180,8 @@ export const create = authedMutation({
 
     await ctx.db.insert("liveMatchMeta", {
       matchId,
-      teamA: args.teamA,
-      teamB: args.teamB,
+      teamA: sanitizeTeamMeta(args.teamA),
+      teamB: sanitizeTeamMeta(args.teamB),
       sport: args.sport,
     });
 
@@ -658,8 +672,9 @@ export const getMeta = query({
 
     return {
       sport: meta.sport,
-      teamA: meta.teamA,
-      teamB: meta.teamB,
+      // Sanitised on read too: rows written before write-time sanitising may hold anything.
+      teamA: sanitizeTeamMeta(meta.teamA),
+      teamB: sanitizeTeamMeta(meta.teamB),
       players: players ?? [],
       isYouthMatch: match.isYouthMatch,
     };
@@ -731,8 +746,8 @@ export const listLiveFeed = query({
         servingTeam: m.servingTeam,
         periodLabel: m.periodLabel,
         lastEventAt: m.lastEventAt,
-        teamA: { name: meta.teamA.name, color: meta.teamA.color },
-        teamB: { name: meta.teamB.name, color: meta.teamB.color },
+        teamA: sanitizeTeamMeta(meta.teamA),
+        teamB: sanitizeTeamMeta(meta.teamB),
       });
     }
     return items;

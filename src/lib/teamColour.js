@@ -173,9 +173,9 @@ function passes(S, band) {
 
 // 3. Walk lightness in OKLCH until the on-colour clears the gate on every stop (incl. sheen),
 //    then solve the smallest numeral scrim that clears 8:1 (with a motif line underneath).
-function normalise(src, forceL) {
+function normalise(src, forceL, forceBand) {
   const c = oklch(src);
-  const band = bandOf(c);
+  const band = forceBand ?? bandOf(c);
   let L;
   if (band === 'deep') {
     L = forceL ?? Math.max(0.34, Math.min(c.L, 0.66));
@@ -251,6 +251,12 @@ export function deriveTeamColours(aInput, bInput) {
       nL = normalise(Lt.src, 0.93);
     } else {
       nD = normalise(D.src, 0.28);
+    }
+    // Two bright colours can't spread far enough while both keep dark text (e.g. white v white):
+    // move the darker team into the deep band (same hue, white text), darker until it is clear.
+    for (const L of [0.42, 0.36, 0.3, 0.24]) {
+      if (deltaE(nD.core, nL.core) >= CLASH) break;
+      nD = normalise(D.src, L, 'deep');
     }
     if (darkFirst) [A, B] = [nD, nL];
     else [B, A] = [nD, nL];

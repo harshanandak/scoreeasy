@@ -58,7 +58,7 @@ Check each of the following and update if the feature affects it. Be selective �
   - **Changed**: Changes to existing functionality
   - **Fixed**: Bug fixes
   - **Removed**: Removed features
-- Include: feature name, PR number, Beads ID
+- Include: feature name, PR number, Forge issue ID
 - Example:
   ```markdown
   ## [Unreleased]
@@ -98,13 +98,7 @@ git push
 
 ⚠️  **After pushing**: CI will re-trigger (Greptile, SonarCloud, etc.). Poll for up to 60 seconds. If checks are still pending after that, stop and ask the user to return to `/premerge <pr-number>` later. If new Greptile comments appear on the doc changes, run `/review <pr-number>` again.
 
-### Step 4: Sync Beads
-
-```bash
-bd sync
-```
-
-### Step 5: Hand Off — STOP HERE
+### Step 4: Hand Off — STOP HERE
 
 **DO NOT run `gh pr merge`.** Present the PR and wait for the user to merge.
 
@@ -115,7 +109,6 @@ Output:
 
   All checks: ✓ passing
   Documentation: ✓ updated on feature branch
-  Beads: ✓ synced
 
   👉 Please merge in the GitHub UI:
      https://github.com/<owner>/<repo>/pull/<number>
@@ -125,7 +118,7 @@ Output:
 After you merge, run /verify to confirm everything landed correctly.
 ```
 
-### Step 6: Record Stage Transition
+### Step 5: Record Stage Transition
 
 ```bash
 forge issue comment <id> "stage: premerge -> verify
@@ -160,7 +153,6 @@ Asking is the point of this command; doing it yourself is the violation.
   - CLAUDE.md: USER section updated with new pattern
   - Committed: docs: update documentation for auth-refresh
 ✓ CI re-triggered after doc push — checks passed within the 60 second poll window
-✓ Beads synced
 
 ✅ PR #89 is ready to merge
 
