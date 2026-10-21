@@ -108,7 +108,7 @@ who opened it is actually answered.
 
 3. **Act on it**
    - **Fix here** → make the code change, commit with a clear message.
-   - **Valid but advisory** → `bd create` the follow-up and note the id in the reply.
+   - **Valid but advisory** → `forge issue create` the follow-up and note the id in the reply.
    - **Invalid / conflicting** → change nothing; the reply carries the reason.
 
 4. **Reply and resolve** (for ALL comments, even invalid ones)
@@ -261,7 +261,7 @@ gh pr comment <pr-number> --body "## Greptile Summary Response
 Addressed all key recommendations:
 - [Recommendation 1]: ✓ Fixed in commit <sha>
 - [Recommendation 2]: ✓ Explained (see inline response)
-- [Recommendation 3]: ⏭️ Out of scope for this PR (created issue bd-xxx)
+- [Recommendation 3]: ⏭️ Out of scope for this PR (created issue <issue-id>)
 
 All critical and high-priority items resolved."
 ```
@@ -325,11 +325,10 @@ gh pr checks <pr-number>
 # ✓ Other CI/CD checks
 ```
 
-### Step 10: Update Beads
+### Step 10: Update the issue
 
 ```bash
-bd update <id> --comment "PR review complete: all issues addressed, all checks passing"
-bd sync
+forge issue comment <id> "PR review complete: all issues addressed, all checks passing"
 ```
 
 ## Example Output
@@ -370,7 +369,7 @@ bd sync
 
 ✓ Fixes committed: 3c4d5e6
 ✓ All checks passing: ✓
-✓ Beads updated: Ready for merge
+✓ Issue updated: Ready for merge
 
 Next: /premerge <pr-number>
 ```
@@ -460,7 +459,7 @@ Stage 7: /verify     → Post-merge CI check on main
 - **Post summary response**: Address Greptile's overall assessment
 - **Use sonarcloud skill**: Don't just check the web UI
 - **Verify all checks**: Ensure everything is green before /premerge
-- **Update Beads**: Keep issue status current
+- **Update the Forge issue**: Keep issue status current
 - **Research if needed**: Use WebSearch for unclear suggestions
 - **Document fixes**: Clear commit messages for all fixes
 - **Don't leave unresolved**: Address every comment and check
