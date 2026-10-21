@@ -50,9 +50,10 @@ the requested destination. It still pushes a distinct result page and still
 replaces deep-linked scorers.
 
 Cricket adapter changes are confined to the four cricket scorer files and the
-cricket completion section of quick match. They will need a merge against the
-parallel cricket Back-stack work after the full-suite lane is released. That work
-has now landed on master as `28ada35` (PR #170); this branch has not merged it yet.
+cricket completion section of quick match. Master `28ada35` (PR #170) was merged
+after the lane was released. Limited, Test and guided completion retain its
+`completeProtectedScoring` navigation, with the shared hook owning the commit and
+single navigation. Test quick completion retains its `/history` destination.
 
 ## Acceptance and demo
 
@@ -91,8 +92,10 @@ Timing, disabled controls, stored result and final URL are captured in
 
 ## Validation
 
-Final focused result: **21 files passed; 288 tests passed and 9 existing expected
-failures remained (297 total); zero runner errors**. The run took 175.71 seconds
+Pre-merge focused result: **21 files passed; 288 tests passed and 9 existing
+expected failures remained (297 total)**. After merging PR #170, the same selection
+also includes `CricketFinishNavigation`: **22 files passed; 306 tests passed and 9
+expected failures remained (315 total); zero runner errors**, in 231.36 seconds
 with two workers. Earlier runs encountered worker-start timeouts at default
 concurrency; the same checks remained enabled in the passing run.
 
@@ -112,9 +115,11 @@ also exposed deferred updater execution; synchronous innings publication fixed
 those without weakening their assertions. All corresponding regressions pass in
 the final focused run.
 
-The full suite, build, push and PR creation are deliberately reserved for the
-owner's "lane free" instruction. No Convex deployment or
-production write is part of this work. SA-07, SA-09, guided failed-save navigation,
+The owner released the full-suite lane. The normal pre-push hook runs the full
+suite and build; their terminal results are reported in the PR. The running-app
+demo was repeated after the merge: attempted taps at 2.6 ms and 174 ms left the
+completed 1-0 result intact. No Convex deployment or production write is part of
+this work. SA-07, SA-09, guided failed-save navigation,
 Test cricket's active "Finish & save" persistence, and guided raw-innings retention
 remain outside scope. Test cricket's terminal result commit is distinct from its
 active "Finish & save" action.

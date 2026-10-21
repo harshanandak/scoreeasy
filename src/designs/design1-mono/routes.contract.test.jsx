@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
 import { getGoalsSports } from '../../models/sportRegistry';
+import { cricketFinishSeed } from '../../test/cricketFinishFixtures';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -152,6 +153,50 @@ afterEach(() => {
 });
 
 describe('route contracts: already correct (pinned)', () => {
+  it.each(['limited', 'test-tournament', 'test-quick', 'guided'])('RA-1: Back after finishing %s cricket preserves the result and does not reopen its scorer', async (kind) => {
+    Object.entries(cricketFinishSeed(kind)).forEach(([key, value]) => seed(key, value));
+    const quick = kind === 'test-quick';
+    const storageKey = quick ? 'se_quickmatches' : 'se_cricket';
+    renderApp(['/history', quick ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score']);
+    await settleRoute();
+    if (kind === 'guided') {
+      fireEvent.click(await screen.findByRole('button', { name: 'Four' }));
+    } else if (kind.startsWith('test')) {
+      fireEvent.click(await screen.findByRole('button', { name: 'Four runs' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Save & Return' }));
+    } else {
+      fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    }
+    await waitFor(() => expect(currentRoute()).toBe(quick ? '/history' : '/cricket/tournament/100'));
+    const saved = JSON.parse(localStorage.getItem(storageKey));
+    expect(quick ? saved[0] : saved[0].matches[0]).toMatchObject({ status: 'completed', winner: quick ? 'Beta' : 'B' });
+    await pressProbeBack();
+    await waitFor(() => expect(currentRoute()).toBe('/history'));
+    expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+  });
+
+  it('RA-1 cricket regression: limited-overs quick Finish preserves restored Undo and the saved innings through Back', async () => {
+    const scores = { team1: { runs: 1, balls: 6, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } };
+    seed('se_quickmatch_draft_cricket', {
+      sport: 'cricket', phase: 'scoring', team1Name: 'Alpha', team2Name: 'Beta',
+      format: { preset: 'custom', overs: 1, players: 11, totalInnings: 2, trackOvers: true },
+      innings: 2, battingTeam: 2, scores: { ...scores, team2: { ...scores.team2, runs: 1, balls: 1 } },
+      cricketHistory: [{ type: 'runs', key: 'team2', value: 1, innings: 2, battingTeam: 2 }], updatedAt: NOW_ISO,
+    });
+    renderApp(['/app', '/cricket/quick']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
+    expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    expect(saved).toEqual([expect.objectContaining({ sport: 'cricket', winner: 'Beta' })]);
+    expect(saved[0].team1Score).toMatchObject({ runs: 1, balls: 6 });
+    expect(saved[0].team2Score).toMatchObject({ runs: 4, balls: 1 });
+    await pressProbeBack();
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
+  });
+
   it('renders the 404 recovery screen, with Play and Home, for an unknown multi-segment path', async () => {
     renderApp(['/this/does/not/exist']);
     const heading = await screen.findByRole('heading', { name: 'This screen is not available' });
@@ -219,7 +264,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
   });
 
   // Goals quick matches already finish in place in MonoQuickMatch. Pin that
-  // separate path; tennis completion is pinned below, and cricket remains open.
+  // separate path; tennis and cricket completion have their own contracts.
   it.each(getGoalsSports())('RA-2 goals regression: $id quick Finish preserves Undo and the saved result through Back', async ({ id: sport }) => {
     seed(`se_quickmatch_draft_${sport}`, {
       sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { mode: 'free' },

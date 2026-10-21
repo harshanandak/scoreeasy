@@ -10,6 +10,7 @@ import { deriveInnings } from '../../../utils/cricketEngine';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import MonoCricketGuidedScorer from './MonoCricketGuidedScorer';
 import MonoCricketInningsSetup from './MonoCricketInningsSetup';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 // C6b — two-innings orchestrator for the Guided cricket scorer. A phase state
 // machine drives an opening-lineup step, innings 1, an innings break (target +
@@ -113,6 +114,7 @@ export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
   const navigate = useNavigate();
   const completion = useMatchCompletion();
+  const completeProtectedScoring = useScoringCompletion();
 
   const sportConfig = getSportById(sport);
   const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -124,11 +126,21 @@ export default function MonoCricketGuidedScorerRoute() {
 
   const [phase, setPhase] = useState(() => initialPhase(match));
 
-  const navigateToTournament = () => navigate(`/${sport || 'cricket'}/tournament/${id}`);
+  const navigateToTournament = () => {
+    const destination = `/${sport || 'cricket'}/tournament/${id}`;
+    if (completeProtectedScoring) {
+      completeProtectedScoring(destination);
+    } else {
+      navigate(destination, { replace: true });
+    }
+  };
 
   // A completed match is never re-scored — bounce back to the tournament.
   useEffect(() => {
-    if (match && match.status === 'completed') navigateToTournament();
+    if (match && match.status === 'completed') {
+      if (completion.committed) completion.leave(navigateToTournament);
+      else completion.complete(() => true, navigateToTournament);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.status]);
 

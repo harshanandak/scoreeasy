@@ -16,6 +16,7 @@ import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -28,6 +29,7 @@ const triggerHaptic = (pattern) => {
 
 export default function MonoCricketLiveScore() {
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
   const sportConfig = getSportById(sport || 'cricket');
   const { isAuthenticated } = useAuth();
@@ -606,7 +608,14 @@ export default function MonoCricketLiveScore() {
       saveTournamentToConvex(updatedTournament);
       live.finalize();
       return true;
-    }, () => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
+    }, () => {
+      const destination = `/${sport || 'cricket'}/tournament/${id}`;
+      if (completeProtectedScoring) {
+        completeProtectedScoring(destination);
+      } else {
+        navigate(destination, { replace: true });
+      }
+    }, 300);
   };
 
   const handleDiscard = () => {
