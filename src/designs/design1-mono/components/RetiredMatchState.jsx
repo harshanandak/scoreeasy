@@ -19,7 +19,11 @@ export default function RetiredMatchState({ entry }) {
           <caption className="text-left font-semibold">Saved sets</caption>
           <tbody>{sets.map((set, index) => (
             <tr key={index}>
-              <th className="text-left font-normal" scope="row">Set {index + 1}{set.completed ? ' · Completed' : ' · Unfinished'}</th>
+              <th className="text-left font-normal" scope="row">
+                Set {index + 1}
+                {set.completed === true && ' · Completed'}
+                {set.completed === false && ' · Unfinished'}
+              </th>
               <td className="text-right font-mono">{savedScoreLabel([set.score1, set.score2])}</td>
             </tr>
           ))}</tbody>

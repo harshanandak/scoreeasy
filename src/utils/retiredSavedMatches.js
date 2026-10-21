@@ -79,7 +79,9 @@ export function loadRetiredSavedMatches() {
         const team2Ref = match.team2Id ?? match.team2;
         const team1 = teamName(teams, team1Ref, 'Team 1');
         const team2 = teamName(teams, team2Ref, 'Team 2');
-        const winner = match.winner === team1Ref ? team1 : match.winner === team2Ref ? team2 : match.winner;
+        const winner = match.winner === undefined || match.winner === null
+          ? null
+          : match.winner === team1Ref ? team1 : match.winner === team2Ref ? team2 : match.winner;
         const knockoutFormat = asArray(tournament.knockoutMatches).includes(match) ? tournament.knockoutConfig?.format : null;
         const format = match.format || knockoutFormat || tournament.format;
         const completed = isCompleted(match, sport, format);

@@ -63,7 +63,7 @@ describe('retired saved matches', () => {
     renderHistory();
     const group = await screen.findByRole('region', { name: 'Unfinished, retired sport' });
     fireEvent.click(within(group).getByRole('button', { name: 'View details: Dinks vs Lobs' }));
-    expect(screen.getByText('Set 2')).toBeInTheDocument();
+    expect(screen.getByText('Set 2', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('11 - 8')).toBeInTheDocument();
     expect(screen.getAllByText('10 - 7').length).toBeGreaterThan(0);
     expect(screen.getByText('9 - 7')).toBeInTheDocument();
@@ -146,7 +146,7 @@ describe('retired saved matches', () => {
     const row = await screen.findByRole('button', { name: 'View details: Dinks vs Lobs' });
     expect(row).toHaveTextContent('10 - 7');
     fireEvent.click(row);
-    expect(screen.getByText('Set 2')).toBeInTheDocument();
+    expect(screen.getByText('Set 2', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('9 - 7')).toBeInTheDocument();
     expect(localStorage.getItem('se_pickleball')).toBe(saved);
   });
@@ -171,5 +171,25 @@ describe('retired saved matches', () => {
     expect(write).not.toHaveBeenCalled();
     expect(remove).not.toHaveBeenCalled();
     expect({ ...localStorage }).toEqual(before);
+  });
+
+  it('does not invent a winner when a legacy save omits team references and winner', async () => {
+    seedTournament('pickleball', { team1Id: undefined, team2Id: undefined, status: 'completed',
+      currentSet: undefined, sets: [{ score1: 11, score2: 7, completed: true }] });
+    renderHistory();
+    const row = await screen.findByRole('button', { name: 'View details: Team 1 vs Team 2' });
+    expect(row).not.toHaveTextContent('Team 1 won');
+    fireEvent.click(row);
+    expect(screen.queryByText(/Team 1 won/)).not.toBeInTheDocument();
+  });
+
+  it('does not label an unmarked legacy set as unfinished in a completed match', async () => {
+    seedTournament('pickleball', { status: 'completed', currentSet: undefined,
+      sets: [{ score1: 11, score2: 7 }] });
+    renderHistory();
+    fireEvent.click(await screen.findByRole('button', { name: 'View details: Dinks vs Lobs' }));
+    const sets = screen.getByRole('table', { name: 'Saved sets' });
+    expect(within(sets).queryByText(/Unfinished/)).not.toBeInTheDocument();
+    expect(within(sets).getByText('11 - 7')).toBeInTheDocument();
   });
 });

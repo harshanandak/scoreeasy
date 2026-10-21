@@ -11,6 +11,7 @@ Scope: the stranded-save issue (`8fabb959-95a3-4313-b3bb-9f2a3f58c925`) and reti
 - [x] History has an **Unfinished, retired sport** group. Old quick drafts remain readable beyond the active scorer's draft expiry.
 - [x] Pickleball, squash, rugby, futsal and handball tournament saves are readable, including progress stored inside `draftState`.
 - [x] The existing details panel shows the saved score, sets or recorded period, serving team when saved, and saved score history. Goals action history stays an action list; it is not converted into invented score snapshots.
+- [x] Missing legacy winner references and set-completion flags stay unknown rather than inventing a winner or an unfinished-set label.
 - [x] The view says **This sport is retired; scoring is off**. It has no scoring, Resume, Rematch, Undo or Delete controls.
 - [x] Retired sport links offer **View saved match** when the requested save exists. Match links select that match; links covering several saves filter History to the sport. Empty links retain their recovery actions.
 - [x] Returning-player detection includes retired tournament storage and retired drafts. Retired saves never become resumable destinations.
@@ -26,7 +27,7 @@ Section A of `../2026-07-20-icp-games/adjusted-plan.md` already promises saved m
 
 ## Evidence
 
-Rung 4: the first regression run failed **8 new cases** while **24 existing route cases passed**. Further failing cases exposed shared-store deletion, single-set score selection and nested tournament draft state before those fixes were made.
+Rung 4: the first regression run failed **8 new cases** while **24 existing route cases passed**. Further failing cases exposed shared-store deletion, single-set score selection and nested tournament draft state before those fixes were made. Final archive review added two red regressions for missing legacy winner references and set-completion flags; those fields now remain unknown when absent.
 
 Focused validation covers these ten files: `RetiredSavedMatches.test.jsx`, `MonoHistory.test.jsx`, `AppRouteRecovery.test.jsx`, `appEntry.test.js`, `storage.test.js`, `storage.stability.test.js`, `MonoStatistics.test.jsx`, `palette.test.js`, `sportRegistry.test.js` and `routes.contract.test.jsx`.
 
