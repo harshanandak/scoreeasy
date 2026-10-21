@@ -4,7 +4,7 @@ Decisions needed: none.
 
 Retirement left unfinished saved matches unreachable and sent signed-out devices with only retired tournaments to marketing. This change reuses History's match-details panel for the archive, including unfinished quick drafts and tournament progress. It does not restore a retired scorer.
 
-Scope: the stranded-save issue (`8fabb959-95a3-4313-b3bb-9f2a3f58c925`) and retired-only entry issue (`96b7e01c-3167-43f5-814d-6681a402580b`). Base: master (`cdae97d`).
+Scope: the stranded-save issue (`8fabb959-95a3-4313-b3bb-9f2a3f58c925`) and retired-only entry issue (`96b7e01c-3167-43f5-814d-6681a402580b`). Implementation base: master (`cdae97d`). The release branch normally merges current master before pushing; the PR description records its final base and validation counts.
 
 ## Acceptance checklist
 
@@ -19,8 +19,8 @@ Scope: the stranded-save issue (`8fabb959-95a3-4313-b3bb-9f2a3f58c925`) and reti
 - [x] Completed retired saves remain visible. Existing retirement and expected-failure tests are unchanged.
 - [x] Palette test and baseline remain unchanged at **669**; new UI uses existing tokens.
 - [x] Four **390×844** screenshots were captured from the running local app and individually inspected.
-- [ ] Full suite and production build: deliberately deferred until **lane free**, then run by the normal pre-push hook.
-- [ ] Push and PR: deliberately held. No hosted checks exist for this branch yet.
+
+The initial handoff stopped before push, full-suite tests and build until the single validation lane was released. The normal pre-push hook runs the full suite and production build. Their final counts and the hosted-check snapshot belong in the PR description.
 
 Section A of `../2026-07-20-icp-games/adjusted-plan.md` already promises saved matches stay readable without restricting that promise to completed matches. Its promise is unchanged.
 
@@ -30,7 +30,7 @@ Rung 4: the first regression run failed **8 new cases** while **24 existing rout
 
 Focused validation covers these ten files: `RetiredSavedMatches.test.jsx`, `MonoHistory.test.jsx`, `AppRouteRecovery.test.jsx`, `appEntry.test.js`, `storage.test.js`, `storage.stability.test.js`, `MonoStatistics.test.jsx`, `palette.test.js`, `sportRegistry.test.js` and `routes.contract.test.jsx`.
 
-The focused run passed **261 tests with 7 expected failures (268 total), 10 files**. These are focused counts, not full-suite counts. Lint passed with **0 errors and 29 warnings**; type-check passed. Commit hooks run lint, type-check and agent-config sync without bypasses.
+At the initial hold, the focused run passed **261 tests with 7 expected failures (268 total), 10 files**. These are focused counts, not full-suite counts. Lint passed with **0 errors and 29 warnings**; type-check passed. Commit hooks run lint, type-check and agent-config sync without bypasses. After merging master, focused validation also includes its cricket completion-navigation and deterministic sets-stability tests.
 
 Rung 5: `capture-demo.cjs` used fresh browser contexts against `bun run dev` on port **5178** because 5173 was occupied. It verified the 10–7 pickleball draft, no retired-storage writes, refresh retention, no scoring controls, and signed-out retired-only `/` → `/app` without a Resume action. Fixtures are synthetic local data. No secret files or production services are involved.
 
@@ -47,4 +47,4 @@ T3 Preview twice returned `Preview automation snapshot timed out after 15000ms.`
 
 Start `bun run dev -- --host 127.0.0.1 --port 5178 --strictPort`. Run `capture-demo.cjs` with `SCOREEASY_PLAYWRIGHT` pointing at an installed Playwright module and `SCOREEASY_BROWSER` pointing at Chrome. `SCOREEASY_DEMO_URL` can override the local origin. The script creates isolated browser contexts, seeds only synthetic local saves, checks behavior and storage, and writes the four screenshots beside this file.
 
-After the lane release: fetch and merge `origin/master`, rerun focused checks, push normally so the full-suite/build hook runs, and open the PR against master. Do not merge or watch it.
+Release procedure: fetch and merge `origin/master`, rerun focused checks, fetch again immediately before pushing, push normally so the full-suite/build hook runs, and open the PR against master. Do not merge or watch it.
