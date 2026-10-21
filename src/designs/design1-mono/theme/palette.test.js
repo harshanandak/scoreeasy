@@ -159,7 +159,9 @@ describe('documented contrast pairs', () => {
 // ---------------------------------------------------------------------------
 // Baseline measured on master 4ed7ad8: 667, up from the old 651 by
 // TeamColourPicker.jsx (+12) and lib/courtMotifs.js (+4).
-const BASELINE = 667;
+// 669 on feat/team-colour-volleyball (PR #157): lib/sportMarks.js (+2), the white/black
+// luminance <mask> inside its data-URI SVG, where CSS variables cannot reach.
+const BASELINE = 669;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

@@ -195,7 +195,7 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Volleyball quick match' })).toBeInTheDocument();
 
-    const endMatchButton = await screen.findByRole('button', { name: 'Finish' });
+    const endMatchButton = await screen.findByRole('button', { name: /^Finish( match)?$/ });
     fireEvent.click(endMatchButton);
 
     expect(screen.getByRole('dialog', { name: 'End match?' })).toBeInTheDocument();
@@ -225,7 +225,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Team B name' }), { target: { value: 'Hawks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start Volleyball' }));
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Finish( match)?$/ }));
     fireEvent.click(screen.getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
 
