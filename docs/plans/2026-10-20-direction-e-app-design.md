@@ -42,6 +42,24 @@ Harsha picked option **B · Mono hard shell** from three rendered options:
 - The court drawing is **not** on the keys (it fought the flat fills); `courtMotifs.js` stays for the
   spectator page and later use. Success criterion 2's "court drawing behind" is dropped for the scorer.
 
+## Design revision 2 (2026-10-21, later): Refined Soft with Mono-strength controls
+
+Comparing the three options again, Harsha moved the app to **Refined Soft** (option A: cleaner layout,
+fewer frames and uppercase labels) but kept B's stronger buttons. This supersedes the B styling
+above; the thumb-first layout, names once, serving once and the options sheet all stay.
+
+- Keys are the engine's blended gradient (hi → core → lo plus the 7% sheen the engine gates),
+  rounded, with no ink frame. On-colour text stays ≥ 4.5:1 on every stop for any pair.
+- Only the controls you press (Finish, Undo, More, Done, the dialog buttons) keep Mono's 2px ink
+  edge and hard offset shadow. Labels are sentence-case sans; status is one plain text line.
+- Score background: three options were prototyped in `prototype/refined-soft-app.html`
+  (A gradient only, B a volleyball mark on both keys, C the mark on the **serving** key only).
+  **C is the default**: the ball sits with the serving team, so the mark names the game and carries
+  the serve instead of being wallpaper. It is `src/lib/sportMarks.js`, a CSS mask painted in the
+  engine's gated `--team-x-motif`. Sports without a mark show the gradient only (option A).
+- Finish and Discard use the app's confirm dialog in the board's skin and show the score they act on.
+- Screens: `docs/plans/2026-10-20-direction-e-app-screens/` (`volleyball-*.png`, `score-background-options-A-B-C.png`).
+
 ## Success criteria
 
 1. A scorer can pick a colour for each team on quick-match setup (6 preset swatches + custom), and the choice survives a refresh mid-match.
