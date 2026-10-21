@@ -12,7 +12,7 @@ The decision is to stay on React Router v7 (`react-router-dom` 7.15) and clean i
 - contract tests for the top findings;
 - a fix plan of small, one-point PRs, ordered by how much each one matters to a scorer mid-match.
 
-The original audit did not change app code. Its only code additions were `src/designs/design1-mono/routes.contract.test.jsx` and the sweep script `scripts/route-sweep.mjs`.
+The original audit did not change app code. Its only code additions were `src/designs/design1-mono/routes.contract.test.jsx` and the sweep script `scripts/route-sweep.mjs`. Follow-up implementation status is recorded below; the original inventories and runtime rows remain historical evidence.
 
 **Severity scale.** P0: a point or a match is lost, or the board lies. P1: a scorer can lose track of a match, gets stuck, or Back does something unsafe mid-match. P2: wrong or confusing behaviour with a way out. P3: polish, dead code, or a latent risk.
 
@@ -25,7 +25,7 @@ The original audit did not change app code. Its only code additions were `src/de
 
 ## Top findings in plain words
 
-1. **Back after finishing a match goes back into the match** (RA-1, RA-2). Only volleyball-style (sets) tournament scorers leave the scorer cleanly. Football/basketball/hockey/kabaddi, tennis and cricket scorers *push* the next screen on Finish. So Back reopens the scorer you just finished. For a tennis quick match it opens a dead "Match not found" page that still has the exit guard on it.
+1. **Back after finishing a match goes back into the match** (RA-1, RA-2). **Goals tournament completion is fixed** for football, basketball, hockey and kabaddi: manual, timed and target-score completion now use the existing app completion seam after a successful local save. Sets tournament completion already used that seam. Tennis and cricket remain open; a finished tennis quick match still reopens a dead "Match not found" page with the exit guard armed. Goals quick matches already finish in place; their saved result and Undo are pinned separately.
 2. **RA-3 fixed: Home lists resumable matches.** Home and cold entry share a catalog of active-sport quick drafts, tennis drafts, cricket Test matches and unfinished tournaments. Each destination has a Resume action. Retired sports have no Resume; saved data stays intact and completed results remain readable in History. Originally, Home hid quick drafts and could strand an in-progress tennis match.
 3. **Stale cricket Test links hang on "Loading..." forever** (RA-4). The bottom nav is hidden, and Back warns about losing unsaved progress for a match that does not exist.
 4. **The exit warning fires before a match even starts** (RA-5). `/:sport/quick` is guarded by URL, so the untouched setup form already asks "Leave this page? Your unsaved scoring progress may be lost." That trains scorers to tap Leave without reading.
@@ -34,6 +34,14 @@ The original audit did not change app code. Its only code additions were `src/de
 7. **Back and Home are not consistent** (RA-8, RA-10, RA-12). `navigate(-1)` with no fallback can leave the app. In-app back arrows push while hardware Back pops. "Home" means `/` on some buttons and `/app` on others, so Home on a 404 can drop you straight into a live scorer.
 
 No P0 was demonstrated by these routing cases. They exposed lost *track* of matches, Back loops and dead ends. This audit does not establish that autosave always succeeds or that scored points cannot be lost; persistence failures need separate stability proof.
+
+### Goals completion follow-up
+
+The goals portion of RA-1 is fixed for the four registered goals-engine sports: football, basketball, hockey and kabaddi. All three tournament completion paths (manual Finish, target score and time expiry) save before using the app-owned completion seam; a failed local save keeps the scorer open. Futsal, handball and rugby are retired and are not included. Tennis and cricket completion remain open; the tennis RA-2 expected-failure contract is unchanged.
+
+The former goals RA-1 expected failure is now a normal contract parameterized over the registered goals sports. Additional normal quick-match contracts verify that restored Undo history corrects the score before Finish and that the saved result survives Back. Goals quick matches already use an in-place result, so this change does not claim to fix a quick-match scorer-reopening bug. Real-browser Back on that result still opens the existing leave-page warning; that guard behavior remains outside this completion fix.
+
+Proof: restoring master's goals scorer makes all four tournament contracts fail by reopening the completed scorer (rung 4). At 390x844 in the running guest app, football tournament Finish → Back reopens the scorer before the fix and stays on the completed tournament afterward (rung 5). Football quick-match Undo → Finish → Back retains the corrected 2–1 result before and after; the leave warning remains visible. Screenshots, inspected individually, and structured run evidence are in [the goals demo](2026-10-21-routing-fixes/goals-back/README.md). Browser proof does not establish native Android behavior.
 
 ## Method
 
@@ -126,11 +134,11 @@ Path strings are built in place everywhere except `appEntry.js` (`APP_ENTRY_PATH
 
 ## Findings
 
-Evidence marked "run #n" refers to the run table below. "Contract RA-n" is the matching route test (RA-3 now passes normally; open findings retain `it.fails`) in `routes.contract.test.jsx`.
+Evidence marked "run #n" refers to the original run table below. "Contract RA-n" is the matching route test in `routes.contract.test.jsx`; RA-3 and goals completion now pass normally, while open findings retain `it.fails`.
 
 | ID | Sev | Finding | Evidence | Forge |
 |----|-----|---------|----------|-------|
-| RA-1 | P1 | Back after finishing a tournament match reopens its scorer (goals, tennis-tournament, cricket limited-overs, cricket Test, guided cricket). Only the sets scorer uses `completeProtectedScoring`. The others PUSH the tournament page. | `scoring/MonoGoalsLiveScore.jsx:198,290,397`; `scoring/MonoTennisLiveScore.jsx:687`; `scoring/MonoCricketLiveScore.jsx:600`; `scoring/MonoCricketTestLiveScore.jsx:596-602`; `scoring/MonoCricketGuidedScorerRoute.jsx:125`; vs `scoring/MonoSetsLiveScore.jsx:501-505`. Run #79: Finish → `/football/tournament/100` → Back → `/football/tournament/100/match/m1/score` "Football match scorer". Contract RA-1. | `a7088ac7-c11b-4a36-9012-25baacb4248f` |
+| RA-1 | P1 | **Goals portion fixed:** football, basketball, hockey and kabaddi complete through `completeProtectedScoring` after saving. Tennis-tournament, cricket limited-overs, cricket Test and guided cricket remain open. | `scoring/MonoGoalsLiveScore.jsx` (`completeMatch`, all three completion paths); normal RA-1 contracts for every registered goals sport. Original run #79 records the prior failure; the goals demo below records before/after. Tennis/cricket evidence remains the original source inventory. | `a7088ac7-c11b-4a36-9012-25baacb4248f` |
 | RA-2 | P1 | Back after finishing a tennis quick match lands on `/tennis/quick/live/<id>`, now "Match not found", with the exit guard armed again. | `scoring/MonoTennisLiveScore.jsx:630-632` (clear draft, push `/history`); `:711-723` recovery branch; protected by `backButton.js:10`. Run #78. Contract RA-2. | `80bba13a-e002-4a13-8dc8-600bc9cd430e` |
 | RA-3 (fixed) | P1 | Original finding: `/app` never lists in-progress drafts. With 1 draft the Home tab shows "Play your first match". With 2+ drafts the app entry lands on `/app` on purpose, but nothing there lets the scorer pick one. Tennis drafts are then unreachable from the UI. | `landing/DashboardLanding.jsx:723-736` reads `gs_sessions`, `se_quickmatches`, tournaments only; `:758` `hasNoData`; `utils/appEntry.js:92-100` (2+ drafts → `/app`); tennis drafts are discovered only in `appEntry.js:39-51`. Runs #67-68 (`/` → `/app` "Welcome."), #86 (one volleyball draft, Home tab → "Welcome."). Contract RA-3. | `6fc57130-4f71-404c-b4a2-673929ba16b8` |
 | RA-4 | P1 | Unknown cricket Test match id → "Loading..." forever, no nav, and Back asks about unsaved progress. | `scoring/MonoCricketTestLiveScore.jsx:695-698` (no not-found branch). Runs #58-59, #82 (exit dialog over "Loading..."). Contract RA-4. | `504a2ffb-85fa-4861-95b6-62954d7f34d3` |
@@ -259,14 +267,17 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 
 ## Contract tests
 
-`src/designs/design1-mono/routes.contract.test.jsx`, 21 tests (13 normal, 8 expected failures):
+`src/designs/design1-mono/routes.contract.test.jsx`, 29 tests (22 normal, 7 expected failures):
 - **Pinned (pass today):** generic 404 with Play/Home; sport-scoped 404 on `/volleyball`; single draft auto-resumes from `/`.
 - **RA-3 fixed:** 10 normal passing cases verify Home Resume, the multi-match entry chooser and all eight generic sport quick scorers; tennis uses its dedicated saved-draft scorer.
-- **`it.fails` (encode the correct behaviour, fail today):** RA-1, RA-2, RA-4, RA-5, RA-6, RA-7, RA-8, RA-9. Each one was first run as a plain `it` to confirm it fails on its contract assertion, not on the harness. The fix PR for each finding flips its test to `it`.
+- **Goals RA-1 fixed / quick regression:** 9 normal passing cases pin the four registered goals sports, tournament Finish and Back with Undo, and quick-match saved-result preservation. Tennis and cricket completion remain open.
+- **`it.fails` (encode the correct behaviour, fail today):** RA-2, RA-4, RA-5, RA-6, RA-7, RA-8, RA-9. Each one was first run as a plain `it` to confirm it fails on its contract assertion, not on the harness. The fix PR for each finding flips its test to `it`.
+
+Sync with RA-3 master (`4da859d`): routing expected failures decrease from 8 to 7 by replacing the single goals RA-1 expected failure with parameterized normal tests. The four stability cases are unchanged, so the repository total decreases from 12 to 11. Master's RA-3 tests and every contract from RA-2 onward are preserved without duplication.
 
 ### RA-3 integration evidence
 
-Merged `origin/master` at `8384956` using the master audit files as the base, preserving the spawned-process Chrome debugger endpoint validation and the omitted-showcase disclosure. RA-3 phone evidence was refreshed from `bun run dev` on port 5173 at 390?844 CSS pixels (device scale 2): all 18 selected cases reached their intended surface without horizontal overflow or stuck loading; Home Resume targets measured at least 44px tall. Each refreshed screenshot in `2026-10-21-routing-fixes/RA-3/after/` was inspected. The local backend returned `live:listLiveFeed` errors that the existing silent Home error boundary caught; public live-feed availability is not proven by this demo. The other eight route findings and all four stability cases remain expected failures. The palette ratchet remains exactly 667; no baseline or exclusion changed.
+Merged `origin/master` at `8384956` using the master audit files as the base, preserving the spawned-process Chrome debugger endpoint validation and the omitted-showcase disclosure. RA-3 phone evidence was refreshed from `bun run dev` on port 5173 at 390?844 CSS pixels (device scale 2): all 18 selected cases reached their intended surface without horizontal overflow or stuck loading; Home Resume targets measured at least 44px tall. Each refreshed screenshot in `2026-10-21-routing-fixes/RA-3/after/` was inspected. The local backend returned `live:listLiveFeed` errors that the existing silent Home error boundary caught; public live-feed availability is not proven by this demo. At that integration, the other eight route findings and all four stability cases remained expected failures. The palette ratchet was exactly 667; no baseline or exclusion changed in that integration.
 
 ## Fix plan
 
@@ -287,6 +298,8 @@ The original plan below groups fixes by scorer impact. Harsha's current delivery
 | 11 | **Small auth and result fixes** | RA-15, RA-19, RA-22 | honour `?sport` in Guided mode; `onSignIn` with `returnTo`; onboarding completion `replace`; consume or clear stored `returnTo` on every sign-in | Low | runs #13, #19 |
 
 Not a code PR: **RA-13 App Links.** Publishing `assetlinks.json` and `apple-app-site-association` needs the release SHA-256 fingerprint and the Apple Team ID (`docs/mobile/app-link-associations.md`). Until they are published, shared live links open in the browser.
+
+Plan item 2a (goals tournament completion) is implemented and verified as described above. Items 2b and 2c (tennis and cricket) remain open.
 
 ### Recorded decisions and remaining release question
 
