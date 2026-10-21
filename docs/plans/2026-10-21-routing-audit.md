@@ -272,6 +272,13 @@ Not a code PR: **RA-13 App Links.** Publishing `assetlinks.json` and `apple-app-
 
 ### Decisions for Harsha
 
+> **Decided by Harsha, 2026-10-21:**
+> - **RA-5:** the leave-match guard turns on only once scoring starts; quick-match setup shows the bottom nav and leaves without a warning.
+> - **RA-10:** every in-app Home goes to `/app`; `/` stays for the logo and cold start.
+> - **Rematch:** hidden on tournament match results (tournament results offer Back to tournament / Next match); quick-match results keep Rematch.
+> - **RA-13** (who publishes the app-link files, and when) is still open: it needs the release signing fingerprint and Apple Team ID.
+
+
 - **RA-5, quick-match setup.** (a) Keep the guard on setup but drop the "unsaved scoring progress" wording until a point is scored. (b) Arm the guard only once scoring starts, and show the bottom nav on setup (recommended: the setup form has nothing to lose). (c) Leave as is.
 - **RA-10, what "Home" means.** (a) `/app` everywhere inside the app, and `/` only for the brand/logo and cold start (recommended). (b) `/` everywhere, accepting that Home can jump into a live scorer.
 - **RA-13.** Who publishes the association files, and when.
