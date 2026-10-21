@@ -216,7 +216,7 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
   // the Home tab shows "Play your first match" over a live match, and when two
   // drafts exist the app entry (/) deliberately lands here to let the scorer pick.
   // Fix PR: "Resume surface: /app lists every in-progress draft".
-  it.fails('RA-3: the Home dashboard offers a resume action for an in-progress quick draft', async () => {
+  it('RA-3: the Home dashboard offers a resume action for an in-progress quick draft', async () => {
     seed('se_quickmatch_draft_volleyball', {
       phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets',
       updatedAt: NOW_ISO, savedAt: NOW_ISO,
@@ -225,6 +225,32 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     await settleRoute();
 
     expect(screen.getAllByRole('button', { name: /resume/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Play your first match')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /resume/i }));
+    await waitFor(() => expect(currentRoute()).toBe('/volleyball/quick'));
+  });
+
+  it('RA-3: multiple matches land on Home and each Resume opens its own route', async () => {
+    const cases = [
+      { name: /resume.*tennis/i, path: `/tennis/quick/live/${TENNIS_ID}` },
+      { name: /resume.*cricket/i, path: '/cricket/quick/test-match/123' },
+      { name: /resume.*Sunday League/i, path: '/football/tournament/100' },
+    ];
+    for (const entry of cases) {
+      seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
+        id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
+        status: 'in-progress', format: { sets: 3 }, updatedAt: NOW_ISO,
+      });
+      seed('se_quickmatches', [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', status: 'in-progress', format: { totalInnings: 4 }, updatedAt: NOW_ISO }]);
+      seed('se_football', [footballTournament()]);
+      renderApp(['/']);
+      await settleRoute();
+      expect(currentRoute()).toBe('/app');
+      expect(screen.getAllByRole('button', { name: /resume/i })).toHaveLength(3);
+      fireEvent.click(screen.getByRole('button', { name: entry.name }));
+      await waitFor(() => expect(currentRoute()).toBe(entry.path));
+      cleanup();
+    }
   });
 
   // RA-4 (P1). The cricket Test scorer renders "Loading..." forever when the

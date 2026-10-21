@@ -1,6 +1,7 @@
 import { getSportsList } from '../models/sportRegistry';
 import { isStaleQuickMatchDraft, listDataKeys, loadData } from './storage';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
+import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
 
 export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
@@ -31,6 +32,7 @@ export function loadQuickMatchDrafts(sports = getSportsList()) {
   return sports
     .map((sport) => ({
       ...loadData(`${QUICK_MATCH_DRAFT_PREFIX}${sport.id}`, null),
+      sport: sport.id,
       entryPath: `/${sport.id}/quick`,
     }))
     .filter((draft) => draft?.phase === 'scoring' && !isStaleQuickMatchDraft(draft));
@@ -44,6 +46,7 @@ export function loadTennisQuickDrafts() {
       const matchId = draft?.id || key.slice(TENNIS_QUICK_DRAFT_PREFIX.length);
       return {
         ...draft,
+        sport: 'tennis',
         entryPath: `/tennis/quick/live/${matchId}`,
       };
     })
@@ -81,6 +84,31 @@ export function loadActiveSessionSummaries() {
   return sessions.filter((session) => session?.status === 'active' || session?.status === 'paused');
 }
 
+// Read-only catalog shared by cold entry and Home. Paths identify resumable
+// surfaces: a quick scorer or a tournament's fixture picker.
+export function loadInProgressMatches(sports = getSportsList()) {
+  const quickMatches = [
+    ...loadQuickMatchDrafts(sports),
+    ...loadTennisQuickDrafts(),
+    ...loadQuickMatchSummaries().filter((match) => match.entryPath),
+  ].map((match) => ({ ...match, kind: 'quick' }));
+  const tournaments = sports.flatMap((sport) => {
+    const saved = loadData(sport.storageKey, []);
+    if (!Array.isArray(saved)) return [];
+    return saved.filter((tournament) => {
+      if (tournament?.id === undefined || tournament?.id === null) return false;
+      const matches = getTournamentMatches(tournament);
+      return matches.some((match) => !isTournamentMatchCompleted(match, sport.engine, match.format || tournament.format));
+    }).map((tournament) => ({
+      ...tournament,
+      sport: sport.id,
+      kind: 'tournament',
+      entryPath: `/${sport.id}/tournament/${tournament.id}`,
+    }));
+  });
+  return [...new Map([...quickMatches, ...tournaments].map((match) => [match.entryPath, match])).values()];
+}
+
 export function loadAppEntryState() {
   try {
     const sports = getSportsList();
@@ -93,11 +121,11 @@ export function loadAppEntryState() {
     // saved (e.g. abandoned quick drafts piling up), don't force-redirect into an
     // arbitrary one — return null so the app entry lands on the dashboard and the
     // player can go home (or pick a match to resume) instead of being trapped.
-    const resumableEntryPaths = [
-      ...quickMatchDrafts.map((draft) => draft.entryPath),
-      ...quickMatches.map((match) => match.entryPath),
-    ].filter(Boolean);
-    const draftEntryPath = resumableEntryPaths.length === 1 ? resumableEntryPaths[0] : null;
+    const inProgressMatches = loadInProgressMatches(sports);
+    const onlyMatch = inProgressMatches.length === 1 ? inProgressMatches[0] : null;
+    // Preserve tournament-only entry at Home; only a lone quick match jumps
+    // straight to scoring. Multiple entries always share Home's resume list.
+    const draftEntryPath = onlyMatch?.kind === 'quick' ? onlyMatch.entryPath : null;
 
     return {
       draftEntryPath,

@@ -8,10 +8,47 @@ import {
   loadAppEntryState,
   loadQuickMatchSummaries,
   loadReturningPlayerState,
+  loadInProgressMatches,
 } from './appEntry';
+import { getSportsList } from '../models/sportRegistry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 describe('app entry contract', () => {
+  it('lists each resumable sport draft, tennis draft, Test match and unfinished tournament once without writing storage', () => {
+    const now = new Date().toISOString();
+    const sports = getSportsList().filter((sport) => sport.id !== 'tennis');
+    for (const sport of sports) {
+      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ sport: sport.id, phase: 'scoring', updatedAt: now }));
+    }
+    localStorage.setItem(getTennisQuickDraftKey('tennis-1'), JSON.stringify({ id: 'tennis-1', status: 'in-progress', updatedAt: now }));
+    localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'test-1', sport: 'cricket', status: 'in-progress', format: { totalInnings: 4 }, updatedAt: now },
+      { id: 'finished', sport: 'cricket', status: 'completed', format: { totalInnings: 4 } },
+    ]));
+    localStorage.setItem('se_football', JSON.stringify([
+      { id: 1, name: 'Cup', matches: [{ id: 'm1', status: 'pending' }], knockoutMatches: [] },
+      { id: 2, matches: [{ status: 'completed' }] },
+      { id: 3, matches: [{ status: 'completed' }], knockoutMatches: [{ status: 'pending' }] },
+    ]));
+    const before = JSON.stringify(localStorage);
+    const entries = loadInProgressMatches();
+    expect(entries.map((entry) => entry.entryPath)).toEqual(expect.arrayContaining([
+      ...sports.map((sport) => `/${sport.id}/quick`),
+      '/tennis/quick/live/tennis-1', '/cricket/quick/test-match/test-1',
+      '/football/tournament/1', '/football/tournament/3',
+    ]));
+    expect(entries).toHaveLength(sports.length + 4);
+    expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
+    expect(JSON.stringify(localStorage)).toBe(before);
+    expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
+  });
+
+  it('excludes setup, expired and completed drafts from the resume catalog', () => {
+    localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({ phase: 'setup' }));
+    localStorage.setItem('se_quickmatch_draft_football', JSON.stringify({ phase: 'scoring', updatedAt: '2020-01-01' }));
+    localStorage.setItem(getTennisQuickDraftKey('old'), JSON.stringify({ status: 'completed' }));
+    expect(loadInProgressMatches()).toEqual([]);
+  });
   beforeEach(() => {
     globalThis.localStorage.clear();
   });

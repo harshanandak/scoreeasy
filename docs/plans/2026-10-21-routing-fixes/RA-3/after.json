@@ -1,0 +1,416 @@
+[
+  {
+    "label": "RA3 all resumable matches on Home",
+    "path": "/",
+    "seed": "resumeCatalog",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 6 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      },
+      {
+        "label": "Resume Cricket: Red vs Blue",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 100",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 101",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 102",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [],
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 6be68c7c2449d287] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "RA3 resume tennis from Home",
+    "path": "/app",
+    "seed": "resumeCatalog",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      },
+      {
+        "label": "Resume Cricket: Red vs Blue",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 100",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 101",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 102",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Resume Tennis: Ana vs Bea: clicked"
+      }
+    ],
+    "final": {
+      "url": "/tennis/quick/live/1761000000000",
+      "heading": "Tennis match scorer",
+      "text": "Tennis match scorer Tennis SET 1 OF 3 \u25cf Sign in to go live A free account lets you share the live scoreboard \u2014 your matches stay private until you go live. Ana:",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 4,
+      "stuckLoading": false,
+      "resumeActions": [],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: e694434e3374e70e] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "RA3 resume cricket Test from Home",
+    "path": "/app",
+    "seed": "resumeCatalog",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      },
+      {
+        "label": "Resume Cricket: Red vs Blue",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 100",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 101",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 102",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Resume Cricket: Red vs Blue: clicked"
+      }
+    ],
+    "final": {
+      "url": "/cricket/quick/test-match/123",
+      "heading": "Cricket match scorer",
+      "text": "Cricket match scorer \u25cf Sign in to go live A free account lets you share the live scoreboard \u2014 your matches stay private until you go live. Cricket TEST MATCH 1S",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 5,
+      "stuckLoading": false,
+      "resumeActions": [],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 3494d1ee2721ea45] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "RA3 resume third tournament from Home",
+    "path": "/app",
+    "seed": "resumeCatalog",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      },
+      {
+        "label": "Resume Cricket: Red vs Blue",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 100",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 101",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 102",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Resume Football: Sunday League 102: clicked"
+      }
+    ],
+    "final": {
+      "url": "/football/tournament/102",
+      "heading": "Sunday League 102",
+      "text": "\u2190 Tournaments Sunday League 102 LIVE Football \u00b7 2 teams \u00b7 Round Robin 0/1 Matches Standings Teams MATCH 1 Red vs Blue Enter Score",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "stuckLoading": false,
+      "resumeActions": [],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 1ce665eab735faec] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "RA3 resume volleyball from Home",
+    "path": "/app",
+    "seed": "resumeCatalog",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      },
+      {
+        "label": "Resume Cricket: Red vs Blue",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 100",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 101",
+        "height": 44
+      },
+      {
+        "label": "Resume Football: Sunday League 102",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Resume Volleyball: Sharks vs Jets: clicked"
+      }
+    ],
+    "final": {
+      "url": "/volleyball/quick",
+      "heading": "Volleyball quick match",
+      "text": "Volleyball quick match Volleyball 2:23 SET 1 OF 3 \u25cf Sign in to go live A free account lets you share the live scoreboard \u2014 your matches stay private until you g",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 5,
+      "stuckLoading": false,
+      "resumeActions": [],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 3dabbdc54c3d9c41] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "root with two drafts",
+    "path": "/",
+    "seed": "twoDrafts",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 2 ACTIVE 0 RECENT 0 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [],
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: a265a0d499939a31] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "app with two drafts",
+    "path": "/app",
+    "seed": "twoDrafts",
+    "url": "/app",
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 2 ACTIVE 0 RECENT 0 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [
+      {
+        "label": "Resume Volleyball: Sharks vs Jets",
+        "height": 44
+      },
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "snaps": [],
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 23886c5b3a29b191] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "FLOW3 tournament list Home with one draft",
+    "path": "/volleyball/tournament",
+    "seed": "tennisDraft",
+    "url": "/volleyball/tournament",
+    "heading": "\ud83c\udfd0 Volleyball Tournaments",
+    "text": "Home \ud83c\udfd0 Volleyball Tournaments New Volleyball Tournament \ud83c\udfd0 No tournaments yet Build a match list, track standings, and resume the next game from one place. 1 N",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Home: clicked"
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "heading": "Welcomeback.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 0 RECENT 0 EVENTS Guest on this device SIGN IN \u2192 In progress Ana vs Bea Tennis \u00b7 Quick match Resume \u2192 ",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "stuckLoading": false,
+      "resumeActions": [
+        {
+          "label": "Resume Tennis: Ana vs Bea",
+          "height": 44
+        }
+      ],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 1c91a794e8511a12] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "FLOW2 bottom-nav Home with one volleyball draft",
+    "path": "/play",
+    "seed": "volleyDraftOnly",
+    "url": "/play",
+    "heading": "",
+    "text": "GUIDED BROWSE 1 PICK A SPORT What are you scoring today? VOLLEYBALL BADMINTON TABLE TENNIS TENNIS PICKLEBALL SQUASH FOOTBALL BASKETBALL HOCKEY HANDBALL FUTSAL K",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Home: clicked"
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "heading": "Welcomeback.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 0 RECENT 0 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "stuckLoading": false,
+      "resumeActions": [
+        {
+          "label": "Resume Volleyball: Sharks vs Jets",
+          "height": 44
+        }
+      ],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 9611593bf471bc9b] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  }
+]

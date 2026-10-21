@@ -31,6 +31,12 @@ const blankSet = { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false,
 const wonSet = { ...blankSet, games1: 6, games2: 0, completed: true };
 
 const seeds = {
+  resumeCatalog: {
+    [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', updatedAt: iso },
+    se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, updatedAt: iso },
+    se_quickmatches: [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', team1Id: 'team1', team2Id: 'team2', format: { totalInnings: 4 }, innings: [], status: 'in-progress', updatedAt: iso }],
+    se_football: [100, 101, 102].map((id) => ({ id, name: `Sunday League ${id}`, type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'pending' }] })),
+  },
   tennisDraft: {
     [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1: 'Ana', team2: 'Bea', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', sets: null, date: iso, createdAt: iso, updatedAt: iso },
   },
@@ -59,6 +65,19 @@ const seeds = {
 
 // [label, path, seedName?, steps?]
 const cases = [
+  ['RA3 all resumable matches on Home', '/', 'resumeCatalog'],
+  ['RA3 resume tennis from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 }, { reload: true }, { wait: 5000 },
+  ]],
+  ['RA3 resume cricket Test from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Cricket: Red vs Blue' }, { wait: 5000 }, { reload: true }, { wait: 5000 },
+  ]],
+  ['RA3 resume third tournament from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Football: Sunday League 102' }, { wait: 5000 },
+  ]],
+  ['RA3 resume volleyball from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Volleyball: Sharks vs Jets' }, { wait: 5000 }, { reload: true }, { wait: 5000 },
+  ]],
   // App shell + public
   ['root resolver', '/'],
   ['marketing', '/marketing'],
@@ -254,6 +273,8 @@ async function main() {
       dialog: dialog ? dialog.innerText.replace(/\\s+/g, ' ').trim().slice(0, 90) : '',
       historyLength: history.length,
       stuckLoading: /^(Loading\\.\\.\\.|Loading…)$/.test((main.innerText || '').trim()),
+      resumeActions: [...document.querySelectorAll('button[aria-label^="Resume "]')].map((el) => ({ label: el.getAttribute('aria-label'), height: el.getBoundingClientRect().height })),
+      horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
     };
   })()`;
 
@@ -289,6 +310,7 @@ async function main() {
       for (const step of steps) {
         if (step.wait) await sleep(step.wait);
         else if (step.back) await send('Runtime.evaluate', { expression: 'history.back()' }, sessionId);
+        else if (step.reload) await send('Page.reload', {}, sessionId);
         else if (step.goto) { await send('Page.navigate', { url: BASE + step.goto }, sessionId); }
         else if (step.eval) await send('Runtime.evaluate', { expression: step.eval }, sessionId);
         else if (step.snap) result.snaps.push({ at: step.snap, ...(await evalSnap()) });

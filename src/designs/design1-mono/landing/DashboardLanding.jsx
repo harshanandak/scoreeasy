@@ -10,6 +10,7 @@ import { MONO, SWISS } from './landingTheme';
 import SportIcon from './sportIcons';
 import LiveNowStrip from '../live/LiveNowStrip';
 import ErrorBoundary from '../../../components/ErrorBoundary';
+import { loadInProgressMatches } from '../../../utils/appEntry';
 
 const QM_KEY = 'se_quickmatches';
 
@@ -150,6 +151,7 @@ function ExistingUserDashboard({
   navigate,
   user,
   sessions,
+  inProgressMatches,
   allTournaments,
   recentMatches,
   playedCount,
@@ -157,7 +159,6 @@ function ExistingUserDashboard({
   setShowAllSports,
 }) {
   const hasActive = sessions.length > 0;
-  const activeTournaments = allTournaments.filter(tr => tr.isActive);
   const displayTournaments = allTournaments.slice(0, 4);
   const displayName = getDashboardDisplayName(user);
   const tournamentCount = allTournaments.length;
@@ -198,7 +199,7 @@ function ExistingUserDashboard({
       {/* ── Stat line — pure typography, no chrome ── */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap', marginBottom: 20 }}>
         {[
-          ['Active', sessions.length],
+          ['Active', sessions.length + inProgressMatches.length],
           ['Recent', playedCount],
           ['Events', tournamentCount],
         ].map(([label, value]) => (
@@ -233,6 +234,27 @@ function ExistingUserDashboard({
       )}
 
       {/* ── ACTIVE STATE ── */}
+      {inProgressMatches.length > 0 && (
+        <section aria-labelledby="resume-matches-title" style={{ margin: '20px 0 28px' }}>
+          <h2 id="resume-matches-title" style={{ fontFamily: MONO, fontSize: '0.875rem', fontWeight: 800, margin: '0 0 12px' }}>In progress</h2>
+          {inProgressMatches.map((match) => {
+            const sportName = getSportById(match.sport)?.name || match.sport;
+            const title = match.kind === 'tournament'
+              ? match.name || `${sportName} tournament`
+              : `${match.team1Name || match.team1 || 'Team A'} vs ${match.team2Name || match.team2 || 'Team B'}`;
+            return (
+              <div key={match.entryPath} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: `1px solid ${t.divider}` }}>
+                <SportIcon name={sportName} size={24} color={t.text} />
+                <div style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+                  <div style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{title}</div>
+                  <div style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: 4 }}>{sportName} &middot; {match.kind === 'tournament' ? 'Tournament' : 'Quick match'}</div>
+                </div>
+                <button type="button" aria-label={`Resume ${sportName}: ${title}`} onClick={() => navigate(match.entryPath)} style={{ ...btnPrimary, minHeight: 44, minWidth: 80, flexShrink: 0 }}>Resume &rarr;</button>
+              </div>
+            );
+          })}
+        </section>
+      )}
       {hasActive && (
         <div style={{ marginTop: 20 }}>
           <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted, display: 'block', marginBottom: 16 }}>Active</span>
@@ -278,30 +300,6 @@ function ExistingUserDashboard({
               </button>
             );
           })}
-
-          {activeTournaments.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              {activeTournaments.slice(0, 2).map(tr => (
-                <button
-                  key={tr.id}
-                  type="button"
-                  onClick={() => navigate(`/${tr.sportId}/tournament/${tr.id}`)}
-                  style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer', ...s.activeRow }}
-                >
-                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius)', border: `1px solid ${t.border}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
-                    <SportIcon name={tr.sportIcon} size={18} color={t.text} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: t.text }}>{tr.name}</div>
-                    <div style={{ fontFamily: MONO, fontSize: '0.6875rem', color: t.textMuted, marginTop: 2 }}>
-                      {tr.teams?.length || 0} teams &middot; {tr.completed}/{tr.total} matches played
-                    </div>
-                  </div>
-                  <span style={{ ...btnPrimary, fontSize: '0.625rem', padding: '6px 14px' }}>Continue &rarr;</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
@@ -529,6 +527,7 @@ function ExistingUserDashboard({
 }
 
 ExistingUserDashboard.propTypes = {
+  inProgressMatches: PropTypes.arrayOf(PropTypes.object).isRequired,
   cloudAuthAvailable: PropTypes.bool.isRequired,
   isAuthenticated: PropTypes.bool.isRequired,
   navigate: PropTypes.func.isRequired,
@@ -724,11 +723,13 @@ function readDashboardState() {
   const sessions = getActiveSessions();
   const allTournaments = collectTournamentsBySport(getSportsList());
 
-  const qm = loadData(QM_KEY, []);
+  const savedMatches = loadData(QM_KEY, []);
+  const qm = Array.isArray(savedMatches) ? savedMatches.filter((match) => match?.status !== 'in-progress') : [];
   qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
 
   return {
     sessions,
+    inProgressMatches: loadInProgressMatches(),
     allTournaments,
     playedCount: qm.length,
     recentMatches: qm.slice(0, 3),
@@ -744,7 +745,7 @@ export default function DashboardLanding() {
   const [visible, setVisible] = useState(false);
   /* Lazy initializer: read every localStorage slice once, synchronously, before
      first paint — so the dashboard never flashes empty then re-renders populated. */
-  const [{ sessions, allTournaments, recentMatches, playedCount }] = useState(readDashboardState);
+  const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount }] = useState(readDashboardState);
   const [showAllSports, setShowAllSports] = useState(false);
 
   useEffect(() => {
@@ -755,7 +756,7 @@ export default function DashboardLanding() {
   /* Zero data = no tournaments AND no quick matches AND no active sessions.
      The dashboard always renders; at zero data it shows the calm empty state
      (the guided wizard now lives on /play, not here). */
-  const hasNoData = allTournaments.length === 0 && recentMatches.length === 0 && sessions.length === 0;
+  const hasNoData = inProgressMatches.length === 0 && allTournaments.length === 0 && recentMatches.length === 0 && sessions.length === 0;
   return (
     <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}
          className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
@@ -782,6 +783,7 @@ export default function DashboardLanding() {
           navigate={navigate}
           user={user}
           sessions={sessions}
+          inProgressMatches={inProgressMatches}
           allTournaments={allTournaments}
           recentMatches={recentMatches}
           playedCount={playedCount}
