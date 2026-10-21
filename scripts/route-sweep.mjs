@@ -33,7 +33,7 @@ const wonSet = { ...blankSet, games1: 6, games2: 0, completed: true };
 const seeds = {
   resumeCatalog: {
     [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', updatedAt: iso },
-    se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, updatedAt: iso },
+    se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }], currentSet: 0, updatedAt: iso },
     se_quickmatches: [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', team1Id: 'team1', team2Id: 'team2', format: { totalInnings: 4 }, innings: [], status: 'in-progress', updatedAt: iso }],
     se_football: [100, 101, 102].map((id) => ({ id, name: `Sunday League ${id}`, type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'pending' }] })),
   },

@@ -226,7 +226,7 @@
     "seed": "resumeCatalog",
     "url": "/app",
     "heading": "Welcomeback.",
-    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 6 ACTIVE 0 RECENT 3 EVENTS Guest on this device SIGN IN \u2192 In progress Sharks vs Jets Volleyball \u00b7 Quick match R",
     "bottomNav": true,
     "dialog": "",
     "historyLength": 2,
@@ -266,7 +266,7 @@
     "final": {
       "url": "/volleyball/quick",
       "heading": "Volleyball quick match",
-      "text": "Volleyball quick match Volleyball 2:23 SET 1 OF 3 \u25cf Sign in to go live A free account lets you share the live scoreboard \u2014 your matches stay private until you g",
+      "text": "Volleyball quick match Resumed your in-progress quick match on this device. Volleyball 0:30 SET 1 OF 3 \u25cf Sign in to go live A free account lets you share the li",
       "bottomNav": false,
       "dialog": "",
       "historyLength": 5,
@@ -275,8 +275,7 @@
       "horizontalOverflow": false
     },
     "errors": [
-      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 3dabbdc54c3d9c41] Server Error",
-      "console.error: The above error occurred in the <LiveNowStrip> component:"
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: cf75191ee424045e] Server Error"
     ]
   },
   {
