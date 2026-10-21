@@ -81,8 +81,8 @@ body.bare .phone{height:100vh;border-radius:0;box-shadow:none}
 /* ===================== shared app primitives ===================== */
 .scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;font-family:var(--f-ui);background:var(--canvas);color:var(--ink);padding:0 16px 104px;scrollbar-width:none}
 .scr::-webkit-scrollbar{display:none}
-:where(.scr,.tsb) :where(button,input){font:inherit;color:inherit}
-:where(.scr,.tsb) :where(button){cursor:pointer;-webkit-tap-highlight-color:transparent;background:none;border:0;padding:0;touch-action:manipulation}
+:where(.scr,.tsb,.sheet,.crb) :where(button,input){font:inherit;color:inherit}
+:where(.scr,.tsb,.sheet,.crb) :where(button){cursor:pointer;-webkit-tap-highlight-color:transparent;background:none;border:0;padding:0;touch-action:manipulation}
 .scr :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .wash{position:absolute;left:0;right:0;top:0;height:300px;pointer-events:none;z-index:0}
@@ -411,13 +411,15 @@ h1.title{margin:6px 0 2px;font:800 2.35rem/1 var(--f-display);letter-spacing:-.0
 .over i.b4{background:var(--s-core);color:var(--s-on)}
 .over i.e{background:none;box-shadow:inset 0 0 0 1.5px var(--hair-2)}
 .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.pad .ctl{flex-direction:column;gap:0;min-height:62px;padding:0!important;font:800 1.5rem/1 var(--num)!important}
+.pad .ctl{flex-direction:column;gap:0;min-height:clamp(58px,9vh,76px);padding:0!important;font:800 1.5rem/1 var(--num)!important}
 .pad .ctl small{font:800 .72rem var(--f-ui)}
 .pad .wk{background:var(--danger-soft)!important;color:var(--danger)}
 .pad2{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
-.pad2 button{min-height:48px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair-2);font-weight:750;font-size:.86rem}
+.pad2 button{min-height:clamp(48px,6.6vh,56px);border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair-2);font-weight:750;font-size:.86rem}
 .pad2.runs button{font:800 1.15rem var(--num)}
-.crbar{display:grid;grid-template-columns:1fr 60px 60px;gap:10px;margin-top:auto;padding-top:10px}
+.crbar{display:grid;grid-template-columns:1fr 60px 60px;gap:10px;padding-top:10px}
+.crb>*{flex:none}
+.crb .pad{margin-top:auto;padding-top:12px}
 .crbar .ctl{min-height:58px}
 .crbar .tsb-undo{justify-content:flex-start;gap:10px;padding:0 14px!important}
 /* goals board: +1/+2/+3 inside the team key */
@@ -454,6 +456,8 @@ h1.title{margin:6px 0 2px;font:800 2.35rem/1 var(--f-display);letter-spacing:-.0
 .banner i{width:10px;height:10px;border-radius:50%;background:var(--gold-ink);animation:breathe 1.2s ease-in-out infinite;flex:none}
 .sbk .hero-teams{min-height:146px}
 .sbk .half .n{font-size:4.2rem}
+.sbk.cr .half .n{font-size:2.9rem}
+.sbk .line span:first-child{min-width:0}
 .sbk .line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums}
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 8px;padding:4px;border-radius:18px;background:var(--surface-2)}
 .tabs button{min-height:48px;border-radius:14px;font-weight:700}
@@ -1203,7 +1207,7 @@ function specVb(state) {
   const feed = [['a', 'Point Royals', '22–19'], ['b', 'Point Strikers', '21–19'], ['a', 'Point Royals', '21–18'], ['a', 'Set 1 to Royals', '25–21']];
   return `<div class="scr" data-screen="spec-vb-${state}" style="${teamVarsStr(d)}">${wash(d.A.tint, d.B.tint)}${specNav()}
     <div class="hero sbk">${specBoard(d, 'Royals', 'Strikers', 22, 19, 'a', null)}
-      <div class="line"><span>Volleyball · Set 2 · Sets 1–0</span><span style="display:flex;gap:6px">${label}</span></div></div>
+      <div class="line"><span>Set 2 · Sets 1–0</span><span style="display:flex;gap:6px">${label}</span></div></div>
     ${state === 'paused' ? '<p class="sub" style="margin:10px 4px 0">No new points for 2 minutes. The score will update when play resumes.</p>' : ''}
     <div class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true">Feed</button><button type="button" role="tab" aria-selected="false">Scorecard</button><button type="button" role="tab" aria-selected="false">Stats</button></div>
     <div class="list feed">${feed.map(([k, t, s]) => `<div class="row"><span class="tline" style="--c:${k === 'a' ? d.A.core : d.B.core}" aria-hidden="true"></span><span class="t"><b>${t}</b><small>Set ${t.startsWith('Set') ? 1 : 2}</small></span><span class="sc">${s}</span></div>`).join('')}</div>
@@ -1223,7 +1227,7 @@ function specCr(state) {
         <div class="winline"><em>Winner</em>Lions won by 3 wickets</div>`
     : `<div class="list feed">${[['12.3', 'Dot ball', '98/3'], ['12.2', 'FOUR · Rohan', '98/3'], ['12.1', '1 run · Dev', '94/3'], ['11.6', 'WICKET · Kabir c Sami', '93/3']].map(([o, t, s]) => `<div class="row"><span class="tline" style="--c:${d.B.core}" aria-hidden="true"></span><span class="t"><b>${t}</b><small>Over ${o}</small></span><span class="sc">${s}</span></div>`).join('')}</div>`;
   return `<div class="scr" data-screen="spec-cr-${state}" style="${teamVarsStr(d)}">${wash(d.A.tint, d.B.tint)}${specNav()}${banner}
-    <div class="hero sbk">${specBoard(d, 'Tigers', 'Lions', '164/6', final ? '165/7' : '98/3', null, final ? 'b' : null)}
+    <div class="hero sbk cr">${specBoard(d, 'Tigers', 'Lions', '164/6', final ? '165/7' : '98/3', null, final ? 'b' : null)}
       <div class="line"><span>${line}</span>${label}</div></div>
     <div class="tabs" role="tablist">${tabs}</div>${body}
     ${final ? `<div class="signup"><b>Score your own matches</b><p>Free on your phone. Cricket, kabaddi and 7 more sports.</p><button type="button" class="go">Get Score Easy ${I.arrow}</button></div>` : ''}
