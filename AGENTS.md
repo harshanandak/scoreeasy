@@ -11,7 +11,7 @@ Reject your own diff if it breaks one of these.
 - **The scorer never loses a point.** A tap that scores must survive a refresh, a backgrounded app, and a flaky court wifi connection. Optimistic UI is fine; silently dropping the write is not.
 - **The board stays truthful.** Score, serve, set/innings state and undo history must agree with each other on every screen. A display that disagrees with the rules of the game is a P0, however pretty it is.
 - **One-handed, courtside, in sunlight.** Touch targets stay thumb-sized and contrast stays legible outdoors. A layout that only works on a desktop viewport is not done.
-- **A match is private to its scorer until shared.** Every Convex function touching match or user data checks identity before it reads.
+- **Private match data stays private (target).** Require identity and ownership checks for scorer-only data. Public profile/search queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision (Forge issue "SA-16 Public username queries return raw match documents without identity", `f210fff9-5107-400a-830b-d5951e7a92b3`). Live spectator reads use visibility/moderation gates; broadcasts default to public visibility.
 - **Sport rules live in one place per sport.** Scoring logic belongs in the sport module, not sprinkled through components.
 
 ## Glossary
@@ -27,9 +27,9 @@ Reject your own diff if it breaks one of these.
 
 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+3. **Writing TypeScript into `src/`.** `src/` uses JS/JSX, not TypeScript. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
-5. **Assuming the folder name.** This directory is `scoreeasy` (it was `Volleyball` until 2026-09); the project is Score Easy and volleyball is one sport among several.
+5. **Assuming the folder name.** The project is Score Easy (`scoreeasy`); a worktree's directory name can differ. Volleyball is one sport among several.
 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
 7. **Leaving work stranded locally.** Config and code both need pushing; a session that ends unpushed loses the work.
 
@@ -51,7 +51,7 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
 
 - **Code standards** — `CODING_STANDARDS.md`, read before writing `convex/` code and at review time.
 - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
-- **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+- **Issue tracking** — `forge issue`. `forge issue ready` to find work, `forge issue show <id>` for context, `forge issue comment <id> "…"` at each stage transition, `forge issue create` for follow-ups. Use it instead of TodoWrite or markdown TODO lists.
 
 ## Shipping regime (pre-user)
 
@@ -60,7 +60,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
 - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
 - **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
-- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+- **Main recovery policy:** use squash merges, revert or fix forward within the hour, never debug on a red main. GitHub deletes merged branches automatically but also permits merge and rebase merges; squash is our policy, not a repository restriction.
 
 ## Non-interactive shell
 
@@ -68,4 +68,4 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 
 ## Escape hatch
 
-When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (turning on strict mode, adding the Convex ESLint plugin, changing a sport's rules), state the options and stop rather than picking one quietly.
+When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (enabling JavaScript checking with `checkJs`, changing a sport's rules), state the options and stop rather than picking one quietly. TypeScript strict mode and the Convex ESLint plugin are already enabled.

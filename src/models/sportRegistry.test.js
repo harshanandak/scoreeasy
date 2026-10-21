@@ -8,8 +8,10 @@ import {
   getRetiredSport,
   getRetiredSportsList,
   getSportLabel,
+  isTeamColourSport,
 } from './sportRegistry';
 import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
+import { COURT_MOTIFS } from '../lib/courtMotifs';
 
 const RETIRED_IDS = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
 
@@ -290,6 +292,7 @@ describe('getSportsByCategory', () => {
     const tennisCards = getSportsByCategory()['More sports'].filter(sport => /tennis/i.test(sport.name));
 
     expect(tennisCards.map(sport => sport.id)).toEqual(['tennis', 'tabletennis']);
+    expect(tennisCards.map(sport => sport.name)).toEqual(['Tennis', 'Table Tennis']);
     expect(new Set(tennisCards.map(sport => sport.desc)).size).toBe(2);
   });
 });
@@ -329,5 +332,42 @@ describe('getSportLabel', () => {
   it('falls back to a generic label for an unknown or missing sport', () => {
     expect(getSportLabel('curling')).toBe('Other sport');
     expect(getSportLabel(null)).toBe('Other sport');
+  });
+});
+
+describe('isTeamColourSport', () => {
+  it('does not opt retired sports into team colour or put them back in pickers', () => {
+    RETIRED_IDS.forEach(id => {
+      expect(isTeamColourSport(id)).toBe(false);
+    });
+    const pickerIds = Object.values(getSportsByCategory()).flat().map(sport => sport.id);
+    expect(pickerIds).toEqual(getSportsList().map(sport => sport.id));
+    expect(pickerIds.filter(id => isTeamColourSport(id))).toEqual(
+      getSportsList().filter(sport => sport.teamColour === true).map(sport => sport.id),
+    );
+  });
+
+  it('is true only for a sport whose registry entry opts in', () => {
+    const registry = {
+      on: { id: 'on', engine: 'sets', teamColour: true },
+      off: { id: 'off', engine: 'sets' },
+    };
+    expect(isTeamColourSport('on', registry)).toBe(true);
+    expect(isTeamColourSport('off', registry)).toBe(false);
+    expect(isTeamColourSport('missing', registry)).toBe(false);
+  });
+
+  it('is false for unknown ids and prototype keys', () => {
+    expect(isTeamColourSport('nonexistent')).toBe(false);
+    expect(isTeamColourSport('toString')).toBe(false);
+    expect(isTeamColourSport(undefined)).toBe(false);
+  });
+
+  it('only flags sets or goals sports that have a court drawing (never tennis or cricket)', () => {
+    for (const sport of getSportsList().filter((s) => isTeamColourSport(s.id))) {
+      expect(['sets', 'goals']).toContain(sport.engine);
+      expect(['tennis', 'cricket']).not.toContain(sport.id);
+      expect(COURT_MOTIFS[sport.id], sport.id).toBeTruthy();
+    }
   });
 });

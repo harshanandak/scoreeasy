@@ -29,7 +29,7 @@ Automatically invoke this skill when the user wants to:
 | 4 | `/ship` | Push branch and create PR with full documentation |
 | 5 | `/review` | Address ALL PR feedback (GitHub Actions, Greptile, SonarCloud) |
 | 6 | `/premerge` | Update docs, hand off PR to user |
-| 7 | `/verify` | Post-merge health check (CI on main, close Beads) |
+| 7 | `/verify` | Post-merge health check (CI on main, close Forge issues) |
 
 ## Workflow Flow
 

@@ -208,11 +208,12 @@ If you have attempted 3+ fixes without resolution:
 
 If any check fails:
 ```bash
-# Create Beads issue for problems
-bd create "Fix <issue-description>"
+# Create an issue for problems
+forge issue create --title "Fix <issue-description>" --type bug
 
-# Mark current issue as blocked
-bd update <current-id> --status blocked --comment "Blocked by <new-issue-id>"
+# Mark current issue as blocked by it
+forge issue dep add <current-id> <new-issue-id>
+forge issue comment <current-id> "Blocked by <new-issue-id>"
 
 # Output what needs fixing
 ```
@@ -268,8 +269,8 @@ Ready for /ship
   - validation.test.ts: Assertion failed
   - auth.test.ts: Timeout exceeded
 
-✓ Beads issue created: bd-k8m3 "Fix validation test"
-✓ Current issue marked: Blocked by bd-k8m3
+✓ Issue created: <new-issue-id> "Fix validation test"
+✓ Current issue marked: Blocked by <new-issue-id>
 
 Fix issues then re-run /validate
 ```
@@ -291,6 +292,6 @@ Stage 7: /verify     → Post-merge CI check on main
 
 - **All checks must pass**: Don't proceed to /ship with failures
 - **Security is mandatory**: OWASP Top 10 review required for all features
-- **Create issues for failures**: Track problems in Beads
+- **Create issues for failures**: Track problems with `forge issue create`
 - **TDD helps**: Tests should already pass from /dev phase
 - **Fix before shipping**: Resolve all issues before creating PR
