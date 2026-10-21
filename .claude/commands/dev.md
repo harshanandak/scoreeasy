@@ -184,7 +184,7 @@ Reviewer checks:
 - Structure: functions not too long, proper separation of concerns
 - Duplication: no copy-paste that could be extracted
 - Test coverage: tests cover happy path and at least one error path
-- No magic numbers, no commented-out code, no TODO without a Beads issue
+- No magic numbers, no commented-out code, no TODO without a Forge issue
 
 If quality issues found: implementer fixes → re-review → repeat until ✅
 
@@ -314,7 +314,7 @@ Document the gate count in the final commit message.
   - Decision 1: RESOLVED (score 2, proceeded with conservative choice)
   - Decision gates fired: 1 (plan quality: Good)
 
-✓ Beads updated: forge-xyz → implementation complete
+✓ Issue updated: <issue-id> → implementation complete
 
 Ready for /validate
 ```

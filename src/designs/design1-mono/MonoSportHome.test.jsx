@@ -103,15 +103,33 @@ describe('MonoSportHome sport chooser', () => {
     expect(screen.getByText('No sports found.')).toBeInTheDocument();
   });
 
-  it('orders groups around the popular games', () => {
+  it('lists Tier-0 games under Popular first, then the kept-later sports', () => {
     renderSportHome();
 
     const text = getChooser().textContent;
     expect(text.indexOf('Popular')).toBeGreaterThan(-1);
-    expect(text.indexOf('Popular')).toBeLessThan(text.indexOf('Team Sports'));
-    expect(text.indexOf('Team Sports')).toBeLessThan(text.indexOf('Racquet Sports'));
-    // Categories fully covered by the popular tier (Cricket, Net Sports) do not repeat below it.
-    expect(text).not.toContain('Net Sports');
+    expect(text.indexOf('Popular')).toBeLessThan(text.indexOf('More sports'));
+    expect(text).not.toContain('Racquet Sports');
+    expect(text).not.toContain('Team Sports');
+
+    const quickButtons = within(getChooser())
+      .getAllByRole('button', { name: /^Quick match: / })
+      .map((button) => button.getAttribute('aria-label').replace('Quick match: ', ''));
+    expect(quickButtons).toEqual([
+      'Cricket', 'Kabaddi', 'Volleyball', 'Badminton', 'Football', 'Basketball',
+      'Tennis', 'Table Tennis', 'Hockey',
+    ]);
+  });
+
+  it('no longer offers the deregistered sports', () => {
+    renderSportHome();
+
+    ['Pickleball', 'Squash', 'Rugby', 'Futsal', 'Handball'].forEach((name) => {
+      expect(screen.queryByRole('button', { name: `Quick match: ${name}` })).not.toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'pickle' } });
+    expect(screen.getByText('No sports found.')).toBeInTheDocument();
   });
 
   it('scrolls the requested sport into view from the sport query param', () => {

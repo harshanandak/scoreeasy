@@ -1,10 +1,31 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
+
+// Renders the real app shell, which code-splits routes via React.lazy. Load every
+// route chunk during module collection so no test pays a cold dynamic import()
+// inside its findBy/waitFor window (see preloadAppRoutes).
+await preloadAppRoutes();
 
 const nativeBackButtonMock = vi.hoisted(() => ({
   installNativeBackButtonGuard: vi.fn(() => vi.fn()),
+}));
+
+// The scorer route renders real Convex hooks. Before route chunks were preloaded
+// these tests usually finished before the lazy scorer mounted, hiding the
+// missing provider; now that it mounts immediately, give it the same inert
+// Convex surface the sibling app-shell tests use instead of letting it crash
+// into the ErrorBoundary.
+vi.mock('convex/react', () => ({
+  useMutation: () => vi.fn(),
+  useQuery: () => [],
+  useConvexConnectionState: () => ({
+    isWebSocketConnected: true,
+    hasEverConnected: true,
+    connectionRetries: 0,
+  }),
 }));
 
 vi.mock('../../mobile/backButton', async (importOriginal) => ({

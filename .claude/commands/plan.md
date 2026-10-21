@@ -16,7 +16,7 @@ Before ANY planning work begins:
 
 0. If invoked as `/plan <slug> --continue`, this gate does NOT apply. The worktree
    already exists from the first run. Resume it instead of building a new one:
-   a. cd .worktrees/<slug>   (if it is gone: bd worktree create .worktrees/<slug> --branch feat/<slug>)
+   a. cd .worktrees/<slug>   (if it is gone: git worktree add .worktrees/<slug> feat/<slug>)
    b. git checkout feat/<slug>   — the proposal branch was a detour; Phase 2+3 run on the feature branch
    c. git pull --rebase origin master   — pick up the merged proposal
    d. Skip to Phase 2. Do not re-run steps 1-5 and do not re-create the branch or the epic.
@@ -26,13 +26,13 @@ Before ANY planning work begins:
    - Tell the user: "You are on '<branch>'. Planning must start from a clean worktree on master.
      Run: git checkout master — then re-run /plan."
 3. If on master, create the worktree NOW before asking any questions:
-   a. bd worktree create .worktrees/<slug> --branch feat/<slug>
+   a. git fetch origin master && git worktree add .worktrees/<slug> -b feat/<slug> origin/master
    b. cd .worktrees/<slug>
 4. Confirm: "Working in isolated worktree: .worktrees/<slug> (branch: feat/<slug>)"
 5. Create the epic issue and record the stage transition:
    ```bash
-   bd create --title="<feature-name>" --type=epic
-   bd update <id> --status=in_progress
+   forge issue create --title "<feature-name>" --type epic
+   forge issue update <id> --status in_progress
    forge issue comment <id> "stage: none -> plan"
    ```
 6. ONLY THEN begin Phase 1.
@@ -298,7 +298,7 @@ forge issue comment <id> "stage: research -> setup"
 The epic was created in the Entry HARD-GATE (Phase 1 entry). If this feature requires child issues (sub-tasks tracked separately), create them now and link to the epic:
 
 ```bash
-bd create --title="<sub-task-name>" --type=feature --parent=<epic-id>
+forge issue create --title "<sub-task-name>" --type task --parent <epic-id>
 ```
 
 ### Step 2: Branch + worktree
@@ -316,9 +316,10 @@ else
   # Step 2b: Verify .worktrees/ is gitignored — add if missing
   git check-ignore -v .worktrees/ || echo ".worktrees/" >> .gitignore
 
-  # Step 2c: Create a Beads-aware worktree rooted on master
+  # Step 2c: Create the worktree rooted on master
   git checkout master
-  bd worktree create .worktrees/<slug> --branch feat/<slug>
+  git fetch origin master
+  git worktree add .worktrees/<slug> -b feat/<slug> origin/master
   cd .worktrees/<slug>
 fi
 ```
@@ -408,7 +409,7 @@ Do NOT proceed to /dev until ALL are confirmed:
 1. git branch --show-current output shows feat/<slug>
 2. git worktree list shows .worktrees/<slug>
 3. Baseline tests ran — either passing OR user confirmed to proceed past failures
-4. Beads issue is created with status=in_progress
+4. Forge issue is created with status=in_progress
 5. Task list exists at docs/plans/YYYY-MM-DD-<slug>-tasks.md
 6. User has confirmed task list is correct
 7. `forge issue show <id>` shows the design + acceptance comment from Step 5b
@@ -444,7 +445,7 @@ transition comment is present, and it carries a summary.
   - Sources: <N> references
 
 ✓ Phase 3: Setup complete
-  - Beads: <issue-id> (in_progress)
+  - Issue: <issue-id> (in_progress)
   - Branch: feat/<slug>
   - Worktree: .worktrees/<slug> (baseline: <N>/<N> tests passing)
   - Task list: docs/plans/<date>-<slug>-tasks.md (<N> tasks)
