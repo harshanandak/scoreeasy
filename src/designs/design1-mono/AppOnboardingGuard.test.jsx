@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
+
+// Renders the real app shell, which code-splits routes via React.lazy. Load every
+// route chunk during module collection so no test pays a cold dynamic import()
+// inside its findBy/waitFor window (see preloadAppRoutes).
+await preloadAppRoutes();
 
 const authState = vi.hoisted(() => ({
   current: {
