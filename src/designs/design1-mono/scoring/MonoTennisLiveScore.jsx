@@ -26,6 +26,7 @@ import {
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import { triggerConfetti } from '../utils/confetti';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -300,6 +301,7 @@ const makeKeyHandler = (addPoint, undo, leftTeam, rightTeam) => (e) => {
 
 export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
   const isQuickMatch = storageMode === 'quick';
   const quickDraftKey = isQuickMatch ? getTennisQuickDraftKey(matchId) : null;
@@ -307,6 +309,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
   const navigateBack = () => navigate(isQuickMatch ? `/${sport}/quick` : `/${sport}/tournament/${id}`);
+  const completeScoring = (path) => {
+    if (completeProtectedScoring) completeProtectedScoring(path);
+    else navigate(path, { replace: true });
+  };
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -629,7 +635,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
     clearData(quickDraftKey);
     setSaveWarning('');
-    navigate('/history');
+    completeScoring('/history');
   };
 
   // Save match and return
@@ -683,6 +689,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     setSaveWarning('');
     if (isMatchComplete) {
       saveTournamentToConvex(updatedTournament);
+      completeScoring(`/${sport}/tournament/${id}`);
+      return;
     }
     navigate(`/${sport}/tournament/${id}`);
   };

@@ -53,6 +53,9 @@ const seeds = {
   football: {
     se_football: [{ id: 100, name: 'Sunday League', type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', score1: null, score2: null, status: 'pending' }] }],
   },
+  tennisTournamentWon: {
+    se_tennis: [{ id: 300, name: 'Tennis Cup', type: 'round-robin', mode: 'tournament', phase: 'group', format: { sets: 3 }, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Ana' }, { id: 't2', name: 'Bea' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'in-progress', draftState: { currentSet: 2, sets: [wonSet, wonSet, blankSet], history: [], savedAt: iso } }] }],
+  },
   volleyballDone: {
     se_volleyball: [{ id: 200, name: 'Beach Cup', type: 'round-robin', mode: 'tournament', phase: 'group', format: { sets: 3, pointsPerSet: 25 }, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Sharks' }, { id: 't2', name: 'Jets' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'completed', winner: 't1', setsWon1: 2, setsWon2: 0, sets: [{ score1: 25, score2: 20, completed: true }, { score1: 25, score2: 18, completed: true }], completedAt: iso }] }],
   },
@@ -195,7 +198,7 @@ const cases = [
     { back: true }, { wait: 1500 },
   ]],
   ['FLOW tennis quick Finish -> Back', '/app', 'tennisDraftWon', [
-    { goto: `/tennis/quick/live/${TENNIS_ID}` }, { wait: 5000 },
+    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 },
     { snap: 'scorer (won)' },
     { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
@@ -205,6 +208,13 @@ const cases = [
     { click: 'button', text: 'Enter Score' }, { wait: 4000 },
     { snap: 'scorer' },
     { click: 'button', text: 'Finish' }, { wait: 2500 },
+    { snap: 'after Finish' },
+    { back: true }, { wait: 3000 },
+  ]],
+  ['FLOW tennis tournament Finish -> Back', '/tennis/tournament/300', 'tennisTournamentWon', [
+    { click: 'button', text: 'Resume Match' }, { wait: 20000 },
+    { snap: 'scorer (won)' },
+    { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
     { back: true }, { wait: 3000 },
   ]],
@@ -247,6 +257,8 @@ const cases = [
     { click: 'button', aria: 'Home' }, { wait: 4000 },
   ]],
 ];
+
+const redactDiagnostic = (value) => value.replace(/([?&](?:token|key|secret|password|api_key)=)[^&\s]+/gi, '$1[REDACTED]');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -334,6 +346,7 @@ async function runSweep(ws) {
     const dialog = [...document.querySelectorAll('[role=dialog],[role=alertdialog]')].find(vis);
     return {
       url: location.pathname + location.search + location.hash,
+      viewport: { width: innerWidth, height: innerHeight },
       heading: h ? h.textContent.replace(/\\s+/g, ' ').trim().slice(0, 80) : '',
       text: (main.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 160),
       bottomNav: vis(document.querySelector('.global-bottom-nav')),
@@ -371,6 +384,12 @@ async function runSweep(ws) {
     }
     await send('Page.navigate', { url: BASE + path }, sessionId);
     await sleep(SETTLE_MS);
+    const capture = async (suffix = '') => {
+      if (!process.env.SHOTS) return;
+      const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
+      const name = `${label}${suffix ? ` ${suffix}` : ''}`.replace(/[^a-z0-9]+/gi, '_');
+      writeFileSync(join(process.env.SHOTS, `${name}.png`), Buffer.from(data, 'base64'));
+    };
     const evalSnap = async () => (await send('Runtime.evaluate', { expression: SNAP, returnByValue: true }, sessionId)).result.value;
     const result = { label, path, seed: seedName || '', ...(await evalSnap()), snaps: [] };
     if (steps) {
@@ -379,23 +398,29 @@ async function runSweep(ws) {
         else if (step.back) await send('Runtime.evaluate', { expression: 'history.back()' }, sessionId);
         else if (step.goto) { await send('Page.navigate', { url: BASE + step.goto }, sessionId); }
         else if (step.eval) await send('Runtime.evaluate', { expression: step.eval }, sessionId);
-        else if (step.snap) result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+        else if (step.snap) {
+          result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+          await capture(step.snap);
+        }
         else if (step.click) {
           const expr = `(() => { const els = [...document.querySelectorAll(${JSON.stringify(step.click)})];
             const el = els.find((e) => e.getClientRects().length && (${JSON.stringify(step.aria || '')} ? e.getAttribute('aria-label') === ${JSON.stringify(step.aria || '')} || e.textContent.trim() === ${JSON.stringify(step.aria || '')} : e.textContent.includes(${JSON.stringify(step.text || '')})));
             if (!el) return 'NOT FOUND'; el.click(); return 'clicked'; })()`;
-          const r = (await send('Runtime.evaluate', { expression: expr, returnByValue: true }, sessionId)).result.value;
+          let r;
+          for (let attempt = 0; attempt < 50; attempt += 1) {
+            r = (await send('Runtime.evaluate', { expression: expr, returnByValue: true }, sessionId)).result.value;
+            if (r === 'clicked') break;
+            await sleep(200);
+          }
+          if (r !== 'clicked') throw new Error(`Click target did not appear: ${step.aria || step.text}`);
           result.snaps.push({ at: `click ${step.aria || step.text}: ${r}` });
         }
       }
       const final = await evalSnap();
       result.final = final;
     }
-    result.errors = [...new Set(errors)].slice(0, 6);
-    if (process.env.SHOTS) {
-      const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
-      writeFileSync(join(process.env.SHOTS, `${label.replace(/[^a-z0-9]+/gi, '_')}.png`), Buffer.from(data, 'base64'));
-    }
+    result.errors = [...new Set(errors.map(redactDiagnostic))].slice(0, 6);
+    await capture();
     listeners.delete(sessionId);
     await send('Target.closeTarget', { targetId });
     await send('Target.disposeBrowserContext', { browserContextId }).catch(() => {});

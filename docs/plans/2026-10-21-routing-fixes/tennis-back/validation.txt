@@ -1,0 +1,12 @@
+Focused: 7 files passed; 134 passed; 11 expected fail; 145 total; duration 33.03s.
+Lint: exit 0; 0 errors; 29 warnings.
+Type-check: exit 0.
+Merge hooks: agent-config-sync, type-check, lint passed.
+Palette: exact baseline 669, unchanged; no exclusions added.
+Sweep syntax: node --check scripts/route-sweep.mjs passed.
+Browser: before/after x quick/tournament; 390x844; all intended clicks succeeded; 12 PNGs inspected.
+Full suite/build: not run at hold point.
+
+Final integration: origin/master 0038e60e676bcaecb888037eb1bfac0ecd1c18c0.
+Final focused: 8 files passed; 175 passed; 10 expected fail; 185 total; duration 36.85s.
+Expected failures: 6 routing + 4 unchanged stability = 10 repository-wide.
