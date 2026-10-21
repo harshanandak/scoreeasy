@@ -1,6 +1,6 @@
 # Direction E in the app — task list
 
-Design: `docs/plans/2026-10-20-direction-e-app-design.md` · epic `scoreeasy-mni` · branch `feat/direction-e-app`
+Design: `docs/plans/2026-10-20-direction-e-app-design.md` · epic `direction-e-in-the-9be869f4` (forge issue) · branch `feat/direction-e-app`
 
 Waves run in order; tasks inside a wave own disjoint files. Every task is TDD: write the test,
 watch it fail, implement, watch it pass, commit.

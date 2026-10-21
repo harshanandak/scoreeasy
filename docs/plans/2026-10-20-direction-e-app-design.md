@@ -1,6 +1,6 @@
 # Direction E in the app — design
 
-- **Feature:** `direction-e-app` · epic `scoreeasy-mni`
+- **Feature:** `direction-e-app` · epic `direction-e-in-the-9be869f4` (forge issue)
 - **Date:** 2026-10-20
 - **Status:** approved in session (Harsha), Phase 1
 
