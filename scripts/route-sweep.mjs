@@ -11,18 +11,21 @@
 //   node scripts/route-sweep.mjs out.json
 // Env: BASE (default http://localhost:5193), CHROME (path to chrome.exe),
 //      ONLY (regex on case label), SETTLE_MS, CONCURRENCY, SHOTS (screenshot dir).
+//      CRICKET_QUICK_DESTINATION=/cricket/quick to sweep the pre-RA-1 finish exit.
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { cricketFinishSeed } from '../src/test/cricketFinishFixtures.js';
 
 const BASE = process.env.BASE || 'http://localhost:5193';
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const PORT = 9339;
+const PORT = Number(process.env.CHROME_PORT || 9339);
 const SETTLE_MS = Number(process.env.SETTLE_MS || 6500);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 5);
 const OUT = process.argv[2] || 'results.json';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
+const cricketQuickDestination = process.env.CRICKET_QUICK_DESTINATION || '/history';
 
 const now = Date.now();
 const iso = new Date(now).toISOString();
@@ -31,6 +34,7 @@ const blankSet = { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false,
 const wonSet = { ...blankSet, games1: 6, games2: 0, completed: true };
 
 const seeds = {
+  ...Object.fromEntries(['limited', 'test-tournament', 'test-quick', 'guided'].map((kind) => [`cricket-${kind}`, cricketFinishSeed(kind)])),
   tennisDraft: {
     [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1: 'Ana', team2: 'Bea', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', sets: null, date: iso, createdAt: iso, updatedAt: iso },
   },
@@ -59,6 +63,25 @@ const seeds = {
 
 // [label, path, seedName?, steps?]
 const cases = [
+  ...['limited', 'test-tournament', 'test-quick', 'guided'].map((kind) => [
+    `RA-1 cricket ${kind} Finish -> Back`, '/history', `cricket-${kind}`, [
+      { until: "!!document.querySelector('h1') && document.body.innerText.includes('History & Stats')" },
+      { eval: `history.pushState({ idx: (history.state?.idx || 0) + 1 }, '', '${kind === 'test-quick' ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score'}'); dispatchEvent(new PopStateEvent('popstate'));` },
+      { until: `[...document.querySelectorAll('button')].some(b => ${kind === 'guided' ? "b.getAttribute('aria-label') === 'Four'" : kind.startsWith('test') ? "b.getAttribute('aria-label') === 'Four runs'" : "b.textContent.trim() === 'Finish'"})` },
+      { snap: 'scorer' },
+      ...(kind === 'guided' ? [{ click: 'button', aria: 'Four' }]
+        : kind.startsWith('test') ? [{ click: 'button', aria: 'Four runs' }, { until: "document.body.innerText.includes('Save & Return')" }, { click: 'button', text: 'Save & Return' }]
+          : [{ click: 'button', text: 'Finish' }]),
+      { until: `location.pathname === '${kind === 'test-quick' ? cricketQuickDestination : '/cricket/tournament/100'}' && document.body.innerText.includes('${kind === 'test-quick' ? cricketQuickDestination === '/history' ? 'History & Stats' : 'Quick Match' : 'Cricket Cup'}')` },
+      { snap: 'after Finish' },
+      { back: true }, { wait: 2500 },
+      ...(kind === 'test-quick' && cricketQuickDestination === '/cricket/quick' ? [
+        { snap: 'after Back (setup guard, RA-5)' },
+        { click: 'button', text: 'Leave page' },
+        { until: "location.pathname !== '/cricket/quick'" }, { wait: 1000 },
+      ] : []),
+    ],
+  ]),
   // App shell + public
   ['root resolver', '/'],
   ['marketing', '/marketing'],
@@ -216,7 +239,7 @@ async function main() {
   ], { stdio: 'ignore' });
 
   let version;
-  for (let i = 0; i < 50; i += 1) {
+  for (let i = 0; i < 300; i += 1) {
     try { version = await (await fetch(`http://127.0.0.1:${PORT}/json/version`)).json(); break; } catch { await sleep(200); }
   }
   const ws = new WebSocket(version.webSocketDebuggerUrl);
@@ -288,10 +311,25 @@ async function main() {
     if (steps) {
       for (const step of steps) {
         if (step.wait) await sleep(step.wait);
+        else if (step.until) {
+          let ready = false;
+          for (let attempt = 0; attempt < 300; attempt += 1) {
+            const value = (await send('Runtime.evaluate', { expression: step.until, returnByValue: true }, sessionId)).result.value;
+            if (value) { ready = true; break; }
+            await sleep(200);
+          }
+          if (!ready) throw new Error(`Page did not become ready: ${step.until}`);
+        }
         else if (step.back) await send('Runtime.evaluate', { expression: 'history.back()' }, sessionId);
         else if (step.goto) { await send('Page.navigate', { url: BASE + step.goto }, sessionId); }
         else if (step.eval) await send('Runtime.evaluate', { expression: step.eval }, sessionId);
-        else if (step.snap) result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+        else if (step.snap) {
+          result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+          if (process.env.SHOTS && label.startsWith('RA-1 cricket')) {
+            const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
+            writeFileSync(join(process.env.SHOTS, `${`${label}_${step.snap}`.replace(/[^a-z0-9]+/gi, '_')}.png`), Buffer.from(data, 'base64'));
+          }
+        }
         else if (step.click) {
           const expr = `(() => { const els = [...document.querySelectorAll(${JSON.stringify(step.click)})];
             const el = els.find((e) => e.getClientRects().length && (${JSON.stringify(step.aria || '')} ? e.getAttribute('aria-label') === ${JSON.stringify(step.aria || '')} || e.textContent.trim() === ${JSON.stringify(step.aria || '')} : e.textContent.includes(${JSON.stringify(step.text || '')})));
@@ -302,6 +340,14 @@ async function main() {
       }
       const final = await evalSnap();
       result.final = final;
+    }
+    if (label.startsWith('RA-1 cricket')) {
+      const saved = await send('Runtime.evaluate', {
+        expression: "(() => { const tournaments = JSON.parse(localStorage.getItem('se_cricket') || '[]'); const quick = JSON.parse(localStorage.getItem('se_quickmatches') || '[]'); return (tournaments[0]?.matches?.[0] || quick[0])?.status; })()",
+        returnByValue: true,
+      }, sessionId);
+      result.savedMatchStatus = saved.result.value;
+      result.contractPassed = result.savedMatchStatus === 'completed' && result.final?.url === '/history' && !result.final?.dialog;
     }
     result.errors = [...new Set(errors)].slice(0, 6);
     if (process.env.SHOTS) {

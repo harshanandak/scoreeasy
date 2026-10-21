@@ -2,6 +2,12 @@ import { act, cleanup, configure, fireEvent, render, screen, waitFor, within } f
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
+import { cricketFinishSeed } from '../../test/cricketFinishFixtures';
+// Warm the cricket flow's lazy chunks before starting navigation assertions.
+import './MonoTournamentLiveScore';
+import './MonoCricketTournament';
+import './MonoQuickMatch';
+import './MonoHistory';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -151,6 +157,27 @@ afterEach(() => {
 });
 
 describe('route contracts: already correct (pinned)', () => {
+  it.each(['limited', 'test-tournament', 'test-quick', 'guided'])('RA-1: Back after finishing %s cricket does not reopen its scorer', async (kind) => {
+    Object.entries(cricketFinishSeed(kind)).forEach(([key, value]) => seed(key, value));
+    const scorerPath = kind === 'test-quick'
+      ? '/cricket/quick/test-match/300'
+      : '/cricket/tournament/100/match/m1/score';
+    const destination = kind === 'test-quick' ? '/history' : '/cricket/tournament/100';
+    renderApp(['/history', scorerPath]);
+    await settleRoute();
+    if (kind === 'guided') {
+      fireEvent.click(await screen.findByRole('button', { name: 'Four' }));
+    } else if (kind.startsWith('test')) {
+      fireEvent.click(await screen.findByRole('button', { name: 'Four runs' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Save & Return' }));
+    } else {
+      fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    }
+    await waitFor(() => expect(currentRoute()).toBe(destination));
+    await pressProbeBack();
+    await waitFor(() => expect(currentRoute()).toBe('/history'));
+  });
+
   it('renders the 404 recovery screen, with Play and Home, for an unknown multi-segment path', async () => {
     renderApp(['/this/does/not/exist']);
     const heading = await screen.findByRole('heading', { name: 'This screen is not available' });
@@ -178,8 +205,8 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
   // RA-1 (P1). Goals scorers finish with a plain navigate() PUSH to the
   // tournament page, so Back from the tournament reopens the scorer of the match
   // that just finished. Sets scorers already route completion through
-  // completeProtectedScoring (PR #128); goals, tennis-tournament and cricket do
-  // not. Fix PR: "Back-stack: every scorer finishes through completeProtectedScoring".
+  // completeProtectedScoring (PR #128); goals and tennis-tournament still do
+  // not. Cricket completion is covered by the pinned contracts above.
   it.fails('RA-1: Back after finishing a goals tournament match does not reopen its scorer', async () => {
     seed('se_football', [footballTournament()]);
     renderApp(['/football/tournament/100', '/football/tournament/100/match/m1/score']);
