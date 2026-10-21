@@ -9,7 +9,14 @@ Sonar and other scanners are graded on the same four classes, not on their own s
 
 ## Convex functions
 
-**Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+**Validators (target).** Every public `query` / `mutation` / `action` should declare `args` and `returns` validators. `internal*` functions should declare them too — internal only means "not reachable from the client", not "unvalidated". All current public functions declare `args`, but `returns` is still missing from:
+
+- `convex/live.ts`: `create`, `scorePoint`, `undo`, `setVisibility`, `pause`, `finalize`.
+- `convex/matches.ts`: `save`, `getByUser`, `getUserStats`, `getRecent`, `getPublicUserStatsByUsername`, `getPublicRecentByUsername`.
+- `convex/teams.ts`: `search`.
+- `convex/users.ts`: `store`, `claimUsername`, `checkUsername`, `search`, `getByUsername`, `completeOnboarding`, `getCurrent`, `getMe`.
+
+The mutation gaps are tracked in Forge task `ed01415e-cf7a-487f-98ad-d6d25b8713b6` ("Add returns validators to public Convex mutations missing them"). The query gaps remain targets; this task covers mutations only.
 
 ```ts
 export const get = query({
@@ -19,7 +26,7 @@ export const get = query({
 });
 ```
 
-**Auth on every public function that touches user data.** `const identity = await ctx.auth.getUserIdentity()` first; throw if null. Ownership is a second check — being logged in is not being allowed.
+**Auth on scorer-only data (target).** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision, tracked in the SA-16 issue linked from `AGENTS.md`. Live spectator reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
 
 **Wrap auth in a custom function, do not repeat it.** Convex has no row-level security; the custom-function wrapper (`convex-helpers` `customQuery` / `customMutation`) is the substitute. A wrapper that injects `ctx.user` is how a rule gets enforced repo-wide instead of per-handler. Use it for basic auth, role checks, and tenant scoping.
 
@@ -55,10 +62,10 @@ Reach for a Convex component when a feature is self-contained and reusable with 
 
 Prefer generated types (`Doc<"matches">`, `Id<"matches">`, `api`/`internal` references) over hand-written shapes. Avoid `any`; where a type is genuinely unknown use `unknown` and narrow.
 
-Note the actual repo state: `tsconfig.json` has `strict: true` and `checkJs: false`, and `src/` is JSX/JS with zero `.ts` files. Because `checkJs` is off, `strict` only governs the TypeScript under `convex/` — it costs zero errors there and must stay green. Turning `checkJs` on is a separate decision: it currently surfaces 1114 errors across 55 JS files, so do not assume JS is type-checked.
+Note the actual repo state: `tsconfig.json` has `strict: true` and `checkJs: false`, and `src/` uses JSX/JS rather than TypeScript. `bun run type-check` checks the included TypeScript under `convex/`; it does not type-check JS/JSX. Turning `checkJs` on is a separate decision. Run `bunx tsc --noEmit -p tsconfig.json --checkJs true` for current JavaScript diagnostics rather than relying on a stored error count.
 
 ## Lint
 
-`bun run lint` runs ESLint with `eslint-plugin-react-hooks` over `**/*.{js,jsx}`, plus `@convex-dev/eslint-plugin` over `convex/**/*.ts` (parsed by `@typescript-eslint/parser`).
+`bun run lint` runs ESLint over the repo. `eslint-plugin-react-hooks` is registered for `**/*.{js,jsx}`, but no React Hooks rules are enabled. `@convex-dev/eslint-plugin` rules apply to `convex/**/*.ts` (parsed by `@typescript-eslint/parser`).
 
-Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-validator`, `no-schema-import-cycle`. Warnings: `no-filter-in-query`, `no-top-of-hour-crons`, and `explicit-table-ids` (a warning only until the 5 existing `db.get`/`db.patch` call sites in `matches.ts` and `users.ts` pass an explicit table name). Everything else in this file is enforced by review.
+Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-validator`, `no-schema-import-cycle`. Warnings: `no-filter-in-query`, `no-top-of-hour-crons`, and `explicit-table-ids`. Explicit table IDs are still missing in several source and test files; run `bunx eslint convex` for the current list. Other standards in this file are review targets, not additional lint rules.

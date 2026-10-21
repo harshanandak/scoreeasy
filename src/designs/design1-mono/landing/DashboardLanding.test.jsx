@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getRetiredSportsList } from '../../../models/sportRegistry';
 import DashboardLanding from './DashboardLanding';
 
 let authState;
@@ -56,6 +57,21 @@ describe('DashboardLanding start flow', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     globalThis.localStorage.clear();
+  });
+
+  it.each(getRetiredSportsList())('does not offer Resume or Rematch for a retired $name draft', (sport) => {
+    const draft = { sport: sport.id, phase: 'scoring', updatedAt: new Date().toISOString() };
+    globalThis.localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify(draft));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+      { id: 'old', sport: sport.id, status: 'completed', team1: 'Dinks', team2: 'Lobs' },
+      { id: 'live', sport: sport.id, status: 'in-progress', updatedAt: draft.updatedAt },
+    ]));
+    const before = JSON.stringify(localStorage);
+    renderDashboard();
+    expect(screen.getByRole('heading', { name: /Welcome\s*back/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /resume|rematch/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Dinks').length).toBeGreaterThan(0);
+    expect(JSON.stringify(localStorage)).toBe(before);
   });
 
   it('renders the calm empty dashboard at zero data instead of the setup wizard', async () => {

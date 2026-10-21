@@ -35,7 +35,7 @@ function renderProfile(initialEntry = '/profile', authOverrides = {}) {
           <Route path="/profile" element={<MonoProfile />} />
           <Route path="/profile/:username" element={<MonoProfile />} />
           <Route path="/login" element={<p>Login</p>} />
-          <Route path="/volleyball/quick" element={<p>Guest match</p>} />
+          <Route path="/play" element={<p>Play hub</p>} />
           <Route path="/users/search" element={<p>Find players</p>} />
         </Routes>
       </MemoryRouter>
@@ -59,7 +59,7 @@ describe('MonoProfile recovery actions', () => {
     renderProfile('/profile');
 
     fireEvent.click(screen.getByRole('button', { name: 'Start guest match' }));
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
   });
 
   it('preserves the profile return target when sending users to sign in', () => {

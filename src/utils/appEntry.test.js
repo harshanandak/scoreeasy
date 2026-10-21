@@ -10,7 +10,7 @@ import {
   loadReturningPlayerState,
   loadInProgressMatches,
 } from './appEntry';
-import { getSportsList } from '../models/sportRegistry';
+import { getRetiredSportsList, getSportsList } from '../models/sportRegistry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 describe('app entry contract', () => {
@@ -41,6 +41,21 @@ describe('app entry contract', () => {
     expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
     expect(JSON.stringify(localStorage)).toBe(before);
     expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
+  });
+
+  it('never resumes retired-sport drafts or tournaments and preserves their saved data', () => {
+    const now = new Date().toISOString();
+    for (const sport of getRetiredSportsList()) {
+      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ phase: 'scoring', updatedAt: now }));
+      localStorage.setItem(sport.storageKey, JSON.stringify([{ id: 1, matches: [{ status: 'pending' }] }]));
+    }
+    localStorage.setItem('se_quickmatches', JSON.stringify(getRetiredSportsList().map((sport) => ({
+      id: sport.id, sport: sport.id, status: 'in-progress', updatedAt: now,
+    }))));
+    const before = JSON.stringify(localStorage);
+    expect(loadInProgressMatches()).toEqual([]);
+    expect(loadAppEntryState().draftEntryPath).toBeNull();
+    expect(JSON.stringify(localStorage)).toBe(before);
   });
 
   it('excludes setup, expired and completed drafts from the resume catalog', () => {

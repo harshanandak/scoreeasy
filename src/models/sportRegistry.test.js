@@ -5,25 +5,49 @@ import {
   getGoalsSports,
   getSportById,
   getSportsByCategory,
+  getRetiredSport,
+  getRetiredSportsList,
+  getSportLabel,
+  isTeamColourSport,
 } from './sportRegistry';
+import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
+import { COURT_MOTIFS } from '../lib/courtMotifs';
 
-// ─── All 14 sports registered ──────────────────────────────────────────────────
+const RETIRED_IDS = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
+
+// ─── The ICP game focus: 9 registered sports ──────────────────────────────────
+// docs/plans/2026-07-20-icp-games/adjusted-plan.md §A
 
 describe('SPORT_REGISTRY', () => {
   const sportIds = Object.keys(SPORT_REGISTRY);
 
-  it('has exactly 14 sports', () => {
-    expect(sportIds).toHaveLength(14);
+  it('has exactly 9 sports', () => {
+    expect(sportIds).toHaveLength(9);
   });
 
-  it('contains all expected sport ids', () => {
+  it('contains every Tier-0 and kept-later sport that has an engine today', () => {
     const expected = [
-      'volleyball', 'badminton', 'tabletennis', 'tennis', 'pickleball', 'squash',
-      'football', 'basketball', 'hockey', 'handball', 'futsal', 'kabaddi', 'rugby',
-      'cricket',
+      'cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball',
+      'tennis', 'tabletennis', 'hockey',
     ];
-    expected.forEach(id => {
-      expect(SPORT_REGISTRY).toHaveProperty(id);
+    expect([...sportIds].sort()).toEqual([...expected].sort());
+  });
+
+  it('no longer registers the five deregistered sports', () => {
+    RETIRED_IDS.forEach(id => {
+      expect(SPORT_REGISTRY).not.toHaveProperty(id);
+      expect(getSportById(id)).toBeNull();
+    });
+  });
+
+  it('does not register throwball or kho kho yet', () => {
+    expect(getSportById('throwball')).toBeNull();
+    expect(getSportById('khokho')).toBeNull();
+  });
+
+  it('gives every registered sport a slot in the focus order', () => {
+    sportIds.forEach(id => {
+      expect(SPORT_ORDER).toContain(id);
     });
   });
 
@@ -75,7 +99,7 @@ describe('SPORT_REGISTRY', () => {
 // ─── Sets-based sports ─────────────────────────────────────────────────────────
 
 describe('Sets-based sports config', () => {
-  const setsSports = ['volleyball', 'badminton', 'tabletennis', 'tennis', 'pickleball', 'squash'];
+  const setsSports = ['volleyball', 'badminton', 'tabletennis', 'tennis'];
 
   it('has engine = "sets"', () => {
     setsSports.forEach(id => {
@@ -122,7 +146,7 @@ describe('Sets-based sports config', () => {
 // ─── Goals-based sports ────────────────────────────────────────────────────────
 
 describe('Goals-based sports config', () => {
-  const goalsSports = ['football', 'basketball', 'hockey', 'handball', 'futsal', 'kabaddi', 'rugby'];
+  const goalsSports = ['football', 'basketball', 'hockey', 'kabaddi'];
 
   it('has engine = "goals"', () => {
     goalsSports.forEach(id => {
@@ -158,12 +182,6 @@ describe('Goals-based sports config', () => {
   it('kabaddi awards 2 points for a win', () => {
     expect(SPORT_REGISTRY.kabaddi.config.winPoints).toBe(2);
   });
-
-  it('rugby awards 4 points for a win and 2 for draw', () => {
-    const rugby = SPORT_REGISTRY.rugby;
-    expect(rugby.config.winPoints).toBe(4);
-    expect(rugby.config.drawPoints).toBe(2);
-  });
 });
 
 // ─── Cricket ───────────────────────────────────────────────────────────────────
@@ -187,18 +205,30 @@ describe('Cricket config', () => {
 // ─── Helper functions ──────────────────────────────────────────────────────────
 
 describe('getSportsList', () => {
-  it('returns array of 14 sport objects', () => {
+  it('returns array of 9 sport objects', () => {
     const list = getSportsList();
-    expect(list).toHaveLength(14);
+    expect(list).toHaveLength(9);
     expect(list[0]).toHaveProperty('id');
     expect(list[0]).toHaveProperty('name');
+  });
+
+  it("lists Tier-0 first in the plan's India-first order, then the kept-later three", () => {
+    expect(getSportsList().map(s => s.id)).toEqual([
+      'cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball',
+      'tennis', 'tabletennis', 'hockey',
+    ]);
+  });
+
+  it('follows the single order source in sportFocus.js', () => {
+    const registered = SPORT_ORDER.filter(id => SPORT_REGISTRY[id]);
+    expect(getSportsList().map(s => s.id)).toEqual(registered);
   });
 });
 
 describe('getSetsSports', () => {
   it('returns only sets-engine sports', () => {
     const setsSports = getSetsSports();
-    expect(setsSports).toHaveLength(6);
+    expect(setsSports).toHaveLength(4);
     setsSports.forEach(s => {
       expect(s.engine).toBe('sets');
     });
@@ -208,7 +238,7 @@ describe('getSetsSports', () => {
 describe('getGoalsSports', () => {
   it('returns only goals-engine sports', () => {
     const goalsSports = getGoalsSports();
-    expect(goalsSports).toHaveLength(7);
+    expect(goalsSports).toHaveLength(4);
     goalsSports.forEach(s => {
       expect(s.engine).toBe('goals');
     });
@@ -236,45 +266,108 @@ describe('getSportById', () => {
 });
 
 describe('getSportsByCategory', () => {
-  it('returns an object with category keys', () => {
-    const categories = getSportsByCategory();
-    expect(categories).toHaveProperty('Racquet Sports');
-    expect(categories).toHaveProperty('Team Sports');
-    expect(categories).toHaveProperty('Contact Sports');
-    expect(categories).toHaveProperty('Net Sports');
-    expect(categories).toHaveProperty('Cricket');
+  it('groups sports into the two focus tiers, Popular first', () => {
+    expect(Object.keys(getSportsByCategory())).toEqual(['Popular', 'More sports']);
   });
 
-  it('Racquet Sports has 5 sports', () => {
-    expect(getSportsByCategory()['Racquet Sports']).toHaveLength(5);
+  it('Popular holds the registered Tier-0 sports in plan order', () => {
+    const popular = getSportsByCategory().Popular.map(s => s.id);
+    expect(popular).toEqual(['cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball']);
+    expect(popular).toEqual(PRIORITY_SPORT_IDS.filter(id => SPORT_REGISTRY[id]));
+  });
+
+  it('More sports holds the kept-later three', () => {
+    const later = getSportsByCategory()['More sports'].map(s => s.id);
+    expect(later).toEqual(['tennis', 'tabletennis', 'hockey']);
+    expect(later).toEqual(LATER_SPORT_IDS);
+  });
+
+  it('covers every registered sport exactly once', () => {
+    const all = Object.values(getSportsByCategory()).flat().map(s => s.id);
+    expect(all).toHaveLength(new Set(all).size);
+    expect([...all].sort()).toEqual(Object.keys(SPORT_REGISTRY).sort());
   });
 
   it('keeps tennis and table tennis as intentionally distinct cards', () => {
-    const racquetSports = getSportsByCategory()['Racquet Sports'];
-    const tennisCards = racquetSports.filter(sport => /tennis/i.test(sport.name));
+    const tennisCards = getSportsByCategory()['More sports'].filter(sport => /tennis/i.test(sport.name));
 
-    expect(tennisCards.map(sport => sport.id)).toEqual(['tabletennis', 'tennis']);
-    expect(tennisCards.map(sport => sport.name)).toEqual(['Table Tennis', 'Tennis']);
+    expect(tennisCards.map(sport => sport.id)).toEqual(['tennis', 'tabletennis']);
+    expect(tennisCards.map(sport => sport.name)).toEqual(['Tennis', 'Table Tennis']);
     expect(new Set(tennisCards.map(sport => sport.desc)).size).toBe(2);
   });
+});
 
-  it('Team Sports has 5 sports', () => {
-    expect(getSportsByCategory()['Team Sports']).toHaveLength(5);
+// ─── Retired (deregistered) sports — saved data stays readable ────────────────
+
+describe('retired sports', () => {
+  it('knows all five deregistered sports with a label, engine and storage key', () => {
+    RETIRED_IDS.forEach(id => {
+      const retired = getRetiredSport(id);
+      expect(retired).not.toBeNull();
+      expect(retired.id).toBe(id);
+      expect(typeof retired.name).toBe('string');
+      expect(['sets', 'goals']).toContain(retired.engine);
+      expect(retired.storageKey).toBe(`se_${id}`);
+    });
+    expect(getRetiredSportsList().map(s => s.id).sort()).toEqual([...RETIRED_IDS].sort());
   });
 
-  it('Contact Sports has 2 sports', () => {
-    expect(getSportsByCategory()['Contact Sports']).toHaveLength(2);
+  it('does not treat a registered or unknown sport as retired', () => {
+    expect(getRetiredSport('volleyball')).toBeNull();
+    expect(getRetiredSport('nonexistent')).toBeNull();
+    expect(getRetiredSport(undefined)).toBeNull();
+  });
+});
+
+describe('getSportLabel', () => {
+  it('names registered sports from the registry', () => {
+    expect(getSportLabel('tabletennis')).toBe('Table Tennis');
   });
 
-  it('Net Sports has 1 sport (volleyball)', () => {
-    const net = getSportsByCategory()['Net Sports'];
-    expect(net).toHaveLength(1);
-    expect(net[0].id).toBe('volleyball');
+  it('still names a retired sport so its saved matches read properly', () => {
+    expect(getSportLabel('pickleball')).toBe('Pickleball');
+    expect(getSportLabel('futsal')).toBe('Futsal');
   });
 
-  it('Cricket has 1 sport (cricket)', () => {
-    const cricket = getSportsByCategory()['Cricket'];
-    expect(cricket).toHaveLength(1);
-    expect(cricket[0].id).toBe('cricket');
+  it('falls back to a generic label for an unknown or missing sport', () => {
+    expect(getSportLabel('curling')).toBe('Other sport');
+    expect(getSportLabel(null)).toBe('Other sport');
+  });
+});
+
+describe('isTeamColourSport', () => {
+  it('does not opt retired sports into team colour or put them back in pickers', () => {
+    RETIRED_IDS.forEach(id => {
+      expect(isTeamColourSport(id)).toBe(false);
+    });
+    const pickerIds = Object.values(getSportsByCategory()).flat().map(sport => sport.id);
+    expect(pickerIds).toEqual(getSportsList().map(sport => sport.id));
+    expect(pickerIds.filter(id => isTeamColourSport(id))).toEqual(
+      getSportsList().filter(sport => sport.teamColour === true).map(sport => sport.id),
+    );
+  });
+
+  it('is true only for a sport whose registry entry opts in', () => {
+    const registry = {
+      on: { id: 'on', engine: 'sets', teamColour: true },
+      off: { id: 'off', engine: 'sets' },
+    };
+    expect(isTeamColourSport('on', registry)).toBe(true);
+    expect(isTeamColourSport('off', registry)).toBe(false);
+    expect(isTeamColourSport('missing', registry)).toBe(false);
+  });
+
+  it('is false for unknown ids and prototype keys', () => {
+    expect(isTeamColourSport('nonexistent')).toBe(false);
+    expect(isTeamColourSport('toString')).toBe(false);
+    expect(isTeamColourSport(undefined)).toBe(false);
+  });
+
+  it('only flags sets or goals sports that have a court drawing (never tennis or cricket)', () => {
+    for (const sport of getSportsList().filter((s) => isTeamColourSport(s.id))) {
+      expect(['sets', 'goals']).toContain(sport.engine);
+      expect(['tennis', 'cricket']).not.toContain(sport.id);
+      expect(COURT_MOTIFS[sport.id], sport.id).toBeTruthy();
+    }
   });
 });

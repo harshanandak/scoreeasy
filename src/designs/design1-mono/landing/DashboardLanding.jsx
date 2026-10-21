@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
 import { getActiveSessions } from '../../../utils/universalStorage';
-import { getSportsList, getSportById } from '../../../models/sportRegistry';
+import { getSportsList, getSportById, getSportLabel } from '../../../models/sportRegistry';
 import { useAuth } from '../../../hooks/useAuth';
 import { isTournamentMatchCompleted } from '../../../utils/tournamentSync';
 import { MONO, SWISS } from './landingTheme';
@@ -85,7 +85,8 @@ const allSportsList = getSportsList();
 
 const SPORT_NAMES = allSportsList.map(sp => sp.name);
 
-const DEFAULT_FEATURED_SPORT_IDS = ['cricket', 'football', 'volleyball'];
+// Empty-state featured tier: the first few sports in focus order (src/models/sportFocus.js).
+const DEFAULT_FEATURED_SPORT_COUNT = 3;
 
 function collectTournamentsBySport(sports) {
   const tournaments = [];
@@ -366,7 +367,7 @@ function ExistingUserDashboard({
                 style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
               >
                 <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
-                <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Start your first match.</span>
+                <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>{inProgressMatches.length > 0 || hasActive ? 'Start another match.' : 'Start your first match.'}</span>
                 <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
               </button>
               <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
@@ -447,8 +448,7 @@ function ExistingUserDashboard({
             <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
           </div>
           {recentMatches.map((qm, i) => {
-            const sportConfig = getSportById(qm.sport);
-            const sportName = sportConfig?.name || null;
+            const sportName = qm.sport ? getSportLabel(qm.sport) : null;
             const team1Won = qm.winner === qm.team1;
             const team2Won = qm.winner === qm.team2;
             return (
@@ -586,9 +586,7 @@ function EmptyDashboard({ navigate, isAuthenticated, user }) {
   /* Featured tier: real favourites first; else a few popular defaults so the row is never empty. */
   const favoriteIds = user?.favoriteGames || [];
   const favoriteSports = allSportsList.filter(sp => favoriteIds.includes(sp.id));
-  const defaultSports = DEFAULT_FEATURED_SPORT_IDS
-    .map(id => allSportsList.find(sp => sp.id === id))
-    .filter(Boolean);
+  const defaultSports = allSportsList.slice(0, DEFAULT_FEATURED_SPORT_COUNT);
   const featuredSports = favoriteSports.length > 0 ? favoriteSports : defaultSports;
   const featuredLabel = favoriteSports.length > 0 ? 'Favourites' : 'Popular';
 

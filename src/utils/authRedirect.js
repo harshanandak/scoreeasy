@@ -1,5 +1,8 @@
+import { PLAY_HUB_PATH } from './appPaths';
+
 export const AUTH_RETURN_TO_KEY = 'scoreeasy.authReturnTo';
-export const DEFAULT_GUEST_SCORING_PATH = '/volleyball/quick';
+// A guest picks the game first; no sport is assumed.
+export const DEFAULT_GUEST_SCORING_PATH = PLAY_HUB_PATH;
 
 export function isSafeAppPath(value) {
   return typeof value === 'string' &&

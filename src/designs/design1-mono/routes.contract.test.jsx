@@ -1,6 +1,7 @@
-import { act, cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
@@ -12,12 +13,9 @@ import Design1Mono from './index';
 // the fix lands. Whoever lands the fix flips `it.fails` to `it` in the same PR.
 // The finding id (RA-n) points at the audit doc's findings table and fix plan.
 //
-// Harness: same shape as AppRouteRecovery.test.jsx. It renders the real
-// Design1Mono shell, whose routes are React.lazy chunks, so the async budget is
-// raised file-locally for cold chunk loads under a parallel run. (PR #159 adds
-// src/test/preloadAppRoutes.js for this; switch to it once that is on master.)
-configure({ asyncUtilTimeout: 15000 });
-vi.setConfig({ testTimeout: 40000, hookTimeout: 40000 });
+// Match AppRouteRecovery.test.jsx: resolve lazy route chunks during collection
+// so contract assertions do not depend on cold imports inside a test timeout.
+await preloadAppRoutes();
 
 const authState = vi.hoisted(() => ({ current: null }));
 const convexState = vi.hoisted(() => ({ useQuery: () => [] }));
@@ -122,7 +120,7 @@ async function settleRoute() {
     expect(document.querySelector('.route-skeleton')).toBeNull();
     expect(document.querySelector('main')?.textContent?.trim()).toBeTruthy();
   });
-  await act(() => new Promise((resolve) => { setTimeout(resolve, 120); }));
+  await act(async () => {});
 }
 
 async function pressProbeBack() {
@@ -174,7 +172,7 @@ describe('route contracts: already correct (pinned)', () => {
   });
 });
 
-describe('route contracts: open findings (it.fails until the fix PR lands)', () => {
+describe('route contracts: audit findings (open findings retain it.fails)', () => {
   // RA-1 (P1). Goals scorers finish with a plain navigate() PUSH to the
   // tournament page, so Back from the tournament reopens the scorer of the match
   // that just finished. Sets scorers already route completion through
@@ -211,11 +209,7 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     expect(currentRoute()).not.toBe(`/tennis/quick/live/${TENNIS_ID}`);
   });
 
-  // RA-3 (P1). The dashboard (/app) reads only completed quick matches,
-  // tournaments and legacy gs_sessions. An in-progress quick draft is invisible:
-  // the Home tab shows "Play your first match" over a live match, and when two
-  // drafts exist the app entry (/) deliberately lands here to let the scorer pick.
-  // Fix PR: "Resume surface: /app lists every in-progress draft".
+  // RA-3 fixed: Home exposes the same resumable catalog as cold entry.
   it('RA-3: the Home dashboard offers a resume action for an in-progress quick draft', async () => {
     seed('se_quickmatch_draft_volleyball', {
       phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets',
@@ -225,7 +219,7 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     await settleRoute();
 
     expect(screen.getAllByRole('button', { name: /resume/i }).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Play your first match')).not.toBeInTheDocument();
+    expect(screen.queryByText(/first match/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /resume/i }));
     await waitFor(() => expect(currentRoute()).toBe('/volleyball/quick'));
   });
@@ -251,6 +245,21 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
       await waitFor(() => expect(currentRoute()).toBe(entry.path));
       cleanup();
     }
+  });
+
+  it.each(['cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball', 'tabletennis', 'hockey'])('RA-3: Resume restores the %s quick scorer', async (sport) => {
+    seed(`se_quickmatch_draft_${sport}`, {
+      phase: 'scoring', sport, team1Name: 'Sharks', team2Name: 'Jets',
+      vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }],
+      currentSet: 0, gScore1: 2, gScore2: 1, updatedAt: NOW_ISO,
+    });
+    renderApp(['/app']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /resume/i }));
+    await waitFor(() => expect(currentRoute()).toBe(`/${sport}/quick`));
+    await settleRoute();
+    expect(screen.queryByText('App route crashed')).not.toBeInTheDocument();
+    expect(screen.getByText(/Resumed/)).toBeInTheDocument();
   });
 
   // RA-4 (P1). The cricket Test scorer renders "Loading..." forever when the

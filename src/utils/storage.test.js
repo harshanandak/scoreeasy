@@ -344,7 +344,9 @@ describe('Quick match persistence normalization', () => {
     vi.useRealTimers();
   });
 
-  it('stores completed quick matches for every supported sport with terminal status', () => {
+  // Includes the five deregistered sports: a device may still hold their matches,
+  // and storage must keep them (removal from the registry never drops saved data).
+  it('stores completed quick matches for every registered and deregistered sport with terminal status', () => {
     const sports = [
       'volleyball',
       'badminton',

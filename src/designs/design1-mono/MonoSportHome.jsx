@@ -3,10 +3,8 @@ import PropTypes from 'prop-types';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadSportTournaments } from '../../utils/storage';
 import { getSportsByCategory } from '../../models/sportRegistry';
-import { prioritySports } from './theme/sportsTokens';
 import SportIcon from './SportIcon';
 
-const CATEGORY_PRIORITY = ['Cricket', 'Team Sports', 'Net Sports', 'Racquet Sports', 'Contact Sports'];
 const MONO = 'var(--font-mono)';
 
 /* Design-system tokens — single source of truth lives in index.css */
@@ -52,14 +50,6 @@ const sportShape = PropTypes.shape({
   desc: PropTypes.string,
   storageKey: PropTypes.string,
 });
-
-function getOrderedCategories(sportCategories) {
-  const categoryKeys = Object.keys(sportCategories);
-  return [
-    ...CATEGORY_PRIORITY.filter(category => categoryKeys.includes(category)),
-    ...categoryKeys.filter(category => !CATEGORY_PRIORITY.includes(category)),
-  ];
-}
 
 function SportRow({ sport, savedCount, highlighted, isLast, navigate }) {
   return (
@@ -134,8 +124,8 @@ RowGroup.propTypes = {
 export default function MonoSportHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // Groups and order come from the registry's focus tiers (src/models/sportFocus.js).
   const sportCategories = getSportsByCategory();
-  const categoryKeys = getOrderedCategories(sportCategories);
   const requestedSportId = searchParams.get('sport')?.toLowerCase() ?? null;
   const [visible, setVisible] = useState(false);
   const [tournamentCounts, setTournamentCounts] = useState({});
@@ -163,14 +153,8 @@ export default function MonoSportHome() {
 
   const getCounts = (id) => tournamentCounts[id] || 0;
 
-  const popular = prioritySports
-    .map(id => allSports.find(sport => sport.id === id))
-    .filter(Boolean);
-  const categorySections = categoryKeys
-    .map(category => ({
-      category,
-      sports: (sportCategories[category] ?? []).filter(sport => !prioritySports.includes(sport.id)),
-    }))
+  const categorySections = Object.entries(sportCategories)
+    .map(([category, sports]) => ({ category, sports }))
     .filter(section => section.sports.length > 0);
 
   const trimmedSearch = searchQuery.trim().toLowerCase();
@@ -224,14 +208,7 @@ export default function MonoSportHome() {
             </div>
           ) : (
             <>
-              <RowGroup
-                label="Popular"
-                sports={popular}
-                getCounts={getCounts}
-                requestedSportId={requestedSportId}
-                navigate={navigate}
-              />
-              {categorySections.map(({ category, sports }) => (
+              {categorySections.map(({ category, sports }, index) => (
                 <RowGroup
                   key={category}
                   label={category}
@@ -239,7 +216,7 @@ export default function MonoSportHome() {
                   getCounts={getCounts}
                   requestedSportId={requestedSportId}
                   navigate={navigate}
-                  withRule
+                  withRule={index > 0}
                 />
               ))}
             </>
