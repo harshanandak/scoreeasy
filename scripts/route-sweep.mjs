@@ -33,6 +33,13 @@ const blankSet = { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false,
 const wonSet = { ...blankSet, games1: 6, games2: 0, completed: true };
 
 const seeds = {
+  resumeCatalog: {
+    [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', updatedAt: iso },
+    se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }], currentSet: 0, updatedAt: iso },
+    se_quickmatches: [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', team1Id: 'team1', team2Id: 'team2', format: { totalInnings: 4 }, innings: [], status: 'in-progress', updatedAt: iso }],
+    se_football: [100, 101, 102].map((id) => ({ id, name: `Sunday League ${id}`, type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'pending' }] })),
+  },
+
   tennisDraft: {
     [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1: 'Ana', team2: 'Bea', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', sets: null, date: iso, createdAt: iso, updatedAt: iso },
   },
@@ -59,8 +66,41 @@ const seeds = {
   volleyDraftOnly: { se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, updatedAt: iso, savedAt: iso } },
 };
 
+const genericResumeSports = ['cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball', 'tabletennis', 'hockey'];
+for (const sport of genericResumeSports) {
+  seeds[`resume_${sport}`] = {
+    [`se_quickmatch_draft_${sport}`]: {
+      phase: 'scoring', sport, team1Name: 'Sharks', team2Name: 'Jets',
+      vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }],
+      currentSet: 0, gScore1: 2, gScore2: 1, updatedAt: iso,
+    },
+  };
+}
+seeds.retiredDrafts = Object.fromEntries(['pickleball', 'squash', 'rugby', 'futsal', 'handball'].map((sport) => [
+  `se_quickmatch_draft_${sport}`, { phase: 'scoring', sport, team1Name: 'Dinks', team2Name: 'Lobs', updatedAt: iso },
+]));
+
 // [label, path, seedName?, steps?]
 const cases = [
+  ...genericResumeSports.map((sport) => [`RA3 resume ${sport} quick from Home`, '/app', `resume_${sport}`, [
+    { eval: `document.querySelector('button[aria-label^="Resume "]').click()` }, { wait: 3500 },
+    { eval: 'location.reload()' }, { wait: 5000 },
+  ]]),
+  ['RA3 retired drafts have no Resume on Home', '/app', 'retiredDrafts'],
+  ['RA3 all resumable matches on Home', '/', 'resumeCatalog'],
+  ['RA3 resume tennis from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+  ['RA3 resume cricket Test from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Cricket: Red vs Blue' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+  ['RA3 resume third tournament from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Football: Sunday League 102' }, { wait: 5000 },
+  ]],
+  ['RA3 resume volleyball from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Volleyball: Sharks vs Jets' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+
   // App shell + public
   ['root resolver', '/'],
   ['marketing', '/marketing'],
@@ -299,6 +339,8 @@ async function runSweep(ws) {
       bottomNav: vis(document.querySelector('.global-bottom-nav')),
       dialog: dialog ? dialog.innerText.replace(/\\s+/g, ' ').trim().slice(0, 90) : '',
       historyLength: history.length,
+      resumeActions: [...document.querySelectorAll('button[aria-label^="Resume "]')].map((el) => ({ label: el.getAttribute('aria-label'), height: el.getBoundingClientRect().height })),
+      horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
       stuckLoading: /^(Loading\\.\\.\\.|Loading…)$/.test((main.innerText || '').trim()),
     };
   })()`;

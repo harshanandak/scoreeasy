@@ -1,0 +1,74 @@
+[
+  {
+    "label": "root with two drafts",
+    "path": "/",
+    "seed": "twoDrafts",
+    "url": "/app",
+    "heading": "Welcome.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome. + + + + ● READY Play your first match. Pick a sport and you are scoring in seconds. Start playing → ● GO LIVE RECENT",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "snaps": [],
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: dabd82cbbcf73b19] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "app with two drafts",
+    "path": "/app",
+    "seed": "twoDrafts",
+    "url": "/app",
+    "heading": "Welcome.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome. + + + + ● READY Play your first match. Pick a sport and you are scoring in seconds. Start playing → ● GO LIVE RECENT",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "snaps": [],
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 13597b46fc19d4e7] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  },
+  {
+    "label": "FLOW2 bottom-nav Home with one volleyball draft",
+    "path": "/play",
+    "seed": "volleyDraftOnly",
+    "url": "/play",
+    "heading": "",
+    "text": "GUIDED BROWSE 1 PICK A SPORT What are you scoring today? VOLLEYBALL BADMINTON TABLE TENNIS TENNIS PICKLEBALL SQUASH FOOTBALL BASKETBALL HOCKEY HANDBALL FUTSAL K",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "stuckLoading": false,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "snaps": [
+      {
+        "at": "click Home: clicked"
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "heading": "Welcome.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome. + + + + ● READY Play your first match. Pick a sport and you are scoring in seconds. Start playing → ● GO LIVE RECENT",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "stuckLoading": false,
+      "resumeActions": [],
+      "horizontalOverflow": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 82283e067ccb1b34] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:"
+    ]
+  }
+]
