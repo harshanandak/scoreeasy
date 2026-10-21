@@ -1,5 +1,6 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
+import { RETIRED_SPORTS } from '../models/sportFocus';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -156,7 +157,7 @@ function normalizeQuickMatchForStorage(match) {
 function normalizedQuickMatches(matches) {
   if (!Array.isArray(matches)) return [];
   return matches
-    .map(normalizeQuickMatchForStorage)
+    .map((match) => RETIRED_SPORTS[match?.sport] ? match : normalizeQuickMatchForStorage(match))
     .filter(Boolean);
 }
 
@@ -385,22 +386,25 @@ export const saveQuickMatches = (matches) => {
   return saveData(STORAGE_KEYS.QUICK_MATCHES, normalizedQuickMatches(matches));
 };
 
-export const loadQuickMatches = () => {
+export const loadQuickMatches = ({ readOnly = false } = {}) => {
   const stored = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
   const normalized = normalizedQuickMatches(stored);
-  if (JSON.stringify(stored) !== JSON.stringify(normalized)) {
+  if (!readOnly && JSON.stringify(stored) !== JSON.stringify(normalized)) {
     saveData(STORAGE_KEYS.QUICK_MATCHES, normalized);
   }
   return normalized;
 };
 
-export const loadCompletedQuickMatches = () => {
-  return loadQuickMatches().filter(m => m.status === 'completed');
+export const loadCompletedQuickMatches = (options) => {
+  return loadQuickMatches(options).filter(isCompletionSignal);
 };
 
 export const replaceCompletedQuickMatches = (completedMatches) => {
-  const activeMatches = loadQuickMatches().filter(m => m.status !== 'completed');
-  return saveQuickMatches([...activeMatches, ...completedMatches]);
+  const matches = loadQuickMatches();
+  const retiredMatches = matches.filter((match) => RETIRED_SPORTS[match.sport]);
+  const activeMatches = matches.filter((match) => !RETIRED_SPORTS[match.sport] && !isCompletionSignal(match));
+  const completed = completedMatches.filter((match) => !RETIRED_SPORTS[match.sport]);
+  return saveQuickMatches([...retiredMatches, ...activeMatches, ...completed]);
 };
 
 export const clearCompletedQuickMatches = () => {

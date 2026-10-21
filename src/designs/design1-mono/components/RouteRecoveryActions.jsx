@@ -9,6 +9,7 @@ export default function RouteRecoveryActions({
   sportId = null,
   primaryPath = null,
   primaryLabel = null,
+  savedPath = null,
 }) {
   const navigate = useNavigate();
   const sport = sportId ? getSportById(sportId) : null;
@@ -19,7 +20,8 @@ export default function RouteRecoveryActions({
   const effectivePrimaryLabel = primaryLabel || (sport ? `Back to ${sport.name} tournaments` : 'Play');
 
   const actions = [
-    { label: effectivePrimaryLabel, path: effectivePrimaryPath, primary: true },
+    savedPath ? { label: 'View saved match', path: savedPath, primary: true } : null,
+    { label: effectivePrimaryLabel, path: effectivePrimaryPath, primary: !savedPath },
     sport ? { label: `Start ${sport.name} quick match`, path: quickPath, primary: false } : null,
     sport ? { label: 'Choose another sport', path: playPath, primary: false } : null,
     // Every recovery screen offers a guaranteed escape Home, including
@@ -64,4 +66,5 @@ RouteRecoveryActions.propTypes = {
   sportId: PropTypes.string,
   primaryPath: PropTypes.string,
   primaryLabel: PropTypes.string,
+  savedPath: PropTypes.string,
 };

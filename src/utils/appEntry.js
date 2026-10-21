@@ -1,4 +1,5 @@
-import { getSportsList } from '../models/sportRegistry';
+import { getRetiredSportsList, getSportsList } from '../models/sportRegistry';
+import { loadRetiredSavedMatches } from './retiredSavedMatches';
 import { isStaleQuickMatchDraft, listDataKeys, loadData } from './storage';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
@@ -133,7 +134,8 @@ export function loadAppEntryState() {
         activeSessions: loadActiveSessionSummaries(),
         quickMatchDrafts,
         quickMatches,
-        tournaments: loadTournamentSummaries(sports),
+        history: loadRetiredSavedMatches(),
+        tournaments: loadTournamentSummaries([...sports, ...getRetiredSportsList()]),
       }),
     };
   } catch {

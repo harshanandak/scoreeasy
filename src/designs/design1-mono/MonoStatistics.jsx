@@ -8,7 +8,7 @@ import {
   loadSportTournaments,
   replaceCompletedQuickMatches,
 } from '../../utils/storage';
-import { getSportsList } from '../../models/sportRegistry';
+import { getRetiredSport, getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import SportIcon from './SportIcon';
 import { PLAY_HUB_PATH } from '../../utils/appPaths';
@@ -227,7 +227,7 @@ export function MonoStatisticsPanel() {
   const [statsStatus, setStatsStatus] = useState('');
 
   useEffect(() => {
-    const qm = loadCompletedQuickMatches();
+    const qm = loadCompletedQuickMatches({ readOnly: true });
     qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
     setQuickMatches(qm);
 
@@ -265,6 +265,7 @@ export function MonoStatisticsPanel() {
   };
 
   const requestDeleteQuickMatch = (match) => {
+    if (getRetiredSport(match.sport)) return;
     setPendingClear(null);
     setPendingDelete({
       match,
@@ -302,7 +303,7 @@ export function MonoStatisticsPanel() {
   };
 
   const clearAllQuickMatches = () => {
-    setQuickMatches([]);
+    setQuickMatches((matches) => matches.filter((match) => getRetiredSport(match.sport)));
     clearCompletedQuickMatches();
   };
 
@@ -572,7 +573,7 @@ export function MonoStatisticsPanel() {
                   <QuickTeamTable rows={quickTeamRows} />
                 </div>
 
-                {quickMatches.length > 1 && (
+                {quickMatches.filter((match) => !getRetiredSport(match.sport)).length > 1 && (
                   <div className="flex justify-end mb-3">
                     <button
                       type="button"
@@ -608,7 +609,7 @@ export function MonoStatisticsPanel() {
                             </span>
                           </div>
                         </div>
-                        <button
+                        {!getRetiredSport(qm.sport) && <button
                           type="button"
                           onClick={() => requestDeleteQuickMatch(qm)}
                           className="bg-transparent border-none cursor-pointer text-sm"
@@ -617,7 +618,7 @@ export function MonoStatisticsPanel() {
                           aria-label={`Delete match ${qm.team1} vs ${qm.team2}, ${formatQuickScore(qm)}`}
                         >
                           &times;
-                        </button>
+                        </button>}
                       </div>
                     </div>
                   ))}

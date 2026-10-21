@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
   clearCompletedQuickMatches,
@@ -11,7 +11,9 @@ import {
   saveData,
 } from '../../utils/storage';
 import { loadHistory } from '../../utils/universalStorage';
-import { getRetiredSportsList, getSportById, getSportLabel, getSportsList } from '../../models/sportRegistry';
+import { getSportById, getSportLabel, getSportsList } from '../../models/sportRegistry';
+import { loadRetiredSavedMatches } from '../../utils/retiredSavedMatches';
+import RetiredMatchState from './components/RetiredMatchState';
 import {
   getCompletedAt,
   getTournamentMatches,
@@ -146,7 +148,7 @@ function matchesResultFilter(entry, resultFilter) {
 
 function buildEntryShareText(entry) {
   const title = entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`;
-  return `${title} - ${entry.score} - ${winnerLabel(entry.winner)}`;
+  return `${title} - ${entry.score} - ${entry.isUnfinished ? 'Unfinished' : winnerLabel(entry.winner)}`;
 }
 
 function getShareStatusText(response) {
@@ -206,8 +208,7 @@ function matchScore(match, team1Id, team2Id) {
 
 function buildTournamentEntries() {
   const entries = [];
-  // Deregistered sports are included so their saved tournaments stay readable.
-  const sports = [...getSportsList(), ...getRetiredSportsList()];
+  const sports = getSportsList();
 
   sports.forEach((sport) => {
     const tournaments = loadSportTournaments(sport.storageKey);
@@ -289,14 +290,16 @@ OptionChips.propTypes = {
 
 export default function MonoHistory() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { history, clearAll: clearLegacyHistory, refresh: refreshLegacyHistory } = useGameHistory();
   const [visible, setVisible] = useState(false);
   const [view, setView] = useState('matches');
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
+  const [retiredEntries] = useState(loadRetiredSavedMatches);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sportFilter, setSportFilter] = useState(ANY_SPORT);
+  const [sportFilter, setSportFilter] = useState(() => searchParams.get('sport') ? getSportLabel(searchParams.get('sport')) : ANY_SPORT);
   const [resultFilter, setResultFilter] = useState(RESULT_ALL);
   const [sortOrder, setSortOrder] = useState(SORT_NEWEST);
   const [showFilters, setShowFilters] = useState(false);
@@ -309,22 +312,22 @@ export default function MonoHistory() {
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
 
-    const loadedQuick = loadCompletedQuickMatches();
+    const loadedQuick = loadCompletedQuickMatches({ readOnly: true }).filter((match) => !retiredEntries.some((entry) => entry.id === `quick-${match.id}`));
     loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
 
     setQuickMatches(loadedQuick);
     setTournamentEntries(buildTournamentEntries());
-  }, []);
+  }, [retiredEntries]);
 
   // The Stats panel mutates the SAME quick-match store (se_quickmatches) with its
   // own local copy, so re-read whenever the Matches tab is (re)entered — otherwise a
   // delete/clear performed under Stats leaves stale rows here until a remount.
   useEffect(() => {
     if (view !== 'matches') return;
-    const loadedQuick = loadCompletedQuickMatches();
+    const loadedQuick = loadCompletedQuickMatches({ readOnly: true }).filter((match) => !retiredEntries.some((entry) => entry.id === `quick-${match.id}`));
     loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
     setQuickMatches(loadedQuick);
-  }, [view]);
+  }, [view, retiredEntries]);
 
   const quickEntries = useMemo(() => {
     return quickMatches.map((qm) => {
@@ -376,9 +379,14 @@ export default function MonoHistory() {
   }, [history]);
 
   const allEntries = useMemo(() => {
-    return [...quickEntries, ...tournamentEntries, ...legacyEntries]
+    return [...quickEntries, ...tournamentEntries, ...legacyEntries, ...retiredEntries]
       .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
-  }, [quickEntries, tournamentEntries, legacyEntries]);
+  }, [quickEntries, tournamentEntries, legacyEntries, retiredEntries]);
+
+  useEffect(() => {
+    const saved = searchParams.get('saved');
+    if (saved) setSelectedEntry(allEntries.find((entry) => entry.retired && entry.id === saved) || null);
+  }, [allEntries, searchParams]);
 
   const filteredEntries = useMemo(() => {
     const normalizedSearch = normalizeSearchValue(searchQuery);
@@ -399,10 +407,10 @@ export default function MonoHistory() {
     || sortOrder !== SORT_NEWEST
     || filter !== 'all';
 
-  const quickCount = quickEntries.length;
-  const tournamentCount = tournamentEntries.length + legacyEntries.length;
+  const quickCount = quickEntries.length + retiredEntries.filter((entry) => entry.source === 'quick').length;
+  const tournamentCount = tournamentEntries.length + legacyEntries.length + retiredEntries.filter((entry) => entry.source === 'tournament').length;
   const totalCount = allEntries.length;
-  const clearableCount = quickCount + legacyEntries.length;
+  const clearableCount = quickEntries.length + legacyEntries.length;
 
   const resetDiscoveryFilters = () => {
     setFilter('all');
@@ -824,11 +832,16 @@ export default function MonoHistory() {
           </section>
         ) : (
           <>
+            {[
+              { label: filter === 'quick' ? 'Quick matches' : filter === 'tournament' ? 'Tournament matches' : 'All matches', entries: filteredEntries.filter((entry) => !entry.isUnfinished) },
+              { label: 'Unfinished, retired sport', entries: filteredEntries.filter((entry) => entry.isUnfinished) },
+            ].filter((group) => group.entries.length > 0).map((group) => (
+            <section key={group.label} aria-label={group.label}>
             <p className="font-mono" style={{ margin: '0 0 2px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
-              {filter === 'quick' ? 'Quick matches' : filter === 'tournament' ? 'Tournament matches' : 'All matches'}
+              {group.label}
             </p>
             <div className="mono-history-list flex flex-col">
-            {filteredEntries.map((entry, entryIndex) => (
+            {group.entries.map((entry, entryIndex) => (
               <div
                 key={entry.id}
                 className="mono-history-row mono-history-row-enter"
@@ -863,7 +876,7 @@ export default function MonoHistory() {
                     </span>
                     <span className="block text-xs" style={{ marginTop: 2, color: 'var(--muted-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {[
-                        winnerLabel(entry.winner),
+                        entry.isUnfinished ? 'Unfinished' : winnerLabel(entry.winner),
                         entry.sportName,
                         entry.source === 'quick' ? 'Quick' : 'Tournament',
                         entry.isLegacy ? entry.participants : entry.tournamentName,
@@ -877,7 +890,7 @@ export default function MonoHistory() {
                   </span>
                 </button>
 
-                {entry.source === 'quick' && (
+                {entry.source === 'quick' && !entry.retired && (
                   <button
                     onClick={() => {
                       confirmDeleteQuickMatch(entry);
@@ -893,6 +906,8 @@ export default function MonoHistory() {
               </div>
             ))}
             </div>
+            </section>
+            ))}
           </>
         )}
 
@@ -903,8 +918,9 @@ export default function MonoHistory() {
               {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
             </h2>
             <p className="text-sm font-mono mb-4" style={{ color: '#111' }}>
-              {selectedEntry.score} - {winnerLabel(selectedEntry.winner)}
+              {selectedEntry.score} - {selectedEntry.isUnfinished ? 'Unfinished' : winnerLabel(selectedEntry.winner)}
             </p>
+            {selectedEntry.retired && <RetiredMatchState entry={selectedEntry} />}
             <div className="grid grid-cols-2 gap-2">
               {selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) && (
                 <button
@@ -928,7 +944,14 @@ export default function MonoHistory() {
                 type="button"
                 className="mono-btn"
                 style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => setSelectedEntry(null)}
+                onClick={() => {
+                  setSelectedEntry(null);
+                  if (searchParams.has('saved')) {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('saved');
+                    setSearchParams(next, { replace: true });
+                  }
+                }}
               >
                 Close
               </button>

@@ -104,6 +104,50 @@ describe('app route recovery', () => {
     });
   });
 
+  it('opens a retired draft read-only from its old deep link without writing it', async () => {
+    const key = 'se_quickmatch_draft_pickleball';
+    const saved = JSON.stringify({ sport: 'pickleball', phase: 'scoring', team1Name: 'Dinks',
+      team2Name: 'Lobs', vScore1: 10, vScore2: 7, currentSet: 0,
+      format: { type: 'single', target: 11 }, updatedAt: '2026-01-01T10:00:00.000Z' });
+    localStorage.setItem(key, saved);
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    const remove = vi.spyOn(Storage.prototype, 'removeItem');
+    try {
+      renderApp('/pickleball/quick');
+      fireEvent.click(await screen.findByRole('button', { name: 'View saved match' }));
+      expect(await screen.findByText('This sport is retired; scoring is off')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Dinks vs Lobs' })).toBeInTheDocument();
+      expect(screen.getAllByText(/10 - 7/).length).toBeGreaterThan(0);
+      expect(screen.queryByRole('button', { name: /Resume|Rematch|Undo/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      expect(write.mock.calls.filter(([k]) => k === key)).toEqual([]);
+      expect(remove.mock.calls.filter(([k]) => k === key)).toEqual([]);
+      expect(localStorage.getItem(key)).toBe(saved);
+    } finally { write.mockRestore(); remove.mockRestore(); }
+  });
+
+  it('opens the requested retired tournament match rather than another saved match', async () => {
+    localStorage.setItem('se_futsal', JSON.stringify([{ id: 'cup', name: 'Saved Cup',
+      format: { mode: 'free' }, teams: [{ id: 'a', name: 'Dinks' }, { id: 'b', name: 'Lobs' }],
+      matches: [{ id: 'm1', team1Id: 'a', team2Id: 'b', score1: 2, score2: 1, period: 2 },
+        { id: 'm2', team1Id: 'a', team2Id: 'b', score1: 4, score2: 3, period: 1 }] }]));
+    const saved = localStorage.getItem('se_futsal');
+    renderApp('/futsal/tournament/cup/match/m2/score');
+    fireEvent.click(await screen.findByRole('button', { name: 'View saved match' }));
+    expect(await screen.findByText('This sport is retired; scoring is off')).toBeInTheDocument();
+    expect(screen.getByText('Period 1')).toBeInTheDocument();
+    expect(screen.getByText(/4 - 3 - Unfinished/)).toBeInTheDocument();
+    expect(localStorage.getItem('se_futsal')).toBe(saved);
+  });
+
+  it('opens signed-out retired-only tournament devices at Home', async () => {
+    localStorage.setItem('se_futsal', JSON.stringify([{ id: 'cup', matches: [
+      { id: 'm1', score1: 3, score2: 1, status: 'completed' },
+    ] }]));
+    renderApp('/');
+    await waitFor(() => expectCurrentRoute('/app'));
+  });
+
   it('recovers a deep tournament scorer link of a deregistered sport', async () => {
     renderApp('/squash/tournament/t-1/match/m-1/score');
 

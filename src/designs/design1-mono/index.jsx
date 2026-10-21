@@ -5,6 +5,7 @@ import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 're
 import MonoLanding from './MonoLanding';
 import { getRetiredSport, getSportById } from '../../models/sportRegistry';
 import { loadData, loadQuickMatch } from '../../utils/storage';
+import { retiredSavedHistoryPath } from '../../utils/retiredSavedMatches';
 import { getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -140,6 +141,8 @@ export function LazyFallback() {
 // deregistered: say so plainly and point at the sport chooser. Its saved
 // matches are still listed (read-only) in History.
 function RetiredSportRoute({ sportName }) {
+  const location = useLocation();
+  const savedPath = retiredSavedHistoryPath(location.pathname);
   return (
     <RouteRecoveryActions
       eyebrow="Sport retired"
@@ -147,6 +150,7 @@ function RetiredSportRoute({ sportName }) {
       message={`Score Easy now focuses on fewer games. Your saved ${sportName} matches stay in History.`}
       primaryLabel="Choose a sport"
       primaryPath="/play"
+      savedPath={savedPath}
     />
   );
 }
