@@ -7,7 +7,7 @@ description: Deep research with parallel-deep-research, document findings
 > The research phase has been absorbed into the `/plan` command, which runs a full 3-phase workflow:
 > - **Phase 1**: Brainstorming — design intent, constraints, success criteria
 > - **Phase 2**: Technical research — web search, OWASP, codebase exploration, TDD scenarios
-> - **Phase 3**: Setup — branch, worktree, Beads issue, task list
+> - **Phase 3**: Setup — branch, worktree, Forge issue, task list
 >
 > Run `/plan <feature-slug>` to start the complete planning workflow.
 

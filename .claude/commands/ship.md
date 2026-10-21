@@ -19,7 +19,7 @@ This command creates a PR after validation passes.
 Do NOT create PR until:
 1. /validate was run in this session with all four outputs shown (type, lint, tests, security)
 2. All checks confirmed passing — not assumed, not "was passing earlier"
-3. Beads issue is in_progress
+3. Forge issue is in_progress
 4. git branch --show-current output is NOT main or master
 </HARD-GATE>
 ```
@@ -96,7 +96,7 @@ If a PR template exists:
 2. **Fill in every section** with actual data from the current PR context:
    - Replace HTML comments (`<!-- ... -->`) with real content
    - Check applicable checkboxes (`- [x]`)
-   - Fill in beads issue IDs (replace `beads-xxx` with actual ID)
+   - Fill in the Forge issue ID (replace `<issue-id>` with the actual ID)
    - Fill in test results, validation status, and other concrete data
    - Reference the design doc: `docs/plans/YYYY-MM-DD-<slug>-design.md`
 3. **Do NOT remove any sections** — fill them all, even if "N/A"
@@ -126,8 +126,8 @@ each one ticked and walked out loud. Completeness gates the merge, size does not
 ## Testing
 [How it was tested, test results]
 
-## Beads
-Closes beads-xxx
+## Issue
+Forge issue: <issue-id>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
@@ -140,23 +140,23 @@ gh pr create --title "<type>: <concise description>" --body "<populated-template
 
 Rules for the PR body:
 - **Use the project's template structure** — never substitute your own format
-- **Fill in concrete data** — commit counts, test results, actual file paths, real beads IDs
+- **Fill in concrete data** — commit counts, test results, actual file paths, real Forge issue IDs
 - **Check applicable checkboxes** — `[x]` for items that apply, `[ ]` for items that don't
-- **Include "Closes beads-xxx"** in the Beads section (required for auto-close in /verify)
+- **Include "Forge issue: <issue-id>"** in the Issue section (required for auto-close in /verify)
 
-### Step 6: Update Beads — only now that the PR exists
+### Step 6: Update the issue — only now that the PR exists
 
 Do this **after** `gh pr create` succeeds, never before the push. If the push or the
-PR creation fails and the issue is already `done`, no PR exists, and re-running
+PR creation fails and the issue is already `review`, no PR exists, and re-running
 `/ship` is refused by its own entry gate, which requires `in_progress`.
 
 ```bash
-bd update <id> --status done
-bd sync
+forge issue update <id> --status review
 ```
 
 If a later step fails after this point, put it back with
-`bd update <id> --status in_progress` before you stop.
+`forge issue update <id> --status in_progress` before you stop. `/verify` closes the
+issue once the merge lands.
 
 ### Step 7: Record Stage Transition
 ```bash
@@ -187,11 +187,11 @@ forge team verify 2>&1 || true
 ```
 ✓ Validation: /validate passed (all 4 checks — fresh output confirmed)
 ✓ Freshness: Branch is up-to-date with master
-✓ Beads: Marked done & synced (forge-xyz)
+✓ Issue: Marked review (<issue-id>)
 ✓ Pushed: feat/stripe-billing
 ✓ PR created: https://github.com/.../pull/123
   - PR body: Problem → Root Cause → Fix → Value (narrative format)
-  - Beads linked: forge-xyz
+  - Issue linked: <issue-id>
   - Implementation details in collapsible section
 
 ⏸️  PR created, checks started (Greptile, SonarCloud, GitHub Actions)
@@ -217,7 +217,7 @@ Stage 7: /verify     → Post-merge CI check on main
 
 - **Use the project's PR template**: Always read `.github/pull_request_template.md` (or equivalent) and populate it — never substitute your own format
 - **Fill every section**: Even if "N/A" — empty/missing sections cause review friction
-- **Include "Closes beads-xxx"**: Required for auto-close in /verify
+- **Include "Forge issue: <issue-id>"**: Required for auto-close in /verify
 - **Concrete data only**: Test counts, file paths, commit SHAs — not placeholder text
 - **Poll briefly, then stop**: Check PR status for up to 60 seconds, then hand off if checks are still pending
 - **NO auto-merge**: Always wait for /review phase
