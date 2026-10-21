@@ -1,13 +1,10 @@
-import { act, cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
+import { getGoalsSports } from '../../models/sportRegistry';
 import { cricketFinishSeed } from '../../test/cricketFinishFixtures';
-// Warm the cricket flow's lazy chunks before starting navigation assertions.
-import './MonoTournamentLiveScore';
-import './MonoCricketTournament';
-import './MonoQuickMatch';
-import './MonoHistory';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -18,12 +15,9 @@ import './MonoHistory';
 // the fix lands. Whoever lands the fix flips `it.fails` to `it` in the same PR.
 // The finding id (RA-n) points at the audit doc's findings table and fix plan.
 //
-// Harness: same shape as AppRouteRecovery.test.jsx. It renders the real
-// Design1Mono shell, whose routes are React.lazy chunks, so the async budget is
-// raised file-locally for cold chunk loads under a parallel run. (PR #159 adds
-// src/test/preloadAppRoutes.js for this; switch to it once that is on master.)
-configure({ asyncUtilTimeout: 15000 });
-vi.setConfig({ testTimeout: 40000, hookTimeout: 40000 });
+// Match AppRouteRecovery.test.jsx: resolve lazy route chunks during collection
+// so contract assertions do not depend on cold imports inside a test timeout.
+await preloadAppRoutes();
 
 const authState = vi.hoisted(() => ({ current: null }));
 const convexState = vi.hoisted(() => ({ useQuery: () => [] }));
@@ -128,7 +122,7 @@ async function settleRoute() {
     expect(document.querySelector('.route-skeleton')).toBeNull();
     expect(document.querySelector('main')?.textContent?.trim()).toBeTruthy();
   });
-  await act(() => new Promise((resolve) => { setTimeout(resolve, 120); }));
+  await act(async () => {});
 }
 
 async function pressProbeBack() {
@@ -157,13 +151,11 @@ afterEach(() => {
 });
 
 describe('route contracts: already correct (pinned)', () => {
-  it.each(['limited', 'test-tournament', 'test-quick', 'guided'])('RA-1: Back after finishing %s cricket does not reopen its scorer', async (kind) => {
+  it.each(['limited', 'test-tournament', 'test-quick', 'guided'])('RA-1: Back after finishing %s cricket preserves the result and does not reopen its scorer', async (kind) => {
     Object.entries(cricketFinishSeed(kind)).forEach(([key, value]) => seed(key, value));
-    const scorerPath = kind === 'test-quick'
-      ? '/cricket/quick/test-match/300'
-      : '/cricket/tournament/100/match/m1/score';
-    const destination = kind === 'test-quick' ? '/history' : '/cricket/tournament/100';
-    renderApp(['/history', scorerPath]);
+    const quick = kind === 'test-quick';
+    const storageKey = quick ? 'se_quickmatches' : 'se_cricket';
+    renderApp(['/history', quick ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score']);
     await settleRoute();
     if (kind === 'guided') {
       fireEvent.click(await screen.findByRole('button', { name: 'Four' }));
@@ -173,9 +165,34 @@ describe('route contracts: already correct (pinned)', () => {
     } else {
       fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
     }
-    await waitFor(() => expect(currentRoute()).toBe(destination));
+    await waitFor(() => expect(currentRoute()).toBe(quick ? '/history' : '/cricket/tournament/100'));
+    const saved = JSON.parse(localStorage.getItem(storageKey));
+    expect(quick ? saved[0] : saved[0].matches[0]).toMatchObject({ status: 'completed', winner: quick ? 'Beta' : 'B' });
     await pressProbeBack();
     await waitFor(() => expect(currentRoute()).toBe('/history'));
+    expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+  });
+
+  it('RA-1 cricket regression: limited-overs quick Finish preserves restored Undo and the saved innings through Back', async () => {
+    const scores = { team1: { runs: 1, balls: 6, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } };
+    seed('se_quickmatch_draft_cricket', {
+      sport: 'cricket', phase: 'scoring', team1Name: 'Alpha', team2Name: 'Beta',
+      format: { preset: 'custom', overs: 1, players: 11, totalInnings: 2, trackOvers: true },
+      innings: 2, battingTeam: 2, scores: { ...scores, team2: { ...scores.team2, runs: 1, balls: 1 } },
+      cricketHistory: [{ type: 'runs', key: 'team2', value: 1, innings: 2, battingTeam: 2 }], updatedAt: NOW_ISO,
+    });
+    renderApp(['/app', '/cricket/quick']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
+    expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    expect(saved).toEqual([expect.objectContaining({ sport: 'cricket', winner: 'Beta' })]);
+    expect(saved[0].team1Score).toMatchObject({ runs: 1, balls: 6 });
+    expect(saved[0].team2Score).toMatchObject({ runs: 4, balls: 1 });
+    await pressProbeBack();
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
   });
 
   it('renders the 404 recovery screen, with Play and Home, for an unknown multi-segment path', async () => {
@@ -201,24 +218,57 @@ describe('route contracts: already correct (pinned)', () => {
   });
 });
 
-describe('route contracts: open findings (it.fails until the fix PR lands)', () => {
-  // RA-1 (P1). Goals scorers finish with a plain navigate() PUSH to the
-  // tournament page, so Back from the tournament reopens the scorer of the match
-  // that just finished. Sets scorers already route completion through
-  // completeProtectedScoring (PR #128); goals and tennis-tournament still do
-  // not. Cricket completion is covered by the pinned contracts above.
-  it.fails('RA-1: Back after finishing a goals tournament match does not reopen its scorer', async () => {
-    seed('se_football', [footballTournament()]);
-    renderApp(['/football/tournament/100', '/football/tournament/100/match/m1/score']);
+describe('route contracts: goals completion (RA-1/RA-2)', () => {
+  it('covers every registered goals-engine sport', () => {
+    expect(getGoalsSports().map(({ id }) => id).sort()).toEqual(['basketball', 'football', 'hockey', 'kabaddi']);
+  });
+
+  it.each(getGoalsSports())('RA-1: $id tournament Finish saves the result and Back does not reopen the scorer', async ({ id: sport, storageKey }) => {
+    const tournament = footballTournament();
+    tournament.matches[0].draftState = {
+      score1: 3, score2: 1, history: [{ score1: 2, score2: 1 }], savedAt: NOW_ISO,
+    };
+    seed(storageKey, [tournament]);
+    const tournamentPath = `/${sport}/tournament/100`;
+    renderApp([tournamentPath, `${tournamentPath}/match/m1/score`]);
     await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
-    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    await waitFor(() => expect(currentRoute()).toBe(tournamentPath));
 
     await pressProbeBack();
 
-    expect(currentRoute()).not.toBe('/football/tournament/100/match/m1/score');
+    expect(currentRoute()).toBe(tournamentPath);
+    expect(JSON.parse(localStorage.getItem(storageKey))[0].matches[0]).toMatchObject({
+      status: 'completed', score1: 2, score2: 1, winner: 't1',
+    });
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
   });
 
+  // Goals quick matches already finish in place in MonoQuickMatch. Pin that
+  // separate path without marking the still-open tennis contracts fixed.
+  it.each(getGoalsSports())('RA-2 goals regression: $id quick Finish preserves Undo and the saved result through Back', async ({ id: sport }) => {
+    seed(`se_quickmatch_draft_${sport}`, {
+      sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { mode: 'free' },
+      gScore1: 3, gScore2: 1, gScoreHistory: [{ team: 1, value: 1 }],
+      updatedAt: NOW_ISO, savedAt: NOW_ISO,
+    });
+    renderApp(['/app', `/${sport}/quick`]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+    expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: 'Red' })]);
+    expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
+    await pressProbeBack();
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
+    expect(localStorage.getItem('se_quickmatches')).toBe(JSON.stringify(saved));
+  });
+});
+
+describe('route contracts: audit findings (open findings retain it.fails)', () => {
   // RA-2 (P1). Finishing a tennis quick match PUSHES /history. Back lands on the
   // scorer URL of the finished match, whose draft is gone: "Match not found",
   // inside the exit guard. Same fix PR as RA-1.
@@ -238,12 +288,8 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     expect(currentRoute()).not.toBe(`/tennis/quick/live/${TENNIS_ID}`);
   });
 
-  // RA-3 (P1). The dashboard (/app) reads only completed quick matches,
-  // tournaments and legacy gs_sessions. An in-progress quick draft is invisible:
-  // the Home tab shows "Play your first match" over a live match, and when two
-  // drafts exist the app entry (/) deliberately lands here to let the scorer pick.
-  // Fix PR: "Resume surface: /app lists every in-progress draft".
-  it.fails('RA-3: the Home dashboard offers a resume action for an in-progress quick draft', async () => {
+  // RA-3 fixed: Home exposes the same resumable catalog as cold entry.
+  it('RA-3: the Home dashboard offers a resume action for an in-progress quick draft', async () => {
     seed('se_quickmatch_draft_volleyball', {
       phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets',
       updatedAt: NOW_ISO, savedAt: NOW_ISO,
@@ -252,6 +298,47 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     await settleRoute();
 
     expect(screen.getAllByRole('button', { name: /resume/i }).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/first match/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /resume/i }));
+    await waitFor(() => expect(currentRoute()).toBe('/volleyball/quick'));
+  });
+
+  it('RA-3: multiple matches land on Home and each Resume opens its own route', async () => {
+    const cases = [
+      { name: /resume.*tennis/i, path: `/tennis/quick/live/${TENNIS_ID}` },
+      { name: /resume.*cricket/i, path: '/cricket/quick/test-match/123' },
+      { name: /resume.*Sunday League/i, path: '/football/tournament/100' },
+    ];
+    for (const entry of cases) {
+      seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
+        id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
+        status: 'in-progress', format: { sets: 3 }, updatedAt: NOW_ISO,
+      });
+      seed('se_quickmatches', [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', status: 'in-progress', format: { totalInnings: 4 }, updatedAt: NOW_ISO }]);
+      seed('se_football', [footballTournament()]);
+      renderApp(['/']);
+      await settleRoute();
+      expect(currentRoute()).toBe('/app');
+      expect(screen.getAllByRole('button', { name: /resume/i })).toHaveLength(3);
+      fireEvent.click(screen.getByRole('button', { name: entry.name }));
+      await waitFor(() => expect(currentRoute()).toBe(entry.path));
+      cleanup();
+    }
+  });
+
+  it.each(['cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball', 'tabletennis', 'hockey'])('RA-3: Resume restores the %s quick scorer', async (sport) => {
+    seed(`se_quickmatch_draft_${sport}`, {
+      phase: 'scoring', sport, team1Name: 'Sharks', team2Name: 'Jets',
+      vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }],
+      currentSet: 0, gScore1: 2, gScore2: 1, updatedAt: NOW_ISO,
+    });
+    renderApp(['/app']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /resume/i }));
+    await waitFor(() => expect(currentRoute()).toBe(`/${sport}/quick`));
+    await settleRoute();
+    expect(screen.queryByText('App route crashed')).not.toBeInTheDocument();
+    expect(screen.getByText(/Resumed/)).toBeInTheDocument();
   });
 
   // RA-4 (P1). The cricket Test scorer renders "Loading..." forever when the

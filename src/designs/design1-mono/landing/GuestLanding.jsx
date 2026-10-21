@@ -6,6 +6,7 @@ import { sports, sportDetails, features, steps, tickerItems, heroScoreCards, exp
 import finalTheme, { MONO, SWISS } from './landingTheme';
 import useIsMobile from './useIsMobile';
 import { getSportAccent, sportsTokens } from '../theme/sportsTokens';
+import { getSportsList } from '../../../models/sportRegistry';
 
 const heroSportPriority = new Map([
   ['Cricket', 0],
@@ -13,22 +14,7 @@ const heroSportPriority = new Map([
   ['Volleyball', 2],
 ]);
 
-const sportIdByName = new Map([
-  ['Badminton', 'badminton'],
-  ['Basketball', 'basketball'],
-  ['Cricket', 'cricket'],
-  ['Football', 'football'],
-  ['Futsal', 'futsal'],
-  ['Handball', 'handball'],
-  ['Hockey', 'hockey'],
-  ['Kabaddi', 'kabaddi'],
-  ['Pickleball', 'pickleball'],
-  ['Rugby', 'rugby'],
-  ['Squash', 'squash'],
-  ['Table Tennis', 'tabletennis'],
-  ['Tennis', 'tennis'],
-  ['Volleyball', 'volleyball'],
-]);
+const sportIdByName = new Map(getSportsList().map((sport) => [sport.name, sport.id]));
 
 function sportPlayPath(sport) {
   const sportId = sportIdByName.get(sport);
@@ -611,7 +597,7 @@ export default function GuestLanding() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: `0 ${px}px` }}>
           <p style={{ fontFamily: MONO, fontSize: '0.6875rem', letterSpacing: '0.12em', color: t.textFaint, marginBottom: mobile ? 8 : 12 }}>03 / SPORTS</p>
           <h2 style={{ fontWeight: 900, fontSize: mobile ? 'clamp(1.75rem, 7vw, 2.25rem)' : 'clamp(2rem, 4vw, 3rem)', lineHeight: 1, letterSpacing: '0', margin: mobile ? '0 0 24px 0' : '0 0 40px 0', color: t.text }}>
-            14 SPORTS.<br />YOUR RULES.
+            {sports.length} SPORTS.<br />YOUR RULES.
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: mobile ? 8 : 12 }}>
             {sports.map((sp, i) => {

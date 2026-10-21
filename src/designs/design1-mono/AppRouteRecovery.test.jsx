@@ -1,22 +1,13 @@
-import { cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
 
 // This file renders the real Design1Mono app, which code-splits its routes via
-// React.lazy (see index.jsx). Each test navigates to a route whose component is
-// fetched through an on-demand dynamic import(). When the full suite runs in
-// parallel, those one-time module transforms contend for CPU and can take
-// several seconds to resolve, leaving the Suspense fallback (<AppLoading />)
-// mounted past the global 5s asyncUtilTimeout — which surfaces as a flaky
-// waitFor/findBy timeout even though the route eventually renders correctly.
-//
-// Give the async queries generous headroom (file-local, so the rest of the
-// suite keeps the tighter global default) and raise the per-test timeout above
-// 2x asyncUtilTimeout so tests with two sequential awaits (e.g. waitFor the
-// redirect, then findBy the loaded screen) are never killed mid-wait.
-configure({ asyncUtilTimeout: 15000 });
-vi.setConfig({ testTimeout: 40000, hookTimeout: 40000 });
+// React.lazy. Load every route chunk during module collection so no test pays a
+// cold dynamic import() inside its findBy/waitFor window (see preloadAppRoutes).
+await preloadAppRoutes();
 
 const authState = vi.hoisted(() => ({
   current: {
@@ -97,6 +88,37 @@ describe('app route recovery', () => {
     expect(recoveryPanel).toBeInTheDocument();
     expect(within(recoveryPanel).getByRole('button', { name: 'Play' })).toBeInTheDocument();
     expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
+  });
+
+  it('explains a deregistered sport quick link and offers the sport chooser', async () => {
+    renderApp('/pickleball/quick');
+
+    const heading = await screen.findByRole('heading', { name: 'Pickleball is no longer offered' });
+    const recoveryPanel = heading.closest('.max-w-2xl');
+    expect(within(recoveryPanel).getByText(/saved Pickleball matches stay in History/i)).toBeInTheDocument();
+    expect(within(recoveryPanel).queryByRole('button', { name: /Start Pickleball/i })).not.toBeInTheDocument();
+
+    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Choose a sport' }));
+    await waitFor(() => {
+      expectCurrentRoute('/play');
+    });
+  });
+
+  it('recovers a deep tournament scorer link of a deregistered sport', async () => {
+    renderApp('/squash/tournament/t-1/match/m-1/score');
+
+    const heading = await screen.findByRole('heading', { name: 'Squash is no longer offered' });
+    const recoveryPanel = heading.closest('.max-w-2xl');
+    expect(within(recoveryPanel).getByRole('button', { name: 'Choose a sport' })).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
+  });
+
+  it('sends a legacy quick-match link for a deregistered sport to the sport chooser', async () => {
+    renderApp('/quick-match?sport=rugby');
+
+    await waitFor(() => {
+      expectCurrentRoute('/play');
+    });
   });
 
   it('redirects legacy quick-match links into the default volleyball quick flow', async () => {

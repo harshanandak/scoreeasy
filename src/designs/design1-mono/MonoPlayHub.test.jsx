@@ -93,6 +93,23 @@ describe('MonoPlayHub Guided | Browse toggle', () => {
     expect(globalThis.localStorage.getItem(PLAY_MODE_KEY)).toBe('guided');
   });
 
+  it('shows the Guided sport grid in focus order without the deregistered sports', () => {
+    renderPlayHub();
+
+    const names = [
+      'Cricket', 'Kabaddi', 'Volleyball', 'Badminton', 'Football', 'Basketball',
+      'Tennis', 'Table Tennis', 'Hockey',
+    ];
+    const gridButtons = screen.getAllByRole('button')
+      .map((button) => button.textContent.trim())
+      .filter((label) => names.some((name) => name.toUpperCase() === label.toUpperCase()));
+    expect(gridButtons.map((label) => label.toUpperCase())).toEqual(names.map((name) => name.toUpperCase()));
+
+    ['Pickleball', 'Squash', 'Rugby', 'Futsal', 'Handball'].forEach((name) => {
+      expect(screen.queryByRole('button', { name: new RegExp(`^${name}$`, 'i') })).not.toBeInTheDocument();
+    });
+  });
+
   it('drives the Guided wizard through to the tournament-setup contract', async () => {
     // Preserves the wizard's navigate contract (now reached via the hub):
     // /{sport}/tournament/new with { state: { fromWizard, teams, tournamentName } }.

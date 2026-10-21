@@ -5,21 +5,21 @@ import {
   getReadableTextColor,
   getSportAccent,
   landingTokenBridge,
-  prioritySports,
   sportAccents,
   sportsCssVariables,
   sportsTokens,
 } from './sportsTokens';
 
 describe('sports design tokens', () => {
-  it('keeps cricket and football first in the priority sports list', () => {
-    expect(prioritySports.slice(0, 2)).toEqual(['cricket', 'football']);
-    expect(prioritySports).toContain('volleyball');
+  it('leaves sport order to the registry (src/models/sportFocus.js), not the theme', async () => {
+    const tokens = await import('./sportsTokens');
+    expect(tokens).not.toHaveProperty('prioritySports');
   });
 
-  it('uses a restrained field-green and pitch-brown palette for the priority sports', () => {
-    const priorityAccentColors = prioritySports.map((sport) => sportAccents[sport].primary);
-    const priorityFieldColors = prioritySports.map((sport) => sportAccents[sport].field);
+  it('uses a restrained field-green and pitch-brown palette for the accented sports', () => {
+    const accented = ['cricket', 'football', 'volleyball'];
+    const priorityAccentColors = accented.map((sport) => sportAccents[sport].primary);
+    const priorityFieldColors = accented.map((sport) => sportAccents[sport].field);
 
     expect(new Set(priorityAccentColors)).toEqual(new Set(['oklch(0.6230 0.1688 149.1777)']));
     expect(new Set(priorityFieldColors)).toEqual(new Set(['oklch(0.6082 0.1213 58.2537)']));
