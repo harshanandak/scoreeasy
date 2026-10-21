@@ -3,6 +3,8 @@
 //
 // Each mark is SVG body markup in viewBox 0 0 140 100, black on transparent, drawn travelling
 // right (towards the net when it sits on the left key; the board mirrors it for the right key).
+// Only alpha matters to a mask: shapes paint in the default currentColor (opaque); the two literals
+// left are the luminance <mask> that cuts the seams out (white keeps, black cuts).
 // It is used as a CSS mask, so its colour and alpha always come from the colour engine
 // (--team-x-motif) and every label and numeral over it stays contrast-gated.
 
@@ -23,7 +25,7 @@ export const SPORT_MARKS = Object.freeze({
     `<g transform='translate(92 50) scale(4.6) translate(-12 -12)' fill='none' stroke='#000' ` +
     `stroke-width='1.15' stroke-linecap='round'>${VOLLEYBALL_SEAMS}</g></mask></defs>` +
     `<circle cx='92' cy='50' r='46' mask='url(#m)'/>` +
-    `<path d='M16 30H34M4 50H36M16 70H34' fill='none' stroke='#000' stroke-width='6' stroke-linecap='round'/>`,
+    `<path d='M16 30H34M4 50H36M16 70H34' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>`,
 });
 
 /**
