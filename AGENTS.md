@@ -51,7 +51,7 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
 
 - **Code standards** — `CODING_STANDARDS.md`, read before writing `convex/` code and at review time.
 - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
-- **Issue tracking** — `bd` (beads). `bd prime` for the command reference; `bd ready` to find work. Use it instead of TodoWrite or markdown TODO lists, and `bd remember` instead of MEMORY.md files.
+- **Issue tracking** — `forge issue`. `forge issue ready` to find work, `forge issue show <id>` for context, `forge issue comment <id> "…"` at each stage transition, `forge issue create` for follow-ups. Use it instead of TodoWrite or markdown TODO lists.
 
 ## Shipping regime (pre-user)
 

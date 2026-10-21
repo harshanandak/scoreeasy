@@ -29,9 +29,3 @@ npm-debug.log*
 .parcel-cache/
 
 .vercel
-
-# Beads / Dolt files (added by bd init)
-.dolt/
-.beads/*.db
-.beads/*.db-*
-.beads-credential-key
