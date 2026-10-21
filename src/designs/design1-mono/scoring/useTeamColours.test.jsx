@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TEAM_COLOURS, deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
 import { motifMaskUrl } from '../../../lib/courtMotifs';
+import { sportMarkMaskUrl } from '../../../lib/sportMarks';
 import { useTeamColours } from './useTeamColours';
 
 const defaults = teamColourVars(deriveTeamColours(DEFAULT_TEAM_COLOURS.a, DEFAULT_TEAM_COLOURS.b));
@@ -40,5 +41,11 @@ describe('useTeamColours', () => {
     const { result } = renderHook(() => useTeamColours('#d62828', '#1d4ed8', 'cricket'));
     expect(result.current).not.toHaveProperty('--sport-motif-a');
     expect(result.current).not.toHaveProperty('--sport-motif-b');
+    expect(result.current).not.toHaveProperty('--sport-mark');
+  });
+
+  it('adds the sport mark (the "show the game" silhouette) when the sport has one', () => {
+    const { result } = renderHook(() => useTeamColours('#d62828', '#1d4ed8', 'volleyball'));
+    expect(result.current['--sport-mark']).toBe(sportMarkMaskUrl('volleyball'));
   });
 });

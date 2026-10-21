@@ -16,7 +16,8 @@ only for flagged sports, so each game ships in its own PR without conflicting wi
 | 1 | `feat/team-colour-engine` | Colour engine + court drawings (library only, no UI change) | 1, 2 |
 | 2 | `fix/live-team-colour-hex` | Server stores a team colour only when it is a strict hex | 11 |
 | 3 | `feat/team-colour-arena` | Rule 7, arena styles + Tailwind tokens, `useTeamColours`, `TeamColourPicker`, per-sport flag (all off) | 3, 4, 5, 6 + flag helper |
-| 4 | `feat/team-colour-volleyball` | Volleyball in team colour: quick-match picker, draft, live share, quick + tournament sets boards | 7, 8 (sets), 9 |
+| 4 | `feat/team-colour-volleyball` | Volleyball in team colour: quick-match picker, draft, live share, and the new team-colour scorer (option B, see design revision) | 7, 8 (sets) |
+| 4b | `feat/team-colour-tournament-sets` | Tournament sets board on the same scorer for flagged sports | 9 |
 | 5 | `feat/team-colour-football` | Football in team colour: goals boards (quick + tournament) | 8 (goals), 10 |
 | 6 | `feat/team-colour-spectator` | Spectator scorebug in team colour for flagged sports | 12 |
 | 7–16 | `feat/team-colour-<sport>` | One per sport: badminton, tabletennis, pickleball, squash, basketball, hockey, handball, futsal, kabaddi, rugby. Flip the flag, test that sport's board (its own controls, swap, undo), phone screenshot | 13 (per sport) |
