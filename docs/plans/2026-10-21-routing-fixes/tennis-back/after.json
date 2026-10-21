@@ -1,0 +1,162 @@
+[
+  {
+    "label": "FLOW tennis quick Finish -> Back",
+    "path": "/app",
+    "seed": "tennisDraftWon",
+    "url": "/app",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Welcomeback.",
+    "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 0 RECENT 0 EVENTS Guest on this device SIGN IN → In progress Ana vs Bea Tennis · Quick match Resume → ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [
+      {
+        "label": "Resume Tennis: Ana vs Bea",
+        "height": 44
+      }
+    ],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "click Resume Tennis: Ana vs Bea: clicked"
+      },
+      {
+        "at": "scorer (won)",
+        "url": "/tennis/quick/live/1761000000000",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Tennis match scorer",
+        "text": "Tennis match scorer Tennis SET 3 OF 3 MATCH COMPLETE ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until yo",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/history",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "History & Stats",
+        "text": "History & Stats Clear local history Matches Stats 1 All matches 1 Quick 0 Tournaments FIND MATCH FILTERS + ALL MATCHES Ana vs Bea Ana won · Tennis · Quick · 22.",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Welcomeback.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 0 ACTIVE 1 RECENT 0 EVENTS Guest on this device SIGN IN → + + + + ● LAST MATCH TENNIS ANA 2 — 0 BEA ANA WON ● G",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": [
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: 26a1948ffd4565f5] Server Error",
+      "console.error: The above error occurred in the <LiveNowStrip> component:",
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5174/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx?t=1792609283448",
+      "exception: Error: [CONVEX Q(live:listLiveFeed)] [Request ID: f376088b632abffb] Server Error"
+    ]
+  },
+  {
+    "label": "FLOW tennis tournament Finish -> Back",
+    "path": "/tennis/tournament/300",
+    "seed": "tennisTournamentWon",
+    "url": "/tennis/tournament/300",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Tennis Cup",
+    "text": "← Tournaments Tennis Cup LIVE Tennis · 2 teams · Round Robin 0/1 Matches Standings Teams MATCH 1 Ana vs Bea ▶ Resume Match",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "click Resume Match: clicked"
+      },
+      {
+        "at": "scorer (won)",
+        "url": "/tennis/tournament/300/match/m1/score",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Tennis match scorer",
+        "text": "Tennis match scorer Tennis SET 3 OF 3 MATCH COMPLETE ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until yo",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/tennis/tournament/300",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Tennis Cup",
+        "text": "← Tournaments Tennis Cup COMPLETE Tennis · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Ana 2 vs Bea 0 6-0 6-0 0-0 Edit Score",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/tennis/tournament/300",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Tennis Cup",
+      "text": "← Tournaments Tennis Cup COMPLETE Tennis · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Ana 2 vs Bea 0 6-0 6-0 0-0 Edit Score",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5174/src/designs/design1-mono/scoring/MonoTennisLiveScore.jsx?t=1792609283448"
+    ]
+  }
+]

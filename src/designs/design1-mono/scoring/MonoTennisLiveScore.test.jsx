@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { fireEvent, render, screen, act, waitFor } from '@testing-library/react';
 import { deriveServer } from './MonoTennisLiveScore.jsx';
+import { ScoringCompletionContext } from './scoringCompletionContext';
+import { clearData, saveQuickMatch, saveSportTournament } from '../../../utils/storage';
 
 // Issue #109: tennis scorer UX fixes. These tests cover the pure serve-derivation
 // helper plus the render-level fixes (serving indicator, milestone announcement,
@@ -48,6 +50,9 @@ describe('deriveServer', () => {
 // --- Component-level render tests ---
 
 const h = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  params: { sport: 'tennis', matchId: 'q1' },
+  tournaments: [],
   draft: {
     matchId: 'q1', sport: 'tennis', team1Name: 'Alpha', team2Name: 'Beta',
     // 3-set match (best of 3 -> 2 sets to win). Set 1 is done 6-4; sets 2 & 3 are
@@ -63,8 +68,8 @@ const h = vi.hoisted(() => ({
 
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
-  useParams: () => ({ sport: 'tennis', matchId: 'q1' }),
+  useNavigate: () => h.navigate,
+  useParams: () => h.params,
   useLocation: () => ({ pathname: '/tennis/quick/q1', search: '' }),
 }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
@@ -73,7 +78,7 @@ vi.mock('../../../utils/storage', () => ({
   saveData: vi.fn(() => true),
   clearData: vi.fn(),
   isStaleQuickMatchDraft: vi.fn(() => false),
-  loadSportTournaments: vi.fn(() => []),
+  loadSportTournaments: vi.fn(() => h.tournaments),
   saveSportTournament: vi.fn(() => true),
   saveQuickMatch: vi.fn(() => true),
 }));
@@ -130,5 +135,76 @@ describe('MonoTennisLiveScore render', () => {
     expect(discard.className).toContain('mono-btn-danger');
     const finish = screen.getByRole('button', { name: 'Finish' });
     expect(finish.className).not.toContain('mono-btn-danger');
+  });
+});
+
+describe('MonoTennisLiveScore completion navigation', () => {
+  const originalSets = h.draft.sets;
+  afterEach(() => {
+    h.draft.sets = originalSets;
+    h.params = { sport: 'tennis', matchId: 'q1' };
+  });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    h.params = { sport: 'tennis', matchId: 'q1' };
+    h.tournaments = [];
+    h.draft.sets = [makeSet({ games1: 6, completed: true }), makeSet({ games1: 6, completed: true }), makeSet()];
+  });
+
+  const prepareMatch = (mode) => {
+    if (mode === 'tournament') {
+      h.params = { sport: 'tennis', id: '100', matchId: 'm1' };
+      h.tournaments = [{
+        id: 100, format: { sets: 3 }, teams: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }],
+        matches: [{ id: 'm1', team1Id: 'a', team2Id: 'b', sets: h.draft.sets }],
+      }];
+    }
+  };
+
+  it.each(['quick', 'tournament'])('finishes %s through the completion seam after saving', async (mode) => {
+    const complete = vi.fn();
+    prepareMatch(mode);
+    render(
+      <ScoringCompletionContext.Provider value={complete}>
+        <MonoTennisLiveScore storageMode={mode} />
+      </ScoringCompletionContext.Provider>,
+    );
+    const finish = await screen.findByRole('button', { name: 'Finish' });
+    await waitFor(() => expect(finish).toBeEnabled());
+    fireEvent.click(finish);
+
+    expect(complete).toHaveBeenCalledWith(mode === 'quick' ? '/history' : '/tennis/tournament/100');
+    expect(h.navigate).not.toHaveBeenCalled();
+    const save = mode === 'quick' ? saveQuickMatch : saveSportTournament;
+    expect(save.mock.invocationCallOrder[0]).toBeLessThan(complete.mock.invocationCallOrder[0]);
+    if (mode === 'quick') expect(clearData).toHaveBeenCalledWith('se_tennis_quick_draft_q1');
+  });
+
+  it.each(['quick', 'tournament'])('replaces the %s scorer without the completion provider', async (mode) => {
+    prepareMatch(mode);
+    render(<MonoTennisLiveScore storageMode={mode} />);
+    const finish = await screen.findByRole('button', { name: 'Finish' });
+    await waitFor(() => expect(finish).toBeEnabled());
+    fireEvent.click(finish);
+    expect(h.navigate).toHaveBeenCalledWith(mode === 'quick' ? '/history' : '/tennis/tournament/100', { replace: true });
+  });
+
+  it.each(['quick', 'tournament'])('stays in the %s scorer if saving the result fails', async (mode) => {
+    prepareMatch(mode);
+    const save = mode === 'quick' ? saveQuickMatch : saveSportTournament;
+    save.mockReturnValueOnce(false);
+    const complete = vi.fn();
+    render(
+      <ScoringCompletionContext.Provider value={complete}>
+        <MonoTennisLiveScore storageMode={mode} />
+      </ScoringCompletionContext.Provider>,
+    );
+    const finish = await screen.findByRole('button', { name: 'Finish' });
+    await waitFor(() => expect(finish).toBeEnabled());
+    fireEvent.click(finish);
+    expect(screen.getByText('Save failed - storage may be full. Export your data.')).toBeInTheDocument();
+    expect(complete).not.toHaveBeenCalled();
+    expect(h.navigate).not.toHaveBeenCalled();
+    expect(clearData).not.toHaveBeenCalled();
   });
 });

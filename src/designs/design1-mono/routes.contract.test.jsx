@@ -246,7 +246,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
   });
 
   // Goals quick matches already finish in place in MonoQuickMatch. Pin that
-  // separate path without marking the still-open tennis contracts fixed.
+  // separate path; tennis and cricket completion have their own contracts.
   it.each(getGoalsSports())('RA-2 goals regression: $id quick Finish preserves Undo and the saved result through Back', async ({ id: sport }) => {
     seed(`se_quickmatch_draft_${sport}`, {
       sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { mode: 'free' },
@@ -269,10 +269,31 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
 });
 
 describe('route contracts: audit findings (open findings retain it.fails)', () => {
-  // RA-2 (P1). Finishing a tennis quick match PUSHES /history. Back lands on the
-  // scorer URL of the finished match, whose draft is gone: "Match not found",
-  // inside the exit guard. Same fix PR as RA-1.
-  it.fails('RA-2: Back after finishing a tennis quick match does not land on the dead scorer', async () => {
+  // Tennis completion unwinds the scorer and its exit guard (RA-1/RA-2).
+  it('RA-1: Back after finishing a tennis tournament match does not reopen its scorer', async () => {
+    const tournament = footballTournament();
+    tournament.name = 'Tennis Cup';
+    tournament.format = { sets: 3 };
+    tournament.matches[0].draftState = {
+      currentSet: 2, sets: [wonTennisSet, wonTennisSet, blankTennisSet], history: [], savedAt: NOW_ISO,
+    };
+    seed('se_tennis', [tournament]);
+    renderApp(['/tennis/tournament/100', '/tennis/tournament/100/match/m1/score']);
+    await settleRoute();
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    await waitFor(() => expect(currentRoute()).toBe('/tennis/tournament/100'));
+
+    await pressProbeBack();
+
+    expect(currentRoute()).toBe('/tennis/tournament/100');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
+    expect(saved).toMatchObject({ status: 'completed', winner: 't1', sets: [{ score1: 6, score2: 0, completed: true }, { score1: 6, score2: 0, completed: true }, { score1: 0, score2: 0, completed: false }] });
+    expect(screen.queryByRole('heading', { name: 'Tennis match scorer' })).not.toBeInTheDocument();
+  });
+
+  it('RA-2: Back after finishing a tennis quick match does not land on the dead scorer', async () => {
     seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
       id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
       format: { sets: 3 }, status: 'in-progress', sets: null, updatedAt: NOW_ISO, createdAt: NOW_ISO,
@@ -286,6 +307,54 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     await pressProbeBack();
 
     expect(currentRoute()).not.toBe(`/tennis/quick/live/${TENNIS_ID}`);
+    expect(screen.queryByRole('heading', { name: 'Match not found' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
+    expect(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)).toBeNull();
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({
+      sport: 'tennis', status: 'completed', setsWon1: 2, setsWon2: 0,
+      sets: [{ score1: 6, score2: 0, completed: true }, { score1: 6, score2: 0, completed: true }, { score1: 0, score2: 0, completed: false }],
+    });
+  });
+
+  it.each(['quick', 'tournament'])('tennis %s keeps the saved draft and Undo history across a remount', async (mode) => {
+    const sets = [wonTennisSet, { ...blankTennisSet, games1: 5, points1: 2 }, blankTennisSet];
+    const priorSets = [wonTennisSet, { ...blankTennisSet, games1: 5, points1: 1 }, blankTennisSet];
+    const history = [{ currentSet: 1, sets: priorSets, timestamp: Date.now() - 1000 }];
+    const path = mode === 'quick' ? `/tennis/quick/live/${TENNIS_ID}` : '/tennis/tournament/100/match/m1/score';
+    if (mode === 'quick') {
+      seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
+        id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
+        format: { sets: 3 }, status: 'in-progress', updatedAt: NOW_ISO,
+        draftState: { currentSet: 1, sets, history, savedAt: NOW_ISO },
+      });
+    } else {
+      const tournament = footballTournament();
+      tournament.name = 'Tennis Cup';
+      tournament.teams[0].name = 'Ana';
+      tournament.teams[1].name = 'Bea';
+      tournament.format = { sets: 3 };
+      tournament.matches[0].draftState = { currentSet: 1, sets, history, savedAt: NOW_ISO };
+      seed('se_tennis', [tournament]);
+    }
+    const savedDraft = () => mode === 'quick'
+      ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)).draftState
+      : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0].draftState;
+    renderApp(['/app', path]);
+    await settleRoute();
+    fireEvent.click(await screen.findByRole('button', { name: /^Ana: 30/ }));
+    await waitFor(() => expect(savedDraft().sets[1].points1).toBe(3));
+    expect(savedDraft().history).toHaveLength(2);
+    expect(savedDraft().history[1].sets).toEqual(sets);
+    cleanup();
+
+    renderApp(['/app', path]);
+    await settleRoute();
+    expect(await screen.findByRole('button', { name: /^Ana: 40/ })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(savedDraft().sets).toEqual(sets));
+    expect(savedDraft().history).toEqual(history);
+    expect(screen.getByRole('button', { name: /^Ana: 30/ })).toBeEnabled();
   });
 
   // RA-3 fixed: Home exposes the same resumable catalog as cold entry.

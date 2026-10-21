@@ -41,3 +41,11 @@ The `*_scorer.png` and `*_after_Finish.png` files record the scoring and result 
 - Full suite and production build: **not run at this checkpoint**. The normal pre-push hook owns both after “lane free”. No hosted checks or PR exist yet.
 
 The master merge retains Home RA-3 and goals RA-1 fixes. On “lane free”, fetch and merge master again, retain the incoming tennis fix in the audit and contract files, rerun focused validation, and push through the normal hooks before opening the PR.
+
+## Final integration after lane release
+
+- Focused validation: **15 files passed; 208 normal passes; 10 expected failures; 218 total**. This adds the tennis and goals scorer tests to the earlier cricket, route, stability and palette selection.
+- Route contracts: **37 total; 31 normal passes; 6 expected failures**. Home RA-3, goals RA-1 and tennis RA-1/RA-2 remain normal contracts.
+- Expected failures against tennis master: **6 before / 6 after routing; 10 before / 10 after repository-wide**. The earlier 7/11 baseline fell to 6/10 through tennis #169; cricket adds five passing route cases and does not change the remaining expected failures.
+- The palette remains exactly **669**, with no BASELINE or exclusion change. The cricket implementations and the inspected demo captures are unchanged by the tennis integration.
+- Full-suite/build terminal results from the normal pre-push hook are reported in the PR. Hosted checks are separate evidence.
