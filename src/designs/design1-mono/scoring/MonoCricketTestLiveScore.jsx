@@ -15,6 +15,7 @@ import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -43,6 +44,7 @@ function MenuIcon() {
 
 export default function MonoCricketTestLiveScore({ storageMode }) {
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
   const sportConfig = getSportById(sport || 'cricket');
   const isQuickMatch = storageMode === 'quick';
@@ -590,7 +592,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
 
     setSaveWarning('');
-    navigateBack();
+    finishScoring();
   };
 
   const navigateBack = () => {
@@ -632,7 +634,18 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     });
   };
 
-  const handleFinish = () => navigateBack();
+  const finishScoring = () => {
+    const destination = isQuickMatch
+      ? '/history'
+      : `/${sport || 'cricket'}/tournament/${id}`;
+    if (completeProtectedScoring) {
+      completeProtectedScoring(destination);
+    } else {
+      navigate(destination, { replace: true });
+    }
+  };
+
+  const handleFinish = () => finishScoring();
 
   // Continuous auto-save
   useEffect(() => {

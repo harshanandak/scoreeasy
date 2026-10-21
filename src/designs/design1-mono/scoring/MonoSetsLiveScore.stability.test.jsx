@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 // Stability audit 2026-10-21 (docs/plans/2026-10-21-stability-audit.md).
 // Each `it.fails` encodes the CORRECT behaviour and currently fails against
@@ -61,17 +61,29 @@ try {
 
 const { default: MonoSetsLiveScore } = await import('./MonoSetsLiveScore.jsx');
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
 function arenaButtons() {
   return screen.getAllByRole('button').filter((b) => /points\./.test(b.getAttribute('aria-label') || ''));
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers();
+  // Start beyond the scorer's initial lastClickRef=0 guard window.
+  vi.setSystemTime(new Date('2026-10-21T12:00:00Z'));
   h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
   h.tournaments = [h.makeTournament()];
 });
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllTimers();
+  vi.useRealTimers();
+});
+
+async function renderScorer() {
+  await act(async () => { render(<MonoSetsLiveScore />); });
+  expect(screen.getByText(/points to win/)).toBeTruthy();
+}
 
 describe('MonoSetsLiveScore — stability audit 2026-10-21', () => {
   // SA-01 (P0): the tournament scorer checks win-by-2 BEFORE the 30-point cap, so
@@ -87,13 +99,12 @@ describe('MonoSetsLiveScore — stability audit 2026-10-21', () => {
         scoringMode: 'rally',
       },
     })];
-    render(<MonoSetsLiveScore />);
-    await screen.findByText(/points to win/);
+    await renderScorer();
     const [left] = arenaButtons();
     // Guard: the draft really restored 29-29, so a failure below is the cap bug.
     expect(left.getAttribute('aria-label')).toMatch(/: 29 points\./);
-    fireEvent.click(left);
-    expect(await screen.findByText(/wins Set 1!/, {}, { timeout: 1500 })).toBeTruthy();
+    await act(async () => { fireEvent.click(left); });
+    expect(screen.getByText(/wins Set 1!/)).toBeTruthy();
   });
 
   // SA-07 (P1): the autosave effect returns early when history is empty, so
@@ -101,13 +112,13 @@ describe('MonoSetsLiveScore — stability audit 2026-10-21', () => {
   // undone point back. Reproduced in the browser sweep (badminton tournament).
   // Fix PR: "fix(scorers): persist the draft after undo-to-empty".
   it.fails('SA-07 undo back to 0-0 persists, so a refresh cannot resurrect the point', async () => {
-    render(<MonoSetsLiveScore />);
-    await screen.findByText(/points to win/);
+    await renderScorer();
     const [left] = arenaButtons();
-    fireEvent.click(left);
-    await wait(200);
-    fireEvent.click(screen.getByRole('button', { name: /^undo$/i }));
-    await wait(200);
+    // Autosave runs in a React effect, not a timer: flush the point's save
+    // before undo, then flush undo's effects before inspecting persistence.
+    await act(async () => { fireEvent.click(left); });
+    expect(h.saveSpy.mock.calls.at(-1)?.[1].matches[0].draftState.sets[0].score1).toBe(1);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^undo$/i })); });
     const lastSaved = h.saveSpy.mock.calls.at(-1)?.[1];
     const savedMatch = lastSaved?.matches?.find((m) => m.id === 'm1');
     const savedSets = savedMatch?.draftState?.sets;
@@ -119,13 +130,15 @@ describe('MonoSetsLiveScore — stability audit 2026-10-21', () => {
   // Team B within 150 ms of a tap on Team A is silently dropped.
   // Fix PR: "fix(scorers): per-target tap guard + visible ignored-tap feedback".
   it.fails('SA-11 a tap on the other team inside 150 ms still scores', async () => {
-    render(<MonoSetsLiveScore />);
-    await screen.findByText(/points to win/);
+    await renderScorer();
     const [left, right] = arenaButtons();
-    fireEvent.click(left);
-    await wait(60);
-    fireEvent.click(right);
-    await wait(100);
+    await act(async () => { fireEvent.click(left); });
+    expect(arenaButtons()[0].getAttribute('aria-label')).toMatch(/: 1 points?\./);
+    // A real 60 ms timeout can resume after >=150 ms under load, bypassing
+    // the shared Date.now() guard and hiding SA-11. Model the fast cross-team
+    // case exactly; both taps must score once the actual guard is fixed.
+    await act(async () => { await vi.advanceTimersByTimeAsync(60); });
+    await act(async () => { fireEvent.click(right); });
     const [, rightAfter] = arenaButtons();
     expect(rightAfter.getAttribute('aria-label')).toMatch(/: 1 points?\./);
   });
