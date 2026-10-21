@@ -1,17 +1,15 @@
-// Score Easy colour palette: the one JS home for colour values.
+// Score Easy colour palette: a JS snapshot of the current root CSS values.
 //
-// Colour audit 2026-10-21 (docs/plans/2026-10-21-colour-system-audit.md),
-// §6.5 "JS" row and migration PR 1. This file pins TODAY's values exactly as
+// This file pins the current values exactly as
 // src/index.css declares them; it changes no pixel. palette.test.js fails if
 // this file and index.css drift apart, if a documented contrast pair drops
-// below its threshold, or if raw colour literals in shipped files go up.
+// below its threshold, or if raw colour literals exceed the recorded baseline.
 //
 // Values still live in index.css (CSS is the source of truth for rendering).
-// When a value PR changes a colour (PR 3 green, PR 4 canvas, ...), it changes
-// both places in the same diff and the drift test keeps them honest.
+// An approved colour change must update both places in the same diff;
+// the drift test keeps them aligned. This snapshot approves no future style.
 //
-// Consumers that need a literal (Clerk appearance, Capacitor status bar, the
-// team-colour engine NEUTRAL, confetti) move onto this module in later PRs.
+// Production consumers are not rewired by this module.
 
 /**
  * index.css `:root` declarations, copied string-for-string (whitespace is

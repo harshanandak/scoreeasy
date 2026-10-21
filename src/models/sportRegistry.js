@@ -459,6 +459,11 @@ export const getGoalsSports = () => getSportsList().filter((s) => s.engine === '
 
 export const getSportById = (id) => SPORT_REGISTRY[id] || null;
 
+// Direction E team colour is rolled out one sport at a time: a sport opts in with
+// `teamColour: true` on its own registry entry, and its boards switch to the team-colour arena.
+export const isTeamColourSport = (id, registry = SPORT_REGISTRY) =>
+  Object.prototype.hasOwnProperty.call(registry, id) && registry[id].teamColour === true;
+
 export const getSportsByCategory = () => ({
   'Racquet Sports': [
     SPORT_REGISTRY.badminton,

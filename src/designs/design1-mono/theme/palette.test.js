@@ -1,9 +1,8 @@
-// Guards for the single colour source (colour audit 2026-10-21, migration PR 1).
-// Audit: docs/plans/2026-10-21-colour-system-audit.md §6.5 "Guard" row.
+// Guards for the current root CSS colour snapshot.
 //   (a) drift    — palette.js mirrors src/index.css string-for-string.
 //   (b) contrast — every documented pair meets its threshold, or is an honest,
-//                  named known gap that must be flipped when its PR lands.
-//   (c) ratchet  — raw colour literals in shipped src/ files never go up.
+//                  named known gap that must be updated if its values change.
+//   (c) ratchet  — raw colour literals in shipped src/ files stay under a cap.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -82,10 +81,10 @@ describe('palette.js mirrors index.css (drift)', () => {
 });
 
 describe('oklch -> sRGB conversion', () => {
-  it('matches the reference values the audit used', () => {
+  it('matches reference conversions of the current CSS values', () => {
     expect(oklchToHex('oklch(0 0 0)')).toBe('#000000');
     expect(oklchToHex('oklch(1.0000 0 0)')).toBe('#ffffff');
-    // --primary ≈ #16a249 and --se-color-danger ≈ #ac281e (audit §2, §3.2).
+    // Current --primary ≈ #16a249 and --se-color-danger ≈ #ac281e.
     expect(oklchToHex('oklch(0.6230 0.1688 149.1777)')).toBe('#16a249');
     expect(oklchToHex('oklch(0.49 0.17 29)')).toBe('#ac281e');
     expect(toHex('#e7f4ee')).toBe('#e7f4ee');
@@ -98,9 +97,9 @@ describe('oklch -> sRGB conversion', () => {
   });
 });
 
-// Documented pairs. `knownGap` names the migration PR that fixes a pair which
-// fails today; the test asserts it STILL fails so the entry must be flipped to
-// a passing pair (drop `knownGap`) in the PR that fixes the value.
+// Current pairs. `knownGap` describes a pair below its threshold today;
+// the test asserts it STILL fails so a value change must update the entry.
+// These gaps prescribe neither replacement values nor a future visual policy.
 const CONTRAST_PAIRS = [
   { fg: 'ink', bg: 'canvas', min: 4.5, use: 'body text on the page' },
   { fg: 'ink', bg: 'surface', min: 4.5, use: 'text on cards, dialogs, sheets' },
@@ -116,9 +115,9 @@ const CONTRAST_PAIRS = [
   { fg: 'warning', bg: 'warningSoft', min: 4.5, use: 'warning notice text' },
   { fg: 'focusRing', bg: 'canvas', min: 3, use: 'focus ring (non-text, 1.4.11)' },
   { fg: 'blendGold', bg: 'surface', min: 3, use: 'gold milestone fill/edge (non-text)' },
-  { fg: 'inverse', bg: 'action', min: 4.5, use: 'label on the primary action', knownGap: 'PR 3 (#12753a)' },
-  { fg: 'action', bg: 'canvas', min: 4.5, use: 'green text on the page', knownGap: 'PR 3 (#12753a); PR 11 makes links ink' },
-  { fg: 'surface', bg: 'canvas', min: 1.1, use: 'card separates from page', knownGap: 'PR 4 (D4: #f3f3ef canvas, white surface)' },
+  { fg: 'inverse', bg: 'action', min: 4.5, use: 'label on the primary action', knownGap: 'current primary fill lacks text contrast' },
+  { fg: 'action', bg: 'canvas', min: 4.5, use: 'green text on the page', knownGap: 'current primary text lacks page contrast' },
+  { fg: 'surface', bg: 'canvas', min: 1.1, use: 'card separates from page', knownGap: 'current card and page have little separation' },
 ];
 
 describe('documented contrast pairs', () => {
@@ -148,18 +147,17 @@ describe('documented contrast pairs', () => {
 // `&#9679;`-style HTML entities, hex runs glued to word characters, and named
 // colours (`white`, `black`, ...).
 //
-// Excluded (audit §3.1 categories):
+// Excluded:
 //   - tests (*.test.*, *.spec.*) and src/test/ setup;
 //   - token definitions: src/index.css, theme/palette.js, theme/sportsTokens.js,
-//     clerkTheme.js, and src/lib/teamColour.js once it lands (audit §6.3);
+//     clerkTheme.js; dynamic colour engine: src/lib/teamColour.js;
 //   - dev-only showcases and dead code, listed below.
 //
-// The count may only go DOWN. When a migration PR removes literals, lower
-// BASELINE to the new count in that PR. At 0 the ratchet becomes a ban
-// (audit §7, PR 23).
+// Counts above BASELINE fail. Lower counts prompt a baseline update, but that
+// update is not enforced: maintainers must lower it when removing literals.
+// At 0 the ratchet becomes a ban.
 // ---------------------------------------------------------------------------
-// Baseline recorded 2026-10-21 on origin/master 0542f1e. (The audit's 692 also counted
-// named colours and comments; this rule is stricter about what is code.)
+// Baseline recorded 2026-10-21 on origin/master 0542f1e.
 const BASELINE = 651;
 
 const EXCLUDED_FILES = new Set([
@@ -168,24 +166,21 @@ const EXCLUDED_FILES = new Set([
   'designs/design1-mono/theme/palette.js',
   'designs/design1-mono/theme/sportsTokens.js',
   'designs/design1-mono/clerkTheme.js',
-  // Internal showcases (dev-only routes) — audit §3.1
+  // Dynamic colour engine (not a static palette consumer)
+  'lib/teamColour.js',
+  // Internal showcases (dev-only routes)
   'designs/design1-mono/MonoSetDisplayShowcase.jsx',
   'designs/design1-mono/MonoMatchCardShowcase.jsx',
   'designs/design1-mono/landing-designs/BrutalistColorShowcase.jsx',
   'designs/design1-mono/landing-designs/LandingDesignA.jsx',
   'designs/design1-mono/landing/DashboardShowcase.jsx',
-  // Dead code (imported nowhere) — audit §3.1
+  // Unused legacy screens
   'designs/design1-mono/landing-designs/BrutalistBlueVariants.jsx',
   'designs/design1-mono/MonoSportHome_TABBED.jsx',
   'designs/design1-mono/MonoHome.jsx',
   'designs/design1-mono/MonoSetup.jsx',
   'designs/design1-mono/MonoLiveGame.jsx',
 ]);
-
-// Excluded once they land on master (engine values, audit §6.3). Listed here so
-// the exclusion is ready; the existence check below skips them until then.
-const PENDING_EXCLUDED_FILES = new Set(['lib/teamColour.js']);
-for (const rel of PENDING_EXCLUDED_FILES) EXCLUDED_FILES.add(rel);
 
 const COLOUR_LITERAL = /(?<![&\w])#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![\w-])|\b(?:rgba?|hsla?|oklch)\(/gi;
 
@@ -228,7 +223,6 @@ describe('raw colour literal ratchet', () => {
 
   it('every excluded file still exists (keep the list honest)', () => {
     for (const rel of EXCLUDED_FILES) {
-      if (PENDING_EXCLUDED_FILES.has(rel)) continue;
       expect(() => statSync(join(SRC_DIR, rel)), rel).not.toThrow();
     }
   });
