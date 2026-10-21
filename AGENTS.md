@@ -11,7 +11,7 @@ Reject your own diff if it breaks one of these.
 - **The scorer never loses a point.** A tap that scores must survive a refresh, a backgrounded app, and a flaky court wifi connection. Optimistic UI is fine; silently dropping the write is not.
 - **The board stays truthful.** Score, serve, set/innings state and undo history must agree with each other on every screen. A display that disagrees with the rules of the game is a P0, however pretty it is.
 - **One-handed, courtside, in sunlight.** Touch targets stay thumb-sized and contrast stays legible outdoors. A layout that only works on a desktop viewport is not done.
-- **A match is private to its scorer until shared.** Every Convex function touching match or user data checks identity before it reads.
+- **Private match data stays private.** Identity and ownership checks protect scorer-only data. Public profiles, discovery and token-gated shared matches have intentionally unauthenticated reads; live broadcasts default to public visibility.
 - **Sport rules live in one place per sport.** Scoring logic belongs in the sport module, not sprinkled through components.
 
 ## Glossary
@@ -27,9 +27,9 @@ Reject your own diff if it breaks one of these.
 
 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+3. **Writing TypeScript into `src/`.** `src/` uses JS/JSX, not TypeScript. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
-5. **Assuming the folder name.** This directory is `scoreeasy` (it was `Volleyball` until 2026-09); the project is Score Easy and volleyball is one sport among several.
+5. **Assuming the folder name.** The project is Score Easy (`scoreeasy`); a worktree's directory name can differ. Volleyball is one sport among several.
 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
 7. **Leaving work stranded locally.** Config and code both need pushing; a session that ends unpushed loses the work.
 
@@ -68,4 +68,4 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 
 ## Escape hatch
 
-When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (turning on strict mode, adding the Convex ESLint plugin, changing a sport's rules), state the options and stop rather than picking one quietly.
+When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (enabling JavaScript checking with `checkJs`, changing a sport's rules), state the options and stop rather than picking one quietly. TypeScript strict mode and the Convex ESLint plugin are already enabled.

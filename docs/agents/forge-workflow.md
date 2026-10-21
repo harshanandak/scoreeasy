@@ -1,19 +1,19 @@
-<!-- This file is a copy of AGENTS.md. Keep in sync manually or use: bunx forge setup --symlink -->
+<!-- Canonical workflow source; run bun run sync:agents to regenerate harness mirrors. -->
 # Project Workflow Instructions
 
 ## 7-Stage TDD-First Workflow
 
-This project enforces a **strict TDD-first development workflow** with 7 stages:
+This project follows a **TDD-first development workflow** with 7 stages. Stage instructions guide agents; the Git hooks enforce only the checks listed below.
 
 | Stage | Command     | Purpose                                                   | Required For |
 |-------|-------------|-----------------------------------------------------------|--------------|
 | 1     | `/plan`     | Design intent → research → branch + worktree + task list | Critical, Standard, Refactor |
-| 2     | `/dev`      | Subagent-driven TDD per task (spec + quality review)     | All types    |
+| 2     | `/dev`      | Subagent-driven TDD per task (spec + quality review)     | All except Docs |
 | 3     | `/validate`    | Validate + 4-phase debug mode on failure                    | All types    |
 | 4     | `/ship`     | Create PR with documentation                             | All types    |
-| 5     | `/review`   | Address ALL PR feedback                                  | Critical, Standard |
-| 6     | `/premerge` | Complete docs on feature branch, hand off PR             | All types    |
-| 7     | `/verify`   | Post-merge health check (CI, deployments)                | All types    |
+| 5     | `/review`   | Triage feedback under the four must-fix classes in `AGENTS.md`; file advisory follow-ups | Critical, Standard |
+| 6     | `/premerge` | Complete docs on feature branch, hand off PR             | Critical, Standard, Refactor |
+| 7     | `/verify`   | Post-merge health check (CI, deployments)                | Critical (after merge) |
 
 **Utility**: `/status` — Context check before starting work (not a numbered stage)
 
@@ -131,14 +131,14 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
 ## Documentation Index (Context Pointers)
 
 **Detailed command instructions** are located in:
-- [.claude/commands/status.md](.claude/commands/status.md) - How to check current context (utility)
-- [.claude/commands/plan.md](.claude/commands/plan.md) - How to plan features (3 phases: design intent + research + branch/worktree/tasks)
-- [.claude/commands/dev.md](.claude/commands/dev.md) - How to implement with subagent-driven TDD and decision gate
-- [.claude/commands/validate.md](.claude/commands/validate.md) - How to run validation (with HARD-GATE exit)
-- [.claude/commands/ship.md](.claude/commands/ship.md) - How to create PRs
-- [.claude/commands/review.md](.claude/commands/review.md) - How to address PR feedback (with HARD-GATE exit)
-- [.claude/commands/premerge.md](.claude/commands/premerge.md) - How to complete docs and hand off PR for merge
-- [.claude/commands/verify.md](.claude/commands/verify.md) - How to verify post-merge health
+- [.claude/commands/status.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/status.md) - How to check current context (utility)
+- [.claude/commands/plan.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/plan.md) - How to plan features (3 phases: design intent + research + branch/worktree/tasks)
+- [.claude/commands/dev.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/dev.md) - How to implement with subagent-driven TDD and decision gate
+- [.claude/commands/validate.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/validate.md) - How to run validation (with HARD-GATE exit)
+- [.claude/commands/ship.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/ship.md) - How to create PRs
+- [.claude/commands/review.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/review.md) - How to address PR feedback (with HARD-GATE exit)
+- [.claude/commands/premerge.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/premerge.md) - How to complete docs and hand off PR for merge
+- [.claude/commands/verify.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/verify.md) - How to verify post-merge health
 
 **Planning documents** (created by `/plan`, consumed by `/dev`):
 - `docs/plans/YYYY-MM-DD-<slug>-design.md` - Design intent + technical research
@@ -150,8 +150,6 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
   `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
   into the harness mirrors.
 - Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
-  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
-  were sent here looking for them, they never existed.
 
 ## Descriptive Context Convention
 
@@ -180,14 +178,14 @@ Check by eye that: (1) the issue has a description, (2) at least one stage-trans
 comment exists, (3) the most recent transition carries a summary, (4) design metadata is
 set if the issue is past the plan stage.
 
-This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+`forge issue show` retrieves the issue; it does not automatically validate these context fields.
 
 ### Field Definitions
 
-- **Summary**: 1-2 sentence recap of what was accomplished in this stage. Example: `--summary "All 5 tasks done, 1 decision gate fired"`
-- **Decisions**: Key choices made during this stage that affect downstream work. Example: `--decisions "Used streaming parser over DOM for memory efficiency"`
-- **Artifacts**: File paths or URLs produced by this stage. Example: `--artifacts "lib/parser.js test/parser.test.js docs/plans/2026-03-26-parser-design.md"`
-- **Next**: Guidance for the next stage on what to focus on. Example: `--next "Run lint first — streaming approach may trigger no-await rule"`
+- **Summary**: 1-2 sentence recap of what was accomplished in this stage. Example: `summary: All 5 tasks done, 1 decision gate fired`
+- **Decisions**: Key choices made during this stage that affect downstream work. Example: `decisions: Used streaming parser over DOM for memory efficiency`
+- **Artifacts**: File paths or URLs produced by this stage. Example: `artifacts: lib/parser.js test/parser.test.js docs/plans/2026-03-26-parser-design.md`
+- **Next**: Guidance for the next stage on what to focus on. Example: `next: Run lint first`
 
 ### Usage in Stage Transitions
 
@@ -203,12 +201,11 @@ next: Run type check and lint"
 
 ### Enforcement Level
 
-This convention is **advisory only**. The `validate` subcommand prints warnings but always exits 0. It does not block any stage transition. The goal is to build good habits, not to create friction.
+This context convention is **advisory only** and is checked by the agent. It is separate from the `/validate` quality checks and is not an automatic CLI gate.
 
 ## Issue Tracker
 
-Issues live in Forge's own tracker (`forge issue`, stored in `.git/forge/records.sqlite`
-and shared by every worktree).
+Issues live in Forge's own tracker. Use `forge issue` rather than relying on a particular on-disk storage path.
 
 ### Quick Reference
 
@@ -267,8 +264,4 @@ git commit -m "refactor: extract helpers"      # REFACTOR phase
 
 ## MCP servers
 
-Configured in `.mcp.json`:
-
-- **github** — repository integration (usually built-in)
-- **parallel-ai** — web research and data enrichment
-- **context7** — up-to-date library documentation
+`.mcp.json` configures **convex**. Other integrations depend on the harness configuration; inspect the available tools for the current session.

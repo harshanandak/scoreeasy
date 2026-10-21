@@ -4,7 +4,7 @@ Score Easy is a Vite + React sports scoring app that now ships with Clerk authen
 
 ## Requirements
 
-- [Bun](https://bun.sh/) 1.x
+- [Bun](https://bun.sh/) >=1.2.15 (the pinned version is in `package.json`)
 - A Clerk publishable key
 - A Convex deployment URL
 - Optional: Sentry DSN
@@ -22,8 +22,8 @@ VITE_SENTRY_DSN=https://...
 `VITE_SENTRY_DSN` is optional. The app will start without it.
 
 For Vercel Preview deployments, use the Clerk development application and a
-development Convex deployment. The Clerk development issuer currently used for
-Preview auth is:
+development Convex deployment. Set the Clerk issuer to match that development
+application, for example:
 
 ```bash
 CLERK_JWT_ISSUER_DOMAIN=https://elegant-seahorse-53.clerk.accounts.dev
@@ -39,7 +39,7 @@ Clerk JWT template must be named exactly `convex`.
 - `bun run preview` - preview the production build locally
 - `bun run test` - run the Vitest suite once
 - `bun run lint` - run ESLint across the repo
-- `bun run type-check` - run TypeScript validation over the JS/JSX sources
+- `bun run type-check` - check the included Convex TypeScript (`checkJs: false` leaves JS/JSX unchecked)
 
 ## Setup
 
@@ -50,7 +50,9 @@ bun run dev
 
 ## Deployment
 
-The app is configured for Vercel-style static hosting.
+Production deployment is configured as an assets-only Cloudflare Worker
+(`wrangler.jsonc` and `.github/workflows/cloudflare-worker-production.yml`). The
+Vite `dist` output can also be served by a static host such as Vercel.
 
 Required production environment variables:
 
