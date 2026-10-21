@@ -2,7 +2,7 @@
 //   (a) drift    — palette.js mirrors src/index.css string-for-string.
 //   (b) contrast — every documented pair meets its threshold, or is an honest,
 //                  named known gap that must be updated if its values change.
-//   (c) ratchet  — raw colour literals in shipped src/ files stay under a cap.
+//   (c) ratchet  — raw colour literals in shipped src/ files match a pinned count.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -153,12 +153,13 @@ describe('documented contrast pairs', () => {
 //     clerkTheme.js; dynamic colour engine: src/lib/teamColour.js;
 //   - dev-only showcases and dead code, listed below.
 //
-// Counts above BASELINE fail. Lower counts prompt a baseline update, but that
-// update is not enforced: maintainers must lower it when removing literals.
+// Counts above or below BASELINE fail: use tokens for new colours and lower
+// the baseline when removing literals.
 // At 0 the ratchet becomes a ban.
 // ---------------------------------------------------------------------------
-// Baseline recorded 2026-10-21 on origin/master 0542f1e.
-const BASELINE = 651;
+// Baseline measured on master 4ed7ad8: 667, up from the old 651 by
+// TeamColourPicker.jsx (+12) and lib/courtMotifs.js (+4).
+const BASELINE = 667;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
@@ -227,19 +228,19 @@ describe('raw colour literal ratchet', () => {
     }
   });
 
-  it(`raw colour literals in shipped files do not exceed the baseline (${BASELINE})`, () => {
+  it(`raw colour literals in shipped files match the baseline (${BASELINE})`, () => {
     const perFile = listShippedFiles(SRC_DIR)
       .map((rel) => [rel, countColourLiterals(readFileSync(join(SRC_DIR, rel), 'utf8'))])
       .filter(([, count]) => count > 0);
     const total = perFile.reduce((sum, [, count]) => sum + count, 0);
 
-    if (total < BASELINE) {
-      console.info(`[palette ratchet] ${total} raw colour literals (< baseline ${BASELINE}). Lower BASELINE to ${total}.`);
-    }
+    const message = total > BASELINE
+      ? `Raw colour literals rose to ${total}, use var(--se-color-*) (baseline ${BASELINE}).`
+      : `Raw colour literals fell to ${total}, lower BASELINE to ${total}.`;
     expect(
       total,
-      `Raw colour literals rose to ${total} (baseline ${BASELINE}). Use var(--se-color-*) instead.\n`
+      `${message}\n`
         + perFile.sort((a, b) => b[1] - a[1]).map(([rel, count]) => `  ${count}\t${rel}`).join('\n'),
-    ).toBeLessThanOrEqual(BASELINE);
+    ).toBe(BASELINE);
   });
 });
