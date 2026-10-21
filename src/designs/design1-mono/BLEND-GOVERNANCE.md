@@ -66,8 +66,9 @@ theme that has dissolved its own structure.
    point keys. Those values come from the colour engine (`src/lib/teamColour.js`)
    only, never a raw hex, so every label and numeral stays contrast-gated. Green
    there is limited to the LIVE badge and app actions; lead and tie are not
-   colour-coded (the numbers say who leads). The hard shell (§4) still holds: the
-   team fills sit inside the brutalist border.
+   colour-coded (the numbers say who leads). How the team surfaces are framed is
+   decided by the scorer screen's own design, recorded with it; §4 governs the rest
+   of the app.
 
 ---
 
