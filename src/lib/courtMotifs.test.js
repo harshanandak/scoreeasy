@@ -12,14 +12,17 @@ const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml');
 
 // Throwball is a Tier-0 sets game about to join the registry; its drawing must exist either way.
 const SCORED_SPORTS = [...new Set([...getSetsSports(), ...getGoalsSports()].map((s) => s.id).concat('throwball'))];
+// Keep validating retained drawings even when their sport is no longer registered.
+const DRAWN_SPORTS = Object.keys(COURT_MOTIFS);
 
 describe('court motifs', () => {
   it('covers every sets and goals sport in the registry', () => {
-    expect(SCORED_SPORTS.length).toBeGreaterThanOrEqual(12);
+    expect(SCORED_SPORTS).toHaveLength(9);
+    expect(DRAWN_SPORTS.length).toBeGreaterThanOrEqual(12);
     for (const id of SCORED_SPORTS) expect(COURT_MOTIFS[id], id).toBeTruthy();
   });
 
-  it.each(SCORED_SPORTS)('%s: mask url decodes to a well-formed SVG with drawing in it', (id) => {
+  it.each(DRAWN_SPORTS)('%s: mask url decodes to a well-formed SVG with drawing in it', (id) => {
     for (const half of [undefined, 'a', 'b']) {
       const doc = parse(decode(motifMaskUrl(id, half)));
       expect(doc.getElementsByTagName('parsererror')).toHaveLength(0);
@@ -43,7 +46,7 @@ describe('court motifs', () => {
   });
 
   it('escapes both quote characters, so the url survives any quoting context', () => {
-    for (const id of SCORED_SPORTS) {
+    for (const id of DRAWN_SPORTS) {
       const body = motifMaskUrl(id).slice('url("'.length, -'")'.length);
       expect(body).not.toMatch(/["']/);
     }

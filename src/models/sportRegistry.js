@@ -1,8 +1,19 @@
-// Central registry for all 14 sports
-// Each sport defines its engine type, scoring config, and UI settings
+// Central registry for the 9 registered sports
+// Each sport defines its engine type, scoring config, and UI settings.
+// Display order, tier grouping and the deregistered sports live in ./sportFocus.js
+// (ICP plan: docs/plans/2026-07-20-icp-games/adjusted-plan.md §A).
+
+import {
+  LATER_GROUP_LABEL,
+  LATER_SPORT_IDS,
+  PRIORITY_GROUP_LABEL,
+  PRIORITY_SPORT_IDS,
+  RETIRED_SPORTS,
+  SPORT_ORDER,
+} from './sportFocus';
 
 export const SPORT_REGISTRY = {
-  // === SETS-BASED SPORTS (6) ===
+  // === SETS-BASED SPORTS (4) ===
   volleyball: {
     id: 'volleyball',
     name: 'Volleyball',
@@ -120,63 +131,7 @@ export const SPORT_REGISTRY = {
     ],
   },
 
-  pickleball: {
-    id: 'pickleball',
-    name: 'Pickleball',
-    icon: '🏓',
-    engine: 'sets',
-    desc: 'Rally scoring, fastest growing',
-    storageKey: 'se_pickleball',
-    config: {
-      pointsPerSet: 11,
-      deciderPoints: 11,
-      winBy: 2,
-      setFormats: [
-        { label: 'Single game', sets: 1, points: [9, 11, 15] },
-        { label: 'Best of 3', sets: 3 },
-      ],
-      defaultSetFormat: 1, // Best of 3
-      scoringModes: ['rally', 'side-out'],
-      defaultScoringMode: 'rally',
-      serviceRotation: 1, // Rally scoring, service changes every point
-    },
-    standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],
-    features: [
-      'Rally point scoring',
-      'Best of 3 games to 11',
-      'Win by 2 at deuce',
-      'Fastest growing sport',
-    ],
-  },
-
-  squash: {
-    id: 'squash',
-    name: 'Squash',
-    icon: '🎾',
-    engine: 'sets',
-    desc: 'PAR scoring, best of 3/5',
-    storageKey: 'se_squash',
-    config: {
-      pointsPerSet: 11,
-      deciderPoints: 11,
-      winBy: 2,
-      setFormats: [
-        { label: 'Best of 3', sets: 3 },
-        { label: 'Best of 5', sets: 5 },
-      ],
-      defaultSetFormat: 0, // Best of 3
-      serviceRotation: null,
-    },
-    standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],
-    features: [
-      'Point-a-rally scoring',
-      'Best of 3 or 5 games',
-      'Win by 2 at deuce',
-      'Indoor court sport',
-    ],
-  },
-
-  // === GOALS-BASED SPORTS (7) ===
+  // === GOALS-BASED SPORTS (4) ===
   football: {
     id: 'football',
     name: 'Football',
@@ -277,70 +232,6 @@ export const SPORT_REGISTRY = {
     ],
   },
 
-  handball: {
-    id: 'handball',
-    name: 'Handball',
-    icon: '🤾',
-    engine: 'goals',
-    desc: 'Fast-paced goals',
-    storageKey: 'se_handball',
-    config: {
-      scoringUnit: 'goal',
-      pointIncrement: 1,
-      drawAllowed: true,
-      winPoints: 2,
-      drawPoints: 1,
-      lossPoints: 0,
-      quickButtons: null,
-      // Real: 2×30 min = 60 min
-      timePresets: [
-        { label: '10 min', value: 600 },
-        { label: '30 min (Half)', value: 1800 },
-        { label: '60 min (Full)', value: 3600 },
-      ],
-      pointPresets: [10, 15, 20, 25],
-    },
-    standingsColumns: ['P', 'W', 'D', 'L', 'GF', 'GA', 'GD', 'Pts'],
-    features: [
-      'High-scoring matches',
-      'Draws allowed',
-      'Goal difference ranking',
-      '2 halves format',
-    ],
-  },
-
-  futsal: {
-    id: 'futsal',
-    name: 'Futsal',
-    icon: '⚽',
-    engine: 'goals',
-    desc: 'Indoor football, 5v5',
-    storageKey: 'se_futsal',
-    config: {
-      scoringUnit: 'goal',
-      pointIncrement: 1,
-      drawAllowed: true,
-      winPoints: 3,
-      drawPoints: 1,
-      lossPoints: 0,
-      quickButtons: null,
-      // Real: 2×20 min = 40 min
-      timePresets: [
-        { label: '10 min', value: 600 },
-        { label: '20 min (Half)', value: 1200 },
-        { label: '40 min (Full)', value: 2400 },
-      ],
-      pointPresets: [5, 7, 10, 15],
-    },
-    standingsColumns: ['P', 'W', 'D', 'L', 'GF', 'GA', 'GD', 'Pts'],
-    features: [
-      'Indoor 5v5',
-      '3 points for a win',
-      'Goal difference',
-      'Fast-paced matches',
-    ],
-  },
-
   kabaddi: {
     id: 'kabaddi',
     name: 'Kabaddi',
@@ -374,44 +265,6 @@ export const SPORT_REGISTRY = {
       'Super tackle bonus',
       'All-out bonus (2pts)',
       'Time-based (2x20 min)',
-    ],
-  },
-
-  rugby: {
-    id: 'rugby',
-    name: 'Rugby',
-    icon: '🏉',
-    engine: 'goals',
-    desc: 'Try, conversion, penalty, drop',
-    storageKey: 'se_rugby',
-    config: {
-      scoringUnit: 'point',
-      pointIncrement: 1,
-      drawAllowed: true,
-      winPoints: 4,
-      drawPoints: 2,
-      lossPoints: 0,
-      quickButtons: [
-        { label: 'Penalty (3)', value: 3 },
-        { label: 'Try (5)', value: 5 },
-        { label: 'Try+Conv (7)', value: 7 },
-        { label: 'Drop (3)', value: 3 },
-      ],
-      bonusPoints: true,
-      // Real: 2×40 min = 80 min (Rugby Union)
-      timePresets: [
-        { label: '20 min', value: 1200 },
-        { label: '40 min (Half)', value: 2400 },
-        { label: '80 min (Full)', value: 4800 },
-      ],
-      pointPresets: [21, 30, 40, 50],
-    },
-    standingsColumns: ['P', 'W', 'D', 'L', 'PF', 'PA', '+/-', 'BP', 'Pts'],
-    features: [
-      'Try (5) + Conversion (2)',
-      'Penalty goal (3)',
-      'Bonus point system',
-      'Drop goal (3)',
     ],
   },
 
@@ -451,7 +304,17 @@ export const SPORT_REGISTRY = {
 };
 
 // Helper functions
-export const getSportsList = () => Object.values(SPORT_REGISTRY);
+
+const orderIndex = (id) => {
+  const index = SPORT_ORDER.indexOf(id);
+  return index === -1 ? SPORT_ORDER.length : index;
+};
+
+const pickRegistered = (ids) => ids.map((id) => SPORT_REGISTRY[id]).filter(Boolean);
+
+/** Every registered sport in focus order (sportFocus.js) — what all pickers show. */
+export const getSportsList = () =>
+  Object.values(SPORT_REGISTRY).sort((a, b) => orderIndex(a.id) - orderIndex(b.id));
 
 export const getSetsSports = () => getSportsList().filter((s) => s.engine === 'sets');
 
@@ -464,22 +327,18 @@ export const getSportById = (id) => SPORT_REGISTRY[id] || null;
 export const isTeamColourSport = (id, registry = SPORT_REGISTRY) =>
   Object.prototype.hasOwnProperty.call(registry, id) && registry[id].teamColour === true;
 
+/** Pickers group by focus tier: Tier-0 ("Popular") first, then the kept-later sports. */
 export const getSportsByCategory = () => ({
-  'Racquet Sports': [
-    SPORT_REGISTRY.badminton,
-    SPORT_REGISTRY.tabletennis,
-    SPORT_REGISTRY.tennis,
-    SPORT_REGISTRY.pickleball,
-    SPORT_REGISTRY.squash,
-  ],
-  'Team Sports': [
-    SPORT_REGISTRY.football,
-    SPORT_REGISTRY.basketball,
-    SPORT_REGISTRY.hockey,
-    SPORT_REGISTRY.handball,
-    SPORT_REGISTRY.futsal,
-  ],
-  'Contact Sports': [SPORT_REGISTRY.kabaddi, SPORT_REGISTRY.rugby],
-  'Net Sports': [SPORT_REGISTRY.volleyball],
-  'Cricket': [SPORT_REGISTRY.cricket],
+  [PRIORITY_GROUP_LABEL]: pickRegistered(PRIORITY_SPORT_IDS),
+  [LATER_GROUP_LABEL]: pickRegistered(LATER_SPORT_IDS),
 });
+
+/** A deregistered sport's label/engine/storage key, so its saved matches stay readable. */
+export const getRetiredSport = (id) =>
+  (id && Object.prototype.hasOwnProperty.call(RETIRED_SPORTS, id) ? RETIRED_SPORTS[id] : null);
+
+export const getRetiredSportsList = () => Object.values(RETIRED_SPORTS);
+
+/** Human label for any stored sport id — registered, retired, or unknown. */
+export const getSportLabel = (id) =>
+  getSportById(id)?.name || getRetiredSport(id)?.name || 'Other sport';
