@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Score Easy colour system audit (2026-10-21)</title>
+<style>
+:root{--canvas:#f3f3ef;--surface:#fff;--ink:#0b0b0d;--ink2:#45454d;--ink3:#64646c;--action:#12753a;--actionp:#0c5a2c;--wash:#e1f1e6;--danger:#b42318;--scrim:rgba(11,11,13,.45);--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--sans:Inter,ui-sans-serif,system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:15px/1.5 var(--sans)}
+main{max-width:1120px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:28px;margin:0 0 4px}h2{font:800 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:40px 0 12px;padding-top:16px;border-top:2px solid var(--ink)}
+p.lede{color:var(--ink2);max-width:760px}
+table{border-collapse:collapse;width:100%;background:var(--surface);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid #d9d9d4;text-align:left;vertical-align:middle}th{font:800 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:#e9e9e4}
+td.ok{color:#0c5a2c;font-weight:700}td.mid{color:#8a5300;font-weight:700}td.bad{color:#b42318;font-weight:800}td.na{color:#64646c}
+.sw{display:inline-block;width:34px;height:26px;border:1.5px solid var(--ink);border-radius:4px;vertical-align:middle}
+code{font:12px var(--mono)}
+.legend span{display:inline-block;margin-right:14px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+.phone{position:relative;width:340px;height:600px;border:2px solid var(--ink);border-radius:22px;overflow:hidden;background:#f6f8f6;margin:0 auto}
+.cap{font:800 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:center;margin:10px 0 0;color:var(--ink2)}
+/* mini board shared */
+.board{position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;gap:10px;font-family:var(--sans)}
+.brow{display:flex;justify-content:space-between;align-items:center}.brow b{font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border:1.5px solid var(--ink);border-radius:6px;background:var(--surface);font:800 10px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.chip.live{color:var(--action);border-color:var(--action);background:var(--wash)}.chip.live::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.keys{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.key{border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font:800 11px var(--mono);letter-spacing:.08em}
+.key i{font:800 84px/1 'Barlow Condensed',var(--sans);font-style:normal}
+.key.a{background:#bb0012}.key.b{background:#1d4ccc}
+.hbtn{min-height:44px;border:2px solid var(--ink);border-radius:10px;background:var(--surface);box-shadow:3px 3px 0 var(--ink);font:800 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:0 12px;display:flex;align-items:center;justify-content:center}
+.scrim{position:absolute;inset:0;background:var(--scrim)}
+.scrim.old{background:rgba(0,0,0,.28);backdrop-filter:blur(2px)}
+/* current dialog (as shipped) */
+.dlg-old{position:absolute;left:12px;right:12px;bottom:12px;background:#f9fbf9;border:1px solid #000;border-radius:8px;box-shadow:3px 3px 0 .5px rgba(0,0,0,.7),3px 1px 2px -.5px rgba(0,0,0,.7);padding:18px}
+.dlg-old .ov{color:#16a249;font:800 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+.dlg-old h3{margin:0 0 8px;font-size:19px}.dlg-old p{margin:0 0 16px;color:#333;font-size:14px}
+.dlg-old button{display:block;width:100%;min-height:48px;margin-top:10px;border:1px solid #000;border-radius:4px;font:700 14px var(--sans)}
+.dlg-old .p{background:#16a249;color:#fff}.dlg-old .s{background:#f9fbf9}
+/* proposed dialog */
+.dlg-new{position:absolute;left:12px;right:12px;bottom:12px;background:var(--surface);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);padding:18px}
+.dlg-new .ov{color:var(--ink2);font:800 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+.dlg-new h3{margin:0 0 8px;font-size:20px;font-weight:800}.dlg-new p{margin:0 0 16px;color:var(--ink2);font-size:14px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:12px;border:2px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--ink);font:800 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ink{background:var(--ink);color:#fff}.btn.sec{background:var(--surface);color:var(--ink)}.btn.go{background:var(--action);color:#fff}.btn.danger{background:var(--danger);color:#fff}
+.btn.dis{background:transparent;color:var(--ink3);border-style:dashed;border-color:var(--ink3);box-shadow:none;cursor:default}
+.btn.link{border:0;box-shadow:none;background:none;text-decoration:underline;text-underline-offset:3px}
+.btnrow{background:var(--surface);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:16px;border-radius:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 18px}
+.btnrow .btn{margin-top:4px}.btnrow small{display:block;color:var(--ink2);font-size:12px;margin-top:6px}
+.meaning{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{background:var(--surface);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);border-radius:14px;padding:14px 16px}
+.box h3{margin:0 0 8px;font:800 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.box ul{margin:0;padding-left:18px}.box li{margin:3px 0}
+@media (max-width:720px){.meaning{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>Score Easy &middot; colour system audit</h1>
+<p class="lede">2026-10-21. Current palette vs proposed palette, with WCAG 2.x contrast ratios computed from the token values (oklch converted to sRGB). Companion to <code>docs/plans/2026-10-21-colour-system-audit.md</code>. Text needs 4.5:1, large text (24px+, or 18.66px+ bold) and UI component boundaries need 3:1.</p>
+<p class="lede">Grey numbers are fills (backgrounds, washes): they are not meant to contrast with the page, only the text placed on them is graded (see section 3).</p><p class="legend"><span class="ok">&#9632; meets 4.5:1</span> <span class="mid" style="color:#8a5300">&#9632; 3 to 4.5 (large text / UI only)</span> <span style="color:#b42318">&#9632; under 3:1</span></p>
+
+<h2>1 &middot; Current palette (origin/master + PR #157 board)</h2>
+<table><thead><tr><th></th><th>Token / literal</th><th>sRGB</th><th>vs canvas</th><th>vs surface</th><th>white text on it</th><th>Used for</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#f6f8f6"></span></td><td><code>canvas --background</code></td><td><code>#f6f8f6</code></td><td class="na">1.00</td><td class="na">1.02</td><td class="na">1.06</td><td>page background</td></tr>
+<tr><td><span class="sw" style="background:#f9fbf9"></span></td><td><code>surface --card</code></td><td><code>#f9fbf9</code></td><td class="na">1.02</td><td class="na">1.00</td><td class="na">1.04</td><td>cards, dialogs, sheets</td></tr>
+<tr><td><span class="sw" style="background:#eaecea"></span></td><td><code>surface-warm --muted</code></td><td><code>#eaecea</code></td><td class="na">1.12</td><td class="na">1.14</td><td class="na">1.19</td><td>sunk panels</td></tr>
+<tr><td><span class="sw" style="background:#000000"></span></td><td><code>ink --foreground</code></td><td><code>#000000</code></td><td class="ok">19.75</td><td class="ok">20.16</td><td class="ok">21.00</td><td>text, borders</td></tr>
+<tr><td><span class="sw" style="background:#333333"></span></td><td><code>ink-soft --chart-5</code></td><td><code>#333333</code></td><td class="na">11.88</td><td class="na">12.13</td><td class="na">12.63</td><td>body copy</td></tr>
+<tr><td><span class="sw" style="background:#666666"></span></td><td><code>ink-muted/faint --muted-foreground</code></td><td><code>#666666</code></td><td class="ok">5.40</td><td class="ok">5.51</td><td class="ok">5.74</td><td>meta text (muted and faint are one value)</td></tr>
+<tr><td><span class="sw" style="background:#16a249"></span></td><td><code>action --primary</code></td><td><code>#16a249</code></td><td class="mid">3.15</td><td class="mid">3.22</td><td class="mid">3.35</td><td>CTA fill, nav, tabs, links, lead, live, focus...</td></tr>
+<tr><td><span class="sw" style="background:#00a63e"></span></td><td><code>secondary (unused)</code></td><td><code>#00a63e</code></td><td class="na">3.02</td><td class="na">3.09</td><td class="na">3.22</td><td>defined, never used</td></tr>
+<tr><td><span class="sw" style="background:#bcf6d1"></span></td><td><code>action-soft --accent</code></td><td><code>#bcf6d1</code></td><td class="na">1.15</td><td class="na">1.17</td><td class="na">1.22</td><td>hover, selected, live badge bg</td></tr>
+<tr><td><span class="sw" style="background:#0c5a29"></span></td><td><code>action-strong --accent-foreground</code></td><td><code>#0c5a29</code></td><td class="ok">7.89</td><td class="ok">8.06</td><td class="ok">8.39</td><td>success text, hover</td></tr>
+<tr><td><span class="sw" style="background:#cc0000"></span></td><td><code>--destructive</code></td><td><code>#cc0000</code></td><td class="ok">5.53</td><td class="ok">5.65</td><td class="ok">5.89</td><td>cricket out, end chip</td></tr>
+<tr><td><span class="sw" style="background:#ac281e"></span></td><td><code>--se-color-danger</code></td><td><code>#ac281e</code></td><td class="ok">6.42</td><td class="ok">6.56</td><td class="ok">6.83</td><td>danger text, discard</td></tr>
+<tr><td><span class="sw" style="background:#ffe8e3"></span></td><td><code>--se-color-danger-soft</code></td><td><code>#ffe8e3</code></td><td class="na">1.10</td><td class="na">1.12</td><td class="na">1.17</td><td>danger wash</td></tr>
+<tr><td><span class="sw" style="background:#ffded8"></span></td><td><code>sportsTokens dangerSoft</code></td><td><code>#ffded8</code></td><td class="na">1.18</td><td class="na">1.20</td><td class="na">1.25</td><td>JS copy that drifted</td></tr>
+<tr><td><span class="sw" style="background:#946400"></span></td><td><code>--se-color-warning</code></td><td><code>#946400</code></td><td class="ok">4.84</td><td class="ok">4.94</td><td class="ok">5.14</td><td>warning (CSS)</td></tr>
+<tr><td><span class="sw" style="background:#b86e2e"></span></td><td><code>sportsTokens warning (pitchBrown)</code></td><td><code>#b86e2e</code></td><td class="mid">3.72</td><td class="mid">3.80</td><td class="mid">3.96</td><td>warning (JS copy, different hue)</td></tr>
+<tr><td><span class="sw" style="background:#fff0cc"></span></td><td><code>--se-color-warning-soft</code></td><td><code>#fff0cc</code></td><td class="na">1.06</td><td class="na">1.08</td><td class="na">1.13</td><td>warning wash</td></tr>
+<tr><td><span class="sw" style="background:#0074f7"></span></td><td><code>--se-color-focus-ring</code></td><td><code>#0074f7</code></td><td class="mid">4.06</td><td class="mid">4.15</td><td class="mid">4.32</td><td>global focus ring (the only blue in the system)</td></tr>
+<tr><td><span class="sw" style="background:#e7f4ee"></span></td><td><code>--se-blend-green-wash</code></td><td><code>#e7f4ee</code></td><td class="na">1.06</td><td class="na">1.09</td><td class="na">1.13</td><td>lead/live wash (blend)</td></tr>
+<tr><td><span class="sw" style="background:#d6ecdf"></span></td><td><code>--se-blend-green-wash-strong</code></td><td><code>#d6ecdf</code></td><td class="na">1.17</td><td class="na">1.19</td><td class="na">1.24</td><td>winner row (blend)</td></tr>
+<tr><td><span class="sw" style="background:#b8862e"></span></td><td><code>--se-blend-gold</code></td><td><code>#b8862e</code></td><td class="mid">3.04</td><td class="mid">3.11</td><td class="mid">3.24</td><td>milestone</td></tr>
+<tr><td><span class="sw" style="background:#e8b64c"></span></td><td><code>--se-blend-gold-bright</code></td><td><code>#e8b64c</code></td><td class="na">1.76</td><td class="na">1.80</td><td class="na">1.87</td><td>milestone highlight</td></tr>
+<tr><td><span class="sw" style="background:#0f6a32"></span></td><td><code>tsb live chip text</code></td><td><code>#0f6a32</code></td><td class="ok">6.31</td><td class="ok">6.44</td><td class="ok">6.71</td><td>raw hex in PR #157 board</td></tr>
+<tr><td><span class="sw" style="background:#45454d"></span></td><td><code>tsb ink-2</code></td><td><code>#45454d</code></td><td class="ok">8.93</td><td class="ok">9.12</td><td class="ok">9.50</td><td>raw hex in PR #157 board</td></tr>
+<tr><td><span class="sw" style="background:#888888"></span></td><td><code>raw #888 (293 uses)</code></td><td><code>#888888</code></td><td class="mid">3.33</td><td class="mid">3.40</td><td class="mid">3.54</td><td>grey text in 26 files</td></tr>
+<tr><td><span class="sw" style="background:#aaaaaa"></span></td><td><code>raw #aaa</code></td><td><code>#aaaaaa</code></td><td class="bad">2.18</td><td class="bad">2.23</td><td class="bad">2.32</td><td>grey text</td></tr>
+<tr><td><span class="sw" style="background:#bbbbbb"></span></td><td><code>raw #bbb</code></td><td><code>#bbbbbb</code></td><td class="bad">1.81</td><td class="bad">1.84</td><td class="bad">1.92</td><td>grey text</td></tr>
+<tr><td><span class="sw" style="background:#cccccc"></span></td><td><code>raw #ccc</code></td><td><code>#cccccc</code></td><td class="bad">1.51</td><td class="bad">1.54</td><td class="bad">1.61</td><td>grey text / separators</td></tr>
+<tr><td><span class="sw" style="background:#666666"></span></td><td><code>raw #666</code></td><td><code>#666666</code></td><td class="ok">5.40</td><td class="ok">5.51</td><td class="ok">5.74</td><td>grey text</td></tr>
+<tr><td><span class="sw" style="background:#0066ff"></span></td><td><code>raw #0066ff (101 uses)</code></td><td><code>#0066ff</code></td><td class="ok">4.54</td><td class="ok">4.64</td><td class="ok">4.83</td><td>legacy blue accent, 16 files</td></tr>
+<tr><td><span class="sw" style="background:#dc2626"></span></td><td><code>raw #dc2626 (47 uses)</code></td><td><code>#dc2626</code></td><td class="ok">4.54</td><td class="ok">4.64</td><td class="ok">4.83</td><td>red: live dots, errors, delete</td></tr>
+<tr><td><span class="sw" style="background:#16a34a"></span></td><td><code>raw #16a34a</code></td><td><code>#16a34a</code></td><td class="mid">3.10</td><td class="mid">3.16</td><td class="mid">3.30</td><td>notice bar</td></tr>
+<tr><td><span class="sw" style="background:#ff6b00"></span></td><td><code>raw #ff6b00 free hit</code></td><td><code>#ff6b00</code></td><td class="bad">2.68</td><td class="bad">2.74</td><td class="bad">2.86</td><td>cricket FREE HIT</td></tr>
+<tr><td><span class="sw" style="background:#d97706"></span></td><td><code>raw #d97706</code></td><td><code>#d97706</code></td><td class="mid">3.00</td><td class="mid">3.06</td><td class="mid">3.19</td><td>notice bar</td></tr>
+</tbody></table>
+
+<h2>2 &middot; Proposed palette (role-based)</h2>
+<p class="lede">23 role values. Names keep the existing <code>--se-color-*</code> prefix so most call sites keep compiling; <i>(new)</i> marks tokens that do not exist yet. Only <code>src/index.css</code> (and one JS mirror, <code>theme/palette.js</code>, for APIs that need literals) may contain these values.</p>
+<table><thead><tr><th></th><th>Role / token</th><th>sRGB</th><th>vs canvas</th><th>vs surface</th><th>white text on it</th><th>Use</th></tr></thead><tbody>
+<tr><td><span class="sw" style="background:#f3f3ef"></span></td><td><b>canvas</b><br><code>--se-color-canvas</code></td><td><code>#f3f3ef</code></td><td class="na">1.00</td><td class="na">1.11</td><td class="na">1.11</td><td>page background; warm neutral, no green tint</td></tr>
+<tr><td><span class="sw" style="background:#ffffff"></span></td><td><b>surface</b><br><code>--se-color-surface</code></td><td><code>#ffffff</code></td><td class="na">1.11</td><td class="na">1.00</td><td class="na">1.00</td><td>cards, dialogs, sheets, secondary buttons</td></tr>
+<tr><td><span class="sw" style="background:#e9e9e4"></span></td><td><b>surface-sunk</b><br><code>--se-color-surface-warm</code></td><td><code>#e9e9e4</code></td><td class="na">1.09</td><td class="na">1.22</td><td class="na">1.22</td><td>sunk panels, disabled fills, skeletons</td></tr>
+<tr><td><span class="sw" style="background:#0b0b0d"></span></td><td><b>ink</b><br><code>--se-color-ink</code></td><td><code>#0b0b0d</code></td><td class="ok">17.68</td><td class="ok">19.66</td><td class="ok">19.66</td><td>text, every shell border, every hard shadow</td></tr>
+<tr><td><span class="sw" style="background:#45454d"></span></td><td><b>ink-2</b><br><code>--se-color-ink-soft</code></td><td><code>#45454d</code></td><td class="ok">8.54</td><td class="ok">9.50</td><td class="ok">9.50</td><td>body copy, overlines, secondary labels</td></tr>
+<tr><td><span class="sw" style="background:#64646c"></span></td><td><b>ink-3</b><br><code>--se-color-ink-muted</code></td><td><code>#64646c</code></td><td class="ok">5.27</td><td class="ok">5.86</td><td class="ok">5.86</td><td>meta, placeholder, disabled label (still 4.5:1)</td></tr>
+<tr><td><span class="sw" style="background:#0b0b0d"></span></td><td><b>line</b><br><code>--se-color-line</code></td><td><code>#0b0b0d</code></td><td class="ok">17.68</td><td class="ok">19.66</td><td class="ok">19.66</td><td>control boundaries = ink</td></tr>
+<tr><td><span class="sw" style="background:#c9c9c3"></span></td><td><b>line-soft</b><br><code>--se-color-line-soft (new)</code></td><td><code>#c9c9c3</code></td><td class="na">1.50</td><td class="na">1.66</td><td class="na">1.66</td><td>decorative dividers inside a surface only</td></tr>
+<tr><td><span class="sw" style="background:#ffffff"></span></td><td><b>on-ink</b><br><code>--se-color-inverse</code></td><td><code>#ffffff</code></td><td class="na">1.11</td><td class="na">1.00</td><td class="na">1.00</td><td>text on ink / action / danger fills</td></tr>
+<tr><td><span class="sw" style="background:#12753a"></span></td><td><b>action</b><br><code>--se-color-action</code></td><td><code>#12753a</code></td><td class="ok">5.20</td><td class="ok">5.78</td><td class="ok">5.78</td><td>the ONE primary forward action per screen</td></tr>
+<tr><td><span class="sw" style="background:#0c5a2c"></span></td><td><b>action-press</b><br><code>--se-color-action-strong</code></td><td><code>#0c5a2c</code></td><td class="ok">7.51</td><td class="ok">8.35</td><td class="ok">8.35</td><td>pressed / hover of the action</td></tr>
+<tr><td><span class="sw" style="background:#e1f1e6"></span></td><td><b>action-wash</b><br><code>--se-color-action-soft</code></td><td><code>#e1f1e6</code></td><td class="na">1.05</td><td class="na">1.17</td><td class="na">1.17</td><td>live chip background (shared wash)</td></tr>
+<tr><td><span class="sw" style="background:#0f6a32"></span></td><td><b>live</b><br><code>--se-color-live (new, = action)</code></td><td><code>#0f6a32</code></td><td class="ok">6.04</td><td class="ok">6.71</td><td class="ok">6.71</td><td>LIVE chip text + dot + pulse</td></tr>
+<tr><td><span class="sw" style="background:#e1f1e6"></span></td><td><b>live-wash</b><br><code>--se-color-live-soft (new, = action-soft)</code></td><td><code>#e1f1e6</code></td><td class="na">1.05</td><td class="na">1.17</td><td class="na">1.17</td><td>LIVE chip background</td></tr>
+<tr><td><span class="sw" style="background:#b42318"></span></td><td><b>danger</b><br><code>--se-color-danger</code></td><td><code>#b42318</code></td><td class="ok">5.91</td><td class="ok">6.57</td><td class="ok">6.57</td><td>destructive fills + danger text</td></tr>
+<tr><td><span class="sw" style="background:#8f1b12"></span></td><td><b>danger-press</b><br><code>--se-color-danger-strong (new)</code></td><td><code>#8f1b12</code></td><td class="ok">8.09</td><td class="ok">9.00</td><td class="ok">9.00</td><td>pressed destructive</td></tr>
+<tr><td><span class="sw" style="background:#fbe9e7"></span></td><td><b>danger-wash</b><br><code>--se-color-danger-soft</code></td><td><code>#fbe9e7</code></td><td class="na">1.05</td><td class="na">1.17</td><td class="na">1.17</td><td>error notice background</td></tr>
+<tr><td><span class="sw" style="background:#8a5300"></span></td><td><b>warning</b><br><code>--se-color-warning</code></td><td><code>#8a5300</code></td><td class="ok">5.69</td><td class="ok">6.33</td><td class="ok">6.33</td><td>warnings, FREE HIT</td></tr>
+<tr><td><span class="sw" style="background:#fdf0d5"></span></td><td><b>warning-wash</b><br><code>--se-color-warning-soft</code></td><td><code>#fdf0d5</code></td><td class="na">1.01</td><td class="na">1.13</td><td class="na">1.13</td><td>warning notice background</td></tr>
+<tr><td><span class="sw" style="background:#b8862e"></span></td><td><b>gold</b><br><code>--se-color-gold (= --se-blend-gold)</code></td><td><code>#b8862e</code></td><td class="bad">2.91</td><td class="mid">3.24</td><td class="mid">3.24</td><td>ONE milestone per screen; fills/edges only</td></tr>
+<tr><td><span class="sw" style="background:#e8b64c"></span></td><td><b>gold-bright</b><br><code>--se-color-gold-bright</code></td><td><code>#e8b64c</code></td><td class="na">1.68</td><td class="na">1.87</td><td class="na">1.87</td><td>milestone highlight; ink text on it</td></tr>
+<tr><td><span class="sw" style="background:#7a5410"></span></td><td><b>gold-ink</b><br><code>--se-color-gold-ink (new)</code></td><td><code>#7a5410</code></td><td class="ok">6.08</td><td class="ok">6.77</td><td class="ok">6.77</td><td>gold as text</td></tr>
+<tr><td><span class="sw" style="background:#0b0b0d"></span></td><td><b>focus</b><br><code>--se-color-focus-ring</code></td><td><code>#0b0b0d</code></td><td class="ok">17.68</td><td class="ok">19.66</td><td class="ok">19.66</td><td>focus outline = ink, 3px, 3px offset</td></tr>
+</tbody></table>
+
+<h2>3 &middot; Key pairs</h2>
+<table><thead><tr><th>Pair</th><th>Ratio</th></tr></thead><tbody>
+<tr><td>white on current action (End match / Start label)</td><td class="mid">3.35</td></tr>
+<tr><td>current action as text on canvas</td><td class="mid">3.15</td></tr>
+<tr><td>current action-strong on action-soft (alert-success)</td><td class="ok">6.88</td></tr>
+<tr><td>current canvas vs surface</td><td class="ok">1.02</td></tr>
+<tr><td>#888 on canvas</td><td class="mid">3.33</td></tr>
+<tr><td>ink-muted on canvas</td><td class="ok">5.40</td></tr>
+<tr><td>white on --destructive</td><td class="ok">5.89</td></tr>
+<tr><td>white on #dc2626</td><td class="ok">4.83</td></tr>
+<tr><td>#dc2626 dot on surface</td><td class="ok">4.64</td></tr>
+<tr><td>gold on surface</td><td class="ok">3.11</td></tr>
+<tr><td>white on gold</td><td class="ok">3.24</td></tr>
+<tr><td>ink on gold-bright</td><td class="ok">10.51</td></tr>
+<tr><td>current warning on warning-soft</td><td class="ok">4.56</td></tr>
+<tr><td>#ff6b00 on #fff8f0 (FREE HIT)</td><td class="bad">2.71</td></tr>
+<tr><td>tsb live #0f6a32 on green-wash</td><td class="ok">5.94</td></tr>
+<tr><td>current focus ring on canvas</td><td class="ok">4.06</td></tr>
+<tr><td>P white on action</td><td class="ok">5.78</td></tr>
+<tr><td>P white on action-press</td><td class="ok">8.35</td></tr>
+<tr><td>P action text on canvas</td><td class="ok">5.20</td></tr>
+<tr><td>P live on live-wash</td><td class="ok">5.73</td></tr>
+<tr><td>P ink on action-wash</td><td class="ok">16.79</td></tr>
+<tr><td>P white on danger</td><td class="ok">6.57</td></tr>
+<tr><td>P danger text on canvas</td><td class="ok">5.91</td></tr>
+<tr><td>P danger on danger-wash</td><td class="ok">5.61</td></tr>
+<tr><td>P warning on warning-wash</td><td class="ok">5.61</td></tr>
+<tr><td>P warning text on canvas</td><td class="ok">5.69</td></tr>
+<tr><td>P ink-3 on canvas</td><td class="ok">5.27</td></tr>
+<tr><td>P ink-3 on surface-sunk</td><td class="ok">4.81</td></tr>
+<tr><td>P ink-2 on canvas</td><td class="ok">8.54</td></tr>
+<tr><td>P line-soft on surface (decorative divider)</td><td class="ok">1.66</td></tr>
+<tr><td>P gold-ink on surface</td><td class="ok">6.77</td></tr>
+<tr><td>P ink on gold-bright</td><td class="ok">10.51</td></tr>
+<tr><td>P focus (ink) on canvas</td><td class="ok">17.68</td></tr>
+<tr><td>P canvas vs surface</td><td class="ok">1.11</td></tr>
+<tr><td>P action vs team-a core #bb0012 (adjacent fills)</td><td class="ok">1.16</td></tr>
+</tbody></table>
+
+<h2>4 &middot; What green means</h2>
+<div class="meaning">
+<div class="box"><h3>Today: green carries 9 meanings</h3><ul>
+<li>primary CTA fill (Start, End match, Rematch)</li><li>bottom-nav and tab selection</li><li>text links (TOURNAMENT &rarr;, QUICK &#9656;, FILTERS +, Edit Rules)</li>
+<li>LIVE badge (but LIVE is red in 4 other places)</li><li>lead (classic board numeral + underline)</li><li>success / saved notice</li><li>FINAL badge (identical to LIVE)</li>
+<li>decoration: landing numerals, tags, green offset shadows, GUEST MODE chip</li><li>input focus outline</li></ul></div>
+<div class="box"><h3>Proposed: green means "go" and "live", nothing else</h3><ul>
+<li><b>Go</b>: the fill of the single primary forward action on a screen. Always a filled button with a white label (5.78:1) and an ink border/shadow.</li>
+<li><b>Live</b>: the LIVE chip (word + dot + optional pulse) while a match is actually broadcasting.</li>
+<li>Never: lead, selection, links, focus, success, final, decoration, shadows, borders, dialogs.</li>
+<li>Selection = ink inversion. Links = ink + underline. Focus = ink ring. Lead = the numbers (and team colour on team boards).</li></ul></div>
+</div>
+
+<h2>5 &middot; End-match dialog over the team board: as shipped vs proposed</h2>
+<div class="grid">
+<div><div class="phone"><div class="board">
+<div class="brow"><b>Team A v Team B</b><span class="hbtn">Finish</span></div>
+<div><span class="chip">Set 1</span> <span class="chip">Sets 0-0</span> <span class="chip live">Live</span></div>
+<div class="keys"><div class="key a">TEAM A<i>1</i>TAP +1</div><div class="key b">TEAM B<i>0</i>TAP +1</div></div>
+<div class="hbtn" style="min-height:52px">Undo</div></div>
+<div class="scrim old"></div>
+<div class="dlg-old"><p class="ov">Match control</p><h3>End match?</h3><p>This will finish the current match and save the result.</p><button class="p">End match</button><button class="s">Keep scoring</button></div>
+</div><p class="cap">As shipped: 1px border, 8px radius, 70% blurred shadow, green overline + fill (white on green 3.35:1), blurred scrim</p></div>
+<div><div class="phone"><div class="board">
+<div class="brow"><b>Team A v Team B</b><span class="hbtn">Finish</span></div>
+<div><span class="chip">Set 1</span> <span class="chip">Sets 0-0</span> <span class="chip live">Live</span></div>
+<div class="keys"><div class="key a">TEAM A<i>1</i>TAP +1</div><div class="key b">TEAM B<i>0</i>TAP +1</div></div>
+<div class="hbtn" style="min-height:52px">Undo</div></div>
+<div class="scrim"></div>
+<div class="dlg-new"><p class="ov">Match control</p><h3>End match?</h3><p>This will finish the current match and save the result.</p><div class="btn ink">End match</div><div class="btn sec">Keep scoring</div></div>
+</div><p class="cap">Proposed: 2px ink, 14px radius (= keys), 4px pure-ink shadow, ink overline, ink commit button (19.7:1), flat scrim</p></div>
+</div>
+
+<h2>6 &middot; One button set (hard shell)</h2>
+<div class="btnrow">
+<div><div class="btn go">Start volleyball</div><small>Primary forward action. Once per screen. Green fill, white label 5.78:1.</small></div>
+<div><div class="btn ink">End match</div><small>Commit inside a dialog or sheet. Ink fill, white label 19.7:1.</small></div>
+<div><div class="btn sec">Keep scoring</div><small>Secondary / cancel. Surface fill, ink label.</small></div>
+<div><div class="btn danger">Discard match</div><small>Destructive. Danger fill, white label 6.57:1.</small></div>
+<div><div class="btn dis">Next: match rules</div><small>Disabled. Dashed ink-3 border, no shadow, no faded green.</small></div>
+<div><div class="btn sec link">Tournament &rarr;</div><small>Text action. Ink + underline, never green.</small></div>
+</div>
+<p class="lede">Every button: 2px ink border, radius 10px (keys 14px, sheets 16px top), shadow <code>3px 3px 0 ink</code>, pressed <code>translate(2px,2px)</code> + <code>1px 1px 0 ink</code>, min-height 52px on phones (44px floor for header chips).</p>
+</main></body></html>
