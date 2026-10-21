@@ -599,7 +599,7 @@ export default function MonoSetsLiveScore() {
   const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally');
   // Broadcast scorecard kind, derived from the sport's ENGINE rather than
   // hardcoded (#108). Every sport this scorer drives (volleyball, badminton,
-  // tabletennis, pickleball, squash) is engine 'sets' and renders through the
+  // tabletennis) is engine 'sets' and renders through the
   // watch's points-per-set scorebug, whose kind is 'volleyball'. Deriving by
   // engine — instead of the sport id — avoids regressing the watch to the
   // generic card (its ScorecardPanel only special-cases 'volleyball'/'tennis').
