@@ -44,6 +44,9 @@ const seeds = {
   football: {
     se_football: [{ id: 100, name: 'Sunday League', type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', score1: null, score2: null, status: 'pending' }] }],
   },
+  tennisTournamentWon: {
+    se_tennis: [{ id: 300, name: 'Tennis Cup', type: 'round-robin', mode: 'tournament', phase: 'group', format: { sets: 3 }, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Ana' }, { id: 't2', name: 'Bea' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'in-progress', draftState: { currentSet: 2, sets: [wonSet, wonSet, blankSet], history: [], savedAt: iso } }] }],
+  },
   volleyballDone: {
     se_volleyball: [{ id: 200, name: 'Beach Cup', type: 'round-robin', mode: 'tournament', phase: 'group', format: { sets: 3, pointsPerSet: 25 }, createdAt: iso, winnerMode: 'table-topper', knockoutConfig: null, knockoutMatches: [], teams: [{ id: 't1', name: 'Sharks' }, { id: 't2', name: 'Jets' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'completed', winner: 't1', setsWon1: 2, setsWon2: 0, sets: [{ score1: 25, score2: 20, completed: true }, { score1: 25, score2: 18, completed: true }], completedAt: iso }] }],
   },
@@ -153,7 +156,7 @@ const cases = [
     { back: true }, { wait: 1500 },
   ]],
   ['FLOW tennis quick Finish -> Back', '/app', 'tennisDraftWon', [
-    { goto: `/tennis/quick/live/${TENNIS_ID}` }, { wait: 5000 },
+    { goto: `/tennis/quick/live/${TENNIS_ID}` }, { wait: 20000 },
     { snap: 'scorer (won)' },
     { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
@@ -163,6 +166,13 @@ const cases = [
     { click: 'button', text: 'Enter Score' }, { wait: 4000 },
     { snap: 'scorer' },
     { click: 'button', text: 'Finish' }, { wait: 2500 },
+    { snap: 'after Finish' },
+    { back: true }, { wait: 3000 },
+  ]],
+  ['FLOW tennis tournament Finish -> Back', '/tennis/tournament/300', 'tennisTournamentWon', [
+    { click: 'button', text: 'Resume Match' }, { wait: 20000 },
+    { snap: 'scorer (won)' },
+    { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
     { back: true }, { wait: 3000 },
   ]],

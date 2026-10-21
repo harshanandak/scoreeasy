@@ -1,6 +1,6 @@
 import { act, cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import Design1Mono from './index';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
@@ -130,6 +130,16 @@ async function pressProbeBack() {
   await settleRoute();
 }
 
+beforeAll(async () => {
+  await Promise.all([
+    import('./MonoTournamentLiveScore'),
+    import('./GenericSetsTournament'),
+    import('./scoring/MonoTennisLiveScore'),
+    import('./MonoHistory'),
+    import('./landing/DashboardLanding'),
+  ]);
+});
+
 beforeEach(() => {
   globalThis.localStorage?.clear();
   globalThis.sessionStorage?.clear();
@@ -195,7 +205,26 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
   // RA-2 (P1). Finishing a tennis quick match PUSHES /history. Back lands on the
   // scorer URL of the finished match, whose draft is gone: "Match not found",
   // inside the exit guard. Same fix PR as RA-1.
-  it.fails('RA-2: Back after finishing a tennis quick match does not land on the dead scorer', async () => {
+  it('RA-1: Back after finishing a tennis tournament match does not reopen its scorer', async () => {
+    const tournament = footballTournament();
+    tournament.name = 'Tennis Cup';
+    tournament.format = { sets: 3 };
+    tournament.matches[0].draftState = {
+      currentSet: 2, sets: [wonTennisSet, wonTennisSet, blankTennisSet], history: [], savedAt: NOW_ISO,
+    };
+    seed('se_tennis', [tournament]);
+    renderApp(['/tennis/tournament/100', '/tennis/tournament/100/match/m1/score']);
+    await settleRoute();
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    await waitFor(() => expect(currentRoute()).toBe('/tennis/tournament/100'));
+
+    await pressProbeBack();
+
+    expect(currentRoute()).toBe('/tennis/tournament/100');
+    expect(screen.queryByRole('heading', { name: 'Tennis match scorer' })).not.toBeInTheDocument();
+  });
+
+  it('RA-2: Back after finishing a tennis quick match does not land on the dead scorer', async () => {
     seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
       id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
       format: { sets: 3 }, status: 'in-progress', sets: null, updatedAt: NOW_ISO, createdAt: NOW_ISO,
@@ -209,6 +238,7 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
     await pressProbeBack();
 
     expect(currentRoute()).not.toBe(`/tennis/quick/live/${TENNIS_ID}`);
+    expect(screen.queryByRole('heading', { name: 'Match not found' })).not.toBeInTheDocument();
   });
 
   // RA-3 (P1). The dashboard (/app) reads only completed quick matches,
