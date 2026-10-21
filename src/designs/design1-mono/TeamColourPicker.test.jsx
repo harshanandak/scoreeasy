@@ -47,6 +47,17 @@ describe('TeamColourPicker', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('shows a focus ring on the custom swatch while its colour input has focus', () => {
+    renderPicker();
+    const input = screen.getByLabelText('Custom colour for Team A colour');
+    const swatch = input.closest('label');
+    expect(swatch.style.outline).toBe('none');
+    fireEvent.focus(input);
+    expect(swatch.style.outline).toMatch(/3px solid/);
+    fireEvent.blur(input);
+    expect(swatch.style.outline).toBe('none');
+  });
+
   it('checks no swatch for a custom colour', () => {
     renderPicker({ value: '#123456' });
     for (const radio of screen.getAllByRole('radio')) expect(radio).toHaveAttribute('aria-checked', 'false');

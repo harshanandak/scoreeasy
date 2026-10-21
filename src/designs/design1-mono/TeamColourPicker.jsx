@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { normaliseHex } from '../../lib/teamColour';
 
@@ -44,6 +44,8 @@ export default function TeamColourPicker({ label, value, onChange }) {
   const current = normaliseHex(value);
   const checkedIndex = TEAM_SWATCHES.findIndex((s) => s.hex === current);
   const refs = useRef([]);
+  // The native colour input is invisible (opacity 0), so its focus is shown on the swatch around it.
+  const [customFocused, setCustomFocused] = useState(false);
 
   const select = (index) => {
     const n = TEAM_SWATCHES.length;
@@ -96,7 +98,7 @@ export default function TeamColourPicker({ label, value, onChange }) {
       <label
         title="Custom colour"
         style={{
-          ...swatchStyle(checkedIndex === -1 && current ? current : 'var(--se-color-surface)', checkedIndex === -1 && !!current),
+          ...swatchStyle(checkedIndex === -1 && current ? current : 'var(--se-color-surface)', customFocused || (checkedIndex === -1 && !!current)),
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -112,6 +114,8 @@ export default function TeamColourPicker({ label, value, onChange }) {
           aria-label={`Custom colour for ${label}`}
           value={current ?? '#000000'}
           onChange={onCustom}
+          onFocus={() => setCustomFocused(true)}
+          onBlur={() => setCustomFocused(false)}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
         />
       </label>
