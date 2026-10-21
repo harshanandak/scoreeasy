@@ -5,7 +5,7 @@ import { handleAppConfirmKeyDown } from './appConfirmUtils';
 
 const DEFAULT_DRAFT_SAVED_MESSAGE = 'Draft saved. You can resume this match later.';
 
-export function useAppScoringPrompt() {
+export function useAppScoringPrompt(completion = null) {
   const [notice, setNotice] = useState(null);
   const [pendingPrompt, setPendingPrompt] = useState(null);
   const [draftRedirectPending, setDraftRedirectPending] = useState(false);
@@ -78,7 +78,9 @@ export function useAppScoringPrompt() {
     closeNotice,
     closePrompt,
     confirmDiscard,
-    isInteractionLocked: Boolean(pendingPrompt || draftRedirectPending),
+    get isInteractionLocked() {
+      return Boolean(pendingPrompt || draftRedirectPending || completion?.locked);
+    },
     notice,
     pendingPrompt,
     renderPrompt,

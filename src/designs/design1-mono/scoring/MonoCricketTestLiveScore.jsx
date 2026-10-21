@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -84,7 +85,18 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [saveWarning, setSaveWarning] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [showCard, setShowCard] = useState(false);
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
+
+  const inningsRef = useRef(innings);
+  inningsRef.current = innings;
+  const commitInnings = (update) => {
+    if (completion.locked) return;
+    // Decide and lock a winning delivery before another event can Undo it.
+    const next = typeof update === 'function' ? update(inningsRef.current) : update;
+    inningsRef.current = next;
+    setInnings(next);
+  };
 
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
@@ -124,14 +136,14 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       ];
 
       if (qm.draftState) {
-        setInnings(qm.draftState.innings);
+        commitInnings(qm.draftState.innings);
         setCurrentInningsIndex(qm.draftState.currentInningsIndex);
         setFollowOnEnforced(qm.draftState.followOnEnforced || false);
         setHistory(qm.draftState.history || []);
       } else if (qm.innings && qm.innings.length === 4) {
-        setInnings(qm.innings);
+        commitInnings(qm.innings);
       } else {
-        setInnings(initInnings);
+        commitInnings(initInnings);
       }
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -158,14 +170,14 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       ];
 
       if (foundMatch.draftState) {
-        setInnings(foundMatch.draftState.innings);
+        commitInnings(foundMatch.draftState.innings);
         setCurrentInningsIndex(foundMatch.draftState.currentInningsIndex);
         setFollowOnEnforced(foundMatch.draftState.followOnEnforced || false);
         setHistory(foundMatch.draftState.history || []);
       } else if (foundMatch.innings && foundMatch.innings.length === 4) {
-        setInnings(foundMatch.innings);
+        commitInnings(foundMatch.innings);
       } else {
-        setInnings(initInnings);
+        commitInnings(initInnings);
       }
     }
   }, [id, matchId, sport, storageMode]);
@@ -220,12 +232,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   }, [innings, currentInningsIndex, team1Id, team2Id, team1Name, team2Name]);
 
-  // Finalize the broadcast once the match is decided (completion is detected by
-  // the existing result logic — we only react to it, never change it).
-  useEffect(() => {
-    if (matchComplete) liveRef.current.finalize();
-  }, [matchComplete]);
-
   // Totals
   const getTeamTotal = (teamId) => innings.filter(i => i.teamId === teamId).reduce((s, i) => s + (i.runs || 0), 0);
 
@@ -272,6 +278,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (battingTotal > bowlingTotal) {
       const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
       setMatchResult(result);
+      completion.lock();
       setMatchComplete(true);
       return true;
     }
@@ -280,6 +287,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Advance to next innings
   const advanceInnings = (updatedInnings) => {
+    if (completion.locked) return;
     const nextIndex = currentInningsIndex + 1;
 
     // Check follow-on after innings 2
@@ -306,6 +314,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       if (lastBatTotal > oppTotal) {
         const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
         setMatchResult(result);
+        completion.lock();
         setMatchComplete(true);
         return;
       }
@@ -315,6 +324,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       // All 4 innings done
       const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
       setMatchResult(result);
+      completion.lock();
       setMatchComplete(true);
       return;
     }
@@ -328,7 +338,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (enforce) {
       setFollowOnEnforced(true);
       // Swap team assignments for innings 3 & 4
-      setInnings(prev => {
+      commitInnings(prev => {
         const updated = [...prev];
         updated[2] = { ...updated[2], teamId: team2Id };
         updated[3] = { ...updated[3], teamId: team1Id };
@@ -353,7 +363,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.runs += runs;
@@ -385,7 +395,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     broadcastIntentRef.current = { kind: 'point', team: innings[currentInningsIndex]?.teamId === team2Id ? 'B' : 'A', value: 0, at: Date.now() };
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.wickets += 1;
@@ -427,7 +437,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     // wides and no balls do not.
     const countsAsBall = type === 'bye' || type === 'legBye';
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.runs += 1;
@@ -461,7 +471,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const confirmDeclare = () => {
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       updated[currentInningsIndex] = { ...updated[currentInningsIndex], declared: true };
       if (!checkResult(updated)) {
@@ -484,6 +494,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const confirmDraw = () => {
+    completion.lock();
     setMatchResult({ winner: 'draw', desc: 'Match Drawn' });
     setMatchComplete(true);
   };
@@ -493,7 +504,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
     broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
-    setInnings(last.innings);
+    commitInnings(last.innings);
     setCurrentInningsIndex(last.currentInningsIndex);
     setFollowOnEnforced(last.followOnEnforced);
     setHistory(prev => prev.slice(0, -1));
@@ -534,10 +545,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     scoringPrompt.scheduleDraftRedirect(() => navigateBack());
   };
 
-  // Save completed match
-  const saveCompleteMatch = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
+  // Persist the terminal state before finalizing its broadcast. In particular,
+  // the winning ball must survive a refresh on the result screen.
+  const persistCompleteMatch = () => {
     const winner = matchResult?.winner || null;
     const winDesc = matchResult?.desc || '';
     const completedAt = new Date().toISOString();
@@ -567,7 +577,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       });
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
+        return false;
       }
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -584,14 +594,28 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       const ok = saveSportTournament(storageKey, updatedTournament);
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
+        return false;
       }
       saveTournamentToConvex(updatedTournament);
     }
 
     setSaveWarning('');
-    navigateBack();
+    liveRef.current.finalize();
+    return true;
   };
+
+  const saveCompleteMatch = () => {
+    if (scoringPrompt.pendingPrompt) return;
+    if (completion.locked) {
+      completion.leave(navigateBack);
+      return;
+    }
+    completion.complete(persistCompleteMatch, navigateBack);
+  };
+
+  useEffect(() => {
+    if (matchComplete && matchResult) completion.complete(persistCompleteMatch);
+  }, [matchComplete, matchResult]);
 
   const navigateBack = () => {
     if (isQuickMatch) {
@@ -602,6 +626,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const discardAndExit = () => {
+    if (completion.locked) return;
     if (isQuickMatch) {
       // Discarding a quick match throws it away — remove the record from
       // se_quickmatches entirely. Writing back a 'pending' shell would leave the
@@ -632,11 +657,14 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     });
   };
 
-  const handleFinish = () => navigateBack();
+  const handleFinish = () => {
+    if (completion.locked) return;
+    navigateBack();
+  };
 
   // Continuous auto-save
   useEffect(() => {
-    if (!match || !format || matchComplete) return;
+    if (completion.locked || !match || !format || matchComplete) return;
     if (history.length === 0) return;
     const draftState = {
       innings: structuredClone(innings),
@@ -797,9 +825,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           <div className="flex gap-3 justify-center">
             <button
               onClick={saveCompleteMatch}
-              disabled={scoringPrompt.isInteractionLocked}
+              disabled={Boolean(scoringPrompt.pendingPrompt)}
               className="mono-btn-primary"
-              style={{ padding: '12px 24px', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              style={{ padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
             >
               Save &amp; Return
             </button>

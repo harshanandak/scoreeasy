@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
@@ -111,6 +112,7 @@ function initialPhase(match) {
 export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
   const navigate = useNavigate();
+  const completion = useMatchCompletion();
 
   const sportConfig = getSportById(sport);
   const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -199,6 +201,7 @@ export default function MonoCricketGuidedScorerRoute() {
   // Live persistence for the current innings: mirror the batting aggregate and
   // keep the raw engine innings in the draft (single-innings bridge, per phase).
   const handleStateChange = (innings) => {
+    if (completion.locked) return;
     persist((m) => ({
       ...m,
       status: 'in-progress',
@@ -235,7 +238,7 @@ export default function MonoCricketGuidedScorerRoute() {
   };
 
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
-  const handleComplete2 = (payload) => {
+  const handleComplete2 = (payload) => completion.complete(() => {
     const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
     const agg = mirrorAggregate(finalInnings, fmt);
     const updated = updateMatchInTournament(tournament, matchId, (m) => {
@@ -256,8 +259,7 @@ export default function MonoCricketGuidedScorerRoute() {
       };
     });
     saveSportTournament(storageKey, updated);
-    navigateToTournament();
-  };
+  }, navigateToTournament);
 
   // ---- render by phase ----
 

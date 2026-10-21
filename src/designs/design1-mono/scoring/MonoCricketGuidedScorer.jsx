@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   makeFormat,
@@ -115,6 +116,19 @@ export default function MonoCricketGuidedScorer({
 
   const der = useMemo(() => deriveInnings(innings, fmt), [innings, fmt]);
   const chase = useMemo(() => deriveChase(innings, fmt), [innings, fmt]);
+  const completion = useMatchCompletion();
+
+  const completionReason = (next, derived) => {
+    if (next.target != null && derived.runs >= next.target) return 'chased';
+    if (derived.wkts >= (next.playersPerSide || 11) - 1) return 'allout';
+    if (fmt.oversPerInnings > 0 && derived.legalBalls >= fmt.oversPerInnings * bpo) return 'overs';
+    return null;
+  };
+
+  const commitInnings = (next) => {
+    if (completionReason(next, deriveInnings(next, fmt))) completion.lock();
+    setInnings(next);
+  };
 
   // Fire onStateChange after each committed ball (skip the initial mount).
   const mounted = useRef(false);
@@ -123,19 +137,15 @@ export default function MonoCricketGuidedScorer({
       mounted.current = true;
       return;
     }
-    onStateChange?.(innings);
+    if (!completion.committed) onStateChange?.(innings);
   }, [innings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fire onComplete once when the innings ends (all out / overs done / chased).
-  const completed = useRef(false);
   useEffect(() => {
-    if (completed.current) return;
-    const allOut = der.wkts >= (innings.playersPerSide || 11) - 1;
-    const oversDone = der.legalBalls >= (fmt.oversPerInnings || 0) * bpo && (fmt.oversPerInnings || 0) > 0;
-    const chased = innings.target != null && der.runs >= innings.target;
-    if (allOut || oversDone || chased) {
-      completed.current = true;
-      onComplete?.({ innings, ...der, reason: chased ? 'chased' : allOut ? 'allout' : 'overs' });
+    if (completion.committed) return;
+    const reason = completionReason(innings, der);
+    if (reason) {
+      completion.complete(() => onComplete?.({ innings, ...der, reason }));
     }
   }, [der.wkts, der.legalBalls, der.runs]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -151,7 +161,7 @@ export default function MonoCricketGuidedScorer({
   const maybePromptBowler = (nextInn) => {
     const lb = deriveInnings(nextInn, fmt).legalBalls;
     const co = Math.floor(lb / bpo);
-    if (lb > 0 && lb % bpo === 0 && overPrompted.current < co && !completed.current) {
+    if (lb > 0 && lb % bpo === 0 && overPrompted.current < co && !completion.locked) {
       overPrompted.current = co;
       setBowlerOpen(true);
     }
@@ -160,6 +170,7 @@ export default function MonoCricketGuidedScorer({
   // Commit a normal delivery from the live innings; surface a rejection as a toast
   // (the engine THROWS on illegal dismissals) instead of only console.warn.
   const apply = (delivery, { overPrompt = true } = {}) => {
+    if (completion.locked) return;
     let next;
     try {
       next = applyDelivery(innings, delivery, fmt);
@@ -167,7 +178,7 @@ export default function MonoCricketGuidedScorer({
       setToast(e.message);
       return null;
     }
-    setInnings(next);
+    commitInnings(next);
     if (overPrompt) maybePromptBowler(next);
     return next;
   };
@@ -223,6 +234,7 @@ export default function MonoCricketGuidedScorer({
   // the new-batter picker unless the innings is all out; the pick is injected back
   // into the just-applied delivery via editDelivery.
   const onWicketConfirm = (w) => {
+    if (completion.locked) return;
     setWicketOpen(false);
     const wicket = { ...w, bowler: innings.bowler, incoming: null, onFreeHit: innings.freeHit };
     let next;
@@ -232,7 +244,7 @@ export default function MonoCricketGuidedScorer({
       setToast(e.message);
       return;
     }
-    setInnings(next);
+    commitInnings(next);
     const idx = next.deliveries.length - 1;
     const wkts = deriveInnings(next, fmt).wkts;
     if (wkts < playersPerSide - 1) {
@@ -244,6 +256,7 @@ export default function MonoCricketGuidedScorer({
 
   // Mankad: run out the non-striker before the ball; same apply-then-inject flow.
   const doMankad = () => {
+    if (completion.locked) return;
     setSheetOpen(false);
     const wicket = { type: 'mankad', out: innings.nonStriker, bowler: innings.bowler, incoming: null };
     let next;
@@ -253,7 +266,7 @@ export default function MonoCricketGuidedScorer({
       setToast(e.message);
       return;
     }
-    setInnings(next);
+    commitInnings(next);
     const idx = next.deliveries.length - 1;
     if (deriveInnings(next, fmt).wkts < playersPerSide - 1) {
       setBatterPicker({ ctx: 'mankad', index: idx });
@@ -261,6 +274,7 @@ export default function MonoCricketGuidedScorer({
   };
 
   const onBatterPick = (player) => {
+    if (completion.locked) return;
     const ctx = batterPicker;
     setBatterPicker(null);
     learnName(player);
@@ -287,6 +301,7 @@ export default function MonoCricketGuidedScorer({
   };
 
   const onBowlerPick = (player) => {
+    if (completion.locked) return;
     setBowlerOpen(false);
     if (!canBowl(innings, player.id, fmt)) {
       setToast('Bowler not eligible (quota / consecutive over)');
@@ -297,7 +312,7 @@ export default function MonoCricketGuidedScorer({
   };
 
   const doUndo = () => {
-    completed.current = false;
+    if (completion.locked) return;
     const next = undoInnings(innings);
     setInnings(next);
     const co = Math.floor(deriveInnings(next, fmt).legalBalls / bpo);
@@ -310,7 +325,10 @@ export default function MonoCricketGuidedScorer({
   };
 
   // SWAP: engine-authoritative ball-free strike change (a correction, not a ball).
-  const swapStrike = () => setInnings((prev) => changeStrike(prev));
+  const swapStrike = () => {
+    if (completion.locked) return;
+    setInnings((prev) => changeStrike(prev));
+  };
 
   // ⋯More sheet actions
   const doDeadBall = () => {
@@ -340,14 +358,14 @@ export default function MonoCricketGuidedScorer({
     setBowlerOpen(true);
   };
   const endInnings = () => {
+    if (completion.locked) return;
     setSheetOpen(false);
-    completed.current = true; // latch so the effect can't fire a second completion
-    onComplete?.({ innings, ...der, reason: 'manual-innings' });
+    completion.complete(() => onComplete?.({ innings, ...der, reason: 'manual-innings' }));
   };
   const endMatch = () => {
+    if (completion.locked) return;
     setSheetOpen(false);
-    completed.current = true; // latch so the effect can't fire a second completion
-    onComplete?.({ innings, ...der, reason: 'manual-match' });
+    completion.complete(() => onComplete?.({ innings, ...der, reason: 'manual-match' }));
   };
 
   // ---- derived view data ----
@@ -396,7 +414,7 @@ export default function MonoCricketGuidedScorer({
     : Math.min(100, ((fmt.oversPerInnings || 0) * bpo ? der.legalBalls / ((fmt.oversPerInnings || 0) * bpo) : 0) * 100);
 
   return (
-    <div className="mono-scorer-screen">
+    <div className="mono-scorer-screen" inert={completion.isCompleting ? '' : undefined}>
       <style>{STYLES}</style>
       <div className="mono-scorer-shell">
         <h1 className="sr-only">Cricket match scorer</h1>

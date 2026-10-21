@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
@@ -70,7 +71,8 @@ export default function MonoCricketLiveScore() {
   // Pending extra for the Super Over (scoreeasy-awy). null | 'wide' | 'noBall'
   const [superOverPendingExtra, setSuperOverPendingExtra] = useState(null);
   const [saveWarning, setSaveWarning] = useState('');
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
 
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
@@ -377,6 +379,7 @@ export default function MonoCricketLiveScore() {
 
   // Skip trial ball (gully cricket)
   const skipTrialBall = () => {
+    if (completion.locked) return;
     setTrialBallUsed(true);
   };
 
@@ -396,6 +399,7 @@ export default function MonoCricketLiveScore() {
 
   // Super Over scoring
   const addSuperOverRuns = (runs) => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -420,6 +424,7 @@ export default function MonoCricketLiveScore() {
   };
 
   const addSuperOverWicket = () => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -443,6 +448,7 @@ export default function MonoCricketLiveScore() {
   };
 
   const addSuperOverExtra = (type) => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -458,6 +464,7 @@ export default function MonoCricketLiveScore() {
   };
 
   const addSuperOverExtraRuns = (extraRuns) => {
+    if (completion.locked) return;
     if (!superOverPendingExtra || !canResolvePendingExtra()) return;
     if (extraRuns > 0) {
       const key = superOverPhase === 'team1_batting' ? 'team1' : 'team2';
@@ -589,15 +596,17 @@ export default function MonoCricketLiveScore() {
       completedAt: new Date().toISOString(),
     }));
 
-    const ok = saveSportTournament(storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    saveTournamentToConvex(updatedTournament);
-    live.finalize();
-    setTimeout(() => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
+    completion.complete(() => {
+      const ok = saveSportTournament(storageKey, updatedTournament);
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return false;
+      }
+      setSaveWarning('');
+      saveTournamentToConvex(updatedTournament);
+      live.finalize();
+      return true;
+    }, () => navigate(`/${sport || 'cricket'}/tournament/${id}`), 300);
   };
 
   const handleDiscard = () => {

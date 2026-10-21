@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
@@ -333,7 +334,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const [milestone, setMilestone] = useState(null);
   const milestoneRef = useRef(null);
   const milestoneTimerRef = useRef(null);
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
 
   // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
   // page. Tennis maps to the generic snapshot as: current-set GAMES -> pointsA/B,
@@ -516,7 +518,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   // pile up blank drafts, and the draft is cleared on finish/discard. Tournament
   // matches autosave into the bracket so a resumable in-progress draft survives.
   useEffect(() => {
-    if (!match || isMatchComplete || history.length === 0) return;
+    if (completion.locked || !match || isMatchComplete || history.length === 0) return;
     if (isQuickMatch) {
       if (!quickDraftKey) return;
       saveData(quickDraftKey, {
@@ -620,7 +622,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       });
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
+        return false;
       }
       setSaveWarning('');
       scoringPrompt.scheduleDraftRedirect(navigateBack);
@@ -630,11 +632,12 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     const ok = saveStoredQuickMatch(entry);
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
+      return false;
     }
 
     clearData(quickDraftKey);
     setSaveWarning('');
+    live.finalize();
     completeScoring('/history');
   };
 
@@ -642,57 +645,58 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const saveMatch = () => {
     if (scoringPrompt.isInteractionLocked) return;
 
-    if (isMatchComplete) {
-      triggerConfetti(TENNIS_CONFETTI);
-      triggerHaptic([100, 100, 100, 100, 100]);
-      live.finalize();
-    }
+    completion.complete(() => {
+      if (isMatchComplete) {
+        triggerConfetti(TENNIS_CONFETTI);
+        triggerHaptic([100, 100, 100, 100, 100]);
+      }
 
-    if (isQuickMatch) {
-      saveQuickMatch();
-      return;
-    }
+      if (isQuickMatch) {
+        return saveQuickMatch();
+      }
 
-    // S6660: flatten else-if instead of else { if }
-    const { team1Sets: team1SetsWon, team2Sets: team2SetsWon } =
-      countSetsWon(sets.filter(s => s.completed));
+      // S6660: flatten else-if instead of else { if }
+      const { team1Sets: team1SetsWon, team2Sets: team2SetsWon } =
+        countSetsWon(sets.filter(s => s.completed));
 
-    let winner = null;
-    if (team1SetsWon > team2SetsWon) winner = match.team1Id;
-    else if (team2SetsWon > team1SetsWon) winner = match.team2Id;
+      let winner = null;
+      if (team1SetsWon > team2SetsWon) winner = match.team1Id;
+      else if (team2SetsWon > team1SetsWon) winner = match.team2Id;
 
-    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-      ...m,
-      // Persist the shared set contract (score1/score2 = games) so standings + the
-      // bracket UI can read sets — but ONLY once the match is complete. An
-      // in-progress save must leave the top-level result fields empty, otherwise
-      // calculateSetsStandings (which skips only pending/empty matches) would count
-      // the unfinished match and award match points. draftState below keeps the raw
-      // live shape for resume.
-      sets: isMatchComplete ? mapTennisSetsForQuickHistory(sets) : [],
-      status: isMatchComplete ? 'completed' : 'in-progress',
-      winner: isMatchComplete ? winner : null,
-      completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
-      draftState: isMatchComplete ? undefined : {
-        currentSet,
-        sets,
-        history,
-        savedAt: new Date().toISOString(),
-      },
-    }));
+      const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+        ...m,
+        // Persist the shared set contract (score1/score2 = games) so standings + the
+        // bracket UI can read sets — but ONLY once the match is complete. An
+        // in-progress save must leave the top-level result fields empty, otherwise
+        // calculateSetsStandings (which skips only pending/empty matches) would count
+        // the unfinished match and award match points. draftState below keeps the raw
+        // live shape for resume.
+        sets: isMatchComplete ? mapTennisSetsForQuickHistory(sets) : [],
+        status: isMatchComplete ? 'completed' : 'in-progress',
+        winner: isMatchComplete ? winner : null,
+        completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
+        draftState: isMatchComplete ? undefined : {
+          currentSet,
+          sets,
+          history,
+          savedAt: new Date().toISOString(),
+        },
+      }));
 
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    if (isMatchComplete) {
-      saveTournamentToConvex(updatedTournament);
-      completeScoring(`/${sport}/tournament/${id}`);
-      return;
-    }
-    navigate(`/${sport}/tournament/${id}`);
+      const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return false;
+      }
+      setSaveWarning('');
+      if (isMatchComplete) {
+        saveTournamentToConvex(updatedTournament);
+        live.finalize();
+        completeScoring(`/${sport}/tournament/${id}`);
+        return;
+      }
+      navigate(`/${sport}/tournament/${id}`);
+    });
   };
 
   // Cancel and discard changes — clear the in-progress quick draft so the app
@@ -701,6 +705,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   // 'pending' when it has no real result yet, so the bracket doesn't leave a
   // scoreless match stuck in-progress. Keep any partial set progress otherwise.
   const discardAndExit = () => {
+    if (completion.locked) return;
     if (quickDraftKey) clearData(quickDraftKey);
     if (tournament) {
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
