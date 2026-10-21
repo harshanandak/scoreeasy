@@ -1228,6 +1228,140 @@ button.mono-stat-card {
   line-height: 0.95;
 }
 
+/* ===== Direction E: team colour arena (BLEND-GOVERNANCE §7) =====
+   Opt-in per sport: the grid carries data-team-colour plus the --team-{a,b}-* variables from
+   useTeamColours (colour engine output only), and each column says which team it holds
+   (data-team="a|b"), so colour follows the team when sides swap. Every text/surface pair
+   below is contrast-gated by the engine's contrastReport. */
+.mono-arena-grid[data-team-colour] {
+  border: var(--se-border-standard) solid var(--se-color-line);
+  box-shadow: var(--se-shadow-hard);
+  overflow: hidden;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="a"] {
+  --tc-hi: var(--team-a-hi);
+  --tc-core: var(--team-a-core);
+  --tc-lo: var(--team-a-lo);
+  --tc-on: var(--team-a-on);
+  --tc-scrim: var(--team-a-scrim);
+  --tc-tint: var(--team-a-tint);
+  --tc-motif: var(--team-a-motif);
+  --tc-mask: var(--sport-motif-a, none);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="b"] {
+  --tc-hi: var(--team-b-hi);
+  --tc-core: var(--team-b-core);
+  --tc-lo: var(--team-b-lo);
+  --tc-on: var(--team-b-on);
+  --tc-scrim: var(--team-b-scrim);
+  --tc-tint: var(--team-b-tint);
+  --tc-motif: var(--team-b-motif);
+  --tc-mask: var(--sport-motif-b, none);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col {
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 8px;
+  background: linear-gradient(180deg, var(--tc-hi), var(--tc-core) 55%, var(--tc-lo));
+  color: var(--tc-on);
+}
+
+/* The seam blends A into B over the column padding only, so no label ever sits on the blend. */
+.mono-arena-grid[data-team-colour] .mono-arena-col + .mono-arena-col {
+  border-left: 0;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="a"] + .mono-arena-col::before,
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="b"] + .mono-arena-col::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 14px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="a"] + .mono-arena-col::before {
+  background: linear-gradient(90deg, var(--team-a-core), transparent);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col[data-team="b"] + .mono-arena-col::before {
+  background: linear-gradient(90deg, var(--team-b-core), transparent);
+}
+
+/* The sport's court drawing, faint, behind the content (mask = shape, colour = engine). */
+.mono-arena-grid[data-team-colour] .mono-arena-motif {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--tc-motif);
+  mask-image: var(--tc-mask);
+  mask-size: cover;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: var(--tc-mask);
+  -webkit-mask-size: cover;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-half:active {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-half-display:active {
+  background: transparent;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-half:focus-visible {
+  outline: 3px solid var(--tc-on);
+  outline-offset: -5px;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-overline {
+  color: var(--tc-on);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-num {
+  position: relative;
+  isolation: isolate;
+  color: var(--tc-on);
+}
+
+/* Numeral scrim: a soft veil sized by the engine so the score clears 8:1 on any team colour. */
+.mono-arena-grid[data-team-colour] .mono-arena-num::before {
+  content: '';
+  position: absolute;
+  inset: -12% -22%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--tc-scrim) 65%, transparent);
+  pointer-events: none;
+}
+
+/* Lead and tie are not colour-coded on a team-colour board (§7): the numbers say who leads. */
+.mono-arena-grid[data-team-colour] .mono-arena-half[data-leading="true"] .mono-arena-num::after {
+  background: transparent;
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-hint {
+  color: var(--tc-on);
+}
+
+.mono-arena-grid[data-team-colour] .mono-correct {
+  color: var(--tc-on);
+}
+
+.mono-arena-grid[data-team-colour] .mono-arena-col .mono-btn {
+  background: var(--tc-tint);
+  border-color: var(--se-color-ink);
+  color: var(--se-color-ink);
+}
+
 .mono-scorer-score-area {
   margin-bottom: 32px;
 }
