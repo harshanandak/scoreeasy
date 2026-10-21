@@ -1,10 +1,11 @@
 // Route sweep (routing audit, docs/plans/2026-10-21-routing-audit.md).
 //
 // Drives headless Chrome over the DevTools protocol at a phone viewport
-// (390x844), visits every route as a guest in a fresh browser context, and
+// (390x844), visits the listed guest cases in fresh browser contexts, and
 // records the final URL, visible heading, page text, bottom-nav and dialog
 // state, and console errors. Cases can seed localStorage and run click / Back
-// steps, which is how the Back-stack findings were reproduced.
+// steps, which is how the Back-stack findings were reproduced. The registered
+// set-display, brutalist-colors and dashboard-variants showcases are omitted.
 //
 // Usage (dev server must already be running):
 //   bunx vite --port 5193 --strictPort
@@ -15,12 +16,13 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 
 const BASE = process.env.BASE || 'http://localhost:5193';
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const PORT = 9339;
 const SETTLE_MS = Number(process.env.SETTLE_MS || 6500);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 5);
+// Trusted local CLI destination, with the same filesystem authority as its caller.
 const OUT = process.argv[2] || 'results.json';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 
@@ -208,19 +210,63 @@ const cases = [
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Read only the endpoint announced by our child, never a shared discovery port.
+function connectDebugger(chrome) {
+  return new Promise((resolve, reject) => {
+    const lines = createInterface({ input: chrome.stderr });
+    let socket;
+    let settled = false;
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      lines.close();
+      chrome.stderr.resume();
+      chrome.off('error', onError);
+      chrome.off('exit', onExit);
+      if (error) {
+        socket?.close();
+        reject(error);
+      } else resolve(socket);
+    };
+    const onError = () => finish(new Error('Chrome debugger failed to start or connect'));
+    const onExit = () => finish(new Error('Spawned Chrome exited before debugger connection'));
+    // Same 10-second startup budget as the original 50 x 200ms discovery loop.
+    const timer = setTimeout(() => finish(new Error('Chrome debugger startup timed out')), 10000);
+    chrome.once('error', onError);
+    chrome.once('exit', onExit);
+    lines.on('line', (line) => {
+      if (!line.startsWith('DevTools listening on ') || socket) return;
+      const endpoint = /^DevTools listening on ws:\/\/127\.0\.0\.1:(\d{1,5})\/devtools\/browser\/([a-f0-9-]{36})$/.exec(line);
+      if (!endpoint || Number(endpoint[1]) < 1 || Number(endpoint[1]) > 65535) {
+        finish(new Error('Chrome announced an invalid loopback debugger endpoint'));
+        return;
+      }
+      socket = new WebSocket(`ws://127.0.0.1:${Number(endpoint[1])}/devtools/browser/${endpoint[2]}`);
+      socket.addEventListener('error', onError, { once: true });
+      socket.addEventListener('open', () => finish(), { once: true });
+    });
+  });
+}
+
 async function main() {
   const profile = mkdtempSync(join(tmpdir(), 'se-audit-'));
   const chrome = spawn(CHROME, [
-    '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
+    '--headless=new', '--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1', `--user-data-dir=${profile}`,
     '--window-size=390,844', '--no-first-run', '--no-default-browser-check', 'about:blank',
-  ], { stdio: 'ignore' });
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
-  let version;
-  for (let i = 0; i < 50; i += 1) {
-    try { version = await (await fetch(`http://127.0.0.1:${PORT}/json/version`)).json(); break; } catch { await sleep(200); }
+  let ws;
+  try {
+    ws = await connectDebugger(chrome);
+    await runSweep(ws);
+  } finally {
+    ws?.close();
+    chrome.kill();
   }
-  const ws = new WebSocket(version.webSocketDebuggerUrl);
-  await new Promise((r) => ws.addEventListener('open', r, { once: true }));
+}
+
+async function runSweep(ws) {
   let nextId = 1;
   const pending = new Map();
   const listeners = new Map(); // sessionId -> fn
@@ -333,9 +379,6 @@ async function main() {
   const order = new Map(cases.map((c, i) => [c[0], i]));
   results.sort((a, b) => order.get(a.label) - order.get(b.label));
   writeFileSync(OUT, JSON.stringify(results, null, 2));
-  ws.close();
-  chrome.kill();
-  process.exit(0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
