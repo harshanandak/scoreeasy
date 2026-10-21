@@ -1,26 +1,16 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+// `?inline` runs src/index.css through the project's real Vite CSS pipeline
+// (the @tailwindcss/vite plugin from vite.config.js + postcss.config.js) and
+// hands back the compiled CSS string, built from the sources under test.
+import compiledIndexCss from '../../index.css?inline';
 
 // The HiFi-blend token layer is additive: it introduces rounded/soft/gold/live
 // custom properties on top of the frozen brutalist Mono tokens. These contracts
 // pin the token API (M1 foundation) so the 27 downstream screens can rely on it.
 const root = process.cwd();
 const indexCss = readFileSync(join(root, 'src/index.css'), 'utf8');
-
-// Locate the compiled stylesheet emitted by `vite build`, if a build is present.
-// Tailwind v4 copies `:root` custom properties through verbatim (they are not
-// tree-shaken/purged like utility classes), so the authored source is the
-// primary contract — but when dist/ exists we additionally assert the tokens
-// survived the real build, catching any future purge/rewrite regression.
-function readBuiltCss() {
-  const assetsDir = join(root, 'dist', 'assets');
-  if (!existsSync(assetsDir)) return null;
-  const cssFiles = readdirSync(assetsDir).filter((f) => f.endsWith('.css'));
-  if (cssFiles.length === 0) return null;
-  return cssFiles.map((f) => readFileSync(join(assetsDir, f), 'utf8')).join('\n');
-}
-const builtCss = readBuiltCss();
 
 // Extract the body of a specific brace-delimited block (e.g. an @media rule) by
 // walking braces from the header, so assertions can't leak across rule
@@ -78,22 +68,24 @@ describe('blend design tokens (frozen values)', () => {
   });
 });
 
-describe('blend tokens survive the production build', () => {
-  it('keeps every frozen token in the compiled stylesheet when a build exists', () => {
-    if (!builtCss) {
-      // No dist/ build present in this run — source assertions above are the
-      // contract; the CI `build` gate exercises the compiled path separately.
-      expect(existsSync(join(root, 'src/index.css'))).toBe(true);
-      return;
-    }
-    // The build minifies values (e.g. rgba(20,40,30,.28) -> #14281e47), so the
-    // exact-value contract is enforced at source above; here we prove the build
-    // did not DROP or rename any token declaration.
-    for (const decl of FROZEN_TOKENS) {
-      const name = decl.split(':')[0];
-      expect(builtCss).toMatch(new RegExp(`${name}\\s*:`));
-    }
-    expect(builtCss).toContain('se-blend-pulse');
+// Tailwind v4 copies `:root` custom properties through verbatim (they are not
+// tree-shaken/purged like utility classes). Prove that against a compile of the
+// CURRENT sources rather than whatever happens to sit in dist/: an untracked
+// dist/ can be left over from another branch's build, or be half-written by a
+// concurrent `vite build`, which made this contract flaky.
+describe('blend tokens survive the Tailwind/PostCSS pipeline', () => {
+  it('actually ran the Tailwind compiler (not a raw passthrough)', () => {
+    expect(compiledIndexCss).not.toContain('@import "tailwindcss"');
+    expect(compiledIndexCss).toMatch(/tailwindcss v\d/);
+  });
+
+  it.each(FROZEN_TOKENS)('keeps the exact frozen value through the pipeline: %s', (decl) => {
+    expect(compiledIndexCss).toContain(decl);
+  });
+
+  it('keeps the LIVE breathing pulse keyframes through the pipeline', () => {
+    expect(compiledIndexCss).toContain('@keyframes se-blend-pulse');
+    expect(compiledIndexCss).toMatch(/\.se-blend-pulse\s*\{[^}]*animation:\s*se-blend-pulse/);
   });
 });
 

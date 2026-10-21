@@ -89,11 +89,13 @@
      Additive only. These rounded/soft/gold/live properties sit ON TOP of the
      brutalist Mono tokens above (pure-black ink & borders, hard `3px 3px 0`
      zero-blur shadow, tight 4-8px radii, Inter/JetBrains Mono) — none of which
-     change. Downstream screens opt into blend; they never lose the hard shell.
+     change. Downstream screens opt into blend; scoring/live exceptions follow
+     rule 7 below.
 
      ── BLEND-GOVERNANCE CONTRACT (full text: BLEND-GOVERNANCE.md) ──────────────
      1. GREEN is for LEAD / LIVE only — the leading team, a live badge, an
         active/primary CTA. Never decorative, never a resting-state fill.
+        On scoring and live surfaces the teams' own colours take over (rule 7).
      2. GOLD is ONE milestone accent PER SCREEN — a single moment (match won,
         record, podium). Two golds on a screen is a bug.
      3. CAPSULES & CIRCLES are for INTERACTIVE elements only (buttons, chips,
@@ -105,6 +107,11 @@
         ALWAYS reduced-motion gated. Never use it for idle/decorative emphasis.
      6. PER-SCREEN SOFT-ELEMENT BUDGET — cap soft-styled elements per screen (see
         doc); overuse dissolves the brutalist backbone the blend depends on.
+     7. TEAM COLOUR is identity on SCORING / LIVE surfaces. Use the colour
+        engine's contrast-gated values for team surfaces and point keys, never
+        raw hex. App green stays with LIVE / actions; lead and tie are not
+        colour-coded. The scorer's design decides its framing; rule 4 governs
+        the rest of the app.
      ========================================================================== */
 
   /* Rounded radius scale — interactive elements only (contract §3) */
@@ -128,9 +135,36 @@
 
   /* LIVE breathing pulse timing (helper class + reduced-motion gate below) */
   --se-blend-pulse-duration: 2.4s;
+
+  /* Team colour (Direction E). Scoring screens set these at runtime from the colour engine
+     (src/lib/teamColour.js); these fallbacks are its output for the default red v blue pair. */
+  --team-a-hi: #d32928;
+  --team-a-core: #bb0012;
+  --team-a-lo: #890600;
+  --team-a-on: #ffffff;
+  --team-a-scrim: rgba(0, 0, 0, 0.3);
+  --team-a-tint: #ffe6e3;
+  --team-a-line: #c7423b;
+  --team-a-motif: rgba(0, 0, 0, 0.17);
+  --team-b-hi: #2f61e3;
+  --team-b-core: #1d4ccc;
+  --team-b-lo: #182aa4;
+  --team-b-on: #ffffff;
+  --team-b-scrim: rgba(0, 0, 0, 0.31);
+  --team-b-tint: #e4edff;
+  --team-b-line: #2d57be;
+  --team-b-motif: rgba(0, 0, 0, 0.17);
 }
 
 @theme inline {
+  --color-team-a: var(--team-a-core);
+  --color-team-a-on: var(--team-a-on);
+  --color-team-a-tint: var(--team-a-tint);
+  --color-team-a-line: var(--team-a-line);
+  --color-team-b: var(--team-b-core);
+  --color-team-b-on: var(--team-b-on);
+  --color-team-b-tint: var(--team-b-tint);
+  --color-team-b-line: var(--team-b-line);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
