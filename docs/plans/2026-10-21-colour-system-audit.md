@@ -316,6 +316,13 @@ These rules in `BLEND-GOVERNANCE.md` would change. `blendTokens.test.js` asserts
 
 **Decisions this audit does not make.** Each needs a yes or no from Harsha before the dependent PR:
 
+> **Decided by Harsha, 2026-10-21:** green means only **go** (one filled primary per screen) and
+> **live**, in the darker AA green `#12753a`; **LIVE is green** everywhere (D1 = a); selection,
+> links and focus use ink (follows from the green rule, D2 = a); the **leading score is not
+> coloured** on cricket, tennis and the classic sets boards (D3 = a); **neutral page `#f3f3ef` with
+> white cards** (D4 = a). D5 (showcase routes) is open; default to deleting dead code that nothing
+> imports and keeping the showcases out of the ratchet until Harsha decides.
+
 - **D1. LIVE colour.** (a) green, as recommended: matches governance and keeps red for danger; (b) broadcast red: matches TV convention but collides with danger and with red teams. Each option clashes with one team colour, which is why the chip always carries the word.
 - **D2. Selection colour.** (a) ink inversion, as recommended; (b) keep green for the active bottom-nav tab only.
 - **D3. Lead on non-team boards** (cricket, tennis, classic sets). (a) no colour, ink weight/marker only, as recommended; (b) keep green until those boards get team colour.
