@@ -1,6 +1,7 @@
-import { act, cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
@@ -12,12 +13,9 @@ import Design1Mono from './index';
 // the fix lands. Whoever lands the fix flips `it.fails` to `it` in the same PR.
 // The finding id (RA-n) points at the audit doc's findings table and fix plan.
 //
-// Harness: same shape as AppRouteRecovery.test.jsx. It renders the real
-// Design1Mono shell, whose routes are React.lazy chunks, so the async budget is
-// raised file-locally for cold chunk loads under a parallel run. (PR #159 adds
-// src/test/preloadAppRoutes.js for this; switch to it once that is on master.)
-configure({ asyncUtilTimeout: 15000 });
-vi.setConfig({ testTimeout: 40000, hookTimeout: 40000 });
+// Match AppRouteRecovery.test.jsx: resolve lazy route chunks during collection
+// so contract assertions do not depend on cold imports inside a test timeout.
+await preloadAppRoutes();
 
 const authState = vi.hoisted(() => ({ current: null }));
 const convexState = vi.hoisted(() => ({ useQuery: () => [] }));
@@ -122,7 +120,7 @@ async function settleRoute() {
     expect(document.querySelector('.route-skeleton')).toBeNull();
     expect(document.querySelector('main')?.textContent?.trim()).toBeTruthy();
   });
-  await act(() => new Promise((resolve) => { setTimeout(resolve, 120); }));
+  await act(async () => {});
 }
 
 async function pressProbeBack() {

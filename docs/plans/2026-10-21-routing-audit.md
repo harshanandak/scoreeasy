@@ -8,7 +8,7 @@ The decision is to stay on React Router v7 (`react-router-dom` 7.15) and clean i
 
 - an inventory of every route, every navigation call site, and every place a path string is built;
 - the problems found, with file:line evidence and a severity;
-- a run of every route in the real app as a guest (headless Chrome, phone viewport);
+- a 91-case guest sweep of public, app, sport and legacy routes (headless Chrome, phone viewport); three registered showcase routes were not exercised;
 - contract tests for the top findings;
 - a fix plan of small, one-point PRs, ordered by how much each one matters to a scorer mid-match.
 
@@ -16,10 +16,12 @@ App code is not changed here. The only code added is `src/designs/design1-mono/r
 
 **Severity scale.** P0: a point or a match is lost, or the board lies. P1: a scorer can lose track of a match, gets stuck, or Back does something unsafe mid-match. P2: wrong or confusing behaviour with a way out. P3: polish, dead code, or a latent risk.
 
-**In flight, not duplicated here:**
+**Related work (original snapshot; integration updates below):**
 - PR #158 (`fix/start-match-routing`) repoints the generic "start a match" buttons to `/play` and adds `src/utils/appPaths.js`.
 - `feat/icp-game-focus` deregisters pickleball, squash, rugby, futsal and handball, and decides what an unknown-sport URL does (e.g. `/pickleball/quick`). Findings that touch unknown sports are noted for that branch below. This audit does not propose a competing fix.
-- PR #159 (`fix/flaky-tests`) adds `src/test/preloadAppRoutes.js`. It is not on master yet, so the new contract test uses the `AppRouteRecovery.test.jsx` harness. Switch it to the preload helper when #159 lands.
+- PR #159 (`fix/flaky-tests`) added `src/test/preloadAppRoutes.js` and is now on master. The contract tests use that helper during collection instead of extending timeouts for cold route imports.
+
+**Integration baseline.** The inventories, line numbers and 91 runtime rows below record the original audit at `bfbfae4`; they are historical evidence, not a fresh sweep of the integrated branch. This branch now includes master through PR #156 (`3e3cb754bcb6cd0ba946ba722e6e0a12c380116d`), including PR #158's path helpers and guest-entry links and PR #159's preload helper. References below to those PRs being in flight describe the original snapshot. The three omitted showcase routes are `/showcase/set-display`, `/showcase/brutalist-colors` and `/showcase/dashboard-variants`; their runtime behaviour remains unverified by this audit. No new browser sweep was run for this integration.
 
 ## Top findings in plain words
 
@@ -31,7 +33,7 @@ App code is not changed here. The only code added is `src/designs/design1-mono/r
 6. **Ids are validated five different ways** (RA-4, RA-7, RA-9). Some screens show recovery for a bad id, some spin forever, and `/constructor/quick` is accepted as a real sport.
 7. **Back and Home are not consistent** (RA-8, RA-10, RA-12). `navigate(-1)` with no fallback can leave the app. In-app back arrows push while hardware Back pops. "Home" means `/` on some buttons and `/app` on others, so Home on a 404 can drop you straight into a live scorer.
 
-There is no P0. No route path was found that drops a scored point: scorers autosave drafts before they navigate. The problems are lost *track* of matches, Back loops and dead ends.
+No P0 was demonstrated by these routing cases. They exposed lost *track* of matches, Back loops and dead ends. This audit does not establish that autosave always succeeds or that scored points cannot be lost; persistence failures need separate stability proof.
 
 ## Method
 
@@ -252,7 +254,7 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 
 ## Fix plan
 
-Small one-point PRs, ordered by scorer impact. Each one is verified by flipping its contract test(s) from `it.fails` to `it`, re-running the matching sweep cases (`ONLY=<regex> node scripts/route-sweep.mjs`), and a phone-viewport demo for the merge.
+The original plan below groups fixes by scorer impact. Harsha's current delivery direction is to merge the appropriate existing PRs; this table does not authorize opening more PRs. A fix with a matching contract is verified by flipping it from `it.fails` to `it`, re-running the matching sweep cases (`ONLY=<regex> node scripts/route-sweep.mjs`), and a phone-viewport demo for the merge. Findings without a contract need focused proof in their owning implementation work.
 
 | # | PR | Fixes | Files | Risk | Verification |
 |---|----|-------|-------|------|--------------|
@@ -261,7 +263,7 @@ Small one-point PRs, ordered by scorer impact. Each one is verified by flipping 
 | 3 | **Validate `:id`/`:matchId` routes: one resolver, recovery instead of Loading** | RA-4, RA-7 | new `resolveTournamentMatch(sportId, id, matchId)` beside `utils/storage.js`; use it in the dispatcher, the result screen and every scorer; not-found branch in `MonoCricketTestLiveScore` quick mode (`RouteRecoveryActions`) | Low to medium: touches 6 screens, but they converge on the dispatcher's existing rule | RA-4, RA-7; runs #58-59, #82-83 |
 | 4 | **Validate `:sport` with an own-key lookup** | RA-9, RA-18 | `models/sportRegistry.js:460` (`Object.hasOwn`; optional lowercase redirect for RA-18) | Low. Coordinate with `feat/icp-game-focus`, which edits the same registry | RA-9; runs #46, #89-91 |
 | 5 | **Route error boundaries: reset on navigation, plus one around `/live/:token`** | RA-6, RA-11 | `index.jsx:1772` (key the boundary by `location.pathname`), `MonoWatchMatch` boundary falling back to `UnavailableScreen` | Low | RA-6; runs #33, #84 |
-| 6 | **Arm the exit guard from the scorer, not from the URL** | RA-5 | `index.jsx` guard effect, `mobile/backButton.js` (`isProtectedScoringRoute`), `MonoQuickMatch.jsx` (signal "scoring" phase), bottom-nav visibility | **Medium to high**: every scorer depends on this guard. Needs a decision first (below) | RA-5; runs #77, #81; Android device: Back on setup vs. mid-match |
+| 6 | **Arm the exit guard from the scorer, not from the URL** | RA-5 | `index.jsx` guard effect, `mobile/backButton.js` (`isProtectedScoringRoute`), `MonoQuickMatch.jsx` (signal "scoring" phase), bottom-nav visibility | **Medium to high**: every scorer depends on this guard. Decision recorded below: protect scoring, not setup | RA-5; runs #77, #81; Android device: Back on setup vs. mid-match |
 | 7 | **Safe Back and one meaning of Home** | RA-8, RA-10, RA-12 | `goBackOr(navigate, fallback)` helper; replace `navigate(-1)` in `MonoProfile`, `MonoUserSearch`; point in-app "Home" buttons at `/app` (`RouteRecoveryActions`, `MonoTournamentList`, `MonoTournamentSetup`, `MonoProfile`, `MonoAuthPageFrame`, `ErrorBoundary`); make scorer Cancel/Discard exits unwind instead of push | Low to medium | RA-8; runs #85, #87 |
 | 8 | **Route table out of `index.jsx`** | maintainability | move the `<Route>` list, legacy redirects and guards into `routes.jsx` / `routeGuards.jsx`; `index.jsx` keeps the shell | Low: pure move, guarded by `routes.contract.test.jsx` + `AppRouteRecovery.test.jsx` | full suite + full sweep diff identical |
 | 9 | **Path builders per area** (extends `src/utils/appPaths.js` from PR #158) | RA-14, RA-20, the 94 literals | `quickPath`, `tournamentPath`, `tournamentMatchPath(…, 'score'\|'result')`, `testMatchPath`, `tennisLivePath`, `livePath`, `loginPath(returnTo)`; replace call sites screen by screen, one PR per area (dashboard, quick match, tournaments, scorers, auth) | Low | grep for `navigate('/` literals trending to 0; sweep unchanged |
@@ -270,7 +272,7 @@ Small one-point PRs, ordered by scorer impact. Each one is verified by flipping 
 
 Not a code PR: **RA-13 App Links.** Publishing `assetlinks.json` and `apple-app-site-association` needs the release SHA-256 fingerprint and the Apple Team ID (`docs/mobile/app-link-associations.md`). Until they are published, shared live links open in the browser.
 
-### Decisions for Harsha
+### Recorded decisions and remaining release question
 
 > **Decided by Harsha, 2026-10-21:**
 > - **RA-5:** the leave-match guard turns on only once scoring starts; quick-match setup shows the bottom nav and leaves without a warning.
@@ -279,10 +281,7 @@ Not a code PR: **RA-13 App Links.** Publishing `assetlinks.json` and `apple-app-
 > - **RA-13** (who publishes the app-link files, and when) is still open: it needs the release signing fingerprint and Apple Team ID.
 
 
-- **RA-5, quick-match setup.** (a) Keep the guard on setup but drop the "unsaved scoring progress" wording until a point is scored. (b) Arm the guard only once scoring starts, and show the bottom nav on setup (recommended: the setup form has nothing to lose). (c) Leave as is.
-- **RA-10, what "Home" means.** (a) `/app` everywhere inside the app, and `/` only for the brand/logo and cold start (recommended). (b) `/` everywhere, accepting that Home can jump into a live scorer.
-- **RA-13.** Who publishes the association files, and when.
-- **RA-19.** Should Rematch from a tournament result open a quick match at all?
+The guard, Home and Rematch decisions above are settled. The remaining release question is **RA-13:** who publishes the association files, and when. It is outside this audit integration leaf.
 
 ## Forge issues (P0/P1)
 
