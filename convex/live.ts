@@ -84,6 +84,19 @@ function snapshotPatch(snap: {
   };
 }
 
+// Team colours are rendered into CSS on the spectator page, so only a strict
+// #rrggbb hex is ever stored (OWASP A03 — CSS injection). Anything else
+// (`url(...)`, `red;background:...`, short/long hex, named colours) is dropped
+// rather than rejected, so a bad colour never blocks the scorer's match. Valid
+// hex is normalised to lower case.
+const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
+function sanitizeTeamMeta(team: { name: string; color?: string }) {
+  const { name, color } = team;
+  return color !== undefined && HEX_COLOUR.test(color)
+    ? { name, color: color.toLowerCase() }
+    : { name };
+}
+
 // Moderation floor knobs (§7.1). Lightweight, index-counted — no rate-limiter
 // component for v1.
 const CREATE_CAP = 20; // max new live matches per owner per window
@@ -166,8 +179,8 @@ export const create = authedMutation({
 
     await ctx.db.insert("liveMatchMeta", {
       matchId,
-      teamA: args.teamA,
-      teamB: args.teamB,
+      teamA: sanitizeTeamMeta(args.teamA),
+      teamB: sanitizeTeamMeta(args.teamB),
       sport: args.sport,
     });
 
