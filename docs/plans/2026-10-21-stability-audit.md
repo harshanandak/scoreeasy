@@ -1,6 +1,8 @@
 # Stability and reliability audit (2026-10-21)
 
-**Why this exists.** Harsha, 2026-10-21: "we need to improve application stability and reliability." AGENTS.md has two non-negotiables that matter most here: *the scorer never loses a point*, and *the board stays truthful*. Both are broken today, in ways the scorer cannot see.
+**Decisions needed:** sport-rule alignment (SA-12), public-profile privacy (SA-16), and ownership of shared dev deployment recovery (SA-05). These are follow-up decisions; this audit PR makes no rule, application, or deployment changes.
+
+**Why this exists.** Harsha, 2026-10-21: "we need to improve application stability and reliability." AGENTS.md has two non-negotiables that matter most here: *the scorer never loses a point*, and *the board stays truthful*. The original audit found failures of both on the base below.
 
 - **Storage.** When device storage is full, points go into memory and vanish on refresh.
   - Nothing tells the scorer.
@@ -16,9 +18,26 @@ Everything below has evidence: a browser run, a failing test, or a quoted `file:
 - flaky tests (#159)
 - game-registry changes (`feat/icp-game-focus`)
 
-**Base.** `origin/master` at `9f263b1`.
+**Base.** Original audit: `origin/master` at `9f263b1`. Recovery fetched `origin/master` again on 2026-10-21 and confirmed the same commit (`9f263b1a88d82ddcbf15b891a60ce51126a75c60`); no merge was needed. Source references below refer to that base, not another worker's branch.
 
-## How this was run
+## Recovery evidence and limits
+
+The previous worker committed this report and four expected-failure tests in `fdf8674`. Its browser observations, deployment inventories, and build measurements are **historical evidence**, retained from that report. The external browser script, screenshots, recording, and raw deployment inventories are not attached to this PR. No fresh browser sweep, native-device run, or deployment read/write was performed during recovery. Treat **B** as previously reported rung 5, not independently reverified rung 5; **C** as rung 2 source evidence; **T** as rung 4 executable evidence; and **S** as an unproven scenario.
+
+Fresh recovery checks and ownership boundaries are recorded below. A passing `it.fails` is evidence that an assertion still fails, not evidence of a fix. Fix PRs must convert the relevant test to ordinary `it` and prove the corrected behavior.
+
+### Fresh recovery acceptance checklist (2026-10-21)
+
+- [x] Read `AGENTS.md`, `CODING_STANDARDS.md`, `README.md` and the existing audit; work only in the supplied worktree on `docs/stability-audit`.
+- [x] Fetch the remote base and confirm the original commit is preserved. Re-read the cap ordering, storage-backend selection, completed tennis/cricket autosave guards, goals draft fields and provider-tree switch on `origin/master` (rung 2).
+- [x] Run `bun run test -- src/designs/design1-mono/scoring/MonoSetsLiveScore.stability.test.jsx src/utils/storage.stability.test.js`: two files passed, four expected failures (rung 4).
+- [x] Temporarily run those four cases as ordinary `it`: all four failed for the documented cap, storage, undo and cross-team assertions; restore both files byte-for-byte afterward (rung 4). The temporary conversion is not committed.
+- [x] Read the live Forge inventory and verify every SA-01 through SA-20 ID against the report: 20 issues, four P0 and sixteen P1, all open with acceptance criteria. No issue was closed or duplicated.
+- [x] Separate historical browser/deployment evidence from fresh checks and identify parallel ownership overlaps. No app fixes or deployment operations are included.
+
+Commit/push hooks run lint, type checking, agent-config synchronization, the full test suite and a build. Their final outcomes and the hosted-check snapshot belong in the PR handoff; the focused checks above do not substitute for those hooks. Native behavior and the historical browser table still need fresh proof in the relevant fix PRs.
+
+## Original audit method (historical)
 
 - **Browser sweep.**
   - Headless Chrome 155 driven over the Chrome DevTools Protocol: a ~100-line Node script kept outside the repo. No new dependencies.
@@ -37,7 +56,7 @@ Everything below has evidence: a browser run, a failing test, or a quoted `file:
 - **Build.** `bun run build` (vite 6.4.2, vite-plugin-pwa 1.3.0).
 - **Convex.** `functionSpec` of the dev and prod deployments (read-only).
 
-**Failing-safe tests added.** These are the only code in this PR. Each encodes the *correct* behaviour as `it.fails`, so it passes today. When the fix lands, vitest turns it red until it is flipped to `it`. Each was also run as plain `it` to confirm it fails for the stated reason, not for a harness problem.
+**Expected-failure tests added.** These are the only code in this PR. Each encodes the intended behavior as `it.fails`. The previous worker reported also running each as plain `it` to confirm the reason for failure. Recovery validation is recorded separately below. When a fix makes an assertion pass, Vitest reports the unexpected pass as a failure until the test becomes ordinary `it`. An unrelated harness failure could also satisfy `it.fails`, so inspect ordinary-test failure reasons when maintaining these tests.
 
 | Test | Finding | Fails today because |
 |---|---|---|
@@ -46,13 +65,13 @@ Everything below has evidence: a browser run, a failing test, or a quoted `file:
 | same › SA-11 | Cross-team tap dropped | `Beta: 0 points`: a tap on Team B 60 ms after Team A is ignored |
 | `src/utils/storage.stability.test.js` › SA-02 | Storage full at boot hides saved data | `expected null to deeply equal { phase: 'scoring' }` |
 
-## Per-screen console and crash table (guest, 390×844, dev deployment)
+## Historical per-screen console and crash table (guest, 390×844, dev deployment)
 
 Noise present on every screen, and not listed per row:
 - `Manifest: Line: 1, column: 1, Syntax error`. In dev, the PWA plugin does not serve `/manifest.webmanifest`, so the SPA fallback returns `index.html`. P3.
 - Clerk's "development keys" warning. Expected in dev.
 
-`Blocked call to navigator.vibrate` appears on scoring taps. It only happens because the taps were synthetic (no user activation). Real taps do not trigger it.
+`Blocked call to navigator.vibrate` appeared on synthetic scoring taps without user activation. Real-device haptic behavior was not verified.
 
 | Screen | Renders? | Errors captured | Notes |
 |---|---|---|---|
@@ -89,14 +108,14 @@ Noise present on every screen, and not listed per row:
 
 ## LiveNowStrip throwing on the dashboard (forge `livenowstrip-throws-on-the-a1784d4e`)
 
-**Root cause.** It is the environment, not the code.
+**Historical diagnosis.** The reported missing-function errors match the reported dev deployment inventory. This does not establish the deployment's current state or rule out separate code failures.
 
 - `functionSpec` of the dev deployment `notable-hippopotamus-913` lists only 16 functions, all in `users.js`, `matches.js` and `teams.js`. It has **no `live.*` functions**.
 - Prod (`tremendous-anaconda-408`) has the full `live.*` set.
 - So in dev, `useQuery(api.live.listLiveFeed, …)` (`LiveNowStrip.jsx:14`) throws on **every** `/app` mount. "After leaving a quick match" is simply the most common way people land on `/app`.
 - The silent boundary (`DashboardLanding.jsx:768`, `fallback={null} captureToSentry={false}`) hides it, apart from the dev console.
 
-**Where the stale push came from.** All 9 local checkouts under `E:\Personal-Projects\scoreeasy` (the root plus 8 worktrees) contain `convex/live.ts`. The push that removed the live functions therefore came from some other checkout, an older branch or another machine. On a shared dev deployment, the last `npx convex dev` push wins.
+**Origin of the drift is unknown.** The previous worker reported finding `convex/live.ts` in all nine inspected local checkouts. That snapshot cannot identify which checkout, branch, machine, or deployment command produced the deployed function inventory. A shared dev deployment still needs coordinated ownership.
 
 **Effects in dev.**
 - `/live/:token` crashes.
@@ -135,15 +154,15 @@ A root-cause comment was added to the forge issue.
 | Badminton tournament: Team 1, then Team 2 at 60 ms (unit test SA-11) | B+1 | B+0 |
 
 **Assessment.**
-- **What the guard protects against does not happen on touch devices.** One physical tap produces one `click`. React handlers do not double-fire.
-- **What it drops is real input.** Deliberate fast repeats run about 6–8 taps per second, i.e. 120–170 ms apart. A scorer catching up on missed rallies, or a basketball scorer entering points, falls inside the window. A tap on the *other* team within 150 ms is dropped too.
+- **Touch-device protection is unverified.** This sweep used synthetic input and did not measure accidental physical double taps or device event delivery.
+- **It drops distinct synthetic input.** The measured cross-team and repeated-tap cases fall inside the shared window. A scorer entering multiple missed events could encounter the same guard; actual device input needs a follow-up run.
 - **The drop is silent.** No haptic, no flash, and the "Last: …" ticker stays on the previous action.
 - **The board stays internally consistent.** The history agrees with what is shown. So this is P1, not P0, but it is a lost point the scorer did not choose to lose.
 - This also explains the colour audit's "8 rapid synthetic taps register as one".
 
 **Recommendation: replace the guard, don't shorten it.**
 1. Guard **per target button**, never across teams or actions.
-2. Key it on distinct gestures: ignore a `click` that shares a `pointerdown` with an already-handled one. Do not use wall time. If a time window is kept as a backstop, ≤ 50 ms catches only accidental bounce.
+2. Evaluate gesture identity and keyboard input rather than assuming a shorter time window is safe. Neither a replacement algorithm nor a safe duration was validated by this audit.
 3. Give every accepted tap the existing haptic plus a press animation. Never ignore a tap silently: if one is rejected (for example while scoring is locked), flash the button.
 4. Add the same guard to guided cricket.
 
@@ -158,17 +177,17 @@ Severity:
 - **P3:** hygiene.
 
 **How each was checked:**
-- **B:** reproduced in the browser sweep.
-- **T:** encoded in a failing `it.fails` test.
-- **C:** verified by reading the code.
-- **S:** suspected; needs a device or more repro.
+- **B:** previously reported browser reproduction (historical rung 5; artifacts unavailable here).
+- **T:** executable expected-failure test (rung 4 when freshly run).
+- **C:** source inspection (rung 2); scenario and absence claims remain unproven at runtime.
+- **S:** suspected; needs a device or more repro (unproven).
 
 ### P0: can lose a point or match
 
 | ID | Finding | Evidence | Repro | Scorer impact | Forge |
 |---|---|---|---|---|---|
 | SA-01 | Badminton tournament game never ends at the 30-point cap | `MonoSetsLiveScore.jsx:193-196` checks `max - min < winBy` *before* `maxPoints` (and the same at `:179-180` for single-game). Quick match gets it right in `quickMatchSets.js:41`. | Badminton round-robin, score to 29-29, then Team 1 +1. The board stays at "SET 1 OF 3, 30–29". Quick match at the same score moves to set 2. **B, T** | The board breaks the BWF rules. The game runs past 30, and standings and history record an impossible score. | `b698365e-92df-488b-ab8c-6fde42a8d0f9` |
-| SA-02 | Storage full at boot means a memory-only session that hides every saved match | `storage.js:186-205`: one test write at import; if it throws, `getStorage()` returns a memory store for reads **and** writes. `isPrivateMode` (`:447`) is never read in `src/`. | Fill localStorage mid-match, score 3, reload. The page lands on the **Setup** screen and the match is invisible. **B, T** | Every point after the disk filled is gone, the existing match looks deleted, and there is no warning. Safari private mode behaves the same way. | `7a50f38f-f619-445d-b791-68a16a422433` |
+| SA-02 | Storage full at boot means a memory-only session that hides every saved match | `storage.js:186-205`: one test write at import; if it throws, `getStorage()` returns a memory store for reads **and** writes. The original source pass found no consumer of `isPrivateMode` (`:447`); that absence is not a runtime guarantee. | Fill localStorage mid-match, score 3, reload. The page lands on the **Setup** screen and the match is invisible. **B, T** | Writes after quota can fail and previously saved data becomes hidden after reload, without a warning. Private-mode behavior needs browser-specific verification. | `7a50f38f-f619-445d-b791-68a16a422433` |
 | SA-03 | Autosave failures are swallowed while the board shows the point | Return value ignored at: `MonoQuickMatch.jsx:588`, `MonoSetsLiveScore.jsx:402`, `MonoGoalsLiveScore.jsx` (~`:323`), `MonoCricketTestLiveScore.jsx:649,655`, `MonoTennisLiveScore.jsx:516` (quick) and `MonoCricketGuidedScorerRoute.jsx:162`. `handleComplete2` (`:257-258`) navigates away even when the save failed. Only `console.warn` fires (`storage.js:223,270`). | Same quota run. The board showed 2–3, the saved draft held `[{score1:2,score2:0}]`, and three `QuotaExceededError` console warnings appeared with no UI. **B** | The scorer keeps scoring into nothing. | `6c1a0fa5-9462-4cf3-a150-297d77606f9d` |
 | SA-04 | The match-winning point or ball is never autosaved | Autosave early-returns once complete: `MonoTennisLiveScore.jsx:513`, `MonoCricketLiveScore.jsx:629`, `MonoCricketTestLiveScore.jsx:639`. Super-over state is missing from `draftState` (`MonoCricketLiveScore.jsx:476-488, 632-641`). | Tennis at match point: win the point, then refresh (or be backgrounded and killed, or hit SA-06) before tapping Save. The board reopens one point earlier. **C** | The deciding point is lost, and a super over restarts. | `0bc3c8a0-36f9-4584-9051-95d08e9cfd03` |
 
@@ -231,23 +250,23 @@ Severity:
   - the PWA precache holds 70 entries / 1217.7 KiB, including showcase chunks behind `SHOW_INTERNAL_ROUTES` (`DashboardShowcase`, `BrutalistColorShowcase`, `MonoMatchCardShowcase`, `LandingDesignA`)
   - nothing is alarming; splitting the tournament scorer per family and keeping showcases out of precache would trim first-install bytes
 
-## What is solid (checked, with evidence)
+## Positive evidence on the original base (bounded to the inspected paths)
 
 - **Quick-match draft.** It is written after every committed change (`MonoQuickMatch.jsx:584-619`). It carries all three undo histories, the serve, innings, free hit and the live id, and the clock is rebuilt from wall time.
   - Verified in the browser for volleyball, football, cricket and tennis, including undo after refresh.
 - **Finishing a quick match.** The result is saved before the draft is cleared. If the save fails, the draft is kept and a warning shows (`MonoQuickMatch.jsx:873-887`).
   - B: "Match saved to History on this device"; History and Stats agree.
 - **Undo across a set boundary.** It restores a full snapshot in quick match, the sets tournament scorer and tennis.
-- **Scoring is local-first.** No scoring path awaits Convex, and awaited mutations sit in try/catch (`useMatchSync.js:50-68`, `useLiveBroadcast.js:66-98`).
-- **The outbox core is sound** (`outbox.js`):
+- **Inspected local-first paths.** The inspected scoring paths update local state before cloud sync; awaited mutations have try/catch in `useMatchSync.js:50-68` and `useLiveBroadcast.js:66-98` (C; not an exhaustive absence proof).
+- **Outbox mechanisms found in source** (`outbox.js`, C; SA-18 still applies):
   - a persisted FIFO queue
   - each acknowledgement saved as it arrives
   - concurrent drains coalesced
   - `finalize` refuses to archive with an undrained tail
   - the server dedupes on `(matchId, clientEventId)` before checking final status
-- **Convex identity.** `authedMutation`/`authedQuery` require identity (`convex/lib/functions.ts`), and `loadOwnedMatch` checks ownership. SA-16 is the exception.
+- **Convex identity wrappers.** `authedMutation`/`authedQuery` require identity (`convex/lib/functions.ts`), and `loadOwnedMatch` checks ownership (C). SA-16 identifies public-query concerns; this is not a complete authorization audit.
 - **Recovery panels.** Tournament, match, result, tennis and resume links all show recovery panels with actions (B).
-- **Native glue:**
+- **Native glue (C; not device-tested):**
   - the back button confirms before leaving a scorer, and its async listener is removed correctly (`backButton.js:74-128`)
   - deep-link parsing is wrapped and limited to https on `scoreeasy.app` (`deepLinks.js:22-33`)
   - plugin calls are platform- and availability-guarded
@@ -283,7 +302,18 @@ One concern per PR, each shipped with a phone-viewport demo per AGENTS.md.
 | D1 | **Decision → PR:** volleyball cap and badminton/pickleball serve | SA-12 | `sportDefaults.js` / `sportRegistry.js`, then one rule source | Rule change | Harsha decides; tests for both scorers |
 | D2 | **Decision → PR:** what a public profile may expose | SA-16 | `convex/matches.ts`, `convex/teams.ts` | Privacy | convex-test with signed-out identity |
 
-P2 and P3 items should ride along with the PR that touches the same file, or go in a follow-up hygiene PR. They should never widen a P0 or P1 PR.
+P2 and P3 items need their own bounded follow-up unless they are required to satisfy the active PR's acceptance criteria. Sharing a file is not sufficient reason to expand a fix PR.
+
+## Parallel ownership and handoff
+
+This PR owns this audit and the two `.stability.test` files only. It preserves `fdf8674` and does not edit app behavior, `AGENTS.md`, `README.md`, coding standards, or their mirrors.
+
+- **Routing worker:** Home/resume (overlap with SA-19), goals, tennis and cricket finish/recovery paths (overlap with SA-04, SA-07, SA-08, SA-09, SA-10). Coordinate acceptance coverage before opening a second fix for the same path.
+- **Sets-cap worker:** shared set helper and rule consumers (SA-01, with possible SA-12 rule-decision overlap). Convert the SA-01 expected-failure test when integrating the fix; do not silently change the sport-rule decision.
+- **Dialogs worker:** shell CSS. No CSS changes belong to this audit; phone-modal evidence must come from that worker's PR.
+- **Docs-drift worker:** `AGENTS.md`, `README.md`, `CODING_STANDARDS.md` and mirrors. Deployment/copy findings above are handoff context, not authorization to edit those files here.
+
+These assignments were supplied in the recovery brief; they do not assert that another worker's changes have landed. Check the current remote before starting each follow-up.
 
 ## Forge issues
 
