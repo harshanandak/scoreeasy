@@ -5,7 +5,9 @@ import {
   getGoalsSports,
   getSportById,
   getSportsByCategory,
+  isTeamColourSport,
 } from './sportRegistry';
+import { COURT_MOTIFS } from '../lib/courtMotifs';
 
 // ─── All 14 sports registered ──────────────────────────────────────────────────
 
@@ -276,5 +278,31 @@ describe('getSportsByCategory', () => {
     const cricket = getSportsByCategory()['Cricket'];
     expect(cricket).toHaveLength(1);
     expect(cricket[0].id).toBe('cricket');
+  });
+});
+
+describe('isTeamColourSport', () => {
+  it('is true only for a sport whose registry entry opts in', () => {
+    const registry = {
+      on: { id: 'on', engine: 'sets', teamColour: true },
+      off: { id: 'off', engine: 'sets' },
+    };
+    expect(isTeamColourSport('on', registry)).toBe(true);
+    expect(isTeamColourSport('off', registry)).toBe(false);
+    expect(isTeamColourSport('missing', registry)).toBe(false);
+  });
+
+  it('is false for unknown ids and prototype keys', () => {
+    expect(isTeamColourSport('nonexistent')).toBe(false);
+    expect(isTeamColourSport('toString')).toBe(false);
+    expect(isTeamColourSport(undefined)).toBe(false);
+  });
+
+  it('only flags sets or goals sports that have a court drawing (never tennis or cricket)', () => {
+    for (const sport of getSportsList().filter((s) => isTeamColourSport(s.id))) {
+      expect(['sets', 'goals']).toContain(sport.engine);
+      expect(['tennis', 'cricket']).not.toContain(sport.id);
+      expect(COURT_MOTIFS[sport.id], sport.id).toBeTruthy();
+    }
   });
 });

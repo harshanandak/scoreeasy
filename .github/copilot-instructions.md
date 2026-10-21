@@ -14,7 +14,7 @@ Reject your own diff if it breaks one of these.
 - **The scorer never loses a point.** A tap that scores must survive a refresh, a backgrounded app, and a flaky court wifi connection. Optimistic UI is fine; silently dropping the write is not.
 - **The board stays truthful.** Score, serve, set/innings state and undo history must agree with each other on every screen. A display that disagrees with the rules of the game is a P0, however pretty it is.
 - **One-handed, courtside, in sunlight.** Touch targets stay thumb-sized and contrast stays legible outdoors. A layout that only works on a desktop viewport is not done.
-- **A match is private to its scorer until shared.** Every Convex function touching match or user data checks identity before it reads.
+- **Private match data stays private (target).** Require identity and ownership checks for scorer-only data. Public profile/search queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision (Forge issue "SA-16 Public username queries return raw match documents without identity", `f210fff9-5107-400a-830b-d5951e7a92b3`). Live spectator reads use visibility/moderation gates; broadcasts default to public visibility.
 - **Sport rules live in one place per sport.** Scoring logic belongs in the sport module, not sprinkled through components.
 
 ## Glossary
@@ -30,9 +30,9 @@ Reject your own diff if it breaks one of these.
 
 1. **Using npm.** This repo is on **bun** (`bun.lock`). `npm install` rewrites the lockfile and the dependency tree.
 2. **Running `npx convex deploy`.** That targets production. Development is `npx convex dev` — always.
-3. **Writing TypeScript into `src/`.** `src/` is 173 JS/JSX files and zero `.ts`. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
+3. **Writing TypeScript into `src/`.** `src/` uses JS/JSX, not TypeScript. `tsconfig.json` sets `checkJs: false`, so the JS you write is not type-checked — but it also sets `strict: true` and includes `src/**/*.ts(x)`, so a `.tsx` file you add *is* checked, strictly. Either way it breaks the plain-JS convention; don't add one.
 4. **Editing `prototype/` when asked to change the app**, or the reverse. They are separate surfaces.
-5. **Assuming the folder name.** This directory is `scoreeasy` (it was `Volleyball` until 2026-09); the project is Score Easy and volleyball is one sport among several.
+5. **Assuming the folder name.** The project is Score Easy (`scoreeasy`); a worktree's directory name can differ. Volleyball is one sport among several.
 6. **Treating `convex/` like ordinary code.** It has non-obvious rules — read `CODING_STANDARDS.md` before writing anything under `convex/`.
 7. **Leaving work stranded locally.** Config and code both need pushing; a session that ends unpushed loses the work.
 
@@ -63,7 +63,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
 - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
 - **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
-- **Main is recoverable:** squash-only, branch deleted on merge, revert or fix forward within the hour, never debug on a red main.
+- **Main recovery policy:** use squash merges, revert or fix forward within the hour, never debug on a red main. GitHub deletes merged branches automatically but also permits merge and rebase merges; squash is our policy, not a repository restriction.
 
 ## Non-interactive shell
 
@@ -71,7 +71,7 @@ Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a 
 
 ## Escape hatch
 
-When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (turning on strict mode, adding the Convex ESLint plugin, changing a sport's rules), state the options and stop rather than picking one quietly.
+When this file contradicts what the code plainly does, the code wins — then say so in your report so the file gets fixed. When a task needs a decision Harsha has not made (enabling JavaScript checking with `checkJs`, changing a sport's rules), state the options and stop rather than picking one quietly. TypeScript strict mode and the Convex ESLint plugin are already enabled.
 
 ---
 
@@ -86,7 +86,14 @@ Sonar and other scanners are graded on the same four classes, not on their own s
 
 ## Convex functions
 
-**Validators.** Every public `query` / `mutation` / `action` declares `args` and `returns` validators. `internal*` functions declare them too — internal only means "not reachable from the client", not "unvalidated".
+**Validators (target).** Every public `query` / `mutation` / `action` should declare `args` and `returns` validators. `internal*` functions should declare them too — internal only means "not reachable from the client", not "unvalidated". All current public functions declare `args`, but `returns` is still missing from:
+
+- `convex/live.ts`: `create`, `scorePoint`, `undo`, `setVisibility`, `pause`, `finalize`.
+- `convex/matches.ts`: `save`, `getByUser`, `getUserStats`, `getRecent`, `getPublicUserStatsByUsername`, `getPublicRecentByUsername`.
+- `convex/teams.ts`: `search`.
+- `convex/users.ts`: `store`, `claimUsername`, `checkUsername`, `search`, `getByUsername`, `completeOnboarding`, `getCurrent`, `getMe`.
+
+The mutation gaps are tracked in Forge task `ed01415e-cf7a-487f-98ad-d6d25b8713b6` ("Add returns validators to public Convex mutations missing them"). The query gaps remain targets; this task covers mutations only.
 
 ```ts
 export const get = query({
@@ -96,7 +103,7 @@ export const get = query({
 });
 ```
 
-**Auth on every public function that touches user data.** `const identity = await ctx.auth.getUserIdentity()` first; throw if null. Ownership is a second check — being logged in is not being allowed.
+**Auth on scorer-only data (target).** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision, tracked in the SA-16 issue linked from `AGENTS.md`. Live spectator reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
 
 **Wrap auth in a custom function, do not repeat it.** Convex has no row-level security; the custom-function wrapper (`convex-helpers` `customQuery` / `customMutation`) is the substitute. A wrapper that injects `ctx.user` is how a rule gets enforced repo-wide instead of per-handler. Use it for basic auth, role checks, and tenant scoping.
 
@@ -132,13 +139,13 @@ Reach for a Convex component when a feature is self-contained and reusable with 
 
 Prefer generated types (`Doc<"matches">`, `Id<"matches">`, `api`/`internal` references) over hand-written shapes. Avoid `any`; where a type is genuinely unknown use `unknown` and narrow.
 
-Note the actual repo state: `tsconfig.json` has `strict: true` and `checkJs: false`, and `src/` is JSX/JS with zero `.ts` files. Because `checkJs` is off, `strict` only governs the TypeScript under `convex/` — it costs zero errors there and must stay green. Turning `checkJs` on is a separate decision: it currently surfaces 1114 errors across 55 JS files, so do not assume JS is type-checked.
+Note the actual repo state: `tsconfig.json` has `strict: true` and `checkJs: false`, and `src/` uses JSX/JS rather than TypeScript. `bun run type-check` checks the included TypeScript under `convex/`; it does not type-check JS/JSX. Turning `checkJs` on is a separate decision. Run `bunx tsc --noEmit -p tsconfig.json --checkJs true` for current JavaScript diagnostics rather than relying on a stored error count.
 
 ## Lint
 
-`bun run lint` runs ESLint with `eslint-plugin-react-hooks` over `**/*.{js,jsx}`, plus `@convex-dev/eslint-plugin` over `convex/**/*.ts` (parsed by `@typescript-eslint/parser`).
+`bun run lint` runs ESLint over the repo. `eslint-plugin-react-hooks` is registered for `**/*.{js,jsx}`, but no React Hooks rules are enabled. `@convex-dev/eslint-plugin` rules apply to `convex/**/*.ts` (parsed by `@typescript-eslint/parser`).
 
-Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-validator`, `no-schema-import-cycle`. Warnings: `no-filter-in-query`, `no-top-of-hour-crons`, and `explicit-table-ids` (a warning only until the 5 existing `db.get`/`db.patch` call sites in `matches.ts` and `users.ts` pass an explicit table name). Everything else in this file is enforced by review.
+Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-validator`, `no-schema-import-cycle`. Warnings: `no-filter-in-query`, `no-top-of-hour-crons`, and `explicit-table-ids`. Explicit table IDs are still missing in several source and test files; run `bunx eslint convex` for the current list. Other standards in this file are review targets, not additional lint rules.
 
 ---
 
@@ -146,17 +153,17 @@ Machine-enforced as errors: `no-old-registered-function-syntax`, `require-args-v
 
 ## 7-Stage TDD-First Workflow
 
-This project enforces a **strict TDD-first development workflow** with 7 stages:
+This project follows a **TDD-first development workflow** with 7 stages. Stage instructions guide agents; the Git hooks enforce only the checks listed below.
 
 | Stage | Command     | Purpose                                                   | Required For |
 |-------|-------------|-----------------------------------------------------------|--------------|
 | 1     | `/plan`     | Design intent → research → branch + worktree + task list | Critical, Standard, Refactor |
-| 2     | `/dev`      | Subagent-driven TDD per task (spec + quality review)     | All types    |
+| 2     | `/dev`      | Subagent-driven TDD per task (spec + quality review)     | All except Docs |
 | 3     | `/validate`    | Validate + 4-phase debug mode on failure                    | All types    |
 | 4     | `/ship`     | Create PR with documentation                             | All types    |
-| 5     | `/review`   | Address ALL PR feedback                                  | Critical, Standard |
-| 6     | `/premerge` | Complete docs on feature branch, hand off PR             | All types    |
-| 7     | `/verify`   | Post-merge health check (CI, deployments)                | All types    |
+| 5     | `/review`   | Triage feedback under the four must-fix classes in `AGENTS.md`; file advisory follow-ups | Critical, Standard |
+| 6     | `/premerge` | Complete docs on feature branch, hand off PR             | Critical, Standard, Refactor |
+| 7     | `/verify`   | Post-merge health check (CI, deployments)                | Critical (after merge) |
 
 **Utility**: `/status` — Context check before starting work (not a numbered stage)
 
@@ -274,14 +281,14 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
 ## Documentation Index (Context Pointers)
 
 **Detailed command instructions** are located in:
-- [.claude/commands/status.md](.claude/commands/status.md) - How to check current context (utility)
-- [.claude/commands/plan.md](.claude/commands/plan.md) - How to plan features (3 phases: design intent + research + branch/worktree/tasks)
-- [.claude/commands/dev.md](.claude/commands/dev.md) - How to implement with subagent-driven TDD and decision gate
-- [.claude/commands/validate.md](.claude/commands/validate.md) - How to run validation (with HARD-GATE exit)
-- [.claude/commands/ship.md](.claude/commands/ship.md) - How to create PRs
-- [.claude/commands/review.md](.claude/commands/review.md) - How to address PR feedback (with HARD-GATE exit)
-- [.claude/commands/premerge.md](.claude/commands/premerge.md) - How to complete docs and hand off PR for merge
-- [.claude/commands/verify.md](.claude/commands/verify.md) - How to verify post-merge health
+- [.claude/commands/status.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/status.md) - How to check current context (utility)
+- [.claude/commands/plan.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/plan.md) - How to plan features (3 phases: design intent + research + branch/worktree/tasks)
+- [.claude/commands/dev.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/dev.md) - How to implement with subagent-driven TDD and decision gate
+- [.claude/commands/validate.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/validate.md) - How to run validation (with HARD-GATE exit)
+- [.claude/commands/ship.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/ship.md) - How to create PRs
+- [.claude/commands/review.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/review.md) - How to address PR feedback (with HARD-GATE exit)
+- [.claude/commands/premerge.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/premerge.md) - How to complete docs and hand off PR for merge
+- [.claude/commands/verify.md](https://github.com/harshanandak/scoreeasy/blob/master/.claude/commands/verify.md) - How to verify post-merge health
 
 **Planning documents** (created by `/plan`, consumed by `/dev`):
 - `docs/plans/YYYY-MM-DD-<slug>-design.md` - Design intent + technical research
@@ -293,8 +300,6 @@ TDD block here. Writing the test first is a rule you follow, not one the hook en
   `docs/agents/forge-workflow.md` is one of the sources `bun run sync:agents` composes
   into the harness mirrors.
 - Tool setup and enforcement details live in `AGENTS.md` and `CODING_STANDARDS.md`.
-  There are no `docs/TOOLCHAIN.md` or `docs/VALIDATION.md` files in this repo — if you
-  were sent here looking for them, they never existed.
 
 ## Descriptive Context Convention
 
@@ -323,14 +328,14 @@ Check by eye that: (1) the issue has a description, (2) at least one stage-trans
 comment exists, (3) the most recent transition carries a summary, (4) design metadata is
 set if the issue is past the plan stage.
 
-This checks: (1) issue has a description, (2) at least one stage transition exists, (3) most recent transition has a summary, (4) design metadata is set if past the plan stage. Exits 0 when context checks run (even if warnings are found); exits 1 only if the issue cannot be retrieved.
+`forge issue show` retrieves the issue; it does not automatically validate these context fields.
 
 ### Field Definitions
 
-- **Summary**: 1-2 sentence recap of what was accomplished in this stage. Example: `--summary "All 5 tasks done, 1 decision gate fired"`
-- **Decisions**: Key choices made during this stage that affect downstream work. Example: `--decisions "Used streaming parser over DOM for memory efficiency"`
-- **Artifacts**: File paths or URLs produced by this stage. Example: `--artifacts "lib/parser.js test/parser.test.js docs/plans/2026-03-26-parser-design.md"`
-- **Next**: Guidance for the next stage on what to focus on. Example: `--next "Run lint first — streaming approach may trigger no-await rule"`
+- **Summary**: 1-2 sentence recap of what was accomplished in this stage. Example: `summary: All 5 tasks done, 1 decision gate fired`
+- **Decisions**: Key choices made during this stage that affect downstream work. Example: `decisions: Used streaming parser over DOM for memory efficiency`
+- **Artifacts**: File paths or URLs produced by this stage. Example: `artifacts: lib/parser.js test/parser.test.js docs/plans/2026-03-26-parser-design.md`
+- **Next**: Guidance for the next stage on what to focus on. Example: `next: Run lint first`
 
 ### Usage in Stage Transitions
 
@@ -346,12 +351,11 @@ next: Run type check and lint"
 
 ### Enforcement Level
 
-This convention is **advisory only**. The `validate` subcommand prints warnings but always exits 0. It does not block any stage transition. The goal is to build good habits, not to create friction.
+This context convention is **advisory only** and is checked by the agent. It is separate from the `/validate` quality checks and is not an automatic CLI gate.
 
 ## Issue Tracker
 
-Issues live in Forge's own tracker (`forge issue`, stored in `.git/forge/records.sqlite`
-and shared by every worktree).
+Issues live in Forge's own tracker. Use `forge issue` rather than relying on a particular on-disk storage path.
 
 ### Quick Reference
 
@@ -361,7 +365,7 @@ forge issue show <id>                               # View issue details and sta
 forge issue claim <id>                              # Claim work
 forge issue update <id> --status in_progress        # Move an issue along
 forge issue comment <id> "stage: plan -> dev ..."   # Record a stage transition
-forge issue create --title "..." --type task        # File a follow-up
+forge issue create "..." --type task                # File a follow-up
 forge issue close <id> --reason "..."               # Complete work
 ```
 
@@ -381,7 +385,8 @@ forge issue close <id> --reason "..."               # Complete work
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
-    git pull --rebase
+    git fetch origin
+    git merge --no-edit origin/master
     git push
     git status  # MUST show "up to date with origin"
    ```
@@ -410,8 +415,4 @@ git commit -m "refactor: extract helpers"      # REFACTOR phase
 
 ## MCP servers
 
-Configured in `.mcp.json`:
-
-- **github** — repository integration (usually built-in)
-- **parallel-ai** — web research and data enrichment
-- **context7** — up-to-date library documentation
+`.mcp.json` configures **convex**. Other integrations depend on the harness configuration; inspect the available tools for the current session.
