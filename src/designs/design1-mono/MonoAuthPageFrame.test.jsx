@@ -25,6 +25,7 @@ function renderFrame(initialEntry = '/login') {
           )}
         />
         <Route path="/volleyball/quick" element={<p>Guest scoring</p>} />
+        <Route path="/play" element={<p>Play hub</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -68,6 +69,15 @@ describe('MonoAuthPageFrame', () => {
 
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
     expect(screen.getByText('Guest scoring')).toBeInTheDocument();
+  });
+
+  it('sends a guest to the Play hub to pick a game when no return target is given', () => {
+    renderFrame('/login');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue as guest' }));
+
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
+    expect(screen.getByText('Play hub')).toBeInTheDocument();
   });
 
   it('keeps helper text optional', () => {
