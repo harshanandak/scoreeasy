@@ -1,0 +1,149 @@
+// Court line drawings (Direction E): one per sets/goals sport, drawn faintly behind the score.
+//
+// Each drawing is SVG body markup in viewBox 0 0 400 260, black stroke on transparent, team A's
+// half on the left and B's on the right, to regulation proportions. They are used as a CSS mask,
+// so the line colour and alpha always come from the colour engine (--team-x-motif) and stay
+// contrast-gated. Volleyball, badminton, football, basketball and kabaddi are ported from
+// docs/plans/2026-07-26-icp-games-design/directions/e-broadcast/motifs.html.
+
+// The same markup again, mirrored about the centre line (x = 200): draw A's half once.
+const mirror = (s) => `${s}<g transform='matrix(-1 0 0 1 400 0)'>${s}</g>`;
+const dots = (pts, r) => pts.map(([x, y]) => `<circle cx='${x}' cy='${y}' r='${r}' fill='#000' stroke='none'/>`).join('');
+const hatch = (id) =>
+  `<defs><pattern id='${id}' width='7' height='7' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>` +
+  `<path d='M0 0V7' stroke='#000' stroke-width='1.3'/></pattern></defs>`;
+
+export const COURT_MOTIFS = Object.freeze({
+  // court 18 x 9 m, net band with mesh + posts, 3 m attack lines with their dashed extensions
+  volleyball:
+    `<rect x='30' y='45' width='340' height='170'/>` +
+    mirror(`<path d='M143.3 45V215'/><path d='M143.3 41V22M143.3 219V238' stroke-dasharray='4 4'/>`) +
+    `<rect x='195' y='24' width='10' height='212' stroke-width='1.6'/>` +
+    `<path d='${Array.from({ length: 20 }, (_, i) => `M195 ${34 + i * 10}H205`).join('')}' stroke-width='1'/>` +
+    dots([[200, 18], [200, 242]], 4),
+
+  // doubles court 13.4 x 6.1 m: singles + doubles sidelines, short/long service lines, centre line, net, shuttle
+  badminton:
+    `<rect x='30' y='52' width='340' height='156'/><path d='M30 63.7H370M30 196.3H370'/>` +
+    mirror(`<path d='M149.7 52V208M49.3 52V208M30 130H149.7'/>`) +
+    `<path d='M200 38V222' stroke-width='3'/>` +
+    dots([[200, 36], [200, 224]], 3.5) +
+    `<g transform='translate(268 236) rotate(-58)' stroke-width='1.8'><path d='M-5 0a5 5 0 0 0 10 0Z' fill='#000'/>` +
+    `<path d='M-5 0L-11 -22H11L5 0M-2 0L-4 -22M2 0L4 -22M-9 -14H9'/></g>`,
+
+  // table 2.74 x 1.525 m: edge lines, doubles centre line, net overhanging the sides, posts, ball
+  tabletennis:
+    `<rect x='30' y='35.5' width='340' height='189'/><path d='M30 130H370' stroke-width='1.6'/>` +
+    `<path d='M200 16.5V243.5' stroke-width='3.4'/>` +
+    dots([[200, 14], [200, 246]], 3.5) +
+    `<circle cx='292' cy='92' r='5' stroke-width='1.8'/>`,
+
+  // doubles court 23.77 x 10.97 m: singles sidelines, service lines, centre service line, centre marks, net
+  tennis:
+    `<rect x='30' y='51.5' width='340' height='157'/><path d='M30 71.1H370M30 188.9H370'/>` +
+    mirror(`<path d='M108.5 71.1V188.9M108.5 130H200M30 130H37'/>`) +
+    `<path d='M200 38.5V221.5' stroke-width='3'/>` +
+    dots([[200, 36], [200, 224]], 3.5),
+
+  // court 13.41 x 6.10 m: hatched non-volley zone (kitchen) either side of the net, centre lines, net
+  pickleball:
+    hatch('k') +
+    `<rect x='30' y='52.7' width='340' height='154.6'/>` +
+    `<rect x='146' y='52.7' width='108' height='154.6' fill='url(#k)' stroke-width='1.6'/>` +
+    mirror(`<path d='M30 130H146'/>`) +
+    `<path d='M200 45V215' stroke-width='3'/>` +
+    dots([[200, 42], [200, 218]], 3.5),
+
+  // court 6.4 x 9.75 m seen from above, front wall at the top: short line, half-court line,
+  // service boxes; A takes the left box, B the right
+  squash:
+    `<rect x='124.5' y='15' width='151' height='230'/><path d='M124.5 15H275.5' stroke-width='4'/>` +
+    `<path d='M124.5 143.4H275.5M200 143.4V245'/>` +
+    mirror(`<path d='M162.3 143.4V181.2H124.5'/>`) +
+    `<circle cx='232' cy='70' r='4' stroke-width='1.8'/>`,
+
+  // pitch 105 x 68 m: halfway, centre circle, boxes, spots, D, goals, corner arcs
+  football:
+    `<rect x='20' y='13' width='360' height='234'/><path d='M200 13V247'/><circle cx='200' cy='130' r='31.4'/>` +
+    dots([[200, 130]], 2.4) +
+    mirror(
+      `<path d='M20 61H76.6V199H20M20 98.6H38.9V161.4H20M76.6 104.9A31.4 31.4 0 0 1 76.6 155.1` +
+        `M20 117.5H13V142.5H20M20 16.4A3.4 3.4 0 0 0 23.4 13M23.4 247A3.4 3.4 0 0 0 20 243.6'/>` +
+        dots([[57.7, 130]], 2),
+    ),
+
+  // court 28 x 15 m: keys, free-throw circles, 3-point arcs, hoops, centre circle
+  basketball:
+    `<rect x='20' y='33.5' width='360' height='193'/><path d='M200 33.5V226.5'/><circle cx='200' cy='130' r='23'/>` +
+    mirror(
+      `<path d='M20 98.5H94.6V161.5H20M94.6 107A23 23 0 0 1 94.6 153'/>` +
+        `<path d='M94.6 107A23 23 0 0 0 94.6 153' stroke-dasharray='4 4'/>` +
+        `<path d='M20 45.1H58.3A86.8 86.8 0 0 1 58.3 214.9H20'/><circle cx='40.3' cy='130' r='3.2' stroke-width='1.8'/>`,
+    ),
+
+  // pitch 91.4 x 55 m: centre line, 23 m lines, shooting circles, dashed 5 m circles, spots, goals
+  hockey:
+    `<rect x='20' y='21.65' width='360' height='216.7'/><path d='M200 21.65V238.35'/>` +
+    mirror(
+      `<path d='M110.2 21.65V238.35'/>` +
+        `<path d='M20 65.2A57.6 57.6 0 0 1 77.6 122.8V137.2A57.6 57.6 0 0 1 20 194.8'/>` +
+        `<path d='M20 45.5A77.3 77.3 0 0 1 97.3 122.8V137.2A77.3 77.3 0 0 1 20 214.5' stroke-dasharray='4 6'/>` +
+        `<path d='M20 122.8H15.2V137.2H20'/>` +
+        dots([[45.2, 130]], 2),
+    ),
+
+  // court 40 x 20 m: centre line, 6 m goal area, dashed 9 m free-throw line, 7 m and 4 m marks, goals
+  handball:
+    `<rect x='20' y='40' width='360' height='180'/><path d='M200 40V220'/>` +
+    mirror(
+      `<path d='M20 62.5A54 54 0 0 1 74 116.5V143.5A54 54 0 0 1 20 197.5'/>` +
+        `<path d='M46.6 40A81 81 0 0 1 101 116.5V143.5A81 81 0 0 1 46.6 220' stroke-dasharray='6 5'/>` +
+        `<path d='M83 125.5V134.5M56 128.2V131.8M20 116.5H11V143.5H20'/>`,
+    ),
+
+  // court 40 x 20 m: centre circle and spot, 6 m penalty areas, penalty and 10 m marks, goals, corner arcs
+  futsal:
+    `<rect x='20' y='40' width='360' height='180'/><path d='M200 40V220'/><circle cx='200' cy='130' r='27'/>` +
+    dots([[200, 130]], 2.4) +
+    mirror(
+      `<path d='M20 62.5A54 54 0 0 1 74 116.5V143.5A54 54 0 0 1 20 197.5'/>` +
+        `<path d='M20 116.5H11V143.5H20M20 42.3A2.3 2.3 0 0 0 22.3 40M22.3 220A2.3 2.3 0 0 0 20 217.7'/>` +
+        dots([[74, 130], [110, 130]], 2),
+    ),
+
+  // mat 13 x 10 m + 1 m lobbies, midline, baulk lines, dashed bonus lines
+  kabaddi:
+    `<rect x='30' y='16' width='340' height='228'/><path d='M30 35H370M30 225H370'/>` +
+    `<path d='M200 16V244' stroke-width='3.4'/>` +
+    mirror(`<path d='M102 35V225'/><path d='M75.7 35V225' stroke-dasharray='7 6'/>`),
+
+  // pitch 100 x 70 m + 10 m in-goals: try lines, halfway, 22 m lines, dashed 10 m, 5 m and 15 m lines, posts
+  rugby:
+    `<rect x='20' y='25' width='360' height='210'/><path d='M200 25V235'/>` +
+    `<path d='M50 40H350M50 220H350M50 70H350M50 190H350' stroke-width='1.4' stroke-dasharray='5 9'/>` +
+    mirror(
+      `<path d='M50 25V235' stroke-width='3'/><path d='M116 25V235'/><path d='M170 25V235' stroke-dasharray='6 5'/>` +
+        `<path d='M50 121.6V138.4' stroke-width='3.4'/>` +
+        dots([[50, 121.6], [50, 138.4]], 2.6),
+    ),
+});
+
+const svgFor = (markup, viewBox) =>
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${viewBox}' preserveAspectRatio='xMidYMid slice' ` +
+  `fill='none' stroke='#000' stroke-width='2.5' stroke-linecap='round'>${markup}</svg>`;
+
+const VIEWBOX = { a: '0 0 200 260', b: '200 0 200 260' };
+
+/**
+ * The sport's court drawing as a CSS `url(...)` for `mask-image`.
+ * @param {string} sportId registry id, e.g. 'football'
+ * @param {'a' | 'b'} [half] crop to that team's half (for the point keys); whole court when omitted
+ * @returns {string | null} null for sports without a drawing
+ */
+export function motifMaskUrl(sportId, half) {
+  const markup = Object.prototype.hasOwnProperty.call(COURT_MOTIFS, sportId) ? COURT_MOTIFS[sportId] : null;
+  if (!markup) return null;
+  const svg = svgFor(markup, VIEWBOX[half] ?? '0 0 400 260');
+  // encodeURIComponent leaves ' alone; escape it too so the url survives any quoting context.
+  return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, '%27')}")`;
+}
