@@ -1,0 +1,411 @@
+/* Team-colour scorer, "B · Mono hard shell" (BLEND-GOVERNANCE §7, §4): the app's own brutalist
+   language (ink borders, hard offset shadow, mono labels) around flat team-colour keys. Each key is
+   the team's engine core colour with the engine's on-colour text (labels >= 4.6:1; the large
+   numerals read 6.7:1 and up on every preset, no scrim needed). Thumb-first: Undo sits at the bottom. */
+
+.tsb {
+  --tsb-num: 'Barlow Condensed', var(--se-font-sans), system-ui, sans-serif;
+  --tsb-ink: var(--se-color-ink);
+  --tsb-ink-2: #45454d;
+  --tsb-shadow: 3px 3px 0 var(--tsb-ink);
+  --tsb-shadow-key: 4px 4px 0 var(--tsb-ink);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--se-color-canvas);
+  color: var(--tsb-ink);
+  font-family: var(--se-font-sans);
+}
+
+/* reset only the board's own controls; embedded app controls (the live bar) keep their styles */
+.tsb :where(.tsb-btn, .tsb-key, .tsb-row, .tsb-scrim) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tsb-chip,
+.tsb-last,
+.tsb-who,
+.tsb-word,
+.tsb-srvtag,
+.tsb .tsb-finish,
+.tsb-undo-t {
+  font-family: var(--se-font-mono);
+  text-transform: uppercase;
+}
+
+/* ---- header ---- */
+.tsb-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 14px 8px 16px;
+}
+
+.tsb-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.tsb-title b {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsb-title small {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--tsb-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsb .tsb-finish {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--tsb-ink);
+  border-radius: 8px;
+  background: var(--se-color-surface);
+  box-shadow: var(--tsb-shadow);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* ---- status chips + last action ---- */
+.tsb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 2px 12px 8px;
+}
+
+.tsb-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border: 1.5px solid var(--tsb-ink);
+  border-radius: 6px;
+  background: var(--se-color-surface);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.tsb-chip-live {
+  gap: 6px;
+  border-color: #0f6a32;
+  background: var(--se-blend-green-wash);
+  color: #0f6a32;
+}
+
+.tsb-chip-live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tsb-last {
+  min-height: 1.6em;
+  padding: 0 16px 10px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--tsb-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- the two point keys: flat team colour in the hard shell ---- */
+.tsb-keys {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px 0 12px;
+  min-height: 260px;
+}
+
+.tsb .tsb-key {
+  position: relative;
+  min-height: 240px;
+  border: 2px solid var(--tsb-ink);
+  border-radius: 14px;
+  box-shadow: var(--tsb-shadow-key);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 6px;
+  text-align: center;
+  touch-action: manipulation;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+/* press: the key sinks into its shadow (hard-shell press; the target stays under the thumb) */
+.tsb .tsb-key:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--tsb-ink);
+}
+
+.tsb .tsb-key:focus-visible {
+  outline: 3px solid var(--tsb-ink);
+  outline-offset: 4px;
+}
+
+.tsb .tsb-key-a {
+  background: var(--team-a-core);
+  color: var(--team-a-on);
+}
+
+.tsb .tsb-key-b {
+  background: var(--team-b-core);
+  color: var(--team-b-on);
+}
+
+.tsb-srvtag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+/* inverted chip: the team's on-colour as the fill, the team colour as the text */
+.tsb-key-a .tsb-srvtag {
+  background: var(--team-a-on);
+  color: var(--team-a-core);
+}
+
+.tsb-key-b .tsb-srvtag {
+  background: var(--team-b-on);
+  color: var(--team-b-core);
+}
+
+.tsb-who {
+  max-width: 92%;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsb-big {
+  font: 800 clamp(6rem, min(38vw, 24vh), 10rem)/0.9 var(--tsb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin: 8px 0 6px;
+}
+
+.tsb-word {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+/* ---- bottom thumb zone: undo + options ---- */
+.tsb-bar {
+  display: grid;
+  grid-template-columns: 1fr 60px;
+  gap: 12px;
+  padding: 14px 16px 16px 12px;
+}
+
+.tsb .tsb-undo,
+.tsb .tsb-more {
+  min-height: 60px;
+  border: 2px solid var(--tsb-ink);
+  border-radius: 12px;
+  background: var(--se-color-surface);
+  box-shadow: var(--tsb-shadow);
+}
+
+.tsb .tsb-undo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  text-align: left;
+}
+
+.tsb .tsb-more {
+  display: grid;
+  place-items: center;
+}
+
+.tsb .tsb-undo:active:not(:disabled),
+.tsb .tsb-more:active,
+.tsb .tsb-finish:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--tsb-ink);
+}
+
+.tsb .tsb-undo:disabled {
+  cursor: default;
+  color: var(--tsb-ink-2);
+  box-shadow: none;
+  border-style: dashed;
+}
+
+.tsb-undo-t {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.tsb-undo-w {
+  margin-left: auto;
+  font-family: var(--se-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tsb-ink-2);
+}
+
+/* ---- options sheet ---- */
+.tsb-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.tsb-sheet-layer[hidden] {
+  display: none;
+}
+
+.tsb .tsb-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 12, 14, 0.4);
+}
+
+.tsb-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 10px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+  border: 2px solid var(--tsb-ink);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  background: var(--se-color-canvas);
+}
+
+.tsb-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 12px 4px;
+  font-size: 1rem;
+}
+
+.tsb .tsb-sheet-close {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--tsb-ink);
+  border-radius: 8px;
+  background: var(--se-color-surface);
+  box-shadow: var(--tsb-shadow);
+  font-weight: 700;
+}
+
+.tsb-sheet-live {
+  margin-bottom: 14px;
+}
+
+.tsb-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.tsb-set {
+  padding: 6px 10px;
+  border: 1.5px solid var(--tsb-ink);
+  border-radius: 6px;
+  background: var(--se-color-surface);
+  font: 700 0.72rem var(--se-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* the winner's colour as a thick bottom edge; colour is never the only cue (the score says it) */
+.tsb-win-a {
+  border-bottom: 4px solid var(--team-a-core);
+}
+
+.tsb-win-b {
+  border-bottom: 4px solid var(--team-b-core);
+}
+
+.tsb-sheet-group {
+  margin-bottom: 14px;
+  border: 2px solid var(--tsb-ink);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--se-color-surface);
+  box-shadow: var(--tsb-shadow);
+}
+
+.tsb .tsb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.tsb .tsb-row + .tsb-row {
+  border-top: 1.5px solid var(--tsb-ink);
+}
+
+.tsb-row-aside {
+  font-family: var(--tsb-num);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.tsb .tsb-row-danger {
+  color: var(--se-color-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsb .tsb-key,
+  .tsb .tsb-key:active {
+    transition: none;
+    transform: none;
+  }
+}

@@ -1,0 +1,182 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
+
+// Direction E in quick match: team colours picked on setup, kept in the draft, shared to the
+// live meta, and painted on the board for sports that opt in (volleyball first). Drives the real
+// component, seeded through the draft like MonoQuickMatch.broadcast.test.jsx.
+
+const live = vi.hoisted(() => ({
+  point: vi.fn(() => Promise.resolve()),
+  undo: vi.fn(() => Promise.resolve()),
+  finalize: vi.fn(() => Promise.resolve()),
+  goLive: vi.fn(() => Promise.resolve({ token: 'TOK', matchId: 'mid' })),
+  setVisibility: vi.fn(() => Promise.resolve()),
+  reset: vi.fn(),
+}));
+
+const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null }));
+const storage = vi.hoisted(() => ({ saveData: null }));
+
+vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+  useParams: () => ({ sport: ctx.sport }),
+  useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),
+  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+}));
+vi.mock('../../hooks/useAuth', () => ({
+  useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: true }),
+}));
+vi.mock('../../hooks/useLiveBroadcast', () => ({
+  useLiveBroadcast: () => ({ ...live, isLive: false, token: null, error: null }),
+}));
+vi.mock('../../lib/live/liveSession', () => ({
+  getConsent: () => 'accepted',
+  setConsent: vi.fn(),
+  loadSession: () => null,
+  saveSession: vi.fn(),
+}));
+vi.mock('../../utils/storage', () => {
+  storage.saveData = vi.fn(() => true);
+  return {
+    loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+    saveData: storage.saveData,
+    clearData: vi.fn(),
+    saveQuickMatch: vi.fn(() => true),
+    isStaleQuickMatchDraft: () => false,
+  };
+});
+
+const { default: MonoQuickMatch } = await import('./MonoQuickMatch.jsx');
+
+function seedSets(sport, colours = {}) {
+  ctx.sport = sport;
+  ctx.draft = {
+    phase: 'scoring', sport, team1Name: 'Reds', team2Name: 'Blues', lastAction: '', quickMatchId: 3003,
+    format: { type: 'best-of', sets: 3, target: 25, winBy: 2 },
+    sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0,
+    ...colours,
+  };
+}
+
+const board = () => document.querySelector('[data-team-board]');
+const keys = () => [...document.querySelectorAll('.tsb-key')];
+
+beforeEach(() => {
+  ctx.draft = null;
+  live.goLive.mockClear();
+  live.point.mockClear();
+  storage.saveData.mockClear();
+});
+
+describe('quick match team colour: volleyball board', () => {
+  it('restores the picked colours from the draft and paints the board with them', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+
+    const expected = deriveTeamColours('#facc15', '#16a34a');
+    expect(board().style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
+    expect(board().style.getPropertyValue('--team-b-core')).toBe(expected.B.core);
+    expect(keys().map((k) => k.dataset.team)).toEqual(['a', 'b']);
+  });
+
+  it('shares the colours to the live meta', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    const descriptor = live.goLive.mock.calls[0][0];
+    expect(descriptor.teamA).toEqual({ name: 'Reds', color: '#facc15' });
+    expect(descriptor.teamB).toEqual({ name: 'Blues', color: '#16a34a' });
+  });
+
+  it('keeps the colours in the saved draft', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add point for Reds' }));
+    await waitFor(() => expect(storage.saveData).toHaveBeenCalled());
+    const draft = storage.saveData.mock.calls.at(-1)[1];
+    expect(draft.team1Color).toBe('#facc15');
+    expect(draft.team2Color).toBe('#16a34a');
+  });
+
+  it('falls back to red v blue for an old draft without colours, and for a crafted colour', async () => {
+    seedSets('volleyball', { team2Color: 'url(//x)' });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+    const expected = deriveTeamColours(DEFAULT_TEAM_COLOURS.a, DEFAULT_TEAM_COLOURS.b);
+    expect(board().style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
+    expect(board().style.getPropertyValue('--team-b-core')).toBe(expected.B.core);
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    expect(live.goLive.mock.calls[0][0].teamB.color).toBe(DEFAULT_TEAM_COLOURS.b);
+  });
+
+  it('keeps colour with the team when sides swap (from the options sheet)', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Swap sides' }));
+    expect(keys().map((k) => k.dataset.team)).toEqual(['b', 'a']);
+    expect(keys()[0]).toHaveTextContent('Blues');
+  });
+
+  it('scores, says what undo will do, undoes, and corrects from the sheet', async () => {
+    seedSets('volleyball');
+    render(<MonoQuickMatch />);
+    const reds = await screen.findByRole('button', { name: 'Add point for Reds' });
+    fireEvent.click(reds);
+    await waitFor(() => expect(reds).toHaveTextContent('1'));
+    expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('back to 0–0');
+    // lead is not colour-coded: the key keeps its team class whatever the score
+    expect(reds).toHaveClass('tsb-key-a');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    await waitFor(() => expect(reds).toHaveTextContent('0'));
+    expect(screen.getByRole('button', { name: 'Undo last action' })).toBeDisabled();
+
+    fireEvent.click(reds);
+    await waitFor(() => expect(reds).toHaveTextContent('1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Subtract one from Reds' }));
+    await waitFor(() => expect(reds).toHaveTextContent('0'));
+  });
+
+  it('keeps the live-sharing bar mounted while the options sheet is closed', async () => {
+    seedSets('volleyball');
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+    expect(screen.queryByRole('dialog', { name: 'Match options' })).toBeNull();
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+  });
+});
+
+describe('quick match team colour: sports not yet opted in', () => {
+  it('leaves the badminton board and live meta as they were', async () => {
+    seedSets('badminton', { team1Color: '#facc15' });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+    expect(board()).toBeNull();
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    expect(live.goLive.mock.calls[0][0].teamA).toEqual({ name: 'Reds' });
+  });
+});
+
+describe('quick match team colour: setup', () => {
+  it('offers a colour picker per team for volleyball', async () => {
+    ctx.sport = 'volleyball';
+    render(<MonoQuickMatch />);
+    const teamA = await screen.findByRole('radiogroup', { name: 'Team A colour' });
+    expect(screen.getByRole('radiogroup', { name: 'Team B colour' })).toBeInTheDocument();
+    const yellow = teamA.querySelector('[aria-label="Yellow"]');
+    fireEvent.click(yellow);
+    expect(yellow).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('offers no picker for a sport that has not opted in', async () => {
+    ctx.sport = 'badminton';
+    render(<MonoQuickMatch />);
+    await screen.findByLabelText('Team A name');
+    expect(screen.queryByRole('radiogroup', { name: 'Team A colour' })).toBeNull();
+  });
+});

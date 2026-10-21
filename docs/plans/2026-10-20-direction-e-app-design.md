@@ -26,6 +26,22 @@ This is the v1 release cut: ship it, don't polish it (see the shipping regime in
 | Engine delivery | Plain-JS engine → CSS custom properties → Tailwind theme colours (`@theme`). Tailwind chosen over StyleX: already installed and wired, no new compile plugin, and the engine's runtime CSS variables map straight onto Tailwind colours. |
 | Motifs | Court drawings for all 12 sports in scope. |
 
+## Design revision (2026-10-21): the scorer screen
+
+Recolouring the classic arena grid, and then a port of the mockup's soft "lean scorer", were both
+judged not good enough on a phone (redundant names and serving cues, muddy scrims, a court drawing
+that read as gridlines, Undo out of thumb reach, a soft look that clashed with the brutalist app).
+Harsha picked option **B · Mono hard shell** from three rendered options:
+
+- Thumb-first layout: status (title, Finish, chips, last action) at the top, the two point keys in the
+  middle, **Undo** (saying where it goes back to) and the options sheet in the bottom thumb zone.
+- Keys are the team's flat engine core colour inside the app's own hard shell (ink border, hard offset
+  shadow, mono labels). Numerals read 6.7:1 and up on every preset without a scrim.
+- Names appear once (on the keys); serving appears once (a tag on the serving key).
+- Swap, −1 corrections, completed sets, live sharing and Discard live in the options sheet.
+- The court drawing is **not** on the keys (it fought the flat fills); `courtMotifs.js` stays for the
+  spectator page and later use. Success criterion 2's "court drawing behind" is dropped for the scorer.
+
 ## Success criteria
 
 1. A scorer can pick a colour for each team on quick-match setup (6 preset swatches + custom), and the choice survives a refresh mid-match.

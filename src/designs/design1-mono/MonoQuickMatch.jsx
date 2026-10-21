@@ -7,7 +7,11 @@ import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calcu
 import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { clearData, saveData, loadData, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
-import { getSportById } from '../../models/sportRegistry';
+import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
+import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
+import TeamColourPicker from './TeamColourPicker';
+import { useTeamColours } from './scoring/useTeamColours';
+import TeamSetsBoard from './scoring/TeamSetsBoard';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
@@ -371,6 +375,11 @@ export default function MonoQuickMatch() {
   const wizardTeams = Array.isArray(location.state?.teams) ? location.state.teams : null;
   const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || 'Team A');
   const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || 'Team B');
+  // Direction E: each team's colour owns its half of the board, for sports that opt in.
+  const [team1Color, setTeam1Color] = useState(DEFAULT_TEAM_COLOURS.a);
+  const [team2Color, setTeam2Color] = useState(DEFAULT_TEAM_COLOURS.b);
+  const teamColourOn = isTeamColourSport(sport);
+  const teamColourStyle = useTeamColours(team1Color, team2Color, sport);
   const [saveWarning, setSaveWarning] = useState('');
 
   // The "resumed your match" info is a transient toast — auto-dismiss it shortly
@@ -555,6 +564,9 @@ export default function MonoQuickMatch() {
     scoringSportRef.current = sport;
     setTeam1Name(draft.team1Name || '');
     setTeam2Name(draft.team2Name || '');
+    // Drafts from before team colours (or with a tampered value) fall back to red v blue.
+    setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
+    setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
     if (draft.format) setFormat(draft.format);
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -590,6 +602,8 @@ export default function MonoQuickMatch() {
       sport,
       team1Name,
       team2Name,
+      team1Color,
+      team2Color,
       format,
       scores,
       sets,
@@ -616,7 +630,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Name, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -770,8 +784,8 @@ export default function MonoQuickMatch() {
     clientMatchId: liveMatchIdRef.current ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
     sport,
     scorecardKind: liveScorecardKind,
-    teamA: { name: team1Name },
-    teamB: { name: team2Name },
+    teamA: teamColourOn ? { name: team1Name, color: team1Color } : { name: team1Name },
+    teamB: teamColourOn ? { name: team2Name, color: team2Color } : { name: team2Name },
   };
 
   const formatCountdown = (seconds) => {
@@ -1576,6 +1590,8 @@ export default function MonoQuickMatch() {
     if (options.resetTeams) {
       setTeam1Name('Team A');
       setTeam2Name('Team B');
+      setTeam1Color(DEFAULT_TEAM_COLOURS.a);
+      setTeam2Color(DEFAULT_TEAM_COLOURS.b);
       setTeam1Players([]);
       setTeam2Players([]);
     }
@@ -2366,6 +2382,11 @@ export default function MonoQuickMatch() {
                       ))}
                     </div>
                   )}
+                  {teamColourOn && (
+                    <div className="mt-3">
+                      <TeamColourPicker label="Team A colour" value={team1Color} onChange={setTeam1Color} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Team 2 */}
@@ -2412,6 +2433,11 @@ export default function MonoQuickMatch() {
                           </span>
                         </button>
                       ))}
+                    </div>
+                  )}
+                  {teamColourOn && (
+                    <div className="mt-3">
+                      <TeamColourPicker label="Team B colour" value={team2Color} onChange={setTeam2Color} />
                     </div>
                   )}
                 </div>
@@ -2890,6 +2916,82 @@ export default function MonoQuickMatch() {
     const setsRule = format.type === 'best-of'
       ? `${format.points || 25} pts · win by ${setsWinBy}`
       : `${format.target} pts · win by ${setsWinBy}`;
+
+    if (teamColourOn) {
+      // Direction E board (team colour). Same state and handlers as the classic screen below;
+      // the board only renders them. Keys and band follow the team, not the side.
+      const boardHalves = setHalves.map((h) => ({
+        key: h.team === 1 ? 'a' : 'b',
+        team: h.team,
+        name: h.name,
+        score: h.score,
+        serving: Boolean(h.serving),
+      }));
+      // Every history entry snapshots the score BEFORE its action, so undo can say exactly
+      // where it goes back to (true for points and corrections alike).
+      const lastEntry = vScoreHistory[vScoreHistory.length - 1];
+      const undoScores = lastEntry && (format.type === 'best-of' && Array.isArray(lastEntry.sets)
+        ? lastEntry.sets[lastEntry.currentSet || 0] || { score1: 0, score2: 0 }
+        : { score1: lastEntry.vScore1 ?? 0, score2: lastEntry.vScore2 ?? 0 });
+      const undoHint = undoScores
+        ? `back to ${boardHalves.map((h) => (h.team === 1 ? undoScores.score1 : undoScores.score2)).join('\u2013')}`
+        : '';
+      const setHistory = format.type === 'best-of'
+        ? sets.filter((s) => s.completed).map((s, i) => {
+          const winnerTeam = s.score1 > s.score2 ? 1 : 2;
+          const scoreOf = (team) => (team === 1 ? s.score1 : s.score2);
+          return {
+            label: `Set ${i + 1}`,
+            left: scoreOf(boardHalves[0].team),
+            right: scoreOf(boardHalves[1].team),
+            winnerKey: winnerTeam === 1 ? 'a' : 'b',
+            winnerName: getTeamLabel(winnerTeam),
+          };
+        })
+        : [];
+      return (
+        <>
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+          {endMatchDialog}
+          {discardDialog}
+          <TeamSetsBoard
+            title={`${team1Name} v ${team2Name}`}
+            subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
+            isLive={Boolean(live?.isLive)}
+            colourStyle={teamColourStyle}
+            halves={boardHalves}
+            chips={[
+              ...(format.type === 'best-of'
+                ? [`Set ${currentSet + 1}`, `Sets ${leftSetsWon}\u2013${rightSetsWon}`]
+                : [`First to ${format.target}`]),
+              timer.formatted,
+            ]}
+            setHistory={setHistory}
+            // One plain line, e.g. "Last · point Reds · 22–19" (serving shows once, on the key).
+            lastLine={lastEntry && lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}`
+              ? `Last \u00b7 point ${getTeamLabel(lastEntry.team)} \u00b7 ${boardHalves.map((h) => h.score).join('\u2013')}`
+              : lastAction || 'Tap a team to score a point'}
+            canUndo={vScoreHistory.length > 0}
+            undoHint={undoHint}
+            onUndo={undoPoint}
+            onPoint={addPoint}
+            onSwap={handleSideSwap}
+            onCorrect={(team) => adjustSetScore(team, -1)}
+            onDiscard={requestDiscardQuickMatch}
+            onFinish={requestEndMatch}
+            notice={<ScoringNotice message={saveWarning} />}
+            live={cloudAuthAvailable ? (
+              <LiveBroadcastBar
+                broadcast={live}
+                descriptor={liveDescriptor}
+                enabled={liveEnabled}
+                onEnableChange={setLiveEnabled}
+              />
+            ) : null}
+          />
+        </>
+      );
+    }
 
     return (
       <div className="mono-scorer-screen mono-arena-screen">

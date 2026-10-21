@@ -8,6 +8,7 @@ export const SPORT_REGISTRY = {
     name: 'Volleyball',
     icon: '🏐',
     engine: 'sets',
+    teamColour: true, // Direction E team-colour board
     desc: 'Sets, rally scoring, deuce',
     storageKey: 'se_volleyball',
     config: {
