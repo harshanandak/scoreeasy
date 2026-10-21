@@ -3,6 +3,7 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
+import { getGoalsSports } from '../../models/sportRegistry';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -172,24 +173,57 @@ describe('route contracts: already correct (pinned)', () => {
   });
 });
 
-describe('route contracts: audit findings (open findings retain it.fails)', () => {
-  // RA-1 (P1). Goals scorers finish with a plain navigate() PUSH to the
-  // tournament page, so Back from the tournament reopens the scorer of the match
-  // that just finished. Sets scorers already route completion through
-  // completeProtectedScoring (PR #128); goals, tennis-tournament and cricket do
-  // not. Fix PR: "Back-stack: every scorer finishes through completeProtectedScoring".
-  it.fails('RA-1: Back after finishing a goals tournament match does not reopen its scorer', async () => {
-    seed('se_football', [footballTournament()]);
-    renderApp(['/football/tournament/100', '/football/tournament/100/match/m1/score']);
+describe('route contracts: goals completion (RA-1/RA-2)', () => {
+  it('covers every registered goals-engine sport', () => {
+    expect(getGoalsSports().map(({ id }) => id).sort()).toEqual(['basketball', 'football', 'hockey', 'kabaddi']);
+  });
+
+  it.each(getGoalsSports())('RA-1: $id tournament Finish saves the result and Back does not reopen the scorer', async ({ id: sport, storageKey }) => {
+    const tournament = footballTournament();
+    tournament.matches[0].draftState = {
+      score1: 3, score2: 1, history: [{ score1: 2, score2: 1 }], savedAt: NOW_ISO,
+    };
+    seed(storageKey, [tournament]);
+    const tournamentPath = `/${sport}/tournament/100`;
+    renderApp([tournamentPath, `${tournamentPath}/match/m1/score`]);
     await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
-    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    await waitFor(() => expect(currentRoute()).toBe(tournamentPath));
 
     await pressProbeBack();
 
-    expect(currentRoute()).not.toBe('/football/tournament/100/match/m1/score');
+    expect(currentRoute()).toBe(tournamentPath);
+    expect(JSON.parse(localStorage.getItem(storageKey))[0].matches[0]).toMatchObject({
+      status: 'completed', score1: 2, score2: 1, winner: 't1',
+    });
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
   });
 
+  // Goals quick matches already finish in place in MonoQuickMatch. Pin that
+  // separate path; tennis completion is pinned below, and cricket remains open.
+  it.each(getGoalsSports())('RA-2 goals regression: $id quick Finish preserves Undo and the saved result through Back', async ({ id: sport }) => {
+    seed(`se_quickmatch_draft_${sport}`, {
+      sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { mode: 'free' },
+      gScore1: 3, gScore2: 1, gScoreHistory: [{ team: 1, value: 1 }],
+      updatedAt: NOW_ISO, savedAt: NOW_ISO,
+    });
+    renderApp(['/app', `/${sport}/quick`]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+    expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: 'Red' })]);
+    expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
+    await pressProbeBack();
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
+    expect(localStorage.getItem('se_quickmatches')).toBe(JSON.stringify(saved));
+  });
+});
+
+describe('route contracts: audit findings (open findings retain it.fails)', () => {
   // Tennis completion unwinds the scorer and its exit guard (RA-1/RA-2).
   it('RA-1: Back after finishing a tennis tournament match does not reopen its scorer', async () => {
     const tournament = footballTournament();

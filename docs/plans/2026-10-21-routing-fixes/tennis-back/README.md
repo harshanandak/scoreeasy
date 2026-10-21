@@ -1,4 +1,4 @@
-Decisions needed: none. Hold for "lane free" before the final master merge and push.
+Decisions needed: none. The full-suite lane was released for final integration and normal push.
 
 Finishing tennis previously pushed the destination, leaving the completed scorer in Back history. Quick tennis then reopened a scorer whose draft had been cleared. Both completion paths now call the existing protected-scoring completion seam after the local save succeeds. The standalone fallback replaces the scorer entry.
 
@@ -17,11 +17,11 @@ Acceptance coverage (rung 4 unless marked otherwise):
 - [x] Back leaves neither a dead scorer nor a completion dialog; saved quick and tournament results retain the full set contract, including the unused third set. Browser proof is described above (rung 5).
 - [x] Both modes save before invoking completion, replace when rendered without the provider, and stay in the scorer without clearing the draft when the local save fails.
 - [x] Both modes restore a scored draft and its nonempty Undo history after remount; Undo restores the prior score and persists the remaining history.
-- [x] Master's RA-3 fixes remain; goals and cricket RA-1 remain open at this integration baseline.
+- [x] After final integration with goals master `0038e60e676bcaecb888037eb1bfac0ecd1c18c0`, goals RA-1 and RA-3 stay fixed alongside tennis RA-1/RA-2. Cricket RA-1 remains open.
 - [x] Palette ratchet measures exactly 669. No baseline or exclusion changes.
-- [x] Focused validation: 7 files, 134 passing tests, 11 expected failures (145 total); zero unexpected failures. Includes MonoTennisLiveScore, routes.contract, appEntry, AppEntryRoute, both stability-audit files and palette.
+- [x] Final focused validation: 8 files, 175 passing tests, 10 expected failures (185 total); zero unexpected failures. Includes MonoTennisLiveScore, the merged MonoGoalsLiveScore tests, routes.contract, appEntry, AppEntryRoute, both stability-audit files and palette. There are 6 routing expected failures and 4 stability expected failures, down from master's 7 + 4.
 - [x] Lint: 0 errors, 29 warnings. Type-check passed. Normal merge commit hooks passed lint, type-check and agent-config sync. Sweep syntax check passed.
-- [ ] Full suite and build: deferred to the normal pre-push hook after "lane free". No push, PR or hosted-check claim at this hold point.
+- [ ] Full suite and build: run by the normal pre-push hook. The PR and handoff record the terminal result; no hosted-check pass is inferred from local validation.
 
 Known limit: the stability audit's SA-07 already records that Undo to an empty history is not autosaved, including tennis (`35cbce6e-7e28-49de-826a-204bb3e46904`). A temporary broader remount test reproduced this for both tennis modes: the board reverted, but storage retained the undone point. This routing patch does not fix that existing defect or claim every persistence scenario is safe. The committed regression covers nonempty history; the audit's four expected-failure stability cases remain unchanged. Winning-point refresh before Finish is also outside this routing proof (SA-04).
 
