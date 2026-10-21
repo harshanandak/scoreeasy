@@ -56,7 +56,7 @@ fi
 
 # For each in_progress issue, check if its PR was already merged
 if [ -n "$DEFAULT_BRANCH" ]; then
-  bd list --status=in_progress --json 2>/dev/null | jq -r '.[].id' | while read id; do
+  forge issue list --status in_progress --json 2>/dev/null | jq -r '.data.issues[].id' | while read id; do
     # Search git log for the issue ID in commit messages (fixed-strings for literal match)
     if git log --oneline --first-parent "$DEFAULT_BRANCH" --fixed-strings --grep="$id" | grep -q .; then
       echo "STALE: $id — found in git history, likely already merged"
@@ -67,7 +67,7 @@ fi
 
 If stale issues are found, close them:
 ```bash
-bd close <id> --force --reason="Already merged — detected during status reconciliation"
+forge issue close <id> --reason "Already merged — detected during status reconciliation"
 ```
 
 ### Step 2: Review Recent Commits
