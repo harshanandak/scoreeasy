@@ -144,6 +144,40 @@ describe("live.create — team colour is stored only when it is a strict hex", (
     expect(stored?.teamA.color).toBe("#1d4ed8");
   });
 
+  test("reads drop a bad colour stored before this fix (legacy rows)", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      teamA: { name: "Falcons", color: "#1d4ed8" },
+      teamB: { name: "Hawks", color: "#16a34a" },
+      clientMatchId: "cm-legacy-colour",
+    });
+    // Simulate a row written before write-time sanitising existed.
+    await t.run(async (ctx) => {
+      const row = await ctx.db
+        .query("liveMatchMeta")
+        .withIndex("by_match", (q) => q.eq("matchId", matchId))
+        .unique();
+      await ctx.db.patch(row!._id, {
+        teamA: { name: "Falcons", color: "red;background:url(//x)" },
+        teamB: { name: "Hawks", color: "#16A34A" },
+      });
+    });
+
+    const meta = await t.query(api.live.getMeta, { token });
+    expect(meta?.teamA).toEqual({ name: "Falcons" });
+    expect(meta?.teamB).toEqual({ name: "Hawks", color: "#16a34a" });
+
+    const feed = await t.query(api.live.listLiveFeed, {});
+    const item = feed.find((i) => i.token === token);
+    expect(item).toBeDefined();
+    expect(item?.teamA.color).toBeUndefined();
+    expect(item?.teamB.color).toBe("#16a34a");
+  });
+
   test("a team without a colour still creates the match", async () => {
     const { stored, meta } = await createWithColours("cm-no-colour", undefined);
     expect(stored?.teamA).toEqual({ name: "Falcons" });
