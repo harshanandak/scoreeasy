@@ -1,0 +1,206 @@
+[
+  {
+    "label": "football-quick-Finish-Back",
+    "path": "/play",
+    "seed": "quickFootball",
+    "url": "/play",
+    "heading": "Play",
+    "text": "GUIDED BROWSE Play CHOOSE SPORT Quick starts scoring now. Tournament builds a bracket. Formats are picked during setup. POPULAR Cricket QUICK ▸ TOURNAMENT Kabad",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "savedQuick": [],
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "click Quick match: Football: clicked"
+      },
+      {
+        "at": "quick-scorer",
+        "url": "/football/quick",
+        "heading": "Football quick match",
+        "text": "Football quick match Resumed your in-progress quick match on this device. Football 0:07 LIVE ● Sign in to go live A free account lets you share the live scorebo",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [],
+        "stuckLoading": false
+      },
+      {
+        "at": "click Undo last action: clicked"
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "click End match: clicked"
+      },
+      {
+        "at": "quick-after-finish",
+        "url": "/football/quick",
+        "heading": "Red Won",
+        "text": "Match saved to History on this device. MATCH RESULT Red Won Duration: 0:07 Red 2 - 1 Blue Rematch Share View History See Stats New Match Home",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [
+          {
+            "sport": "football",
+            "score1": 2,
+            "score2": 1,
+            "winner": "Red"
+          }
+        ],
+        "stuckLoading": false
+      },
+      {
+        "at": "quick-after-back",
+        "url": "/football/quick",
+        "heading": "Red Won",
+        "text": "Match saved to History on this device. MATCH RESULT Red Won Duration: 0:07 Red 2 - 1 Blue Rematch Share View History See Stats New Match Home",
+        "bottomNav": false,
+        "dialog": "SCORE EASY Leave this page? Your unsaved scoring progress may be lost. Stay here Leave pag",
+        "historyLength": 4,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [
+          {
+            "sport": "football",
+            "score1": 2,
+            "score2": 1,
+            "winner": "Red"
+          }
+        ],
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/football/quick",
+      "heading": "Red Won",
+      "text": "Match saved to History on this device. MATCH RESULT Red Won Duration: 0:07 Red 2 - 1 Blue Rematch Share View History See Stats New Match Home",
+      "bottomNav": false,
+      "dialog": "SCORE EASY Leave this page? Your unsaved scoring progress may be lost. Stay here Leave pag",
+      "historyLength": 4,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "savedQuick": [
+        {
+          "sport": "football",
+          "score1": 2,
+          "score2": 1,
+          "winner": "Red"
+        }
+      ],
+      "stuckLoading": false
+    },
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5173/src/mobile/haptics.js"
+    ]
+  },
+  {
+    "label": "FLOW football Finish -> Back",
+    "path": "/football/tournament/100",
+    "seed": "football",
+    "url": "/football/tournament/100",
+    "heading": "Sunday League",
+    "text": "← Tournaments Sunday League LIVE Football · 2 teams · Round Robin 0/1 Matches Standings Teams MATCH 1 Red vs Blue Enter Score",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "savedQuick": [],
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "click Enter Score: clicked"
+      },
+      {
+        "at": "click Add 1 point to Red: clicked"
+      },
+      {
+        "at": "scorer",
+        "url": "/football/tournament/100/match/m1/score",
+        "heading": "Football match scorer",
+        "text": "Football match scorer Football LIVE SCORING ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go live",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [],
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/football/tournament/100",
+        "heading": "Sunday League",
+        "text": "← Tournaments Sunday League COMPLETE Football · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Red 1 vs Blue 0 Edit Score",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [],
+        "stuckLoading": false
+      },
+      {
+        "at": "after Back",
+        "url": "/football/tournament/100",
+        "heading": "Sunday League",
+        "text": "← Tournaments Sunday League COMPLETE Football · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Red 1 vs Blue 0 Edit Score",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "savedQuick": [],
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/football/tournament/100",
+      "heading": "Sunday League",
+      "text": "← Tournaments Sunday League COMPLETE Football · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Red 1 vs Blue 0 Edit Score",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "savedQuick": [],
+      "stuckLoading": false
+    },
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5173/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx?t=1792594489586"
+    ]
+  }
+]

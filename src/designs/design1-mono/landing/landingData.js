@@ -1,7 +1,8 @@
-export const sports = [
-  'Cricket', 'Football', 'Volleyball', 'Tennis', 'Basketball', 'Badminton',
-  'Hockey', 'Table Tennis', 'Pickleball', 'Squash', 'Rugby', 'Handball', 'Futsal', 'Kabaddi',
-];
+import { getSportsList } from '../../../models/sportRegistry';
+
+// Landing sport cards = the registered sports, in focus order (src/models/sportFocus.js).
+export const sports = getSportsList().map((sport) => sport.name);
+const SPORT_COUNT = sports.length;
 
 export const sportDetails = {
   Volleyball: { duration: '15-25 min', players: '2-12 players', rules: 'sets + rallies' },
@@ -12,11 +13,6 @@ export const sportDetails = {
   Badminton: { duration: 'best of 3', players: '1v1 / 2v2', rules: 'rally points' },
   Hockey: { duration: 'periods', players: '2 teams', rules: 'goals + clock' },
   'Table Tennis': { duration: 'best of 5', players: '1v1 / 2v2', rules: '11-point games' },
-  Pickleball: { duration: 'best of 3', players: '1v1 / 2v2', rules: 'rally or side-out' },
-  Squash: { duration: 'best of 3/5', players: '1v1', rules: 'PAR scoring' },
-  Rugby: { duration: 'halves', players: '2 teams', rules: 'tries + kicks' },
-  Handball: { duration: 'halves', players: '2 teams', rules: 'goals + time' },
-  Futsal: { duration: 'indoor halves', players: '5v5', rules: 'goals + clock' },
   Kabaddi: { duration: 'raids', players: '7v7', rules: 'raids + tackles' },
 };
 
@@ -26,19 +22,19 @@ export const features = [
   { title: 'Live Scoring', desc: 'Real-time score entry with set tracking, deuce rules, and timers.', tag: 'TRACK', icon: 'Tennis' },
   { title: 'Statistics', desc: 'Win rates, match history, player performance across all sports.', tag: 'ANALYZE', icon: 'Basketball' },
   { title: 'Team Management', desc: 'Create teams, invite players, manage rosters across tournaments.', tag: 'MANAGE', icon: 'Football' },
-  { title: '14 Sports', desc: 'Volleyball, cricket, tennis, football, and 10 more with sport-specific rules.', tag: 'PLAY', icon: 'Cricket' },
+  { title: `${SPORT_COUNT} Sports`, desc: `Cricket, kabaddi, volleyball, badminton, and ${SPORT_COUNT - 4} more with sport-specific rules.`, tag: 'PLAY', icon: 'Cricket' },
 ];
 
 export const steps = [
-  { num: '01', title: 'PICK SPORT', desc: 'Choose from 14 sports with pre-configured rules.', icon: 'Volleyball' },
+  { num: '01', title: 'PICK SPORT', desc: `Choose from ${SPORT_COUNT} sports with pre-configured rules.`, icon: 'Volleyball' },
   { num: '02', title: 'ADD TEAMS', desc: 'Name your teams or players. Set match format.', icon: 'Cricket' },
   { num: '03', title: 'SCORE LIVE', desc: 'Tap to score. Track sets, overs, or goals in real time.', icon: 'Tennis' },
 ];
 
-export const tickerItems = ['14 SPORTS', 'NO SIGNUP START', 'LOCAL HISTORY', 'TOURNAMENTS', 'LIVE SCORING', 'FREE TO PLAY'];
+export const tickerItems = [`${SPORT_COUNT} SPORTS`, 'NO SIGNUP START', 'LOCAL HISTORY', 'TOURNAMENTS', 'LIVE SCORING', 'FREE TO PLAY'];
 
 export const experienceStats = [
-  { label: 'sports ready', value: '14', detail: 'Cricket, football, volleyball, and common court games start from one picker.' },
+  { label: 'sports ready', value: String(SPORT_COUNT), detail: 'Cricket, kabaddi, volleyball, and the other ground and court games start from one picker.' },
   { label: 'guest mode', value: 'NOW', detail: 'No account required before the first score tap.' },
   { label: 'local first', value: 'ON', detail: 'History and scoring continue when cloud auth is unavailable.' },
 ];

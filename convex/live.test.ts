@@ -84,6 +84,108 @@ describe("live.create", () => {
   });
 });
 
+// Team colours are rendered into CSS on the spectator page, so only a strict
+// #rrggbb hex may ever be stored (OWASP A03 — CSS injection).
+describe("live.create — team colour is stored only when it is a strict hex", () => {
+  async function createWithColours(
+    clientMatchId: string,
+    colorA: string | undefined,
+    colorB?: string,
+  ) {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const teamA =
+      colorA === undefined ? { name: "Falcons" } : { name: "Falcons", color: colorA };
+    const teamB =
+      colorB === undefined ? { name: "Hawks" } : { name: "Hawks", color: colorB };
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      teamA,
+      teamB,
+      clientMatchId,
+    });
+    const stored = await t.run(async (ctx) =>
+      ctx.db
+        .query("liveMatchMeta")
+        .withIndex("by_match", (q) => q.eq("matchId", matchId))
+        .unique(),
+    );
+    const meta = await t.query(api.live.getMeta, { token });
+    return { stored, meta };
+  }
+
+  test.each([
+    ["url(x)"],
+    ["red;background:url(//x)"],
+    ["#12345"],
+    ["#1234567"],
+    ["red"],
+    [" #1d4ed8"],
+    ["#1d4ed8\n"],
+  ])("drops a non-hex colour %j", async (bad) => {
+    const { stored, meta } = await createWithColours("cm-bad-colour", bad, "#16a34a");
+    expect(stored?.teamA.name).toBe("Falcons");
+    expect(stored?.teamA.color).toBeUndefined();
+    expect(meta?.teamA.color).toBeUndefined();
+    // The other team's valid colour is unaffected.
+    expect(stored?.teamB.color).toBe("#16a34a");
+  });
+
+  test("stores a lower-case #rrggbb as-is", async () => {
+    const { stored, meta } = await createWithColours("cm-hex", "#1d4ed8");
+    expect(stored?.teamA.color).toBe("#1d4ed8");
+    expect(meta?.teamA.color).toBe("#1d4ed8");
+  });
+
+  test("stores an upper-case #RRGGBB normalised to lower case", async () => {
+    const { stored } = await createWithColours("cm-hex-upper", "#1D4ED8");
+    expect(stored?.teamA.color).toBe("#1d4ed8");
+  });
+
+  test("reads drop a bad colour stored before this fix (legacy rows)", async () => {
+    const t = newClient();
+    await seedUser(t, "owner|1");
+    const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
+    const { matchId, token } = await asOwner.mutation(api.live.create, {
+      sport: "volleyball",
+      scorecardKind: "volleyball",
+      teamA: { name: "Falcons", color: "#1d4ed8" },
+      teamB: { name: "Hawks", color: "#16a34a" },
+      clientMatchId: "cm-legacy-colour",
+    });
+    // Simulate a row written before write-time sanitising existed.
+    await t.run(async (ctx) => {
+      const row = await ctx.db
+        .query("liveMatchMeta")
+        .withIndex("by_match", (q) => q.eq("matchId", matchId))
+        .unique();
+      await ctx.db.patch(row!._id, {
+        teamA: { name: "Falcons", color: "red;background:url(//x)" },
+        teamB: { name: "Hawks", color: "#16A34A" },
+      });
+    });
+
+    const meta = await t.query(api.live.getMeta, { token });
+    expect(meta?.teamA).toEqual({ name: "Falcons" });
+    expect(meta?.teamB).toEqual({ name: "Hawks", color: "#16a34a" });
+
+    const feed = await t.query(api.live.listLiveFeed, {});
+    const item = feed.find((i) => i.token === token);
+    expect(item).toBeDefined();
+    expect(item?.teamA.color).toBeUndefined();
+    expect(item?.teamB.color).toBe("#16a34a");
+  });
+
+  test("a team without a colour still creates the match", async () => {
+    const { stored, meta } = await createWithColours("cm-no-colour", undefined);
+    expect(stored?.teamA).toEqual({ name: "Falcons" });
+    expect(stored?.teamB).toEqual({ name: "Hawks" });
+    expect(meta?.teamA.name).toBe("Falcons");
+  });
+});
+
 describe("live.scorePoint", () => {
   test("increments the snapshot and the running event totals", async () => {
     const t = newClient();
