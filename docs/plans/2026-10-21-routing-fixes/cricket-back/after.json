@@ -1,0 +1,242 @@
+[
+  {
+    "label": "RA-1 cricket limited Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-limited",
+    "url": "/history",
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/tournament/100/match/m1/score",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer Cricket CUSTOM COMPLETED ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go li",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/tournament/100",
+        "heading": "Cricket Cup",
+        "text": "← Tournaments Cricket Cup COMPLETE Custom · 2 teams · Round Robin 1/1 Matches Points Table Teams Match 1 CUSTOM COMPLETED Clear Alpha 1/0 1 ov vs ★Beta 2/0 0.1 ",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/history",
+      "heading": "History & Stats",
+      "text": "History & Stats Matches Stats 1 All matches 0 Quick 1 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Tournament · Cricket Cup ·",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5173/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx"
+    ]
+  },
+  {
+    "label": "RA-1 cricket test-tournament Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-test-tournament",
+    "url": "/history",
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/tournament/100/match/m1/score",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go live. Cricket TEST MATCH 4T",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Four runs: clicked"
+      },
+      {
+        "at": "click Save & Return: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/tournament/100",
+        "heading": "Cricket Cup",
+        "text": "← Tournaments Cricket Cup COMPLETE Test Match · 2 teams · Round Robin 1/1 Matches Points Table Teams Match 1 TEST MATCH COMPLETED Clear Alpha 1/all & 0/all vs ★",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/history",
+      "heading": "History & Stats",
+      "text": "History & Stats Matches Stats 1 All matches 0 Quick 1 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Tournament · Cricket Cup ·",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5173/src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx"
+    ]
+  },
+  {
+    "label": "RA-1 cricket test-quick Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-test-quick",
+    "url": "/history",
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/quick/test-match/300",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go live. Cricket TEST MATCH 4T",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Four runs: clicked"
+      },
+      {
+        "at": "click Save & Return: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/history",
+        "heading": "History & Stats",
+        "text": "History & Stats Clear local history Matches Stats 1 All matches 1 Quick 0 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Quick ",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/history",
+      "heading": "History & Stats",
+      "text": "History & Stats Clear local history Matches Stats 1 All matches 1 Quick 0 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Quick ",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5173/src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx"
+    ]
+  },
+  {
+    "label": "RA-1 cricket guided Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-guided",
+    "url": "/history",
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/tournament/100/match/m1/score",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer ‹ CUSTOM OVER 0 · CHASING 2 GUIDED POWER LIVE 0/0 (0) CRR 0.00 NEED 2 OFF 120 RRR 0.10 ●Batter 1 0 (0) Batter 2 0 (0) Bowler ◢ 0-0-0-0 P'SH",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Four: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/tournament/100",
+        "heading": "Cricket Cup",
+        "text": "← Tournaments Cricket Cup COMPLETE Custom · 2 teams · Round Robin 1/1 Matches Points Table Teams Match 1 CUSTOM COMPLETED Clear Alpha 1/0 1 ov vs ★Beta 4/0 0.1 ",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/history",
+      "heading": "History & Stats",
+      "text": "History & Stats Matches Stats 1 All matches 0 Quick 1 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Tournament · Cricket Cup ·",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": []
+  }
+]

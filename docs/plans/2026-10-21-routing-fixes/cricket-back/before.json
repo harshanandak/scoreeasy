@@ -1,0 +1,123 @@
+[
+  {
+    "label": "RA-1 cricket limited Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-limited",
+    "url": "/history",
+    "heading": "",
+    "text": "",
+    "bottomNav": false,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/tournament/100/match/m1/score",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer Cricket CUSTOM COMPLETED ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go li",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/tournament/100",
+        "heading": "Cricket Cup",
+        "text": "← Tournaments Cricket Cup COMPLETE Custom · 2 teams · Round Robin 1/1 Matches Points Table Teams Match 1 CUSTOM COMPLETED Clear Alpha 1/0 1 ov vs ★Beta 2/0 0.1 ",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 5,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/cricket/tournament/100/match/m1/score",
+      "heading": "Cricket match scorer",
+      "text": "Cricket match scorer Cricket CUSTOM COMPLETED ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go li",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 5,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": false,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5173/src/designs/design1-mono/scoring/MonoCricketLiveScore.jsx?t=1792610900739"
+    ]
+  },
+  {
+    "label": "RA-1 cricket test-tournament Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-test-tournament",
+    "url": "/history",
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/tournament/100/match/m1/score",
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go live. Cricket TEST MATCH 4T",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Four runs: clicked"
+      },
+      {
+        "at": "click Save & Return: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/tournament/100",
+        "heading": "Cricket Cup",
+        "text": "← Tournaments Cricket Cup COMPLETE Test Match · 2 teams · Round Robin 1/1 Matches Points Table Teams Match 1 TEST MATCH COMPLETED Clear Alpha 1/all & 0/all vs ★",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 5,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/cricket/tournament/100/match/m1/score",
+      "heading": "Cricket match scorer",
+      "text": "Cricket match scorer ● Sign in to go live A free account lets you share the live scoreboard — your matches stay private until you go live. Cricket TEST MATCH 1S",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 5,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": false,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5173/src/designs/design1-mono/scoring/MonoCricketTestLiveScore.jsx?t=1792610901164"
+    ]
+  }
+]

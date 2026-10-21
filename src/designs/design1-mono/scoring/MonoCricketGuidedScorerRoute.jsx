@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
@@ -9,6 +9,7 @@ import { deriveInnings } from '../../../utils/cricketEngine';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import MonoCricketGuidedScorer from './MonoCricketGuidedScorer';
 import MonoCricketInningsSetup from './MonoCricketInningsSetup';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 // C6b — two-innings orchestrator for the Guided cricket scorer. A phase state
 // machine drives an opening-lineup step, innings 1, an innings break (target +
@@ -111,6 +112,8 @@ function initialPhase(match) {
 export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
+  const completionStarted = useRef(false);
 
   const sportConfig = getSportById(sport);
   const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -122,7 +125,17 @@ export default function MonoCricketGuidedScorerRoute() {
 
   const [phase, setPhase] = useState(() => initialPhase(match));
 
-  const navigateToTournament = () => navigate(`/${sport || 'cricket'}/tournament/${id}`);
+  const navigateToTournament = () => {
+    // Finishing also triggers the completed-match effect on the next render.
+    if (completionStarted.current) return;
+    completionStarted.current = true;
+    const destination = `/${sport || 'cricket'}/tournament/${id}`;
+    if (completeProtectedScoring) {
+      completeProtectedScoring(destination);
+    } else {
+      navigate(destination, { replace: true });
+    }
+  };
 
   // A completed match is never re-scored — bounce back to the tournament.
   useEffect(() => {
