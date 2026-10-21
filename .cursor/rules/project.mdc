@@ -19,7 +19,7 @@ Reject your own diff if it breaks one of these.
 - **The scorer never loses a point.** A tap that scores must survive a refresh, a backgrounded app, and a flaky court wifi connection. Optimistic UI is fine; silently dropping the write is not.
 - **The board stays truthful.** Score, serve, set/innings state and undo history must agree with each other on every screen. A display that disagrees with the rules of the game is a P0, however pretty it is.
 - **One-handed, courtside, in sunlight.** Touch targets stay thumb-sized and contrast stays legible outdoors. A layout that only works on a desktop viewport is not done.
-- **Private match data stays private.** Identity and ownership checks protect scorer-only data. Public profiles, discovery and token-gated shared matches have intentionally unauthenticated reads; live broadcasts default to public visibility.
+- **Private match data stays private (target).** Require identity and ownership checks for scorer-only data. Public profile/search queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision (Forge issue "SA-16 Public username queries return raw match documents without identity", `f210fff9-5107-400a-830b-d5951e7a92b3`). Live spectator reads use visibility/moderation gates; broadcasts default to public visibility.
 - **Sport rules live in one place per sport.** Scoring logic belongs in the sport module, not sprinkled through components.
 
 ## Glossary
@@ -108,7 +108,7 @@ export const get = query({
 });
 ```
 
-**Auth on scorer-only data.** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries and live spectator queries are intentionally unauthenticated; live token reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
+**Auth on scorer-only data (target).** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision, tracked in the SA-16 issue linked from `AGENTS.md`. Live spectator reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
 
 **Wrap auth in a custom function, do not repeat it.** Convex has no row-level security; the custom-function wrapper (`convex-helpers` `customQuery` / `customMutation`) is the substitute. A wrapper that injects `ctx.user` is how a rule gets enforced repo-wide instead of per-handler. Use it for basic auth, role checks, and tenant scoping.
 
@@ -370,7 +370,7 @@ forge issue show <id>                               # View issue details and sta
 forge issue claim <id>                              # Claim work
 forge issue update <id> --status in_progress        # Move an issue along
 forge issue comment <id> "stage: plan -> dev ..."   # Record a stage transition
-forge issue create --title "..." --type task        # File a follow-up
+forge issue create "..." --type task                # File a follow-up
 forge issue close <id> --reason "..."               # Complete work
 ```
 
@@ -390,7 +390,8 @@ forge issue close <id> --reason "..."               # Complete work
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
-    git pull --rebase
+    git fetch origin
+    git merge --no-edit origin/master
     git push
     git status  # MUST show "up to date with origin"
    ```

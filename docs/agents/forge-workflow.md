@@ -215,7 +215,7 @@ forge issue show <id>                               # View issue details and sta
 forge issue claim <id>                              # Claim work
 forge issue update <id> --status in_progress        # Move an issue along
 forge issue comment <id> "stage: plan -> dev ..."   # Record a stage transition
-forge issue create --title "..." --type task        # File a follow-up
+forge issue create "..." --type task                # File a follow-up
 forge issue close <id> --reason "..."               # Complete work
 ```
 
@@ -235,7 +235,8 @@ forge issue close <id> --reason "..."               # Complete work
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
-    git pull --rebase
+    git fetch origin
+    git merge --no-edit origin/master
     git push
     git status  # MUST show "up to date with origin"
    ```

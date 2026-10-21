@@ -11,7 +11,7 @@ Reject your own diff if it breaks one of these.
 - **The scorer never loses a point.** A tap that scores must survive a refresh, a backgrounded app, and a flaky court wifi connection. Optimistic UI is fine; silently dropping the write is not.
 - **The board stays truthful.** Score, serve, set/innings state and undo history must agree with each other on every screen. A display that disagrees with the rules of the game is a P0, however pretty it is.
 - **One-handed, courtside, in sunlight.** Touch targets stay thumb-sized and contrast stays legible outdoors. A layout that only works on a desktop viewport is not done.
-- **Private match data stays private.** Identity and ownership checks protect scorer-only data. Public profiles, discovery and token-gated shared matches have intentionally unauthenticated reads; live broadcasts default to public visibility.
+- **Private match data stays private (target).** Require identity and ownership checks for scorer-only data. Public profile/search queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision (Forge issue "SA-16 Public username queries return raw match documents without identity", `f210fff9-5107-400a-830b-d5951e7a92b3`). Live spectator reads use visibility/moderation gates; broadcasts default to public visibility.
 - **Sport rules live in one place per sport.** Scoring logic belongs in the sport module, not sprinkled through components.
 
 ## Glossary

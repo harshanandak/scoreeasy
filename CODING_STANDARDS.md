@@ -26,7 +26,7 @@ export const get = query({
 });
 ```
 
-**Auth on scorer-only data.** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries and live spectator queries are intentionally unauthenticated; live token reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
+**Auth on scorer-only data (target).** Use the auth wrapper, or check `ctx.auth.getUserIdentity()` before reading private data; throw if null. Ownership is a second check — being logged in is not being allowed. Public profile/search/stat queries currently allow unauthenticated reads; their match-data exposure needs a privacy decision, tracked in the SA-16 issue linked from `AGENTS.md`. Live spectator reads apply visibility and moderation gates. The public `live.report` mutation also accepts signed-out reports.
 
 **Wrap auth in a custom function, do not repeat it.** Convex has no row-level security; the custom-function wrapper (`convex-helpers` `customQuery` / `customMutation`) is the substitute. A wrapper that injects `ctx.user` is how a rule gets enforced repo-wide instead of per-handler. Use it for basic auth, role checks, and tenant scoping.
 
