@@ -63,6 +63,14 @@ function seedVolleyball(extra = {}) {
   };
 }
 
+// The classic sets screen (sports not yet on the Direction E team-colour board). Volleyball has
+// moved to the board, so the classic-screen guarantees are pinned on badminton until it moves too.
+function seedClassicSets(extra = {}) {
+  seedVolleyball(extra);
+  ctx.sport = 'badminton';
+  ctx.draft.sport = 'badminton';
+}
+
 beforeEach(() => {
   nav.mockClear();
   storageMock.clearData.mockClear();
@@ -76,7 +84,7 @@ beforeEach(() => {
 
 describe('MonoQuickMatch hardening (#106)', () => {
   it('gates Discard behind a confirm dialog and wipes only on confirm', () => {
-    seedVolleyball();
+    seedClassicSets();
     render(<MonoQuickMatch />);
 
     // First tap only opens the dialog — nothing is wiped yet.
@@ -95,7 +103,7 @@ describe('MonoQuickMatch hardening (#106)', () => {
   });
 
   it('keeps the match when the Discard dialog is dismissed', () => {
-    seedVolleyball();
+    seedClassicSets();
     render(<MonoQuickMatch />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
@@ -166,7 +174,7 @@ describe('MonoQuickMatch hardening (#106)', () => {
   });
 
   it('announces the last scoring action in an aria-live region inside the scorer', () => {
-    seedVolleyball({ lastAction: 'Reds +1' });
+    seedClassicSets({ lastAction: 'Reds +1' });
     render(<MonoQuickMatch />);
 
     const lastActionText = screen.getByText(/Last: Reds \+1/);
@@ -176,7 +184,7 @@ describe('MonoQuickMatch hardening (#106)', () => {
   });
 
   it('reserves a fixed live-broadcast slot when cloud auth is available, and omits it offline', () => {
-    seedVolleyball();
+    seedClassicSets();
     const { container, unmount } = render(<MonoQuickMatch />);
     // The slot holds space even before the bar hydrates, so the score won't jump.
     expect(container.querySelector('.mono-live-slot')).not.toBeNull();
@@ -184,7 +192,7 @@ describe('MonoQuickMatch hardening (#106)', () => {
 
     // Offline build (no cloud auth): no permanent empty slot.
     ctx.cloudAuthAvailable = false;
-    seedVolleyball();
+    seedClassicSets();
     const { container: offlineContainer } = render(<MonoQuickMatch />);
     expect(offlineContainer.querySelector('.mono-live-slot')).toBeNull();
   });
@@ -250,5 +258,57 @@ describe('MonoQuickMatch hardening (#106)', () => {
 
     expect(storageMock.saveQuickMatch).toHaveBeenCalledTimes(1);
     expect(live.finalize).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('MonoQuickMatch hardening on the team-colour board (volleyball)', () => {
+  const openOptions = () => fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+
+  it('gates Discard behind a confirm dialog and wipes only on confirm', () => {
+    seedVolleyball();
+    render(<MonoQuickMatch />);
+
+    openOptions();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
+    const dialog = screen.getByRole('dialog', { name: /Discard match/i });
+    expect(storageMock.clearData).not.toHaveBeenCalled();
+    expect(nav).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Discard' }));
+    expect(storageMock.clearData).toHaveBeenCalled();
+  });
+
+  it('keeps the match when the Discard dialog is dismissed', () => {
+    seedVolleyball();
+    render(<MonoQuickMatch />);
+
+    openOptions();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
+    const dialog = screen.getByRole('dialog', { name: /Discard match/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep scoring' }));
+
+    expect(screen.queryByRole('dialog', { name: /Discard match/i })).not.toBeInTheDocument();
+    expect(storageMock.clearData).not.toHaveBeenCalled();
+    expect(nav).not.toHaveBeenCalled();
+  });
+
+  it('announces the last scoring action in an aria-live region', () => {
+    seedVolleyball({ lastAction: 'Reds +1' });
+    render(<MonoQuickMatch />);
+
+    const lastActionText = screen.getByText('Reds +1');
+    expect(lastActionText.closest('[aria-live="polite"]')).not.toBeNull();
+  });
+
+  it('keeps the live-broadcast bar mounted when cloud auth is available, and omits it offline', () => {
+    seedVolleyball();
+    const { container, unmount } = render(<MonoQuickMatch />);
+    expect(container.querySelector('.tsb-sheet-live')).not.toBeNull();
+    unmount();
+
+    ctx.cloudAuthAvailable = false;
+    seedVolleyball();
+    const { container: offlineContainer } = render(<MonoQuickMatch />);
+    expect(offlineContainer.querySelector('.tsb-sheet-live')).toBeNull();
   });
 });

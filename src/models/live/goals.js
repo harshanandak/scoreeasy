@@ -1,9 +1,8 @@
 // Pure goals/period-sports derivation over the shared `scoringEvents` stream
 // (design §6.6, research §4.D). This is the GENERIC +N engine: football,
-// basketball, hockey, handball, futsal, rugby, kabaddi — and any custom/silly
-// "+N" game — all flow through it with ZERO per-sport branching. Sports differ
-// only by their `periods` config and by the `value` / `meta.type` carried on
-// each event.
+// basketball, hockey, kabaddi — and any custom/silly "+N" game — all flow
+// through it with ZERO per-sport branching. Sports differ only by their
+// `periods` config and by the `value` / `meta.type` carried on each event.
 //
 // MODEL (see scoringEvents.js): every scoring row is `type: 'point'` carrying
 // `{ team: 'A'|'B', value: number, at: number, meta? }`. `value` may be +N

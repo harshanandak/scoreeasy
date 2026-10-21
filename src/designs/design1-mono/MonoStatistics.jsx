@@ -11,6 +11,7 @@ import {
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import SportIcon from './SportIcon';
+import { PLAY_HUB_PATH } from '../../utils/appPaths';
 
 function getMatchDate(match) {
   return new Date(match.completedAt || match.date || match.createdAt || 0);
@@ -371,8 +372,8 @@ export function MonoStatisticsPanel() {
               <EmptyState
                 icon="📊"
                 label="No game data yet. Finish a quick match or tournament to unlock win rates, streaks, and form."
-                primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
-                secondaryAction={{ label: 'Create tournament', onClick: () => navigate('/volleyball/tournament/new') }}
+                primaryAction={{ label: 'Start quick match', onClick: () => navigate(PLAY_HUB_PATH) }}
+                secondaryAction={{ label: 'Create tournament', onClick: () => navigate(PLAY_HUB_PATH) }}
               />
             ) : (
             <>
@@ -552,7 +553,7 @@ export function MonoStatisticsPanel() {
               <EmptyState
                 icon={'\u26A1'}
                 label="No quick matches yet. Score one match to unlock team form, streaks, and head-to-head stats."
-                primaryAction={{ label: 'Start quick match', onClick: () => navigate('/volleyball/quick') }}
+                primaryAction={{ label: 'Start quick match', onClick: () => navigate(PLAY_HUB_PATH) }}
                 secondaryAction={{ label: 'View history', onClick: () => navigate('/history') }}
               />
             ) : (

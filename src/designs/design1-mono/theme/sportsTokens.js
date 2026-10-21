@@ -4,8 +4,6 @@ export const fontStacks = {
   serif: "Merriweather, ui-serif, serif",
 };
 
-export const prioritySports = ['cricket', 'football', 'volleyball'];
-
 const palette = {
   fieldGreen: 'oklch(0.6230 0.1688 149.1777)',
   fieldGreenSoft: 'oklch(0.9231 0.0773 156.7494)',

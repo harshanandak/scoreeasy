@@ -1,10 +1,11 @@
 // Route sweep (routing audit, docs/plans/2026-10-21-routing-audit.md).
 //
 // Drives headless Chrome over the DevTools protocol at a phone viewport
-// (390x844), visits every route as a guest in a fresh browser context, and
+// (390x844), visits the listed guest cases in fresh browser contexts, and
 // records the final URL, visible heading, page text, bottom-nav and dialog
 // state, and console errors. Cases can seed localStorage and run click / Back
-// steps, which is how the Back-stack findings were reproduced.
+// steps, which is how the Back-stack findings were reproduced. The registered
+// set-display, brutalist-colors and dashboard-variants showcases are omitted.
 //
 // Usage (dev server must already be running):
 //   bunx vite --port 5193 --strictPort
@@ -15,12 +16,13 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createInterface } from 'node:readline';
 
 const BASE = process.env.BASE || 'http://localhost:5193';
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const PORT = 9339;
 const SETTLE_MS = Number(process.env.SETTLE_MS || 6500);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 5);
+// Trusted local CLI destination, with the same filesystem authority as its caller.
 const OUT = process.argv[2] || 'results.json';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 
@@ -31,6 +33,13 @@ const blankSet = { games1: 0, games2: 0, points1: 0, points2: 0, isDeuce: false,
 const wonSet = { ...blankSet, games1: 6, games2: 0, completed: true };
 
 const seeds = {
+  resumeCatalog: {
+    [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', updatedAt: iso },
+    se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }], currentSet: 0, updatedAt: iso },
+    se_quickmatches: [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', team1Id: 'team1', team2Id: 'team2', format: { totalInnings: 4 }, innings: [], status: 'in-progress', updatedAt: iso }],
+    se_football: [100, 101, 102].map((id) => ({ id, name: `Sunday League ${id}`, type: 'round-robin', mode: 'tournament', phase: 'group', format: {}, createdAt: iso, winnerMode: 'table-topper', knockoutMatches: [], teams: [{ id: 't1', name: 'Red' }, { id: 't2', name: 'Blue' }], matches: [{ id: 'm1', team1Id: 't1', team2Id: 't2', status: 'pending' }] })),
+  },
+
   tennisDraft: {
     [`se_tennis_quick_draft_${TENNIS_ID}`]: { id: TENNIS_ID, sport: 'tennis', team1: 'Ana', team2: 'Bea', team1Name: 'Ana', team2Name: 'Bea', format: { sets: 3 }, status: 'in-progress', sets: null, date: iso, createdAt: iso, updatedAt: iso },
   },
@@ -60,8 +69,41 @@ const seeds = {
   volleyDraftOnly: { se_quickmatch_draft_volleyball: { phase: 'scoring', sport: 'volleyball', team1Name: 'Sharks', team2Name: 'Jets', vScore1: 12, vScore2: 9, updatedAt: iso, savedAt: iso } },
 };
 
+const genericResumeSports = ['cricket', 'kabaddi', 'volleyball', 'badminton', 'football', 'basketball', 'tabletennis', 'hockey'];
+for (const sport of genericResumeSports) {
+  seeds[`resume_${sport}`] = {
+    [`se_quickmatch_draft_${sport}`]: {
+      phase: 'scoring', sport, team1Name: 'Sharks', team2Name: 'Jets',
+      vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }],
+      currentSet: 0, gScore1: 2, gScore2: 1, updatedAt: iso,
+    },
+  };
+}
+seeds.retiredDrafts = Object.fromEntries(['pickleball', 'squash', 'rugby', 'futsal', 'handball'].map((sport) => [
+  `se_quickmatch_draft_${sport}`, { phase: 'scoring', sport, team1Name: 'Dinks', team2Name: 'Lobs', updatedAt: iso },
+]));
+
 // [label, path, seedName?, steps?]
 const cases = [
+  ...genericResumeSports.map((sport) => [`RA3 resume ${sport} quick from Home`, '/app', `resume_${sport}`, [
+    { eval: `document.querySelector('button[aria-label^="Resume "]').click()` }, { wait: 3500 },
+    { eval: 'location.reload()' }, { wait: 5000 },
+  ]]),
+  ['RA3 retired drafts have no Resume on Home', '/app', 'retiredDrafts'],
+  ['RA3 all resumable matches on Home', '/', 'resumeCatalog'],
+  ['RA3 resume tennis from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+  ['RA3 resume cricket Test from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Cricket: Red vs Blue' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+  ['RA3 resume third tournament from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Football: Sunday League 102' }, { wait: 5000 },
+  ]],
+  ['RA3 resume volleyball from Home', '/app', 'resumeCatalog', [
+    { click: 'button', aria: 'Resume Volleyball: Sharks vs Jets' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
+  ]],
+
   // App shell + public
   ['root resolver', '/'],
   ['marketing', '/marketing'],
@@ -156,7 +198,7 @@ const cases = [
     { back: true }, { wait: 1500 },
   ]],
   ['FLOW tennis quick Finish -> Back', '/app', 'tennisDraftWon', [
-    { goto: `/tennis/quick/live/${TENNIS_ID}` }, { wait: 20000 },
+    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 },
     { snap: 'scorer (won)' },
     { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
@@ -216,21 +258,67 @@ const cases = [
   ]],
 ];
 
+const redactDiagnostic = (value) => value.replace(/([?&](?:token|key|secret|password|api_key)=)[^&\s]+/gi, '$1[REDACTED]');
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Read only the endpoint announced by our child, never a shared discovery port.
+function connectDebugger(chrome) {
+  return new Promise((resolve, reject) => {
+    const lines = createInterface({ input: chrome.stderr });
+    let socket;
+    let settled = false;
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      lines.close();
+      chrome.stderr.resume();
+      chrome.off('error', onError);
+      chrome.off('exit', onExit);
+      if (error) {
+        socket?.close();
+        reject(error);
+      } else resolve(socket);
+    };
+    const onError = () => finish(new Error('Chrome debugger failed to start or connect'));
+    const onExit = () => finish(new Error('Spawned Chrome exited before debugger connection'));
+    // Same 10-second startup budget as the original 50 x 200ms discovery loop.
+    const timer = setTimeout(() => finish(new Error('Chrome debugger startup timed out')), 10000);
+    chrome.once('error', onError);
+    chrome.once('exit', onExit);
+    lines.on('line', (line) => {
+      if (!line.startsWith('DevTools listening on ') || socket) return;
+      const endpoint = /^DevTools listening on ws:\/\/127\.0\.0\.1:(\d{1,5})\/devtools\/browser\/([a-f0-9-]{36})$/.exec(line);
+      if (!endpoint || Number(endpoint[1]) < 1 || Number(endpoint[1]) > 65535) {
+        finish(new Error('Chrome announced an invalid loopback debugger endpoint'));
+        return;
+      }
+      socket = new WebSocket(`ws://127.0.0.1:${Number(endpoint[1])}/devtools/browser/${endpoint[2]}`);
+      socket.addEventListener('error', onError, { once: true });
+      socket.addEventListener('open', () => finish(), { once: true });
+    });
+  });
+}
 
 async function main() {
   const profile = mkdtempSync(join(tmpdir(), 'se-audit-'));
   const chrome = spawn(CHROME, [
-    '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
+    '--headless=new', '--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1', `--user-data-dir=${profile}`,
     '--window-size=390,844', '--no-first-run', '--no-default-browser-check', 'about:blank',
-  ], { stdio: 'ignore' });
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
-  let version;
-  for (let i = 0; i < 50; i += 1) {
-    try { version = await (await fetch(`http://127.0.0.1:${PORT}/json/version`)).json(); break; } catch { await sleep(200); }
+  let ws;
+  try {
+    ws = await connectDebugger(chrome);
+    await runSweep(ws);
+  } finally {
+    ws?.close();
+    chrome.kill();
   }
-  const ws = new WebSocket(version.webSocketDebuggerUrl);
-  await new Promise((r) => ws.addEventListener('open', r, { once: true }));
+}
+
+async function runSweep(ws) {
   let nextId = 1;
   const pending = new Map();
   const listeners = new Map(); // sessionId -> fn
@@ -258,11 +346,14 @@ async function main() {
     const dialog = [...document.querySelectorAll('[role=dialog],[role=alertdialog]')].find(vis);
     return {
       url: location.pathname + location.search + location.hash,
+      viewport: { width: innerWidth, height: innerHeight },
       heading: h ? h.textContent.replace(/\\s+/g, ' ').trim().slice(0, 80) : '',
       text: (main.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 160),
       bottomNav: vis(document.querySelector('.global-bottom-nav')),
       dialog: dialog ? dialog.innerText.replace(/\\s+/g, ' ').trim().slice(0, 90) : '',
       historyLength: history.length,
+      resumeActions: [...document.querySelectorAll('button[aria-label^="Resume "]')].map((el) => ({ label: el.getAttribute('aria-label'), height: el.getBoundingClientRect().height })),
+      horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
       stuckLoading: /^(Loading\\.\\.\\.|Loading…)$/.test((main.innerText || '').trim()),
     };
   })()`;
@@ -293,6 +384,12 @@ async function main() {
     }
     await send('Page.navigate', { url: BASE + path }, sessionId);
     await sleep(SETTLE_MS);
+    const capture = async (suffix = '') => {
+      if (!process.env.SHOTS) return;
+      const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
+      const name = `${label}${suffix ? ` ${suffix}` : ''}`.replace(/[^a-z0-9]+/gi, '_');
+      writeFileSync(join(process.env.SHOTS, `${name}.png`), Buffer.from(data, 'base64'));
+    };
     const evalSnap = async () => (await send('Runtime.evaluate', { expression: SNAP, returnByValue: true }, sessionId)).result.value;
     const result = { label, path, seed: seedName || '', ...(await evalSnap()), snaps: [] };
     if (steps) {
@@ -301,7 +398,10 @@ async function main() {
         else if (step.back) await send('Runtime.evaluate', { expression: 'history.back()' }, sessionId);
         else if (step.goto) { await send('Page.navigate', { url: BASE + step.goto }, sessionId); }
         else if (step.eval) await send('Runtime.evaluate', { expression: step.eval }, sessionId);
-        else if (step.snap) result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+        else if (step.snap) {
+          result.snaps.push({ at: step.snap, ...(await evalSnap()) });
+          await capture(step.snap);
+        }
         else if (step.click) {
           const expr = `(() => { const els = [...document.querySelectorAll(${JSON.stringify(step.click)})];
             const el = els.find((e) => e.getClientRects().length && (${JSON.stringify(step.aria || '')} ? e.getAttribute('aria-label') === ${JSON.stringify(step.aria || '')} || e.textContent.trim() === ${JSON.stringify(step.aria || '')} : e.textContent.includes(${JSON.stringify(step.text || '')})));
@@ -313,11 +413,8 @@ async function main() {
       const final = await evalSnap();
       result.final = final;
     }
-    result.errors = [...new Set(errors)].slice(0, 6);
-    if (process.env.SHOTS) {
-      const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
-      writeFileSync(join(process.env.SHOTS, `${label.replace(/[^a-z0-9]+/gi, '_')}.png`), Buffer.from(data, 'base64'));
-    }
+    result.errors = [...new Set(errors.map(redactDiagnostic))].slice(0, 6);
+    await capture();
     listeners.delete(sessionId);
     await send('Target.closeTarget', { targetId });
     await send('Target.disposeBrowserContext', { browserContextId }).catch(() => {});
@@ -343,9 +440,6 @@ async function main() {
   const order = new Map(cases.map((c, i) => [c[0], i]));
   results.sort((a, b) => order.get(a.label) - order.get(b.label));
   writeFileSync(OUT, JSON.stringify(results, null, 2));
-  ws.close();
-  chrome.kill();
-  process.exit(0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

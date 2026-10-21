@@ -38,6 +38,7 @@ theme that has dissolved its own structure.
 1. **Green = lead / live only.** The soft green wash and green accents mark the
    leading team, a live badge, or the active/primary action. Green is never a
    resting-state fill or generic decoration.
+   On scoring and live surfaces the teams' own colours take over (see §7).
 
 2. **Gold = ONE milestone accent per screen.** Gold marks a single celebratory
    moment (match won, a record, podium placement). More than one gold accent on
@@ -59,6 +60,15 @@ theme that has dissolved its own structure.
 6. **Per-screen soft-element budget.** Cap the soft-styled elements on any one
    screen (rule of thumb: at most ~3 soft surfaces + 1 gold moment + the live
    signal). Overuse erodes the brutalist backbone the blend is layered onto.
+
+7. **Team colour = identity on scoring and live surfaces.** On scoring and
+   spectator screens each team's own colour fills its half of the board and its
+   point keys. Those values come from the colour engine (`src/lib/teamColour.js`)
+   only, never a raw hex, so every label and numeral stays contrast-gated. Green
+   there is limited to the LIVE badge and app actions; lead and tie are not
+   colour-coded (the numbers say who leads). How the team surfaces are framed is
+   decided by the scorer screen's own design, recorded with it; §4 governs the rest
+   of the app.
 
 ---
 
