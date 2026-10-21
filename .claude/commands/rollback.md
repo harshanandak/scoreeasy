@@ -166,19 +166,14 @@ bunx forge rollback
 ✓ Executing: git revert def456 --no-edit
 ✓ Restoring USER sections...
 ✓ Amended commit to preserve USER content
-✓ Beads integration: Issue #123 marked as 'reverted'
 
 Rollback complete!
   Commit: m1n2o3p "Revert: Merge pull request #123"
   Files affected: 15
-  Beads issue: #123 status → reverted
 ```
 
-**Beads Integration**:
-- Parses commit message for issue number (`#123`)
-- If found, runs: `bd update <id> --status reverted --comment "PR reverted"`
-- Silently skips if Beads not installed
-- Updates issue tracking automatically
+**Issue tracking**: rollback does not touch the Forge issue — update it by hand
+(see "Issue tracking" below).
 
 ### 4. Rollback Specific Files
 
@@ -349,29 +344,14 @@ bunx forge rollback
 /validate → /ship
 ```
 
-## Beads Integration
+## Issue tracking
 
-If Beads is installed (`bun install -g @beads/bd`), rollback automatically updates issue tracking.
+Rollback does not update issues. After rolling back a merged PR, reopen the Forge issue
+it closed (the id is in the PR body's `Forge issue:` line) and record why:
 
-### PR Rollback → Issue Status
-
-When rolling back a merged PR:
-1. Parse commit message for issue number (`#123`, `fixes #456`, etc.)
-2. If issue number found:
-   ```bash
-   bd update <id> --status reverted --comment "PR reverted by rollback"
-   ```
-3. Silently skip if:
-   - Beads not installed
-   - No issue number in commit message
-   - Issue doesn't exist
-
-### Manual Beads Update
-
-If automatic detection doesn't work:
 ```bash
-# After rollback
-bd update 123 --status reverted --comment "Rolled back due to production issues"
+forge issue update <id> --status open
+forge issue comment <id> "PR #<number> reverted by rollback: <reason>"
 ```
 
 ## Troubleshooting
@@ -642,15 +622,11 @@ bunx forge rollback
 # ✓ Squash merge detected (1 parent) — using plain revert
 # ✓ Executing: git revert merge789 --no-edit
 # ✓ Restoring USER sections...
-# ✓ Beads: Issue #123 → status: reverted
 # ✓ Rollback complete!
 
-bd show 123
-# ID: 123
-# Title: Add real-time updates
-# Status: reverted
-# Comments:
-#   - PR reverted by rollback
+# Reopen the issue the PR closed
+forge issue update <id> --status open
+forge issue comment <id> "PR #123 reverted by rollback: <reason>"
 ```
 
 ### Example 3: Restore Specific Files
@@ -727,4 +703,3 @@ bunx forge rollback
 - [/dev](.claude/commands/dev.md) - TDD development workflow
 - [/validate](.claude/commands/validate.md) - Validation before shipping
 - [AGENTS.md](../../AGENTS.md) - Complete workflow guide
-- [Beads](https://github.com/beadshq/beads) - Issue tracking integration

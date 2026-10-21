@@ -69,7 +69,7 @@ base branch, so it can never run before `/ship`.)
 
 "Skipping tests creates technical debt. I'll:
  ✓ Allow this commit
- ✓ Create follow-up Beads issue for tests
+ ✓ Create a follow-up issue for tests (`forge issue create`)
  ✓ Document in commit message as [tech-debt]
 
  Proceed?"
@@ -115,32 +115,10 @@ Task 2: Validation logic
 
 ## State Management (Single Source of Truth)
 
-> GitHub issue lifecycle may sync to Beads via CI -- see [docs/BEADS_GITHUB_SYNC.md](docs/BEADS_GITHUB_SYNC.md).
-
-**All workflow state stored in Beads metadata** (survives compaction):
-
-```json
-{
-  "id": "bd-x7y2",
-  "type": "critical",
-  "currentStage": "dev",
-  "completedStages": ["plan"],
-  "skippedStages": [],
-  "workflowDecisions": {
-    "classification": "critical",
-    "reason": "Payment processing, PCI compliance required",
-    "userOverride": false
-  },
-  "parallelTracks": [
-    {
-      "name": "API endpoints",
-      "agent": "backend-architect",
-      "status": "in_progress",
-      "tddPhase": "GREEN"
-    }
-  ]
-}
-```
+**Workflow state lives on the Forge issue** (survives compaction): each stage exit adds a
+stage-transition comment with `forge issue comment` (format under "Usage in Stage
+Transitions" below), so `forge issue show <id>` tells a new session which stage the work
+is in, what was decided, and what comes next.
 
 ## Git Hooks (Automatic Enforcement)
 
@@ -195,7 +173,7 @@ Every stage transition should carry structured context so the next stage (or a n
 Run at each stage exit to check for missing context:
 
 ```bash
-bd show <beads-issue-id>
+forge issue show <id>
 ```
 
 Check by eye that: (1) the issue has a description, (2) at least one stage-transition
@@ -216,7 +194,7 @@ This checks: (1) issue has a description, (2) at least one stage transition exis
 Record the transition as a comment on the issue:
 
 ```bash
-bd comments add <id> "stage: dev -> validate
+forge issue comment <id> "stage: dev -> validate
 summary: All 5 tasks done, 0 gates fired
 decisions: Used approach A per design doc
 artifacts: lib/foo.js test/foo.test.js
@@ -227,25 +205,27 @@ next: Run type check and lint"
 
 This convention is **advisory only**. The `validate` subcommand prints warnings but always exits 0. It does not block any stage transition. The goal is to build good habits, not to create friction.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
-## Beads Issue Tracker
+## Issue Tracker
 
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+Issues live in Forge's own tracker (`forge issue`, stored in `.git/forge/records.sqlite`
+and shared by every worktree).
 
 ### Quick Reference
 
 ```bash
-forge ready           # Find available work
-forge show <id>       # View issue details
-forge claim <id>      # Claim work
-forge close <id>      # Complete work
+forge issue ready                                   # Find available work
+forge issue show <id>                               # View issue details and stage history
+forge issue claim <id>                              # Claim work
+forge issue update <id> --status in_progress        # Move an issue along
+forge issue comment <id> "stage: plan -> dev ..."   # Record a stage transition
+forge issue create --title "..." --type task        # File a follow-up
+forge issue close <id> --reason "..."               # Complete work
 ```
 
 ### Rules
 
-- Use `forge` as the routine command surface for bd-backed issue tracking and sync workflows — do NOT use TodoWrite, TaskCreate, or markdown TODO lists. Exception: `/plan` Phase 3 generates task lists at `docs/plans/YYYY-MM-DD-<slug>-tasks.md` — these are approved artifacts consumed by `/dev`, but Beads (`bd`) remains the source of truth for issue state and IDs. Use `bd` directly only for operations Forge does not wrap yet, such as `bd init`, `bd comments`, `bd dep`, and `bd dolt *`. GitHub issues may be used for external/public tracking; CI may sync GitHub issue lifecycle to Beads (see `docs/BEADS_GITHUB_SYNC.md`).
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `forge issue` for all issue tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists. Exception: `/plan` Phase 3 generates task lists at `docs/plans/YYYY-MM-DD-<slug>-tasks.md` — these are approved artifacts consumed by `/dev`, but the Forge issue remains the source of truth for issue state and IDs.
+- Types are `epic`, `task`, `bug`, `decision`; statuses are `open`, `in_progress`, `review`, `done`, `cancelled`, `backlog`.
 
 ## Session Completion
 
@@ -259,7 +239,6 @@ forge close <id>      # Complete work
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
     git pull --rebase
-    forge sync     # wraps the supported Beads sync flow when Beads is configured
     git push
     git status  # MUST show "up to date with origin"
    ```
@@ -273,7 +252,6 @@ forge close <id>      # Complete work
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 - After fixing review feedback, always push the changes and resolve the related GitHub review threads via the GraphQL API before considering the work complete
-<!-- END BEADS INTEGRATION -->
 
 ## Git conventions
 
