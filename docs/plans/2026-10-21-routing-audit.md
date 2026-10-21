@@ -268,6 +268,12 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 
 Merged `origin/master` at `8384956` using the master audit files as the base, preserving the spawned-process Chrome debugger endpoint validation and the omitted-showcase disclosure. RA-3 phone evidence was refreshed from `bun run dev` on port 5173 at 390?844 CSS pixels (device scale 2): all 18 selected cases reached their intended surface without horizontal overflow or stuck loading; Home Resume targets measured at least 44px tall. Each refreshed screenshot in `2026-10-21-routing-fixes/RA-3/after/` was inspected. The local backend returned `live:listLiveFeed` errors that the existing silent Home error boundary caught; public live-feed availability is not proven by this demo. The other eight route findings and all four stability cases remain expected failures. The palette ratchet remains exactly 667; no baseline or exclusion changed.
 
+### Tennis completion integration evidence
+
+Tennis RA-1 and RA-2 now route successful completion through `ScoringCompletionContext`; failed local saves stay in the scorer. The tournament contract is a new ordinary test; the quick-match contract changed from `it.fails` to `it`. Saved results and nonempty Undo/draft history have focused regression coverage. The existing SA-07 undo-to-empty persistence defect remains open; this is not a general persistence repair.
+
+At the pre-push hold: seven focused files pass with 134 ordinary passes and 11 expected failures; lint has 0 errors and 29 warnings; type-check passes; the palette count remains exactly 669. The 390x844 browser comparison reproduces both old Back failures and verifies the fixed destinations without a dialog. See [the walkthrough and all 12 inspected screenshots](2026-10-21-routing-fixes/tennis-back/README.md). Full-suite/build and hosted checks are deferred until the final integration and push.
+
 ## Fix plan
 
 The original plan below groups fixes by scorer impact. Harsha's current delivery direction is to merge the appropriate existing PRs; this table does not authorize opening more PRs. A fix with a matching contract is verified by flipping it from `it.fails` to `it`, re-running the matching sweep cases (`ONLY=<regex> node scripts/route-sweep.mjs`), and a phone-viewport demo for the merge. Findings without a contract need focused proof in their owning implementation work.

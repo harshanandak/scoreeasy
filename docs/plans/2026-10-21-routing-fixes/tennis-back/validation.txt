@@ -1,0 +1,8 @@
+Focused: 7 files passed; 134 passed; 11 expected fail; 145 total; duration 33.03s.
+Lint: exit 0; 0 errors; 29 warnings.
+Type-check: exit 0.
+Merge hooks: agent-config-sync, type-check, lint passed.
+Palette: exact baseline 669, unchanged; no exclusions added.
+Sweep syntax: node --check scripts/route-sweep.mjs passed.
+Browser: before/after x quick/tournament; 390x844; all intended clicks succeeded; 12 PNGs inspected.
+Full suite/build: not run at hold point.

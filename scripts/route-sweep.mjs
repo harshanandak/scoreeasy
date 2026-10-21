@@ -406,7 +406,13 @@ async function runSweep(ws) {
           const expr = `(() => { const els = [...document.querySelectorAll(${JSON.stringify(step.click)})];
             const el = els.find((e) => e.getClientRects().length && (${JSON.stringify(step.aria || '')} ? e.getAttribute('aria-label') === ${JSON.stringify(step.aria || '')} || e.textContent.trim() === ${JSON.stringify(step.aria || '')} : e.textContent.includes(${JSON.stringify(step.text || '')})));
             if (!el) return 'NOT FOUND'; el.click(); return 'clicked'; })()`;
-          const r = (await send('Runtime.evaluate', { expression: expr, returnByValue: true }, sessionId)).result.value;
+          let r;
+          for (let attempt = 0; attempt < 50; attempt += 1) {
+            r = (await send('Runtime.evaluate', { expression: expr, returnByValue: true }, sessionId)).result.value;
+            if (r === 'clicked') break;
+            await sleep(200);
+          }
+          if (r !== 'clicked') throw new Error(`Click target did not appear: ${step.aria || step.text}`);
           result.snaps.push({ at: `click ${step.aria || step.text}: ${r}` });
         }
       }
