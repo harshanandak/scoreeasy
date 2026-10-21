@@ -10,7 +10,7 @@
 - **Badminton cap.** In a tournament, a game at 30-29 never ends. In a quick match, the same score ends it.
 - **Undo.** Undoing back to 0-0 is not saved. A refresh brings the undone point back.
 
-Everything below has evidence: a browser run, a failing test, or a quoted `file:line`.
+Evidence below is graded by source inspection, executable tests, historical browser observations, or an explicitly unproven scenario. The historical browser assets are unavailable.
 
 **Scope.** Out of scope, because other audits own them:
 - routing correctness (only crash-causing routing items are listed here)
@@ -18,7 +18,7 @@ Everything below has evidence: a browser run, a failing test, or a quoted `file:
 - flaky tests (#159)
 - game-registry changes (`feat/icp-game-focus`)
 
-**Base.** Original audit: `origin/master` at `9f263b1`. Recovery fetched `origin/master` again on 2026-10-21 and confirmed the same commit (`9f263b1a88d82ddcbf15b891a60ce51126a75c60`); no merge was needed. Source references below refer to that base, not another worker's branch.
+**Base.** Original audit and first recovery: `origin/master` at `9f263b1a88d82ddcbf15b891a60ce51126a75c60`. This integration fetched and normally merged `origin/master` at `acb11708c91f6d5e4f41d526405cee2c4047bb63` on 2026-10-21, preserving original audit commit `fdf8674` and recovery commit `73f291c`. Line references remain on the original base unless reverified in the integration section below. Historical observations do not establish current runtime or deployment behavior.
 
 ## Recovery evidence and limits
 
@@ -36,6 +36,19 @@ Fresh recovery checks and ownership boundaries are recorded below. A passing `it
 - [x] Separate historical browser/deployment evidence from fresh checks and identify parallel ownership overlaps. No app fixes or deployment operations are included.
 
 Commit/push hooks run lint, type checking, agent-config synchronization, the full test suite and a build. Their final outcomes and the hosted-check snapshot belong in the PR handoff; the focused checks above do not substitute for those hooks. Native behavior and the historical browser table still need fresh proof in the relevant fix PRs.
+
+## Integration against landed master (2026-10-21)
+
+The integration issue is `1b5b39fd-194c-4c86-8ffa-22d5909b4060`, claimed by `scoreeasy-pr165-integration-r2`. This is a bounded reconciliation, not a new audit sweep.
+
+- **Landed:** shared colour foundation PR #156 (`3e3cb75`), routing audit PR #163 (`349f2ac`), and docs-drift PR #164 (`acb1170`). The routing PR adds an audit and expected-failure route tests; it does not implement the routing fixes. Its findings overlap SA-05, SA-09, SA-14, SA-17 and SA-19 and should share follow-up acceptance coverage.
+- **Source comparison (rung 2):** comparing the original base with fetched master shows the cited scorer, storage, auth/bootstrap, routing, live and Convex files are unchanged. The sport registry adds the team-colour helper after line 459; the cited badminton/pickleball rule entries at lines 53 and 141 are unchanged. Colour CSS, helper and picker additions do not establish any scoring or persistence fix.
+- **Current source re-read (rung 2):** `MonoSetsLiveScore.jsx:179-180,193-196` still checks win-by before the cap; `:240,341` still shares the tap window; `:388-402` still skips empty-history autosaves and ignores the save result. `storage.js:186-205` still selects a memory backend for reads after the import-time write probe fails. `MonoTennisLiveScore.jsx:513`, `MonoCricketLiveScore.jsx:629-643`, and `MonoCricketTestLiveScore.jsx:639-655` retain the completed-state guards and draft omissions; `MonoGoalsLiveScore.jsx:313-323` still omits clock/overtime fields. `main.jsx:236-258,326-361` retains the provider-tree switch. These are source observations; the proposed refresh, native and reconnect scenarios need runtime proof in their fix PRs.
+- **Public-profile correction (rung 2):** `convex/matches.ts:211-220` returns aggregate stats; only `getPublicRecentByUsername` at `:222-230` returns sorted match documents. Both use plain public queries. SA-16 remains a privacy decision and source finding, not a fresh signed-out API reproduction.
+- **Docs reconciliation (rung 2):** PR #164 corrected README's JS/JSX type-check claim and its production-host description, and clarified the documented hook guarantees in AGENTS/standards/workflow/mirrors. `DEPLOYMENT.md:13,28-76` still contains the boot claim and Vercel guidance; the `VERCEL_ENV` service-worker concern remains source-only. See the split status below.
+- **Fresh executable proof (rung 4):** both stability files pass with their four expected failures. Temporarily making all four ordinary `it` cases fails on the intended cap, unreadable storage, stale undo draft and dropped cross-team tap assertions. Both files are restored byte-for-byte. No case became an ordinary passing regression because these fixes are not on this master.
+
+The four P0 and sixteen P1 findings remain follow-ups. No fresh browser sweep, native run, deployment inventory, or application fix is included. The historical screen table and build measurements below retain their original baseline. Hook outcomes, current full-suite counts and the hosted-check snapshot are reported in the PR handoff.
 
 ## Original audit method (historical)
 
@@ -106,7 +119,7 @@ Noise present on every screen, and not listed per row:
 | `/onboarding` (guest) | redirects to `/login?returnTo=/` | none | |
 | `/live/not-a-real-token` | **"App route crashed"** (route-level boundary) | **uncaught** `[CONVEX Q(live:getByToken)] Could not find public function for 'live:getByToken'` | The dev deployment lacks the live functions (SA-05). `MonoWatchMatch` also has no local boundary, so *any* server error takes down the spectator's whole route, prod included. |
 
-## LiveNowStrip throwing on the dashboard (forge `livenowstrip-throws-on-the-a1784d4e`)
+## Historical LiveNowStrip failure on the dashboard (forge `livenowstrip-throws-on-the-a1784d4e`)
 
 **Historical diagnosis.** The reported missing-function errors match the reported dev deployment inventory. This does not establish the deployment's current state or rule out separate code failures.
 
@@ -117,12 +130,12 @@ Noise present on every screen, and not listed per row:
 
 **Origin of the drift is unknown.** The previous worker reported finding `convex/live.ts` in all nine inspected local checkouts. That snapshot cannot identify which checkout, branch, machine, or deployment command produced the deployed function inventory. A shared dev deployment still needs coordinated ownership.
 
-**Effects in dev.**
+**Effects reported on the original dev deployment (not freshly verified).**
 - `/live/:token` crashes.
 - Going live cannot work.
 - Any demo recorded on dev shows a dashboard without the strip.
 
-**Fix (needs Harsha; not done here).** It touches shared state other sessions may be using.
+**Historical recovery proposal (needs Harsha and a current inventory; not done here).** It touches shared state other sessions may be using.
 - Re-push dev from current master with `npx convex dev --once`.
 - Better: give each worktree or agent its own dev deployment, so one session's push cannot strip functions from another.
 - Code side: give `MonoWatchMatch` its own boundary (SA-05). Let the strip's boundary log in dev, so drift like this is visible.
@@ -132,8 +145,8 @@ A root-cause comment was added to the forge issue.
 ## Tap guard: does the 150 ms debounce lose points? (coordinator question)
 
 **How it works.**
-- Every scorer has **one** `lastClickRef` per screen, and a tap within 150 ms of the previous accepted tap returns silently (`if (now - lastClickRef.current < 150) return;`).
-- That ref is shared by **both teams and every action**:
+- The guarded scorer paths inspected below have **one** `lastClickRef` per screen, and a tap within 150 ms of the previous accepted tap returns silently (`if (now - lastClickRef.current < 150) return;`).
+- Within each screen, the ref is shared by **both teams and the guarded scoring actions**:
   - `MonoQuickMatch.jsx:1055, 1080, 1107, 1273, 1466`
   - `MonoSetsLiveScore.jsx:240, 341`
   - `MonoGoalsLiveScore.jsx:230`
@@ -142,7 +155,7 @@ A root-cause comment was added to the forge issue.
   - `MonoCricketTestLiveScore.jsx:345–418`
 - Guided cricket has **no guard at all** (`MonoCricketGuidedScorer.jsx:166-176`).
 
-**Measured** on quick volleyball, headless Chrome, `click()` dispatched at controlled intervals:
+**Historically measured** on quick volleyball, headless Chrome, `click()` dispatched at controlled intervals:
 
 | Input | Expected | Got |
 |---|---|---|
@@ -182,6 +195,8 @@ Severity:
 - **C:** source inspection (rung 2); scenario and absence claims remain unproven at runtime.
 - **S:** suspected; needs a device or more repro (unproven).
 
+For **C**-only entries, the repro column describes a proposed failure scenario inferred from source. It does not record an executed browser, native, cloud, refresh or recovery test. Absolute runtime wording in the retained finding names is shorthand for the risk under that scenario, not proof that every match or environment exhibits it.
+
 ### P0: can lose a point or match
 
 | ID | Finding | Evidence | Repro | Scorer impact | Forge |
@@ -189,24 +204,24 @@ Severity:
 | SA-01 | Badminton tournament game never ends at the 30-point cap | `MonoSetsLiveScore.jsx:193-196` checks `max - min < winBy` *before* `maxPoints` (and the same at `:179-180` for single-game). Quick match gets it right in `quickMatchSets.js:41`. | Badminton round-robin, score to 29-29, then Team 1 +1. The board stays at "SET 1 OF 3, 30–29". Quick match at the same score moves to set 2. **B, T** | The board breaks the BWF rules. The game runs past 30, and standings and history record an impossible score. | `b698365e-92df-488b-ab8c-6fde42a8d0f9` |
 | SA-02 | Storage full at boot means a memory-only session that hides every saved match | `storage.js:186-205`: one test write at import; if it throws, `getStorage()` returns a memory store for reads **and** writes. The original source pass found no consumer of `isPrivateMode` (`:447`); that absence is not a runtime guarantee. | Fill localStorage mid-match, score 3, reload. The page lands on the **Setup** screen and the match is invisible. **B, T** | Writes after quota can fail and previously saved data becomes hidden after reload, without a warning. Private-mode behavior needs browser-specific verification. | `7a50f38f-f619-445d-b791-68a16a422433` |
 | SA-03 | Autosave failures are swallowed while the board shows the point | Return value ignored at: `MonoQuickMatch.jsx:588`, `MonoSetsLiveScore.jsx:402`, `MonoGoalsLiveScore.jsx` (~`:323`), `MonoCricketTestLiveScore.jsx:649,655`, `MonoTennisLiveScore.jsx:516` (quick) and `MonoCricketGuidedScorerRoute.jsx:162`. `handleComplete2` (`:257-258`) navigates away even when the save failed. Only `console.warn` fires (`storage.js:223,270`). | Same quota run. The board showed 2–3, the saved draft held `[{score1:2,score2:0}]`, and three `QuotaExceededError` console warnings appeared with no UI. **B** | The scorer keeps scoring into nothing. | `6c1a0fa5-9462-4cf3-a150-297d77606f9d` |
-| SA-04 | The match-winning point or ball is never autosaved | Autosave early-returns once complete: `MonoTennisLiveScore.jsx:513`, `MonoCricketLiveScore.jsx:629`, `MonoCricketTestLiveScore.jsx:639`. Super-over state is missing from `draftState` (`MonoCricketLiveScore.jsx:476-488, 632-641`). | Tennis at match point: win the point, then refresh (or be backgrounded and killed, or hit SA-06) before tapping Save. The board reopens one point earlier. **C** | The deciding point is lost, and a super over restarts. | `0bc3c8a0-36f9-4584-9051-95d08e9cfd03` |
+| SA-04 | Completed-state guards risk losing the match-winning point or ball on refresh | Autosave early-returns once complete: `MonoTennisLiveScore.jsx:513`, `MonoCricketLiveScore.jsx:629`, `MonoCricketTestLiveScore.jsx:639`. Super-over state is missing from `draftState` (`MonoCricketLiveScore.jsx:476-488, 635-643`). | Proposed repro: win the match point, then refresh before tapping Save. The completed-state guard may leave the earlier draft. **C; runtime transition unverified here** | Deciding-point and super-over progress may be lost on restore. | `0bc3c8a0-36f9-4584-9051-95d08e9cfd03` |
 
 ### P1: stuck screens, wrong data, broken recovery
 
 | ID | Finding | Evidence | Repro | Impact | Forge |
 |---|---|---|---|---|---|
-| SA-05 | Dev Convex deployment lacks every `live:*` function, and `/live/:token` has no local boundary | `functionSpec` (dev vs prod, above); `MonoWatchMatch` is covered only by the route boundary (`index.jsx:1772`) | Open `/app` (strip throws) or `/live/anything` ("App route crashed"). **B** | Dev demos and live sharing are broken. In prod, any transient query error blanks the spectator page. | `11d4379b-c56d-4190-a8fa-7018110fc591` |
-| SA-06 | Coming back online remounts the whole app mid-match | `main.jsx:236-258` flips local→cloud on `online`. The root element changes from `<ConvexProvider>` (`:352`) to `<Suspense><CloudAuthRoot>` (`:324`), which forces a full unmount. On native the same happens when the probe flips (`:262-316`). | Boot offline, score, open "End match?", fire `online`. The DOM marker is gone and the sheet is closed; the score survives through the draft. **B** | Anything not persisted is lost: SA-04, SA-08, SA-10, open sheets, and the in-flight sync. | `ef68c0b5-97d7-45c0-a120-618c111e20a1` |
+| SA-05 | Historical dev deployment lacked every `live:*` function; source shows no spectator-local boundary | Historical `functionSpec` (dev vs prod, above); `MonoWatchMatch` is covered only by the route boundary (`index.jsx:1772`, **C**) | Open `/app` (strip throws) or `/live/anything` ("App route crashed"). **B** | The historical dev demo and live-sharing flows failed. A spectator query error may reach the route fallback; current production behavior is unverified. | `11d4379b-c56d-4190-a8fa-7018110fc591` |
+| SA-06 | Coming back online can remount the app mid-match | `main.jsx:236-258` recomputes bootstrap mode on `online`. When cloud mode is selected, the root changes from `<ConvexProvider>` (`:352`) to `<Suspense><CloudAuthRoot>` (`:326-334`), forcing an unmount. On native the probe controls the switch (`:262-324`). | Boot offline, score, open "End match?", fire `online`. The historical run lost the DOM marker and open sheet; the score survived through the draft. **B** | Unpersisted state is at risk. Native behavior and in-flight sync loss are unverified scenarios. | `ef68c0b5-97d7-45c0-a120-618c111e20a1` |
 | SA-07 | Undo back to 0-0 is not saved, so a refresh resurrects the point | `if (history.length === 0) return;` at `MonoSetsLiveScore.jsx:388`, `MonoGoalsLiveScore.jsx:312`, `MonoTennisLiveScore.jsx:513`, `MonoCricketLiveScore.jsx:630` and `MonoCricketTestLiveScore.jsx:640` | Badminton tournament: tap, Undo (0–0), reload. It shows 1–0. **B, T** | The board disagrees with the undo the scorer made. Quick match is fine. | `35cbce6e-7e28-49de-826a-204bb3e46904` |
 | SA-08 | Uncancelled 300 ms timers override undo | Test cricket: `setTimeout(() => advanceInnings(updated), 300)` inside updaters (`MonoCricketTestLiveScore.jsx:366,398,403,439,468`); undo (`:492-500`) cannot cancel it. Goals points-mode auto-finish (`MonoGoalsLiveScore.jsx:266-290`) saves closure scores and navigates away. | At 9 down, Wicket then Undo within 300 ms: innings 2 starts anyway. Goals target 11, reach 11, Undo at 200 ms: the match is saved as 11. **C** | The innings or match ends against the scorer's undo. | `8b0316bd-bcda-40b9-877a-f4188f5dd5dc` |
 | SA-09 | Test cricket: follow-on and result not persisted, idle matches pruned, quick Test route spins forever | `followOnPrompt`/`matchComplete`/`matchResult` are not in `draftState` (`MonoCricketTestLiveScore.jsx:506-512, 641-646`). In-progress quick matches idle more than 24 h are deleted on read (`storage.js:108-116, 137-138, 388-394`). No not-found state on `/cricket/quick/test-match/:id`. | Refresh at the follow-on prompt and the board is stuck. A rest day deletes the Test. `/cricket/quick/test-match/nope` shows "Loading..." forever. **B** (Loading) **, C** | The scorer is stuck or the match is deleted. | `d6656085-2cc6-49c0-976e-7203e308285f` |
 | SA-10 | Goals tournament clock and overtime reset on refresh | `MonoGoalsLiveScore.jsx:313-323` saves only `{score1, score2, history, savedAt}`; quick match does persist the clock (`MonoQuickMatch.jsx:285-291, 612`). | Timed football tournament at 30:00, refresh: the clock reads 0:00. **C** | Match length is wrong. | `134b5fe0-df42-4fe2-af45-2e1fb5924145` |
 | SA-11 | A shared 150 ms tap guard silently drops fast and cross-team taps | See the tap-guard section above. | **B, T** | Lost taps with no feedback. | `ab161889-442c-42f5-8edf-3ca42078c4c3` |
-| SA-12 | **Decision needed:** volleyball 27-point cap and badminton serve differ between quick match and tournament | Volleyball quick caps sets at 27 (`sportDefaults.js:12` → `quickMatchSets.getSetWinRule`); tournament volleyball has no cap (`sportRegistry.js`). Badminton/pickleball serve goes to the rally winner in quick (`MonoQuickMatch.jsx:762, 1257`) but alternates every point in tournament (`sportRegistry.js:53, 141`, `MonoSetsLiveScore.jsx:213-216`, locked by `MonoSetsLiveScore.test.jsx:252`). | The same rallies produce two different boards. **C** | The board disagrees with the rules: FIVB has no cap, and in BWF the rally winner serves. This is a sport-rule change, so it is Harsha's call. | `53d0d0ea-d7c5-49cc-b4a0-61f535c11f6e` |
+| SA-12 | **Decision needed:** volleyball 27-point cap and badminton serve differ between quick match and tournament | Volleyball quick caps sets at 27 (`sportDefaults.js:12` → `quickMatchSets.getSetWinRule`); tournament volleyball has no cap (`sportRegistry.js`). Badminton/pickleball serve goes to the rally winner in quick (`MonoQuickMatch.jsx:762, 1257`) but alternates every point in tournament (`sportRegistry.js:53, 141`, `MonoSetsLiveScore.jsx:213-216`, locked by `MonoSetsLiveScore.test.jsx:252`). | The same rallies can produce different boards. **C** | The implementations disagree. Confirm the intended rules before changing either path; this is Harsha's decision. | `53d0d0ea-d7c5-49cc-b4a0-61f535c11f6e` |
 | SA-13 | Finished matches are never retried to the cloud, but the offline banner promises they will be | Sync state lives in refs (`useMatchSync.js:37-38`); retry is only a button (`MonoQuickMatch.jsx:943-965`); matches finished offline or signed out are skipped (`:858-862`); tournament saves use `saveMatchMutation(payload).catch(() => {})` (`MonoSetsLiveScore.jsx:94` and Goals/Tennis/Cricket/Test); quick tennis, quick Test and guided cricket never sync. `OfflineFallback.jsx:74` says "Cloud sync and sign-in will resume when the connection is back" (seen in the sweep). | Finish a match offline, then reconnect: nothing syncs. **B** (copy) **, C** | Cloud history silently misses matches, and the copy says otherwise. | `d8c42ce8-9555-46b8-9da3-b501bb1be873` |
 | SA-14 | No root error boundary, and the route boundary never resets | Providers and shell sit outside any boundary: `main.jsx:324-361`, `App.jsx:5-14`, `CloudAuthProvider.jsx:31`, and the shell at `index.jsx:1765-1768, 1834`. `ErrorBoundary.jsx` has no reset key. | Crash `/history`, then tap Home in the bottom nav: the URL changes but "App route crashed" stays. A provider throw gives a white screen. **C** | Stuck screen. "Try again" re-crashes. | `591852ea-964f-4784-b5f0-25d91af55006` |
 | SA-15 | Stale tab after a deploy: lazy chunks 404, and the reload can fire mid-match | `skipWaiting`/`clientsClaim`/`cleanupOutdatedCaches` (`vite.config.js:44-46, 111-112`). The controller-change reload runs once per tab session and unconditionally (`main.jsx:158-166`). No `vite:preloadError` anywhere. The SPA fallback serves `index.html` for missing `/assets/*` (`wrangler.jsonc`) under `nosniff` (`public/_headers`). | Two deploys in one session, then open a lazy route: "Failed to fetch dynamically imported module", then "App route crashed". **C** | Crash after a deploy, or a reload on the scorer. | `01582321-9007-4bc7-b345-295a4a3228b9` |
-| SA-16 | Public username queries return raw match documents without identity | `convex/matches.ts:211-231`: `getPublicUserStatsByUsername` / `getPublicRecentByUsername` are plain `query()` and return full `matches` docs. `teams.search` is unauthenticated too. | Call `getPublicRecentByUsername({username})` signed out. **C** | Breaks "a match is private to its scorer until shared". Needs a decision on what a public profile shows. | `f210fff9-5107-400a-830b-d5951e7a92b3` |
+| SA-16 | Public recent-match query returns match documents without an identity check | `convex/matches.ts:211-231`: both username queries are plain `query()`; stats returns aggregates, while `getPublicRecentByUsername` returns sorted `matches` docs. `teams.search` is unauthenticated too. | Proposed repro: call `getPublicRecentByUsername({username})` signed out. **C; no fresh API call** | Conflicts with the stated match-privacy rule. Needs a decision on what a public profile shows. | `f210fff9-5107-400a-830b-d5951e7a92b3` |
 | SA-17 | Native launch deep link replays on every navigation | The effect deps include `navigate` (`index.jsx:1601-1604`), whose identity changes per pathname in react-router 7. `App.getLaunchUrl()` is re-read every time (`deepLinks.js:66-72`). | Cold-launch from a `/live/X` link, then navigate: the app is pulled back, or a spurious Leave prompt appears. **C, S** (needs a device) | Navigation hijack mid-match. | `0f63165d-0168-4024-8a11-f346b4e0fa3a` |
 | SA-18 | Live outbox: a permanent error blocks the queue, and earlier match events are dropped | `outbox.js:113-123` stops at the first failure. `useLiveBroadcast.js:92-97` drops only `match_final`. Plain `Error`s at `convex/live.ts:197-199` stay at the head with no backoff or cap. Events from the previous match are dropped (`useLiveBroadcast.js:63-65`). The `saveSession` result is ignored (`:109`). | The live match is deleted or the account changes mid-match: the spectator board freezes while the scorer still sees LIVE. **C** | Spectators see the wrong score, and `se_outbox` grows toward quota (feeds SA-02). | `2f2ce343-5c01-4dab-80d3-db2a7f8c79c3` |
 | SA-19 | The dashboard ignores an in-progress quick match | `readDashboardState` (`DashboardLanding.jsx:723-736`) never reads `se_quickmatch_draft_*` (`appEntry.js:9`). | Volleyball quick match in progress at 6–4, open `/app`: "Play your first match". **B** | The match looks lost. Recovery depends on `/` auto-resume. Related: `dashboard-live-now-band-35e51f04`. | `82315578-d10f-4de3-b089-bc99c4fa9913` |
@@ -227,10 +242,10 @@ Severity:
 - **A malformed `VITE_CONVEX_URL`** (missing `https://`) throws inside `new ConvexReactClient` (`CloudAuthRoot.jsx:32`) with no boundary, giving a white screen. A missing key falls back to local mode cleanly (`bootstrap.js:7-9`).
 - **Refreshing the quick-match result screen lands on Setup** (B). The data is safe in History.
 - **`ReportMatch` shows "Thanks — reported" even when the mutation fails** (`ReportMatch.jsx:26-32`).
-- **Docs asserting what the code does not do.** AGENTS.md treats this class as must-fix:
-  - `DEPLOYMENT.md:13`: "The app will fail to boot if the Clerk key is missing." It boots in local mode.
-  - `README.md:42`: type-check "over the JS/JSX sources". `tsconfig.json` has `checkJs: false`.
-  - `README.md:53` and `DEPLOYMENT.md:28-76`: Vercel. Hosting is Cloudflare (`wrangler.jsonc`, `.github/workflows/cloudflare-*`), and because of that the `VERCEL_ENV`-gated preview SW cleanup (`vite.config.js:6, 43`) never runs, so Cloudflare PR previews register the production service worker.
+- **Documentation drift status on integrated master (rung 2).**
+  - **Resolved by PR #164:** README now says type-check covers the included Convex TypeScript with JS/JSX unchecked, and describes production as an assets-only Cloudflare Worker. AGENTS/standards/workflow/mirrors now distinguish instructions from hook enforcement. These resolved claims are not open findings.
+  - **Remaining:** `DEPLOYMENT.md:13` says the app fails to boot without the Clerk key, while `bootstrap.js:7-27` selects local mode. `DEPLOYMENT.md:28-76` still presents Vercel guidance; it needs reconciliation with the configured Cloudflare production path.
+  - **Separate source concern:** preview SW cleanup is gated by `VERCEL_ENV` (`vite.config.js:6,43`), while Cloudflare workflows configure previews. Whether a particular preview registers an unwanted worker needs fresh build/browser proof; no current preview behavior is claimed here.
 
 ### P3: hygiene
 
@@ -304,16 +319,13 @@ One concern per PR, each shipped with a phone-viewport demo per AGENTS.md.
 
 P2 and P3 items need their own bounded follow-up unless they are required to satisfy the active PR's acceptance criteria. Sharing a file is not sufficient reason to expand a fix PR.
 
-## Parallel ownership and handoff
+## Ownership and follow-up handoff
 
-This PR owns this audit and the two `.stability.test` files only. It preserves `fdf8674` and does not edit app behavior, `AGENTS.md`, `README.md`, coding standards, or their mirrors.
+This PR owns this audit and the two `.stability.test` files only. It preserves `fdf8674` and `73f291c`; master changes enter through the normal merge. It makes no app, config, deployment or rule changes.
 
-- **Routing worker:** Home/resume (overlap with SA-19), goals, tennis and cricket finish/recovery paths (overlap with SA-04, SA-07, SA-08, SA-09, SA-10). Coordinate acceptance coverage before opening a second fix for the same path.
-- **Sets-cap worker:** shared set helper and rule consumers (SA-01, with possible SA-12 rule-decision overlap). Convert the SA-01 expected-failure test when integrating the fix; do not silently change the sport-rule decision.
-- **Dialogs worker:** shell CSS. No CSS changes belong to this audit; phone-modal evidence must come from that worker's PR.
-- **Docs-drift worker:** `AGENTS.md`, `README.md`, `CODING_STANDARDS.md` and mirrors. Deployment/copy findings above are handoff context, not authorization to edit those files here.
+The earlier routing, sets-cap, dialogs and docs assignments are historical coordination context. All original audit workers completed. Routing audit PR #163 and docs-drift PR #164 have landed; that does not mean the routing or scorer fixes have landed. The sets-cap fix remains parked on another branch and is not absorbed here. Parent owns the final head review and merge.
 
-These assignments were supplied in the recovery brief; they do not assert that another worker's changes have landed. Check the current remote before starting each follow-up.
+Before a follow-up, recheck its existing Forge issue and current master, deduplicate the routing-audit overlaps, and coordinate changes to shared scorer paths. Convert the relevant `it.fails` only when its intended assertion passes with the actual fix. Native and phone-browser acceptance needs fresh artifacts from the fix PR.
 
 ## Forge issues
 
