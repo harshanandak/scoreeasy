@@ -128,9 +128,36 @@
 
   /* LIVE breathing pulse timing (helper class + reduced-motion gate below) */
   --se-blend-pulse-duration: 2.4s;
+
+  /* Team colour (Direction E). Scoring screens set these at runtime from the colour engine
+     (src/lib/teamColour.js); these fallbacks are its output for the default red v blue pair. */
+  --team-a-hi: #d32928;
+  --team-a-core: #bb0012;
+  --team-a-lo: #890600;
+  --team-a-on: #ffffff;
+  --team-a-scrim: rgba(0, 0, 0, 0.3);
+  --team-a-tint: #ffe6e3;
+  --team-a-line: #c7423b;
+  --team-a-motif: rgba(0, 0, 0, 0.17);
+  --team-b-hi: #2f61e3;
+  --team-b-core: #1d4ccc;
+  --team-b-lo: #182aa4;
+  --team-b-on: #ffffff;
+  --team-b-scrim: rgba(0, 0, 0, 0.31);
+  --team-b-tint: #e4edff;
+  --team-b-line: #2d57be;
+  --team-b-motif: rgba(0, 0, 0, 0.17);
 }
 
 @theme inline {
+  --color-team-a: var(--team-a-core);
+  --color-team-a-on: var(--team-a-on);
+  --color-team-a-tint: var(--team-a-tint);
+  --color-team-a-line: var(--team-a-line);
+  --color-team-b: var(--team-b-core);
+  --color-team-b-on: var(--team-b-on);
+  --color-team-b-tint: var(--team-b-tint);
+  --color-team-b-line: var(--team-b-line);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
