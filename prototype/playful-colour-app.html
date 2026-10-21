@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score Easy · Playful colour directions (prototype)</title>
+<!-- Design exploration only (prototype/): never imported by src/. 2026-10-22.
+     Three playful directions over ONE colour system: neutral chrome, one Go green, gold for the win,
+     danger red, and nine sport identities. Sport and team colours both run through a verbatim copy of
+     src/lib/teamColour.js (inlined below), so every label on a gradient is contrast-gated the same way.
+     URL params: ?d=kit|sticker|bug  &theme=light|dark  &w=390|360  &s=<screen> (single screen)
+     &bare=1 (screen fills the viewport, for screenshots)  &audit=1 (writes the measured checks into #audit). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Barlow+Condensed:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:wght@400..900&family=Rubik:wght@400..900&display=swap" rel="stylesheet">
+<style>
+/* ===================== page chrome (not part of the app) ===================== */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#dcdfe5;color:#0b0b0d;font-family:Figtree,system-ui,sans-serif}
+.bar{position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 24px;background:#fff;border-bottom:1px solid rgba(11,11,13,.12)}
+.bar h1{margin:0 8px 0 0;font:800 1.05rem/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.01em}
+.seg{display:inline-flex;border:2px solid #0b0b0d;border-radius:12px;overflow:hidden}
+.seg button{font:700 .9rem Figtree,sans-serif;border:0;background:#fff;color:#0b0b0d;padding:9px 13px;cursor:pointer;min-height:40px}
+.seg button+button{border-left:2px solid #0b0b0d}
+.seg button[aria-pressed=true]{background:#0b0b0d;color:#fff}
+.why{flex-basis:100%;margin:0;font-size:.92rem;color:#4a4b52}
+.why b{color:#0b0b0d}
+.wall{display:flex;gap:28px;overflow-x:auto;padding:26px 24px 40px;align-items:flex-start}
+figure{margin:0;flex:none}
+figcaption{font:700 .85rem Figtree,sans-serif;color:#4a4b52;margin:0 0 10px 6px}
+#audit{white-space:pre-wrap;font:12px/1.4 ui-monospace,Consolas,monospace;margin:0 24px 40px;padding:14px;background:#fff;border-radius:12px;display:none}
+#audit.on{display:block}
+body.bare{background:#000}
+body.bare .bar,body.bare figcaption{display:none}
+body.bare .wall{padding:0;gap:0;overflow:visible}
+
+/* ===================== the app: tokens ===================== */
+.phone{
+  --pw:390px;
+  /* neutral chrome */
+  --ink:#0b0b0d; --ink-2:#4a4b52; --ink-3:#5f6067;
+  --canvas:#f4f5f7; --surface:#ffffff; --surface-2:#eceef2;
+  --hair:rgba(11,11,13,.10); --hair-2:rgba(11,11,13,.16);
+  --on-ink:#ffffff;
+  /* Go: the one forward action per screen (engine-normalised green, white label >= 4.7:1 on every stop) */
+  --go-hi:#007c34; --go:#00662a; --go-lo:#004720; --go-on:#ffffff;
+  /* Live: the word + dot, never colour alone */
+  --live-text:#00662a; --live-soft:#d9f6dd;
+  /* Win: gold, one milestone per screen; fills take ink text, gold-ink is the text colour */
+  --gold:#f5b700; --gold-ink:#7a5410; --gold-soft:#fff1c2;
+  --danger:#b42318; --danger-soft:#fbe9e7;
+  /* Mono-strength controls */
+  --edge:var(--ink); --ctl-bg:var(--surface); --ctl-shadow:3px 3px 0 var(--ink); --ctl-press:1px 1px 0 var(--ink);
+  --lift:0 1px 2px rgba(11,11,13,.06),0 14px 30px -18px rgba(11,11,13,.45);
+  --focus:var(--ink);
+  --num:'Barlow Condensed',sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  width:var(--pw);height:844px;position:relative;overflow:hidden;border-radius:34px;
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.08);
+  background:var(--canvas);color:var(--ink);
+}
+.phone[data-theme=dark]{
+  --ink:#f4f5f7; --ink-2:#b9bbc2; --ink-3:#a2a4ab;
+  --canvas:#0e0f12; --surface:#191a1f; --surface-2:#25272d;
+  --hair:rgba(244,245,247,.12); --hair-2:rgba(244,245,247,.2);
+  --on-ink:#0b0b0d;
+  --live-text:#7ee2a2; --live-soft:#123321;
+  --gold-ink:#f5c84c; --gold-soft:#3a2f0c;
+  --danger:#ff8f84; --danger-soft:#3a1714;
+  --ctl-bg:#202228; --ctl-shadow:3px 3px 0 #000000,3px 3px 0 1px rgba(244,245,247,.35); --ctl-press:1px 1px 0 #000;
+  --lift:0 1px 0 rgba(255,255,255,.04),0 16px 30px -18px rgba(0,0,0,.9);
+}
+body.bare .phone{height:100vh;border-radius:0;box-shadow:none}
+
+/* per-direction type */
+.phone[data-dir=kit]{--f-ui:Figtree,system-ui,sans-serif;--f-display:'Bricolage Grotesque',Figtree,sans-serif;--r-card:22px;--r-tile:20px;--r-ctl:14px;--r-chip:999px}
+.phone[data-dir=sticker]{--f-ui:Rubik,system-ui,sans-serif;--f-display:Rubik,system-ui,sans-serif;--r-card:28px;--r-tile:26px;--r-ctl:999px;--r-chip:999px}
+.phone[data-dir=bug]{--f-ui:Archivo,system-ui,sans-serif;--f-display:Archivo,system-ui,sans-serif;--r-card:10px;--r-tile:8px;--r-ctl:10px;--r-chip:6px}
+
+/* ===================== shared app primitives ===================== */
+.scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;font-family:var(--f-ui);background:var(--canvas);color:var(--ink);padding:0 16px 104px;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+:where(.scr,.tsb) :where(button,input){font:inherit;color:inherit}
+:where(.scr,.tsb) :where(button){cursor:pointer;-webkit-tap-highlight-color:transparent;background:none;border:0;padding:0;touch-action:manipulation}
+.scr :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wash{position:absolute;left:0;right:0;top:0;height:300px;pointer-events:none;z-index:0}
+.scr>*{position:relative;z-index:1}
+.scr>.wash{position:absolute;z-index:0}
+
+.top{display:flex;align-items:center;gap:12px;padding:14px 0 8px;min-height:72px}
+.top .grow{flex:1;min-width:0}
+.brand{display:flex;align-items:center;gap:9px;font:800 1.18rem/1 var(--f-display);letter-spacing:-.02em}
+.dots{display:grid;grid-template-columns:repeat(2,9px);gap:3px}
+.dots i{width:9px;height:9px;border-radius:50%}
+.avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font:800 1rem var(--f-display);background:var(--surface);box-shadow:inset 0 0 0 2px var(--edge)}
+h1.title{margin:6px 0 2px;font:800 2.35rem/1 var(--f-display);letter-spacing:-.035em}
+.sub{margin:0;color:var(--ink-2);font-size:.95rem;font-weight:500}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:26px 2px 10px}
+.sec h2{margin:0;font:750 1.05rem/1 var(--f-display);letter-spacing:-.01em}
+.sec span{color:var(--ink-2);font-size:.85rem;font-weight:600}
+
+/* Mono-strength control: the things you press have a defined edge */
+.ctl{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border:2px solid var(--edge)!important;border-radius:var(--r-ctl);background:var(--ctl-bg)!important;box-shadow:var(--ctl-shadow);font-weight:750!important;transition:transform 90ms ease,box-shadow 90ms ease}
+.ctl:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+.go{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;padding:0 20px;border:2px solid var(--ink)!important;border-radius:var(--r-ctl);color:var(--go-on)!important;font-weight:800!important;font-size:1.06rem;box-shadow:var(--ctl-shadow);
+  background:linear-gradient(168deg,var(--go-hi),var(--go) 55%,var(--go-lo))!important;transition:transform 90ms ease,box-shadow 90ms ease}
+.go:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+.phone[data-theme=dark] .go{border-color:#000!important}
+.btnrow{display:flex;gap:10px}
+.btnrow .go{flex:1}
+
+/* chips (filters, segmented) */
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;border-radius:var(--r-chip);background:var(--surface)!important;box-shadow:inset 0 0 0 1px var(--hair-2);font-weight:650;font-size:.95rem}
+.chip i{width:10px;height:10px;border-radius:50%;background:var(--s-core)}
+.chip[aria-pressed=true]{background:var(--ink)!important;color:var(--on-ink)!important;box-shadow:none}
+.segc{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border-radius:calc(var(--r-ctl) + 4px);background:var(--surface-2)}
+.phone[data-dir=sticker] .segc{border-radius:999px}
+.segc button{min-height:48px;border-radius:var(--r-ctl);font-weight:650;font-size:.92rem}
+.segc button[aria-pressed=true]{background:var(--surface)!important;box-shadow:inset 0 0 0 2px var(--edge),0 2px 0 var(--edge);font-weight:800}
+
+/* dock */
+.dock{position:absolute!important;z-index:20!important;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 10px calc(12px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--hair);font-family:var(--f-ui)}
+.dock button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;border-radius:16px;font:700 .74rem var(--f-ui);color:var(--ink-2);cursor:pointer;background:none;border:0}
+.dock button svg{width:22px;height:22px}
+.dock button[aria-current=page]{background:var(--ink);color:var(--on-ink)}
+
+/* list rows */
+.list{background:var(--surface);border-radius:var(--r-card);box-shadow:inset 0 0 0 1px var(--hair)}
+.row{display:flex;align-items:center;gap:12px;width:100%;min-height:68px;padding:10px 14px;text-align:left}
+.row+.row{border-top:1px solid var(--hair)}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t b strong{font-weight:850}
+.row .t small{display:block;margin-top:2px;color:var(--ink-2);font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sc{font:800 1.35rem/1 var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.badge{flex:none;position:relative;isolation:isolate;overflow:hidden;width:44px;height:44px;border-radius:13px;background:linear-gradient(168deg,var(--s-hi),var(--s-core) 55%,var(--s-lo))}
+.badge::after{content:'';position:absolute;inset:6px;background:var(--s-on);-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
+
+/* ===================== sport tiles ===================== */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;min-height:116px;padding:14px 14px 12px;border-radius:var(--r-tile);color:var(--s-on);text-align:left;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--s-hi),var(--s-core) 52%,var(--s-lo));box-shadow:inset 0 0 0 1px var(--hair),var(--lift);transition:transform 180ms var(--spring)}
+.tile:active{transform:scale(.965)}
+.tile b{font:800 1.22rem/1.02 var(--f-display);letter-spacing:-.02em}
+.tile small{font-size:.8rem;font-weight:650;max-width:92%}
+.tile.mini{min-height:92px}
+.tile.mini b{font-size:1.02rem}
+.tile .mk{position:absolute;z-index:-1;right:-16%;bottom:-10%;width:82%;aspect-ratio:140/100;background:var(--s-motif);-webkit-mask:var(--mark) right bottom/contain no-repeat;mask:var(--mark) right bottom/contain no-repeat;pointer-events:none}
+.tile .stk{display:none}
+
+/* ===================== the scorer (as shipped in PR #157; chrome restyled per direction) ===================== */
+.tsb{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--canvas);color:var(--ink);font-family:var(--f-ui)}
+.tsb-top{display:flex;align-items:center;gap:10px;padding:14px 16px 6px 18px}
+.tsb-title{flex:1;min-width:0}
+.tsb-title b{display:block;font:800 1.12rem/1.15 var(--f-display);letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsb-title small{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:.82rem;color:var(--ink-2);white-space:nowrap}
+.tsb-title small i{width:9px;height:9px;border-radius:50%;background:var(--s-core);box-shadow:inset 0 0 0 1px var(--hair-2)}
+.live{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;background:var(--live-soft);color:var(--live-text);font-size:.8rem;font-weight:800;white-space:nowrap}
+.live::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.35}}
+.tsb-finish{padding:0 16px!important}
+.tsb-meta{display:flex;flex-wrap:wrap;justify-content:center;column-gap:8px;margin:0;padding:8px 16px 2px;font-size:.92rem;font-variant-numeric:tabular-nums}
+.tsb-meta span+span::before{content:'\00b7';margin-right:8px;color:var(--ink-2)}
+.tsb-meta span:first-child{font-weight:800}
+.tsb-last{min-height:1.6em;margin:0;padding:2px 16px 10px;text-align:center;font-size:.84rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsb-keys{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px;min-height:260px}
+.tsb-key{position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:240px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 8px 22px;text-align:center;box-shadow:inset 0 0 0 1px var(--hair),var(--lift);transition:transform 80ms ease}
+.tsb-key:active{transform:scale(.985)}
+.tsb-key-a{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-a-hi) 0%,var(--team-a-core) 52%,var(--team-a-lo) 100%);color:var(--team-a-on)}
+.tsb-key-b{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-b-hi) 0%,var(--team-b-core) 52%,var(--team-b-lo) 100%);color:var(--team-b-on)}
+.tsb-mark{position:absolute;z-index:-1;bottom:2%;left:4%;width:118%;aspect-ratio:140/100;max-height:29%;-webkit-mask:var(--sport-mark) right bottom/contain no-repeat;mask:var(--sport-mark) right bottom/contain no-repeat;pointer-events:none}
+.tsb-key[data-side=right] .tsb-mark{left:auto;right:4%;transform:scaleX(-1)}
+.tsb-key-a .tsb-mark{background:var(--team-a-motif)}
+.tsb-key-b .tsb-mark{background:var(--team-b-motif)}
+.tsb-srv{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:8px;font-size:.78rem;font-weight:750;white-space:nowrap}
+.tsb-key-a .tsb-srv{background:var(--team-a-on);color:var(--team-a-core)}
+.tsb-key-b .tsb-srv{background:var(--team-b-on);color:var(--team-b-core)}
+.tsb-who{max-width:94%;font-size:1.06rem;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsb-big{font:800 clamp(6.25rem,min(36vw,24vh),10rem)/.92 var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:8px 0 6px}
+.tsb-big.bump{animation:bump 260ms var(--spring)}
+@keyframes bump{0%{transform:scale(1.12)}100%{transform:scale(1)}}
+.tsb-word{font-size:.82rem;font-weight:650}
+.tsb-bar{display:grid;grid-template-columns:1fr 64px;gap:12px;padding:14px 17px 18px 14px}
+.tsb-undo,.tsb-more{min-height:60px}
+.tsb-undo{justify-content:flex-start!important;gap:10px;padding:0 16px!important}
+.tsb-undo-w{margin-left:auto;font-size:.86rem;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.tsb-undo:disabled{border-style:dashed!important;box-shadow:none;color:var(--ink-2)}
+.tsb-more{padding:0!important}
+
+/* ===================== Home hero (last match) ===================== */
+.hero{position:relative;border-radius:var(--r-card);overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair),var(--lift)}
+.hero-teams{position:relative;display:grid;grid-template-columns:1fr 1fr;min-height:176px}
+.half{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;color:var(--t-on)}
+.half.a{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-a-hi),var(--team-a-core) 52%,var(--team-a-lo));--t-on:var(--team-a-on)}
+.half.b{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-b-hi),var(--team-b-core) 52%,var(--team-b-lo));--t-on:var(--team-b-on);align-items:flex-end;text-align:right}
+.half .nm{font-weight:750;font-size:1rem}
+.half .n{font:800 4.6rem/.9 var(--num);font-variant-numeric:tabular-nums}
+.half .tag{position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:8px;font-size:.76rem;font-weight:800;background:var(--t-on);color:var(--team-a-core)}
+.half.b .tag{left:auto;right:14px;color:var(--team-b-core)}
+.seam{position:absolute;top:0;bottom:0;left:50%;width:44px;transform:translateX(-50%);background:linear-gradient(90deg,var(--team-a-core),var(--team-b-core));opacity:.0}
+.phone[data-dir=kit] .hero-teams{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 45%),linear-gradient(100deg,var(--team-a-hi) 0%,var(--team-a-core) 30%,var(--team-b-core) 70%,var(--team-b-lo) 100%)}
+.phone[data-dir=kit] .half{background:none}
+.hero-foot{padding:14px 16px 16px}
+.hero-foot p{margin:0 0 12px;display:flex;justify-content:space-between;gap:8px;color:var(--ink-2);font-size:.86rem;font-weight:600;font-variant-numeric:tabular-nums}
+.hero-foot p b{color:var(--ink)}
+.hero .ctl{flex:none}
+
+/* ===================== setup ===================== */
+.back{width:48px;padding:0!important}
+.sportchip{display:flex;align-items:center;gap:10px}
+.sportchip .badge{width:40px;height:40px;border-radius:12px}
+.sportchip b{display:block;font:800 1.3rem/1 var(--f-display);letter-spacing:-.02em}
+.sportchip small{display:block;margin-top:3px;font-size:.82rem;color:var(--ink-2);font-weight:600}
+.txtbtn{min-height:48px;padding:0 6px;font-weight:750;font-size:.9rem;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px}
+.matchup{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 6px}
+.mk-key{position:relative;isolation:isolate;overflow:hidden;min-height:132px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:inset 0 0 0 1px var(--hair),var(--lift);transition:background 240ms ease}
+.mk-key.a{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-a-hi),var(--team-a-core) 52%,var(--team-a-lo));color:var(--team-a-on)}
+.mk-key.b{background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-b-hi),var(--team-b-core) 52%,var(--team-b-lo));color:var(--team-b-on)}
+.mk-key b{font-weight:750;font-size:1.02rem}
+.mk-key span{font:800 3.6rem/.95 var(--num)}
+.vs{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--surface);color:var(--ink);font:800 .9rem var(--f-display);box-shadow:inset 0 0 0 2px var(--edge)}
+.field{margin-top:18px}
+.field label,.flabel{display:block;margin:0 2px 8px;font-size:.85rem;font-weight:700;color:var(--ink-2)}
+.inp{display:block;width:100%;min-height:52px;padding:0 16px;border-radius:14px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair-2);font-size:1.04rem!important;font-weight:650!important;color:var(--ink)!important}
+.phone[data-dir=sticker] .inp{border-radius:999px;padding:0 20px}
+.phone[data-dir=bug] .inp{border-radius:8px}
+.inp:focus{outline:3px solid var(--focus);outline-offset:2px}
+.sw{display:grid;grid-template-columns:repeat(6,48px);justify-content:space-between;margin-top:10px}
+.sw button{position:relative;width:48px;height:48px;border-radius:14px;background:var(--c)!important;box-shadow:inset 0 0 0 1px var(--hair-2)}
+.sw button[aria-pressed=true]{box-shadow:0 0 0 3px var(--canvas),0 0 0 5px var(--ink)}
+.sw button[aria-pressed=true]::after{content:'';position:absolute;inset:14px;background:var(--c-on);-webkit-mask:var(--check) center/contain no-repeat;mask:var(--check) center/contain no-repeat}
+.phone[data-dir=sticker] .sw button{border-radius:50%}
+.phone[data-dir=bug] .sw button{border-radius:6px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.phone[data-dir=bug] .sw button[aria-pressed=true]{clip-path:none}
+.rules{margin:10px 2px 0;font-size:.85rem;color:var(--ink-2);font-weight:500}
+.sticky{position:absolute!important;z-index:20!important;left:0;right:0;bottom:0;padding:12px 16px 18px;background:linear-gradient(180deg,transparent,var(--canvas) 28%)}
+
+/* ===================== finish / winner moment ===================== */
+.win{position:relative;isolation:isolate;overflow:hidden;margin-top:6px;border-radius:var(--r-card);padding:22px 20px 20px;min-height:320px;display:flex;flex-direction:column;justify-content:flex-end;color:var(--team-a-on);
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-a-hi),var(--team-a-core) 52%,var(--team-a-lo));box-shadow:var(--lift)}
+.win .trophy{position:absolute;z-index:-1;right:-30px;top:-10px;width:230px;height:230px;background:var(--team-a-motif);-webkit-mask:var(--trophy) center/contain no-repeat;mask:var(--trophy) center/contain no-repeat}
+.wintag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--gold);color:#0b0b0d;font-weight:850;font-size:.82rem;margin-bottom:auto}
+.win h1{margin:18px 0 0;font:800 2.9rem/.95 var(--f-display);letter-spacing:-.04em}
+.win .wsub{margin:6px 0 0;font-weight:600;font-size:.95rem}
+.win .wn{font:800 6.2rem/.85 var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:12px}
+.sets{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+.set{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);font-size:.86rem;font-weight:650;font-variant-numeric:tabular-nums}
+.set::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--dot)}
+.lose{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:16px;background:var(--team-b-tint);color:#0b0b0d;font-weight:650;font-size:.94rem}
+.lose b{margin-left:auto;font:800 1.5rem/1 var(--num)}
+.lose i{width:12px;height:12px;border-radius:50%;background:var(--team-b-core)}
+.confetti{position:absolute;z-index:-1;top:0;bottom:0;right:0;left:56%;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;top:var(--y);left:var(--x);width:var(--w,9px);height:var(--h,14px);background:var(--c);border-radius:2px;transform:rotate(var(--r));animation:fall 900ms cubic-bezier(.2,.7,.3,1) both;animation-delay:var(--d)}
+@keyframes fall{from{transform:translateY(-140px) rotate(0);opacity:0}to{transform:translateY(0) rotate(var(--r));opacity:1}}
+
+/* ===================== history + profile ===================== */
+.card{background:var(--surface);border-radius:var(--r-card);box-shadow:inset 0 0 0 1px var(--hair),var(--lift);padding:18px 18px 16px}
+.bign{font:800 3.4rem/.9 var(--num);font-variant-numeric:tabular-nums}
+.stack{display:flex;gap:3px;height:16px;margin:14px 0 12px}
+.stack i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--s-hi),var(--s-core));flex:var(--n)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;font-weight:600;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend span i{width:10px;height:10px;border-radius:50%;background:var(--s-core)}
+.legend b{color:var(--ink)}
+.prof{display:flex;flex-direction:column;align-items:center;text-align:center;padding:10px 0 4px}
+.ring{width:128px;height:128px;border-radius:50%;padding:10px;background:var(--ring)}
+.ring div{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:var(--surface);box-shadow:0 0 0 4px var(--canvas);font:800 2.6rem var(--f-display);letter-spacing:-.03em}
+.prof h1{margin:14px 0 2px;font:800 2rem/1 var(--f-display);letter-spacing:-.03em}
+.statline{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 0}
+.statline div{text-align:center}
+.statline b{display:block;font:800 2.3rem/1 var(--num)}
+.statline span{font-size:.8rem;font-weight:650;color:var(--ink-2)}
+.brow{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;min-height:60px;padding:8px 14px}
+.brow+.brow{border-top:1px solid var(--hair)}
+.brow .nm{font-weight:700;font-size:.95rem}
+.brow .tr{grid-column:2;height:8px;border-radius:999px;background:var(--surface-2);margin-top:6px;overflow:hidden}
+.brow .tr i{display:block;height:100%;width:var(--p);border-radius:999px;background:linear-gradient(90deg,var(--s-hi),var(--s-core))}
+.brow .ct{font:800 1.45rem/1 var(--num)}
+.setrow{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;padding:0 16px;font-weight:650;text-align:left}
+.setrow+.setrow{border-top:1px solid var(--hair)}
+.setrow span{color:var(--ink-2);font-weight:600;font-size:.9rem}
+
+/* ===================== motion (quick, never blocking) ===================== */
+.in{animation:rise 420ms var(--spring) both;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@media (prefers-reduced-motion:reduce){.phone *{animation:none!important;transition:none!important}}
+
+/* =========================================================================================
+   DIRECTION 1 · KIT (recommended): Apple-Sports gradients. Colour lives in the sport and team
+   identities, each a blended engine gradient with its mark cropped at the edge. Chrome stays neutral.
+   ========================================================================================= */
+.phone[data-dir=kit] .wash{background:radial-gradient(120% 90% at 20% -10%,var(--w1),transparent 60%),radial-gradient(90% 80% at 95% 0%,var(--w2),transparent 62%)}
+.phone[data-dir=kit][data-theme=dark] .wash{opacity:.35}
+
+/* =========================================================================================
+   DIRECTION 2 · STICKER: flat, die-cut colour. Sport colours as flat fills with a white keyline,
+   the mark as a peel-off round sticker, rounder shapes, a small tilt on badges only.
+   ========================================================================================= */
+.phone[data-dir=sticker] .tile{background:var(--s-core);box-shadow:0 0 0 4px var(--surface),0 12px 22px -12px rgba(11,11,13,.55);margin:4px}
+.phone[data-dir=sticker] .grid2,.phone[data-dir=sticker] .grid3{gap:6px}
+.phone[data-dir=sticker] .tile .mk{display:none}
+.phone[data-dir=sticker] .tile .stk{display:grid;place-items:center;position:absolute;right:10px;bottom:10px;width:54px;height:54px;border-radius:50%;background:var(--surface);box-shadow:0 4px 10px -4px rgba(11,11,13,.5);transform:rotate(-10deg)}
+.phone[data-dir=sticker] .tile .stk::after{content:'';width:38px;height:30px;background:var(--s-core);-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
+.phone[data-dir=sticker] .tile.mini .stk{width:40px;height:40px;right:8px;bottom:8px}
+.phone[data-dir=sticker] .tile.mini .stk::after{width:28px;height:22px}
+.phone[data-dir=sticker] .tile small{max-width:100%;padding-right:52px}
+.phone[data-dir=sticker] .tile:not(.mini){min-height:124px}
+.phone[data-dir=sticker] .tile:active{transform:rotate(-2deg) scale(.97)}
+.phone[data-dir=sticker] .badge{background:var(--s-core);border-radius:50%;box-shadow:0 0 0 3px var(--surface),0 3px 8px -3px rgba(11,11,13,.45)}
+.phone[data-dir=sticker] .half.a{background:var(--team-a-core)}
+.phone[data-dir=sticker] .half.b{background:var(--team-b-core)}
+.phone[data-dir=sticker] .half .tag{transform:rotate(-4deg)}
+.phone[data-dir=sticker] .hero,.phone[data-dir=sticker] .card,.phone[data-dir=sticker] .list{box-shadow:0 0 0 1px var(--hair),0 14px 26px -18px rgba(11,11,13,.5)}
+.phone[data-dir=sticker] .vs{transform:translate(-50%,-50%) rotate(-8deg);width:46px;height:46px;box-shadow:0 0 0 3px var(--edge),0 6px 12px -6px rgba(0,0,0,.5)}
+.phone[data-dir=sticker] .hero .vs{display:grid}
+.phone[data-dir=sticker] .live{transform:rotate(-3deg);box-shadow:0 0 0 2px var(--surface),0 3px 8px -4px rgba(0,0,0,.45)}
+.phone[data-dir=sticker] .tsb-key{border-radius:30px}
+.phone[data-dir=sticker] .tsb-srv,.phone[data-dir=sticker] .tsb-srv{border-radius:999px}
+.phone[data-dir=sticker] .win{background:var(--team-a-core)}
+.phone[data-dir=sticker] .wintag{transform:rotate(-5deg);box-shadow:0 0 0 3px var(--surface),0 6px 12px -6px rgba(0,0,0,.5);height:36px;padding:0 16px;font-size:.9rem}
+.phone[data-dir=sticker] .win h1,.phone[data-dir=sticker] .prof h1,.phone[data-dir=sticker] h1.title{font-weight:800;letter-spacing:-.03em}
+.phone[data-dir=sticker] .ring{background:var(--surface);box-shadow:0 0 0 1px var(--hair),0 10px 22px -14px rgba(0,0,0,.6)}
+.phone[data-dir=sticker] .orbit{position:absolute;width:36px;height:36px;border-radius:50%;box-shadow:0 0 0 3px var(--surface),0 4px 8px -4px rgba(0,0,0,.5);background:var(--s-core);display:grid;place-items:center}
+.phone[data-dir=sticker] .orbit::after{content:'';width:24px;height:20px;background:var(--s-on);-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
+.orbit{display:none}
+.phone[data-dir=sticker] .stack{height:22px;gap:4px}
+.phone[data-dir=sticker] .stack i{background:var(--s-core);box-shadow:0 0 0 2px var(--surface)}
+.phone[data-dir=sticker] .dock{left:12px;right:12px;bottom:12px;border-radius:999px;border:0;padding:6px;box-shadow:0 0 0 1px var(--hair),0 16px 30px -14px rgba(0,0,0,.5)}
+.phone[data-dir=sticker] .dock button{border-radius:999px}
+.phone[data-dir=sticker] .brand .dots{transform:rotate(-8deg)}
+.phone[data-dir=sticker] .chip{box-shadow:inset 0 0 0 2px var(--hair-2)}
+
+/* =========================================================================================
+   DIRECTION 3 · SCOREBUG: broadcast graphics. One ink scorebug bar per screen, sport stripes,
+   angled corners, a condensed caps face for bug labels only (sentence case everywhere else).
+   ========================================================================================= */
+.phone[data-dir=bug] .cut{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%)}
+.phone[data-dir=bug] .tile{background:var(--s-core);box-shadow:none;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,0 100%)}
+.phone[data-dir=bug] .tile::before{content:'';position:absolute;z-index:-1;inset:0 0 0 46%;background:repeating-linear-gradient(115deg,transparent 0 12px,var(--s-motif) 12px 22px)}
+.phone[data-dir=bug] .tile .mk{width:64%;right:-6%;bottom:-6%}
+.phone[data-dir=bug] .tile b{font:800 1.28rem/1 Archivo,sans-serif;font-stretch:72%;text-transform:uppercase;letter-spacing:.01em}
+.phone[data-dir=bug] .tile.mini b{font-size:1.06rem}
+.phone[data-dir=bug] .tile:active{transform:translateX(3px)}
+.phone[data-dir=bug] .badge{background:var(--s-core);border-radius:6px;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,0 100%)}
+.phone[data-dir=bug] h1.title,.phone[data-dir=bug] .prof h1,.phone[data-dir=bug] .win h1{font-stretch:78%;font-weight:850;letter-spacing:-.02em}
+.phone[data-dir=bug] .sec h2{font-stretch:75%;text-transform:uppercase;font-weight:800;letter-spacing:.04em;font-size:.95rem}
+.bugbar{display:flex;align-items:stretch;min-height:48px;background:#0b0b0d;color:#fff;border-radius:6px;overflow:hidden;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+.bugbar .stripe{flex:none;width:30px;background:linear-gradient(115deg,var(--s1) 0 33%,var(--s2) 33% 66%,var(--s3) 66%)}
+.bugbar b,.bugbar span{display:flex;align-items:center;padding:0 12px;font:800 .95rem/1 Archivo,sans-serif;font-stretch:72%;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.bugbar b{flex:1;min-width:0;overflow:hidden}
+.bugbar span{color:#d5d7dd;border-left:1px solid rgba(255,255,255,.18)}
+.bugbar .gold{background:var(--gold);color:#0b0b0d}
+.bugbar .onair{color:#5ee08f;gap:6px}
+.bugbar .onair::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;animation:breathe 1.6s ease-in-out infinite}
+.phone[data-dir=bug] .live{border-radius:4px}
+.phone[data-dir=bug] .chip[aria-pressed=true]{clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.phone[data-dir=bug] .dock{background:#0b0b0d;border-top:0}
+.phone[data-dir=bug] .dock button{color:#c9cbd1;border-radius:4px}
+.phone[data-dir=bug] .dock button[aria-current=page]{background:none;color:#fff;box-shadow:inset 0 -4px 0 var(--gold)}
+.phone[data-dir=bug] .stack{gap:2px;height:14px}
+.phone[data-dir=bug] .stack i{border-radius:0;background:var(--s-core);clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+.phone[data-dir=bug] .ring{border-radius:14px;padding:6px;clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%)}
+.phone[data-dir=bug] .ring div{border-radius:10px;box-shadow:none}
+.phone[data-dir=bug] .win{background:var(--team-a-core);clip-path:polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,0 100%)}
+.phone[data-dir=bug] .win::before{content:'';position:absolute;z-index:-1;inset:0 0 0 52%;background:repeating-linear-gradient(115deg,transparent 0 14px,var(--team-a-motif) 14px 26px)}
+.phone[data-dir=bug] .wintag{border-radius:4px;text-transform:uppercase;font-stretch:75%;letter-spacing:.05em}
+.phone[data-dir=bug] .tsb-top{padding-top:12px}
+.phone[data-dir=bug] .set,.phone[data-dir=bug] .lose{border-radius:6px}
+/* scorebug result (Home hero) */
+.sbug{background:#0b0b0d;color:#fff;border-radius:8px 8px 0 0;overflow:hidden}
+.sbug .r{display:grid;grid-template-columns:14px 1fr auto;align-items:stretch;min-height:58px}
+.sbug .r+.r{border-top:1px solid rgba(255,255,255,.14)}
+.sbug .r i{background:var(--c)}
+.sbug .r b{display:flex;align-items:center;gap:8px;padding:0 14px;font:800 1.2rem/1 Archivo,sans-serif;font-stretch:75%;text-transform:uppercase;letter-spacing:.02em}
+.sbug .r b em{font-style:normal;font-size:.72rem;letter-spacing:.06em;background:var(--gold);color:#0b0b0d;padding:4px 6px;border-radius:3px}
+.sbug .r span{display:flex;align-items:center;padding:0 16px;font:800 2.2rem/1 var(--num);font-variant-numeric:tabular-nums;background:rgba(255,255,255,.06)}
+.sbug .r.lo b,.sbug .r.lo span{color:#c9cbd1}
+.sbug .hd{display:flex;justify-content:space-between;padding:10px 14px;font:800 .78rem/1 Archivo,sans-serif;font-stretch:75%;text-transform:uppercase;letter-spacing:.08em;color:#d5d7dd;border-bottom:1px solid rgba(255,255,255,.14)}
+.sbug .hd .g{color:var(--gold)}
+/* ===================== Kit-only additions: game boards per engine family, live flow, Live tab ===================== */
+.pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;font-size:.8rem;font-weight:800;white-space:nowrap}
+.pill.paused{background:var(--surface-2);color:var(--ink)}
+.pill.paused::before{content:'';width:3px;height:9px;background:currentColor;box-shadow:5px 0 0 currentColor;margin-right:5px}
+.pill.final{background:var(--ink);color:var(--on-ink)}
+.pill.time{background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair-2);font:800 1.05rem/1 var(--num);letter-spacing:.02em;height:34px;padding:0 12px}
+/* cricket guided board */
+.crb{position:absolute;inset:0;display:flex;flex-direction:column;padding:0 14px 14px;background:var(--canvas);font-family:var(--f-ui);color:var(--ink)}
+.crb .tsb-top{padding:14px 2px 8px 4px}
+.bat{position:relative;isolation:isolate;overflow:hidden;border-radius:22px;padding:14px 16px;color:var(--team-a-on);background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--team-a-hi),var(--team-a-core) 52%,var(--team-a-lo));box-shadow:var(--lift)}
+.bat .mk2{position:absolute;z-index:-1;right:-4%;bottom:-16%;width:60%;aspect-ratio:140/100;background:var(--team-a-motif);-webkit-mask:var(--sport-mark) right bottom/contain no-repeat;mask:var(--sport-mark) right bottom/contain no-repeat}
+.bat .who{font-weight:750;font-size:.95rem}
+.bat .rw{display:flex;align-items:baseline;gap:8px;margin-top:2px}
+.bat .rw b{font:800 4.4rem/.9 var(--num);font-variant-numeric:tabular-nums}
+.bat .rw span{font-weight:700;font-size:1rem}
+.bat .need{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;font-weight:700;font-size:.9rem}
+.bat .need em{font-style:normal;display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:8px;background:var(--team-a-on);color:var(--team-a-core);font-weight:800}
+.crt{margin-top:10px;background:var(--surface);border-radius:18px;box-shadow:inset 0 0 0 1px var(--hair)}
+.crt .r{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;min-height:40px;padding:0 14px;font-size:.92rem;font-variant-numeric:tabular-nums}
+.crt .r+.r{border-top:1px solid var(--hair)}
+.crt .r b{font-weight:750}
+.crt .r .n{font:800 1.25rem/1 var(--num)}
+.crt .r small{color:var(--ink-2);font-weight:600;font-size:.8rem}
+.over{display:flex;align-items:center;gap:7px;padding:7px 14px;border-top:1px solid var(--hair)}
+.over span{font-size:.8rem;font-weight:700;color:var(--ink-2);margin-right:auto}
+.over i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:800 .95rem/1 var(--num);font-style:normal;background:var(--surface-2);color:var(--ink)}
+.over i.b4{background:var(--s-core);color:var(--s-on)}
+.over i.e{background:none;box-shadow:inset 0 0 0 1.5px var(--hair-2)}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.pad .ctl{flex-direction:column;gap:0;min-height:62px;padding:0!important;font:800 1.5rem/1 var(--num)!important}
+.pad .ctl small{font:800 .72rem var(--f-ui)}
+.pad .wk{background:var(--danger-soft)!important;color:var(--danger)}
+.pad2{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.pad2 button{min-height:48px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair-2);font-weight:750;font-size:.86rem}
+.pad2.runs button{font:800 1.15rem var(--num)}
+.crbar{display:grid;grid-template-columns:1fr 60px 60px;gap:10px;margin-top:auto;padding-top:10px}
+.crbar .ctl{min-height:58px}
+.crbar .tsb-undo{justify-content:flex-start;gap:10px;padding:0 14px!important}
+/* goals board: +1/+2/+3 inside the team key */
+.plus{display:grid;grid-template-columns:repeat(3,48px);gap:8px;margin-top:10px}
+.plus button{width:48px;height:48px;border-radius:14px;font:800 1.2rem/1 var(--num);background:var(--on)!important;color:var(--core)!important;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.plus button:active{transform:translateY(2px);box-shadow:none}
+.tsb-key.goals{padding-top:24px;justify-content:center}
+.tsb-key.goals .tsb-big{font-size:clamp(5.5rem,min(30vw,20vh),8.5rem)}
+.markchip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 8px;border-radius:999px;background:var(--s-core);color:var(--s-on);font-weight:800;font-size:.82rem}
+.markchip::before{content:'';width:26px;height:19px;background:currentColor;-webkit-mask:var(--mark) center/contain no-repeat;mask:var(--mark) center/contain no-repeat}
+/* tennis */
+.srvdot{display:inline-block;width:10px;height:10px;border-radius:50%;background:currentColor;margin-right:7px;vertical-align:1px}
+.strip{display:flex;justify-content:center;gap:8px;padding:0 16px 10px}
+.strip span{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);font-size:.84rem;font-weight:650;font-variant-numeric:tabular-nums}
+/* sheets */
+.scrim{position:absolute;inset:0;z-index:30;background:rgba(11,11,13,.45)}
+.sheet{position:absolute;z-index:31;left:0;right:0;bottom:0;padding:10px 18px 22px;border-radius:26px 26px 0 0;background:var(--surface);color:var(--ink);font-family:var(--f-ui);box-shadow:0 -18px 40px -24px rgba(0,0,0,.6)}
+.sheet .grab{width:44px;height:5px;border-radius:9px;background:var(--hair-2);margin:0 auto 14px}
+.sheet h2{margin:4px 0 6px;font:800 1.6rem/1.05 var(--f-display);letter-spacing:-.03em}
+.sheet p{margin:0;color:var(--ink-2);font-size:.95rem;line-height:1.4}
+.sheet .stack2{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.sheet .ctl{width:100%}
+.livebar{display:flex;align-items:center;gap:10px;margin:2px 0 14px;padding:8px 8px 8px 12px;border-radius:14px;background:var(--surface-2)}
+.livebar b{flex:1;font-weight:750;font-size:.92rem}
+.livebar .ctl{width:auto!important;min-height:48px;padding:0 14px}
+.qr{display:block;width:172px;height:172px;margin:4px auto 14px;padding:10px;border-radius:18px;background:#fff;box-shadow:inset 0 0 0 1px var(--hair-2)}
+.link{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 6px 0 14px;border-radius:14px;background:var(--surface-2);font-weight:650;font-size:.92rem}
+.link span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link .ctl{width:auto;flex:none}
+.danger-row{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:8px;color:var(--danger);font-weight:750}
+/* spectator */
+.snav{display:flex;align-items:center;gap:10px;min-height:68px}
+.banner{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:10px 14px;border-radius:14px;background:var(--gold-soft);color:var(--ink);font-weight:650;font-size:.9rem}
+.banner i{width:10px;height:10px;border-radius:50%;background:var(--gold-ink);animation:breathe 1.2s ease-in-out infinite;flex:none}
+.sbk .hero-teams{min-height:146px}
+.sbk .half .n{font-size:4.2rem}
+.sbk .line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 8px;padding:4px;border-radius:18px;background:var(--surface-2)}
+.tabs button{min-height:48px;border-radius:14px;font-weight:700}
+.tabs button[aria-selected=true]{background:var(--surface);box-shadow:inset 0 0 0 2px var(--edge),0 2px 0 var(--edge);font-weight:800}
+.feed .row{min-height:56px}
+.tline{width:4px;align-self:stretch;border-radius:4px;background:var(--c);flex:none}
+.signup{margin-top:14px;padding:16px;border-radius:22px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair),var(--lift)}
+.signup b{display:block;font:800 1.2rem/1.1 var(--f-display);letter-spacing:-.02em}
+.signup p{margin:4px 0 12px;color:var(--ink-2);font-size:.9rem}
+.report{display:flex;justify-content:center;margin-top:6px}
+.tot .r{display:grid;grid-template-columns:12px 1fr auto;gap:12px;align-items:center;min-height:62px;padding:0 14px}
+.tot .r+.r{border-top:1px solid var(--hair)}
+.tot .r i{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.tot .r b{font-weight:750}
+.tot .r span{font:800 1.5rem/1 var(--num);font-variant-numeric:tabular-nums}
+.tot .r small{display:block;color:var(--ink-2);font-weight:600;font-size:.8rem}
+.winline{display:flex;align-items:center;gap:8px;margin:12px 2px 0;font-weight:750}
+.winline em{font-style:normal;display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:999px;background:var(--gold);color:#0b0b0d;font-size:.76rem;font-weight:850}
+/* live destination */
+.lcard{display:grid;grid-template-columns:44px 1fr auto;column-gap:12px;align-items:center;width:100%;min-height:84px;padding:12px 14px;text-align:left}
+.lcard+.lcard{border-top:1px solid var(--hair)}
+.lcard .tm{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;line-height:1.55;white-space:nowrap;overflow:hidden}
+.lcard .tm i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.lcard .sc{text-align:right;font:800 1.25rem/1.24 var(--num);font-variant-numeric:tabular-nums}
+.lcard .meta{grid-column:2/4;display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.8rem;font-weight:650;color:var(--ink-2)}
+.lcard .meta .pill{height:24px;padding:0 8px;font-size:.72rem}
+.dock.five{grid-template-columns:repeat(5,1fr);gap:2px;padding-left:6px;padding-right:6px}
+.dock.five button{font-size:.7rem}
+.dock .dot{position:relative}
+.dock .dot::after{content:'';position:absolute;top:9px;left:calc(50% + 7px);width:8px;height:8px;border-radius:50%;background:var(--live-text);box-shadow:0 0 0 2px var(--surface)}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 10px 0}
+.empty .marks{display:flex;gap:12px;margin-bottom:20px}
+.empty .marks .badge{width:58px;height:58px;border-radius:18px;transform:rotate(var(--r))}
+.empty h2{margin:0;font:800 1.75rem/1.05 var(--f-display);letter-spacing:-.03em}
+.empty p{margin:8px 0 22px;color:var(--ink-2);font-size:.95rem;max-width:290px;line-height:1.4}
+.empty .go{max-width:300px}
+
+</style>
+</head>
+<body>
+<div class="bar" role="toolbar" aria-label="Prototype controls">
+  <h1>Score Easy · playful colour</h1>
+  <div class="seg" id="dirSeg" aria-label="Direction">
+    <button data-d="kit">Kit ★ recommended</button><button data-d="sticker">Sticker</button><button data-d="bug">Scorebug</button>
+  </div>
+  <div class="seg" id="themeSeg" aria-label="Theme"><button data-t="light">Light</button><button data-t="dark">Dark</button></div>
+  <div class="seg" id="wSeg" aria-label="Width"><button data-w="390">390</button><button data-w="360">360</button></div>
+  <div class="seg"><button id="runAudit">Run checks</button></div>
+  <p class="why" id="why"></p>
+</div>
+<div class="wall" id="wall"></div>
+<pre id="audit" aria-live="polite"></pre>
+
+<script>
+/* ===== Colour engine: verbatim copy of src/lib/teamColour.js (master 28c4bdb), `export` keywords removed. ===== */
+// Team colour engine (Direction E): any team hex -> bold, blended, contrast-gated tokens.
+//
+// Ported from the approved mockup
+// (docs/plans/2026-07-26-icp-games-design/directions/e-broadcast/volleyball.html,
+// "Colour engine"), light theme only. Colours are normalised in OKLCH so that
+// whatever a scorer picks (yellow v white, black v black, neon), label text on
+// the team fill clears 4.5:1 and the score numeral clears 7.5:1 on its scrim.
+// Pure functions, no DOM. Only engine-computed values ever leave this module,
+// so a scorer-typed string can never reach a `style` attribute (OWASP A03).
+
+const DEFAULT_TEAM_COLOURS = Object.freeze({ a: '#d62828', b: '#1d4ed8' });
+
+const PRESETS = Object.freeze({
+  'Red v Blue': ['#d62828', '#1d4ed8'],
+  'Red v Maroon': ['#e11d2a', '#7a1020'],
+  'Yellow v White': ['#facc15', '#ffffff'],
+  'Black v Green': ['#111111', '#16a34a'],
+  'Purple v Orange': ['#6d28d9', '#f97316'],
+  'Sky v Navy': ['#38bdf8', '#1e2a5a'],
+});
+
+const HEX_RE = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/**
+ * @param {unknown} input
+ * @returns {string | null} '#rrggbb' (lower case) or null when input is not a plain hex colour
+ */
+function normaliseHex(input) {
+  if (typeof input !== 'string') return null;
+  const m = HEX_RE.exec(input.trim());
+  if (!m) return null;
+  const h = m[1].length === 3 ? m[1].split('').map((x) => x + x).join('') : m[1];
+  return `#${h.toLowerCase()}`;
+}
+
+// --- colour maths: sRGB <-> OKLab/OKLCH, WCAG 2.x luminance ---------------------------
+
+const toLin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const toGam = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+const hexToRgb = (h) => {
+  const n = parseInt(h.slice(1), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+};
+const rgbToHex = (rgb) =>
+  '#' + rgb.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join('');
+
+function toLab(hex) {
+  const [r, g, b] = hexToRgb(hex).map(toLin);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+
+function labToLin([L, a, b]) {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
+
+const lab = (L, C, h) => [L, C * Math.cos((h * Math.PI) / 180), C * Math.sin((h * Math.PI) / 180)];
+const inGamut = (lin) => lin.every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+
+/** @returns {{L: number, C: number, h: number}} OKLCH of a '#rrggbb' colour */
+function oklch(hex) {
+  const [L, a, b] = toLab(hex);
+  let h = (Math.atan2(b, a) * 180) / Math.PI;
+  if (h < 0) h += 360;
+  return { L, C: Math.hypot(a, b), h };
+}
+
+// OKLCH -> hex, reducing chroma (never hue) until the colour fits in sRGB.
+function fromOklch({ L, C, h }) {
+  L = Math.min(0.995, Math.max(0.05, L));
+  if (!inGamut(labToLin(lab(L, C, h)))) {
+    let lo = 0;
+    let hi = C;
+    for (let i = 0; i < 22; i++) {
+      const mid = (lo + hi) / 2;
+      if (inGamut(labToLin(lab(L, mid, h)))) lo = mid;
+      else hi = mid;
+    }
+    C = lo;
+  }
+  return rgbToHex(labToLin(lab(L, C, h)).map((v) => toGam(Math.min(1, Math.max(0, v)))));
+}
+
+const luminance = (hex) => {
+  const [r, g, b] = hexToRgb(hex).map(toLin);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/** WCAG 2.x contrast ratio between two '#rrggbb' colours. */
+function contrast(x, y) {
+  const a = luminance(x);
+  const b = luminance(y);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/** Euclidean distance in OKLab (0.15 ~ clearly different at a glance). */
+function deltaE(x, y) {
+  const p = toLab(x);
+  const q = toLab(y);
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+}
+
+// `top` composited over `base` at alpha `al`.
+const over = (base, top, al) => {
+  const B = hexToRgb(base);
+  const T = hexToRgb(top);
+  return rgbToHex(B.map((v, i) => v * (1 - al) + T[i] * al));
+};
+
+// --- the engine -----------------------------------------------------------------------
+
+// Light neutrals: the literal values of --background, --card and --foreground in src/index.css.
+const NEUTRAL = Object.freeze({
+  bg: fromOklch({ L: 0.9782, C: 0.0039, h: 145.5458 }),
+  surface: fromOklch({ L: 0.9855, C: 0.0026, h: 145.5558 }),
+  ink: '#000000',
+});
+
+const WHITE = '#ffffff';
+const INK = '#0b0b0d';
+const SHEEN = 0.07; // the white highlight the key gradient adds at its top
+const TXT = 4.6; // label gate on a deep fill (0.1 head-room over 4.5)
+const TXT_BRIGHT = 6.5; // dark text on a bright fill gets more, bright fills wash out in sun
+const NUM = 8; // numeral-on-scrim target (gate is 7.5)
+const CLASH = 0.15;
+
+// Court-drawing line. Deep fills: white chalk where the fill has head-room, else a black
+// engraving (which can only raise white-text contrast). Bright fills: ink. All gated in contrastReport.
+const MOTIF = { chalk: { col: WHITE, a: 0.1 }, deep: { col: '#000000', a: 0.17 }, bright: { col: INK, a: 0.11 } };
+
+const sheen = (hi) => over(hi, WHITE, SHEEN);
+
+function motifFor(S, band) {
+  if (band !== 'deep') return MOTIF.bright;
+  const worst = Math.min(...[S.hi, S.core, S.lo, sheen(S.hi)].map((x) => contrast(WHITE, over(x, WHITE, MOTIF.chalk.a))));
+  return worst >= 5.5 ? MOTIF.chalk : MOTIF.deep;
+}
+
+// 1. Bright colours (yellow, white, sky, orange) stay bright and take dark text;
+//    everything else becomes a rich deep colour that takes white text.
+const bandOf = (c) => (c.L >= 0.72 || (c.h >= 45 && c.h <= 125 && c.L >= 0.62 && c.C >= 0.08) ? 'bright' : 'deep');
+
+// 2. hi/core/lo gradient stops for one team at core lightness L.
+function stops(c, L, band) {
+  const C = c.C < 0.035 ? 0 : Math.max(0.09, Math.min(c.C, band === 'deep' ? 0.205 : 0.19));
+  const hiL = band === 'deep' ? L + 0.065 : Math.min(0.975, L + 0.045);
+  const loL = band === 'deep' ? Math.max(0.17, L - 0.1) : L - 0.05;
+  return {
+    core: fromOklch({ L, C, h: c.h }),
+    hi: fromOklch({ L: hiL, C, h: c.h }),
+    lo: fromOklch({ L: loL, C: C * 0.94, h: c.h + 3 }),
+  };
+}
+
+function passes(S, band) {
+  const on = band === 'deep' ? WHITE : INK;
+  const min = Math.min(...[S.hi, S.core, S.lo, sheen(S.hi)].map((x) => contrast(on, x)));
+  return min >= (band === 'deep' ? TXT : TXT_BRIGHT);
+}
+
+// 3. Walk lightness in OKLCH until the on-colour clears the gate on every stop (incl. sheen),
+//    then solve the smallest numeral scrim that clears 8:1 (with a motif line underneath).
+function normalise(src, forceL, forceBand) {
+  const c = oklch(src);
+  const band = forceBand ?? bandOf(c);
+  let L;
+  if (band === 'deep') {
+    L = forceL ?? Math.max(0.34, Math.min(c.L, 0.66));
+    while (L > 0.2 && !passes(stops(c, L, band), band)) L -= 0.005;
+  } else {
+    L = forceL ?? Math.min(0.93, Math.max(c.L, 0.66));
+    if (c.C < 0.035) L = Math.min(L, 0.9);
+    while (L < 0.97 && !passes(stops(c, L, band), band)) L += 0.005;
+  }
+  const S = stops(c, L, band);
+  const on = band === 'deep' ? WHITE : INK;
+  const veil = band === 'deep' ? '#000000' : '#ffffff';
+  const worst = band === 'deep' ? sheen(S.hi) : S.lo;
+  const mo = motifFor(S, band);
+  const cands = [worst, over(worst, mo.col, mo.a)];
+  const lowest = (al) =>
+    cands.map((x) => over(x, veil, al)).reduce((p, x) => (contrast(on, x) < contrast(on, p) ? x : p));
+  let al = 0;
+  while (al < 0.6 && contrast(on, lowest(al)) < NUM) al += 0.01;
+  return {
+    src,
+    c,
+    band,
+    L,
+    ...S,
+    on,
+    veil,
+    scrimA: +al.toFixed(2),
+    numSurf: lowest(al),
+    motifCol: mo.col,
+    motifA: mo.a,
+  };
+}
+
+// 4. Soft chip tint + a line colour that reads on the light page (>= 3.2:1).
+function accents(t) {
+  const { c } = t;
+  const C = c.C < 0.035 ? 0 : Math.min(c.C, 0.17);
+  const tint = fromOklch({ L: 0.945, C: Math.min(C, 0.045), h: c.h });
+  const ok = (x) => contrast(x, NEUTRAL.bg) >= 3.2 && contrast(x, NEUTRAL.surface) >= 3.2;
+  let Ll = Math.min(0.72, Math.max(c.L, 0.4));
+  while (!ok(fromOklch({ L: Ll, C, h: c.h })) && Ll > 0.2) Ll -= 0.01;
+  return { tint, line: fromOklch({ L: Ll, C, h: c.h }) };
+}
+
+/**
+ * Derive both teams' tokens. Invalid input falls back to that team's default; never throws.
+ * @param {unknown} aInput team A colour
+ * @param {unknown} bInput team B colour
+ * @returns {{A: object, B: object, note: string}} each team:
+ *   hi, core, lo, on, veil, scrimA, numSurf, tint, line, motifCol, motifA, band
+ */
+function deriveTeamColours(aInput, bInput) {
+  const aHex = normaliseHex(aInput) ?? DEFAULT_TEAM_COLOURS.a;
+  const bHex = normaliseHex(bInput) ?? DEFAULT_TEAM_COLOURS.b;
+  let A = normalise(aHex);
+  let B = normalise(bHex);
+  const before = deltaE(A.core, B.core);
+  let note = '';
+
+  // 5. Clash: too close -> spread lightness apart. Hue is kept, so each team keeps its identity.
+  if (before < CLASH) {
+    const darkFirst = A.L <= B.L;
+    const D = darkFirst ? A : B;
+    const Lt = darkFirst ? B : A;
+    let nD;
+    let nL = Lt;
+    if (D.band === 'deep' && Lt.band === 'deep') {
+      nD = normalise(D.src, 0.31);
+      nL = normalise(Lt.src, Math.max(Lt.L, 0.5));
+    } else if (D.band === 'bright' && Lt.band === 'bright') {
+      nD = normalise(D.src, 0.8);
+      nL = normalise(Lt.src, 0.93);
+    } else {
+      nD = normalise(D.src, 0.28);
+    }
+    // Two bright colours can't spread far enough while both keep dark text (e.g. white v white):
+    // move the darker team into the deep band (same hue, white text), darker until it is clear.
+    for (const L of [0.42, 0.36, 0.3, 0.24]) {
+      if (deltaE(nD.core, nL.core) >= CLASH) break;
+      nD = normalise(D.src, L, 'deep');
+    }
+    if (darkFirst) [A, B] = [nD, nL];
+    else [B, A] = [nD, nL];
+    note = `clash ΔE ${before.toFixed(2)} → ${deltaE(A.core, B.core).toFixed(2)} (lightness split)`;
+  }
+
+  const a = accents(A);
+  const b = accents(B);
+  if (deltaE(a.line, b.line) < 0.12) {
+    // Line clash: the darker source team gets the quieter, lower line.
+    const aDarker = A.c.L <= B.c.L;
+    const [dk, lt, dS, lS] = aDarker ? [a, b, A, B] : [b, a, B, A];
+    dk.line = fromOklch({ L: 0.38, C: Math.min(dS.c.C, 0.11), h: dS.c.h });
+    lt.line = fromOklch({ L: 0.6, C: Math.min(lS.c.C, 0.17), h: lS.c.h });
+  }
+  return { A: { ...A, ...a }, B: { ...B, ...b }, note };
+}
+
+/**
+ * Every contrast pair the board relies on, as [label, ratio, minimum] rows.
+ * @param {{A: object, B: object}} derived output of deriveTeamColours
+ */
+function contrastReport(derived) {
+  const rows = [];
+  for (const k of ['A', 'B']) {
+    const t = derived[k];
+    const surfaces = { hi: t.hi, core: t.core, lo: t.lo, sheen: sheen(t.hi) };
+    for (const [name, s] of Object.entries(surfaces)) {
+      rows.push([`${k} label on ${name}`, contrast(t.on, s), 4.5]);
+      rows.push([`${k} label on ${name} + court line`, contrast(t.on, over(s, t.motifCol, t.motifA)), 4.5]);
+    }
+    rows.push([`${k} numeral on scrim (worst stop, incl. court line)`, contrast(t.on, t.numSurf), 7.5]);
+    rows.push([`${k} chip text on tint`, contrast(NEUTRAL.ink, t.tint), 4.5]);
+    rows.push([`${k} line on page`, contrast(t.line, NEUTRAL.bg), 3]);
+    rows.push([`${k} line on card`, contrast(t.line, NEUTRAL.surface), 3]);
+  }
+  return rows;
+}
+
+const rgba = (hex, a) => `rgba(${hexToRgb(hex).map((v) => Math.round(v * 255)).join(', ')}, ${+a.toFixed(2)})`;
+
+/**
+ * CSS custom properties for a scoring screen root.
+ * @param {{A: object, B: object}} derived output of deriveTeamColours
+ * @returns {Record<string, string>} --team-{a,b}-{hi,core,lo,on,scrim,tint,line,motif}
+ */
+function teamColourVars(derived) {
+  const vars = {};
+  for (const [k, side] of [['A', 'a'], ['B', 'b']]) {
+    const t = derived[k];
+    vars[`--team-${side}-hi`] = t.hi;
+    vars[`--team-${side}-core`] = t.core;
+    vars[`--team-${side}-lo`] = t.lo;
+    vars[`--team-${side}-on`] = t.on;
+    vars[`--team-${side}-scrim`] = rgba(t.veil, t.scrimA);
+    vars[`--team-${side}-tint`] = t.tint;
+    vars[`--team-${side}-line`] = t.line;
+    vars[`--team-${side}-motif`] = rgba(t.motifCol, t.motifA);
+  }
+  return vars;
+}
+
+
+/* ===================== data ===================== */
+const DIRS = {
+  kit: { name: 'Kit', line: '<b>Kit (recommended):</b> Apple-Sports gradients. Every sport and team is a blended, engine-gated gradient with its mark cropped at the edge; the chrome stays calm and neutral, so the colour reads as identity, not decoration. It is the scorer Harsha already approved, extended to the whole app.' },
+  sticker: { name: 'Sticker', line: '<b>Sticker:</b> flat die-cut colour. Sport colours as solid fills with a white keyline, the mark as a peel-off round sticker, pill controls and a small tilt on badges only. The friendliest of the three, and the closest to childish.' },
+  bug: { name: 'Scorebug', line: '<b>Scorebug:</b> broadcast graphics. One ink scorebug bar per screen, sport stripes, angled corners and a condensed caps face for bug labels. The most "sport TV", and the most likely to drift back toward heavy ink.' },
+};
+const SPORTS = [
+  { id: 'cricket', name: 'Cricket', hex: '#2563eb', colour: 'Royal blue', hint: 'Overs, wickets, NRR', g: 'pop' },
+  { id: 'kabaddi', name: 'Kabaddi', hex: '#e11d74', colour: 'Rani pink', hint: 'Raids, tackles, all-out', g: 'pop' },
+  { id: 'volleyball', name: 'Volleyball', hex: '#fbbf24', colour: 'Sun yellow', hint: 'Sets, rally scoring, deuce', g: 'pop' },
+  { id: 'badminton', name: 'Badminton', hex: '#7c3aed', colour: 'Shuttle violet', hint: 'Rally points, best of 3', g: 'pop' },
+  { id: 'football', name: 'Football', hex: '#16a34a', colour: 'Pitch green', hint: 'Goals, draws, goal difference', g: 'pop' },
+  { id: 'basketball', name: 'Basketball', hex: '#f97316', colour: 'Court orange', hint: 'Points, no draws', g: 'pop' },
+  { id: 'tennis', name: 'Tennis', hex: '#c6e83a', colour: 'Optic volt', hint: 'Sets, games, tiebreaks', g: 'more' },
+  { id: 'tabletennis', name: 'Table tennis', hex: '#0d9488', colour: 'Table teal', hint: 'Best of 5/7, 11 points', g: 'more' },
+  { id: 'hockey', name: 'Hockey', hex: '#38bdf8', colour: 'Turf sky', hint: 'Goals, GD standings', g: 'more' },
+];
+const SP = Object.fromEntries(SPORTS.map((s) => [s.id, s]));
+const SWATCHES = [['Red', '#d62828'], ['Orange', '#f97316'], ['Yellow', '#facc15'], ['Green', '#16a34a'], ['Blue', '#1d4ed8'], ['Purple', '#6d28d9']];
+const HISTORY = [
+  { s: 'volleyball', a: 'Royals', b: 'Strikers', w: 'a', sub: 'Royals won 3–1', sc: '3–1', when: 'Yesterday' },
+  { s: 'kabaddi', a: 'Bulls', b: 'Panthers', w: 'a', sub: 'Bulls won by 7', sc: '38–31', when: 'Mon' },
+  { s: 'cricket', a: 'Lions', b: 'Tigers', w: 'a', sub: 'Lions won by 6 runs', sc: '164/6', when: 'Sun' },
+  { s: 'badminton', a: 'Anya', b: 'Ravi', w: 'a', sub: 'Anya won 2–0', sc: '2–0', when: 'Sat' },
+  { s: 'basketball', a: 'Hoops', b: 'Dunkers', w: 'b', sub: 'Dunkers won by 6', sc: '58–64', when: 'Fri' },
+  { s: 'football', a: 'City', b: 'United', w: null, sub: 'Draw', sc: '2–2', when: 'Thu' },
+];
+const MONTH = [['volleyball', 5], ['cricket', 3], ['kabaddi', 2], ['badminton', 2], ['basketball', 1], ['football', 1]];
+const MINE = [['volleyball', 15], ['cricket', 10], ['kabaddi', 7], ['badminton', 5], ['basketball', 3], ['football', 2]];
+const SCREENS = [
+  ['home', 'Home'], ['play', 'Play hub'], ['setup', 'Quick setup'], ['scorer', 'Volleyball scorer (as shipped, chrome restyled)'],
+  ['finish', 'Finish: the winner moment'], ['history', 'History'], ['profile', 'Profile and stats'],
+];
+
+/* ===================== sport marks (viewBox 0 0 140 100, travelling right; alpha only) ===================== */
+const SPEED = "<path d='M16 30H34M4 50H36M16 70H34' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>";
+const ball = (cuts, r = 44) => `<defs><mask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'><rect width='140' height='100' fill='#fff'/><g fill='none' stroke='#000' stroke-width='3.6' stroke-linecap='round'>${cuts}</g></mask></defs><circle cx='94' cy='50' r='${r}' mask='url(#m)'/>${SPEED}`;
+const VB_SEAMS = ['M11.1 7.1a16.55 16.55 0 0 1 10.9 4', 'M12 12a12.6 12.6 0 0 1-8.7 5', 'M16.8 13.6a16.55 16.55 0 0 1-9 7.5', 'M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10', 'M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5'].map((d) => `<path d='${d}'/>`).join('');
+const MARKS = {
+  // volleyball: verbatim from src/lib/sportMarks.js (the shipped mark)
+  volleyball: `<defs><mask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'><rect width='140' height='100' fill='#fff'/><g transform='translate(92 50) scale(4.6) translate(-12 -12)' fill='none' stroke='#000' stroke-width='1.15' stroke-linecap='round'>${VB_SEAMS}</g></mask></defs><circle cx='92' cy='50' r='46' mask='url(#m)'/>${SPEED}`,
+  cricket: ball("<path d='M72 12C90 34 100 60 112 90'/><path d='M60 18C78 40 88 66 100 94' stroke-dasharray='0.1 7'/><path d='M84 8C102 30 112 56 124 84' stroke-dasharray='0.1 7'/>"),
+  football: `<defs><mask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'><rect width='140' height='100' fill='#fff'/><g fill='#000'><polygon points='94,36 107.3,45.7 102.2,61.3 85.8,61.3 80.7,45.7'/><circle cx='94' cy='6' r='11'/><circle cx='135' cy='37' r='11'/><circle cx='119' cy='86' r='11'/><circle cx='69' cy='86' r='11'/><circle cx='53' cy='37' r='11'/></g><g stroke='#000' stroke-width='3.6' stroke-linecap='round'><path d='M94 36V14M107.3 45.7L126 39.6M102.2 61.3L113.7 77M85.8 61.3L74.3 77M80.7 45.7L62 39.6'/></g></mask></defs><circle cx='94' cy='50' r='44' mask='url(#m)'/>${SPEED}`,
+  basketball: ball("<path d='M94 6V94M50 50H138'/><path d='M64 16Q84 50 64 84'/><path d='M124 16Q104 50 124 84'/>"),
+  tennis: ball("<path d='M60 22C80 36 80 64 60 78'/><path d='M128 22C108 36 108 64 128 78'/>", 42),
+  badminton: `<defs><mask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'><rect width='140' height='100' fill='#fff'/><g fill='none' stroke='#000' stroke-width='3.2' stroke-linecap='round'><path d='M102 45L46 28M102 50H46M102 55L46 72M82 32.5V67.5'/></g></mask></defs><g mask='url(#m)'><polygon points='104,40 104,60 44,84 44,16'/></g><circle cx='114' cy='50' r='15'/><path d='M8 30H30M2 50H32M8 70H30' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>`,
+  tabletennis: "<circle cx='74' cy='44' r='32'/><path d='M94 66L114 90' fill='none' stroke='currentColor' stroke-width='15' stroke-linecap='round'/><circle cx='124' cy='22' r='10'/><path d='M14 30H32M6 48H30' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>",
+  hockey: "<path d='M38 4L58 74Q62 90 78 87L96 82' fill='none' stroke='currentColor' stroke-width='13' stroke-linecap='round' stroke-linejoin='round'/><circle cx='122' cy='78' r='12'/><path d='M100 58H116M106 44H126' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>",
+  kabaddi: "<circle cx='98' cy='17' r='11'/><g fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M90 33L70 58' stroke-width='14'/><path d='M86 38L124 46' stroke-width='10'/><path d='M82 41L60 30' stroke-width='10'/><path d='M70 58L98 70L102 94' stroke-width='12'/><path d='M70 58L46 76L20 86' stroke-width='12'/></g>",
+};
+const svgUrl = (body, vb = '0 0 140 100') => {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='${vb}'>${body}</svg>`;
+  return `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, '%27')}')`;
+};
+const MARK_URL = Object.fromEntries(Object.entries(MARKS).map(([k, v]) => [k, svgUrl(v)]));
+const TROPHY = svgUrl("<path d='M30 8h40v22a20 20 0 0 1-40 0z'/><path d='M30 14H16a10 10 0 0 0 14 18M70 14h14a10 10 0 0 1-14 18' fill='none' stroke='#000' stroke-width='6'/><rect x='45' y='48' width='10' height='18'/><rect x='32' y='66' width='36' height='10' rx='3'/><rect x='26' y='78' width='48' height='12' rx='3'/>", '0 0 100 100');
+const CHECK = svgUrl("<path d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='#000' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/>", '0 0 24 24');
+
+/* ===================== colour helpers (engine-backed) ===================== */
+const hexA = (hex, a) => { const [r, g, b] = hexToRgb(hex).map((v) => Math.round(v * 255)); return `rgba(${r}, ${g}, ${b}, ${a})`; };
+const SPORT_T = Object.fromEntries(SPORTS.map((s) => { const t = normalise(s.hex); return [s.id, { ...t, ...accents(t) }]; }));
+const surfacesOf = (t, flat) => { const base = flat ? [t.core] : [t.hi, t.core, t.lo, sheen(t.hi)]; return [...base, ...base.map((x) => over(x, t.motifCol, t.motifA))]; };
+const sportVars = (id) => { const t = SPORT_T[id]; return `--s-hi:${t.hi};--s-core:${t.core};--s-lo:${t.lo};--s-on:${t.on};--s-motif:${hexA(t.motifCol, t.motifA)};--s-tint:${t.tint};--s-line:${t.line};--mark:${MARK_URL[id]}`; };
+const stopsAttr = (list) => `data-stops="${list.join(',')}"`;
+const teamVarsStr = (d) => Object.entries(teamColourVars(d)).map(([k, v]) => `${k}:${v}`).join(';');
+
+/* ===================== state ===================== */
+const Q = new URLSearchParams(location.search);
+const S = {
+  dir: DIRS[Q.get('d')] ? Q.get('d') : 'kit',
+  theme: Q.get('theme') === 'dark' ? 'dark' : 'light',
+  w: Q.get('w') === '360' ? 360 : 390,
+  only: Q.get('s'),
+  bare: Q.get('bare') === '1',
+  teamA: '#d62828', teamB: '#1d4ed8',
+  nameA: 'Royals', nameB: 'Strikers',
+  fmt: 2,
+  score: { a: 22, b: 19, serve: 'a', hist: [{ a: 21, b: 19, serve: 'a' }], last: 'Last: point Royals · 22–19', bump: null },
+};
+
+/* ===================== icons ===================== */
+const I = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg>',
+  hist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  undo: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>',
+  more: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>',
+  arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  chev: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;opacity:.55"><path d="M9 6l6 6-6 6"/></svg>',
+  gear: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+};
+
+/* ===================== shared fragments ===================== */
+const brandDots = () => `<span class="dots" aria-hidden="true">${['cricket', 'kabaddi', 'volleyball', 'hockey'].map((id) => `<i style="background:${SPORT_T[id].core}"></i>`).join('')}</span>`;
+const dock = (cur) => `<nav class="dock" aria-label="Main">${[['home', 'Home', I.home], ['play', 'Play', I.play], ['history', 'History', I.hist], ['profile', 'Account', I.user]]
+  .map(([k, l, ic]) => `<button type="button" ${cur === k ? 'aria-current="page"' : ''}>${ic}<span>${l}</span></button>`).join('')}</nav>`;
+const wash = (a, b) => `<div class="wash" aria-hidden="true" style="--w1:${a};--w2:${b}"></div>`;
+const bugbar = (label, right, gold, sports = ['cricket', 'kabaddi', 'volleyball'], live = false) =>
+  `<div class="bugbar" ${stopsAttr(['#0b0b0d'])} style="--s1:${SPORT_T[sports[0]].core};--s2:${SPORT_T[sports[1]].core};--s3:${SPORT_T[sports[2]].core}"><i class="stripe" aria-hidden="true"></i><b>${label}</b>${right ? `<span>${right}</span>` : ''}${gold ? `<span class="gold" ${stopsAttr(['#f5b700'])}>${gold}</span>` : ''}${live ? '<span class="onair">Live</span>' : ''}</div>`;
+const teams = () => deriveTeamColours(S.teamA, S.teamB);
+const tile = (id, mini, i) => {
+  const s = SP[id]; const t = SPORT_T[id];
+  const flat = S.dir !== 'kit';
+  return `<button type="button" class="tile in${mini ? ' mini' : ''}" style="${sportVars(id)};--i:${i}" ${stopsAttr(surfacesOf(t, flat))} aria-label="${s.name}: quick match">
+    <span class="mk" aria-hidden="true"></span><span class="stk" aria-hidden="true"></span>
+    <b>${s.name}</b>${mini ? '' : `<small>${s.hint}</small>`}</button>`;
+};
+
+/* ===================== screens ===================== */
+function home() {
+  const d = teams(); const A = d.A; const B = d.B;
+  let hero;
+  if (S.dir === 'bug') {
+    hero = `<div class="hero in" style="--i:1">
+      <div class="sbug" ${stopsAttr(['#0b0b0d'])}>
+        <div class="hd"><span>Volleyball · Best of 5</span><span class="g" ${stopsAttr(['#0b0b0d'])}>Final</span></div>
+        <div class="r"><i style="--c:${A.core}"></i><b>${S.nameA} <em ${stopsAttr(['#f5b700'])}>Won</em></b><span ${stopsAttr(['#1c1c1e'])}>3</span></div>
+        <div class="r lo"><i style="--c:${B.core}"></i><b>${S.nameB}</b><span ${stopsAttr(['#1c1c1e'])}>1</span></div>
+      </div>
+      <div class="hero-foot"><p><span>Sets <b>25–21 · 22–25 · 25–19 · 25–23</b></span></p>
+      <div class="btnrow"><button type="button" class="go">Rematch ${I.arrow}</button><button type="button" class="ctl">Details</button></div></div></div>`;
+  } else {
+    const flat = S.dir === 'sticker';
+    hero = `<div class="hero in" style="--i:1">
+      <div class="hero-teams">
+        <div class="half a" ${stopsAttr(surfacesOf(A, flat))}><span class="tag">Won</span><span class="nm">${S.nameA}</span><span class="n">3</span></div>
+        <span class="seam" aria-hidden="true"></span>
+        <div class="half b" ${stopsAttr(surfacesOf(B, flat))}><span class="nm">${S.nameB}</span><span class="n">1</span></div>
+        ${flat ? `<span class="vs" aria-hidden="true">v</span>` : ''}
+      </div>
+      <div class="hero-foot"><p><span>Sets <b>25–21 · 22–25 · 25–19 · 25–23</b></span></p>
+      <div class="btnrow"><button type="button" class="go">Rematch ${I.arrow}</button><button type="button" class="ctl">Details</button></div></div></div>`;
+  }
+  const head = S.dir === 'bug'
+    ? `<div class="top"><div class="grow">${bugbar('Score Easy', 'Wed 22 Oct')}</div><button type="button" class="avatar" aria-label="Profile">H</button></div>`
+    : `<div class="top"><div class="brand grow">${brandDots()}Score Easy</div><button type="button" class="avatar" aria-label="Profile">H</button></div>`;
+  return `<div class="scr" data-screen="home" style="${teamVarsStr(d)}">${S.dir === 'kit' ? wash(A.tint, B.tint) : ''}${head}
+    <h1 class="title in">Hi Harsha.</h1><p class="sub in">3 matches scored this week</p>
+    <div class="sec"><h2>Last match · Volleyball</h2><span>Yesterday</span></div>${hero}
+    <div class="sec"><h2>Quick start</h2><span>Your favourites</span></div>
+    <div class="grid3">${['volleyball', 'cricket', 'kabaddi'].map((id, i) => tile(id, true, i + 2)).join('')}</div>
+    <div class="sec"><h2>Recent</h2><span>See all</span></div>
+    <div class="list in" style="--i:5">${HISTORY.slice(1, 3).map(histRow).join('')}</div>
+    ${dock('home')}</div>`;
+}
+function histRow(h) {
+  const s = SP[h.s];
+  const nm = h.w === 'a' ? `<strong>${h.a}</strong> v ${h.b}` : h.w === 'b' ? `${h.a} v <strong>${h.b}</strong>` : `${h.a} v ${h.b}`;
+  return `<button type="button" class="row"><span class="badge" aria-hidden="true" style="${sportVars(h.s)}"></span>
+    <span class="t"><b>${nm}</b><small>${s.name} · ${h.when}</small></span><span class="sc">${h.sc}</span>${I.chev}</button>`;
+}
+function play() {
+  const pop = SPORTS.filter((s) => s.g === 'pop'); const more = SPORTS.filter((s) => s.g === 'more');
+  const head = S.dir === 'bug'
+    ? `<div class="top"><div class="grow">${bugbar('Play', '9 sports', null, ['volleyball', 'basketball', 'hockey'])}</div></div>`
+    : `<div class="top"><div class="brand grow">${brandDots()}Play</div></div>`;
+  return `<div class="scr" data-screen="play">${S.dir === 'kit' ? wash(SPORT_T.kabaddi.tint, SPORT_T.hockey.tint) : ''}${head}
+    <h1 class="title in">What are we scoring?</h1><p class="sub in">Tap a sport to set up a quick match</p>
+    <div class="sec"><h2>Popular</h2><span>6 sports</span></div>
+    <div class="grid2">${pop.map((s, i) => tile(s.id, false, i)).join('')}</div>
+    <div class="sec"><h2>More sports</h2></div>
+    <div class="grid3">${more.map((s, i) => tile(s.id, true, i + 6)).join('')}</div>
+    ${dock('play')}</div>`;
+}
+function setup() {
+  const d = teams(); const A = d.A; const B = d.B;
+  const flat = S.dir !== 'kit';
+  const sw = (team, cur) => `<div class="sw" role="group" aria-label="${team === 'a' ? 'Team 1' : 'Team 2'} colour">${SWATCHES.map(([n, hx]) => {
+    const t = normalise(hx);
+    return `<button type="button" data-sw="${team}" data-hex="${hx}" aria-label="${n}" aria-pressed="${cur === hx}" style="--c:${t.core};--c-on:${t.on};--check:${CHECK}"></button>`;
+  }).join('')}</div>`;
+  const fmts = ['Single set', 'Best of 3', 'Best of 5'];
+  return `<div class="scr" data-screen="setup" style="--check:${CHECK}">${S.dir === 'kit' ? wash(SPORT_T.volleyball.tint, SPORT_T.volleyball.tint) : ''}
+    <div class="top"><button type="button" class="ctl back" aria-label="Back">${I.back}</button>
+      <div class="sportchip grow" style="${sportVars('volleyball')}"><span class="badge" aria-hidden="true"></span><span><b>Volleyball</b><small>Quick match</small></span></div>
+      <button type="button" class="txtbtn">Tournament</button></div>
+    <div class="matchup in" style="${teamVarsStr(d)}">
+      <div class="mk-key a" ${stopsAttr(surfacesOf(A, false))}><b>${S.nameA}</b><span>0</span></div>
+      <div class="mk-key b" ${stopsAttr(surfacesOf(B, false))}><b>${S.nameB}</b><span>0</span></div>
+      <span class="vs" aria-hidden="true">v</span></div>
+    <div class="field"><label for="na-${S.dir}">Team 1</label><input class="inp" id="na-${S.dir}" value="${S.nameA}">${sw('a', S.teamA)}</div>
+    <div class="field"><label for="nb-${S.dir}">Team 2</label><input class="inp" id="nb-${S.dir}" value="${S.nameB}">${sw('b', S.teamB)}</div>
+    <div class="field"><span class="flabel">Format</span><div class="segc" role="group" aria-label="Format">${fmts.map((f, i) => `<button type="button" data-fmt="${i}" aria-pressed="${S.fmt === i}">${f}</button>`).join('')}</div>
+    <p class="rules">25 points a set · win by 2 · decider to 15</p></div>
+    <div style="height:70px"></div>
+    <div class="sticky"><button type="button" class="go">Start volleyball ${I.arrow}</button></div></div>`;
+}
+function scorer() {
+  const d = teams(); const sc = S.score;
+  const style = `${teamVarsStr(d)};--sport-mark:${MARK_URL.volleyball};${sportVars('volleyball')}`;
+  const key = (k, side) => {
+    const t = k === 'a' ? d.A : d.B; const name = k === 'a' ? S.nameA : S.nameB; const serving = sc.serve === k;
+    return `<button type="button" class="tsb-key tsb-key-${k}" data-side="${side}" data-point="${k}" aria-label="Add point for ${name}" ${stopsAttr(surfacesOf(t, false))}>
+      ${serving ? '<span class="tsb-mark" aria-hidden="true"></span><span class="tsb-srv">Serving</span>' : ''}
+      <span class="tsb-who">${name}</span><span class="tsb-big${sc.bump === k ? ' bump' : ''}" ${stopsAttr([t.numSurf])}>${sc[k]}</span><span class="tsb-word">Tap +1</span></button>`;
+  };
+  const prev = sc.hist[sc.hist.length - 1];
+  const head = S.dir === 'bug'
+    ? `<header class="tsb-top"><div class="tsb-title">${bugbar(`${S.nameA.slice(0, 3)} v ${S.nameB.slice(0, 3)}`, null, null, ['volleyball', 'volleyball', 'volleyball'], true)}</div><button type="button" class="ctl tsb-finish" data-finish>Finish</button></header>`
+    : `<header class="tsb-top"><div class="tsb-title"><b>${S.nameA} v ${S.nameB}</b><small><i aria-hidden="true"></i>Volleyball · 25 pts · win by 2</small></div><span class="live">Live</span><button type="button" class="ctl tsb-finish" data-finish>Finish</button></header>`;
+  return `<div class="tsb" data-screen="scorer" style="${style}">${head}
+    <p class="tsb-meta"><span>Set 2</span><span>Sets 1–0</span><span>18:42</span></p>
+    <p class="tsb-last" aria-live="polite">${sc.last}</p>
+    <div class="tsb-keys">${key('a', 'left')}${key('b', 'right')}</div>
+    <div class="tsb-bar"><button type="button" class="ctl tsb-undo" data-undo ${prev ? '' : 'disabled'} aria-label="Undo last action">${I.undo}<span>Undo</span><span class="tsb-undo-w">${prev ? `back to ${prev.a}–${prev.b}` : 'Nothing to undo'}</span></button>
+    <button type="button" class="ctl tsb-more" aria-label="Match options" aria-haspopup="dialog">${I.more}</button></div></div>`;
+}
+function finish() {
+  const d = teams(); const A = d.A; const B = d.B;
+  const flat = S.dir !== 'kit';
+  const cols = [A.core, A.hi, B.core, '#f5b700', '#ffd166', A.lo, B.hi];
+  let seed = 7; const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const bits = Array.from({ length: 34 }, (_, i) => `<i style="--x:${(rnd() * 100).toFixed(1)}%;--y:${(rnd() * 92).toFixed(1)}%;--r:${Math.round(rnd() * 360)}deg;--c:${cols[i % cols.length]};--d:${Math.round(rnd() * 260)}ms;--w:${6 + Math.round(rnd() * 5)}px;--h:${9 + Math.round(rnd() * 8)}px"></i>`).join('');
+  const sets = [[25, 21, 'a'], [22, 25, 'b'], [25, 19, 'a'], [25, 23, 'a']];
+  return `<div class="scr" data-screen="finish" style="${teamVarsStr(d)};--trophy:${TROPHY}">
+    <div class="top"><div class="grow">${S.dir === 'bug' ? bugbar('Full time', null, 'Final', ['volleyball', 'volleyball', 'volleyball']) : `<div class="sportchip" style="${sportVars('volleyball')}"><span class="badge" aria-hidden="true"></span><span><b>Full time</b><small>Volleyball · Best of 5 · 1h 12m</small></span></div>`}</div>
+      <button type="button" class="ctl">Done</button></div>
+    <div class="win in" ${stopsAttr(surfacesOf(A, flat))}><span class="trophy" aria-hidden="true"></span><div class="confetti" aria-hidden="true">${bits}</div>
+      <span class="wintag" ${stopsAttr(['#f5b700'])}>Winner</span>
+      <h1>${S.nameA}<br>win it.</h1><p class="wsub">Took the last set 25–23</p>
+      <div class="wn" ${stopsAttr(surfacesOf(A, flat))}>3–1</div></div>
+    <div class="lose in" style="--i:1" ${stopsAttr([B.tint])}><i aria-hidden="true"></i>${S.nameB}<b>1</b></div>
+    <div class="sets in" style="--i:2" aria-label="Set scores">${sets.map(([x, y, w], i) => `<span class="set" style="--dot:${w === 'a' ? A.core : B.core}">Set ${i + 1} <b>${x}–${y}</b></span>`).join('')}</div>
+    <div style="margin-top:22px" class="in"><button type="button" class="go">Rematch ${I.arrow}</button></div>
+    <div class="btnrow in" style="margin-top:12px"><button type="button" class="ctl" style="flex:1">Share result</button><button type="button" class="ctl" style="flex:1">Match details</button></div>
+  </div>`;
+}
+function history() {
+  const tot = MONTH.reduce((s, [, n]) => s + n, 0);
+  const head = S.dir === 'bug'
+    ? `<div class="top"><div class="grow">${bugbar('History', `${tot} this month`, null, ['badminton', 'cricket', 'kabaddi'])}</div></div>`
+    : `<div class="top"><div class="brand grow">${brandDots()}History</div></div>`;
+  return `<div class="scr" data-screen="history">${S.dir === 'kit' ? wash(SPORT_T.volleyball.tint, SPORT_T.cricket.tint) : ''}${head}
+    <div class="card in"><div style="display:flex;align-items:baseline;justify-content:space-between"><span class="sub" style="font-weight:700">October</span><span class="sub">6 sports</span></div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-top:8px"><span class="bign">${tot}</span><span style="font-weight:700">matches scored</span></div>
+      <div class="stack" aria-hidden="true">${MONTH.map(([id, n]) => `<i style="${sportVars(id)};--n:${n}"></i>`).join('')}</div>
+      <div class="legend">${MONTH.map(([id, n]) => `<span style="${sportVars(id)}"><i aria-hidden="true"></i>${SP[id].name} <b>${n}</b></span>`).join('')}</div></div>
+    <div class="chips" role="group" aria-label="Filter by sport" style="margin-top:18px"><button type="button" class="chip" aria-pressed="true">All</button>${['volleyball', 'cricket', 'kabaddi', 'badminton', 'basketball', 'football'].map((id) => `<button type="button" class="chip" aria-pressed="false" style="${sportVars(id)}"><i aria-hidden="true"></i>${SP[id].name}</button>`).join('')}</div>
+    <div class="sec" style="margin-top:12px"><h2>This week</h2><span>6 matches</span></div>
+    <div class="list in" style="--i:2">${HISTORY.map(histRow).join('')}</div>
+    ${dock('history')}</div>`;
+}
+function profile() {
+  const tot = MINE.reduce((s, [, n]) => s + n, 0); let acc = 0;
+  const ring = `conic-gradient(${MINE.map(([id, n]) => { const a = acc; acc += n; return `${SPORT_T[id].core} ${(a / tot * 360).toFixed(1)}deg ${(acc / tot * 360).toFixed(1)}deg`; }).join(',')})`;
+  const head = S.dir === 'bug'
+    ? `<div class="top"><div class="grow">${bugbar('Profile', 'Scorer')}</div><button type="button" class="ctl back" aria-label="Settings">${I.gear}</button></div>`
+    : `<div class="top"><div class="brand grow">${brandDots()}Profile</div><button type="button" class="ctl back" aria-label="Settings">${I.gear}</button></div>`;
+  const orbits = [['volleyball', '-6px', '6px'], ['cricket', '92px', '-4px'], ['kabaddi', '96px', '96px']].map(([id, l, t]) => `<span class="orbit" aria-hidden="true" style="${sportVars(id)};left:${l};top:${t}"></span>`).join('');
+  return `<div class="scr" data-screen="profile">${S.dir === 'kit' ? wash(SPORT_T.cricket.tint, SPORT_T.kabaddi.tint) : ''}${head}
+    <div class="prof in"><div style="position:relative"><div class="ring" style="--ring:${ring}"><div>H</div></div>${orbits}</div>
+      <h1>Harsha</h1><p class="sub">Scoring since June 2026</p></div>
+    <div class="statline in" style="--i:1"><div><b>${tot}</b><span>matches</span></div><div><b>6</b><span>sports</span></div><div><b>5</b><span>day streak</span></div></div>
+    <div class="sec"><h2>Your sports</h2><span>by matches</span></div>
+    <div class="list in" style="--i:2">${MINE.slice(0, 4).map(([id, n]) => `<div class="brow" style="${sportVars(id)};--p:${Math.round(n / MINE[0][1] * 100)}%"><span class="badge" aria-hidden="true"></span><div><div class="nm">${SP[id].name}</div><div class="tr" aria-hidden="true"><i></i></div></div><span class="ct">${n}</span></div>`).join('')}</div>
+    <div class="sec"><h2>Settings</h2></div>
+    <div class="list"><button type="button" class="setrow">Appearance<span>Light</span></button><button type="button" class="setrow">Default sport<span>Volleyball</span></button><button type="button" class="setrow">Account and sync<span>Signed in</span></button></div>
+    ${dock('profile')}</div>`;
+}
+const RENDER = { home, play, setup, scorer, finish, history, profile };
+
+/* ===================== Kit-only additions (recommended direction): one board per engine family, live flow, Live tab =====================
+   Every label and state below is one the shipped scorers already have (MonoCricketGuidedScorer, MonoGoalsLiveScore,
+   MonoTennisLiveScore, LiveBroadcastBar, ShareLiveMatch, MonoWatchMatch). No new rules are invented. */
+const pair = (a, b) => deriveTeamColours(a, b);
+const sideStops = (t) => surfacesOf(t, false);
+const liveTop = (title, sub, right) => `<header class="tsb-top"><div class="tsb-title"><b>${title}</b><small>${sub}</small></div>${right}</header>`;
+
+function cricket() {
+  const d = pair('#6d28d9', '#f97316');
+  const style = `${teamVarsStr(d)};--sport-mark:${MARK_URL.cricket};${sportVars('cricket')}`;
+  return `<div class="crb" data-screen="cricket" style="${style}">
+    ${liveTop('Lions v Tigers', '<i aria-hidden="true"></i>Over 12.3 · Chasing 165', '<span class="live">Live</span><button type="button" class="ctl tsb-finish">Finish</button>')}
+    <div class="bat" ${stopsAttr(sideStops(d.A))}><span class="mk2" aria-hidden="true"></span>
+      <div class="who">Lions batting</div>
+      <div class="rw"><b>98/3</b><span>(12.3)</span><span style="margin-left:auto">CRR 7.84</span></div>
+      <div class="need"><em ${stopsAttr(['#ffffff'])}>Need 67 off 45</em><span>RRR 8.93</span></div></div>
+    <div class="crt">
+      <div class="r"><b>Rohan *</b><span class="n">42 <small>(28)</small></span><small>SR 150.0</small></div>
+      <div class="r"><span>Dev</span><span class="n">17 <small>(15)</small></span><small>SR 113.3</small></div>
+      <div class="r"><span>Arjun <small>bowling</small></span><span class="n">2.3-0-21-1</span><small>Econ 8.40</small></div>
+      <div class="over"><span>This over · P'ship 31 (22)</span><i>1</i><i class="b4">4</i><i>•</i><i class="e"></i><i class="e"></i><i class="e"></i></div>
+    </div>
+    <div class="pad" role="group" aria-label="Runs off the bat">
+      <button type="button" class="ctl">•<small>Dot</small></button><button type="button" class="ctl">1</button><button type="button" class="ctl">4</button><button type="button" class="ctl">6</button><button type="button" class="ctl wk">W<small>Wicket</small></button></div>
+    <div class="pad2 runs" role="group" aria-label="Other runs"><button type="button">2</button><button type="button">3</button><button type="button">5</button><button type="button">7</button></div>
+    <div class="pad2" role="group" aria-label="Extras"><button type="button">Wide</button><button type="button">No-ball</button><button type="button">Bye</button><button type="button">Leg-bye</button></div>
+    <div class="crbar"><button type="button" class="ctl tsb-undo" aria-label="Undo last ball">${I.undo}<span>Undo</span><span class="tsb-undo-w">back to 12.2</span></button>
+      <button type="button" class="ctl" aria-label="Swap strike"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/></svg></button>
+      <button type="button" class="ctl" aria-label="Match options">${I.more}</button></div></div>`;
+}
+
+function goals() {
+  // Basketball: +1/+2/+3 per team (football and hockey tap the whole half; kabaddi has +1, Super Tackle +2, All Out +2).
+  const d = pair('#111111', '#facc15');
+  const style = `${teamVarsStr(d)};${sportVars('basketball')}`;
+  const key = (k, side, name, score) => {
+    const t = k === 'a' ? d.A : d.B;
+    return `<div class="tsb-key tsb-key-${k} goals" data-side="${side}" ${stopsAttr(sideStops(t))} style="--on:${t.on};--core:${t.core}">
+      <span class="tsb-who">${name}</span><span class="tsb-big" ${stopsAttr([t.numSurf])}>${score}</span>
+      <div class="plus" role="group" aria-label="Points for ${name}">${[1, 2, 3].map((n) => `<button type="button" aria-label="Add ${n} for ${name}" ${stopsAttr([t.on])}>+${n}</button>`).join('')}</div></div>`;
+  };
+  return `<div class="tsb" data-screen="goals" style="${style}">
+    ${liveTop('Hoops v Dunkers', '<i aria-hidden="true"></i>Basketball · 40 min match · No draws', '<span class="live">Live</span><button type="button" class="ctl tsb-finish">Finish</button>')}
+    <p class="tsb-meta" style="align-items:center;gap:10px"><span class="markchip" ${stopsAttr([SPORT_T.basketball.core])}>Basketball</span><span class="pill time" aria-label="Time left 07:42">07:42</span></p>
+    <p class="tsb-last" aria-live="polite">Last: +2 Hoops · 52–49</p>
+    <div class="tsb-keys">${key('a', 'left', 'Hoops', 52)}${key('b', 'right', 'Dunkers', 49)}</div>
+    <div class="tsb-bar"><button type="button" class="ctl tsb-undo" aria-label="Undo last action">${I.undo}<span>Undo</span><span class="tsb-undo-w">back to 50–49</span></button>
+      <button type="button" class="ctl tsb-more" aria-label="Match options">${I.more}</button></div></div>`;
+}
+
+function tennis() {
+  const d = pair('#38bdf8', '#7a1020');
+  const style = `${teamVarsStr(d)};--sport-mark:${MARK_URL.tennis};${sportVars('tennis')}`;
+  const key = (k, side, name, pts, games, srv) => {
+    const t = k === 'a' ? d.A : d.B;
+    return `<button type="button" class="tsb-key tsb-key-${k}" data-side="${side}" aria-label="Point to ${name}" ${stopsAttr(sideStops(t))}>
+      ${srv ? '<span class="tsb-mark" aria-hidden="true"></span><span class="tsb-srv">Serving</span>' : ''}
+      <span class="tsb-who">${srv ? '<span class="srvdot" aria-hidden="true"></span>' : ''}${name}</span><span class="tsb-big" ${stopsAttr([t.numSurf])}>${pts}</span><span class="tsb-word">${games} games</span></button>`;
+  };
+  return `<div class="tsb" data-screen="tennis" style="${style}">
+    ${liveTop('Anya v Ravi', '<i aria-hidden="true"></i>Tennis · Singles', '<span class="live">Live</span><button type="button" class="ctl tsb-finish">Finish</button>')}
+    <p class="tsb-meta"><span>Set 2 of 3</span><span>1 – 0 sets · best of 3</span></p>
+    <div class="strip" style="padding-top:8px"><span>Set 1: 6-4</span></div>
+    <div class="tsb-keys">${key('a', 'left', 'Anya', '40', 3, true)}${key('b', 'right', 'Ravi', 'AD', 4, false)}</div>
+    <div class="tsb-bar"><button type="button" class="ctl tsb-undo" aria-label="Undo last action">${I.undo}<span>Undo</span><span class="tsb-undo-w">back to 40–40</span></button>
+      <button type="button" class="ctl tsb-more" aria-label="Match options">${I.more}</button></div></div>`;
+}
+
+function consent() {
+  return `${scorer()}<div class="scrim" aria-hidden="true"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cs-h" data-screen="consent"><div class="grab" aria-hidden="true"></div>
+      <h2 id="cs-h">Share this match live?</h2>
+      <p>Scores and team names will be public to anyone with the link.</p>
+      <div class="stack2"><button type="button" class="go">Share live ${I.arrow}</button><button type="button" class="ctl">Keep private</button></div></div>`;
+}
+
+function qrSvg() {
+  let seed = 11; const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const N = 25; let cells = '';
+  const finder = (x, y) => `<rect x='${x}' y='${y}' width='7' height='7' fill='#0b0b0d'/><rect x='${x + 1}' y='${y + 1}' width='5' height='5' fill='#fff'/><rect x='${x + 2}' y='${y + 2}' width='3' height='3' fill='#0b0b0d'/>`;
+  const inFinder = (x, y) => (x < 8 && y < 8) || (x > N - 9 && y < 8) || (x < 8 && y > N - 9);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!inFinder(x, y) && rnd() > 0.52) cells += `<rect x='${x}' y='${y}' width='1' height='1'/>`;
+  return `<svg class="qr" viewBox="0 0 ${N} ${N}" role="img" aria-label="QR code for the live link" shape-rendering="crispEdges"><g fill="#0b0b0d">${cells}</g>${finder(0, 0)}${finder(N - 7, 0)}${finder(0, N - 7)}</svg>`;
+}
+function share() {
+  return `${scorer()}<div class="scrim" aria-hidden="true"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-h" data-screen="share"><div class="grab" aria-hidden="true"></div>
+      <div class="livebar"><span class="live">Live · public</span><b></b><button type="button" class="ctl">Done</button></div>
+      <h2 id="sh-h">Share the live score</h2><p>Anyone with the link can watch. No sign-in needed.</p>
+      ${qrSvg()}
+      <div class="link"><span>scoreeasy.app/live/7KQ2RX</span><button type="button" class="ctl">Copy link</button></div>
+      <div class="stack2" style="margin-top:12px"><button type="button" class="ctl">Share…</button></div>
+      <button type="button" class="danger-row">Stop sharing</button></div>`;
+}
+
+const specNav = () => `<div class="snav"><div class="brand grow">${brandDots()}Score Easy</div><button type="button" class="ctl">Open app</button></div>`;
+function specBoard(d, nA, nB, sA, sB, serve, winner) {
+  const tag = (k) => (winner === k ? '<span class="tag">Winner ▸</span>' : '');
+  const dot = (k) => (serve === k ? '<span class="srvdot" aria-label="serving"></span>' : '');
+  return `<div class="hero-teams">
+      <div class="half a" ${stopsAttr(sideStops(d.A))}>${tag('a')}<span class="nm">${dot('a')}${nA}</span><span class="n">${sA}</span></div>
+      <div class="half b" ${stopsAttr(sideStops(d.B))}>${tag('b')}<span class="nm">${dot('b')}${nB}</span><span class="n">${sB}</span></div></div>`;
+}
+function specVb(state) {
+  const d = pair('#d62828', '#1d4ed8');
+  const label = state === 'paused' ? '<span class="live">Live</span><span class="pill paused">Paused</span>' : '<span class="live">Live</span>';
+  const feed = [['a', 'Point Royals', '22–19'], ['b', 'Point Strikers', '21–19'], ['a', 'Point Royals', '21–18'], ['a', 'Set 1 to Royals', '25–21']];
+  return `<div class="scr" data-screen="spec-vb-${state}" style="${teamVarsStr(d)}">${wash(d.A.tint, d.B.tint)}${specNav()}
+    <div class="hero sbk">${specBoard(d, 'Royals', 'Strikers', 22, 19, 'a', null)}
+      <div class="line"><span>Volleyball · Set 2 · Sets 1–0</span><span style="display:flex;gap:6px">${label}</span></div></div>
+    ${state === 'paused' ? '<p class="sub" style="margin:10px 4px 0">No new points for 2 minutes. The score will update when play resumes.</p>' : ''}
+    <div class="tabs" role="tablist"><button type="button" role="tab" aria-selected="true">Feed</button><button type="button" role="tab" aria-selected="false">Scorecard</button><button type="button" role="tab" aria-selected="false">Stats</button></div>
+    <div class="list feed">${feed.map(([k, t, s]) => `<div class="row"><span class="tline" style="--c:${k === 'a' ? d.A.core : d.B.core}" aria-hidden="true"></span><span class="t"><b>${t}</b><small>Set ${t.startsWith('Set') ? 1 : 2}</small></span><span class="sc">${s}</span></div>`).join('')}</div>
+    <div class="signup"><b>Score your own matches</b><p>Free on your phone. Volleyball, cricket and 7 more sports.</p><button type="button" class="go">Get Score Easy ${I.arrow}</button></div>
+    <div class="report"><button type="button" class="txtbtn">Report match</button></div></div>`;
+}
+function specCr(state) {
+  const d = pair('#f97316', '#6d28d9');
+  const final = state === 'final';
+  const banner = state === 'offline' ? '<div class="banner" role="status"><i aria-hidden="true"></i>Reconnecting… the score may be behind.</div>' : '';
+  const label = final ? '<span class="pill final">Final</span>' : '<span class="live">Live</span>';
+  const line = final ? 'Cricket · Lions won by 3 wickets' : 'Cricket · Lions need 67 off 45';
+  const tabs = ['Feed', 'Scorecard', 'Stats'].map((t) => `<button type="button" role="tab" aria-selected="${final ? t === 'Scorecard' : t === 'Feed'}">${t}</button>`).join('');
+  const body = final
+    ? `<div class="list tot"><div class="r"><i style="--c:${d.A.core}" aria-hidden="true"></i><span><b>Tigers</b><small>20 overs</small></span><span>164/6</span></div>
+        <div class="r"><i style="--c:${d.B.core}" aria-hidden="true"></i><span><b>Lions</b><small>19.4 overs</small></span><span>165/7</span></div></div>
+        <div class="winline"><em>Winner</em>Lions won by 3 wickets</div>`
+    : `<div class="list feed">${[['12.3', 'Dot ball', '98/3'], ['12.2', 'FOUR · Rohan', '98/3'], ['12.1', '1 run · Dev', '94/3'], ['11.6', 'WICKET · Kabir c Sami', '93/3']].map(([o, t, s]) => `<div class="row"><span class="tline" style="--c:${d.B.core}" aria-hidden="true"></span><span class="t"><b>${t}</b><small>Over ${o}</small></span><span class="sc">${s}</span></div>`).join('')}</div>`;
+  return `<div class="scr" data-screen="spec-cr-${state}" style="${teamVarsStr(d)}">${wash(d.A.tint, d.B.tint)}${specNav()}${banner}
+    <div class="hero sbk">${specBoard(d, 'Tigers', 'Lions', '164/6', final ? '165/7' : '98/3', null, final ? 'b' : null)}
+      <div class="line"><span>${line}</span>${label}</div></div>
+    <div class="tabs" role="tablist">${tabs}</div>${body}
+    ${final ? `<div class="signup"><b>Score your own matches</b><p>Free on your phone. Cricket, kabaddi and 7 more sports.</p><button type="button" class="go">Get Score Easy ${I.arrow}</button></div>` : ''}
+    <div class="report"><button type="button" class="txtbtn">Report match</button></div></div>`;
+}
+
+const LIVE = [
+  { s: 'cricket', a: ['Tigers', '#f97316', '164/6'], b: ['Lions', '#6d28d9', '98/3'], line: 'Over 12.3', st: 'live', ago: '12s ago' },
+  { s: 'volleyball', a: ['Royals', '#d62828', '22'], b: ['Strikers', '#1d4ed8', '19'], line: 'Set 2 · Sets 1–0', st: 'live', ago: '4s ago' },
+  { s: 'kabaddi', a: ['Bulls', '#e11d2a', '31'], b: ['Panthers', '#111111', '27'], line: '2nd Half · 08:10', st: 'live', ago: '30s ago' },
+  { s: 'badminton', a: ['Anya', '#38bdf8', '18'], b: ['Ravi', '#7a1020', '20'], line: 'Set 2 of 3', st: 'paused', ago: '3 min ago' },
+];
+function liveList(empty) {
+  const dock5 = `<nav class="dock five" aria-label="Main">${[['home', 'Home', I.home], ['play', 'Play', I.play], ['live', 'Live', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>'], ['history', 'History', I.hist], ['account', 'Account', I.user]]
+    .map(([k, l, ic]) => `<button type="button" ${k === 'live' ? 'aria-current="page"' : ''} ${k === 'live' && !empty ? 'class="dot" aria-label="Live, 4 matches now"' : ''}>${ic}<span>${l}</span></button>`).join('')}</nav>`;
+  const head = `<div class="top"><div class="brand grow">${brandDots()}Live</div></div><h1 class="title">Live now</h1><p class="sub">${empty ? 'Matches shared by scorers show up here' : '4 matches being scored right now'}</p>`;
+  if (empty) {
+    return `<div class="scr" data-screen="live-empty">${wash(SPORT_T.hockey.tint, SPORT_T.kabaddi.tint)}${head}
+      <div class="empty"><div class="marks" aria-hidden="true">${[['cricket', '-8deg'], ['volleyball', '4deg'], ['kabaddi', '-3deg']].map(([id, r]) => `<span class="badge" style="${sportVars(id)};--r:${r}"></span>`).join('')}</div>
+        <h2>Nothing live right now</h2><p>When someone shares a match, it appears here with its live score. Score one yourself and share the link.</p>
+        <button type="button" class="go">Score a match ${I.arrow}</button></div>${dock5}</div>`;
+  }
+  const chips = ['All', 'Cricket', 'Volleyball', 'Kabaddi', 'Badminton'].map((n, i) => `<button type="button" class="chip" aria-pressed="${i === 0}" ${i ? `style="${sportVars(n.toLowerCase())}"` : ''}>${i ? '<i aria-hidden="true"></i>' : ''}${n}</button>`).join('');
+  const cards = LIVE.map((m) => {
+    const dd = pair(m.a[1], m.b[1]);
+    return `<button type="button" class="lcard"><span class="badge" aria-hidden="true" style="${sportVars(m.s)}"></span>
+      <span><span class="tm"><i style="--c:${dd.A.core}" aria-hidden="true"></i>${m.a[0]}</span><span class="tm"><i style="--c:${dd.B.core}" aria-hidden="true"></i>${m.b[0]}</span></span>
+      <span class="sc">${m.a[2]}<br>${m.b[2]}</span>
+      <span class="meta">${m.st === 'live' ? '<span class="live">Live</span>' : '<span class="pill paused">Paused</span>'}${SP[m.s].name} · ${m.line} · ${m.ago}</span></button>`;
+  }).join('');
+  return `<div class="scr" data-screen="live-list">${wash(SPORT_T.hockey.tint, SPORT_T.kabaddi.tint)}${head}
+    <div class="chips" role="group" aria-label="Filter by sport" style="margin-top:16px">${chips}</div>
+    <div class="list" style="margin-top:8px">${cards}</div>
+    <p class="sub" style="margin:14px 4px 0;font-size:.85rem">Showing public matches shared in the last few hours.</p>${dock5}</div>`;
+}
+
+Object.assign(RENDER, {
+  cricket, goals, tennis, consent, share,
+  'spec-vb-live': () => specVb('live'), 'spec-vb-paused': () => specVb('paused'),
+  'spec-cr-offline': () => specCr('offline'), 'spec-cr-final': () => specCr('final'),
+  'live-list': () => liveList(false), 'live-empty': () => liveList(true),
+});
+const KIT_EXTRA = [
+  ['cricket', 'Cricket board (guided scorer)'], ['goals', 'Goals board (basketball +1/+2/+3)'], ['tennis', 'Tennis board (AD, serve)'],
+  ['consent', 'Go live: consent'], ['share', 'Go live: share sheet'],
+  ['spec-vb-live', 'Spectator: volleyball live'], ['spec-vb-paused', 'Spectator: volleyball paused'],
+  ['spec-cr-offline', 'Spectator: cricket reconnecting'], ['spec-cr-final', 'Spectator: cricket final'],
+  ['live-list', 'Proposal: Live tab'], ['live-empty', 'Proposal: Live tab, nothing live'],
+];
+
+/* ===================== mount ===================== */
+function phoneHTML(key) {
+  return `<div class="phone" data-dir="${S.dir}" data-theme="${S.theme}" data-key="${key}" style="--pw:${S.w}px">${RENDER[key]()}</div>`;
+}
+function renderAll() {
+  const wall = document.getElementById('wall');
+  const all = S.dir === 'kit' ? [...SCREENS, ...KIT_EXTRA] : SCREENS;
+  const list = S.only ? all.filter(([k]) => k === S.only) : all;
+  wall.innerHTML = list.map(([k, label]) => `<figure><figcaption>${DIRS[S.dir].name} · ${label}</figcaption>${phoneHTML(k)}</figure>`).join('');
+  document.getElementById('why').innerHTML = DIRS[S.dir].line;
+  for (const b of document.querySelectorAll('#dirSeg button')) b.setAttribute('aria-pressed', b.dataset.d === S.dir);
+  for (const b of document.querySelectorAll('#themeSeg button')) b.setAttribute('aria-pressed', b.dataset.t === S.theme);
+  for (const b of document.querySelectorAll('#wSeg button')) b.setAttribute('aria-pressed', String(+b.dataset.w === S.w));
+  S.score.bump = null;
+}
+function rerender(key) {
+  const el = document.querySelector(`.phone[data-key="${key}"]`);
+  if (el) el.innerHTML = RENDER[key]();
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.d) { S.dir = t.dataset.d; renderAll(); return; }
+  if (t.dataset.t) { S.theme = t.dataset.t; renderAll(); return; }
+  if (t.dataset.w) { S.w = +t.dataset.w; renderAll(); return; }
+  if (t.id === 'runAudit') { runAudit(); return; }
+  if (t.dataset.sw) { if (t.dataset.sw === 'a') S.teamA = t.dataset.hex; else S.teamB = t.dataset.hex; SCREENS.forEach(([k]) => rerender(k)); return; }
+  if (t.dataset.fmt) { S.fmt = +t.dataset.fmt; rerender('setup'); return; }
+  if (t.dataset.point) {
+    const k = t.dataset.point; const sc = S.score;
+    sc.hist.push({ a: sc.a, b: sc.b, serve: sc.serve }); sc[k] += 1; sc.serve = k; sc.bump = k;
+    sc.last = `Last: point ${k === 'a' ? S.nameA : S.nameB} · ${sc.a}–${sc.b}`; rerender('scorer'); sc.bump = null; return;
+  }
+  if (t.dataset.undo !== undefined) {
+    const sc = S.score; const p = sc.hist.pop(); if (!p) return;
+    Object.assign(sc, p); sc.last = `Undone · back to ${sc.a}–${sc.b}`; rerender('scorer'); return;
+  }
+  if (t.dataset.finish !== undefined) { document.querySelector('.phone[data-key="finish"]')?.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id?.startsWith('na-')) S.nameA = e.target.value || 'Team 1';
+  if (e.target.id?.startsWith('nb-')) S.nameB = e.target.value || 'Team 2';
+});
+
+/* ===================== measured checks: contrast, touch targets, overflow ===================== */
+function parseCol(str) {
+  const m = /rgba?\(([^)]+)\)/.exec(str); if (!m) return null;
+  const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+  return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+}
+const toHexC = (c) => '#' + [c.r, c.g, c.b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+const blend = (fg, bgHex) => { const b = hexToRgb(bgHex).map((v) => v * 255); return toHexC({ r: fg.r * fg.a + b[0] * (1 - fg.a), g: fg.g * fg.a + b[1] * (1 - fg.a), b: fg.b * fg.a + b[2] * (1 - fg.a) }); };
+function bgStops(el, phone) {
+  for (let n = el; n && n !== phone.parentElement; n = n.parentElement) {
+    if (n.dataset && n.dataset.stops) return { stops: n.dataset.stops.split(','), from: 'stops' };
+    const cs = getComputedStyle(n); const c = parseCol(cs.backgroundColor);
+    if (cs.backgroundImage !== 'none' && !n.classList.contains('scr') && !n.classList.contains('go') && !n.classList.contains('wash') && n !== phone) return { stops: null, from: 'unmeasured gradient: ' + n.className };
+    if (n.classList.contains('go')) return { stops: [getComputedStyle(phone).getPropertyValue('--go-hi').trim(), getComputedStyle(phone).getPropertyValue('--go').trim(), getComputedStyle(phone).getPropertyValue('--go-lo').trim()], from: 'go' };
+    if (c && c.a >= 0.99) return { stops: [toHexC(c)], from: 'solid' };
+    if (c && c.a > 0) { const under = bgStops(n.parentElement, phone); return { stops: under.stops && under.stops.map((s) => blend(c, s)), from: 'alpha' }; }
+  }
+  return { stops: [getComputedStyle(phone).getPropertyValue('--canvas').trim()], from: 'canvas' };
+}
+function runAudit() {
+  const out = { dir: S.dir, theme: S.theme, width: S.w, textChecked: 0, minNormal: 99, minLarge: 99, fails: [], unmeasured: [], targets: [], overflow: [] };
+  for (const phone of document.querySelectorAll('.phone')) {
+    const key = phone.dataset.key; const pr = phone.getBoundingClientRect();
+    // text contrast
+    for (const el of phone.querySelectorAll('*')) {
+      const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) || el.tagName === 'INPUT';
+      if (!own) continue;
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+      const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+      const fg = parseCol(cs.color); const bg = bgStops(el, phone);
+      const txt = (el.tagName === 'INPUT' ? el.value : el.textContent).trim().slice(0, 28);
+      if (!bg.stops) { out.unmeasured.push(`${key}: "${txt}" (${bg.from})`); continue; }
+      const size = parseFloat(cs.fontSize); const wt = parseInt(cs.fontWeight, 10);
+      const large = size >= 24 || (size >= 18.66 && wt >= 700); const min = large ? 3 : 4.5;
+      const worst = Math.min(...bg.stops.map((s) => contrast(fg.a < 1 ? blend(fg, s) : toHexC(fg), s)));
+      out.textChecked += 1;
+      if (large) out.minLarge = Math.min(out.minLarge, worst); else out.minNormal = Math.min(out.minNormal, worst);
+      if (worst < min) out.fails.push(`${key}: "${txt}" ${worst.toFixed(2)} < ${min} (fg ${toHexC(fg)} on ${bg.stops.join('/')})`);
+    }
+    // touch targets
+    for (const el of phone.querySelectorAll('button, input, a')) {
+      const r = el.getBoundingClientRect(); if (!r.width) continue;
+      if (r.width < 47.5 || r.height < 47.5) out.targets.push(`${key}: ${el.getAttribute('aria-label') || el.textContent.trim().slice(0, 24)} ${Math.round(r.width)}x${Math.round(r.height)}`);
+    }
+    // horizontal overflow (outside scroll rows and decoration)
+    for (const el of phone.querySelectorAll('*')) {
+      if (el.closest('.chips, [aria-hidden=true], .confetti, .wash')) continue;
+      const r = el.getBoundingClientRect(); if (!r.width) continue;
+      if (r.right > pr.right + 0.5 || r.left < pr.left - 0.5) out.overflow.push(`${key}: <${el.tagName.toLowerCase()} class="${el.className}"> ${Math.round(r.left - pr.left)}..${Math.round(r.right - pr.left)}`);
+    }
+    for (const el of phone.querySelectorAll('.tsb-who, .row .t b, .row .t small, .tsb-undo-w, .tsb-last, .bugbar b')) {
+      if (el.scrollWidth > el.clientWidth + 1) out.overflow.push(`${key}: truncated "${el.textContent.trim()}"`);
+    }
+  }
+  out.minNormal = +out.minNormal.toFixed(2); out.minLarge = +out.minLarge.toFixed(2);
+  const a = document.getElementById('audit'); a.textContent = 'AUDIT ' + JSON.stringify(out, null, 1); a.classList.add('on');
+  return out;
+}
+
+if (S.bare) document.body.classList.add('bare');
+renderAll();
+if (Q.get('audit') === '1') { const go = () => runAudit(); document.fonts ? document.fonts.ready.then(() => setTimeout(go, 1200)) : setTimeout(go, 1500); }
+</script>
+</body>
+</html>
