@@ -5,6 +5,7 @@ import { api } from "../../../convex/_generated/api";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAuth } from "../../hooks/useAuth";
 import BackArrow from "./components/BackArrow";
+import { PLAY_HUB_PATH } from "../../utils/appPaths";
 
 export default function MonoUserSearch() {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ export default function MonoUserSearch() {
               type="button"
               className="mono-btn"
               style={{ minHeight: 44, padding: "10px 14px", fontSize: "0.8125rem" }}
-              onClick={() => navigate("/volleyball/quick")}
+              onClick={() => navigate(PLAY_HUB_PATH)}
             >
               Start guest match
             </button>
@@ -171,7 +172,7 @@ export default function MonoUserSearch() {
               type="button"
               className="mono-btn"
               style={{ minHeight: 44, padding: "10px 14px", fontSize: "0.8125rem" }}
-              onClick={() => navigate("/volleyball/quick")}
+              onClick={() => navigate(PLAY_HUB_PATH)}
             >
               Start guest match
             </button>

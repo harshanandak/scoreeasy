@@ -28,7 +28,7 @@ function renderUserSearch() {
       <LocationProbe />
       <Routes>
         <Route path="/users/search" element={<MonoUserSearch />} />
-        <Route path="/volleyball/quick" element={<p>Guest match</p>} />
+        <Route path="/play" element={<p>Play hub</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -57,6 +57,6 @@ describe('MonoUserSearch', () => {
     expect(screen.getByText(/Try another username/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Start guest match' }));
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
   });
 });
