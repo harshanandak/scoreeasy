@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
@@ -21,6 +21,7 @@ import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
+import { useScoringCompletion } from './scoringCompletionContext';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
 
@@ -40,10 +41,19 @@ const triggerHaptic = (pattern) => {
 
 export default function MonoGoalsLiveScore() {
   const navigate = useNavigate();
+  const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
   const { isAuthenticated } = useAuth();
   const saveMatchMutation = useMutation(api.matches.save);
   const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
+  const completeMatch = useCallback(() => {
+    const tournamentPath = `/${sport}/tournament/${id}`;
+    if (completeProtectedScoring) {
+      completeProtectedScoring(tournamentPath);
+    } else {
+      navigate(tournamentPath, { replace: true });
+    }
+  }, [completeProtectedScoring, navigate, sport, id]);
 
   // Core state
   const [sportConfig, setSportConfig] = useState(null);
@@ -195,7 +205,7 @@ export default function MonoGoalsLiveScore() {
         setSaveWarning('');
         saveTournamentToConvex(updatedTournament);
         live.finalize();
-        navigate(`/${sport}/tournament/${id}`);
+        completeMatch();
         autoFinishTimeoutRef.current = null;
       }, 300);
 
@@ -208,7 +218,7 @@ export default function MonoGoalsLiveScore() {
     }
 
     return undefined;
-  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, id, navigate, scoringPrompt.isInteractionLocked, showScoringWarning, overtimePeriod]);
+  }, [timer.elapsed, tournament, sportConfig, score1, score2, matchId, sport, completeMatch, scoringPrompt.isInteractionLocked, showScoringWarning, overtimePeriod]);
 
   // Add point/goal
   const addScore = (team, value = 1) => {
@@ -287,7 +297,7 @@ export default function MonoGoalsLiveScore() {
           setSaveWarning('');
           saveTournamentToConvex(updatedTournament);
           live.finalize();
-          navigate(`/${sport}/tournament/${id}`);
+          completeMatch();
         }, 300);
       }
     }
@@ -394,7 +404,7 @@ export default function MonoGoalsLiveScore() {
 
     // Delay navigation slightly to show confetti
     setTimeout(() => {
-      navigate(`/${sport}/tournament/${id}`);
+      completeMatch();
     }, 300);
   };
 

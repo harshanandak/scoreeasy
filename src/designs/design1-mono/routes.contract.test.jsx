@@ -175,12 +175,9 @@ describe('route contracts: already correct (pinned)', () => {
 });
 
 describe('route contracts: open findings (it.fails until the fix PR lands)', () => {
-  // RA-1 (P1). Goals scorers finish with a plain navigate() PUSH to the
-  // tournament page, so Back from the tournament reopens the scorer of the match
-  // that just finished. Sets scorers already route completion through
-  // completeProtectedScoring (PR #128); goals, tennis-tournament and cricket do
-  // not. Fix PR: "Back-stack: every scorer finishes through completeProtectedScoring".
-  it.fails('RA-1: Back after finishing a goals tournament match does not reopen its scorer', async () => {
+  // RA-1 (P1). Goals completion must unwind the scorer and its guard entries,
+  // so Back from the tournament stays on the pre-scorer tournament page.
+  it('RA-1: Back after finishing a goals tournament match does not reopen its scorer', async () => {
     seed('se_football', [footballTournament()]);
     renderApp(['/football/tournament/100', '/football/tournament/100/match/m1/score']);
     await settleRoute();
@@ -189,7 +186,7 @@ describe('route contracts: open findings (it.fails until the fix PR lands)', () 
 
     await pressProbeBack();
 
-    expect(currentRoute()).not.toBe('/football/tournament/100/match/m1/score');
+    expect(currentRoute()).toBe('/football/tournament/100');
   });
 
   // RA-2 (P1). Finishing a tennis quick match PUSHES /history. Back lands on the
