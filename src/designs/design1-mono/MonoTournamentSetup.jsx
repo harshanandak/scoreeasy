@@ -66,15 +66,10 @@ const SQUAD_LIMITS = {
   badminton: { playing: 1, max: 2 },
   tabletennis: { playing: 1, max: 2 },
   tennis: { playing: 1, max: 2 },
-  pickleball: { playing: 2, max: 4 },
-  squash: { playing: 1, max: 2 },
   football: { playing: 11, max: 23 },
   basketball: { playing: 5, max: 15 },
   hockey: { playing: 11, max: 18 },
-  handball: { playing: 7, max: 16 },
-  futsal: { playing: 5, max: 14 },
   kabaddi: { playing: 7, max: 12 },
-  rugby: { playing: 15, max: 23 },
   cricket: { playing: 11, max: 16 },
 };
 

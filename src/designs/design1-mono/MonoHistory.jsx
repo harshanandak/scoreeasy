@@ -11,7 +11,7 @@ import {
   saveData,
 } from '../../utils/storage';
 import { loadHistory } from '../../utils/universalStorage';
-import { getSportById, getSportsList } from '../../models/sportRegistry';
+import { getRetiredSportsList, getSportById, getSportLabel, getSportsList } from '../../models/sportRegistry';
 import {
   getCompletedAt,
   getTournamentMatches,
@@ -206,7 +206,8 @@ function matchScore(match, team1Id, team2Id) {
 
 function buildTournamentEntries() {
   const entries = [];
-  const sports = getSportsList();
+  // Deregistered sports are included so their saved tournaments stay readable.
+  const sports = [...getSportsList(), ...getRetiredSportsList()];
 
   sports.forEach((sport) => {
     const tournaments = loadSportTournaments(sport.storageKey);
@@ -327,7 +328,6 @@ export default function MonoHistory() {
 
   const quickEntries = useMemo(() => {
     return quickMatches.map((qm) => {
-      const sportConfig = getSportById(qm.sport);
       const inningsScore = Array.isArray(qm.innings) && qm.innings.length > 0
         ? `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`
         : null;
@@ -341,7 +341,7 @@ export default function MonoHistory() {
         rawId: qm.id,
         source: 'quick',
         sport: qm.sport,
-        sportName: sportConfig?.name || qm.sport,
+        sportName: getSportLabel(qm.sport),
         team1: qm.team1,
         team2: qm.team2,
         score,
@@ -906,7 +906,7 @@ export default function MonoHistory() {
               {selectedEntry.score} - {winnerLabel(selectedEntry.winner)}
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {selectedEntry.source === 'quick' && (
+              {selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) && (
                 <button
                   type="button"
                   className="mono-btn-primary"

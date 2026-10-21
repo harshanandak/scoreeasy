@@ -1,4 +1,4 @@
-// Standard format defaults for all 14 sports
+// Standard format defaults for every registered sport (src/models/sportRegistry.js)
 // Based on 2026 real-world tournament practices and international standards
 
 export const SPORT_DEFAULTS = {
@@ -47,26 +47,6 @@ export const SPORT_DEFAULTS = {
     },
   },
 
-  pickleball: {
-    formatMode: 'standard',
-    type: 'best-of',
-    sets: 3, // Best-of-3 games
-    points: 11,
-    customization: {
-      winBy: 2,
-    },
-  },
-
-  squash: {
-    formatMode: 'standard',
-    type: 'best-of',
-    sets: 3, // Best-of-3 games (PAR scoring)
-    points: 11,
-    customization: {
-      winBy: 2,
-    },
-  },
-
   // === GOALS-BASED SPORTS ===
   football: {
     formatMode: 'standard',
@@ -84,24 +64,6 @@ export const SPORT_DEFAULTS = {
     formatMode: 'standard',
     mode: 'timed',
     timeLimit: 3600, // 60 minutes (4×15 quarters or 2×30 halves)
-  },
-
-  handball: {
-    formatMode: 'standard',
-    mode: 'timed',
-    timeLimit: 3600, // 60 minutes (2×30 halves)
-  },
-
-  futsal: {
-    formatMode: 'standard',
-    mode: 'timed',
-    timeLimit: 2400, // 40 minutes (2×20 halves)
-  },
-
-  rugby: {
-    formatMode: 'standard',
-    mode: 'timed',
-    timeLimit: 4800, // 80 minutes (2×40 halves)
   },
 
   kabaddi: {
