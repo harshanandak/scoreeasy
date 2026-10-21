@@ -25,6 +25,18 @@ App code is not changed here. The only code added is `src/designs/design1-mono/r
 
 ## Top findings in plain words
 
+**Start-match integration verification (2026-10-21).** Master already contains the
+generic CTA fix from PR #158 (`f895e99`). The `fix/start-match-routing` integration
+merged master (`8384956`) without conflicts; its app source matches that master.
+The focused run passed 79 assertions with nine expected failures across seven
+files. All nine RA-1 through RA-9 contracts still fail as intended, so none was
+converted to a normal assertion. RA-14's legacy `/quick-match` sport default
+remains open; the generic Statistics, user-search and default guest-entry links
+were fixed by #158. The palette ratchet still measures 667, so its baseline and
+exclusions are unchanged. A fresh Statistics CTA demo and its counterfactual
+pre-fix destination are recorded in
+[`routing-fixes/start-match/README.md`](2026-10-21-routing-fixes/start-match/README.md).
+
 1. **Back after finishing a match goes back into the match** (RA-1, RA-2). Only volleyball-style (sets) tournament scorers leave the scorer cleanly. Football/basketball/hockey/kabaddi, tennis and cricket scorers *push* the next screen on Finish. So Back reopens the scorer you just finished. For a tennis quick match it opens a dead "Match not found" page that still has the exit guard on it.
 2. **The Home screen cannot see a match in progress** (RA-3). `/app` only lists finished matches and tournaments. With one live quick match, the Home tab says "Play your first match". With two or more, the app entry sends you to `/app` on purpose so you can choose one, but there is nothing there to choose. In-progress tennis quick matches then have no way back in from the UI.
 3. **Stale cricket Test links hang on "Loading..." forever** (RA-4). The bottom nav is hidden, and Back warns about losing unsaved progress for a match that does not exist.

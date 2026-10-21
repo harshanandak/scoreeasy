@@ -1,0 +1,53 @@
+[
+  {
+    "phase": "before",
+    "route": "/volleyball/quick",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [
+      "🏐 Quick Match",
+      "Match rules"
+    ],
+    "buttons": [
+      "",
+      "Tournament →",
+      "Edit Rules",
+      "Add players",
+      "Start Volleyball"
+    ]
+  },
+  {
+    "phase": "after",
+    "route": "/play",
+    "viewport": [
+      390,
+      844
+    ],
+    "headings": [],
+    "buttons": [
+      "Home",
+      "Play",
+      "History",
+      "Sign in",
+      "Guided",
+      "Browse",
+      "CRICKET",
+      "KABADDI",
+      "VOLLEYBALL",
+      "BADMINTON",
+      "FOOTBALL",
+      "BASKETBALL",
+      "TENNIS",
+      "TABLE TENNIS",
+      "HOCKEY",
+      "TTournament2-8 teams. Round-robin or knockout brackets. Auto standings and point tables.",
+      "QQuick Match2 teams, 1 game. Start scoring in under 10 seconds. No brackets needed."
+    ]
+  },
+  {
+    "reverse": "browser Back",
+    "route": "/history"
+  }
+]
