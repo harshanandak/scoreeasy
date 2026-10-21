@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
 
 // Direction E in quick match: team colours picked on setup, kept in the draft, shared to the
@@ -140,6 +140,32 @@ describe('quick match team colour: volleyball board', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
     fireEvent.click(screen.getByRole('button', { name: 'Subtract one from Reds' }));
     await waitFor(() => expect(reds).toHaveTextContent('0'));
+  });
+
+  it('shows the score it is about to keep in the Finish dialog', async () => {
+    seedSets('volleyball');
+    render(<MonoQuickMatch />);
+    const reds = await screen.findByRole('button', { name: 'Add point for Reds' });
+    fireEvent.click(reds);
+    await waitFor(() => expect(reds).toHaveTextContent('1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    const dialog = screen.getByRole('dialog', { name: 'End match?' });
+    expect(within(dialog).getByText('Set 1 · Sets 0–0')).toBeInTheDocument();
+    expect(within(dialog).getByText('1–0')).toBeInTheDocument();
+  });
+
+  it('states the deciding set rule the scorer is actually playing to', async () => {
+    seedSets('volleyball', {
+      sets: [
+        { score1: 25, score2: 20, completed: true },
+        { score1: 21, score2: 25, completed: true },
+        { score1: 0, score2: 0, completed: false },
+      ],
+      currentSet: 2,
+    });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Reds' });
+    expect(screen.getByText('Volleyball · 15 pts · win by 2')).toBeInTheDocument();
   });
 
   it('keeps the live-sharing bar mounted while the options sheet is closed', async () => {

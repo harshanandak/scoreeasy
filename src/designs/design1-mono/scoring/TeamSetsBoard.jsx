@@ -2,11 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import './teamBoard.css';
 
-// Team-colour scorer for sets sports ("B · Mono hard shell", picked by Harsha 2026-10-21 from three
-// rendered options). Presentational only: every number, label and handler comes from the scorer that
-// owns the rules (MonoQuickMatch), so the board can't disagree with the match state.
+// Team-colour scorer for sets sports: "Refined Soft with Mono-strength controls" (Harsha,
+// 2026-10-21). Calm neutral chrome and sentence-case type around two bold team-colour gradient
+// keys; the controls you press (Finish, Undo, More) keep Mono's hard ink edge and offset shadow.
+// Presentational only: every number, label and handler comes from the scorer that owns the rules
+// (MonoQuickMatch), so the board can't disagree with the match state.
 // Layout is thumb-first: status at the top, the two point keys in the middle, Undo and the options
 // sheet in the bottom thumb zone. Team colour is the engine's --team-{a,b}-* variables (colourStyle).
+// The sport's mark (--sport-mark, when the sport has one) sits on the serving team's key only, so
+// the decoration names the game and carries the serve instead of being wallpaper.
 
 function OptionsSheet({ id, open, onClose, halves, setHistory, onSwap, onCorrect, onDiscard, live }) {
   const closeRef = useRef(null);
@@ -21,7 +25,7 @@ function OptionsSheet({ id, open, onClose, halves, setHistory, onSwap, onCorrect
       <div id={id} className="tsb-sheet" role="dialog" aria-modal="true" aria-label="Match options">
         <div className="tsb-sheet-head">
           <b>Match options</b>
-          <button ref={closeRef} type="button" className="tsb-btn tsb-sheet-close" onClick={onClose}>Done</button>
+          <button ref={closeRef} type="button" className="tsb-btn tsb-ctl tsb-sheet-close" onClick={onClose}>Done</button>
         </div>
         {live && <div className="tsb-sheet-live">{live}</div>}
         {setHistory.length > 0 && (
@@ -75,7 +79,7 @@ export default function TeamSetsBoard({
   isLive,
   colourStyle,
   halves,
-  chips,
+  meta,
   setHistory,
   lastLine,
   canUndo,
@@ -91,6 +95,7 @@ export default function TeamSetsBoard({
 }) {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const sheetId = useId();
+  const hasMark = Boolean(colourStyle['--sport-mark']);
 
   return (
     <div className="tsb" style={colourStyle} data-team-board="">
@@ -100,27 +105,29 @@ export default function TeamSetsBoard({
           <b>{title}</b>
           {subtitle && <small>{subtitle}</small>}
         </div>
-        <button type="button" className="tsb-btn tsb-finish" onClick={onFinish}>Finish</button>
+        {isLive && <span className="tsb-live">Live</span>}
+        <button type="button" className="tsb-btn tsb-ctl tsb-finish" onClick={onFinish}>Finish</button>
       </header>
 
-      <div className="tsb-chips">
-        {isLive && <span className="tsb-chip tsb-chip-live">Live</span>}
-        {chips.map((c) => <span key={c} className="tsb-chip">{c}</span>)}
-      </div>
+      <p className="tsb-meta">
+        {meta.map((m) => <span key={m} className="tsb-meta-item">{m}</span>)}
+      </p>
 
       <p className="tsb-last" aria-live="polite">{lastLine}</p>
 
       <div className="tsb-keys">
-        {halves.map((h) => (
+        {halves.map((h, i) => (
           <button
             key={h.team}
             type="button"
             className={`tsb-key tsb-key-${h.key}`}
             data-team={h.key}
+            data-side={i === 0 ? 'left' : 'right'}
             onClick={() => onPoint(h.team)}
             aria-label={`Add point for ${h.name}`}
           >
-            {h.serving && <span className="tsb-srvtag">&#9679; Serving</span>}
+            {hasMark && h.serving && <span className="tsb-mark" aria-hidden="true" />}
+            {h.serving && <span className="tsb-srv">Serving</span>}
             <span className="tsb-who">{h.name}</span>
             <span className="tsb-big">{h.score}</span>
             <span className="tsb-word">Tap +1</span>
@@ -129,16 +136,16 @@ export default function TeamSetsBoard({
       </div>
 
       <div className="tsb-bar">
-        <button type="button" className="tsb-btn tsb-undo" onClick={onUndo} disabled={!canUndo} aria-label="Undo last action">
+        <button type="button" className="tsb-btn tsb-ctl tsb-undo" onClick={onUndo} disabled={!canUndo} aria-label="Undo last action">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-2" />
           </svg>
           <span className="tsb-undo-t">Undo</span>
-          <span className="tsb-undo-w">{canUndo ? undoHint : 'nothing yet'}</span>
+          <span className="tsb-undo-w">{canUndo ? undoHint : 'Nothing to undo'}</span>
         </button>
         <button
           type="button"
-          className="tsb-btn tsb-more"
+          className="tsb-btn tsb-ctl tsb-more"
           aria-label="Match options"
           aria-haspopup="dialog"
           aria-expanded={optionsOpen}
@@ -178,7 +185,7 @@ TeamSetsBoard.propTypes = {
   isLive: PropTypes.bool,
   colourStyle: PropTypes.object.isRequired,
   halves: PropTypes.arrayOf(half).isRequired,
-  chips: PropTypes.arrayOf(PropTypes.string).isRequired,
+  meta: PropTypes.arrayOf(PropTypes.string).isRequired,
   setHistory: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string.isRequired,
     left: PropTypes.number.isRequired,

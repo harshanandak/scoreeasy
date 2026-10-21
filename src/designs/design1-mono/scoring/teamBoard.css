@@ -1,14 +1,27 @@
-/* Team-colour scorer, "B · Mono hard shell" (BLEND-GOVERNANCE §7, §4): the app's own brutalist
-   language (ink borders, hard offset shadow, mono labels) around flat team-colour keys. Each key is
-   the team's engine core colour with the engine's on-colour text (labels >= 4.6:1; the large
-   numerals read 6.7:1 and up on every preset, no scrim needed). Thumb-first: Undo sits at the bottom. */
+/* Team-colour scorer, "Refined Soft with Mono-strength controls" (Harsha 2026-10-21; the framing
+   BLEND-GOVERNANCE §7 leaves to the scorer's own design). Calm neutral chrome, sentence-case sans
+   labels, hairlines instead of frames, and two bold team-colour gradient keys. Only the controls
+   you press (Finish, Undo, More, Done, dialog buttons) keep Mono's hard ink edge and offset shadow.
 
-.tsb {
+   Contrast: the key gradient uses exactly the engine's stops (hi -> core -> lo plus the 7% white
+   sheen it models), and the sport mark is painted in the engine's --team-x-motif. The engine gates
+   the on-colour text at >= 4.6:1 (6.5:1 on bright fills) on every one of those surfaces, with and
+   without the motif under it (src/lib/teamColour.js contrastReport), so no pair can drop below
+   4.5:1. Chrome text is ink or --tsb-ink-2 (about 8:1) on the light canvas. */
+
+.tsb,
+.tsb-confirm {
   --tsb-num: 'Barlow Condensed', var(--se-font-sans), system-ui, sans-serif;
   --tsb-ink: var(--se-color-ink);
-  --tsb-ink-2: #45454d;
-  --tsb-shadow: 3px 3px 0 var(--tsb-ink);
-  --tsb-shadow-key: 4px 4px 0 var(--tsb-ink);
+  --tsb-ink-2: color-mix(in oklab, var(--se-color-ink) 62%, var(--se-color-surface));
+  --tsb-hair: color-mix(in oklab, var(--se-color-ink) 11%, transparent);
+  --tsb-ctl-shadow: 3px 3px 0 var(--tsb-ink);
+  --tsb-lift: 0 1px 2px color-mix(in oklab, var(--se-color-ink) 6%, transparent),
+    0 14px 30px -18px color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  --tsb-sheen: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0) 40%);
+}
+
+.tsb {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -18,6 +31,14 @@
   background: var(--se-color-canvas);
   color: var(--tsb-ink);
   font-family: var(--se-font-sans);
+}
+
+/* From 768px the app keeps its sticky top nav (.global-nav, min-height 56px, design1-mono/index.jsx)
+   above the board; fit under it so Undo stays on screen without scrolling. */
+@media (min-width: 768px) {
+  .tsb {
+    min-height: calc(100dvh - 56px);
+  }
 }
 
 /* reset only the board's own controls; embedded app controls (the live bar) keep their styles */
@@ -30,15 +51,26 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.tsb-chip,
-.tsb-last,
-.tsb-who,
-.tsb-word,
-.tsb-srvtag,
-.tsb .tsb-finish,
-.tsb-undo-t {
-  font-family: var(--se-font-mono);
-  text-transform: uppercase;
+/* ---- Mono-strength controls: the things you press have a defined edge ---- */
+.tsb .tsb-ctl {
+  border: 2px solid var(--tsb-ink);
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: var(--tsb-ctl-shadow);
+  color: var(--tsb-ink);
+  font-weight: 750;
+  touch-action: manipulation;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.tsb .tsb-ctl:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--tsb-ink);
+}
+
+.tsb :where(.tsb-ctl, .tsb-key, .tsb-row):focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
 }
 
 /* ---- header ---- */
@@ -46,7 +78,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: max(10px, env(safe-area-inset-top, 0px)) 14px 8px 16px;
+  padding: max(14px, env(safe-area-inset-top, 0px)) 16px 6px 18px;
 }
 
 .tsb-title {
@@ -56,8 +88,9 @@
 
 .tsb-title b {
   display: block;
-  font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.06rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -65,56 +98,29 @@
 
 .tsb-title small {
   display: block;
-  font-size: 0.78rem;
+  margin-top: 2px;
+  font-size: 0.8rem;
   color: var(--tsb-ink-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tsb .tsb-finish {
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1.5px solid var(--tsb-ink);
-  border-radius: 8px;
-  background: var(--se-color-surface);
-  box-shadow: var(--tsb-shadow);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-
-/* ---- status chips + last action ---- */
-.tsb-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  padding: 2px 12px 8px;
-}
-
-.tsb-chip {
+.tsb-live {
   display: inline-flex;
   align-items: center;
-  height: 26px;
-  padding: 0 9px;
-  border: 1.5px solid var(--tsb-ink);
-  border-radius: 6px;
-  background: var(--se-color-surface);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--se-color-action-soft);
+  color: var(--se-color-action-strong);
+  font-size: 0.78rem;
+  font-weight: 750;
   white-space: nowrap;
 }
 
-.tsb-chip-live {
-  gap: 6px;
-  border-color: #0f6a32;
-  background: var(--se-blend-green-wash);
-  color: #0f6a32;
-}
-
-.tsb-chip-live::before {
+.tsb-live::before {
   content: '';
   width: 7px;
   height: 7px;
@@ -122,134 +128,189 @@
   background: currentColor;
 }
 
+.tsb .tsb-finish {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 0.92rem;
+}
+
+/* ---- status line + last action: plain text, no boxes ---- */
+.tsb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 2px;
+  margin: 0;
+  padding: 8px 16px 2px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tsb-meta-item + .tsb-meta-item::before {
+  content: '\00b7';
+  margin-right: 8px;
+  color: var(--tsb-ink-2);
+}
+
+.tsb-meta-item:first-child {
+  font-weight: 750;
+}
+
 .tsb-last {
   min-height: 1.6em;
-  padding: 0 16px 10px;
+  margin: 0;
+  padding: 2px 16px 10px;
   text-align: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.82rem;
   color: var(--tsb-ink-2);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---- the two point keys: flat team colour in the hard shell ---- */
+/* ---- the two point keys: bold team-colour gradients, no frame ---- */
 .tsb-keys {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 0 16px 0 12px;
+  gap: 10px;
+  padding: 0 14px;
   min-height: 260px;
 }
 
 .tsb .tsb-key {
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 0;
   min-height: 240px;
-  border: 2px solid var(--tsb-ink);
-  border-radius: 14px;
-  box-shadow: var(--tsb-shadow-key);
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 1px var(--tsb-hair), var(--tsb-lift);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 12px 6px;
+  padding: 44px 8px 22px;
   text-align: center;
   touch-action: manipulation;
-  transition: transform 60ms ease, box-shadow 60ms ease;
+  transition: transform 80ms ease;
 }
 
-/* press: the key sinks into its shadow (hard-shell press; the target stays under the thumb) */
 .tsb .tsb-key:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 var(--tsb-ink);
-}
-
-.tsb .tsb-key:focus-visible {
-  outline: 3px solid var(--tsb-ink);
-  outline-offset: 4px;
+  transform: scale(0.985);
 }
 
 .tsb .tsb-key-a {
-  background: var(--team-a-core);
+  background: var(--tsb-sheen), linear-gradient(168deg, var(--team-a-hi) 0%, var(--team-a-core) 52%, var(--team-a-lo) 100%);
   color: var(--team-a-on);
 }
 
 .tsb .tsb-key-b {
-  background: var(--team-b-core);
+  background: var(--tsb-sheen), linear-gradient(168deg, var(--team-b-hi) 0%, var(--team-b-core) 52%, var(--team-b-lo) 100%);
   color: var(--team-b-on);
 }
 
-.tsb-srvtag {
+/* "show the game": the sport's ball-and-action mark on the serving key, flying at the net and
+   cropped by the key's inner edge. Engine motif colour, so it can never cost text contrast. */
+.tsb-mark {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 3px 7px;
-  border-radius: 4px;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  z-index: -1;
+  bottom: 2%;
+  left: 4%;
+  width: 118%;
+  aspect-ratio: 140 / 100;
+  /* on short keys (360 x 640) the mark shrinks instead of climbing into the numeral; it stays
+     anchored to the bottom and the net-side edge */
+  max-height: 29%;
+  -webkit-mask: var(--sport-mark) right bottom / contain no-repeat;
+  mask: var(--sport-mark) right bottom / contain no-repeat;
+  pointer-events: none;
 }
 
-/* inverted chip: the team's on-colour as the fill, the team colour as the text */
-.tsb-key-a .tsb-srvtag {
+.tsb-key[data-side='right'] .tsb-mark {
+  left: auto;
+  right: 4%;
+  transform: scaleX(-1);
+}
+
+.tsb-key-a .tsb-mark {
+  background: var(--team-a-motif);
+}
+
+.tsb-key-b .tsb-mark {
+  background: var(--team-b-motif);
+}
+
+/* serving tag: inverted (on-colour fill, team-colour text), the same gated pair as the labels */
+.tsb-srv {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.tsb-key-a .tsb-srv {
   background: var(--team-a-on);
   color: var(--team-a-core);
 }
 
-.tsb-key-b .tsb-srvtag {
+.tsb-key-b .tsb-srv {
   background: var(--team-b-on);
   color: var(--team-b-core);
 }
 
 .tsb-who {
-  max-width: 92%;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  max-width: 94%;
+  font-size: 1.06rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .tsb-big {
-  font: 800 clamp(6rem, min(38vw, 24vh), 10rem)/0.9 var(--tsb-num);
+  font: 800 clamp(6.25rem, min(36vw, 24vh), 10rem)/0.92 var(--tsb-num);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   margin: 8px 0 6px;
 }
 
 .tsb-word {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 
 /* ---- bottom thumb zone: undo + options ---- */
 .tsb-bar {
   display: grid;
-  grid-template-columns: 1fr 60px;
+  grid-template-columns: 1fr 64px;
   gap: 12px;
-  padding: 14px 16px 16px 12px;
+  padding: 14px 17px 18px 14px;
 }
 
 .tsb .tsb-undo,
 .tsb .tsb-more {
   min-height: 60px;
-  border: 2px solid var(--tsb-ink);
-  border-radius: 12px;
-  background: var(--se-color-surface);
-  box-shadow: var(--tsb-shadow);
 }
 
 .tsb .tsb-undo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 14px;
+  min-width: 0;
+  padding: 0 16px;
   text-align: left;
 }
 
@@ -258,35 +319,30 @@
   place-items: center;
 }
 
-.tsb .tsb-undo:active:not(:disabled),
-.tsb .tsb-more:active,
-.tsb .tsb-finish:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--tsb-ink);
-}
-
 .tsb .tsb-undo:disabled {
   cursor: default;
-  color: var(--tsb-ink-2);
-  box-shadow: none;
   border-style: dashed;
+  border-color: color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  box-shadow: none;
+  color: var(--tsb-ink-2);
 }
 
 .tsb-undo-t {
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 1rem;
 }
 
 .tsb-undo-w {
   margin-left: auto;
-  font-family: var(--se-font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 600;
   color: var(--tsb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---- options sheet ---- */
+/* ---- options sheet: soft surface, hairline groups ---- */
 .tsb-sheet-layer {
   position: fixed;
   inset: 0;
@@ -303,7 +359,7 @@
 .tsb .tsb-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(12, 12, 14, 0.4);
+  background: color-mix(in oklab, var(--se-color-ink) 42%, transparent);
 }
 
 .tsb-sheet {
@@ -312,29 +368,27 @@
   max-width: 560px;
   max-height: 85dvh;
   overflow-y: auto;
-  padding: 10px 14px calc(16px + env(safe-area-inset-bottom, 0px));
-  border: 2px solid var(--tsb-ink);
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-  background: var(--se-color-canvas);
+  padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px 24px 0 0;
+  background: var(--se-color-surface);
+  box-shadow: 0 -18px 40px -24px color-mix(in oklab, var(--se-color-ink) 50%, transparent);
 }
 
 .tsb-sheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 2px 12px 4px;
-  font-size: 1rem;
+  padding: 4px 2px 14px 4px;
+  font-size: 1.06rem;
+}
+
+.tsb-sheet-head b {
+  font-weight: 750;
 }
 
 .tsb .tsb-sheet-close {
   min-height: 44px;
-  padding: 0 14px;
-  border: 1.5px solid var(--tsb-ink);
-  border-radius: 8px;
-  background: var(--se-color-surface);
-  box-shadow: var(--tsb-shadow);
-  font-weight: 700;
+  padding: 0 16px;
 }
 
 .tsb-sheet-live {
@@ -344,36 +398,46 @@
 .tsb-sets {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 14px;
 }
 
 .tsb-set {
-  padding: 6px 10px;
-  border: 1.5px solid var(--tsb-ink);
-  border-radius: 6px;
-  background: var(--se-color-surface);
-  font: 700 0.72rem var(--se-font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid var(--tsb-hair);
+  border-radius: 10px;
+  background: var(--se-color-canvas);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-/* the winner's colour as a thick bottom edge; colour is never the only cue (the score says it) */
-.tsb-win-a {
-  border-bottom: 4px solid var(--team-a-core);
+/* the winner's colour as a dot; colour is never the only cue (the score and sr text say it) */
+.tsb-set::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--tsb-hair);
 }
 
-.tsb-win-b {
-  border-bottom: 4px solid var(--team-b-core);
+.tsb-win-a::before {
+  background: var(--team-a-core);
+}
+
+.tsb-win-b::before {
+  background: var(--team-b-core);
 }
 
 .tsb-sheet-group {
   margin-bottom: 14px;
-  border: 2px solid var(--tsb-ink);
-  border-radius: 12px;
+  border: 1px solid var(--tsb-hair);
+  border-radius: 16px;
   overflow: hidden;
   background: var(--se-color-surface);
-  box-shadow: var(--tsb-shadow);
 }
 
 .tsb .tsb-row {
@@ -381,20 +445,24 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   padding: 0 16px;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 600;
   text-align: left;
 }
 
 .tsb .tsb-row + .tsb-row {
-  border-top: 1.5px solid var(--tsb-ink);
+  border-top: 1px solid var(--tsb-hair);
+}
+
+.tsb .tsb-row:active {
+  background: var(--se-color-canvas);
 }
 
 .tsb-row-aside {
   font-family: var(--tsb-num);
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 800;
 }
 
@@ -402,10 +470,97 @@
   color: var(--se-color-danger);
 }
 
+/* ---- Finish / Discard confirm: the app's ConfirmDialog in this board's skin ----
+   (two classes beat the dialog's own single-class rules, including its phone media query) */
+.app-confirm-backdrop.tsb-confirm {
+  background: color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  backdrop-filter: none;
+}
+
+.tsb-confirm .app-confirm-dialog {
+  border: 1px solid var(--tsb-hair);
+  border-radius: 24px;
+  background: var(--se-color-surface);
+  box-shadow: 0 24px 60px -28px color-mix(in oklab, var(--se-color-ink) 60%, transparent);
+  padding: 24px 20px 20px;
+}
+
+.tsb-confirm .app-confirm-eyebrow {
+  display: none;
+}
+
+.tsb-confirm .app-confirm-title {
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.tsb-confirm .app-confirm-message {
+  margin-bottom: 0;
+  color: var(--tsb-ink-2);
+}
+
+.tsb-confirm-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--tsb-hair);
+  border-bottom: 1px solid var(--tsb-hair);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tsb-ink-2);
+}
+
+.tsb-confirm-summary strong {
+  font: 800 2rem/1 var(--tsb-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--tsb-ink);
+}
+
+.tsb-confirm .app-confirm-primary,
+.tsb-confirm .app-confirm-secondary {
+  min-height: 52px;
+  border: 2px solid var(--tsb-ink);
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 750;
+  box-shadow: var(--tsb-ctl-shadow);
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.tsb-confirm .app-confirm-primary:active,
+.tsb-confirm .app-confirm-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--tsb-ink);
+}
+
+.tsb-confirm .app-confirm-primary {
+  background: var(--tsb-ink);
+  color: var(--se-color-inverse);
+}
+
+.tsb-confirm-danger .app-confirm-primary {
+  background: var(--se-color-danger);
+}
+
+.tsb-confirm .app-confirm-secondary {
+  background: var(--se-color-surface);
+  color: var(--tsb-ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tsb .tsb-key,
-  .tsb .tsb-key:active {
+  .tsb .tsb-key:active,
+  .tsb .tsb-ctl,
+  .tsb-confirm .app-confirm-primary,
+  .tsb-confirm .app-confirm-secondary {
     transition: none;
+  }
+
+  .tsb .tsb-key:active {
     transform: none;
   }
 }

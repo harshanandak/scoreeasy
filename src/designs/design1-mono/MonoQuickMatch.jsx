@@ -47,6 +47,9 @@ function ConfirmDialog({
   message = 'This will finish the current match and save the result.',
   cancelLabel = 'Keep scoring',
   confirmLabel = 'End match',
+  // Optional: a board-specific skin on the backdrop, and the score the action applies to.
+  className = '',
+  summary = null,
 }) {
   const cancelButtonRef = useRef(null);
   const onCancelRef = useRef(onCancel);
@@ -79,7 +82,7 @@ function ConfirmDialog({
 
   return (
     <div
-      className="app-confirm-backdrop"
+      className={className ? `app-confirm-backdrop ${className}` : 'app-confirm-backdrop'}
       role="presentation"
       onMouseDown={handleBackdropPointerDown}
       onTouchStart={handleBackdropPointerDown}
@@ -96,6 +99,7 @@ function ConfirmDialog({
         <p id={`${idPrefix}-message`} className="app-confirm-message">
           {message}
         </p>
+        {summary}
         <div className="app-confirm-actions">
           <button
             type="button"
@@ -2544,12 +2548,15 @@ export default function MonoQuickMatch() {
   const showOvers = !isCricket || format.trackOvers !== false;
   const formatPreset = isCricket && format?.preset ? getCricketFormat(format.preset) : null;
   const presetLabel = formatPreset?.name || '';
-  const endMatchDialog = showEndConfirm ? (
-    <ConfirmDialog onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
-  ) : null;
+  // `skin` lets a board restyle the dialogs (and show the score they act on) without forking them.
+  const renderEndMatchDialog = (skin = {}) => (showEndConfirm ? (
+    <ConfirmDialog {...skin} onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
+  ) : null);
+  const endMatchDialog = renderEndMatchDialog();
 
-  const discardDialog = showDiscardConfirm ? (
+  const renderDiscardDialog = (skin = {}) => (showDiscardConfirm ? (
     <ConfirmDialog
+      {...skin}
       idPrefix="discard-match"
       title="Discard match?"
       message="This will delete this in-progress match. This can't be undone."
@@ -2558,7 +2565,8 @@ export default function MonoQuickMatch() {
       onCancel={cancelDiscardQuickMatch}
       onConfirm={confirmDiscardQuickMatch}
     />
-  ) : null;
+  ) : null);
+  const discardDialog = renderDiscardDialog();
 
   if (phase === 'scoring') {
     if (isCricket) {
@@ -2912,9 +2920,10 @@ export default function MonoQuickMatch() {
     // Derive the win-by margin from the sport config / customization (the same
     // source completeSetIfNeeded uses) instead of hardcoding "2", so the displayed
     // rule matches the actual completion rule for sports that win by 1.
-    const { winBy: setsWinBy } = getSetWinRule({ format, sportConfig, currentSet });
+    // The target comes from the same rule too, so a deciding set reads e.g. "15 pts", not "25".
+    const { target: setsTarget, winBy: setsWinBy } = getSetWinRule({ format, sportConfig, currentSet });
     const setsRule = format.type === 'best-of'
-      ? `${format.points || 25} pts · win by ${setsWinBy}`
+      ? `${setsTarget} pts · win by ${setsWinBy}`
       : `${format.target} pts · win by ${setsWinBy}`;
 
     if (teamColourOn) {
@@ -2949,27 +2958,33 @@ export default function MonoQuickMatch() {
           };
         })
         : [];
+      const boardStatus = format.type === 'best-of'
+        ? [`Set ${currentSet + 1}`, `Sets ${leftSetsWon}–${rightSetsWon}`]
+        : [`First to ${format.target}`];
+      const boardScore = boardHalves.map((h) => h.score).join('–');
+      // The dialogs say exactly which score they act on, in the board's order.
+      const dialogSummary = (
+        <div className="tsb-confirm-summary">
+          <span>{boardStatus.join(' · ')}</span>
+          <strong>{boardScore}</strong>
+        </div>
+      );
       return (
         <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
-          {endMatchDialog}
-          {discardDialog}
+          {renderEndMatchDialog({ className: 'tsb-confirm', summary: dialogSummary })}
+          {renderDiscardDialog({ className: 'tsb-confirm tsb-confirm-danger', summary: dialogSummary })}
           <TeamSetsBoard
             title={`${team1Name} v ${team2Name}`}
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}
-            chips={[
-              ...(format.type === 'best-of'
-                ? [`Set ${currentSet + 1}`, `Sets ${leftSetsWon}\u2013${rightSetsWon}`]
-                : [`First to ${format.target}`]),
-              timer.formatted,
-            ]}
+            meta={[...boardStatus, timer.formatted]}
             setHistory={setHistory}
-            // One plain line, e.g. "Last · point Reds · 22–19" (serving shows once, on the key).
+            // One plain line, e.g. "Last: point Reds · 22–19" (serving shows once, on the key).
             lastLine={lastEntry && lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}`
-              ? `Last \u00b7 point ${getTeamLabel(lastEntry.team)} \u00b7 ${boardHalves.map((h) => h.score).join('\u2013')}`
+              ? `Last: point ${getTeamLabel(lastEntry.team)} \u00b7 ${boardScore}`
               : lastAction || 'Tap a team to score a point'}
             canUndo={vScoreHistory.length > 0}
             undoHint={undoHint}
