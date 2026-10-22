@@ -212,6 +212,7 @@ at **669**. SA-07 was also rerun temporarily as an ordinary test: the point-save
 prerequisite passed, then its final undo persistence assertion failed with
 expected 0, received 1. Its `it.fails` source was restored byte-for-byte.
 
-Lint, type-check and agent-config sync run through the normal commit hook. The
-round-2 full suite, push and PR-body update remain held until the owner releases
-the full-suite lane; no production write or deployment is part of this round.
+Lint, type-check and agent-config sync run through the normal commit hook. At the
+initial round-2 hold point, the full suite, push and PR-body update were held for
+the owner's full-suite lane release. Shipping validation is recorded in PR #172;
+no production write or deployment is part of this round.
