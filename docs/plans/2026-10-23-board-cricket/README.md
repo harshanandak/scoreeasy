@@ -1,57 +1,63 @@
 # Board G1: cricket scoring screen
 
-Decisions needed: none. Keep PR #187 in draft: the compact powerplay/chase layout clips Undo.
+Decisions needed: none. Round 2 fixes both visual findings. PR #187 remains draft because the broader feature acceptance still has unwitnessed browser paths and the separately tracked innings-break reverse-path gap.
+
+## Round 2 layout fixes
+
+Powerplay now shares the batting-team identity row instead of consuming a separate paragraph and its margins. FREE HIT, Last Man Batting, target/chase figures and powerplay remain independently visible when applicable; there is no priority rule hiding a truthful state. No scoring handler, engine rule or persistence path changed.
+
+The innings-break route resets its nested lineup screen's minimum height. The outer handoff owns the viewport height, so the lineup no longer adds another full viewport below the banner. Standalone opening-lineup setup keeps its existing height.
 
 ## Captured evidence
 
-28 after PNGs render the real guided scorer, tournament scorer (`MonoCricketLiveScore`), Test scorer and innings-break route. Each of the eight demo states below has a 390 x 844 light capture, a 360 x 640 light capture and a 390 x 844 dark capture. The two existing before images remain unchanged: [390 x 844](before-390.png), [360 x 640](before-360.png).
+All after PNGs are captured with T3 `html_preview`, using the retained untracked `.capture-g1/` harness, the real components, embedded fonts and a Vite IIFE. The rendered product source is the rebased layout-fix commit (`3a1670623c2ef7aa4155e5622575fdf8c31225e6`); the scorer files and relevant CSS are byte-identical across rebase. Auth/Convex/broadcast are mocked and no live writes occur. Measurements wait for fonts and two animation frames. Motion is disabled to capture settled sheets. Before images are unchanged: [390 x 844](before-390.png), [360 x 640](before-360.png).
+
+The state matrix and all per-control measurements are in [measurements.json](measurements.json). Each state below has light captures at 390 x 844 and 360 x 640, plus dark at 390 x 844.
 
 | State | Light 390 x 844 | Light 360 x 640 | Dark 390 x 844 |
 | --- | --- | --- | --- |
-| Limited-overs mid-innings | [PNG](after-mid-light-390x844.png) | [PNG](after-mid-light-360x640.png) | [PNG](after-mid-dark-390x844.png) |
-| Chase: NEED / OFF / RRR | [PNG](after-chase-light-390x844.png) | [PNG](after-chase-light-360x640.png) | [PNG](after-chase-dark-390x844.png) |
+| Mid-innings | [PNG](after-mid-light-390x844.png) | [PNG](after-mid-light-360x640.png) | [PNG](after-mid-dark-390x844.png) |
+| Chase / target | [PNG](after-chase-light-390x844.png) | [PNG](after-chase-light-360x640.png) | [PNG](after-chase-dark-390x844.png) |
 | Wicket sheet | [PNG](after-wicket-light-390x844.png) | [PNG](after-wicket-light-360x640.png) | [PNG](after-wicket-dark-390x844.png) |
-| FREE HIT | [PNG](after-freehit-light-390x844.png) | [PNG](after-freehit-light-360x640.png) | [PNG](after-freehit-dark-390x844.png) |
-| Innings-break handoff | [PNG](after-break-light-390x844.png) | [PNG](after-break-light-360x640.png) | [PNG](after-break-dark-390x844.png) |
-| Test: Lead by 74 | [PNG](after-test-lead-light-390x844.png) | [PNG](after-test-lead-light-360x640.png) | [PNG](after-test-lead-dark-390x844.png) |
-| Test: Trail by 76 | [PNG](after-test-trail-light-390x844.png) | [PNG](after-test-trail-light-360x640.png) | [PNG](after-test-trail-dark-390x844.png) |
-| Tournament: lean keys | [PNG](after-tournament-light-390x844.png) | [PNG](after-tournament-light-360x640.png) | [PNG](after-tournament-dark-390x844.png) |
+| FREE HIT + chase | [PNG](after-freehit-light-390x844.png) | [PNG](after-freehit-light-360x640.png) | [PNG](after-freehit-dark-390x844.png) |
+| Innings break | [PNG](after-break-light-390x844.png) | [PNG](after-break-light-360x640.png) | [PNG](after-break-dark-390x844.png) |
+| Test Lead by 74 | [PNG](after-test-lead-light-390x844.png) | [PNG](after-test-lead-light-360x640.png) | [PNG](after-test-lead-dark-390x844.png) |
+| Test Trail by 76 | [PNG](after-test-trail-light-390x844.png) | [PNG](after-test-trail-light-360x640.png) | [PNG](after-test-trail-dark-390x844.png) |
+| Tournament | [PNG](after-tournament-light-390x844.png) | [PNG](after-tournament-light-360x640.png) | [PNG](after-tournament-dark-390x844.png) |
+| Powerplay | [PNG](after-powerplay-light-390x844.png) | [PNG](after-powerplay-light-360x640.png) | [PNG](after-powerplay-dark-390x844.png) |
+| Last Man Batting | [PNG](after-lastman-light-390x844.png) | [PNG](after-lastman-light-360x640.png) | [PNG](after-lastman-dark-390x844.png) |
+| Powerplay + chase | [PNG](after-powerplay-chase-light-390x844.png) | [PNG](after-powerplay-chase-light-360x640.png) | [PNG](after-powerplay-chase-dark-390x844.png) |
+| FREE HIT + chase + powerplay | [PNG](after-freehit-powerplay-chase-light-390x844.png) | [PNG](after-freehit-powerplay-chase-light-360x640.png) | [PNG](after-freehit-powerplay-chase-dark-390x844.png) |
+| Last Man Batting + chase | [PNG](after-lastman-chase-light-390x844.png) | [PNG](after-lastman-chase-light-360x640.png) | [PNG](after-lastman-chase-dark-390x844.png) |
 
-Additional 360 x 640 light evidence: [Powerplay](after-powerplay-light-360x640.png), [Last Man Batting](after-lastman-light-360x640.png), [draft remount / Undo](after-restore-light-360x640.png), [powerplay + chase failure](after-powerplay-chase-light-360x640.png).
+Additional evidence: [guided draft save/remount/Undo at 360 x 640](after-restore-light-360x640.png).
 
-## Rendered measurements (rung 5)
+## Compact measurements (rung 5: rendered components)
 
-[All per-control rectangles, label contrast samples and viewport measurements](measurements.json).
+Every scoring document is exactly 360 x 640, with no horizontal or vertical overflow. Undo is 56px high, fully visible in the bottom third, and shows the previous score/over. Its measured y-range is **574..630px** in every compact combination: powerplay alone; chase alone; powerplay + chase; FREE HIT + chase; FREE HIT + chase + powerplay; Last Man Batting alone; Last Man Batting + chase; Test Lead; Test Trail; standard mid-innings and tournament boards. The open wicket modal covers the underlying bar; its rectangle is not a claim that Undo is accessible through the modal.
 
-- The standard guided, chase, FREE HIT, tournament and Test scoring documents are exactly 360 x 640 or 390 x 844 with no horizontal or vertical overflow. Last Man also fits 360 x 640. Wicket sheets fit, with board interaction covered by the modal.
-- Normal Undo: y=574..630 at 360 x 640 and y=778..834 at 390 x 844. The complete 56 px button is in the bottom third, 10 px above the bottom. Hints include `Back to 12.2 ? 97/0`, `Back to 12.3 ? 101/0`, tournament `Back to 12.3 ? 80/0`, and Test `Back to 3rd ? 0.3 ? 20/0`. Its geometry is not a claim of accessibility through the open wicket modal.
-- Every measured scoring control and wicket choice is at least 48 x 48 px. At 360 px, guided Big-5 keys are approximately 61.6 x 64 px, extras/other runs 78.75 x 48 px, and bottom options/swap 50 x 56 px. Tournament run keys are 78 x 78 px; extras are 150 x 48 px. The per-capture JSON lists all measured controls.
-- No capture has horizontal overflow.
-- Key-label contrast: blue run keys 6.99:1; wicket key 5.61:1 light / 7.25:1 dark; neutral keys 19.66:1 / 15.92:1; Undo restore hint 6.78:1 / 5.59:1; FREE HIT 6.00:1 / 8.32:1; tournament yellow keys 11.78:1. The rendered hero-core samples are 6.99:1 and its numeral scrim 10.87:1. The real `contrastReport` separately checks gradient/motif bounds: all pairs pass, minimum label 4.63:1 and minimum numeral 8.02:1. Flat/core samples alone do not prove every gradient pixel.
-- **Failure:** powerplay + chase at 360 x 640 makes the document 658 px tall. Undo is y=591.63..647.63 and is clipped by 7.63 px. Powerplay without the chase row has a 641 px document. Filed as `c55d7bd5-e98d-42d3-9b6c-e2520f3f8d57` (P2).
-- Handoff: its form fits visually, but nested full-height setup adds 98 px of unused scroll: document 738 px at 360 x 640 and 942 px at 390 x 844. There is no Undo in this phase. Extra scroll filed as `05c2ba52-6492-47bb-bea1-bf60d600093d` (P3); the existing reverse-path gap remains separately tracked.
+At 390 x 844, Undo is y=778..834px. Handoff documents are now exactly 360 x 640 and 390 x 844, removing the prior 98px of empty scroll at both sizes. This phase still has no reverse control; that existing functional gap is separately tracked.
 
-## Shared checklist
+Every measured scoring button is at least 48 x 48px. At 360px, guided run keys are about 61.6 x 64px, extras/other runs 78.75 x 48px, and bottom options/swap 50 x 56px. Team contrast bounds pass for the seeded blue/yellow pair: minimum label 4.63:1 and numeral 8.02:1. Rendered labels retain the existing passing ratios: blue keys 6.99:1; warning labels 6.00:1 light / 8.32:1 dark; wicket 5.61:1 / 7.25:1; Undo hint 6.78:1 / 5.59:1.
 
-| Item | Evidence and status |
-| --- | --- |
-| Team labels and mark contrast | Pass for the seeded blue/yellow pair: rendered ratios above plus real engine gradient/motif bounds. Existing automated tests cover distinct, clashing, bright and deep pairs. |
-| Undo visible, reachable, restore hint | Pass on the normal boards; **fails on compact powerplay + chase**. Wicket modal covers the underlying bar; the innings-break phase has no reverse control. |
-| Every named state and reverse path | All eight requested demo states captured in three viewport/theme combinations. Browser actions passed for 12 run/extra keys each followed by Undo, wicket/Bowled/new batter/Undo, swap twice, options scorecards, guided Finish callback and the innings-1-to-break handoff. Powerplay and Last Man rendered. Full secondary-options and Test declaration/draw browser walks remain incomplete; automated coverage is separate. Existing innings-break reverse-path gap remains open. |
-| Scoring zone works at 360 x 640 without scrolling | Standard boards pass. **Powerplay + chase fails**; screenshot and coordinates above. |
-| Light and dark | Pass for all eight requested demo states. |
-| Targets >=48 px; refresh restore | All measured scoring controls pass. A real guided route draft was saved, unmounted and rehydrated: 105/0 restored with team colours, then Undo returned to 101/0. This is a component/route remount, not a full browser-process restart. Existing persistence tests cover refresh. |
-| Setup colours reach board and saved state | Seeded persisted blue/yellow identity appears on guided/tournament/Test boards; real guided draft/remount retains it. The quick setup picker-to-board browser path was not walked; its existing automated test passes. |
+## Acceptance and remaining evidence
 
-## Method, validation and scope
+- Team colour and mark contrast: passing rendered samples plus automated engine bounds; tests cover additional team pairs.
+- Compact scoring / Undo: the two visual findings are fixed, with the combinations and geometry above. All screenshots are dimension-checked and their scroll/control bounds verified by script.
+- Light and dark: captured for every state in the matrix.
+- Prior browser walk: all 12 run/extra keys followed by Undo, wicket/Bowled/new batter/Undo, swap twice, options/scorecards, guided Finish callback and innings-1-to-break handoff passed in the previous round. These historical actions are retained in `browserWalk` in the JSON and are not represented as a new complete walkthrough.
+- Draft restore: real guided route saved, unmounted and rehydrated 105/0 with team colours, then Undo returned to 101/0. This is a route remount, not a full browser-process restart. Persistence tests cover refresh separately.
+- Remaining feature acceptance: quick setup picker-to-board browser path, full secondary-options walkthrough, Test declare/draw walkthrough and every reverse path remain incomplete. No ready claim is made.
 
-Captures use only T3 `html_preview`, with an inlined Vite IIFE, CSS and embedded app fonts in an iframe sized to the target phone viewport. Viewport units are converted to the equivalent pixel height, preserving the original media-query viewport. Wicket retakes disable animation/transition in the local harness to capture the settled sheet. Auth, Convex and broadcast hooks are mocked; a Convex mutation would throw. Fixtures and storage writes are local only. The harness remains untracked in `.capture-g1/`.
+## Validation and scope
 
-The rendered source was PR head `85c4eb976621d9e17a14a8184eb733e80600c057`. The required rebase onto master `997abde` retained both palette reductions (598 minus cricket's 4 = 594). The four scorer components, cricket CSS, shared mono CSS and index CSS are byte-identical to the captured source after rebase.
+The regression was observed failing before the product fix: powerplay was outside the identity row. It now asserts that powerplay stays in that row across a no-ball, FREE HIT and Undo. CSS geometry is verified in rendered pages rather than jsdom.
 
-- Focused validation: 5 files / 46 tests passed (board controls, aggregate boards, quick colours/draft restore, persistence and guided route transitions). No product tests added in this evidence-only task.
-- Screenshot verifier: all 28 after files are exactly 390 x 844 or 360 x 640. Per-capture records enumerate the controls and measurements.
-- Palette check and commit/push hook results are recorded in the PR body after they run. Existing full-suite results in that body belong to the earlier implementation head; they are not a new full-suite run.
-- No scoring/product changes were made for either visual finding. The only product-file integration change is the required shared palette-baseline conflict resolution.
+- Focused board/persistence/route validation: 5 files / 46 tests passed.
+- After rebase, palette, guided-board and innings-handoff tests: 3 files / 163 tests passed. Combined palette baseline is 593 (master 597 minus cricket's four removed literals).
+- Product commit hooks passed lint (0 errors, 29 existing warnings), type-check and all five agent-config checks.
+- Final full-suite, evidence-commit hooks and push-gate results are recorded in the PR body after execution.
 
-Follow-ups: compact powerplay/chase clipping (`c55d7bd5-e98d-42d3-9b6c-e2520f3f8d57`); handoff empty scroll (`05c2ba52-6492-47bb-bea1-bf60d600093d`); guided innings-break correction (`43e7ddce-0740-41c8-986f-e794cb43a7c4`); SA-08 Test innings advance/Undo (`8b0316bd-bcda-40b9-877a-f4188f5dd5dc`); spectator cards (`eda76029-9be1-467b-bcc9-b56a2bd57f53`).
+Only the guided scorer markup, cricket CSS, handoff CSS and the board regression changed for these fixes. No scoring rules, persistence, live or spectator implementation was edited. Rebase retained master's changes and both palette reductions.
+
+Fixed findings: compact Undo clipping (`c55d7bd5-e98d-42d3-9b6c-e2520f3f8d57`) and handoff empty scroll (`05c2ba52-6492-47bb-bea1-bf60d600093d`). Remaining follow-ups: guided innings-break correction (`43e7ddce-0740-41c8-986f-e794cb43a7c4`); SA-08 Test innings advance/Undo (`8b0316bd-bcda-40b9-877a-f4188f5dd5dc`); spectator cards (`eda76029-9be1-467b-bcc9-b56a2bd57f53`).

@@ -1,6 +1,6 @@
 {
-  "sourceHead": "85c4eb976621d9e17a14a8184eb733e80600c057",
-  "method": "T3 html_preview; real components; local seeded fixtures; no Convex writes. CSS viewport units resolved to iframe pixels. Wicket retakes have animations disabled for settled modal captures. Canvas contrast samples computed styles against flat backgrounds or the hero core; use teamContrast for guaranteed gradient and motif bounds. Undo visible is geometric only and does not imply accessibility while a sheet covers the board. Measurements may precede final font layout by a subpixel.",
+  "sourceHead": "3a1670623c2ef7aa4155e5622575fdf8c31225e6",
+  "method": "T3 html_preview; real components; local seeded fixtures; no Convex writes. CSS viewport units resolved to iframe pixels. Wicket retakes have animations disabled for settled modal captures. Canvas contrast samples computed styles against flat backgrounds or the hero core; use teamContrast for guaranteed gradient and motif bounds. Undo visible is geometric only and does not imply accessibility while a sheet covers the board. Round 2 waits for document.fonts.ready and two animation frames before measuring.",
   "thumbZone": "bottom third, y >= 0.66 * viewport height",
   "captures": [
     {
@@ -350,9 +350,9 @@
       "controls": [
         {
           "label": "Finish",
-          "x": 299.73,
+          "x": 300.11,
           "y": 14,
-          "width": 76.27,
+          "width": 75.89,
           "height": 48,
           "bottom": 62,
           "disabled": false
@@ -538,6 +538,332 @@
         },
         {
           "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-chase-light-360x640.png",
+      "state": "chase",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "chase",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 12.2 · 97/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
           "ratio": 6.99,
           "colour": "rgb(255, 255, 255)",
           "background": [
@@ -936,332 +1262,6 @@
             14,
             15,
             18,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
-      "file": "after-chase-light-360x640.png",
-      "state": "chase",
-      "theme": "light",
-      "w": 360,
-      "audit": {
-        "state": "chase",
-        "theme": "light",
-        "w": 360,
-        "h": 640,
-        "viewport": [
-          360,
-          640
-        ],
-        "scroll": [
-          360,
-          640
-        ],
-        "undo": {
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "hint": "UndoBack to 12.2 · 97/0",
-          "visible": true,
-          "thumbZone": true
-        }
-      },
-      "controls": [
-        {
-          "label": "Finish",
-          "x": 270.11,
-          "y": 14,
-          "width": 75.89,
-          "height": 48,
-          "bottom": 62,
-          "disabled": false
-        },
-        {
-          "label": "Dot",
-          "x": 12,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Single",
-          "x": 80.59,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Four",
-          "x": 149.19,
-          "y": 394,
-          "width": 61.61,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Six",
-          "x": 217.8,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wicket",
-          "x": 286.39,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wide",
-          "x": 12,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "No-ball",
-          "x": 97.75,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Bye",
-          "x": 183.5,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Leg-bye",
-          "x": 269.25,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Run 2",
-          "x": 12,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 3",
-          "x": 97.75,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 5",
-          "x": 183.5,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 7",
-          "x": 269.25,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Undo last ball",
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "More options",
-          "x": 240,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "Swap strike",
-          "x": 298,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".cricket-who",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-score",
-          "ratio": 10.87,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            14.494117647058824,
-            53.83529411764706,
-            141.49019607843138,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-ov",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-crr",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-chase",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-four",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-wicket",
-          "ratio": 5.61,
-          "colour": "rgb(180, 35, 24)",
-          "background": [
-            251,
-            233,
-            231,
-            1
-          ]
-        },
-        {
-          "selector": ".pill",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-player-fig",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-pship",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-over-label",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
             1
           ]
         }
@@ -1927,386 +1927,6 @@
       "consoleLogs": []
     },
     {
-      "file": "after-wicket-light-360x640.png",
-      "state": "wicket",
-      "theme": "light",
-      "w": 360,
-      "audit": {
-        "state": "wicket",
-        "theme": "light",
-        "w": 360,
-        "h": 640,
-        "viewport": [
-          360,
-          640
-        ],
-        "scroll": [
-          360,
-          640
-        ],
-        "undo": {
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "hint": "UndoBack to 12.2 · 97/0",
-          "visible": true,
-          "thumbZone": true
-        }
-      },
-      "controls": [
-        {
-          "label": "Finish",
-          "x": 270.11,
-          "y": 14,
-          "width": 75.89,
-          "height": 48,
-          "bottom": 62,
-          "disabled": false
-        },
-        {
-          "label": "Dot",
-          "x": 12,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Single",
-          "x": 80.59,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Four",
-          "x": 149.19,
-          "y": 394,
-          "width": 61.61,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Six",
-          "x": 217.8,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wicket",
-          "x": 286.39,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wide",
-          "x": 12,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "No-ball",
-          "x": 97.75,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Bye",
-          "x": 183.5,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Leg-bye",
-          "x": 269.25,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Run 2",
-          "x": 12,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 3",
-          "x": 97.75,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 5",
-          "x": 183.5,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 7",
-          "x": 269.25,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Undo last ball",
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "More options",
-          "x": 240,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "Swap strike",
-          "x": 298,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "Bowled",
-          "x": 20,
-          "y": 513,
-          "width": 68.42,
-          "height": 48,
-          "bottom": 561,
-          "disabled": false
-        },
-        {
-          "label": "Caught",
-          "x": 95.42,
-          "y": 513,
-          "width": 68.39,
-          "height": 48,
-          "bottom": 561,
-          "disabled": false
-        },
-        {
-          "label": "LBW",
-          "x": 170.81,
-          "y": 513,
-          "width": 53.41,
-          "height": 48,
-          "bottom": 561,
-          "disabled": false
-        },
-        {
-          "label": "Run out",
-          "x": 231.22,
-          "y": 513,
-          "width": 70.53,
-          "height": 48,
-          "bottom": 561,
-          "disabled": false
-        },
-        {
-          "label": "Stumped",
-          "x": 20,
-          "y": 568,
-          "width": 78.05,
-          "height": 48,
-          "bottom": 616,
-          "disabled": false
-        },
-        {
-          "label": "More…",
-          "x": 105.05,
-          "y": 568,
-          "width": 64.23,
-          "height": 48,
-          "bottom": 616,
-          "disabled": false
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".cricket-who",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-score",
-          "ratio": 10.87,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            14.494117647058824,
-            53.83529411764706,
-            141.49019607843138,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-ov",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-crr",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-chase",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-four",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-wicket",
-          "ratio": 5.61,
-          "colour": "rgb(180, 35, 24)",
-          "background": [
-            251,
-            233,
-            231,
-            1
-          ]
-        },
-        {
-          "selector": ".pill",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-player-fig",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-pship",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-over-label",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
       "file": "after-wicket-light-390x844.png",
       "state": "wicket",
       "theme": "light",
@@ -2687,6 +2307,723 @@
       "consoleLogs": []
     },
     {
+      "file": "after-wicket-light-360x640.png",
+      "state": "wicket",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "wicket",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 12.2 · 97/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Bowled",
+          "x": 20,
+          "y": 513,
+          "width": 68.42,
+          "height": 48,
+          "bottom": 561,
+          "disabled": false
+        },
+        {
+          "label": "Caught",
+          "x": 95.42,
+          "y": 513,
+          "width": 68.39,
+          "height": 48,
+          "bottom": 561,
+          "disabled": false
+        },
+        {
+          "label": "LBW",
+          "x": 170.81,
+          "y": 513,
+          "width": 53.41,
+          "height": 48,
+          "bottom": 561,
+          "disabled": false
+        },
+        {
+          "label": "Run out",
+          "x": 231.22,
+          "y": 513,
+          "width": 70.53,
+          "height": 48,
+          "bottom": 561,
+          "disabled": false
+        },
+        {
+          "label": "Stumped",
+          "x": 20,
+          "y": 568,
+          "width": 78.05,
+          "height": 48,
+          "bottom": 616,
+          "disabled": false
+        },
+        {
+          "label": "More…",
+          "x": 105.05,
+          "y": 568,
+          "width": 64.23,
+          "height": 48,
+          "bottom": 616,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-freehit-light-360x640.png",
+      "state": "freehit",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "freehit",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 12.3 · 101/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-freehit",
+          "ratio": 6,
+          "colour": "rgb(122, 84, 16)",
+          "background": [
+            255,
+            241,
+            194,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
       "file": "after-wicket-dark-390x844.png",
       "state": "wicket",
       "theme": "dark",
@@ -3054,343 +3391,6 @@
             14,
             15,
             18,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
-      "file": "after-freehit-light-360x640.png",
-      "state": "freehit",
-      "theme": "light",
-      "w": 360,
-      "audit": {
-        "state": "freehit",
-        "theme": "light",
-        "w": 360,
-        "h": 640,
-        "viewport": [
-          360,
-          640
-        ],
-        "scroll": [
-          360,
-          640
-        ],
-        "undo": {
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "hint": "UndoBack to 12.3 · 101/0",
-          "visible": true,
-          "thumbZone": true
-        }
-      },
-      "controls": [
-        {
-          "label": "Finish",
-          "x": 270.11,
-          "y": 14,
-          "width": 75.89,
-          "height": 48,
-          "bottom": 62,
-          "disabled": false
-        },
-        {
-          "label": "Dot",
-          "x": 12,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Single",
-          "x": 80.59,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Four",
-          "x": 149.19,
-          "y": 394,
-          "width": 61.61,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Six",
-          "x": 217.8,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wicket",
-          "x": 286.39,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wide",
-          "x": 12,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "No-ball",
-          "x": 97.75,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Bye",
-          "x": 183.5,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Leg-bye",
-          "x": 269.25,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Run 2",
-          "x": 12,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 3",
-          "x": 97.75,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 5",
-          "x": 183.5,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 7",
-          "x": 269.25,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Undo last ball",
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "More options",
-          "x": 240,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "Swap strike",
-          "x": 298,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".cricket-who",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-score",
-          "ratio": 10.87,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            14.494117647058824,
-            53.83529411764706,
-            141.49019607843138,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-ov",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-crr",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-chase",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-four",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-wicket",
-          "ratio": 5.61,
-          "colour": "rgb(180, 35, 24)",
-          "background": [
-            251,
-            233,
-            231,
-            1
-          ]
-        },
-        {
-          "selector": ".pill",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-player-fig",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-pship",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-over-label",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-freehit",
-          "ratio": 6,
-          "colour": "rgb(122, 84, 16)",
-          "background": [
-            255,
-            241,
-            194,
             1
           ]
         }
@@ -4078,162 +4078,6 @@
       "consoleLogs": []
     },
     {
-      "file": "after-break-light-360x640.png",
-      "state": "break",
-      "theme": "light",
-      "w": 360,
-      "audit": {
-        "state": "break",
-        "theme": "light",
-        "w": 360,
-        "h": 640,
-        "viewport": [
-          360,
-          640
-        ],
-        "scroll": [
-          360,
-          738
-        ],
-        "undo": null
-      },
-      "controls": [
-        {
-          "label": "Confirm line-up",
-          "x": 28,
-          "y": 526.69,
-          "width": 304,
-          "height": 48,
-          "bottom": 574.69,
-          "disabled": true
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".mono-break-line",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
-      "file": "after-break-light-390x844.png",
-      "state": "break",
-      "theme": "light",
-      "w": 390,
-      "audit": {
-        "state": "break",
-        "theme": "light",
-        "w": 390,
-        "h": 844,
-        "viewport": [
-          390,
-          844
-        ],
-        "scroll": [
-          390,
-          942
-        ],
-        "undo": null
-      },
-      "controls": [
-        {
-          "label": "Confirm line-up",
-          "x": 28,
-          "y": 526.69,
-          "width": 334,
-          "height": 48,
-          "bottom": 574.69,
-          "disabled": true
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".mono-break-line",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
-      "file": "after-break-dark-390x844.png",
-      "state": "break",
-      "theme": "dark",
-      "w": 390,
-      "audit": {
-        "state": "break",
-        "theme": "dark",
-        "w": 390,
-        "h": 844,
-        "viewport": [
-          390,
-          844
-        ],
-        "scroll": [
-          390,
-          942
-        ],
-        "undo": null
-      },
-      "controls": [
-        {
-          "label": "Confirm line-up",
-          "x": 28,
-          "y": 526.69,
-          "width": 334,
-          "height": 48,
-          "bottom": 574.69,
-          "disabled": true
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".mono-break-line",
-          "ratio": 15.92,
-          "colour": "rgb(244, 245, 247)",
-          "background": [
-            25,
-            26,
-            31,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
       "file": "after-test-lead-light-360x640.png",
       "state": "test-lead",
       "theme": "light",
@@ -4483,9 +4327,9 @@
       "controls": [
         {
           "label": "Finish",
-          "x": 299.73,
+          "x": 300.11,
           "y": 14,
-          "width": 76.27,
+          "width": 75.89,
           "height": 48,
           "bottom": 62,
           "disabled": false
@@ -5744,208 +5588,6 @@
       "consoleLogs": []
     },
     {
-      "file": "after-tournament-light-390x844.png",
-      "state": "tournament",
-      "theme": "light",
-      "w": 390,
-      "audit": {
-        "state": "tournament",
-        "theme": "light",
-        "w": 390,
-        "h": 844,
-        "viewport": [
-          390,
-          844
-        ],
-        "scroll": [
-          390,
-          844
-        ],
-        "undo": {
-          "x": 12,
-          "y": 778,
-          "width": 308,
-          "height": 56,
-          "bottom": 834,
-          "hint": "UndoBack to 12.3 · 80/0",
-          "visible": true,
-          "thumbZone": true
-        }
-      },
-      "controls": [
-        {
-          "label": "Finish",
-          "x": 300.11,
-          "y": 14,
-          "width": 75.89,
-          "height": 48,
-          "bottom": 62,
-          "disabled": false
-        },
-        {
-          "label": "0",
-          "x": 12,
-          "y": 456.5,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 542,
-          "disabled": false
-        },
-        {
-          "label": "1",
-          "x": 105.5,
-          "y": 456.5,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 542,
-          "disabled": false
-        },
-        {
-          "label": "2",
-          "x": 199,
-          "y": 456.5,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 542,
-          "disabled": false
-        },
-        {
-          "label": "3",
-          "x": 292.5,
-          "y": 456.5,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 542,
-          "disabled": false
-        },
-        {
-          "label": "4",
-          "x": 12,
-          "y": 550,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 635.5,
-          "disabled": false
-        },
-        {
-          "label": "5",
-          "x": 105.5,
-          "y": 550,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 635.5,
-          "disabled": false
-        },
-        {
-          "label": "6",
-          "x": 199,
-          "y": 550,
-          "width": 85.5,
-          "height": 85.5,
-          "bottom": 635.5,
-          "disabled": false
-        },
-        {
-          "label": "Wide (+1)",
-          "x": 12,
-          "y": 643.5,
-          "width": 150,
-          "height": 48,
-          "bottom": 691.5,
-          "disabled": false
-        },
-        {
-          "label": "No Ball (+1)",
-          "x": 199,
-          "y": 643.5,
-          "width": 150,
-          "height": 48,
-          "bottom": 691.5,
-          "disabled": false
-        },
-        {
-          "label": "Wicket",
-          "x": 12,
-          "y": 699.5,
-          "width": 366,
-          "height": 54.5,
-          "bottom": 754,
-          "disabled": false
-        },
-        {
-          "label": "Undo",
-          "x": 12,
-          "y": 778,
-          "width": 308,
-          "height": 56,
-          "bottom": 834,
-          "disabled": false
-        },
-        {
-          "label": "Match options",
-          "x": 328,
-          "y": 778,
-          "width": 50,
-          "height": 56,
-          "bottom": 834,
-          "disabled": false
-        }
-      ],
-      "contrast": [
-        {
-          "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-scorer-run-button",
-          "ratio": 11.78,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            251,
-            191,
-            36,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-scorer-score-value",
-          "ratio": 11.78,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            251,
-            191,
-            36,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-scorer-extra-row .mono-btn",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        }
-      ],
-      "teamContrast": {
-        "allPass": true,
-        "minimumLabel": 4.630189671546443,
-        "minimumNumeral": 8.024973692679696
-      },
-      "errors": [],
-      "consoleLogs": []
-    },
-    {
       "file": "after-tournament-dark-390x844.png",
       "state": "tournament",
       "theme": "dark",
@@ -6148,12 +5790,642 @@
       "consoleLogs": []
     },
     {
-      "file": "after-powerplay-light-360x640.png",
-      "state": "powerplay",
+      "file": "after-lastman-light-390x844.png",
+      "state": "lastman",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "lastman",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 0.0 · 0/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": true
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-chase-light-390x844.png",
+      "state": "powerplay-chase",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "powerplay-chase",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.2 · 17/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-chase-light-360x640.png",
+      "state": "powerplay-chase",
       "theme": "light",
       "w": 360,
       "audit": {
-        "state": "powerplay",
+        "state": "powerplay-chase",
         "theme": "light",
         "w": 360,
         "h": 640,
@@ -6163,14 +6435,14 @@
         ],
         "scroll": [
           360,
-          641
+          640
         ],
         "undo": {
           "x": 12,
-          "y": 575.13,
+          "y": 574,
           "width": 220,
           "height": 56,
-          "bottom": 631.13,
+          "bottom": 630,
           "hint": "UndoBack to 2.2 · 17/0",
           "visible": true,
           "thumbZone": true
@@ -6189,145 +6461,2753 @@
         {
           "label": "Dot",
           "x": 12,
-          "y": 395.13,
+          "y": 394,
           "width": 61.59,
           "height": 64,
-          "bottom": 459.13,
+          "bottom": 458,
           "disabled": false
         },
         {
           "label": "Single",
           "x": 80.59,
-          "y": 395.13,
+          "y": 394,
           "width": 61.59,
           "height": 64,
-          "bottom": 459.13,
+          "bottom": 458,
           "disabled": false
         },
         {
           "label": "Four",
           "x": 149.19,
-          "y": 395.13,
+          "y": 394,
           "width": 61.61,
           "height": 64,
-          "bottom": 459.13,
+          "bottom": 458,
           "disabled": false
         },
         {
           "label": "Six",
           "x": 217.8,
-          "y": 395.13,
+          "y": 394,
           "width": 61.59,
           "height": 64,
-          "bottom": 459.13,
+          "bottom": 458,
           "disabled": false
         },
         {
           "label": "Wicket",
           "x": 286.39,
-          "y": 395.13,
+          "y": 394,
           "width": 61.59,
           "height": 64,
-          "bottom": 459.13,
+          "bottom": 458,
           "disabled": false
         },
         {
           "label": "Wide",
           "x": 12,
-          "y": 465.13,
+          "y": 464,
           "width": 78.75,
           "height": 48,
-          "bottom": 513.13,
+          "bottom": 512,
           "disabled": false
         },
         {
           "label": "No-ball",
           "x": 97.75,
-          "y": 465.13,
+          "y": 464,
           "width": 78.75,
           "height": 48,
-          "bottom": 513.13,
+          "bottom": 512,
           "disabled": false
         },
         {
           "label": "Bye",
           "x": 183.5,
-          "y": 465.13,
+          "y": 464,
           "width": 78.75,
           "height": 48,
-          "bottom": 513.13,
+          "bottom": 512,
           "disabled": false
         },
         {
           "label": "Leg-bye",
           "x": 269.25,
-          "y": 465.13,
+          "y": 464,
           "width": 78.75,
           "height": 48,
-          "bottom": 513.13,
+          "bottom": 512,
           "disabled": false
         },
         {
           "label": "Run 2",
           "x": 12,
-          "y": 519.13,
+          "y": 518,
           "width": 78.75,
           "height": 48,
-          "bottom": 567.13,
+          "bottom": 566,
           "disabled": false
         },
         {
           "label": "Run 3",
           "x": 97.75,
-          "y": 519.13,
+          "y": 518,
           "width": 78.75,
           "height": 48,
-          "bottom": 567.13,
+          "bottom": 566,
           "disabled": false
         },
         {
           "label": "Run 5",
           "x": 183.5,
-          "y": 519.13,
+          "y": 518,
           "width": 78.75,
           "height": 48,
-          "bottom": 567.13,
+          "bottom": 566,
           "disabled": false
         },
         {
           "label": "Run 7",
           "x": 269.25,
-          "y": 519.13,
+          "y": 518,
           "width": 78.75,
           "height": 48,
-          "bottom": 567.13,
+          "bottom": 566,
           "disabled": false
         },
         {
           "label": "Undo last ball",
           "x": 12,
-          "y": 575.13,
+          "y": 574,
           "width": 220,
           "height": 56,
-          "bottom": 631.13,
+          "bottom": 630,
           "disabled": false
         },
         {
           "label": "More options",
           "x": 240,
-          "y": 575.13,
+          "y": 574,
           "width": 50,
           "height": 56,
-          "bottom": 631.13,
+          "bottom": 630,
           "disabled": false
         },
         {
           "label": "Swap strike",
           "x": 298,
-          "y": 575.13,
+          "y": 574,
           "width": 50,
           "height": 56,
-          "bottom": 631.13,
+          "bottom": 630,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-freehit-powerplay-chase-light-360x640.png",
+      "state": "freehit-powerplay-chase",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "freehit-powerplay-chase",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 2.3 · 21/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-freehit",
+          "ratio": 6,
+          "colour": "rgb(122, 84, 16)",
+          "background": [
+            255,
+            241,
+            194,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-chase-dark-390x844.png",
+      "state": "powerplay-chase",
+      "theme": "dark",
+      "w": 390,
+      "audit": {
+        "state": "powerplay-chase",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.2 · 17/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 7.25,
+          "colour": "rgb(255, 143, 132)",
+          "background": [
+            58,
+            23,
+            20,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 5.59,
+          "colour": "oklab(0.684551 0.0002923 -0.00548257)",
+          "background": [
+            32,
+            34,
+            40,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-freehit-powerplay-chase-dark-390x844.png",
+      "state": "freehit-powerplay-chase",
+      "theme": "dark",
+      "w": 390,
+      "audit": {
+        "state": "freehit-powerplay-chase",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.3 · 21/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 7.25,
+          "colour": "rgb(255, 143, 132)",
+          "background": [
+            58,
+            23,
+            20,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 5.59,
+          "colour": "oklab(0.684551 0.0002923 -0.00548257)",
+          "background": [
+            32,
+            34,
+            40,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-freehit",
+          "ratio": 8.32,
+          "colour": "rgb(245, 200, 76)",
+          "background": [
+            58,
+            47,
+            12,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-freehit-powerplay-chase-light-390x844.png",
+      "state": "freehit-powerplay-chase",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "freehit-powerplay-chase",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.3 · 21/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-freehit",
+          "ratio": 6,
+          "colour": "rgb(122, 84, 16)",
+          "background": [
+            255,
+            241,
+            194,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-lastman-chase-light-390x844.png",
+      "state": "lastman-chase",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "lastman-chase",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 0.0 · 0/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": true
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-lastman-chase-light-360x640.png",
+      "state": "lastman-chase",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "lastman-chase",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 0.0 · 0/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": true
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-lastman-chase-dark-390x844.png",
+      "state": "lastman-chase",
+      "theme": "dark",
+      "w": 390,
+      "audit": {
+        "state": "lastman-chase",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 0.0 · 0/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": true
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-chase",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 7.25,
+          "colour": "rgb(255, 143, 132)",
+          "background": [
+            58,
+            23,
+            20,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 5.59,
+          "colour": "oklab(0.684551 0.0002923 -0.00548257)",
+          "background": [
+            32,
+            34,
+            40,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-restore-light-360x640.png",
+      "state": "restore",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "restore",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 12.2 · 97/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
           "disabled": false
         }
       ],
@@ -6450,6 +9330,1191 @@
             244,
             245,
             247,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": [
+        {
+          "level": "log",
+          "text": "RESTORE {\"rehydratedScore\":\"105/0\",\"undoScore\":\"101/0\",\"savedColours\":[\"#2563eb\",\"#fbbf24\"]}"
+        }
+      ]
+    },
+    {
+      "file": "after-tournament-light-390x844.png",
+      "state": "tournament",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "tournament",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 308,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 12.3 · 80/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "0",
+          "x": 12,
+          "y": 456.5,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 542,
+          "disabled": false
+        },
+        {
+          "label": "1",
+          "x": 105.5,
+          "y": 456.5,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 542,
+          "disabled": false
+        },
+        {
+          "label": "2",
+          "x": 199,
+          "y": 456.5,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 542,
+          "disabled": false
+        },
+        {
+          "label": "3",
+          "x": 292.5,
+          "y": 456.5,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 542,
+          "disabled": false
+        },
+        {
+          "label": "4",
+          "x": 12,
+          "y": 550,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 635.5,
+          "disabled": false
+        },
+        {
+          "label": "5",
+          "x": 105.5,
+          "y": 550,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 635.5,
+          "disabled": false
+        },
+        {
+          "label": "6",
+          "x": 199,
+          "y": 550,
+          "width": 85.5,
+          "height": 85.5,
+          "bottom": 635.5,
+          "disabled": false
+        },
+        {
+          "label": "Wide (+1)",
+          "x": 12,
+          "y": 643.5,
+          "width": 150,
+          "height": 48,
+          "bottom": 691.5,
+          "disabled": false
+        },
+        {
+          "label": "No Ball (+1)",
+          "x": 199,
+          "y": 643.5,
+          "width": 150,
+          "height": 48,
+          "bottom": 691.5,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 12,
+          "y": 699.5,
+          "width": 366,
+          "height": 54.5,
+          "bottom": 754,
+          "disabled": false
+        },
+        {
+          "label": "Undo",
+          "x": 12,
+          "y": 778,
+          "width": 308,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Match options",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-scorer-run-button",
+          "ratio": 11.78,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            251,
+            191,
+            36,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-scorer-score-value",
+          "ratio": 11.78,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            251,
+            191,
+            36,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-scorer-extra-row .mono-btn",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-light-360x640.png",
+      "state": "powerplay",
+      "theme": "light",
+      "w": 360,
+      "audit": {
+        "state": "powerplay",
+        "theme": "light",
+        "w": 360,
+        "h": 640,
+        "viewport": [
+          360,
+          640
+        ],
+        "scroll": [
+          360,
+          640
+        ],
+        "undo": {
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "hint": "UndoBack to 2.2 · 17/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 270.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 80.59,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 149.19,
+          "y": 394,
+          "width": 61.61,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 217.8,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 286.39,
+          "y": 394,
+          "width": 61.59,
+          "height": 64,
+          "bottom": 458,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 97.75,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 183.5,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 269.25,
+          "y": 464,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 512,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 97.75,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 183.5,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 269.25,
+          "y": 518,
+          "width": 78.75,
+          "height": 48,
+          "bottom": 566,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 574,
+          "width": 220,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 240,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 298,
+          "y": 574,
+          "width": 50,
+          "height": 56,
+          "bottom": 630,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".cricket-moment",
+          "ratio": 6,
+          "colour": "rgb(122, 84, 16)",
+          "background": [
+            255,
+            241,
+            194,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-light-390x844.png",
+      "state": "powerplay",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "powerplay",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.2 · 17/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 5.61,
+          "colour": "rgb(180, 35, 24)",
+          "background": [
+            251,
+            233,
+            231,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 6.78,
+          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 5.74,
+          "colour": "rgb(95, 96, 103)",
+          "background": [
+            244,
+            245,
+            247,
+            1
+          ]
+        },
+        {
+          "selector": ".cricket-moment",
+          "ratio": 6,
+          "colour": "rgb(122, 84, 16)",
+          "background": [
+            255,
+            241,
+            194,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-powerplay-dark-390x844.png",
+      "state": "powerplay",
+      "theme": "dark",
+      "w": 390,
+      "audit": {
+        "state": "powerplay",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": {
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "hint": "UndoBack to 2.2 · 17/0",
+          "visible": true,
+          "thumbZone": true
+        }
+      },
+      "controls": [
+        {
+          "label": "Finish",
+          "x": 300.11,
+          "y": 14,
+          "width": 75.89,
+          "height": 48,
+          "bottom": 62,
+          "disabled": false
+        },
+        {
+          "label": "Dot",
+          "x": 12,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Single",
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Four",
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Six",
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wicket",
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
+          "disabled": false
+        },
+        {
+          "label": "Wide",
+          "x": 12,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "No-ball",
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Bye",
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Leg-bye",
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 712,
+          "disabled": false
+        },
+        {
+          "label": "Run 2",
+          "x": 12,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 3",
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 5",
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Run 7",
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
+          "height": 48,
+          "bottom": 768,
+          "disabled": false
+        },
+        {
+          "label": "Undo last ball",
+          "x": 12,
+          "y": 778,
+          "width": 250,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "More options",
+          "x": 270,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        },
+        {
+          "label": "Swap strike",
+          "x": 328,
+          "y": 778,
+          "width": 50,
+          "height": 56,
+          "bottom": 834,
+          "disabled": false
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".cricket-who",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-score",
+          "ratio": 10.87,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            14.494117647058824,
+            53.83529411764706,
+            141.49019607843138,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-ov",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-hero-crr",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-four",
+          "ratio": 6.99,
+          "colour": "rgb(255, 255, 255)",
+          "background": [
+            21,
+            78,
+            205,
+            1
+          ]
+        },
+        {
+          "selector": ".big5-key-wicket",
+          "ratio": 7.25,
+          "colour": "rgb(255, 143, 132)",
+          "background": [
+            58,
+            23,
+            20,
+            1
+          ]
+        },
+        {
+          "selector": ".pill",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".sb-undo-w",
+          "ratio": 5.59,
+          "colour": "oklab(0.684551 0.0002923 -0.00548257)",
+          "background": [
+            32,
+            34,
+            40,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-player-fig",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        },
+        {
+          "selector": ".ck-pship",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        },
+        {
+          "selector": ".mono-over-label",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
+          "background": [
+            14,
+            15,
+            18,
+            1
+          ]
+        },
+        {
+          "selector": ".cricket-moment",
+          "ratio": 8.32,
+          "colour": "rgb(245, 200, 76)",
+          "background": [
+            58,
+            47,
+            12,
             1
           ]
         }
@@ -6767,38 +10832,38 @@
       "consoleLogs": []
     },
     {
-      "file": "after-powerplay-chase-light-360x640.png",
-      "state": "powerplay-chase",
-      "theme": "light",
-      "w": 360,
+      "file": "after-lastman-dark-390x844.png",
+      "state": "lastman",
+      "theme": "dark",
+      "w": 390,
       "audit": {
-        "state": "powerplay-chase",
-        "theme": "light",
-        "w": 360,
-        "h": 640,
+        "state": "lastman",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
         "viewport": [
-          360,
-          640
+          390,
+          844
         ],
         "scroll": [
-          360,
-          658
+          390,
+          844
         ],
         "undo": {
           "x": 12,
-          "y": 591.63,
-          "width": 220,
+          "y": 778,
+          "width": 250,
           "height": 56,
-          "bottom": 647.63,
-          "hint": "UndoBack to 2.2 · 17/0",
-          "visible": false,
+          "bottom": 834,
+          "hint": "UndoBack to 0.0 · 0/0",
+          "visible": true,
           "thumbZone": true
         }
       },
       "controls": [
         {
           "label": "Finish",
-          "x": 270.11,
+          "x": 300.11,
           "y": 14,
           "width": 75.89,
           "height": 48,
@@ -6808,146 +10873,146 @@
         {
           "label": "Dot",
           "x": 12,
-          "y": 411.63,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 475.63,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
           "disabled": false
         },
         {
           "label": "Single",
-          "x": 80.59,
-          "y": 411.63,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 475.63,
+          "x": 86.59,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
           "disabled": false
         },
         {
           "label": "Four",
-          "x": 149.19,
-          "y": 411.63,
-          "width": 61.61,
-          "height": 64,
-          "bottom": 475.63,
+          "x": 161.19,
+          "y": 578,
+          "width": 67.61,
+          "height": 78,
+          "bottom": 656,
           "disabled": false
         },
         {
           "label": "Six",
-          "x": 217.8,
-          "y": 411.63,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 475.63,
+          "x": 235.8,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
           "disabled": false
         },
         {
           "label": "Wicket",
-          "x": 286.39,
-          "y": 411.63,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 475.63,
+          "x": 310.39,
+          "y": 578,
+          "width": 67.59,
+          "height": 78,
+          "bottom": 656,
           "disabled": false
         },
         {
           "label": "Wide",
           "x": 12,
-          "y": 481.63,
-          "width": 78.75,
+          "y": 664,
+          "width": 86.25,
           "height": 48,
-          "bottom": 529.63,
+          "bottom": 712,
           "disabled": false
         },
         {
           "label": "No-ball",
-          "x": 97.75,
-          "y": 481.63,
-          "width": 78.75,
+          "x": 105.25,
+          "y": 664,
+          "width": 86.25,
           "height": 48,
-          "bottom": 529.63,
+          "bottom": 712,
           "disabled": false
         },
         {
           "label": "Bye",
-          "x": 183.5,
-          "y": 481.63,
-          "width": 78.75,
+          "x": 198.5,
+          "y": 664,
+          "width": 86.25,
           "height": 48,
-          "bottom": 529.63,
+          "bottom": 712,
           "disabled": false
         },
         {
           "label": "Leg-bye",
-          "x": 269.25,
-          "y": 481.63,
-          "width": 78.75,
+          "x": 291.75,
+          "y": 664,
+          "width": 86.25,
           "height": 48,
-          "bottom": 529.63,
+          "bottom": 712,
           "disabled": false
         },
         {
           "label": "Run 2",
           "x": 12,
-          "y": 535.63,
-          "width": 78.75,
+          "y": 720,
+          "width": 86.25,
           "height": 48,
-          "bottom": 583.63,
+          "bottom": 768,
           "disabled": false
         },
         {
           "label": "Run 3",
-          "x": 97.75,
-          "y": 535.63,
-          "width": 78.75,
+          "x": 105.25,
+          "y": 720,
+          "width": 86.25,
           "height": 48,
-          "bottom": 583.63,
+          "bottom": 768,
           "disabled": false
         },
         {
           "label": "Run 5",
-          "x": 183.5,
-          "y": 535.63,
-          "width": 78.75,
+          "x": 198.5,
+          "y": 720,
+          "width": 86.25,
           "height": 48,
-          "bottom": 583.63,
+          "bottom": 768,
           "disabled": false
         },
         {
           "label": "Run 7",
-          "x": 269.25,
-          "y": 535.63,
-          "width": 78.75,
+          "x": 291.75,
+          "y": 720,
+          "width": 86.25,
           "height": 48,
-          "bottom": 583.63,
+          "bottom": 768,
           "disabled": false
         },
         {
           "label": "Undo last ball",
           "x": 12,
-          "y": 591.63,
-          "width": 220,
+          "y": 778,
+          "width": 250,
           "height": 56,
-          "bottom": 647.63,
+          "bottom": 834,
           "disabled": false
         },
         {
           "label": "More options",
-          "x": 240,
-          "y": 591.63,
+          "x": 270,
+          "y": 778,
           "width": 50,
           "height": 56,
-          "bottom": 647.63,
+          "bottom": 834,
           "disabled": false
         },
         {
           "label": "Swap strike",
-          "x": 298,
-          "y": 591.63,
+          "x": 328,
+          "y": 778,
           "width": 50,
           "height": 56,
-          "bottom": 647.63,
-          "disabled": false
+          "bottom": 834,
+          "disabled": true
         }
       ],
       "contrast": [
@@ -6996,17 +11061,6 @@
           ]
         },
         {
-          "selector": ".ck-hero-chase",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
           "selector": ".big5-key-four",
           "ratio": 6.99,
           "colour": "rgb(255, 255, 255)",
@@ -7019,67 +11073,56 @@
         },
         {
           "selector": ".big5-key-wicket",
-          "ratio": 5.61,
-          "colour": "rgb(180, 35, 24)",
+          "ratio": 7.25,
+          "colour": "rgb(255, 143, 132)",
           "background": [
-            251,
-            233,
-            231,
+            58,
+            23,
+            20,
             1
           ]
         },
         {
           "selector": ".pill",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
           "background": [
-            255,
-            255,
-            255,
+            25,
+            26,
+            31,
             1
           ]
         },
         {
           "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
+          "ratio": 5.59,
+          "colour": "oklab(0.684551 0.0002923 -0.00548257)",
           "background": [
-            255,
-            255,
-            255,
+            32,
+            34,
+            40,
             1
           ]
         },
         {
           "selector": ".ck-player-fig",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
           "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-pship",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
+            25,
+            26,
+            31,
             1
           ]
         },
         {
           "selector": ".mono-over-label",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
+          "ratio": 7.7,
+          "colour": "rgb(162, 164, 171)",
           "background": [
-            244,
-            245,
-            247,
+            14,
+            15,
+            18,
             1
           ]
         }
@@ -7093,12 +11136,12 @@
       "consoleLogs": []
     },
     {
-      "file": "after-restore-light-360x640.png",
-      "state": "restore",
+      "file": "after-break-light-360x640.png",
+      "state": "break",
       "theme": "light",
       "w": 360,
       "audit": {
-        "state": "restore",
+        "state": "break",
         "theme": "light",
         "w": 360,
         "h": 640,
@@ -7110,291 +11153,28 @@
           360,
           640
         ],
-        "undo": {
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "hint": "UndoBack to 12.2 · 97/0",
-          "visible": true,
-          "thumbZone": true
-        }
+        "undo": null
       },
       "controls": [
         {
-          "label": "Finish",
-          "x": 269.73,
-          "y": 14,
-          "width": 76.27,
+          "label": "Confirm line-up",
+          "x": 28,
+          "y": 526.69,
+          "width": 304,
           "height": 48,
-          "bottom": 62,
-          "disabled": false
-        },
-        {
-          "label": "Dot",
-          "x": 12,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Single",
-          "x": 80.59,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Four",
-          "x": 149.19,
-          "y": 394,
-          "width": 61.61,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Six",
-          "x": 217.8,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wicket",
-          "x": 286.39,
-          "y": 394,
-          "width": 61.59,
-          "height": 64,
-          "bottom": 458,
-          "disabled": false
-        },
-        {
-          "label": "Wide",
-          "x": 12,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "No-ball",
-          "x": 97.75,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Bye",
-          "x": 183.5,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Leg-bye",
-          "x": 269.25,
-          "y": 464,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 512,
-          "disabled": false
-        },
-        {
-          "label": "Run 2",
-          "x": 12,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 3",
-          "x": 97.75,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 5",
-          "x": 183.5,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Run 7",
-          "x": 269.25,
-          "y": 518,
-          "width": 78.75,
-          "height": 48,
-          "bottom": 566,
-          "disabled": false
-        },
-        {
-          "label": "Undo last ball",
-          "x": 12,
-          "y": 574,
-          "width": 220,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "More options",
-          "x": 240,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
-        },
-        {
-          "label": "Swap strike",
-          "x": 298,
-          "y": 574,
-          "width": 50,
-          "height": 56,
-          "bottom": 630,
-          "disabled": false
+          "bottom": 574.69,
+          "disabled": true
         }
       ],
       "contrast": [
         {
-          "selector": ".cricket-who",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-score",
-          "ratio": 10.87,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            14.494117647058824,
-            53.83529411764706,
-            141.49019607843138,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-ov",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-hero-crr",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-four",
-          "ratio": 6.99,
-          "colour": "rgb(255, 255, 255)",
-          "background": [
-            21,
-            78,
-            205,
-            1
-          ]
-        },
-        {
-          "selector": ".big5-key-wicket",
-          "ratio": 5.61,
-          "colour": "rgb(180, 35, 24)",
-          "background": [
-            251,
-            233,
-            231,
-            1
-          ]
-        },
-        {
-          "selector": ".pill",
+          "selector": ".mono-break-line",
           "ratio": 19.66,
           "colour": "rgb(11, 11, 13)",
           "background": [
             255,
             255,
             255,
-            1
-          ]
-        },
-        {
-          "selector": ".sb-undo-w",
-          "ratio": 6.78,
-          "colour": "oklab(0.473317 0.000742126 -0.00252373)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-player-fig",
-          "ratio": 19.66,
-          "colour": "rgb(11, 11, 13)",
-          "background": [
-            255,
-            255,
-            255,
-            1
-          ]
-        },
-        {
-          "selector": ".ck-pship",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
-            1
-          ]
-        },
-        {
-          "selector": ".mono-over-label",
-          "ratio": 5.74,
-          "colour": "rgb(95, 96, 103)",
-          "background": [
-            244,
-            245,
-            247,
             1
           ]
         }
@@ -7405,12 +11185,111 @@
         "minimumNumeral": 8.024973692679696
       },
       "errors": [],
-      "consoleLogs": [
+      "consoleLogs": []
+    },
+    {
+      "file": "after-break-light-390x844.png",
+      "state": "break",
+      "theme": "light",
+      "w": 390,
+      "audit": {
+        "state": "break",
+        "theme": "light",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": null
+      },
+      "controls": [
         {
-          "level": "log",
-          "text": "RESTORE {\"rehydratedScore\":\"105/0\",\"undoScore\":\"101/0\",\"savedColours\":[\"#2563eb\",\"#fbbf24\"]}"
+          "label": "Confirm line-up",
+          "x": 28,
+          "y": 526.69,
+          "width": 334,
+          "height": 48,
+          "bottom": 574.69,
+          "disabled": true
         }
-      ]
+      ],
+      "contrast": [
+        {
+          "selector": ".mono-break-line",
+          "ratio": 19.66,
+          "colour": "rgb(11, 11, 13)",
+          "background": [
+            255,
+            255,
+            255,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
+    },
+    {
+      "file": "after-break-dark-390x844.png",
+      "state": "break",
+      "theme": "dark",
+      "w": 390,
+      "audit": {
+        "state": "break",
+        "theme": "dark",
+        "w": 390,
+        "h": 844,
+        "viewport": [
+          390,
+          844
+        ],
+        "scroll": [
+          390,
+          844
+        ],
+        "undo": null
+      },
+      "controls": [
+        {
+          "label": "Confirm line-up",
+          "x": 28,
+          "y": 526.69,
+          "width": 334,
+          "height": 48,
+          "bottom": 574.69,
+          "disabled": true
+        }
+      ],
+      "contrast": [
+        {
+          "selector": ".mono-break-line",
+          "ratio": 15.92,
+          "colour": "rgb(244, 245, 247)",
+          "background": [
+            25,
+            26,
+            31,
+            1
+          ]
+        }
+      ],
+      "teamContrast": {
+        "allPass": true,
+        "minimumLabel": 4.630189671546443,
+        "minimumNumeral": 8.024973692679696
+      },
+      "errors": [],
+      "consoleLogs": []
     }
   ],
   "browserWalk": {
