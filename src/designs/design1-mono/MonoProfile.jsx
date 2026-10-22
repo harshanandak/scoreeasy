@@ -1,109 +1,156 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { DEFAULT_GUEST_SCORING_PATH } from "../../utils/authRedirect";
 import { useAuth } from "../../hooks/useAuth";
-import BackArrow from "./components/BackArrow";
-import SportIcon from "./SportIcon";
-import { sportsTokens } from "./theme/sportsTokens";
+import { getSportById } from "../../models/sportRegistry";
+import { sportIdentity, sportIdentityVars } from "../../lib/sportIdentity";
+import { GoArrow, KitSection, KitTop, KitWash, SportBadge } from "./kit/KitParts";
+import { winnerSide } from "./kit/historyModel";
+import "./kit/history.css";
 
-function getRoleLabel(stats) {
+/* Profile (Kit, plan 2026-10-22 §9 S4, prototype `profile`): the avatar in a ring split by the
+   sports played (engine identity colours), the name, a pure-type stat line, the per-sport list
+   with bars, and recent matches as Kit rows. Every number comes straight from the Convex stats. */
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function roleLabel(stats) {
   const played = stats?.totalMatches > 0;
   const scored = stats?.gamesOperated > 0;
-  if (played && scored) return "Player & Scorer - ";
-  if (scored) return "Scorer - ";
-  if (played) return "Player - ";
-  return "";
+  if (played && scored) return "Player and scorer";
+  if (scored) return "Scorer";
+  if (played) return "Player";
+  return null;
 }
 
-function getStatsGridClass(stats) {
-  if (stats?.gamesOperated > 0) return "grid gap-3 grid-cols-2 sm:grid-cols-4";
-  return "grid gap-3 grid-cols-2 sm:grid-cols-3";
+function joinedLabel(ts) {
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  return `Joined ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function LoadingState({ onBack }) {
+function formatDate(ts) {
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function sportName(id) {
+  return getSportById(id)?.name || (id ? id.charAt(0).toUpperCase() + id.slice(1) : "Custom");
+}
+
+/** The ring: one arc per sport, sized by matches played, in each sport's engine core colour. */
+function ringBackground(rows) {
+  const total = rows.reduce((sum, row) => sum + row.played, 0);
+  if (total === 0) return undefined;
+  let acc = 0;
+  const stops = rows.map((row) => {
+    const from = (acc / total) * 360;
+    acc += row.played;
+    const colour = sportIdentity(row.id)?.core ?? "var(--se-color-ink-soft)";
+    return `${colour} ${from.toFixed(1)}deg ${((acc / total) * 360).toFixed(1)}deg`;
+  });
+  return `conic-gradient(${stops.join(", ")})`;
+}
+
+function KitPage({ title, children, action }) {
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition mono-visible">
-      <div className="mono-page-shell mono-profile-shell">
-        <button
-          onClick={onBack}
-          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
-          style={{ color: "#888" }}
-        >
-          <BackArrow /> Back
-        </button>
-        <p style={{ color: "#888" }}>Loading profile...</p>
-      </div>
+    <div className="kit-screen" data-screen="profile">
+      <KitWash from={sportIdentity("cricket")?.tint} to={sportIdentity("kabaddi")?.tint} />
+      <KitTop title={title}>{action}</KitTop>
+      {children}
     </div>
   );
 }
+KitPage.propTypes = { title: PropTypes.string.isRequired, children: PropTypes.node, action: PropTypes.node };
+
+function BackControl({ onBack }) {
+  return (
+    <button type="button" className="se-ctl" onClick={onBack}>
+      Back
+    </button>
+  );
+}
+BackControl.propTypes = { onBack: PropTypes.func.isRequired };
+
+function LoadingState({ onBack }) {
+  return (
+    <KitPage title="Profile" action={onBack ? <BackControl onBack={onBack} /> : null}>
+      <p className="kit-note" role="status">Loading profile...</p>
+    </KitPage>
+  );
+}
+LoadingState.propTypes = { onBack: PropTypes.func };
 
 function RecoveryActions({ cloudAuthAvailable, message, onBack, onNavigate, title }) {
   return (
-    <div className="min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition mono-visible">
-      <div className="mono-page-shell mono-profile-shell">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
-          style={{ color: "#888" }}
-        >
-          <BackArrow /> Back
-        </button>
-
-        <section className="mono-table-panel" style={{ padding: "20px" }}>
-          <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#888" }}>
-            Profile
-          </p>
-          <h1 className="text-xl font-bold mb-3" style={{ color: "#111" }}>
-            {title}
-          </h1>
-          <p className="text-sm mb-5" style={{ color: "#666" }}>
-            {message}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {cloudAuthAvailable && (
-              <button
-                type="button"
-                className="mono-btn-primary"
-                style={{ minHeight: 44, padding: "10px 14px" }}
-                onClick={() => onNavigate("/login?returnTo=%2Fprofile")}
-              >
-                Sign in to sync profile
-              </button>
-            )}
-            <button
-              type="button"
-              className={cloudAuthAvailable ? "mono-btn" : "mono-btn-primary"}
-              style={{ minHeight: 44, padding: "10px 14px" }}
-              onClick={() => onNavigate(DEFAULT_GUEST_SCORING_PATH)}
-            >
-              Start guest match
+    <KitPage title="Profile" action={onBack ? <BackControl onBack={onBack} /> : null}>
+      <section className="kit-card kit-recovery" aria-labelledby="profile-recovery-title" style={{ marginTop: 6 }}>
+        <h1 id="profile-recovery-title">{title}</h1>
+        <p>{message}</p>
+        <div className="kit-btnstack">
+          {cloudAuthAvailable && (
+            <button type="button" className="se-go" onClick={() => onNavigate("/login?returnTo=%2Fprofile")}>
+              Sign in to sync profile <GoArrow />
             </button>
-            <button
-              type="button"
-              className="mono-btn"
-              style={{ minHeight: 44, padding: "10px 14px" }}
-              onClick={() => onNavigate("/users/search")}
-            >
-              Find players
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
+          )}
+          <button
+            type="button"
+            className={cloudAuthAvailable ? "se-ctl" : "se-go"}
+            onClick={() => onNavigate(DEFAULT_GUEST_SCORING_PATH)}
+          >
+            Start guest match
+          </button>
+          <button type="button" className="se-ctl" onClick={() => onNavigate("/users/search")}>
+            Find players
+          </button>
+        </div>
+      </section>
+    </KitPage>
   );
 }
 
 RecoveryActions.propTypes = {
   cloudAuthAvailable: PropTypes.bool.isRequired,
   message: PropTypes.string.isRequired,
-  onBack: PropTypes.func.isRequired,
+  onBack: PropTypes.func,
   onNavigate: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
 };
+
+function RecentRow({ match }) {
+  const side = winnerSide(match);
+  const sub = [sportName(match.sport), formatDate(match.date), match.matchRole === "refereeing" ? "scored" : null]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <div className="kit-row">
+      <SportBadge sportId={match.sport} />
+      <span className="kit-row-text">
+        <span className="kit-row-title">
+          {side === "a" ? <strong>{match.team1}</strong> : match.team1} v {side === "b" ? <strong>{match.team2}</strong> : match.team2}
+        </span>
+        <span className="kit-row-sub">{sub}</span>
+      </span>
+      <span className="kit-row-score">{`${match.score1}–${match.score2}`}</span>
+    </div>
+  );
+}
+RecentRow.propTypes = {
+  match: PropTypes.shape({
+    sport: PropTypes.string,
+    team1: PropTypes.string,
+    team2: PropTypes.string,
+    winner: PropTypes.string,
+    score1: PropTypes.number,
+    score2: PropTypes.number,
+    date: PropTypes.number,
+    matchRole: PropTypes.string,
+  }).isRequired,
+};
+
 export default function MonoProfile() {
   const navigate = useNavigate();
   const { username: paramUsername } = useParams();
@@ -114,11 +161,6 @@ export default function MonoProfile() {
     isUserReady,
     cloudAuthAvailable,
   } = useAuth();
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
 
   const isOwnProfile = !paramUsername || paramUsername === currentUser?.username;
   const profileUsername = paramUsername || currentUser?.username || null;
@@ -136,9 +178,10 @@ export default function MonoProfile() {
   );
 
   const displayUser = isOwnProfile ? currentUser : profileUser;
+  const goBack = paramUsername ? () => navigate(-1) : null;
 
   if (!paramUsername && (authLoading || (isAuthenticated && !isUserReady))) {
-    return <LoadingState onBack={() => navigate("/app")} />;
+    return <LoadingState />;
   }
 
   if (!paramUsername && !displayUser && !isAuthenticated) {
@@ -146,7 +189,6 @@ export default function MonoProfile() {
       <RecoveryActions
         cloudAuthAvailable={cloudAuthAvailable}
         message="You can sign in to sync your profile, or keep scoring locally as a guest."
-        onBack={() => navigate("/app")}
         onNavigate={navigate}
         title="Save your profile when you're ready"
       />
@@ -154,7 +196,7 @@ export default function MonoProfile() {
   }
 
   if (paramUsername && profileUser === undefined) {
-    return <LoadingState onBack={() => navigate(-1)} />;
+    return <LoadingState onBack={goBack} />;
   }
 
   if (paramUsername && profileUser === null) {
@@ -162,233 +204,93 @@ export default function MonoProfile() {
       <RecoveryActions
         cloudAuthAvailable={cloudAuthAvailable}
         message={`User @${paramUsername} not found.`}
-        onBack={() => navigate(-1)}
+        onBack={goBack}
         onNavigate={navigate}
         title="Profile not found"
       />
     );
   }
 
-  const formatDate = (ts) => {
-    const d = new Date(ts);
-    return `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1).toString().padStart(2, "0")}.${d.getFullYear().toString().slice(-2)}`;
-  };
+  const username = displayUser?.username || null;
+  const name = displayUser?.displayName || (username ? `@${username}` : "...");
+  const initial = (displayUser?.displayName || username || "?").trim().charAt(0).toUpperCase();
+  const sub = [
+    displayUser?.displayName && username ? `@${username}` : null,
+    roleLabel(stats),
+    displayUser?.createdAt ? joinedLabel(displayUser.createdAt) : null,
+  ].filter(Boolean).join(" · ");
+
+  const sportRows = Object.entries(stats?.sportBreakdown || {})
+    .map(([id, s]) => ({ id, played: s.played, wins: s.wins }))
+    .sort((a, b) => b.played - a.played);
+  const maxPlayed = sportRows[0]?.played || 0;
+
+  const statItems = [
+    ["matches", stats?.totalMatches ?? "-"],
+    ["wins", stats?.wins ?? "-"],
+    ["win rate", stats?.winRate == null ? "-" : `${stats.winRate}%`],
+    ...(stats?.gamesOperated > 0 ? [["scored", stats.gamesOperated]] : []),
+  ];
 
   return (
-    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
-      <div className="mono-page-shell mono-profile-shell">
-        <button
-          onClick={() => navigate("/app")}
-          className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
-          style={{ color: "#888" }}
-        >
-          <BackArrow /> Back
-        </button>
+    <KitPage title="Profile" action={goBack ? <BackControl onBack={goBack} /> : null}>
+      <section className="kit-prof" aria-labelledby="profile-name">
+        <div className="kit-ring" style={{ "--kit-ring": ringBackground(sportRows) }}>
+          {displayUser?.avatarUrl ? <img src={displayUser.avatarUrl} alt="" /> : <span aria-hidden="true">{initial}</span>}
+        </div>
+        <h1 id="profile-name">{name}</h1>
+        {sub && <p className="kit-sub">{sub}</p>}
+      </section>
 
-        <section className="mono-page-header">
-          <div className="flex items-center gap-4 mb-2">
-            {displayUser?.avatarUrl ? (
-              <img
-                src={displayUser.avatarUrl}
-                alt=""
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: sportsTokens.radius.lg,
-                  border: `1px solid ${sportsTokens.color.line}`,
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: sportsTokens.radius.lg,
-                  background: sportsTokens.color.surface,
-                  border: `1px solid ${sportsTokens.color.line}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.125rem",
-                  fontWeight: 700,
-                  color: "#888",
-                }}
-              >
-                {(displayUser?.username || "?")[0].toUpperCase()}
-              </div>
-            )}
-            <div>
-              <h1 className="text-xl font-bold font-mono" style={{ color: "#111" }}>
-                @{displayUser?.username || "..."}
-              </h1>
-              {displayUser?.displayName && (
-                <p className="text-sm" style={{ color: "#888" }}>
-                  {displayUser.displayName}
-                </p>
-              )}
-            </div>
-          </div>
-          {displayUser?.createdAt && (
-            <p className="text-xs" style={{ color: "#bbb" }}>
-              {getRoleLabel(stats)}Joined {formatDate(displayUser.createdAt)}
-            </p>
-          )}
-        </section>
+      <ul className="kit-statline" aria-label="Stats" style={{ "--kit-stat-cols": statItems.length }}>
+        {statItems.map(([label, value]) => (
+          <li key={label}>
+            <b>{value}</b>
+            <span>{label}</span>
+          </li>
+        ))}
+      </ul>
 
-        <section className="mb-8">
-          <h2
-            className="text-xs uppercase tracking-widest font-normal mb-4"
-            style={{ color: "#888" }}
-          >
-            Stats
-          </h2>
-          <div className={getStatsGridClass(stats)}>
-            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
-              <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.totalMatches ?? "-"}
-              </p>
-              <p className="text-xs" style={{ color: "#888" }}>Matches</p>
-            </div>
-            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
-              <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.wins ?? "-"}
-              </p>
-              <p className="text-xs" style={{ color: "#888" }}>Wins</p>
-            </div>
-            <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
-              <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                {stats?.winRate == null ? "-" : `${stats.winRate}%`}
-              </p>
-              <p className="text-xs" style={{ color: "#888" }}>Win Rate</p>
-            </div>
-            {stats?.gamesOperated > 0 && (
-              <div className="mono-stat-strip mono-stat-number-card" style={{ padding: "16px", textAlign: "center" }}>
-                <p className="text-2xl font-bold font-mono" style={{ color: "#111" }}>
-                  {stats.gamesOperated}
-                </p>
-                <p className="text-xs" style={{ color: "#888" }}>Scored</p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {stats?.sportBreakdown && Object.keys(stats.sportBreakdown).length > 0 && (
-          <>
-            <hr className="mono-divider mb-8" />
-            <section className="mb-8">
-              <h2
-                className="text-xs uppercase tracking-widest font-normal mb-4"
-                style={{ color: "#888" }}
-              >
-                Sports
-              </h2>
-              <div className="mono-table-panel" style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>
-                      {["Sport", "P", "W", "L", "Win%"].map((h) => (
-                        <th
-                          key={h}
-                          className="text-xs uppercase tracking-widest font-normal"
-                          style={{
-                            color: "#888",
-                            textAlign: h === "Sport" ? "left" : "right",
-                            padding: "8px 12px",
-                            borderBottom: "1px solid #eee",
-                          }}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(stats.sportBreakdown).map(([sport, s]) => (
-                      <tr key={sport}>
-                        <td className="text-sm" style={{ padding: "8px 12px", textTransform: "capitalize" }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                            <SportIcon name={sport.charAt(0).toUpperCase() + sport.slice(1)} size={16} color="#888" />
-                            {sport}
-                          </span>
-                        </td>
-                        <td className="text-sm font-mono" style={{ padding: "8px 12px", textAlign: "right" }}>
-                          {s.played}
-                        </td>
-                        <td className="text-sm font-mono" style={{ padding: "8px 12px", textAlign: "right" }}>
-                          {s.wins}
-                        </td>
-                        <td className="text-sm font-mono" style={{ padding: "8px 12px", textAlign: "right" }}>
-                          {s.played - s.wins}
-                        </td>
-                        <td className="text-sm font-mono" style={{ padding: "8px 12px", textAlign: "right" }}>
-                          {s.played > 0 ? Math.round((s.wins / s.played) * 100) : 0}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </>
-        )}
-
-        {recentMatches && recentMatches.length > 0 && (
-          <>
-            <hr className="mono-divider mb-8" />
-            <section className="mb-8">
-              <h2
-                className="text-xs uppercase tracking-widest font-normal mb-4"
-                style={{ color: "#888" }}
-              >
-                Recent Matches
-              </h2>
-              <div className="mono-history-list flex flex-col">
-                {recentMatches.map((m) => (
-                  <div key={m._id} className="mono-history-row" style={{ padding: "14px 0" }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs uppercase" style={{ color: "#888" }}>
-                        {m.sport}
-                      </span>
-                      <span className="text-xs font-mono" style={{ color: "#bbb" }}>
-                        {formatDate(m.date)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm" style={{ color: "#111" }}>
-                        {m.team1} vs {m.team2}
-                      </span>
-                      <span
-                        className="text-sm font-mono font-bold"
-                        style={{ color: "#111", fontVariantNumeric: "tabular-nums" }}
-                      >
-                        {m.score1} - {m.score2}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      {m.winner && (
-                        <p className="text-xs" style={{ color: "#888" }}>
-                          Winner: {m.winner}
-                        </p>
-                      )}
-                      {m.matchRole === "refereeing" && (
-                        <span className="text-xs" style={{ color: "#bbb" }}>(scored)</span>
-                      )}
-                    </div>
+      {sportRows.length > 0 && (
+        <section aria-labelledby="profile-sports">
+          <KitSection id="profile-sports" title="Sports" aside={<span>by matches</span>} />
+          <div className="kit-list">
+            {sportRows.map((row) => {
+              const pct = row.played > 0 ? Math.round((row.wins / row.played) * 100) : 0;
+              return (
+                <div
+                  key={row.id}
+                  className="kit-brow"
+                  style={{ ...sportIdentityVars(row.id), "--kit-p": `${maxPlayed ? Math.round((row.played / maxPlayed) * 100) : 0}%` }}
+                >
+                  <SportBadge sportId={row.id} />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="kit-brow-name">{sportName(row.id)}</div>
+                    <div className="kit-brow-track" aria-hidden="true"><i /></div>
+                    <div className="kit-brow-sub">{`${row.wins} W · ${row.played - row.wins} L · ${pct}%`}</div>
                   </div>
-                ))}
-              </div>
-            </section>
-          </>
-        )}
+                  <span className="kit-brow-count" aria-label={`${row.played} played`}>{row.played}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-        <Link
-          to="/users/search"
-          className="mono-btn"
-          style={{ minHeight: 44, padding: "10px 14px", color: sportsTokens.color.action, borderColor: sportsTokens.color.action }}
-        >
+      {recentMatches && recentMatches.length > 0 && (
+        <section aria-labelledby="profile-recent">
+          <KitSection id="profile-recent" title="Recent matches" />
+          <div className="kit-list">
+            {recentMatches.map((m) => <RecentRow key={m._id} match={m} />)}
+          </div>
+        </section>
+      )}
+
+      <div className="kit-btnstack" style={{ marginTop: 20 }}>
+        <Link to="/users/search" className="se-ctl">
           Find players
         </Link>
       </div>
-    </div>
+    </KitPage>
   );
 }

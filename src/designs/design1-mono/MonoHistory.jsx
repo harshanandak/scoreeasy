@@ -18,11 +18,15 @@ import {
   isTournamentMatchCompleted,
   normalizeNonTeamWinner,
 } from '../../utils/tournamentSync';
-import BackArrow from './components/BackArrow';
-import SportIcon from './SportIcon';
-import { sportsTokens } from './theme/sportsTokens';
 import { shareText } from '../../mobile/share';
 import { MonoStatisticsPanel } from './MonoStatistics';
+import MonoSheet from './components/MonoSheet';
+import { deriveTeamColours, normaliseHex, teamColourVars } from '../../lib/teamColour';
+import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
+import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, KitTop, KitWash, SportBadge } from './kit/KitParts';
+import { displayScore, groupByMonth, latestMonthSummary, sportCounts, winnerSide } from './kit/historyModel';
+import { relativeDay } from './kit/dates';
+import './kit/history.css';
 
 const ANY_SPORT = 'all';
 const RESULT_ALL = 'all';
@@ -36,12 +40,6 @@ const RESULT_LABELS = {
   [RESULT_DRAW]: 'Draws',
   [RESULT_CLOSE]: 'Close',
 };
-/* Every sport is offered, not just the ones already played — re-picking a chip clears it. */
-const ALL_SPORT_OPTIONS = getSportsList()
-  .map((sport) => sport.name)
-  .sort((a, b) => a.localeCompare(b))
-  .map((name) => ({ value: name, label: name }));
-
 function toTimestamp(value) {
   const parsed = Date.parse(value || '');
   return Number.isFinite(parsed) ? parsed : 0;
@@ -242,54 +240,9 @@ function buildTournamentEntries() {
   return entries.sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
 }
 
-function OptionChips({ label, options, selected, onPick }) {
-  return (
-    <div role="group" aria-label={label} style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-      {options.map((option) => {
-        const active = selected === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onPick(option.value)}
-            className="font-mono cursor-pointer"
-            style={{
-              minHeight: 40,
-              padding: '8px 14px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              border: active ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
-              borderRadius: 'var(--radius)',
-              background: active ? 'var(--accent)' : 'transparent',
-              color: active ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
-              transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
-            }}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-OptionChips.propTypes = {
-  label: PropTypes.string.isRequired,
-  selected: PropTypes.string.isRequired,
-  options: PropTypes.arrayOf(PropTypes.shape({
-    value: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-  })).isRequired,
-  onPick: PropTypes.func.isRequired,
-};
-
 export default function MonoHistory() {
   const navigate = useNavigate();
   const { history, clearAll: clearLegacyHistory, refresh: refreshLegacyHistory } = useGameHistory();
-  const [visible, setVisible] = useState(false);
   const [view, setView] = useState('matches');
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
@@ -299,15 +252,20 @@ export default function MonoHistory() {
   const [resultFilter, setResultFilter] = useState(RESULT_ALL);
   const [sortOrder, setSortOrder] = useState(SORT_NEWEST);
   const [showFilters, setShowFilters] = useState(false);
-  const [openFilterSection, setOpenFilterSection] = useState(null);
   const [pendingClear, setPendingClear] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [historyStatus, setHistoryStatus] = useState('');
 
+  // A plain status line ("Result copied.") clears itself; an undo stays until the next action.
+  const undoOffered = Boolean(pendingDelete?.deleted || pendingClear?.cleared);
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
+    if (!historyStatus || undoOffered) return undefined;
+    const timer = setTimeout(() => setHistoryStatus(''), 4000);
+    return () => clearTimeout(timer);
+  }, [historyStatus, undoOffered]);
 
+  useEffect(() => {
     const loadedQuick = loadCompletedQuickMatches();
     loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
 
@@ -347,6 +305,8 @@ export default function MonoHistory() {
         winner: normalizeNonTeamWinner(qm.winner),
         elapsedSeconds: qm.elapsedSeconds,
         date: qm.completedAt || qm.date || qm.createdAt,
+        // The pair the scorer picked (kept locally since S1); only plain hex survives.
+        colours: normaliseHex(qm.team1Color) && normaliseHex(qm.team2Color) ? [qm.team1Color, qm.team2Color] : null,
       };
     });
   }, [quickMatches]);
@@ -378,6 +338,14 @@ export default function MonoHistory() {
     return [...quickEntries, ...tournamentEntries, ...legacyEntries]
       .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
   }, [quickEntries, tournamentEntries, legacyEntries]);
+
+  // Sport chips: the sports already played, most played first, then every other registered sport
+  // (re-picking a chip clears it, as before).
+  const sportChips = useMemo(() => {
+    const played = sportCounts(allEntries).map((item) => getSportById(item.id)).filter(Boolean);
+    const playedIds = new Set(played.map((sport) => sport.id));
+    return [...played, ...getSportsList().filter((sport) => !playedIds.has(sport.id))];
+  }, [allEntries]);
 
   const filteredEntries = useMemo(() => {
     const normalizedSearch = normalizeSearchValue(searchQuery);
@@ -499,445 +467,383 @@ export default function MonoHistory() {
   const rematchEntry = (entry) => {
     if (!entry?.sport) return;
     navigate(`/${entry.sport}/quick`, {
-      state: {
-        teams: [entry.team1, entry.team2],
-      },
+      // As Home's Rematch: the saved pair goes along and quick setup validates it.
+      state: entry.colours
+        ? { teams: [entry.team1, entry.team2], colours: entry.colours }
+        : { teams: [entry.team1, entry.team2] },
     });
   };
 
+  const closeDetails = () => {
+    setSelectedEntry(null);
+    if (pendingDelete && !pendingDelete.deleted) setPendingDelete(null);
+  };
+
+  const summary = latestMonthSummary(filteredEntries);
+  const groups = groupByMonth(filteredEntries);
+  const typeOptions = [
+    { value: 'all', label: 'All', count: totalCount },
+    { value: 'quick', label: 'Quick', count: quickCount },
+    { value: 'tournament', label: 'Tournaments', count: tournamentCount },
+  ];
+  const resultOptions = [
+    { value: RESULT_ALL, label: 'All' },
+    { value: RESULT_DECIDED, label: RESULT_LABELS[RESULT_DECIDED] },
+    { value: RESULT_DRAW, label: RESULT_LABELS[RESULT_DRAW] },
+    { value: RESULT_CLOSE, label: RESULT_LABELS[RESULT_CLOSE] },
+  ];
+  const sortOptions = [
+    { value: SORT_NEWEST, label: 'Newest' },
+    { value: SORT_OLDEST, label: 'Oldest' },
+  ];
+  const panelFilterCount = [filter !== 'all', resultFilter !== RESULT_ALL, sortOrder !== SORT_NEWEST].filter(Boolean).length;
+  const undo = pendingDelete?.deleted
+    ? { label: 'Undo delete', onClick: undoDeleteQuickMatch }
+    : pendingClear?.cleared ? { label: 'Undo clear', onClick: undoClearMutableHistory } : null;
+
   return (
-    <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="mono-page-shell">
-        <nav className="mono-page-header flex items-center justify-between" aria-label="History navigation">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/app')}
-              className="bg-transparent border-none cursor-pointer font-swiss text-sm"
-              style={{ color: 'var(--se-color-ink-muted)' }}
-              aria-label="Go back to home"
-            >
-              <BackArrow />
-            </button>
-            <h1 className="text-xl font-semibold" style={{ color: '#111' }}>
-              History &amp; Stats
-            </h1>
-          </div>
-          {view === 'matches' && clearableCount > 0 && (
-            <button
-              onClick={confirmClearMutableHistory}
-              className="mono-btn mono-btn-danger font-swiss text-xs"
-              style={{
-                minHeight: 40,
-                padding: '0 10px',
-              }}
-            >
-              Clear local history
-            </button>
-          )}
-        </nav>
+    <div className="kit-screen" data-screen="history">
+      <KitWash from={sportIdentity('volleyball')?.tint} to={sportIdentity('cricket')?.tint} />
+      <KitTop title="History" />
 
-        {/* Top-level view switch: the match list (History) and the aggregate
-            stats (Stats) are one section, two tabs over the same record data. */}
-        <div className="mono-tabs" role="tablist" aria-label="History and statistics views">
+      {/* Two views over the same record data: the match list and the aggregate stats. */}
+      <div className="kit-seg" role="tablist" aria-label="History and statistics views" style={{ '--kit-seg-cols': 2 }}>
+        {[['matches', 'Matches'], ['stats', 'Stats']].map(([id, label]) => (
           <button
+            key={id}
             type="button"
             role="tab"
-            aria-selected={view === 'matches'}
-            aria-controls="tabpanel-history-matches"
-            onClick={() => setView('matches')}
-            className={view === 'matches' ? 'mono-tab mono-tab-active' : 'mono-tab'}
+            id={`tab-history-${id}`}
+            aria-selected={view === id}
+            aria-controls={`tabpanel-history-${id}`}
+            onClick={() => setView(id)}
           >
-            Matches
+            {label}
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'stats'}
-            aria-controls="tabpanel-history-stats"
-            onClick={() => setView('stats')}
-            className={view === 'stats' ? 'mono-tab mono-tab-active' : 'mono-tab'}
-          >
-            Stats
-          </button>
+        ))}
+      </div>
+
+      {view === 'stats' ? (
+        <div id="tabpanel-history-stats" role="tabpanel" aria-labelledby="tab-history-stats" style={{ marginTop: 16 }}>
+          <MonoStatisticsPanel />
         </div>
+      ) : (
+        <div id="tabpanel-history-matches" role="tabpanel" aria-labelledby="tab-history-matches">
+          {totalCount === 0 ? (
+            <section className="kit-card kit-empty" aria-labelledby="history-empty-title">
+              <EmptyHistoryArt />
+              <h2 id="history-empty-title">No match history yet</h2>
+              <p>Completed quick matches and tournaments will appear here.</p>
+              <div className="kit-btnstack">
+                <button type="button" className="se-go" onClick={() => navigate('/play')}>
+                  Choose a sport <GoArrow />
+                </button>
+              </div>
+            </section>
+          ) : (
+            <>
+              {summary && <MonthCard summary={summary} />}
 
-        {view === 'stats' ? (
-          <div id="tabpanel-history-stats" role="tabpanel" aria-label="Stats">
-            <MonoStatisticsPanel />
-          </div>
-        ) : (
-        <div id="tabpanel-history-matches" role="tabpanel" aria-label="Matches">
-        {/* The summary board IS the type filter — stat cards double as buttons. */}
-        <section className="grid grid-cols-3 gap-3 mb-6" aria-label="History summary">
-          {[
-            { id: 'all', label: 'All matches', value: totalCount },
-            { id: 'quick', label: 'Quick', value: quickCount },
-            { id: 'tournament', label: 'Tournaments', value: tournamentCount },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setFilter(item.id)}
-              aria-pressed={filter === item.id}
-              className="mono-stat-strip mono-stat-card mono-stat-number-card text-center"
-              style={{ padding: '16px 12px' }}
-            >
-              <p className="text-2xl font-bold font-mono mono-score" style={{ margin: 0, color: 'var(--foreground)' }}>{item.value}</p>
-              <p className="text-xs mt-1 mono-muted-text" style={{ margin: 0 }}>{item.label}</p>
-            </button>
-          ))}
-        </section>
-
-        {historyStatus && (
-          <div
-            className="mono-card mono-status-card mb-4"
-            role="status"
-            aria-live="polite"
-            style={{ padding: '10px 12px' }}
-          >
-            {historyStatus}
-          </div>
-        )}
-
-        {pendingClear && !pendingClear.cleared && (
-          <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
-            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear local history?</p>
-            <p className="text-xs mb-4 mono-muted-text">
-              Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => setPendingClear(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="mono-btn mono-btn-danger flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={clearMutableHistory}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
-
-        {pendingClear?.cleared && (
-          <button
-            type="button"
-            className="mono-btn mb-4 w-full"
-            style={{ minHeight: 44, padding: '10px' }}
-            onClick={undoClearMutableHistory}
-          >
-            Undo clear
-          </button>
-        )}
-
-        {pendingDelete && !pendingDelete.deleted && (
-          <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
-            <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick match?</p>
-            <p className="text-xs mb-4 mono-muted-text">
-              {pendingDelete.entry.team1} vs {pendingDelete.entry.team2} will be removed from History.
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="mono-btn flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => setPendingDelete(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="mono-btn mono-btn-danger flex-1"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={completeDeleteQuickMatch}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        )}
-
-        {pendingDelete?.deleted && (
-          <button
-            type="button"
-            className="mono-btn mb-4 w-full"
-            style={{ minHeight: 44, padding: '10px' }}
-            onClick={undoDeleteQuickMatch}
-          >
-            Undo delete
-          </button>
-        )}
-
-        <section className="mb-6">
-          <label htmlFor="history-search" className="font-mono block mb-2" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
-            Find match
-          </label>
-          <input
-            id="history-search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="mono-input w-full mb-3"
-            style={{ minHeight: 44 }}
-            placeholder="Search team, sport, winner, tournament..."
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowFilters(value => !value)}
-            aria-expanded={showFilters}
-            className="bg-transparent border-none cursor-pointer font-mono"
-            style={{ padding: '10px 0', minHeight: 44, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)' }}
-          >
-            Filters <span aria-hidden="true">{showFilters ? '−' : '+'}</span>
-          </button>
-
-          {showFilters && (
-            <div className="mono-filter-panel" style={{ paddingTop: 4 }}>
-              {/* Progressive filtering: pick a dimension, then its options open. */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {[
-                  { id: 'sport', label: 'Sport', value: sportFilter === ANY_SPORT ? null : sportFilter },
-                  { id: 'result', label: 'Result', value: RESULT_LABELS[resultFilter] || null },
-                  { id: 'sort', label: 'Sort', value: sortOrder === SORT_OLDEST ? 'Oldest' : 'Newest' },
-                ].map((dimension) => {
-                  const open = openFilterSection === dimension.id;
-                  const engaged = open || Boolean(dimension.value);
-                  return (
-                    <button
-                      key={dimension.id}
-                      type="button"
-                      aria-label={dimension.label}
-                      aria-expanded={open}
-                      onClick={() => setOpenFilterSection(open ? null : dimension.id)}
-                      className="font-mono cursor-pointer"
-                      style={{
-                        minHeight: 40,
-                        padding: '8px 14px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                        border: engaged ? '1px solid var(--primary)' : '1px solid color-mix(in oklch, var(--border) 22%, transparent)',
-                        borderRadius: 'var(--radius)',
-                        background: engaged ? 'var(--accent)' : 'transparent',
-                        color: engaged ? 'var(--accent-foreground)' : 'var(--se-color-ink-soft)',
-                        transition: 'background 150ms ease, border-color 150ms ease, color 150ms ease',
-                      }}
-                    >
-                      {dimension.label}{dimension.value ? ` · ${dimension.value}` : ''} <span aria-hidden="true">{open ? '−' : '+'}</span>
-                    </button>
-                  );
-                })}
+              <div className="kit-chips" role="group" aria-label="Filter by sport" style={{ marginTop: 14 }}>
+                <FilterChip label="All" pressed={sportFilter === ANY_SPORT} onClick={() => setSportFilter(ANY_SPORT)} />
+                {sportChips.map((sport) => (
+                  <FilterChip
+                    key={sport.id}
+                    label={sport.name}
+                    sportId={sport.id}
+                    pressed={sportFilter === sport.name}
+                    onClick={() => setSportFilter(sportFilter === sport.name ? ANY_SPORT : sport.name)}
+                  />
+                ))}
               </div>
 
-              {openFilterSection === 'sport' && (
-                <OptionChips
-                  label="Sport options"
-                  options={ALL_SPORT_OPTIONS}
-                  selected={sportFilter}
-                  onPick={(value) => {
-                    setSportFilter(value === sportFilter ? ANY_SPORT : value);
-                    setOpenFilterSection(null);
-                  }}
+              <div className="kit-findbar">
+                <label htmlFor="history-search" className="sr-only">Find match</label>
+                <input
+                  id="history-search"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="kit-search"
+                  placeholder="Search matches"
                 />
-              )}
-              {openFilterSection === 'result' && (
-                <OptionChips
-                  label="Result options"
-                  options={[
-                    { value: RESULT_DECIDED, label: 'Decided' },
-                    { value: RESULT_DRAW, label: 'Draws' },
-                    { value: RESULT_CLOSE, label: 'Close' },
-                  ]}
-                  selected={resultFilter}
-                  onPick={(value) => {
-                    setResultFilter(value === resultFilter ? RESULT_ALL : value);
-                    setOpenFilterSection(null);
-                  }}
-                />
-              )}
-              {openFilterSection === 'sort' && (
-                <OptionChips
-                  label="Sort options"
-                  options={[
-                    { value: SORT_NEWEST, label: 'Newest' },
-                    { value: SORT_OLDEST, label: 'Oldest' },
-                  ]}
-                  selected={sortOrder}
-                  onPick={(value) => {
-                    setSortOrder(value);
-                    setOpenFilterSection(null);
-                  }}
-                />
-              )}
-            </div>
-          )}
-
-          {hasActiveDiscoveryFilter && filteredEntries.length > 0 && (
-            <button
-              type="button"
-              className="mono-btn w-full mt-3"
-              style={{ minHeight: 44, padding: '10px' }}
-              onClick={resetDiscoveryFilters}
-            >
-              Clear filters
-            </button>
-          )}
-        </section>
-
-        {filteredEntries.length === 0 ? (
-          <section className="mono-history-section text-center" style={{ padding: '28px 18px' }}>
-            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
-              {totalCount === 0 ? 'No match history yet' : 'No matches found'}
-            </p>
-            <p className="text-xs mb-5 mono-muted-text">
-              {totalCount === 0
-                ? 'Completed quick matches and tournaments will appear here.'
-                : 'Try a different search, sport, result, or date filter.'}
-            </p>
-            {totalCount > 0 && (
-              <button
-                type="button"
-                className="mono-btn w-full mb-2"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={resetDiscoveryFilters}
-              >
-                Clear filters
-              </button>
-            )}
-            <button
-              type="button"
-              className="mono-btn-primary w-full"
-              style={{ minHeight: 44, padding: '10px' }}
-              onClick={() => navigate('/play')}
-            >
-              Choose a sport
-            </button>
-          </section>
-        ) : (
-          <>
-            <p className="font-mono" style={{ margin: '0 0 2px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
-              {filter === 'quick' ? 'Quick matches' : filter === 'tournament' ? 'Tournament matches' : 'All matches'}
-            </p>
-            <div className="mono-history-list flex flex-col">
-            {filteredEntries.map((entry, entryIndex) => (
-              <div
-                key={entry.id}
-                className="mono-history-row mono-history-row-enter"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '12px 0',
-                  borderBottom: entryIndex < filteredEntries.length - 1 ? '1px solid color-mix(in oklch, var(--border) 14%, transparent)' : 'none',
-                  animationDelay: `${Math.min(entryIndex, 8) * 45}ms`,
-                }}
-              >
                 <button
                   type="button"
-                  className="flex-1 bg-transparent border-none text-left cursor-pointer"
-                  style={{ padding: 0, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12 }}
-                  onClick={() => setSelectedEntry(entry)}
-                  aria-label={`View details: ${entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`}`}
+                  className="se-ctl"
+                  aria-expanded={showFilters}
+                  aria-controls="history-filters"
+                  onClick={() => setShowFilters((value) => !value)}
                 >
-                  <SportIcon name={entry.sportName} size={18} color="var(--se-color-ink-muted)" />
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span className="block text-sm" style={{ color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {entry.isLegacy ? (
-                        <span style={{ fontWeight: 600 }}>{entry.tournamentName}</span>
-                      ) : (
-                        <>
-                          <span style={{ fontWeight: entry.winner === entry.team1 ? 800 : 500 }}>{entry.team1}</span>
-                          <span style={{ color: 'var(--muted-foreground)' }}> vs </span>
-                          <span style={{ fontWeight: entry.winner === entry.team2 ? 800 : 500 }}>{entry.team2}</span>
-                        </>
-                      )}
-                    </span>
-                    <span className="block text-xs" style={{ marginTop: 2, color: 'var(--muted-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {[
-                        winnerLabel(entry.winner),
-                        entry.sportName,
-                        entry.source === 'quick' ? 'Quick' : 'Tournament',
-                        entry.isLegacy ? entry.participants : entry.tournamentName,
-                        formatDate(entry.date),
-                        entry.elapsedSeconds > 0 ? formatElapsed(entry.elapsedSeconds) : null,
-                      ].filter(Boolean).join(' · ')}
-                    </span>
-                  </span>
-                  <span className="font-mono" style={{ flexShrink: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--foreground)', fontVariantNumeric: 'tabular-nums' }}>
-                    {entry.score}
-                  </span>
+                  {panelFilterCount > 0 ? `Filters · ${panelFilterCount}` : 'Filters'}
                 </button>
-
-                {entry.source === 'quick' && (
-                  <button
-                    onClick={() => {
-                      confirmDeleteQuickMatch(entry);
-                    }}
-                    className="mono-icon-button text-sm"
-                    style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px', flexShrink: 0 }}
-                    title="Delete this match"
-                    aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
-                  >
-                    &times;
-                  </button>
-                )}
               </div>
-            ))}
-            </div>
-          </>
-        )}
 
+              {showFilters && (
+                <div id="history-filters" className="kit-card kit-filter-panel">
+                  <ChipGroup title="Match type" options={typeOptions} selected={filter} onPick={setFilter} />
+                  <ChipGroup title="Result" options={resultOptions} selected={resultFilter} onPick={setResultFilter} />
+                  <ChipGroup title="Sort" options={sortOptions} selected={sortOrder} onPick={setSortOrder} />
+                </div>
+              )}
+
+              {hasActiveDiscoveryFilter && filteredEntries.length > 0 && (
+                <div style={{ marginTop: 4, textAlign: 'right' }}>
+                  <button type="button" className="kit-quiet kit-clear" onClick={resetDiscoveryFilters}>Clear filters</button>
+                </div>
+              )}
+
+              {filteredEntries.length === 0 ? (
+                <section className="kit-card kit-empty" aria-labelledby="history-none-title">
+                  <h2 id="history-none-title">No matches found</h2>
+                  <p>Try a different search, sport, result, or date filter.</p>
+                  <div className="kit-btnstack">
+                    <button type="button" className="se-ctl" onClick={resetDiscoveryFilters}>Clear filters</button>
+                    <button type="button" className="se-ctl" onClick={() => navigate('/play')}>Choose a sport</button>
+                  </div>
+                </section>
+              ) : (
+                groups.map((group) => (
+                  <section key={group.key} aria-labelledby={`history-month-${group.key}`}>
+                    <KitSection
+                      id={`history-month-${group.key}`}
+                      title={group.label}
+                      aside={<span>{group.entries.length === 1 ? '1 match' : `${group.entries.length} matches`}</span>}
+                    />
+                    <div className="kit-list">
+                      {group.entries.map((entry) => (
+                        <HistoryRow key={entry.id} entry={entry} onOpen={() => setSelectedEntry(entry)} />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              )}
+
+              {clearableCount > 0 && (
+                pendingClear && !pendingClear.cleared ? (
+                  <div className="kit-card kit-confirm">
+                    <p>Clear local history?</p>
+                    <p>Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.</p>
+                    <div className="kit-btnrow">
+                      <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={() => setPendingClear(null)}>Cancel</button>
+                      <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={clearMutableHistory}>Clear</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 14, textAlign: 'center' }}>
+                    <button type="button" className="kit-quiet" onClick={confirmClearMutableHistory}>Clear local history</button>
+                  </div>
+                )
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      <MonoSheet open={Boolean(selectedEntry)} onClose={closeDetails} title="Match details">
         {selectedEntry && (
-          <div className="mono-table-panel mono-history-detail mt-6" style={{ padding: '16px' }}>
-            <p className="font-mono mb-2" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Match details</p>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: '#111' }}>
-              {selectedEntry.isLegacy ? selectedEntry.tournamentName : `${selectedEntry.team1} vs ${selectedEntry.team2}`}
-            </h2>
-            <p className="text-sm font-mono mb-4" style={{ color: '#111' }}>
-              {selectedEntry.score} - {winnerLabel(selectedEntry.winner)}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) && (
-                <button
-                  type="button"
-                  className="mono-btn-primary"
-                  style={{ minHeight: 44, padding: '10px' }}
-                  onClick={() => rematchEntry(selectedEntry)}
-                >
-                  Rematch
-                </button>
-              )}
-              <button
-                type="button"
-                className="mono-btn"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => shareEntry(selectedEntry)}
-              >
-                Share
-              </button>
-              <button
-                type="button"
-                className="mono-btn"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={() => setSelectedEntry(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
+          <MatchDetails
+            entry={selectedEntry}
+            confirmingDelete={Boolean(pendingDelete && !pendingDelete.deleted && pendingDelete.entry.id === selectedEntry.id)}
+            onRematch={selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) ? () => rematchEntry(selectedEntry) : null}
+            onShare={() => shareEntry(selectedEntry)}
+            onDelete={selectedEntry.source === 'quick' ? () => confirmDeleteQuickMatch(selectedEntry) : null}
+            onConfirmDelete={completeDeleteQuickMatch}
+            onCancelDelete={() => setPendingDelete(null)}
+            onClose={closeDetails}
+          />
         )}
+      </MonoSheet>
+
+      {(historyStatus || undo) && (
+        <div className="kit-toast">
+          <span role="status" aria-live="polite">{historyStatus}</span>
+          {undo && <button type="button" onClick={undo.onClick}>{undo.label}</button>}
         </div>
-        )}
+      )}
+    </div>
+  );
+}
+
+/* The month card: the newest month in the list, its total, and one stack bar whose segments and
+   legend are the same per-sport counts as that month's rows below (they always sum to the list). */
+function MonthCard({ summary }) {
+  const sportsLabel = summary.sports.length === 1 ? '1 sport' : `${summary.sports.length} sports`;
+  return (
+    <section className="kit-card" aria-labelledby="history-month-card" style={{ marginTop: 14 }}>
+      <div className="kit-month-head">
+        <h2 id="history-month-card">{summary.label}</h2>
+        <span>{sportsLabel}</span>
+      </div>
+      <p className="kit-month-total" style={{ margin: '4px 0 0' }}>
+        <b>{summary.total}</b> {summary.total === 1 ? 'match scored' : 'matches scored'}
+      </p>
+      <div className="kit-stack" aria-hidden="true">
+        {summary.sports.map((sport) => (
+          <i key={sport.id} style={{ ...sportIdentityVars(sport.id), flex: sport.count }} />
+        ))}
+      </div>
+      <ul className="kit-legend" aria-label={`${summary.label} by sport`}>
+        {summary.sports.map((sport) => (
+          <li key={sport.id} style={sportIdentityVars(sport.id)}>
+            <i aria-hidden="true" />
+            {sport.name} <b>{sport.count}</b>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+MonthCard.propTypes = {
+  summary: PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    total: PropTypes.number.isRequired,
+    sports: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      count: PropTypes.number.isRequired,
+    })).isRequired,
+  }).isRequired,
+};
+
+function ChipGroup({ title, options, selected, onPick }) {
+  return (
+    <div>
+      <h3>{title}</h3>
+      <div className="kit-chips kit-chips-wrap" role="group" aria-label={title}>
+        {options.map((option) => (
+          <FilterChip
+            key={option.value}
+            label={option.label}
+            count={option.count}
+            pressed={selected === option.value}
+            onClick={() => onPick(option.value)}
+          />
+        ))}
       </div>
     </div>
   );
 }
+ChipGroup.propTypes = {
+  title: PropTypes.string.isRequired,
+  selected: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    count: PropTypes.number,
+  })).isRequired,
+  onPick: PropTypes.func.isRequired,
+};
+
+function entryTitle(entry) {
+  if (entry.isLegacy) return entry.tournamentName;
+  const side = winnerSide(entry);
+  return (
+    <>
+      {side === 'a' ? <strong>{entry.team1}</strong> : entry.team1} v {side === 'b' ? <strong>{entry.team2}</strong> : entry.team2}
+    </>
+  );
+}
+
+function entryLabel(entry) {
+  return entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`;
+}
+
+/* A History row, the S1 Home row: the doodle badge, the winner bold (draws plain), the sport and
+   day, the score in numerals. The whole row opens the match. */
+function HistoryRow({ entry, onOpen }) {
+  const score = displayScore(entry.score);
+  const context = entry.source === 'quick' ? null : (entry.isLegacy ? entry.participants : entry.tournamentName);
+  return (
+    <button type="button" className="kit-row" onClick={onOpen} aria-label={`View details: ${entryLabel(entry)}`}>
+      <SportBadge sportId={entry.sport} />
+      <span className="kit-row-text">
+        <span className="kit-row-title">{entryTitle(entry)}</span>
+        <span className="kit-row-sub">
+          {[entry.sportName, context, relativeDay(toTimestamp(entry.date) || null)].filter(Boolean).join(' · ')}
+        </span>
+      </span>
+      <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>
+      <Chevron />
+    </button>
+  );
+}
+HistoryRow.propTypes = {
+  entry: PropTypes.object.isRequired,
+  onOpen: PropTypes.func.isRequired,
+};
+
+function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, onConfirmDelete, onCancelDelete, onClose }) {
+  const side = winnerSide(entry);
+  const colours = entry.colours ? teamColourVars(deriveTeamColours(entry.colours[0], entry.colours[1])) : null;
+  const meta = [
+    entry.sportName,
+    entry.source === 'quick' ? 'Quick match' : 'Tournament',
+    entry.isLegacy ? entry.participants : entry.tournamentName,
+    formatDate(entry.date),
+    entry.elapsedSeconds > 0 ? formatElapsed(entry.elapsedSeconds) : null,
+  ].filter(Boolean).join(' · ');
+
+  if (confirmingDelete) {
+    return (
+      <div className="kit-confirm" style={{ marginTop: 0 }}>
+        <p>Delete this quick match?</p>
+        <p>{entry.team1} vs {entry.team2} will be removed from History.</p>
+        <div className="kit-btnrow">
+          <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={onCancelDelete}>Cancel</button>
+          <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={onConfirmDelete}>Delete</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="kit-detail" style={colours || undefined}>
+      <p className="kit-detail-meta">{meta}</p>
+      {entry.isLegacy ? (
+        <p className="kit-row-title" style={{ margin: '0 0 8px', fontSize: '1.05rem' }}>{entry.tournamentName}</p>
+      ) : (
+        <div className="kit-detail-teams" aria-label={entryLabel(entry)} role="group">
+          {[['a', entry.team1], ['b', entry.team2]].map(([key, name]) => (
+            <div key={key} className={`kit-detail-team${side === key ? ' is-winner' : ''}`}>
+              {colours && <i className={`kit-last-bar kit-last-bar-${key}`} aria-hidden="true" />}
+              <span>{name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="kit-detail-result">
+        {displayScore(entry.score)}
+        <span className="kit-row-sub" style={{ display: 'inline', marginLeft: 10, fontFamily: 'var(--se-font-sans)' }}>{winnerLabel(entry.winner)}</span>
+      </p>
+      <div className="kit-btnstack">
+        {onRematch && <button type="button" className="se-go" onClick={onRematch}>Rematch <GoArrow /></button>}
+        <div className="kit-btnrow">
+          <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={onShare}>Share</button>
+          {onDelete && (
+            <button
+              type="button"
+              className="se-ctl kit-danger"
+              style={{ flex: 1 }}
+              aria-label={`Delete match ${entry.team1} vs ${entry.team2}`}
+              onClick={onDelete}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+        <button type="button" className="se-ctl" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+MatchDetails.propTypes = {
+  entry: PropTypes.object.isRequired,
+  confirmingDelete: PropTypes.bool.isRequired,
+  onRematch: PropTypes.func,
+  onShare: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
+  onConfirmDelete: PropTypes.func.isRequired,
+  onCancelDelete: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
 

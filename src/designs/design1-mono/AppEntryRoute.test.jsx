@@ -45,6 +45,10 @@ vi.mock('./MonoQuickMatch', () => ({
   default: () => <p>Quick match setup</p>,
 }));
 
+vi.mock('./MonoLogin', () => ({
+  default: () => <p>Login screen</p>,
+}));
+
 vi.mock('./MonoProfile', () => ({
   default: () => <p>Profile screen</p>,
 }));
@@ -323,6 +327,23 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
     });
     expect(screen.getByText('Profile screen')).toBeInTheDocument();
+  });
+
+  it('labels the fourth tab Sign in for a cloud guest on History and sends it to sign-in', async () => {
+    authState = { ...authState, authMode: 'cloud', cloudAuthAvailable: true, isAuthenticated: false };
+    const { container } = renderApp('/history');
+
+    expect(await screen.findByRole('heading', { name: 'No match history yet' })).toBeInTheDocument();
+    const appNav = container.querySelector('.global-bottom-nav');
+    const tabs = within(appNav).getAllByRole('button', { hidden: true });
+    expect(tabs.map((tab) => tab.textContent.trim())).toEqual(['Home', 'Play', 'History', 'Sign in']);
+    expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toHaveAttribute('aria-current', 'page');
+
+    fireEvent.click(within(appNav).getByRole('button', { name: 'Sign in', hidden: true }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/login');
+    });
+    expect(await screen.findByText('Login screen')).toBeInTheDocument();
   });
 
   it('gives the brand button an accessible label without leaking the line break', async () => {

@@ -2,6 +2,7 @@
 // the 48px stepper and the matchup preview. Colour comes only from --se-color-* tokens and engine
 // output (--team-a-*, --team-b-* from teamColour.js via useTeamColours), so dark mode is a token swap.
 import PropTypes from 'prop-types';
+import './kit.css';
 import './setup.css';
 
 /**
