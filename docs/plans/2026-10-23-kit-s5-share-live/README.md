@@ -25,7 +25,7 @@ Every PNG was decoded and checked for exact dimensions: 390×844 or 360×640. `r
 - [x] Copied: real copy handler with local clipboard mock shows Copied ✓. Screenshot; fake-clock test proves the 1600ms flash and reset on re-copy. Existing native/web-share/clipboard-fallback/cancellation tests retain their intent.
 - [x] Copy failed: rejected clipboard mock shows the original long-press note. Screenshot; missing Clipboard API regression remains green.
 - [x] Stop sharing: sheet calls the bar's existing private-visibility handler, closes, and returns to the Go offer. Screenshot plus callback/visibility tests. Existing re-publish path is unchanged.
-- [x] Reverse/close paths: Done, backdrop and Escape close; focus enters on Done and returns to Share. Tab wraps at both ends. A regression nests the real bar in `MonoSheet` and verifies Escape closes only Share.
+- [x] Reverse/close paths: Done, backdrop and Escape close; focus enters on Done and returns to Share, including activation while another element held focus. Tab wraps at both ends. A regression nests the real bar in `MonoSheet` and verifies Escape closes only Share.
 - [x] Loading/offline/empty: unresolved auth and no backend render no sharing controls; private state offers Go. Screenshots and existing tests.
 - [x] No horizontal scroll at 390×844 or 360×640; all new controls are at least 48×48. The copy-error sheet still fits vertically at 360×640.
 - [x] Scorer Live is green and includes words. No spectator or scorebug file changed.

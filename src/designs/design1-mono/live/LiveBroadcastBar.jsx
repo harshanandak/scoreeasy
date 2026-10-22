@@ -139,7 +139,10 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
         </span>
         <button
           type="button"
-          onClick={() => setShareOpen(true)}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            setShareOpen(true);
+          }}
           className="se-ctl kit-live-share"
           disabled={!broadcast.token}
         >

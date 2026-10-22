@@ -246,7 +246,6 @@ describe('Kit live controls', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     renderBar({ broadcast: makeBroadcast({ isLive: true, token: 'TOK' }), descriptor, enabled: true, onEnableChange: vi.fn() });
     const share = screen.getByRole('button', { name: 'Share' });
-    share.focus();
     fireEvent.click(share);
     expect(screen.getByRole('button', { name: 'Done' })).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
