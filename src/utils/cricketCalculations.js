@@ -242,6 +242,28 @@ export function getTestMatchResult(innings, team1Id, team2Id, maxWickets) {
   return { winner: null, desc: '' };
 }
 
+export function isTestInningsComplete(innings, format) {
+  return Boolean(innings && (innings.allOut || innings.declared ||
+    innings.wickets >= getMaxWickets(format) || innings.balls >= getTotalBalls(format)));
+}
+
+// Unlike a score comparison, this also establishes that play has actually ended.
+// Hydration and a live delivery must make the same terminal/pending decision.
+export function getTestMatchCompletion(innings, currentInningsIndex, team1Id, team2Id, format, declaredResult = null) {
+  if (declaredResult?.winner) return declaredResult;
+  if (innings?.length !== 4 || currentInningsIndex < 2) return null;
+  const current = innings[currentInningsIndex];
+  if (!current) return null;
+  const total = (teamId) => innings.filter(inn => inn.teamId === teamId).reduce((sum, inn) => sum + (inn.runs || 0), 0);
+  const opponent = current.teamId === team1Id ? team2Id : team1Id;
+  const ended = isTestInningsComplete(current, format);
+  const chaseWon = currentInningsIndex === 3 && total(current.teamId) > total(opponent);
+  const inningsWin = currentInningsIndex === 2 && ended && total(innings[3].teamId) > total(current.teamId);
+  if (!chaseWon && !inningsWin && !(currentInningsIndex === 3 && ended)) return null;
+  if (total(team1Id) === total(team2Id)) return { winner: 'tie', desc: 'Match Tied' };
+  return getTestMatchResult(innings, team1Id, team2Id, getMaxWickets(format));
+}
+
 /**
  * Get limited overs match result description
  */

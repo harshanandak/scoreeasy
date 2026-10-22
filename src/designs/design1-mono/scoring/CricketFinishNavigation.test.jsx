@@ -59,6 +59,30 @@ beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
 describe('cricket finish navigation', () => {
+  it.each(['test-tournament', 'test-quick'])('%s restores a persisted draw as terminal after refreshing before Return', async (kind) => {
+    seed(kind);
+    const complete = vi.fn();
+    const first = renderScorer(kind, complete);
+    fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'End as draw' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End as draw' }));
+    expect(await screen.findByText('Match Drawn')).toBeInTheDocument();
+    const key = kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
+    const finished = JSON.parse(localStorage.getItem(key));
+    const match = kind === 'test-quick' ? finished[0] : finished[0].matches[0];
+    expect(match).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw' });
+    expect(match.draftState).toBeUndefined();
+    first.unmount();
+    renderScorer(kind, complete);
+    expect(await screen.findByText('Match Drawn')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
+    fireEvent.keyDown(globalThis, { key: '4' });
+    expect(JSON.parse(localStorage.getItem(key))).toEqual(finished);
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Return' }));
+    expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath);
+    expect(JSON.parse(localStorage.getItem(key))).toEqual(finished);
+  });
+
   it.each(cases)('%s exits through protected completion after saving the result', async (kind) => {
     seed(kind);
     const complete = vi.fn();

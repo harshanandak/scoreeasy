@@ -40,6 +40,7 @@ vi.mock('../../lib/live/liveSession', () => ({
 }));
 vi.mock('../../utils/storage', () => ({
   loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+  loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),
   clearData: storageMock.clearData,
   saveQuickMatch: storageMock.saveQuickMatch,

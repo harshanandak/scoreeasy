@@ -1715,7 +1715,7 @@ export default function Design1Mono() {
     };
   }, [location.pathname, location.search, navigate, requestScoringExit]);
 
-  // Finish a protected scorer: land on the FULL-TIME result screen while unwinding
+  // Finish a protected scorer: land on its destination while unwinding
   // the scorer entry AND its protection guard entries, so Back from Result returns
   // to the pre-scorer route rather than the frozen, completed scorer (PR #128).
   // Reuses the guard's history bookkeeping + one-shot pop allowance, so no exit
@@ -1728,8 +1728,8 @@ export default function Design1Mono() {
       noPriorRouteIndex: NO_PRIOR_ROUTE_INDEX,
     });
 
-    // shouldUnwind: pop `backDelta` back to the pre-scorer route, then PUSH
-    // Result (Back -> pre-scorer route). Otherwise (deep link / reload — the
+    // shouldUnwind: pop `backDelta` back to the pre-scorer route, then push a
+    // distinct result or reuse the destination entry. Otherwise (deep link / reload — the
     // scorer is the first entry) pop `backDelta` guard entries to land back on
     // the scorer, then REPLACE the scorer entry with Result so Back exits rather
     // than returning to the dead, completed scorer.
@@ -1749,10 +1749,10 @@ export default function Design1Mono() {
       settled = true;
       if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
       globalThis.removeEventListener('popstate', onUnwound);
-      // Pop landed: sit on the target entry, then push (unwind) or replace
-      // (deep-link fallback) per plan. If the pop never landed, replace the
-      // current entry so the completed scorer is never left reachable.
-      navigate(resultPath, (replaceAtEnd || !popLanded) ? { replace: true } : undefined);
+      // Tournament completion can land on its destination while unwinding.
+      // Reuse that entry; pushing it again makes the first Back a no-op.
+      const landedOnResult = `${globalThis.location.pathname}${globalThis.location.search}${globalThis.location.hash}` === resultPath;
+      navigate(resultPath, (replaceAtEnd || !popLanded || landedOnResult) ? { replace: true } : undefined);
     };
     const onUnwound = () => finish(true);
     globalThis.addEventListener('popstate', onUnwound, { once: true });

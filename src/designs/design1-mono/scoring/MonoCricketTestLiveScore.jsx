@@ -1,10 +1,11 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
-import { ballsToOvers, calculateRunRate, getMaxWickets, getTotalBalls, canEnforceFollowOn, getTestMatchResult } from '../../../utils/cricketCalculations';
+import { ballsToOvers, calculateRunRate, getMaxWickets, canEnforceFollowOn, getTestMatchCompletion, isTestInningsComplete } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
@@ -66,8 +67,10 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [currentInningsIndex, setCurrentInningsIndex] = useState(0);
   const [followOnEnforced, setFollowOnEnforced] = useState(false);
   const [followOnPrompt, setFollowOnPrompt] = useState(false);
-  const [matchComplete, setMatchComplete] = useState(false);
-  const [matchResult, setMatchResult] = useState(null);
+  const [terminalSnapshot, setTerminalSnapshot] = useState(null);
+  const terminalSnapshotRef = useRef(null);
+  const matchComplete = Boolean(terminalSnapshot);
+  const matchResult = terminalSnapshot?.result;
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -86,7 +89,27 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const [saveWarning, setSaveWarning] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [showCard, setShowCard] = useState(false);
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
+
+  const inningsRef = useRef(innings);
+  inningsRef.current = innings;
+  const stageCompletion = (next, result) => {
+    // Result persistence and failed-save recovery own this same settled snapshot.
+    const snapshot = structuredClone({ innings: next, currentInningsIndex, followOnEnforced, result, autoSave: true });
+    completion.lock();
+    terminalSnapshotRef.current = snapshot;
+    setTerminalSnapshot(snapshot);
+  };
+  const commitInnings = (update, advance = false) => {
+    if (completion.locked || terminalSnapshotRef.current) return;
+    const next = typeof update === 'function' ? update(inningsRef.current) : update;
+    const result = advance ? getTestMatchCompletion(next, currentInningsIndex, match?.team1Id, match?.team2Id, format) : null;
+    if (result) stageCompletion(next, result);
+    else if (advance && isTestInningsComplete(next[currentInningsIndex], format)) advanceInnings(next);
+    inningsRef.current = next;
+    setInnings(next);
+  };
 
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
@@ -110,71 +133,58 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Load match data
   useEffect(() => {
+    let loaded;
+    let found = null;
+    isKnockoutRef.current = false;
     if (isQuickMatch) {
-      const qm = loadQuickMatch(matchId);
-      if (!qm) return;
-      setMatch(qm);
-      const fmt = migrateCricketFormat(qm.format);
-      setFormat(fmt);
-
-      // Initialize innings team assignments
-      const initInnings = [
-        { teamId: qm.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-      ];
-
-      if (qm.draftState) {
-        setInnings(qm.draftState.innings);
-        setCurrentInningsIndex(qm.draftState.currentInningsIndex);
-        setFollowOnEnforced(qm.draftState.followOnEnforced || false);
-        setHistory(qm.draftState.history || []);
-      } else if (qm.innings && qm.innings.length === 4) {
-        setInnings(qm.innings);
-      } else {
-        setInnings(initInnings);
-      }
+      loaded = loadQuickMatch(matchId);
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const tournaments = loadSportTournaments(storageKey);
-      const found = tournaments.find(t => t.id === Number(id) || t.id === id);
+      found = tournaments.find(t => t.id === Number(id) || t.id === id);
       if (!found) return;
-      let foundMatch = found.matches.find(m => m.id === matchId || m.id === Number(matchId));
-      if (!foundMatch) {
-        foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId || m.id === Number(matchId));
-        if (foundMatch) isKnockoutRef.current = true;
-      }
-      if (!foundMatch) return;
-
-      setTournament(found);
-      setMatch(foundMatch);
-      const fmt = migrateCricketFormat(foundMatch.format || (isKnockoutRef.current && found.knockoutConfig?.format) || found.format);
-      setFormat(fmt);
-
-      const initInnings = [
-        { teamId: foundMatch.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-      ];
-
-      if (foundMatch.draftState) {
-        setInnings(foundMatch.draftState.innings);
-        setCurrentInningsIndex(foundMatch.draftState.currentInningsIndex);
-        setFollowOnEnforced(foundMatch.draftState.followOnEnforced || false);
-        setHistory(foundMatch.draftState.history || []);
-      } else if (foundMatch.innings && foundMatch.innings.length === 4) {
-        setInnings(foundMatch.innings);
-      } else {
-        setInnings(initInnings);
+      loaded = found.matches.find(m => m.id === matchId || m.id === Number(matchId));
+      if (!loaded) {
+        loaded = (found.knockoutMatches || []).find(m => m.id === matchId || m.id === Number(matchId));
+        isKnockoutRef.current = Boolean(loaded);
       }
     }
+    if (!loaded) return;
+
+    const committed = completion.hydrate(loaded, `${sport}:${storageMode || 'tournament'}:${id}:${matchId}`);
+    const draft = committed ? null : loaded.draftState;
+    const initInnings = [loaded.team1Id, loaded.team2Id, loaded.team1Id, loaded.team2Id]
+      .map(teamId => ({ teamId, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false }));
+    const restored = draft?.innings || (loaded.innings?.length === 4 ? loaded.innings : initInnings);
+    const lastPlayed = restored.reduce((last, inn, index) =>
+      inn.runs || inn.balls || inn.wickets || inn.allOut || inn.declared ? index : last, 0);
+    const winner = isQuickMatch && loaded.winner && loaded.winner === (loaded.team1Name || loaded.team1) ? loaded.team1Id
+      : isQuickMatch && loaded.winner && loaded.winner === (loaded.team2Name || loaded.team2) ? loaded.team2Id : loaded.winner;
+    const restoredFormat = migrateCricketFormat(loaded.format || (isKnockoutRef.current && found?.knockoutConfig?.format) || found?.format);
+    const restoredIndex = draft?.currentInningsIndex ?? loaded.currentInningsIndex ?? lastPlayed;
+    const restoredFollowOn = draft?.followOnEnforced ?? loaded.followOnEnforced ?? false;
+    const result = committed ? { winner, desc: loaded.winDesc || 'Match Complete' }
+      : getTestMatchCompletion(restored, restoredIndex, loaded.team1Id, loaded.team2Id, restoredFormat, draft?.result);
+    const snapshot = result ? structuredClone({ innings: restored, currentInningsIndex: restoredIndex,
+      followOnEnforced: restoredFollowOn, result, autoSave: false }) : null;
+    if (snapshot && !committed) completion.lock();
+    terminalSnapshotRef.current = snapshot;
+    setTerminalSnapshot(snapshot);
+    setSaveWarning(snapshot && !committed ? 'Result not saved. Save & Return to retry.' : '');
+
+    setTournament(found);
+    setMatch(loaded);
+    setFormat(restoredFormat);
+    // Hydration publishes the stored snapshot; scoring updates remain lock-checked.
+    inningsRef.current = restored;
+    setInnings(restored);
+    setCurrentInningsIndex(restoredIndex);
+    setFollowOnEnforced(restoredFollowOn);
+    setHistory(draft?.history || []);
   }, [id, matchId, sport, storageMode]);
 
   // Derived values
   const maxWickets = format ? getMaxWickets(format) : 10;
-  const totalBalls = format ? getTotalBalls(format) : Infinity;
   const currentInning = innings[currentInningsIndex];
 
   // Team name helper
@@ -222,12 +232,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   }, [innings, currentInningsIndex, team1Id, team2Id, team1Name, team2Name]);
 
-  // Finalize the broadcast once the match is decided (completion is detected by
-  // the existing result logic — we only react to it, never change it).
-  useEffect(() => {
-    if (matchComplete) liveRef.current.finalize();
-  }, [matchComplete]);
-
   // Totals
   const getTeamTotal = (teamId) => innings.filter(i => i.teamId === teamId).reduce((s, i) => s + (i.runs || 0), 0);
 
@@ -259,29 +263,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     setHasChanges(true);
   };
 
-  // Check for early result after scoring.
-  // Only the FINAL innings (index 3) ends the match the instant the batting side passes
-  // the opponent's aggregate (a chase). In the 3rd innings the batting side is usually
-  // already ahead on aggregate and is building a lead — it must NOT end the match there.
-  const checkResult = (updatedInnings) => {
-    if (currentInningsIndex < 3) return false;
-
-    const battingTeamId = updatedInnings[currentInningsIndex].teamId;
-    const bowlingTeamId = battingTeamId === team1Id ? team2Id : team1Id;
-    const battingTotal = updatedInnings.filter(i => i.teamId === battingTeamId).reduce((s, i) => s + i.runs, 0);
-    const bowlingTotal = updatedInnings.filter(i => i.teamId === bowlingTeamId).reduce((s, i) => s + i.runs, 0);
-
-    if (battingTotal > bowlingTotal) {
-      const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
-      setMatchResult(result);
-      setMatchComplete(true);
-      return true;
-    }
-    return false;
-  };
-
   // Advance to next innings
   const advanceInnings = (updatedInnings) => {
+    if (completion.locked) return;
     const nextIndex = currentInningsIndex + 1;
 
     // Check follow-on after innings 2
@@ -294,33 +278,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       }
     }
 
-    // End of the 3rd innings: if the side due to bat last already leads on aggregate
-    // (its total exceeds the opponent's across the opponent's extra innings — e.g. a
-    // follow-on win), it's an innings victory and the 4th innings is not played.
-    if (currentInningsIndex === 2) {
-      const lastBatTeamId = updatedInnings[3].teamId;
-      const lastBatTotal = updatedInnings
-        .filter(i => i.teamId === lastBatTeamId)
-        .reduce((s, i) => s + i.runs, 0);
-      const oppTotal = updatedInnings
-        .filter(i => i.teamId !== lastBatTeamId)
-        .reduce((s, i) => s + i.runs, 0);
-      if (lastBatTotal > oppTotal) {
-        const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
-        setMatchResult(result);
-        setMatchComplete(true);
-        return;
-      }
-    }
-
-    if (nextIndex >= 4) {
-      // All 4 innings done
-      const result = getTestMatchResult(updatedInnings, team1Id, team2Id, maxWickets);
-      setMatchResult(result);
-      setMatchComplete(true);
-      return;
-    }
-
     setCurrentInningsIndex(nextIndex);
   };
 
@@ -330,7 +287,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (enforce) {
       setFollowOnEnforced(true);
       // Swap team assignments for innings 3 & 4
-      setInnings(prev => {
+      commitInnings(prev => {
         const updated = [...prev];
         updated[2] = { ...updated[2], teamId: team2Id };
         updated[3] = { ...updated[3], teamId: team1Id };
@@ -355,24 +312,15 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.runs += runs;
       inn.balls += 1;
       updated[currentInningsIndex] = inn;
 
-      // Check balls exhausted (for formats with over limits)
-      if (inn.balls >= totalBalls) {
-        if (!checkResult(updated)) {
-          setTimeout(() => advanceInnings(updated), 300);
-        }
-      } else if (currentInningsIndex >= 2) {
-        checkResult(updated);
-      }
-
       return updated;
-    });
+    }, true);
   };
 
   // Add wicket
@@ -387,7 +335,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     broadcastIntentRef.current = { kind: 'point', team: innings[currentInningsIndex]?.teamId === team2Id ? 'B' : 'A', value: 0, at: Date.now() };
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.wickets += 1;
@@ -395,22 +343,10 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
       if (inn.wickets >= maxWickets) {
         inn.allOut = true;
-        updated[currentInningsIndex] = inn;
-        if (!checkResult(updated)) {
-          setTimeout(() => advanceInnings(updated), 300);
-        }
-      } else if (inn.balls >= totalBalls) {
-        updated[currentInningsIndex] = inn;
-        if (!checkResult(updated)) {
-          setTimeout(() => advanceInnings(updated), 300);
-        }
-      } else {
-        updated[currentInningsIndex] = inn;
-        if (currentInningsIndex >= 2) checkResult(updated);
       }
-
+      updated[currentInningsIndex] = inn;
       return updated;
-    });
+    }, true);
   };
 
   // Add extra
@@ -429,22 +365,15 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     // wides and no balls do not.
     const countsAsBall = type === 'bye' || type === 'legBye';
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       const inn = { ...updated[currentInningsIndex] };
       inn.runs += 1;
       if (countsAsBall) inn.balls += 1;
       updated[currentInningsIndex] = inn;
 
-      if (countsAsBall && inn.balls >= totalBalls) {
-        if (!checkResult(updated)) {
-          setTimeout(() => advanceInnings(updated), 300);
-        }
-      } else if (currentInningsIndex >= 2) {
-        checkResult(updated);
-      }
       return updated;
-    });
+    }, true);
   };
 
   // Declaration
@@ -463,14 +392,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const confirmDeclare = () => {
     saveSnapshot();
 
-    setInnings(prev => {
+    commitInnings(prev => {
       const updated = [...prev];
       updated[currentInningsIndex] = { ...updated[currentInningsIndex], declared: true };
-      if (!checkResult(updated)) {
-        setTimeout(() => advanceInnings(updated), 300);
-      }
       return updated;
-    });
+    }, true);
   };
 
   // Draw
@@ -486,16 +412,15 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const confirmDraw = () => {
-    setMatchResult({ winner: 'draw', desc: 'Match Drawn' });
-    setMatchComplete(true);
+    stageCompletion(inningsRef.current, { winner: 'draw', desc: 'Match Drawn' });
   };
 
   // Undo
   const undo = () => {
-    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
+    if (history.length === 0 || matchComplete || scoringPrompt.isInteractionLocked) return;
     broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
-    setInnings(last.innings);
+    commitInnings(last.innings);
     setCurrentInningsIndex(last.currentInningsIndex);
     setFollowOnEnforced(last.followOnEnforced);
     setHistory(prev => prev.slice(0, -1));
@@ -536,12 +461,12 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     scoringPrompt.scheduleDraftRedirect(() => navigateBack());
   };
 
-  // Save completed match
-  const saveCompleteMatch = () => {
-    if (scoringPrompt.isInteractionLocked) return;
-
-    const winner = matchResult?.winner || null;
-    const winDesc = matchResult?.desc || '';
+  // Persist the terminal state before finalizing its broadcast. In particular,
+  // the winning ball must survive a refresh on the result screen.
+  const persistCompleteMatch = () => {
+    const { innings, currentInningsIndex, followOnEnforced, result } = terminalSnapshotRef.current;
+    const winner = result.winner || null;
+    const winDesc = result.desc || '';
     const completedAt = new Date().toISOString();
     const team1Total = innings.filter(i => i.teamId === team1Id).reduce((s, i) => s + (i.runs || 0), 0);
     const team2Total = innings.filter(i => i.teamId === team2Id).reduce((s, i) => s + (i.runs || 0), 0);
@@ -557,6 +482,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         team1: team1Name,
         team2: team2Name,
         innings,
+        currentInningsIndex,
         score1: team1Total,
         score2: team2Total,
         winner: winnerLabel,
@@ -569,13 +495,14 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       });
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
+        return false;
       }
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
         ...m,
         innings,
+        currentInningsIndex,
         winner,
         winDesc,
         status: 'completed',
@@ -586,14 +513,28 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       const ok = saveSportTournament(storageKey, updatedTournament);
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
-        return;
+        return false;
       }
       saveTournamentToConvex(updatedTournament);
     }
 
     setSaveWarning('');
-    finishScoring();
+    liveRef.current.finalize();
+    return true;
   };
+
+  const saveCompleteMatch = () => {
+    if (scoringPrompt.pendingPrompt) return;
+    if (completion.committed) {
+      completion.leave(finishScoring);
+      return;
+    }
+    completion.complete(persistCompleteMatch, finishScoring);
+  };
+
+  useEffect(() => {
+    if (terminalSnapshot?.autoSave) completion.complete(persistCompleteMatch);
+  }, [terminalSnapshot]);
 
   const navigateBack = () => {
     if (isQuickMatch) {
@@ -604,6 +545,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const discardAndExit = () => {
+    if (completion.locked) return;
     if (isQuickMatch) {
       // Discarding a quick match throws it away — remove the record from
       // se_quickmatches entirely. Writing back a 'pending' shell would leave the
@@ -645,17 +587,23 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   };
 
-  const handleFinish = () => finishScoring();
+  const handleFinish = () => {
+    if (completion.locked) return;
+    finishScoring();
+  };
 
   // Continuous auto-save
   useEffect(() => {
-    if (!match || !format || matchComplete) return;
-    if (history.length === 0) return;
+    // A failed terminal save still needs the settled winning innings as a draft.
+    if (completion.committed || !match || !format) return;
+    if (history.length === 0 && !terminalSnapshot) return;
+    const settled = terminalSnapshot || { innings, currentInningsIndex, followOnEnforced };
     const draftState = {
-      innings: structuredClone(innings),
-      currentInningsIndex,
-      followOnEnforced,
+      innings: structuredClone(settled.innings),
+      currentInningsIndex: settled.currentInningsIndex,
+      followOnEnforced: settled.followOnEnforced,
       history: structuredClone(history.slice(-50)),
+      result: terminalSnapshot?.result,
       savedAt: new Date().toISOString(),
     };
     if (isQuickMatch) {
@@ -667,7 +615,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       }));
       saveSportTournament(storageKey, updatedTournament);
     }
-  }, [innings, currentInningsIndex, followOnEnforced]);
+  }, [innings, currentInningsIndex, followOnEnforced, terminalSnapshot]);
 
   const confirmPendingPrompt = () => {
     const promptType = scoringPrompt.pendingPrompt?.type;
@@ -714,8 +662,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   // Show Declare button: not in the last innings
   const showDeclare = currentInningsIndex < 3;
 
-  const isInningsOver = currentInning &&
-    (currentInning.allOut || currentInning.declared || currentInning.balls >= totalBalls);
+  const isInningsOver = isTestInningsComplete(currentInning, format);
 
   // Follow-on prompt UI
   if (followOnPrompt) {
@@ -810,9 +757,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           <div className="flex gap-3 justify-center">
             <button
               onClick={saveCompleteMatch}
-              disabled={scoringPrompt.isInteractionLocked}
+              disabled={Boolean(scoringPrompt.pendingPrompt)}
               className="mono-btn-primary"
-              style={{ padding: '12px 24px', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
+              style={{ padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
             >
               Save &amp; Return
             </button>
