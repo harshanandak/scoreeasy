@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { makeFormat } from '../../../utils/cricketEngine.js';
 import MonoCricketGuidedScorer from './MonoCricketGuidedScorer.jsx';
@@ -26,6 +26,24 @@ const addCustom = (dialogName, value) => {
 };
 
 describe('MonoCricketGuidedScorer — C6', () => {
+  it('freezes a completed innings against Undo and another delivery', () => {
+    vi.useFakeTimers();
+    try {
+      const onComplete = vi.fn();
+      const onStateChange = vi.fn();
+      renderScorer({ target: 1, onComplete, onStateChange });
+      tap('Single');
+      expect(onComplete).toHaveBeenCalledOnce();
+      const finalInnings = structuredClone(onComplete.mock.calls[0][0].innings);
+      const changes = onStateChange.mock.calls.length;
+      tap('Undo last ball');
+      tap('Four');
+      vi.advanceTimersByTime(350);
+      expect(onStateChange).toHaveBeenCalledTimes(changes);
+      expect(onComplete).toHaveBeenCalledOnce();
+      expect(onComplete.mock.calls[0][0].innings).toEqual(finalInnings);
+    } finally { vi.useRealTimers(); }
+  });
   it('wicket -> new-batter picker -> incoming replaces the struck-out striker', () => {
     renderScorer();
     tap('Wicket');

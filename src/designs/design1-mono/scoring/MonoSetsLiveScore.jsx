@@ -1,3 +1,4 @@
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
@@ -48,7 +49,8 @@ export default function MonoSetsLiveScore() {
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [saveWarning, setSaveWarning] = useState('');
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
   const isInteractionLocked = scoringPrompt.isInteractionLocked;
   const [servingTeam, setServingTeam] = useState(1);
   const [scoringMode, setScoringMode] = useState('rally');
@@ -121,6 +123,11 @@ export default function MonoSetsLiveScore() {
     }
     if (!foundMatch) { setLoadStatus('notfound'); return; }
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, () => {
+      const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
+      if (completeProtectedScoring) completeProtectedScoring(resultPath);
+      else navigate(resultPath, { replace: true });
+    })) return;
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
@@ -233,7 +240,7 @@ export default function MonoSetsLiveScore() {
 
   // Add point
   const addPoint = (team) => {
-    if (!sportConfig || !tournament || isInteractionLocked) return;
+    if (!sportConfig || !tournament || isInteractionLocked || completion.locked) return;
 
     // Debounce rapid clicks
     const now = Date.now();
@@ -335,7 +342,7 @@ export default function MonoSetsLiveScore() {
   // history so it is itself undoable, and never completes a set or rotates serve.
   // Mirrored to the broadcast as a value:-1 point so spectators stay in sync.
   const correctPoint = (team) => {
-    if (!sportConfig || !tournament || isInteractionLocked) return;
+    if (!sportConfig || !tournament || isInteractionLocked || completion.locked) return;
 
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
@@ -369,7 +376,7 @@ export default function MonoSetsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0 || isInteractionLocked) return;
+    if (history.length === 0 || isInteractionLocked || completion.locked) return;
 
     broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const last = history[history.length - 1];
@@ -443,6 +450,7 @@ export default function MonoSetsLiveScore() {
   // Save match and return
   const saveMatch = () => {
     if (isInteractionLocked) return;
+    if (completion.locked) return;
 
     // Save all sets that have any score (including in-progress)
     const setsToSave = sets
@@ -484,30 +492,32 @@ export default function MonoSetsLiveScore() {
       },
     }));
 
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    if (isMatchComplete) {
-      saveTournamentToConvex(updatedTournament);
-      live.finalize();
-      // Reference wiring (kernel 42f06561): a completed match lands on the
-      // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
-      // guard entry through the app-owned seam so Back from Result returns to the
-      // bracket, never the frozen completed scorer (PR #128). A plain replace only
-      // drops the guard entry, orphaning the scorer entry underneath.
-      const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
-      if (completeProtectedScoring) {
-        completeProtectedScoring(resultPath);
-      } else {
-        navigate(resultPath, { replace: true });
+    completion.complete(() => {
+      const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
+      if (!ok) {
+        setSaveWarning('Save failed - storage may be full. Export your data.');
+        return false;
       }
-      return;
-    }
+      setSaveWarning('');
+      if (isMatchComplete) {
+        saveTournamentToConvex(updatedTournament);
+        live.finalize();
+        // Reference wiring (kernel 42f06561): a completed match lands on the
+        // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
+        // guard entry through the app-owned seam so Back from Result returns to the
+        // bracket, never the frozen completed scorer (PR #128). A plain replace only
+        // drops the guard entry, orphaning the scorer entry underneath.
+        const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
+        if (completeProtectedScoring) {
+          completeProtectedScoring(resultPath);
+        } else {
+          navigate(resultPath, { replace: true });
+        }
+        return;
+      }
 
-    navigate(`/${sport}/tournament/${id}`);
+      navigate(`/${sport}/tournament/${id}`);
+    });
   };
 
   // Keyboard shortcuts (skip on touch-only devices)
@@ -516,6 +526,7 @@ export default function MonoSetsLiveScore() {
 
     const handleKeyPress = (e) => {
       if (isInteractionLocked) return;
+      if (completion.locked) return;
       // Ignore if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -541,6 +552,7 @@ export default function MonoSetsLiveScore() {
   // Discard the in-progress draft for this match (revert to its committed state),
   // then return to the bracket. Saving is automatic, so plain navigation keeps it.
   const discardAndExit = () => {
+    if (completion.locked) return;
     if (tournament && matchId) {
       const reverted = updateMatchInTournament(tournament, matchId, m => ({
         ...m,
@@ -627,10 +639,12 @@ export default function MonoSetsLiveScore() {
     : (isCurrentSetComplete ? 'Set complete' : 'Tap to score');
   const handleSwapSides = () => {
     if (isInteractionLocked) return;
+    if (completion.locked) return;
     setSidesSwapped(prev => !prev);
   };
   const handleToggleScoringMode = () => {
     if (isInteractionLocked) return;
+    if (completion.locked) return;
     const next = scoringMode === 'side-out' ? 'rally' : 'side-out';
     if (!availableScoringModes.includes(next)) return;
     setScoringMode(next);

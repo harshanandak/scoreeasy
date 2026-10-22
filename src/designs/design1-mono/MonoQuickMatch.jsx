@@ -1,3 +1,4 @@
+import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -6,7 +7,7 @@ import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
-import { clearData, saveData, loadData, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
+import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
 import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
 import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
@@ -385,6 +386,8 @@ export default function MonoQuickMatch() {
   const teamColourOn = isTeamColourSport(sport);
   const teamColourStyle = useTeamColours(team1Color, team2Color, sport);
   const [saveWarning, setSaveWarning] = useState('');
+  const completion = useMatchCompletion();
+  const cricketScoresRef = useRef(null);
 
   // The "resumed your match" info is a transient toast — auto-dismiss it shortly
   // after it appears. Real save errors / end-match validation messages are NOT
@@ -551,13 +554,19 @@ export default function MonoQuickMatch() {
     scoringSportRef.current = null;
 
     const draft = loadData(quickMatchDraftKey, null);
+    const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
+    if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${draft?.quickMatchId || 'setup'}`, () => {
+      clearData(quickMatchDraftKey);
+      navigate('/history', { replace: true });
+    })) return;
     if (isStaleQuickMatchDraft(draft)) {
       clearData(quickMatchDraftKey);
     }
 
     if (!draft || isStaleQuickMatchDraft(draft) || draft.sport !== sport || draft.phase !== 'scoring') {
-      if (previousSport && phase === 'scoring') {
+      if (previousSport && phase !== 'setup') {
         setPhase('setup');
+        setResult(null);
         timer.pause();
         setSaveWarning('');
       }
@@ -598,7 +607,8 @@ export default function MonoQuickMatch() {
   }, [quickMatchDraftKey, sport]);
 
   useEffect(() => {
-    if (phase !== 'scoring') return;
+    // A staged winner is still a draft until its terminal save succeeds.
+    if (completion.committed || phase !== 'scoring') return;
     if (scoringSportRef.current !== sport) return;
 
     saveData(quickMatchDraftKey, {
@@ -887,23 +897,27 @@ export default function MonoQuickMatch() {
     });
   };
 
-  const finalizeMatch = (entry) => {
+  const finalizeMatch = (entry) => completion.complete(() => {
     void endMatchImpact();
 
-    const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, entry.id);
+    const matchId = liveMatchIdRef.current || entry.id;
+    const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
     const nextResult = {
       ...entry,
+      id: matchId,
+      status: 'completed',
       clientMatchId,
       sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
     };
 
+    if (!persistQuickMatch(nextResult)) return false;
     setShowEndConfirm(false);
     setResult(nextResult);
-    const saved = persistQuickMatch(nextResult);
-    if (saved) clearData(quickMatchDraftKey);
+    clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
-  };
+    return true;
+  });
 
   const getTeamLabel = (team) => (team === 1 ? team1Name : team2Name);
 
@@ -1067,8 +1081,30 @@ export default function MonoQuickMatch() {
     setPhase('scoring');
   };
 
+  cricketScoresRef.current = scores;
+  const getCricketTransition = (candidate) => {
+    const key = battingTeam === 1 ? 'team1' : 'team2';
+    const team = candidate[key];
+    if (!team) return null;
+    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
+    const chaseTarget = battingTeam === 2 ? candidate.team1.runs : candidate.team2.runs;
+    if (innings === 1 && inningsOver) return 'break';
+    if (innings === 2 && (inningsOver || team.runs > chaseTarget)) return 'complete';
+    return null;
+  };
+
+  const commitCricketScores = (update) => {
+    if (completion.locked) return;
+    // Same-turn actions must share the latest score before React renders it.
+    const next = update(cricketScoresRef.current);
+    cricketScoresRef.current = next;
+    if (getCricketTransition(next) === 'complete') completion.lock();
+    setScores(next);
+  };
+
   // Cricket: Add runs
   const addRuns = (runs) => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -1082,18 +1118,14 @@ export default function MonoQuickMatch() {
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: runs, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'runs', key, value: runs, freeHit, innings, battingTeam }]);
 
-    // Pure updater: compute the new score only. Innings flip / match finish are
-    // handled by a single post-commit effect, so they read committed state and
-    // can't double-fire when React re-invokes the updater (StrictMode/batching).
-    setScores(prev => {
-      const team = { ...prev[key] };
-      team.runs += runs;
-      team.balls += 1;
-      return { ...prev, [key]: team };
-    });
+    commitCricketScores(prev => ({
+      ...prev,
+      [key]: { ...prev[key], runs: prev[key].runs + runs, balls: prev[key].balls + 1 },
+    }));
   };
 
   const addWicket = () => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -1109,18 +1141,15 @@ export default function MonoQuickMatch() {
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 0, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'wicket', key, freeHit, innings, battingTeam }]);
 
-    // Pure updater: compute the new score (incl. all-out flag). Innings flip /
-    // finish are handled by the post-commit transition effect.
-    setScores(prev => {
-      const team = { ...prev[key] };
-      team.wickets += 1;
-      team.balls += 1;
+    commitCricketScores(prev => {
+      const team = { ...prev[key], wickets: prev[key].wickets + 1, balls: prev[key].balls + 1 };
       if (team.wickets >= maxWickets) team.allOut = true;
       return { ...prev, [key]: team };
     });
   };
 
   const addExtra = (type) => {
+    if (completion.locked) return;
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
@@ -1136,15 +1165,10 @@ export default function MonoQuickMatch() {
     setLastAction(`${battingName} ${extraLabel[type] || 'extra'} +1`);
     broadcastIntentRef.current = { kind: 'point', team: battingTeam === 1 ? 'A' : 'B', value: 1, at: Date.now() };
     setCricketHistory(prev => [...prev, { type: 'extra', key, extraType: type, freeHit, innings, battingTeam }]);
-    // Pure updater: add the extra run (+ a ball for byes/leg-byes). Innings flip /
-    // chase-complete / finish are handled by the post-commit transition effect.
-    setScores(prev => {
-      const team = { ...prev[key], runs: prev[key].runs + 1 };
-      if (countsAsBall) {
-        team.balls += 1;
-      }
-      return { ...prev, [key]: team };
-    });
+    commitCricketScores(prev => ({
+      ...prev,
+      [key]: { ...prev[key], runs: prev[key].runs + 1, balls: prev[key].balls + (countsAsBall ? 1 : 0) },
+    }));
 
     // No ball triggers free hit if format supports it
     if (type === 'noBall' && format.freeHit) {
@@ -1153,6 +1177,7 @@ export default function MonoQuickMatch() {
   };
 
   const undoCricketAction = () => {
+    if (completion.locked) return;
     if (cricketHistory.length === 0) return;
     void correctionImpact();
 
@@ -1166,7 +1191,7 @@ export default function MonoQuickMatch() {
     // Restore free hit state from history entry
     setFreeHit(last.freeHit || false);
 
-    setScores(prev => {
+    commitCricketScores(prev => {
       const team = { ...prev[last.key] };
       if (last.type === 'runs') {
         team.runs = Math.max(0, team.runs - last.value);
@@ -1218,17 +1243,12 @@ export default function MonoQuickMatch() {
   // render, so the winning ball still enqueues before finalize drains (R1).
   useEffect(() => {
     if (!isCricket || phase !== 'scoring') return;
-    const key = battingTeam === 1 ? 'team1' : 'team2';
-    const team = scores[key];
-    if (!team) return;
-    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
-    const chaseTarget = battingTeam === 2 ? scores.team1.runs : scores.team2.runs;
-    const chaseDone = innings === 2 && team.runs > chaseTarget;
-    if (innings === 1 && inningsOver) {
+    const transition = getCricketTransition(scores);
+    if (transition === 'break') {
       setShowInningsBreak(true);
       setInnings(2);
       setBattingTeam(battingTeam === 1 ? 2 : 1);
-    } else if (innings === 2 && (inningsOver || chaseDone)) {
+    } else if (transition === 'complete') {
       finishCricketMatch(scores);
     }
   }, [scores, innings, battingTeam, isCricket, phase, totalBalls, maxWickets]);
@@ -1286,6 +1306,7 @@ export default function MonoQuickMatch() {
 
   // Volleyball: Add point
   const addPoint = (team) => {
+    if (completion.locked) return;
     // Debounce rapid clicks
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
@@ -1341,6 +1362,7 @@ export default function MonoQuickMatch() {
   };
 
   const undoPoint = () => {
+    if (completion.locked) return;
     if (vScoreHistory.length === 0) return;
     void correctionImpact();
 
@@ -1366,6 +1388,7 @@ export default function MonoQuickMatch() {
   };
 
   const adjustSetScore = (team, delta) => {
+    if (completion.locked) return;
     const teamName = getTeamLabel(team);
     const activeSetScore = sets[currentSet] || { score1: 0, score2: 0, completed: false };
     const correctsPreviousSet = format.type === 'best-of'
@@ -1476,6 +1499,7 @@ export default function MonoQuickMatch() {
 
   // Goals: Add score for a team
   const addGoal = (team, value = 1) => {
+    if (completion.locked) return;
     // Timed mode: once the clock hits zero scoring is locked — EXCEPT the one
     // deciding score a no-draw tie still needs (scoringLocked encodes that). This
     // is the load-bearing guard; the render also disables the controls to match.
@@ -1504,6 +1528,7 @@ export default function MonoQuickMatch() {
   };
 
   const undoGoal = () => {
+    if (completion.locked) return;
     if (gScoreHistory.length === 0) return;
     void correctionImpact();
 
@@ -1516,6 +1541,7 @@ export default function MonoQuickMatch() {
   };
 
   const adjustGoalScore = (team, delta) => {
+    if (completion.locked) return;
     const teamName = getTeamLabel(team);
     const currentScore = team === 1 ? gScore1 : gScore2;
     if (delta < 0 && currentScore === 0) {
@@ -1569,6 +1595,7 @@ export default function MonoQuickMatch() {
   };
 
   const endMatchManually = () => {
+    if (completion.locked) return;
     if (isCricket) {
       finishCricketMatch(scores);
     } else if (isGoals) {
@@ -1588,6 +1615,7 @@ export default function MonoQuickMatch() {
   };
 
   const resetMatchState = (nextPhase = 'setup', options = {}) => {
+    completion.reset();
     restoredDraftRef.current = false;
     setSaveWarning('');
     setPhase(nextPhase);

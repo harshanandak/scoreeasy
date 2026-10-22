@@ -75,6 +75,7 @@ vi.mock('react-router-dom', () => ({
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../utils/storage', () => ({
   loadData: vi.fn(() => h.draft),
+  loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),
   clearData: vi.fn(),
   isStaleQuickMatchDraft: vi.fn(() => false),

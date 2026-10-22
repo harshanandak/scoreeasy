@@ -1,0 +1,31 @@
+{
+  "sameTurnTapMs": 2.5999999940395355,
+  "millisecondsToFastTap": 174.09999999403954,
+  "scoreDisabled": true,
+  "finishDisabled": true,
+  "afterFastTap": {
+    "id": "m1",
+    "team1Id": "t1",
+    "team2Id": "t2",
+    "score1": 1,
+    "score2": 0,
+    "status": "completed",
+    "winner": "t1",
+    "completedAt": "2026-10-21T21:56:20.362Z"
+  },
+  "afterCompletion": {
+    "id": "m1",
+    "team1Id": "t1",
+    "team2Id": "t2",
+    "score1": 1,
+    "score2": 0,
+    "status": "completed",
+    "winner": "t1",
+    "completedAt": "2026-10-21T21:56:20.362Z"
+  },
+  "afterOneBack": "/football/tournament",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  }
+}
