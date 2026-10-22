@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 // 3rd innings just because the side batting third already leads on aggregate.
 // The match only completes at the END of the 3rd innings, and only when the
 // side due to bat last is already ahead (a follow-on innings victory). These
-// tests drive the REAL component's checkResult/advanceInnings path by rendering
+// tests drive the REAL component's delivery/advanceInnings path by rendering
 // it and recording a single delivery from a pre-seeded 3rd-innings draftState —
 // they are not calls to getTestMatchResult.
 
@@ -114,15 +114,15 @@ describe('cricket Test 3rd-innings boundary (scoreeasy-m39)', () => {
     fireEvent.keyDown(globalThis, { key: '1' });
 
     // The stroke registered (41/3) but the match must NOT have completed:
-    // checkResult short-circuits at currentInningsIndex < 3, so no setTimeout
-    // / advanceInnings is scheduled and play stays in the 3rd innings.
+    // The completion rule requires a terminal boundary, so play stays in the
+    // 3rd innings while Alpha is still batting.
     expect(hero()).toContain('41/3');
     expect(screen.getByText('3rd Innings')).toBeInTheDocument();
     expect(screen.queryByText('Match Complete')).toBeNull();
     // Active scoring keypad still present (not the result screen).
     expect(screen.getByText('OUT')).toBeInTheDocument();
 
-    // Wait longer than the 300ms advance timer to prove nothing fires later.
+    // Play also stays in this innings after the former 300 ms timer window.
     await wait(350);
     expect(screen.getByText('3rd Innings')).toBeInTheDocument();
     expect(screen.queryByText('Match Complete')).toBeNull();
@@ -139,8 +139,8 @@ describe('cricket Test 3rd-innings boundary (scoreeasy-m39)', () => {
     // Record ONE wicket -> Beta all-out -> end of 3rd innings boundary fires.
     fireEvent.click(screen.getByText('OUT'));
 
-    // Completion is deferred 300ms via setTimeout -> use async findByText.
-    await screen.findByText('Match Complete');
+    // The terminal delivery decides and locks the innings victory synchronously.
+    expect(screen.getByText('Match Complete')).toBeInTheDocument();
 
     // Innings victory for Alpha; the /innings/i wording proves the 4th innings
     // was skipped (Alpha batted once -> innings victory shape).

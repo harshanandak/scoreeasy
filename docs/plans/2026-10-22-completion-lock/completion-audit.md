@@ -51,8 +51,10 @@ The app's history completion seam replaces an unwound entry when it already is
 the requested destination. It still pushes a distinct result page and still
 replaces deep-linked scorers.
 
-Cricket adapter changes are confined to the four cricket scorer files and the
-cricket completion section of quick match. Master `28ada35` (PR #170) was merged
+Cricket adapter changes cover the four cricket scorer files and the cricket
+completion section of quick match. Round 3 also puts Test terminal detection in
+the cricket calculation module so live scoring and hydration share it.
+Master `28ada35` (PR #170) was merged
 after the lane was released. Limited, Test and guided completion retain its
 `completeProtectedScoring` navigation, with the shared hook owning the commit and
 single navigation. Test quick completion retains its `/history` destination.
@@ -71,8 +73,10 @@ with `it.fails` retained. Completion locking does not fix undo-to-empty autosave
   Finish; a failed save remains retryable and does not finalize.
 - Limited-overs cricket: completed Finish rejects later actions and draft writes;
   failed completion remains retryable.
-- Test cricket: the winning ball is persisted before finalize; same-batch Undo is
-  blocked; a failed save can be retried; Return does not save/finalize twice.
+- Test cricket: terminal deliveries, including the final wicket, synchronously
+  lock one innings/result snapshot. Undo cannot alter that snapshot. Failed saves
+  retain it as a terminal-pending draft across refresh; Return retries persistence
+  or leaves a committed result without saving/finalizing twice.
 - Guided cricket: a completed innings cannot be undone or extended. The parent
   rejects further state writes after completion. Its existing failed-save
   navigation and raw-innings retention are reserved for separate follow-ups.
@@ -216,3 +220,85 @@ Lint, type-check and agent-config sync run through the normal commit hook. At th
 initial round-2 hold point, the full suite, push and PR-body update were held for
 the owner's full-suite lane release. Shipping validation is recorded in PR #172;
 no production write or deployment is part of this round.
+
+## Round 3: one terminal Test snapshot
+
+The review of `2ee552a` found a second Test completion path that the earlier chase
+tests did not exercise. All-out, declaration and ball-limit boundaries deferred
+`advanceInnings(updated)` by 300 ms. The callback decided the result from captured
+innings, but the save effect persisted the current innings. Keyboard Undo could
+therefore produce a completed defending win with only nine wickets. Separately,
+the completed-status hydration rule did not recognize a winning in-progress draft
+left by a failed result save.
+
+`getTestMatchCompletion` now owns the Test terminal predicate beside the cricket
+result calculations. Live deliveries and both loaders use it for a chase, an
+ended fourth innings, a third-innings innings victory or a stored declared result.
+Mid-third-innings leads remain in play. The scorer removes all six delayed innings
+callbacks. Its delivery boundary synchronously locks and captures one cloned
+snapshot containing innings, innings index, follow-on state and result. Terminal
+state, result persistence and failed-save draft recovery all use that snapshot;
+result selection cannot drift from the innings saved. The winning ball's live
+snapshot still precedes finalization.
+
+Hydrating a terminal in-progress draft restores the result screen and locks input
+before exposing mutable state. It says "Result not saved. Save & Return to retry."
+and waits for an explicit retry. Return distinguishes an already committed result
+from a pending result, so a pending lock does not prevent its save. A declared draw
+is also retained in the draft even when no scoring history exists. Ordinary
+undo-to-empty saving is unchanged; SA-07 remains an expected failure.
+
+### Counterfactuals and regression evidence (rung 4)
+
+`MonoCricketTestLiveScore.completion.test.jsx` uses the real scorer, real storage
+utilities and localStorage, with mocked remote transport. Its first four tests
+failed on `2ee552a` before any implementation changes:
+
+- OUT from nine wickets, keyboard Undo at fake time 299 ms, then advance to 300 ms:
+  both quick and tournament records became completed defending wins with nine
+  wickets, zero balls and `allOut: false` rather than ten wickets and one ball.
+- A failed winning save retained two runs as an in-progress draft. Remount and
+  attempt Four: both storage branches saved six runs rather than preserving two.
+
+After the fix, the exact reviewed component and calculation-module blobs were
+temporarily restored from `2ee552a` and the same four cases rerun. All four failed
+for those exact assertions again (6.10 s; eight other cases skipped). Both fixed
+source files were then restored byte-for-byte. No expected-failure declarations
+were changed.
+
+The twelve-case regression file additionally covers pending all-out, declaration
+and draw hydration, explicit retry, and a failed declared draw without scoring
+history, for both quick and tournament storage. The expanded targeted run passed
+**5 files / 78 tests** (99.88 s), including the existing innings, completion-lock,
+finish-navigation and cricket-calculation checks.
+
+### Other scorer timers inspected
+
+| Scorer | Timer/decision boundary |
+| --- | --- |
+| Goals, all four sports | Finish and automatic completion enter the shared synchronous commit; navigation is delayed only after the commit. |
+| Sets | Remaining component timeout dismisses the set-won decoration; Finish commits synchronously. |
+| Tennis, tournament and quick | Remaining timeout dismisses a milestone; Finish commits synchronously. |
+| Limited-overs cricket | Finish commits before its navigation delay. Super Over timers switch phase UI; the terminal keypad is already hidden and the result reads current Super Over state, not a captured result paired with later innings. |
+| Guided cricket, child and route | The child locks on its engine's terminal delivery; the parent commits through the shared hook. The remaining timeout dismisses a toast. |
+| Quick match, goals/sets/cricket | Cricket locks from its transition predicate before publishing the winning delivery; the result writer commits synchronously. The remaining component timeout dismisses a warning. |
+
+No other inspected scorer delays a captured match-result decision until a timer
+then persists a separate current innings snapshot. The remaining UI timers are
+unchanged. This timer audit is source evidence (rung 2), not a new device demo.
+
+### Round-3 hold-point validation
+
+The complete focused selection passed with **26 files, 388 passing tests and nine
+existing expected failures (397 total), zero runner errors**, in **422.32 s**:
+
+```text
+bun run test src/designs/design1-mono/scoring src/designs/design1-mono/MonoQuickMatch.broadcast.test.jsx src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx src/designs/design1-mono/MonoQuickMatch.teamColour.test.jsx src/designs/design1-mono/routes.contract.test.jsx src/hooks/useMatchCompletion.test.jsx src/designs/design1-mono/theme/palette.test.js src/utils/cricketCalculations.test.js --maxWorkers=1
+```
+
+Routing retains its six executed expected failures. A source inventory confirms
+all ten repository-wide expected-failure declarations remain unchanged, including
+SA-07 and the storage expected failure outside this focused selection. Palette
+equality remains **669**. Diff whitespace checks pass. Normal commit hooks run
+lint, type-check and agent-configuration sync. The full suite, build, push and PR
+update remain held until the owner releases the lane; no dev server was started.
