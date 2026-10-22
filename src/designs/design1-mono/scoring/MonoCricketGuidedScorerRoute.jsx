@@ -361,5 +361,5 @@ const BREAK_STYLES = `
 .mono-break-tag { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
 .mono-break-line { margin: 0; font-family: var(--se-font-sans); font-size: 1.0625rem; font-weight: 600; }
 .mono-break-line b { font-weight: 800; }
-.mono-break-target { color: var(--primary); font-family: var(--se-font-mono); }
+.mono-break-target { color: var(--se-color-action-on-ink); font-family: var(--se-font-mono); }
 `;

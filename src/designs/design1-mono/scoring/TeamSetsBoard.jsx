@@ -1,77 +1,19 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import PropTypes from 'prop-types';
+import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
 import './teamBoard.css';
 
 // Team-colour scorer for sets sports: "Refined Soft with Mono-strength controls" (Harsha,
 // 2026-10-21). Calm neutral chrome and sentence-case type around two bold team-colour gradient
 // keys; the controls you press (Finish, Undo, More) keep Mono's hard ink edge and offset shadow.
+// The chrome is the shared board shell (BoardShell.jsx); this file adds what a two-key sets board
+// needs: the status line, the two point keys, the sport mark and the completed-set chips.
 // Presentational only: every number, label and handler comes from the scorer that owns the rules
 // (MonoQuickMatch), so the board can't disagree with the match state.
 // Layout is thumb-first: status at the top, the two point keys in the middle, Undo and the options
 // sheet in the bottom thumb zone. Team colour is the engine's --team-{a,b}-* variables (colourStyle).
 // The sport's mark (--sport-mark, when the sport has one) sits on the serving team's key only, so
 // the decoration names the game and carries the serve instead of being wallpaper.
-
-function OptionsSheet({ id, open, onClose, halves, setHistory, onSwap, onCorrect, onDiscard, live }) {
-  const closeRef = useRef(null);
-  useEffect(() => {
-    if (open) closeRef.current?.focus();
-  }, [open]);
-
-  // Kept mounted while closed (hidden) so the live-sharing bar inside keeps running.
-  return (
-    <div className="tsb-sheet-layer" hidden={!open}>
-      <button type="button" className="tsb-scrim" aria-label="Close match options" tabIndex={-1} onClick={onClose} />
-      <div id={id} className="tsb-sheet" role="dialog" aria-modal="true" aria-label="Match options">
-        <div className="tsb-sheet-head">
-          <b>Match options</b>
-          <button ref={closeRef} type="button" className="tsb-btn tsb-ctl tsb-sheet-close" onClick={onClose}>Done</button>
-        </div>
-        {live && <div className="tsb-sheet-live">{live}</div>}
-        {setHistory.length > 0 && (
-          <div className="tsb-sets" aria-label="Completed sets">
-            {setHistory.map((s) => (
-              <span key={s.label} className={`tsb-set tsb-win-${s.winnerKey}`}>
-                {s.label} <b>{s.left}&ndash;{s.right}</b>
-                <span className="sr-only">, {s.winnerName} won</span>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="tsb-sheet-group">
-          <button type="button" className="tsb-row" onClick={() => { onSwap(); onClose(); }}>Swap sides</button>
-          {halves.map((h) => (
-            <button
-              key={h.team}
-              type="button"
-              className="tsb-row"
-              aria-label={`Subtract one from ${h.name}`}
-              onClick={() => onCorrect(h.team)}
-            >
-              <span>Correct {h.name}</span>
-              <span className="tsb-row-aside">&minus;1</span>
-            </button>
-          ))}
-        </div>
-        <div className="tsb-sheet-group">
-          <button type="button" className="tsb-row tsb-row-danger" onClick={() => { onClose(); onDiscard(); }}>Discard match</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-OptionsSheet.propTypes = {
-  id: PropTypes.string.isRequired,
-  open: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  halves: PropTypes.array.isRequired,
-  setHistory: PropTypes.array.isRequired,
-  onSwap: PropTypes.func.isRequired,
-  onCorrect: PropTypes.func.isRequired,
-  onDiscard: PropTypes.func.isRequired,
-  live: PropTypes.node,
-};
 
 export default function TeamSetsBoard({
   title,
@@ -98,16 +40,9 @@ export default function TeamSetsBoard({
   const hasMark = Boolean(colourStyle['--sport-mark']);
 
   return (
-    <div className="tsb" style={colourStyle} data-team-board="">
+    <div className="sb tsb" style={colourStyle} data-team-board="">
       {notice}
-      <header className="tsb-top">
-        <div className="tsb-title">
-          <b>{title}</b>
-          {subtitle && <small>{subtitle}</small>}
-        </div>
-        {isLive && <span className="tsb-live">Live</span>}
-        <button type="button" className="tsb-btn tsb-ctl tsb-finish" onClick={onFinish}>Finish</button>
-      </header>
+      <BoardHeader title={title} subtitle={subtitle} isLive={isLive} onFinish={onFinish} />
 
       <p className="tsb-meta">
         {meta.map((m) => <span key={m} className="tsb-meta-item">{m}</span>)}
@@ -135,38 +70,48 @@ export default function TeamSetsBoard({
         ))}
       </div>
 
-      <div className="tsb-bar">
-        <button type="button" className="tsb-btn tsb-ctl tsb-undo" onClick={onUndo} disabled={!canUndo} aria-label="Undo last action">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-2" />
-          </svg>
-          <span className="tsb-undo-t">Undo</span>
-          <span className="tsb-undo-w">{canUndo ? undoHint : 'Nothing to undo'}</span>
-        </button>
-        <button
-          type="button"
-          className="tsb-btn tsb-ctl tsb-more"
-          aria-label="Match options"
-          aria-haspopup="dialog"
-          aria-expanded={optionsOpen}
-          aria-controls={sheetId}
-          onClick={() => setOptionsOpen(true)}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2" /><circle cx="12" cy="12" r="2.2" /><circle cx="19" cy="12" r="2.2" /></svg>
-        </button>
-      </div>
+      <BoardBar
+        canUndo={canUndo}
+        undoHint={undoHint}
+        onUndo={onUndo}
+        sheetId={sheetId}
+        sheetOpen={optionsOpen}
+        onMore={() => setOptionsOpen(true)}
+      />
 
-      <OptionsSheet
+      <BoardOptionsSheet
         id={sheetId}
         open={optionsOpen}
         onClose={() => setOptionsOpen(false)}
-        halves={halves}
-        setHistory={setHistory}
-        onSwap={onSwap}
-        onCorrect={onCorrect}
-        onDiscard={onDiscard}
         live={live}
-      />
+        onDiscard={onDiscard}
+      >
+        {setHistory.length > 0 && (
+          <div className="tsb-sets" aria-label="Completed sets">
+            {setHistory.map((s) => (
+              <span key={s.label} className={`tsb-set tsb-win-${s.winnerKey}`}>
+                {s.label} <b>{s.left}&ndash;{s.right}</b>
+                <span className="sr-only">, {s.winnerName} won</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <BoardSheetGroup>
+          <button type="button" className="sb-row" onClick={() => { onSwap(); setOptionsOpen(false); }}>Swap sides</button>
+          {halves.map((h) => (
+            <button
+              key={h.team}
+              type="button"
+              className="sb-row"
+              aria-label={`Subtract one from ${h.name}`}
+              onClick={() => onCorrect(h.team)}
+            >
+              <span>Correct {h.name}</span>
+              <span className="sb-row-aside">&minus;1</span>
+            </button>
+          ))}
+        </BoardSheetGroup>
+      </BoardOptionsSheet>
     </div>
   );
 }

@@ -164,15 +164,15 @@ const STYLE = `
 .mcs .team .sc{font-family:var(--se-font-mono,var(--font-mono));font-size:1.9rem;font-weight:800;line-height:1;margin-top:3px}
 .mcs .team .sc .wk{font-size:.55em;font-weight:500;color:color-mix(in oklch,var(--se-color-inverse,var(--primary-foreground)) 55%,transparent)}
 .mcs .team.r{text-align:right}
-.mcs .team.r .sc{color:var(--primary)}
+.mcs .team.r .sc{color:var(--se-color-action-on-ink)}
 .mcs .hero-mid{text-align:center;padding:0 6px}
 .mcs .hero-mid .k{font-family:var(--se-font-mono,var(--font-mono));font-size:.5625rem;letter-spacing:.1em;color:color-mix(in oklch,var(--se-color-inverse,var(--primary-foreground)) 55%,transparent)}
 .mcs .hero-mid .v{font-family:var(--se-font-mono,var(--font-mono));font-size:.8125rem;font-weight:700;margin-top:2px}
 .mcs .hero-note{margin-top:11px;padding-top:9px;border-top:1px solid color-mix(in oklch,var(--se-color-inverse,var(--primary-foreground)) 18%,transparent);text-align:center;font-family:var(--se-font-mono,var(--font-mono));font-size:.75rem}
-.mcs .hero-note b{color:var(--primary);font-weight:800}
+.mcs .hero-note b{color:var(--se-color-action-on-ink);font-weight:800}
 .mcs .wp{margin-top:10px}
 .mcs .wp-bar{height:8px;border-radius:999px;background:color-mix(in oklch,var(--se-color-inverse,var(--primary-foreground)) 20%,transparent);overflow:hidden}
-.mcs .wp-fill{height:100%;background:var(--primary);border-radius:999px}
+.mcs .wp-fill{height:100%;background:var(--se-color-action-on-ink);border-radius:999px}
 .mcs .wp-meta{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--se-font-mono,var(--font-mono));font-size:.5625rem;letter-spacing:.06em;color:color-mix(in oklch,var(--se-color-inverse,var(--primary-foreground)) 60%,transparent)}
 .mcs .blk{margin-bottom:14px}
 .mcs .blk-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
@@ -443,7 +443,7 @@ export default function MonoCricketSpectator({
               ) : (
                 <div className="team r">
                   <div className="nm">CRR</div>
-                  <div className="sc mono" style={{ color: 'var(--primary)' }}>
+                  <div className="sc mono" style={{ color: 'var(--se-color-action-on-ink)' }}>
                     {chase ? chase.CRR : derived.legalBalls
                       ? +((derived.runs * (format.ballsPerOver || 6)) / derived.legalBalls).toFixed(2)
                       : 0}

@@ -48,6 +48,8 @@ function ConfirmDialog({
   message = 'This will finish the current match and save the result.',
   cancelLabel = 'Keep scoring',
   confirmLabel = 'End match',
+  // 'danger' when confirming destroys data (Discard): the confirm button takes the danger fill.
+  tone = 'primary',
   // Optional: a board-specific skin on the backdrop, and the score the action applies to.
   className = '',
   summary = null,
@@ -113,7 +115,7 @@ function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            className="app-confirm-primary"
+            className={`app-confirm-primary${tone === 'danger' ? ' app-confirm-danger' : ''}`}
           >
             {confirmLabel}
           </button>
@@ -2586,6 +2588,7 @@ export default function MonoQuickMatch() {
     <ConfirmDialog
       {...skin}
       idPrefix="discard-match"
+      tone="danger"
       title="Discard match?"
       message="This will delete this in-progress match. This can't be undone."
       confirmLabel="Discard"
@@ -2992,7 +2995,7 @@ export default function MonoQuickMatch() {
       const boardScore = boardHalves.map((h) => h.score).join('–');
       // The dialogs say exactly which score they act on, in the board's order.
       const dialogSummary = (
-        <div className="tsb-confirm-summary">
+        <div className="sb-confirm-summary">
           <span>{boardStatus.join(' · ')}</span>
           <strong>{boardScore}</strong>
         </div>
@@ -3000,8 +3003,8 @@ export default function MonoQuickMatch() {
       return (
         <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
-          {renderEndMatchDialog({ className: 'tsb-confirm', summary: dialogSummary })}
-          {renderDiscardDialog({ className: 'tsb-confirm tsb-confirm-danger', summary: dialogSummary })}
+          {renderEndMatchDialog({ className: 'sb-confirm', summary: dialogSummary })}
+          {renderDiscardDialog({ className: 'sb-confirm', summary: dialogSummary })}
           <TeamSetsBoard
             title={`${team1Name} v ${team2Name}`}
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}

@@ -3,7 +3,8 @@
 **Status:** FROZEN (M1 foundation, kernel issue `blend-design-tokens-blend-8a30cb91`).
 **Scope:** the additive HiFi-blend token layer defined in `src/index.css` (the
 `--se-blend-*` custom properties, the `se-blend-pulse` keyframes, and the
-`.se-blend-pulse` helper). The brutalist Mono tokens are unchanged and remain the
+`.se-blend-pulse` helper). The role tokens (Kit values since 2026-10-22, pinned in
+`theme/palette.js`) remain the
 backbone; blend is a controlled overlay, not a replacement.
 
 Every downstream screen that uses a `--se-blend-*` token MUST obey the rules
@@ -26,7 +27,7 @@ theme that has dissolved its own structure.
 | `--se-blend-green-wash-strong` | `#d6ecdf` | Deeper green wash for emphasis |
 | `--se-blend-shadow-soft` | `0 6px 20px -8px rgba(20,40,30,.28)` | Warm-green-black soft shadow for content |
 | `--se-blend-shadow-cta` | `0 8px 24px -6px rgba(35,120,75,.42)` | Colored/glow shadow for the primary CTA |
-| `--se-blend-gold` | `#b8862e` | Gold milestone accent (base) |
+| `--se-blend-gold` | `var(--se-color-gold)` (`#f5b700`) | Gold milestone accent (base); alias of the Kit gold role since 2026-10-22. A fill that always takes ink text (`--se-color-on-gold`) |
 | `--se-blend-gold-bright` | `#e8b64c` | Gold milestone accent (highlight) |
 | `--se-blend-pulse-duration` | `2.4s` | Breathing-pulse cycle length |
 | `@keyframes se-blend-pulse` / `.se-blend-pulse` | — | LIVE breathing pulse + helper (reduced-motion gated) |

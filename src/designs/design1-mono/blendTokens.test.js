@@ -43,7 +43,7 @@ const FROZEN_TOKENS = [
   '--se-blend-green-wash-strong: #d6ecdf',
   '--se-blend-shadow-soft: 0 6px 20px -8px rgba(20, 40, 30, 0.28)',
   '--se-blend-shadow-cta: 0 8px 24px -6px rgba(35, 120, 75, 0.42)',
-  '--se-blend-gold: #b8862e',
+  '--se-blend-gold: var(--se-color-gold)',
   '--se-blend-gold-bright: #e8b64c',
   '--se-blend-pulse-duration: 2.4s',
 ];
