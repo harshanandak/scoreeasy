@@ -286,7 +286,9 @@ change: `package.json`, `bun.lock`, `vite.config.*`, `vitest.config.*`,
 The rule covers committed, staged, and unstaged
 changes; untracked test-environment files also trigger the full suite.
 
-Otherwise it runs `bun run test --changed origin/master --passWithNoTests`.
+Otherwise it runs `bun run test --maxWorkers=2 --changed origin/master --passWithNoTests`.
+All local hook runs use at most two Vitest workers to bound RAM use across
+concurrent worktrees. CI uses its normal worker settings.
 Vitest follows source imports to select affected tests and explicitly reports
 success if none are related. Native `forceRerunTriggers` also covers the listed
 test-environment files. Missing imports and config replacement require the

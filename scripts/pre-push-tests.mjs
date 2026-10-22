@@ -86,7 +86,8 @@ function main() {
   console.log(related
     ? `[pre-push] Related tests since ${base}; no related tests is an explicit success.`
     : `[pre-push] Full suite: ${plan.reason}${plan.nativeTriggers ? ' via native forceRerunTriggers' : ''}.`);
-  const args = ['run', 'test'];
+  // Concurrent worktrees share laptop RAM; bound the local worker pool.
+  const args = ['run', 'test', '--maxWorkers=2'];
   if (related || plan.nativeTriggers) {
     args.push('--changed', base, related ? '--passWithNoTests' : '--passWithNoTests=false');
   }

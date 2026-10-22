@@ -23,7 +23,7 @@ Or use the validation script (checks only — no rebase):
 
 ```bash
 lefthook run pre-commit   # lint + type-check + agent-config-sync
-lefthook run pre-push     # related tests, or full suite for conservative triggers; no local build
+lefthook run pre-push     # related tests, or full suite for conservative triggers; max 2 workers, no local build
                           # Neither rebases. Use /validate for the full workflow (rebase + checks).
 ```
 
