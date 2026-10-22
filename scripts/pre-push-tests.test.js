@@ -1,21 +1,17 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, linkSync, mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '..');
 const fixtures = [];
 const gitLocalVariables = spawnSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' });
 if (gitLocalVariables.status !== 0) throw new Error('Cannot identify Git repository-local environment variables');
 
-function run(root, command, args, overrides = {}) {
+function run(root, command, args) {
   const env = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
-  for (const [name, value] of Object.entries(overrides)) {
-    const key = Object.keys(env).find((candidate) => candidate.toLowerCase() === name.toLowerCase()) ?? name;
-    env[key] = value;
-  }
   // Hooks export repository-local Git state; foreign fixture repositories must
   // clear those variables as prescribed by githooks(5).
   for (const name of gitLocalVariables.stdout.trim().split('\n')) delete env[name.trim()];
@@ -29,7 +25,7 @@ function run(root, command, args, overrides = {}) {
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
-function fixture() {
+function fixture(resource = 'leaf.js') {
   const root = mkdtempSync(join(tmpdir(), 'scoreeasy-prepush-'));
   fixtures.push(root);
   mkdirSync(join(root, 'scripts'));
@@ -42,8 +38,10 @@ function fixture() {
   writeFileSync(join(root, 'vite.config.js'), `import { forceRerunTriggers } from './scripts/pre-push-tests.mjs';
 export default { test: { globals: true, environment: 'node', forceRerunTriggers, setupFiles: './src/test/setup.js' } };\n`);
   writeFileSync(join(root, 'src/test/setup.js'), '// setup\n');
-  writeFileSync(join(root, 'leaf.js'), 'export const value = 42;\n');
-  writeFileSync(join(root, 'middle.js'), "export { value } from './leaf.js';\n");
+  writeFileSync(join(root, resource), resource.endsWith('.json') ? '{"value":42}\n' : 'export const value = 42;\n');
+  writeFileSync(join(root, 'middle.js'), resource.endsWith('.json')
+    ? `import payload from './${resource}'; export const value = payload.value;\n`
+    : `export { value } from './${resource}';\n`);
   writeFileSync(join(root, 'leaf.test.js'), "import { value } from './middle.js'; it('uses the leaf', () => expect(value).toBe(42));\n");
   writeFileSync(join(root, 'unrelated.test.js'), "it('unrelated sentinel', () => expect(true).toBe(true));\n");
   for (const args of [
@@ -67,23 +65,6 @@ afterEach(() => {
 });
 
 describe('real pre-push hook selection', () => {
-  it('ignores substituted git and bun executables at the front of PATH', () => {
-    const root = fixture();
-    const bun = run(root, 'bun', ['--print', 'process.execPath']);
-    expect(bun.status, bun.output).toBe(0);
-    const traps = join(root, 'traps');
-    mkdirSync(traps);
-    const suffix = process.platform === 'win32' ? '.exe' : '';
-    copyFileSync(process.execPath, join(traps, `git${suffix}`));
-    linkSync(join(traps, `git${suffix}`), join(traps, `bun${suffix}`));
-    writeFileSync(join(root, 'leaf.js'), 'export const value = 42; // changed\n');
-    const result = run(root, bun.output.trim(), ['scripts/pre-push-tests.mjs'], {
-      PATH: [traps, process.env.PATH].join(delimiter),
-    });
-    expect(result.status, result.output).toBe(0);
-    expect(result.output).toMatch(/Test Files\s+1 passed \(1\)/);
-  }, 45000);
-
   it('isolates foreign repositories from exported hook Git state', () => {
     const parent = fixture();
     const priorDir = process.env.GIT_DIR;
@@ -115,24 +96,27 @@ describe('real pre-push hook selection', () => {
     expect(result.output).toMatch(/Test Files\s+1 passed \(1\)/);
   }, 45000);
 
-  it('runs the full suite and fails for a deleted transitive import', () => {
-    const root = fixture();
-    rmSync(join(root, 'leaf.js'));
+  it.each(['leaf.js', 'payload.json'])('runs the full suite and fails for deleted root-level %s', (resource) => {
+    const root = fixture(resource);
+    rmSync(join(root, resource));
     const result = hook(root);
-    console.log(`DELETED IMPORTED SOURCE\n${result.output}`);
+    console.log(`DELETED ROOT-LEVEL ${resource}\n${result.output}`);
     expect(result.status).not.toBe(0);
-    expect(result.output).toContain('Full suite: tracked source deleted/renamed');
+    expect(result.output).toContain('Full suite: tracked file deleted/renamed');
     expect(result.output).toMatch(/Test Files\s+1 failed \| 1 passed \(2\)/);
-    expect(result.output).toContain('leaf.js');
+    expect(result.output).toContain(resource);
   }, 45000);
 
-  it('runs the full suite for a staged source rename', () => {
-    const root = fixture();
-    expect(run(root, 'git', ['mv', 'leaf.js', 'renamed.js']).status).toBe(0);
-    writeFileSync(join(root, 'middle.js'), "export { value } from './renamed.js';\n");
+  it.each(['leaf.js', 'payload.json'])('runs the full suite for a staged root-level %s rename', (resource) => {
+    const root = fixture(resource);
+    const renamed = resource.endsWith('.json') ? 'renamed.json' : 'renamed.js';
+    expect(run(root, 'git', ['mv', resource, renamed]).status).toBe(0);
+    writeFileSync(join(root, 'middle.js'), resource.endsWith('.json')
+      ? `import payload from './${renamed}'; export const value = payload.value;\n`
+      : `export { value } from './${renamed}';\n`);
     const result = hook(root);
     expect(result.status, result.output).toBe(0);
-    expect(result.output).toContain('Full suite: tracked source deleted/renamed');
+    expect(result.output).toContain('Full suite: tracked file deleted/renamed');
     expect(result.output).toMatch(/Test Files\s+2 passed \(2\)/);
   }, 45000);
 

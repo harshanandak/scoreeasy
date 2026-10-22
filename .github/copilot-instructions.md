@@ -277,11 +277,11 @@ It does **not** compare changed source against changed tests — there is no aut
 TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
 
 **Pre-push hook** calls `bun scripts/pre-push-tests.mjs`. It runs the full test
-suite when tracked source is deleted or renamed, or when test-environment files
+suite when any tracked file is deleted or renamed, regardless of directory or
+extension, or when test-environment files
 change: `package.json`, `bun.lock`, `vite.config.*`, `vitest.config.*`,
 `tsconfig*.json`, `src/test/**` (including setup files), or the selection script.
-Source includes everything under `src/`, `convex/`, and `scripts/`, plus JS/TS,
-CSS, and HTML files elsewhere. The rule covers committed, staged, and unstaged
+The rule covers committed, staged, and unstaged
 changes; untracked test-environment files also trigger the full suite.
 
 Otherwise it runs `bun run test --changed origin/master --passWithNoTests`.
@@ -292,6 +292,11 @@ script's conservative full-suite selection before Vitest loads its graph.
 Detached HEAD works with the explicit base. A missing base or common ancestor
 blocks the hook with fetch/unshallow recovery instructions. Fetch `origin master`
 before validation to keep the comparison current.
+
+Developer tooling uses the developer's own PATH for `git` and `bun`. SonarCloud
+uses automatic analysis (`.sonarcloud.properties`), which excludes `scripts/**`:
+developer tooling runs from the dev's own PATH; Sonar covers shipped app code.
+`sonar-project.properties` applies only to CI-based Sonar analysis.
 
 **Required CI `verify` check** (`.github/workflows/ci.yml`) is the full-suite gate.
 It runs the build, all tests, lint, and type-check on every PR. The local pre-push
