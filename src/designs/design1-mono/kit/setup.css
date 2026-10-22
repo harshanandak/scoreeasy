@@ -1,0 +1,514 @@
+/* Kit S2 quick setup (plan 2026-10-22 §9 S2, prototype `setup`). Colour only from --se-color-*
+   tokens and engine vars (--team-a-*, --team-b-*, --sport-*, --kit-sw*), so dark mode is a token
+   swap and team gradients stay absolute (engine-gated).
+
+   Size: light and compact (Harsha on S1: the hero was too big and heavy). The prototype's 132px keys
+   and 3.6rem numerals become ~92px keys with 2.4rem numerals; one Go only, the Start action. */
+
+.kit-screen.kit-setup {
+  padding-bottom: 0;
+}
+
+/* ---- header: navigation chrome, always clean ---- */
+.kit-setup-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 0 8px;
+}
+
+.kit-setup-back {
+  flex: none;
+  width: 48px;
+  padding: 0;
+}
+
+.kit-setup-badge {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(168deg, var(--sport-hi, var(--se-color-surface-warm)), var(--sport-core, var(--se-color-surface-warm)) 55%, var(--sport-lo, var(--se-color-surface-warm)));
+}
+
+.kit-setup-badge::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: var(--sport-on, var(--se-color-ink));
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.kit-setup-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-setup-title h1 {
+  margin: 0;
+  font: 800 1.3rem/1.05 var(--se-font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.kit-setup-title p {
+  margin: 3px 0 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* A quiet text action ("Tournament", "Edit rules", "Add players"): 48px for the thumb. */
+.kit-setup-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 750 0.9rem var(--se-font-sans);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* ---- matchup preview ---- */
+.kit-mu {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+
+.kit-mu-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 92px;
+  padding: 10px 26px;
+  border-radius: 20px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+  color: var(--se-color-ink);
+  text-align: center;
+  transition: background 240ms ease, color 240ms ease;
+}
+
+.kit-mu-key b {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.kit-mu-key span {
+  font: 800 2.4rem/0.95 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Team-colour sports: each key is its engine-gated gradient (hi/core/lo plus the 7% sheen the
+   engine measures), and its text is the engine's on-colour. No blend between the two teams. */
+.kit-mu.is-team .kit-mu-a {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo));
+  color: var(--team-a-on);
+}
+
+.kit-mu.is-team .kit-mu-b {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo));
+  color: var(--team-b-on);
+}
+
+.kit-mu-vs {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+  color: var(--se-color-ink);
+  transform: translate(-50%, -50%);
+}
+
+.kit-mu-v {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- fields ---- */
+.kit-setup-field {
+  position: relative;
+  margin-top: 16px;
+}
+
+.kit-setup-label {
+  display: block;
+  margin: 0 2px 8px;
+  color: var(--se-color-ink-soft);
+  font: 700 0.85rem/1.2 var(--se-font-sans);
+}
+
+.kit-setup-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--se-color-ink);
+  font: 650 1.04rem var(--se-font-sans);
+}
+
+.kit-setup-input::placeholder {
+  color: var(--se-color-ink-muted);
+}
+
+/* Saved-team suggestions under a name field. */
+.kit-setup-suggest {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  left: 0;
+  max-height: 180px;
+  margin-top: 4px;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+.kit-setup-suggest p {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--se-color-ink-muted);
+  font-size: 0.875rem;
+}
+
+.kit-setup-suggest button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 600 0.9rem var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.kit-setup-suggest button + button {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-setup-suggest small {
+  color: var(--se-color-ink-muted);
+  font-size: 0.78rem;
+}
+
+/* ---- colour swatches (TeamColourPicker) ----
+   48px swatches, six across (five kit colours plus "More colours"). Selection is a check in the
+   engine's on-colour plus an ink ring, and aria-pressed. Focus is NOT styled here beyond moving
+   the global ink ring (index.css :focus-visible) clear of the selection ring. */
+.kit-picker {
+  margin-top: 10px;
+}
+
+.kit-sw-row {
+  display: grid;
+  grid-template-columns: repeat(6, 48px);
+  justify-content: space-between;
+  row-gap: 12px;
+}
+
+.kit-sw {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--kit-sw, var(--se-color-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--kit-sw-on, var(--se-color-ink));
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-sw[aria-pressed='true'],
+.kit-sw-more.is-holding,
+.kit-sw-custom.is-selected .kit-sw-dot {
+  box-shadow: 0 0 0 2px var(--se-color-canvas), 0 0 0 4px var(--se-color-ink);
+}
+
+/* The global ring sits 3px off a control; a swatch's selection ring already fills 2-4px, so the
+   focus ring moves out past it and stays visible on a selected swatch too. */
+.kit-sw:focus-visible {
+  outline-offset: 6px;
+}
+
+.kit-sw-check,
+.kit-sw-plus {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-sw-more {
+  background: var(--kit-sw, var(--se-color-surface));
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+}
+
+.kit-sw-plus {
+  stroke-width: 2.4;
+}
+
+.kit-sw-more-panel {
+  margin-top: 12px;
+}
+
+.kit-sw-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-top: 12px;
+  border-radius: 14px;
+  color: var(--se-color-ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.kit-sw-custom.is-focused {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+}
+
+.kit-sw-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.kit-sw-dot {
+  flex: none;
+}
+
+/* ---- segmented control and stepper ---- */
+.kit-seg {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-seg-cols, 3), minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--se-color-surface-warm);
+}
+
+.kit-seg button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 650 0.94rem/1.12 var(--se-font-sans);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-seg button[aria-pressed='true'] {
+  border-color: var(--se-color-ink);
+  background: var(--se-ctl-bg);
+  box-shadow: 2px 2px 0 var(--se-color-ink);
+  font-weight: 800;
+}
+
+.kit-stepper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kit-stepper .se-ctl {
+  width: 48px;
+  padding: 0;
+  font-size: 1.3rem;
+}
+
+.kit-stepper output {
+  min-width: 40px;
+  font: 800 1.9rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.kit-setup-rules {
+  margin: 10px 2px 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.kit-setup-rules-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kit-setup-hint {
+  margin: 6px 2px 0;
+  color: var(--se-color-ink-muted);
+  font-size: 0.82rem;
+}
+
+.kit-setup-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-top: 8px;
+  color: var(--se-color-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kit-setup-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--se-color-ink);
+}
+
+.kit-setup-roster {
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-setup-roster h3 {
+  margin: 0 0 8px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ---- the one Go: sticky at the bottom, above the dock when the dock shows ---- */
+.kit-screen > .kit-setup-cta {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  margin-top: 18px;
+  padding: 14px 0 16px;
+  background: linear-gradient(180deg, transparent, var(--se-color-canvas) 30%);
+}
+
+body.has-mobile-bottom-nav .kit-screen > .kit-setup-cta {
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
+   reads as the Go. */
+.kit-setup-cta .se-go[aria-disabled='true'] {
+  border-style: dashed;
+  background: var(--se-color-surface-warm);
+  box-shadow: none;
+  color: var(--se-color-ink-soft);
+}
+
+.kit-setup-cta .kit-setup-hint {
+  text-align: center;
+}
+
+/* ---- the rules editor ---- */
+.kit-rules-group {
+  margin-top: 18px;
+}
+
+.kit-rules-group .kit-setup-hint {
+  margin-top: 8px;
+}
+
+.kit-rules-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.kit-rules-custom .kit-setup-input {
+  width: 96px;
+  text-align: center;
+}
+
+.kit-rules-done {
+  width: 100%;
+  margin-top: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-mu-key {
+    transition: none;
+  }
+}
