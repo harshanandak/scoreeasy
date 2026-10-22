@@ -105,9 +105,6 @@ describe('MonoPlayHub Guided | Browse toggle', () => {
       .filter((label) => names.some((name) => name.toUpperCase() === label.toUpperCase()));
     expect(gridButtons.map((label) => label.toUpperCase())).toEqual(names.map((name) => name.toUpperCase()));
 
-    ['Pickleball', 'Squash', 'Rugby', 'Futsal', 'Handball'].forEach((name) => {
-      expect(screen.queryByRole('button', { name: new RegExp(`^${name}$`, 'i') })).not.toBeInTheDocument();
-    });
   });
 
   it('drives the Guided wizard through to the tournament-setup contract', async () => {

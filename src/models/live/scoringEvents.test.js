@@ -49,7 +49,7 @@ describe('appendPoint', () => {
     expect(events[events.length - 1].seq).toBe(42);
   });
 
-  it('supports custom +N values for rugby/kabaddi/custom games', () => {
+  it('supports custom +N values for kabaddi/custom games', () => {
     let events = [];
     events = appendPoint(events, { team: 'A', value: 5, at: 1 }); // try
     events = appendPoint(events, { team: 'A', value: 2, at: 2 }); // conversion

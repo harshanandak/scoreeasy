@@ -3,12 +3,8 @@ import { goalsState } from '../../../models/live/goals';
 import { sideName, DEFAULT_TEAM_A, DEFAULT_TEAM_B } from './sideName';
 import { eyebrowStyle, tabularNums } from './scorecardStyles';
 
-// Per-team scoring breakdown by event subtype (research §4.D rugby
-// `TRIES | CONV | PEN | DG` and kabaddi `RAID | TACKLE`). Renders one labelled
-// column group per team from `goalsState(events, config).breakdown`, which sums
-// each event's `value` keyed by `meta.type`. Sport-agnostic: the columns are
-// exactly whatever subtypes appear in the stream (so rugby, kabaddi, or a custom
-// `+N` game all surface their own buckets with ZERO per-sport branching).
+// Per-team scoring breakdown from goalsState, keyed by event.meta.type.
+// Kabaddi and custom games share the same generic point-type columns.
 //
 // Pure-type eyebrow labels over tabular values; CSS-variable tokens only.
 

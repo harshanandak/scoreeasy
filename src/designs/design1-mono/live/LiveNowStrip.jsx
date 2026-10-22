@@ -2,7 +2,6 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useAuth } from '../../../hooks/useAuth';
 import LiveMatchCard from './LiveMatchCard';
-import { isSupportedMatchRecord } from '../../../models/sportRegistry';
 
 // Compact "Live now" rail for the app home (scoreeasy-3ws). Surfaces the top few
 // public live matches; each card links straight to its public watch page
@@ -14,8 +13,7 @@ export default function LiveNowStrip() {
   const { cloudAuthAvailable } = useAuth();
   const matches = useQuery(api.live.listLiveFeed, cloudAuthAvailable ? { limit: STRIP_LIMIT } : 'skip');
 
-  const supportedMatches = Array.isArray(matches) ? matches.filter((record) => isSupportedMatchRecord(record)) : [];
-  if (supportedMatches.length === 0) return null;
+  if (!matches || matches.length === 0) return null;
 
   return (
     <section className="live-strip" aria-label="Live now">
@@ -25,7 +23,7 @@ export default function LiveNowStrip() {
         </span>
       </div>
       <div className="live-strip-rail">
-        {supportedMatches.map((m) => (
+        {matches.map((m) => (
           <LiveMatchCard key={m.token} item={m} />
         ))}
       </div>

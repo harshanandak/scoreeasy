@@ -58,21 +58,6 @@ describe('DashboardLanding start flow', () => {
     globalThis.localStorage.clear();
   });
 
-  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('ignores a %s draft and result without rewriting storage', (sport) => {
-    const draft = { sport, phase: 'scoring', updatedAt: new Date().toISOString() };
-    globalThis.localStorage.setItem(`se_quickmatch_draft_${sport}`, JSON.stringify(draft));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
-      { id: 'old', sport, status: 'completed', team1: 'Dinks', team2: 'Lobs' },
-      { id: 'live', sport, status: 'in-progress', updatedAt: draft.updatedAt },
-    ]));
-    const before = JSON.stringify(localStorage);
-    renderDashboard();
-    expect(screen.getByText('Play your first match.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /resume|rematch/i })).not.toBeInTheDocument();
-    expect(screen.queryByText('Dinks')).not.toBeInTheDocument();
-    expect(JSON.stringify(localStorage)).toBe(before);
-  });
-
   it('renders the calm empty dashboard at zero data instead of the setup wizard', async () => {
     renderDashboard();
 

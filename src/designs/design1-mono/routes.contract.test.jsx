@@ -511,7 +511,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument();
   });
 
-  // RA-9 is fixed by the own-key registry lookup used at the saved-data boundary.
+  // RA-9 is fixed by the own-key registry lookup used by sport routes and live links.
   it('RA-9: an Object.prototype key is not accepted as a :sport slug', async () => {
     renderApp(['/constructor/quick']);
     await settleRoute();

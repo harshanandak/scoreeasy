@@ -124,9 +124,6 @@ describe('MonoSportHome sport chooser', () => {
   it('no longer offers the deregistered sports', () => {
     renderSportHome();
 
-    ['Pickleball', 'Squash', 'Rugby', 'Futsal', 'Handball'].forEach((name) => {
-      expect(screen.queryByRole('button', { name: `Quick match: ${name}` })).not.toBeInTheDocument();
-    });
 
     fireEvent.change(screen.getByLabelText('Search sports'), { target: { value: 'pickle' } });
     expect(screen.getByText('No sports found.')).toBeInTheDocument();

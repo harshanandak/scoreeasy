@@ -6,7 +6,7 @@
 //
 // MODEL (see scoringEvents.js): every scoring row is `type: 'point'` carrying
 // `{ team: 'A'|'B', value: number, at: number, meta? }`. `value` may be +N
-// (rugby try=5/conv=2/pen=3/dg=3; kabaddi raid/tackle; custom). The sport
+// (kabaddi raid/tackle or custom point types). The sport
 // subtype lives in `event.meta.type`; the period in `event.meta.periodIndex`
 // when explicit, else derived from the `at` seconds clock. `undo`/`correction`
 // rows carry a signed `value` (negative) that we sum like reduceState does.

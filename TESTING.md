@@ -1,3 +1,4 @@
+<!-- The five removed sports and their identified saved local data are deleted by the one-time startup purge (2026-10-22); no retention. -->
 # Live Scoring Testing Guide - Sprint 2 E2E Testing
 
 ## Phase A Completed ✓
@@ -144,7 +145,7 @@ Testing all sports end-to-end to catch bugs before Phase C (Tennis Enhancement) 
 
 ---
 
-### Test 3-14: Remaining Sports Quick Test Checklist
+### Remaining Registered Sports Quick Test Checklist
 
 **Table Tennis** (Best-of-5, 11 pts): http://localhost:5173/table-tennis/tournament
 - [ ] Complete match (3-1), test deuce, undo, draft save, resume
@@ -152,12 +153,6 @@ Testing all sports end-to-end to catch bugs before Phase C (Tennis Enhancement) 
 **Tennis** (simplified scoring): http://localhost:5173/tennis/tournament
 - [ ] Complete match with simplified scoring
 - [ ] Note: Full tennis scoring pending Phase C enhancement
-
-**Pickleball** (Best-of-3, 11 pts): http://localhost:5173/pickleball/tournament
-- [ ] Complete match (2-0), test all features
-
-**Squash** (Best-of-5, 11 pts): http://localhost:5173/squash/tournament
-- [ ] Complete match (3-2), test all features
 
 **Football** (Goals, draws allowed): http://localhost:5173/football/tournament
 - [ ] Score winner (3-1) and draw (2-2)
@@ -171,18 +166,8 @@ Testing all sports end-to-end to catch bugs before Phase C (Tennis Enhancement) 
 - [ ] Score winner and draw
 - [ ] Test draft save/resume
 
-**Handball** (Goals, no draws): http://localhost:5173/handball/tournament
-- [ ] Score match, verify draw rejection
-
-**Futsal** (Goals, no draws): http://localhost:5173/futsal/tournament
-- [ ] Score match, verify draw rejection
-
 **Kabaddi** (Goals, no draws): http://localhost:5173/kabaddi/tournament
 - [ ] Score match point-by-point
-
-**Rugby** (Goals, no draws, +3/+5/+7): http://localhost:5173/rugby/tournament
-- [ ] Test all quick buttons (penalty, try, converted try)
-- [ ] Verify draw rejection
 
 **Cricket** (2 innings, 10 wickets): http://localhost:5173/cricket/tournament
 - [ ] Score complete innings 1

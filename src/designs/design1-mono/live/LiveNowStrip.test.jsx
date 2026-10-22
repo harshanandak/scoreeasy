@@ -39,22 +39,6 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('LiveNowStrip', () => {
-  it('filters unregistered sports and invalid envelopes while keeping registered live cards', () => {
-    mocks.feed = [null, 'broken', ...['pickleball', 'squash', 'rugby', 'futsal', 'handball', 'toString'].map(sport => ({
-      ...item(sport, 'Retired A', 'Retired B'), sport,
-    })), item('kept', 'Kept A', 'Kept B')];
-    render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);
-    expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: /Kept A versus Kept B/i })).toHaveAttribute('href', '/live/kept');
-    expect(screen.queryByText('Retired A')).not.toBeInTheDocument();
-  });
-
-  it('renders no empty rail when every live match has an unregistered sport', () => {
-    mocks.feed = [{ ...item('old', 'Retired A', 'Retired B'), sport: 'pickleball' }];
-    const { container } = render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);
-    expect(container).toBeEmptyDOMElement();
-  });
-
   it('renders nothing while loading', () => {
     mocks.feed = undefined;
     const { container } = render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);

@@ -21,13 +21,6 @@ const FOOTBALL = {
   ],
 };
 
-// Rugby: two 40-minute (2400s) halves.
-const RUGBY = {
-  periods: [
-    { label: 'H1', durationSec: 2400 },
-    { label: 'H2', durationSec: 2400 },
-  ],
-};
 
 afterEach(() => cleanup());
 
@@ -56,37 +49,6 @@ describe('GoalsTimeline', () => {
     expect(within(list).getByText('2-1')).toBeInTheDocument();
     // Minute (34') derived from the seconds clock, not ms.
     expect(within(list).getByText(/34/)).toBeInTheDocument();
-  });
-
-  it('renders a rugby +5 / +2 / +3 row with the scoring TYPE and running score', () => {
-    // TRY +5 (5-0), CON +2 (7-0), PEN +3 to B (7-3).
-    const events = build([
-      ['A', 5, 720, { type: 'try' }],
-      ['A', 2, 840, { type: 'conversion' }],
-      ['B', 3, 1680, { type: 'penalty' }],
-    ]);
-    render(
-      <GoalsTimeline
-        events={events}
-        config={RUGBY}
-        teamA="Reds"
-        teamB="Blues"
-        defaultNewestFirst={false}
-      />,
-    );
-
-    const list = screen.getByRole('list');
-    const items = within(list).getAllByRole('listitem');
-    // First row: TRY +5 → 5-0.
-    expect(within(items[0]).getByText('try')).toBeInTheDocument();
-    expect(within(items[0]).getByText('+5')).toBeInTheDocument();
-    expect(within(items[0]).getByText('5-0')).toBeInTheDocument();
-    // Second row: CON +2 → 7-0.
-    expect(within(items[1]).getByText('conversion')).toBeInTheDocument();
-    expect(within(items[1]).getByText('+2')).toBeInTheDocument();
-    // Third row: PEN +3 to B → 7-3.
-    expect(within(items[2]).getByText('penalty')).toBeInTheDocument();
-    expect(within(items[2]).getByText('7-3')).toBeInTheDocument();
   });
 
   it('flags the row where the lead changes', () => {

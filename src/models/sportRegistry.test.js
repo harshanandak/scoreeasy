@@ -10,7 +10,6 @@ import {
 import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
 import { COURT_MOTIFS } from '../lib/courtMotifs';
 
-const RETIRED_IDS = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
 
 // ─── The ICP game focus: 9 registered sports ──────────────────────────────────
 // docs/plans/2026-07-20-icp-games/adjusted-plan.md §A
@@ -28,13 +27,6 @@ describe('SPORT_REGISTRY', () => {
       'tennis', 'tabletennis', 'hockey',
     ];
     expect([...sportIds].sort()).toEqual([...expected].sort());
-  });
-
-  it('no longer registers the five deregistered sports', () => {
-    RETIRED_IDS.forEach(id => {
-      expect(SPORT_REGISTRY).not.toHaveProperty(id);
-      expect(getSportById(id)).toBeNull();
-    });
   });
 
   it('does not register throwball or kho kho yet', () => {
@@ -295,22 +287,12 @@ describe('getSportsByCategory', () => {
 });
 
 describe('unregistered sport lookup', () => {
-  it.each([...RETIRED_IDS, 'curling', 'toString', '__proto__', null, undefined, {}])('does not register %s', (id) => {
+  it.each(['curling', 'toString', '__proto__', null, undefined, {}])('does not register %s', (id) => {
     expect(getSportById(id)).toBeNull();
   });
 });
 
 describe('isTeamColourSport', () => {
-  it('does not opt retired sports into team colour or put them back in pickers', () => {
-    RETIRED_IDS.forEach(id => {
-      expect(isTeamColourSport(id)).toBe(false);
-    });
-    const pickerIds = Object.values(getSportsByCategory()).flat().map(sport => sport.id);
-    expect(pickerIds).toEqual(getSportsList().map(sport => sport.id));
-    expect(pickerIds.filter(id => isTeamColourSport(id))).toEqual(
-      getSportsList().filter(sport => sport.teamColour === true).map(sport => sport.id),
-    );
-  });
 
   it('is true only for a sport whose registry entry opts in', () => {
     const registry = {

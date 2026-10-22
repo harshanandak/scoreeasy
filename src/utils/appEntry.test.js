@@ -43,22 +43,6 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
   });
 
-  it('ignores retired-sport drafts and tournaments without rewriting storage', () => {
-    const now = new Date().toISOString();
-    const sports = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
-    for (const sport of sports) {
-      localStorage.setItem(`se_quickmatch_draft_${sport}`, JSON.stringify({ phase: 'scoring', updatedAt: now }));
-      localStorage.setItem(`se_${sport}`, JSON.stringify([{ id: 1, matches: [{ status: 'pending' }] }]));
-    }
-    localStorage.setItem('se_quickmatches', JSON.stringify(sports.map((sport) => ({
-      id: sport, sport, status: 'in-progress', updatedAt: now,
-    }))));
-    const before = JSON.stringify(localStorage);
-    expect(loadInProgressMatches()).toEqual([]);
-    expect(loadAppEntryState()).toEqual({ draftEntryPath: null, returningPlayerState: false });
-    expect(JSON.stringify(localStorage)).toBe(before);
-  });
-
   it('excludes setup, expired and completed drafts from the resume catalog', () => {
     localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({ phase: 'setup' }));
     localStorage.setItem('se_quickmatch_draft_football', JSON.stringify({ phase: 'scoring', updatedAt: '2020-01-01' }));

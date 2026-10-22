@@ -34,7 +34,7 @@ describe('OfflineFallback', () => {
   it('explains local scoring and exposes offline-safe actions', () => {
     setOnlineState(false);
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
-      { id: 'match-1', sport: 'volleyball', team1: 'Team A', team2: 'Team B' },
+      { id: 'match-1', team1: 'Team A', team2: 'Team B' },
     ]));
 
     render(
@@ -69,7 +69,7 @@ describe('OfflineFallback', () => {
   it('pluralizes saved counts for singular and plural values', () => {
     setOnlineState(false);
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
-      { id: 'match-1', sport: 'volleyball', team1: 'Team A', team2: 'Team B' },
+      { id: 'match-1', team1: 'Team A', team2: 'Team B' },
     ]));
     globalThis.localStorage.setItem('se_volleyball', JSON.stringify([
       { id: 'tournament-1' },

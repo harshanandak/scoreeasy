@@ -1,7 +1,5 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
-import { isSupportedMatchRecord, getSportsList } from '../models/sportRegistry';
-import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -27,6 +25,33 @@ function migrateStoragePrefix() {
   }
 }
 migrateStoragePrefix();
+
+export function purgeRetiredSportData() {
+  try {
+    const storage = globalThis.localStorage;
+    if (!storage || storage.getItem('se_retired_purge_v1') === '1') return;
+    // Deleted sports: remove local data once; there is no retention path.
+    const removed = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
+    for (const sport of removed) {
+      storage.removeItem(`se_${sport}`);
+      storage.removeItem(`gamescore_${sport}`);
+      storage.removeItem(`se_quickmatch_draft_${sport}`);
+      storage.removeItem(`gamescore_quickmatch_draft_${sport}`);
+    }
+    for (const key of ['se_quickmatches', 'gamescore_quickmatches', 'gs_sessions', 'gs_history', 'gs_templates']) {
+      const raw = storage.getItem(key);
+      if (!raw) continue;
+      let rows;
+      try { rows = JSON.parse(raw); } catch { continue; }
+      if (!Array.isArray(rows)) continue;
+      const kept = rows.filter((row) => !removed.includes(row?.sport));
+      if (kept.length !== rows.length) storage.setItem(key, JSON.stringify(kept));
+    }
+    storage.setItem('se_retired_purge_v1', '1');
+  } catch {
+    // Leave the flag unset when storage is unavailable; retry next startup.
+  }
+}
 
 const STORAGE_KEYS = {
   TOURNAMENTS: 'se_tournaments',
@@ -275,22 +300,10 @@ export const saveData = (key, data) => {
   return true;
 };
 
-function registeredSavedData(key, value, defaultValue) {
-  const draftSport = key.startsWith('se_quickmatch_draft_') ? key.slice('se_quickmatch_draft_'.length)
-    : key.startsWith(TENNIS_QUICK_DRAFT_PREFIX) ? 'tennis' : null;
-  const sport = draftSport || getSportsList().find((item) => item.storageKey === key)?.id;
-  const sharedRecords = key === STORAGE_KEYS.QUICK_MATCHES || key === 'gs_history' || key === 'gs_sessions';
-  if (!sport && !sharedRecords) return value;
-
-  const registered = (record) => isSupportedMatchRecord(record, sport);
-  if (draftSport) return registered(value) ? value : defaultValue;
-  return Array.isArray(value) ? value.filter(registered) : defaultValue;
-}
-
 export const loadData = (key, defaultValue = null) => {
   try {
     const data = getStorage().getItem(key);
-    return data ? registeredSavedData(key, JSON.parse(data), defaultValue) : defaultValue;
+    return data ? JSON.parse(data) : defaultValue;
   } catch (error) {
     console.error('Error loading data:', error);
     return defaultValue;
@@ -372,8 +385,20 @@ export const saveSportTournament = (storageKey, tournamentData) => {
 
 export const loadSportTournaments = (storageKey) => {
   const tournaments = loadData(storageKey, []);
-  // Adapt formats in memory; the next collection save may drop ignored rows.
-  return migrateTournaments(tournaments);
+
+  // Apply format migration for backward compatibility
+  const migratedTournaments = migrateTournaments(tournaments);
+
+  // If any tournament was migrated, save the updated data back
+  const needsSave = migratedTournaments.some((t, i) =>
+    t.format?.formatMode && !tournaments[i]?.format?.formatMode
+  );
+
+  if (needsSave) {
+    saveData(storageKey, migratedTournaments);
+  }
+
+  return migratedTournaments;
 };
 
 export const deleteSportTournament = (storageKey, tournamentId) => {
@@ -389,8 +414,11 @@ export const saveQuickMatches = (matches) => {
 
 export const loadQuickMatches = () => {
   const stored = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
-  // Normalize in memory; the next collection save may drop ignored rows.
-  return normalizedQuickMatches(stored);
+  const normalized = normalizedQuickMatches(stored);
+  if (JSON.stringify(stored) !== JSON.stringify(normalized)) {
+    saveData(STORAGE_KEYS.QUICK_MATCHES, normalized);
+  }
+  return normalized;
 };
 
 export const loadCompletedQuickMatches = () => {
