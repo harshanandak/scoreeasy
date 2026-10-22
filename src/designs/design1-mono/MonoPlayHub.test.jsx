@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoPlayHub from './MonoPlayHub';
+import { getSportsList } from '../../models/sportRegistry';
 
 const PLAY_MODE_KEY = 'se_play_mode';
 
@@ -96,18 +97,12 @@ describe('MonoPlayHub Guided | Browse toggle', () => {
   it('shows the Guided sport grid in focus order without the deregistered sports', () => {
     renderPlayHub();
 
-    const names = [
-      'Cricket', 'Kabaddi', 'Volleyball', 'Badminton', 'Football', 'Basketball',
-      'Tennis', 'Table Tennis', 'Hockey',
-    ];
+    const names = getSportsList().map((sport) => sport.name);
     const gridButtons = screen.getAllByRole('button')
       .map((button) => button.textContent.trim())
       .filter((label) => names.some((name) => name.toUpperCase() === label.toUpperCase()));
     expect(gridButtons.map((label) => label.toUpperCase())).toEqual(names.map((name) => name.toUpperCase()));
 
-    ['Pickleball', 'Squash', 'Rugby', 'Futsal', 'Handball'].forEach((name) => {
-      expect(screen.queryByRole('button', { name: new RegExp(`^${name}$`, 'i') })).not.toBeInTheDocument();
-    });
   });
 
   it('drives the Guided wizard through to the tournament-setup contract', async () => {

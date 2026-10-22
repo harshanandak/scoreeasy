@@ -8,7 +8,7 @@ import { eyebrowStyle, tabularNums } from './scorecardStyles';
 // (one per side). Each period cell = points that team scored in that period
 // bucket; FINAL is bold and decisive. The winner's FINAL cell is green-filled
 // (var(--primary) + white text). 2px black rule under the header; t.divider row
-// rules; numerics tabular so a 32-30 deuce or a rugby +5 column stays aligned.
+// Numeric columns stay aligned across all registered sports.
 //
 // EVERY value comes from `goalsState(events, config).lineScore` — per-period
 // team totals, the FINAL totals, and the period LABELS (Q1..Q4, P1.., or a

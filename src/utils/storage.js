@@ -26,6 +26,43 @@ function migrateStoragePrefix() {
 }
 migrateStoragePrefix();
 
+export function purgeRetiredSportData() {
+  try {
+    const storage = globalThis.localStorage;
+    if (!storage || storage.getItem('se_retired_purge_v1') === '1') return;
+    // Deleted sports: remove local data once; there is no retention path.
+    const removed = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
+    for (const sport of removed) {
+      storage.removeItem(`se_${sport}`);
+      storage.removeItem(`gamescore_${sport}`);
+      storage.removeItem(`se_quickmatch_draft_${sport}`);
+      storage.removeItem(`gamescore_quickmatch_draft_${sport}`);
+    }
+    // Keep each key's read/filter/write synchronous; other tabs can still race.
+    for (const key of ['se_quickmatches', 'gamescore_quickmatches', 'gs_sessions', 'gs_history', 'gs_templates']) {
+      const raw = storage.getItem(key);
+      if (!raw) continue;
+      let rows;
+      try { rows = JSON.parse(raw); } catch { continue; }
+      if (!Array.isArray(rows)) continue;
+      const kept = rows.filter((row) => !removed.includes(row?.sport));
+      if (kept.length !== rows.length) storage.setItem(key, JSON.stringify(kept));
+    }
+    for (const key of ['se_statistics', 'gamescore_statistics']) {
+      const raw = storage.getItem(key);
+      if (!raw) continue;
+      let stats;
+      try { stats = JSON.parse(raw); } catch { continue; }
+      if (!stats || typeof stats !== 'object' || Array.isArray(stats)) continue;
+      const kept = Object.fromEntries(Object.entries(stats).filter(([sport]) => !removed.includes(sport)));
+      if (Object.keys(kept).length !== Object.keys(stats).length) storage.setItem(key, JSON.stringify(kept));
+    }
+    storage.setItem('se_retired_purge_v1', '1');
+  } catch {
+    // Leave the flag unset when storage is unavailable; retry next startup.
+  }
+}
+
 const STORAGE_KEYS = {
   TOURNAMENTS: 'se_tournaments',
   STATISTICS: 'se_statistics',

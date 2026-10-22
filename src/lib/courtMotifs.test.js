@@ -10,16 +10,12 @@ const decode = (url) => {
 
 const parse = (svg) => new DOMParser().parseFromString(svg, 'image/svg+xml');
 
-// Throwball is a Tier-0 sets game about to join the registry; its drawing must exist either way.
-const SCORED_SPORTS = [...new Set([...getSetsSports(), ...getGoalsSports()].map((s) => s.id).concat('throwball'))];
-// Keep validating retained drawings even when their sport is no longer registered.
+const SCORED_SPORTS = [...getSetsSports(), ...getGoalsSports()].map((sport) => sport.id);
 const DRAWN_SPORTS = Object.keys(COURT_MOTIFS);
 
 describe('court motifs', () => {
-  it('covers every sets and goals sport in the registry', () => {
-    expect(SCORED_SPORTS).toHaveLength(9);
-    expect(DRAWN_SPORTS.length).toBeGreaterThanOrEqual(12);
-    for (const id of SCORED_SPORTS) expect(COURT_MOTIFS[id], id).toBeTruthy();
+  it('covers exactly the registered sets and goals sports', () => {
+    expect([...DRAWN_SPORTS].sort()).toEqual([...SCORED_SPORTS].sort());
   });
 
   it.each(DRAWN_SPORTS)('%s: mask url decodes to a well-formed SVG with drawing in it', (id) => {

@@ -2,6 +2,10 @@
 
 All notable changes to Score Easy are documented in this file.
 
+## Unreleased — 2026-10-22
+
+- Deleted five removed sports and their assets. A one-time startup purge deletes their keys and explicitly sport-tagged shared local rows, with no retention; sportless rows stay untouched. Convex data is unchanged. Earlier release inventories below describe their historical versions.
+
 ---
 
 ## [2.0.0] - 2026-02-10 - Production Ready 🚀

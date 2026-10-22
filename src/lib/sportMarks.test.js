@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { SPORT_MARKS, sportMarkMaskUrl } from './sportMarks';
+import { getSportById } from '../models/sportRegistry';
 
 // The "show the game" mark on the scorer: a sport's ball-and-action silhouette, used as a CSS
 // mask so its colour and alpha come from the colour engine (--team-x-motif) and stay gated.
 
 describe('sportMarkMaskUrl', () => {
+  it('only defines marks for registered sports', () => {
+    for (const id of Object.keys(SPORT_MARKS)) expect(getSportById(id), id).not.toBeNull();
+  });
   it('draws a mark for volleyball as an svg data url safe for any quoting context', () => {
     const url = sportMarkMaskUrl('volleyball');
     expect(url).toMatch(/^url\("data:image\/svg\+xml,/);

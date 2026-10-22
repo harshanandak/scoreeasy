@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
+import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
 const OLDER_HISTORY_KEY = 'gs_history';
@@ -27,18 +28,14 @@ function seedQuickMatch(matches = [
 }
 
 function seedOlderHistoryMatch() {
+  const participants = ['North', 'South'].map(name => createParticipant({ name }));
+  const session = createGameSession({ templateId: 'preset_volleyball', name: 'Sunday Court', participants });
+  session.scores[participants[0].id].total = 21;
+  session.scores[participants[1].id].total = 18;
+  session.winner = participants[0].id;
   globalThis.localStorage.setItem(
     OLDER_HISTORY_KEY,
-    JSON.stringify([
-      {
-        id: 'older-match-1',
-        gameName: 'Sunday Court',
-        participants: ['North', 'South'],
-        finalScores: { North: 21, South: 18 },
-        winner: 'North',
-        completedAt: '2026-05-18T11:00:00.000Z',
-      },
-    ]),
+    JSON.stringify([createHistoryRecord(session)]),
   );
 }
 
@@ -320,78 +317,6 @@ describe('MonoHistory', () => {
     fireEvent.click(within(viewTabs).getByRole('tab', { name: 'Matches' }));
     expect(screen.getByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
     expect(screen.queryByText('Performance')).not.toBeInTheDocument();
-  });
-
-  it('keeps a deregistered-sport quick match readable with its sport label but no rematch', async () => {
-    seedQuickMatch([
-      {
-        id: 'pb-1',
-        sport: 'pickleball',
-        team1: 'Dinks',
-        team2: 'Lobs',
-        score1: 11,
-        score2: 7,
-        winner: 'Dinks',
-        completedAt: '2026-05-18T12:00:00.000Z',
-      },
-    ]);
-
-    renderHistory();
-
-    const row = await screen.findByRole('button', { name: 'View details: Dinks vs Lobs' });
-    expect(row).toHaveTextContent('Pickleball');
-    fireEvent.click(row);
-
-    expect(screen.getByText('Match details')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Rematch' })).not.toBeInTheDocument();
-  });
-
-  it('labels a quick match of an unknown sport generically', async () => {
-    seedQuickMatch([
-      {
-        id: 'x-1',
-        sport: 'curling',
-        team1: 'Stones',
-        team2: 'Brooms',
-        score1: 5,
-        score2: 3,
-        winner: 'Stones',
-        completedAt: '2026-05-18T12:00:00.000Z',
-      },
-    ]);
-
-    renderHistory();
-
-    const row = await screen.findByRole('button', { name: 'View details: Stones vs Brooms' });
-    expect(row).toHaveTextContent('Other sport');
-  });
-
-  it('still lists completed tournament matches saved under a deregistered sport', async () => {
-    globalThis.localStorage.setItem('se_futsal', JSON.stringify([
-      {
-        id: 'cup-1',
-        name: 'Futsal Cup',
-        createdAt: '2026-05-01T10:00:00.000Z',
-        teams: [{ id: 'reds', name: 'Reds' }, { id: 'blues', name: 'Blues' }],
-        matches: [
-          {
-            id: 'm-1',
-            team1Id: 'reds',
-            team2Id: 'blues',
-            score1: 3,
-            score2: 1,
-            status: 'completed',
-            completedAt: '2026-05-02T10:00:00.000Z',
-          },
-        ],
-      },
-    ]));
-
-    renderHistory();
-
-    const row = await screen.findByRole('button', { name: 'View details: Reds vs Blues' });
-    expect(row).toHaveTextContent('Futsal');
-    expect(row).toHaveTextContent('Futsal Cup');
   });
 
   it('keeps history rows readable instead of disabled-looking', () => {

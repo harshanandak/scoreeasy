@@ -5,15 +5,11 @@ import {
   getGoalsSports,
   getSportById,
   getSportsByCategory,
-  getRetiredSport,
-  getRetiredSportsList,
-  getSportLabel,
   isTeamColourSport,
 } from './sportRegistry';
 import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
 import { COURT_MOTIFS } from '../lib/courtMotifs';
 
-const RETIRED_IDS = ['pickleball', 'squash', 'rugby', 'futsal', 'handball'];
 
 // ─── The ICP game focus: 9 registered sports ──────────────────────────────────
 // docs/plans/2026-07-20-icp-games/adjusted-plan.md §A
@@ -31,13 +27,6 @@ describe('SPORT_REGISTRY', () => {
       'tennis', 'tabletennis', 'hockey',
     ];
     expect([...sportIds].sort()).toEqual([...expected].sort());
-  });
-
-  it('no longer registers the five deregistered sports', () => {
-    RETIRED_IDS.forEach(id => {
-      expect(SPORT_REGISTRY).not.toHaveProperty(id);
-      expect(getSportById(id)).toBeNull();
-    });
   });
 
   it('does not register throwball or kho kho yet', () => {
@@ -297,55 +286,13 @@ describe('getSportsByCategory', () => {
   });
 });
 
-// ─── Retired (deregistered) sports — saved data stays readable ────────────────
-
-describe('retired sports', () => {
-  it('knows all five deregistered sports with a label, engine and storage key', () => {
-    RETIRED_IDS.forEach(id => {
-      const retired = getRetiredSport(id);
-      expect(retired).not.toBeNull();
-      expect(retired.id).toBe(id);
-      expect(typeof retired.name).toBe('string');
-      expect(['sets', 'goals']).toContain(retired.engine);
-      expect(retired.storageKey).toBe(`se_${id}`);
-    });
-    expect(getRetiredSportsList().map(s => s.id).sort()).toEqual([...RETIRED_IDS].sort());
-  });
-
-  it('does not treat a registered or unknown sport as retired', () => {
-    expect(getRetiredSport('volleyball')).toBeNull();
-    expect(getRetiredSport('nonexistent')).toBeNull();
-    expect(getRetiredSport(undefined)).toBeNull();
-  });
-});
-
-describe('getSportLabel', () => {
-  it('names registered sports from the registry', () => {
-    expect(getSportLabel('tabletennis')).toBe('Table Tennis');
-  });
-
-  it('still names a retired sport so its saved matches read properly', () => {
-    expect(getSportLabel('pickleball')).toBe('Pickleball');
-    expect(getSportLabel('futsal')).toBe('Futsal');
-  });
-
-  it('falls back to a generic label for an unknown or missing sport', () => {
-    expect(getSportLabel('curling')).toBe('Other sport');
-    expect(getSportLabel(null)).toBe('Other sport');
+describe('unregistered sport lookup', () => {
+  it.each(['curling', 'toString', '__proto__', null, undefined, {}])('does not register %s', (id) => {
+    expect(getSportById(id)).toBeNull();
   });
 });
 
 describe('isTeamColourSport', () => {
-  it('does not opt retired sports into team colour or put them back in pickers', () => {
-    RETIRED_IDS.forEach(id => {
-      expect(isTeamColourSport(id)).toBe(false);
-    });
-    const pickerIds = Object.values(getSportsByCategory()).flat().map(sport => sport.id);
-    expect(pickerIds).toEqual(getSportsList().map(sport => sport.id));
-    expect(pickerIds.filter(id => isTeamColourSport(id))).toEqual(
-      getSportsList().filter(sport => sport.teamColour === true).map(sport => sport.id),
-    );
-  });
 
   it('is true only for a sport whose registry entry opts in', () => {
     const registry = {

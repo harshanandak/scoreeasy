@@ -135,6 +135,18 @@ afterEach(() => {
 });
 
 describe('MonoWatchMatch', () => {
+  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('shows the missing-snapshot unavailable state for a direct %s live link', (sport) => {
+    mocks.snapshot = null;
+    const missing = renderAt();
+    const unavailable = missing.container.textContent;
+    missing.unmount();
+    mocks.snapshot = { ...GOALS_SNAPSHOT, sport };
+    mocks.meta = { ...META, sport };
+    const retired = renderAt();
+    expect(retired.container.textContent).toBe(unavailable);
+    expect(screen.queryByRole('banner', { name: 'Match scorebug' })).not.toBeInTheDocument();
+  });
+
   it('renders the pinned scorebug from a volleyball snapshot + names', () => {
     mocks.snapshot = VOLLEY_SNAPSHOT;
     mocks.meta = META;

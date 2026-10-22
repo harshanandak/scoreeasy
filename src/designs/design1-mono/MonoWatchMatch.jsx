@@ -27,6 +27,7 @@ import LineScore from './scorecard/LineScore';
 import GenericTimeline from './scorecard/GenericTimeline';
 import { tabularNums, eyebrowStyle } from './scorecard/scorecardStyles';
 import ReportMatch from './live/ReportMatch';
+import { getSportById } from '../../models/sportRegistry';
 
 // A live match with no event in this window reads as PAUSED / DELAY (research
 // §2 "Stale / paused"). 90s mirrors the spec.
@@ -663,7 +664,7 @@ export default function MonoWatchMatch() {
   // useQuery returns undefined while loading, null when getByToken resolves to
   // not-found/private/removed. Skeleton on undefined; unavailable on null.
   if (snapshot === undefined) return <WatchSkeleton />;
-  if (snapshot === null) return <UnavailableScreen />;
+  if (snapshot === null || !getSportById(snapshot.sport)) return <UnavailableScreen />;
 
   const nameA = meta?.teamA?.name ?? 'Team A';
   const nameB = meta?.teamB?.name ?? 'Team B';

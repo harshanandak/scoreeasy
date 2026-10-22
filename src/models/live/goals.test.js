@@ -133,35 +133,6 @@ describe('goalsState — football halves timeline', () => {
   });
 });
 
-// ─── goalsState — rugby +5 / +2 / +3 totals & per-type breakdown ─────────────
-
-describe('goalsState — rugby weighted scoring', () => {
-  it('sums +N values and breaks down points by meta.type per team', () => {
-    freshClock();
-    let e = [];
-    // Team A: try (5) + conversion (2), then a penalty (3).
-    e = score(e, 'A', { value: 5, type: 'try' });
-    e = score(e, 'A', { value: 2, type: 'conv' });
-    e = score(e, 'A', { value: 3, type: 'pen' });
-    // Team B: penalty (3) + drop goal (3).
-    e = score(e, 'B', { value: 3, type: 'pen' });
-    e = score(e, 'B', { value: 3, type: 'dg' });
-
-    const state = goalsState(e, {});
-
-    expect(state.totalA).toBe(10); // 5 + 2 + 3
-    expect(state.totalB).toBe(6); //  3 + 3
-
-    // Per-team, per-type point breakdown — one generic mechanism, no sport code.
-    expect(state.breakdown.A).toEqual({ try: 5, conv: 2, pen: 3 });
-    expect(state.breakdown.B).toEqual({ pen: 3, dg: 3 });
-
-    // Without a `periods` config, line score is a single bucket = the match total.
-    expect(state.lineScore.periods).toHaveLength(1);
-    expect(state.lineScore.periods[0]).toMatchObject({ a: 10, b: 6 });
-  });
-});
-
 // ─── goalsState — kabaddi raid / tackle points ───────────────────────────────
 
 describe('goalsState — kabaddi raid & tackle points', () => {

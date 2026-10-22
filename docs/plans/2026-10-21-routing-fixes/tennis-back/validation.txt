@@ -1,3 +1,5 @@
+Current inventory after PR #175: 5 routing + 4 stability = 9 repository-wide; RA-9 now passes normally. Recorded run counts below are historical.
+
 Focused: 7 files passed; 134 passed; 11 expected fail; 145 total; duration 33.03s.
 Lint: exit 0; 0 errors; 29 warnings.
 Type-check: exit 0.

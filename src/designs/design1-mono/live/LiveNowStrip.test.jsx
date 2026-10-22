@@ -39,6 +39,14 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('LiveNowStrip', () => {
+  it('skips a removed-sport feed item and keeps a registered one', () => {
+    mocks.feed = [{ ...item('old', 'Removed A', 'Removed B'), sport: 'rugby' }, item('kept', 'Reds', 'Blues')];
+    render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);
+    expect(screen.queryByRole('link', { name: /Removed A versus Removed B/i })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: /Reds versus Blues/i })).toHaveAttribute('href', '/live/kept');
+  });
+
   it('renders nothing while loading', () => {
     mocks.feed = undefined;
     const { container } = render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);

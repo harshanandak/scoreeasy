@@ -161,7 +161,8 @@ describe('documented contrast pairs', () => {
 // TeamColourPicker.jsx (+12) and lib/courtMotifs.js (+4).
 // 669 on feat/team-colour-volleyball (PR #157): lib/sportMarks.js (+2), the white/black
 // luminance <mask> inside its data-URI SVG, where CSS variables cannot reach.
-const BASELINE = 669;
+// Removing the unused court hatch helper drops one raw literal: 669 -> 668.
+const BASELINE = 668;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
