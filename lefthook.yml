@@ -11,7 +11,6 @@ pre-commit:
 pre-push:
   parallel: false
   jobs:
-    - name: test
-      run: bun run test
-    - name: build
-      run: bun run build
+    - name: related-tests
+      # Docs/config-only changes can have no related tests; Git errors still fail.
+      run: git merge-base HEAD origin/master > /dev/null && bun run test --changed origin/master --passWithNoTests

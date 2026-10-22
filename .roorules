@@ -278,7 +278,16 @@ is in, what was decided, and what comes next.
 It does **not** compare changed source against changed tests — there is no automatic
 TDD block here. Writing the test first is a rule you follow, not one the hook enforces.
 
-**Pre-push hook** runs the full test suite and the build. Both must pass.
+**Pre-push hook** runs only tests related to files changed since `origin/master`
+(`bun run test --changed origin/master --passWithNoTests`). Vitest follows source
+imports to select affected tests. When no tests are related, it reports that and
+exits successfully; Git errors (including a missing base ref) still fail the hook.
+The explicit base also works with a detached HEAD. Fetch `origin master` before
+validation to keep the comparison current.
+
+**Required CI `verify` check** (`.github/workflows/ci.yml`) is the full-suite gate.
+It runs the build, all tests, lint, and type-check on every PR. The local pre-push
+hook does not build.
 
 ## Documentation Index (Context Pointers)
 
