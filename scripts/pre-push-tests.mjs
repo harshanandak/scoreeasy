@@ -54,6 +54,7 @@ function main() {
   paths.push(...git(['ls-files', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean));
   const removed = entries.find((entry) => /^[DR]/.test(entry.status) && entry.paths.some((path) => sourceFile.test(path)));
   const environment = paths.find((path) => environmentFile.test(path));
+  const replacesConfig = paths.some((path) => /(?:^|\/)(?:vite|vitest)\.config\.[^/]+$|(?:^|\/)scripts\/pre-push-tests\.mjs$/.test(path));
   // Missing imports disappear from Vitest's graph; a replacement config can also
   // omit forceRerunTriggers. Both cases must choose full mode before Vitest loads.
   const reason = removed
@@ -61,10 +62,13 @@ function main() {
     : environment && `test environment changed (${environment})`;
   const args = ['run', 'test'];
   if (reason) {
-    console.log(`[pre-push] Full suite: ${reason}.`);
+    console.log(`[pre-push] Full suite: ${reason}${!removed && !replacesConfig ? ' via native forceRerunTriggers' : ''}.`);
   } else {
     console.log(`[pre-push] Related tests since ${base}; no related tests is an explicit success.`);
-    args.push('--changed', base, '--passWithNoTests');
+  }
+  if (!removed && !replacesConfig) {
+    args.push('--changed', base);
+    args.push(environment ? '--passWithNoTests=false' : '--passWithNoTests');
   }
   const result = spawnSync('bun', args, { stdio: 'inherit' });
   if (result.error) console.error(`[pre-push] Cannot start tests: ${result.error.message}`);

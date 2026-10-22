@@ -1,18 +1,24 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '..');
 const fixtures = [];
+const gitLocalVariables = spawnSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' });
+if (gitLocalVariables.status !== 0) throw new Error('Cannot identify Git repository-local environment variables');
 
 function run(root, command, args) {
+  const env = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
+  // Hooks export repository-local Git state; foreign fixture repositories must
+  // clear those variables as prescribed by githooks(5).
+  for (const name of gitLocalVariables.stdout.trim().split('\n')) delete env[name.trim()];
   const result = spawnSync(command, args, {
     cwd: root,
     encoding: 'utf8',
-    env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' },
+    env,
     timeout: 40000,
   });
   if (result.error) throw result.error;
@@ -57,6 +63,26 @@ afterEach(() => {
 });
 
 describe('real pre-push hook selection', () => {
+  it('isolates foreign repositories from exported hook Git state', () => {
+    const parent = fixture();
+    const priorDir = process.env.GIT_DIR;
+    const priorImplicit = process.env.GIT_IMPLICIT_WORK_TREE;
+    try {
+      process.env.GIT_DIR = join(parent, '.git');
+      process.env.GIT_IMPLICIT_WORK_TREE = '0';
+      const child = fixture();
+      const actual = statSync(run(child, 'git', ['rev-parse', '--show-toplevel']).output.trim());
+      const expected = statSync(child);
+      expect({ dev: actual.dev, ino: actual.ino }).toEqual({ dev: expected.dev, ino: expected.ino });
+      expect(run(parent, 'git', ['rev-parse', '--is-bare-repository']).output.trim()).toBe('false');
+    } finally {
+      if (priorDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = priorDir;
+      if (priorImplicit === undefined) delete process.env.GIT_IMPLICIT_WORK_TREE;
+      else process.env.GIT_IMPLICIT_WORK_TREE = priorImplicit;
+    }
+  }, 45000);
+
   it('selects a transitive source test and supports detached HEAD', () => {
     const root = fixture();
     expect(run(root, 'git', ['checkout', '--detach', '--quiet']).status).toBe(0);
@@ -99,6 +125,7 @@ describe('real pre-push hook selection', () => {
     if (path === 'vitest.config.js') console.log(`CONFIG REPLACEMENT (NO NATIVE TRIGGERS)\n${result.output}`);
     expect(result.status, result.output).toBe(0);
     expect(result.output).toContain('Full suite: test environment changed');
+    if (path !== 'vitest.config.js') expect(result.output).toContain('via native forceRerunTriggers');
     expect(result.output).toMatch(/Test Files\s+2 passed \(2\)/);
   }, 45000);
 
