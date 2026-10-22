@@ -154,9 +154,9 @@ describe('quick Test cricket result', () => {
   it('shows each innings and a chase margin in wickets', () => {
     const m = finishFromQuickResult(result([inn('A', 200), inn('B', 180), inn('A', 100), inn('B', 121, 3)]), { kind: 'cricket' });
     expect(m).toMatchObject({ outcome: 'win', winnerSide: 'team2', headline: 'Beta', detail: 'Won by 7 wickets' });
-    expect(m.team1).toEqual({ name: 'Alpha', score: '200/10 & 100/10', unit: 'innings' });
-    expect(m.team2).toEqual({ name: 'Beta', score: '180/10 & 121/3', unit: 'innings' });
-    expect(m.ariaSummary).toContain('Alpha 200/10 & 100/10, Beta 180/10 & 121/3.');
+    expect(m.team1).toEqual({ name: 'Alpha', score: '200/all & 100/all', unit: 'innings' });
+    expect(m.team2).toEqual({ name: 'Beta', score: '180/all & 121/3', unit: 'innings' });
+    expect(m.ariaSummary).toContain('Alpha 200/all & 100/all, Beta 180/all & 121/3.');
   });
 
   it('shows a defended target as a runs margin', () => {
@@ -168,8 +168,18 @@ describe('quick Test cricket result', () => {
     const m = finishFromQuickResult(result([inn('A', 400), inn('B', 100), inn('B', 150), { teamId: 'A', runs: 0, wickets: 0, balls: 0 }],
       { currentInningsIndex: 2 }), { kind: 'cricket' });
     expect(m).toMatchObject({ winnerSide: 'team1', detail: 'Won by an innings and 150 runs' });
-    expect(m.team1.score).toBe('400/10');
-    expect(m.team2.score).toBe('100/10 & 150/10');
+    expect(m.team1.score).toBe('400/all');
+    expect(m.team2.score).toBe('100/all & 150/all');
+  });
+
+  it('marks declared and all-out innings the way the Test scorer does, including a follow-on', () => {
+    const declared = (teamId, runs, wickets) => ({ teamId, runs, wickets, balls: 60, allOut: false, declared: true });
+    const m = finishFromQuickResult(result([declared('A', 450, 7), inn('B', 150), inn('B', 200), { teamId: 'A', runs: 0, wickets: 0, balls: 0 }],
+      { currentInningsIndex: 2, format: { preset: 'test', totalInnings: 4, players: 11, followOnMargin: 200 } }), { kind: 'cricket' });
+    expect(m).toMatchObject({ winnerSide: 'team1', detail: 'Won by an innings and 100 runs' });
+    expect(m.team1.score).toBe('450/7d');
+    expect(m.team2.score).toBe('150/all & 200/all');
+    expect(m.ariaSummary).toContain('Alpha 450/7d, Beta 150/all & 200/all.');
   });
 
   it('keeps a manual draw truthful when aggregate runs are unequal', () => {

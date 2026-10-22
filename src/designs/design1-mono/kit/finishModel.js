@@ -96,7 +96,8 @@ export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets
     const teamScore = (teamId, name) => ({
       name,
       score: r.innings.filter(i => i.teamId === teamId && (num(i.balls) > 0 || num(i.runs) > 0 || num(i.wickets) > 0 || i.allOut || i.declared))
-        .map(i => `${num(i.runs)}/${num(i.wickets)}`).join(' & ') || '0/0',
+        // Same marks as the Test scorer and board: "243/all" for all out, "187/6d" for a declaration.
+        .map(i => `${num(i.runs)}/${i.allOut ? 'all' : num(i.wickets)}${i.declared ? 'd' : ''}`).join(' & ') || '0/0',
       unit: 'innings',
     });
     const team1 = teamScore(r.team1Id, name1);
