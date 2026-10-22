@@ -223,6 +223,17 @@ function accents(t) {
 }
 
 /**
+ * One colour through the same gates as a team, with no clash pass (there is no opponent).
+ * Used for sport identities (plan 2026-10-22 §3): a sport tile is gated exactly like a scorer key.
+ * @param {unknown} input any hex colour; invalid input falls back to team A's default
+ * @returns {object} hi, core, lo, on, veil, scrimA, numSurf, tint, line, motifCol, motifA, band
+ */
+export function deriveIdentityColour(input) {
+  const t = normalise(normaliseHex(input) ?? DEFAULT_TEAM_COLOURS.a);
+  return { ...t, ...accents(t) };
+}
+
+/**
  * Derive both teams' tokens. Invalid input falls back to that team's default; never throws.
  * @param {unknown} aInput team A colour
  * @param {unknown} bInput team B colour
@@ -278,12 +289,13 @@ export function deriveTeamColours(aInput, bInput) {
 
 /**
  * Every contrast pair the board relies on, as [label, ratio, minimum] rows.
- * @param {{A: object, B: object}} derived output of deriveTeamColours
+ * @param {Record<string, object>} derived output of deriveTeamColours ({A, B, note}), or any
+ *   map of key -> deriveIdentityColour() output (e.g. one row set per sport tile)
  */
 export function contrastReport(derived) {
   const rows = [];
-  for (const k of ['A', 'B']) {
-    const t = derived[k];
+  for (const [k, t] of Object.entries(derived)) {
+    if (!t || typeof t !== 'object') continue; // deriveTeamColours' `note`
     const surfaces = { hi: t.hi, core: t.core, lo: t.lo, sheen: sheen(t.hi) };
     for (const [name, s] of Object.entries(surfaces)) {
       rows.push([`${k} label on ${name}`, contrast(t.on, s), 4.5]);
@@ -305,17 +317,24 @@ const rgba = (hex, a) => `rgba(${hexToRgb(hex).map((v) => Math.round(v * 255)).j
  * @returns {Record<string, string>} --team-{a,b}-{hi,core,lo,on,scrim,tint,line,motif}
  */
 export function teamColourVars(derived) {
-  const vars = {};
-  for (const [k, side] of [['A', 'a'], ['B', 'b']]) {
-    const t = derived[k];
-    vars[`--team-${side}-hi`] = t.hi;
-    vars[`--team-${side}-core`] = t.core;
-    vars[`--team-${side}-lo`] = t.lo;
-    vars[`--team-${side}-on`] = t.on;
-    vars[`--team-${side}-scrim`] = rgba(t.veil, t.scrimA);
-    vars[`--team-${side}-tint`] = t.tint;
-    vars[`--team-${side}-line`] = t.line;
-    vars[`--team-${side}-motif`] = rgba(t.motifCol, t.motifA);
-  }
-  return vars;
+  return { ...colourVars(derived.A, '--team-a'), ...colourVars(derived.B, '--team-b') };
+}
+
+/**
+ * CSS custom properties for one engine-derived colour under a prefix.
+ * @param {object} t one team (or identity) from the engine
+ * @param {string} prefix e.g. '--team-a' or '--sport'
+ * @returns {Record<string, string>} {prefix}-{hi,core,lo,on,scrim,tint,line,motif}
+ */
+export function colourVars(t, prefix) {
+  return {
+    [`${prefix}-hi`]: t.hi,
+    [`${prefix}-core`]: t.core,
+    [`${prefix}-lo`]: t.lo,
+    [`${prefix}-on`]: t.on,
+    [`${prefix}-scrim`]: rgba(t.veil, t.scrimA),
+    [`${prefix}-tint`]: t.tint,
+    [`${prefix}-line`]: t.line,
+    [`${prefix}-motif`]: rgba(t.motifCol, t.motifA),
+  };
 }

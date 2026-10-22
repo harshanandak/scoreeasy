@@ -521,70 +521,56 @@ AppConfirmDialog.propTypes = {
   onConfirm: PropTypes.func.isRequired,
 };
 
+// Dock icons: the hand-drawn layer (Kit S1, Harsha 2026-10-22), stroke 1.9 on the 24 grid and
+// always paired with a label. Paths are verbatim from the hand-drawn board's dock-*.svg.
+const NAV_ICON_PATHS = {
+  home: [
+    'M2.6 12.2C6 9.2 9.2 6.4 13.1 3.2',
+    'M10.6 3.6C14.4 6.6 17.9 9.5 21.6 12.6',
+    'M5.9 9.9C5.5 13.4 5.7 17.4 5.4 21.8',
+    'M18.2 9.8C18.6 13.5 18.4 17.4 18.8 21.6',
+    'M2.8 20.2C9.2 20.6 15.2 20 21.4 20.6',
+    'M10.2 20.1C10.1 18.3 10.2 16.5 10.4 15.1C11.6 14.6 12.8 14.8 14 15.2C14.1 16.8 14 18.4 14.1 20',
+  ],
+  play: [
+    'M7.9 4.1C8 9.3 8.1 14.4 8.5 19.7',
+    'M6.9 20.1C11.6 17.4 16 14.6 20.4 11.6',
+    'M20.5 12.4C16.3 9.6 12.2 7 6.7 4.6',
+    'M2.6 9.4C3.6 9.2 4.5 9.3 5.3 9.5',
+    'M1.9 14.5C3.1 14.3 4.2 14.4 5.4 14.7',
+  ],
+  matches: [
+    'M3.7 12.8C3.9 17.5 7.7 20.9 12.3 20.7C17 20.5 20.6 16.7 20.4 12C20.2 7.4 16.4 3.6 11.8 3.7C9.3 3.8 7.1 4.9 5.5 6.6',
+    'M5.6 2.8C5.4 4.3 5.3 5.8 5.2 7.4C6.6 7.5 8 7.4 9.5 7',
+    'M12.1 7.2C12 9 12 10.9 12.2 12.8',
+    'M11.6 12C13 12.9 14.4 13.7 15.9 14.5',
+  ],
+  account: [
+    'M15.9 7.4C15.9 7.7 16 8.9 15.7 9.5C15.5 10.1 15 10.6 14.5 11C14 11.4 13.4 11.7 12.8 11.9C12.2 12 11.5 12.1 10.9 11.9C10.3 11.8 9.6 11.4 9.2 10.9C8.7 10.5 8.4 9.8 8.2 9.1C8 8.5 8 7.7 8.2 7C8.3 6.4 8.7 5.6 9.1 5.2C9.6 4.7 10.3 4.3 10.9 4.2C11.5 4 12.2 4.1 12.8 4.2C13.5 4.4 14.1 4.7 14.6 5.1C15.1 5.5 15.7 6.1 15.9 6.7C16.2 7.4 16.3 8.2 16.1 8.9C16 9.6 15.2 10.5 15.1 10.8',
+    'M4.1 21.2C4.4 16.9 7.6 14.2 12.1 14.1C16.4 14.1 19.3 16.6 19.9 21',
+  ],
+};
+
 function NavIcon({ name }) {
-  const commonProps = {
-    'aria-hidden': 'true',
-    fill: 'none',
-    height: 22,
-    stroke: 'currentColor',
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    strokeWidth: 1.8,
-    viewBox: '0 0 24 24',
-    width: 22,
-  };
-
-  if (name === 'home') {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 10.5 12 4l8 6.5" />
-        <path d="M6.5 10v9h11v-9" />
-        <path d="M10 19v-5h4v5" />
-      </svg>
-    );
-  }
-
-  if (name === 'play') {
-    return (
-      <svg {...commonProps}>
-        <path d="M8 5.5v13l10-6.5z" />
-      </svg>
-    );
-  }
-
-  if (name === 'matches') {
-    return (
-      <svg {...commonProps}>
-        <path d="M7 6h11" />
-        <path d="M7 12h11" />
-        <path d="M7 18h11" />
-        <path d="M4 6h.01" />
-        <path d="M4 12h.01" />
-        <path d="M4 18h.01" />
-      </svg>
-    );
-  }
-
-  if (name === 'stats') {
-    return (
-      <svg {...commonProps}>
-        <path d="M5 19V9" />
-        <path d="M12 19V5" />
-        <path d="M19 19v-7" />
-      </svg>
-    );
-  }
-
   return (
-    <svg {...commonProps}>
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={24}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+      viewBox="0 0 24 24"
+      width={24}
+    >
+      {NAV_ICON_PATHS[name].map((d) => <path key={d} d={d} />)}
     </svg>
   );
 }
 
 NavIcon.propTypes = {
-  name: PropTypes.oneOf(['home', 'play', 'matches', 'stats', 'account']).isRequired,
+  name: PropTypes.oneOf(['home', 'play', 'matches', 'account']).isRequired,
 };
 
 // Single account control for the mobile bottom nav. The bottom nav is the ONLY
@@ -998,9 +984,9 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
         .global-nav-link:hover,
         .global-nav-link[aria-current="page"] {
-          border-color: var(--se-color-action);
-          background: var(--se-color-action);
-          color: var(--se-color-inverse);
+          border-color: var(--se-color-ink);
+          background: var(--se-color-ink);
+          color: var(--se-color-on-ink);
         }
 
         .global-mobile-menu-button,
@@ -1209,8 +1195,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
           }
 
           .global-mobile-menu-item[aria-current="page"] {
-            background: var(--se-color-action);
-            color: var(--se-color-inverse);
+            background: var(--se-color-ink);
+            color: var(--se-color-on-ink);
           }
 
           .global-mobile-menu-item:last-child {
@@ -1255,15 +1241,13 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             gap: 3px;
             min-height: 54px;
             border: 0;
-            border-radius: 10px;
+            border-radius: 12px;
             background: transparent;
-            color: var(--se-color-ink-muted);
+            color: var(--se-color-ink-soft);
             cursor: pointer;
-            font-family: var(--se-font-mono);
-            font-size: 0.5625rem;
+            font-family: var(--se-font-sans);
+            font-size: 0.74rem;
             font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
             line-height: 1;
             position: relative;
           }
@@ -1279,8 +1263,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           .global-bottom-nav-icon svg {
             display: block;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
           }
 
           .global-bottom-nav-label {
@@ -1300,8 +1284,12 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             min-height: 54px;
             width: 100%;
             min-width: 0;
-            border-radius: 10px;
-            color: var(--se-color-ink-muted);
+            border-radius: 12px;
+            color: var(--se-color-ink-soft);
+            font-family: var(--se-font-sans);
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1;
           }
 
           .global-bottom-nav-account-control {
@@ -1342,16 +1330,17 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           /* Unified active treatment: every nav surface (header link, mobile
              sheet item, bottom-nav item, account cell) paints the active tab
-             with the same solid action fill + inverse ink, so the "you are
-             here" cue is consistent across the shell. The account cell needs
+             with the same solid ink fill + on-ink text (Kit: green is spent on
+             the one Go and on Live, never on chrome), so the "you are here"
+             cue is consistent across the shell. The account cell needs
              its own selector because its interactive control is the Clerk
              button (no aria-current of its own) rather than a
              .global-bottom-nav-item, so the cue is driven by the cell's
              is-active state. */
           .global-bottom-nav-item[aria-current="page"],
           .global-bottom-nav-account-cell.is-active {
-            background: var(--se-color-action);
-            color: var(--se-color-inverse);
+            background: var(--se-color-ink);
+            color: var(--se-color-on-ink);
           }
 
           body.has-mobile-input-focus .global-bottom-nav {

@@ -16,7 +16,7 @@ const live = vi.hoisted(() => ({
 }));
 
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null }));
-const storage = vi.hoisted(() => ({ saveData: null }));
+const storage = vi.hoisted(() => ({ saveData: null, saveQuickMatch: null }));
 
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
@@ -39,12 +39,13 @@ vi.mock('../../lib/live/liveSession', () => ({
 }));
 vi.mock('../../utils/storage', () => {
   storage.saveData = vi.fn(() => true);
+  storage.saveQuickMatch = vi.fn(() => true);
   return {
     loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
     loadQuickMatch: vi.fn(() => null),
     saveData: storage.saveData,
     clearData: vi.fn(),
-    saveQuickMatch: vi.fn(() => true),
+    saveQuickMatch: storage.saveQuickMatch,
     isStaleQuickMatchDraft: () => false,
   };
 });
@@ -69,6 +70,36 @@ beforeEach(() => {
   live.goLive.mockClear();
   live.point.mockClear();
   storage.saveData.mockClear();
+  storage.saveQuickMatch.mockClear();
+});
+
+// Home shows the last match in its team colours (Kit S1), so the finished record keeps them.
+async function finishAfterOnePoint() {
+  const reds = await screen.findByRole('button', { name: 'Add point for Reds' });
+  fireEvent.click(reds);
+  await waitFor(() => expect(reds).toHaveTextContent('1'));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+  fireEvent.click(within(screen.getByRole('dialog', { name: 'End match?' })).getByRole('button', { name: 'End match' }));
+  await waitFor(() => expect(storage.saveQuickMatch).toHaveBeenCalled());
+  return storage.saveQuickMatch.mock.calls.at(-1)[0];
+}
+
+describe('quick match team colour: the finished record', () => {
+  it('keeps the picked colours on a finished volleyball match', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    const saved = await finishAfterOnePoint();
+    expect(saved).toMatchObject({ status: 'completed', team1Color: '#facc15', team2Color: '#16a34a' });
+  });
+
+  it('adds no colours for a sport that has not opted in', async () => {
+    seedSets('badminton', { team1Color: '#facc15' });
+    render(<MonoQuickMatch />);
+    const saved = await finishAfterOnePoint();
+    expect(saved.status).toBe('completed');
+    expect(saved).not.toHaveProperty('team1Color');
+    expect(saved).not.toHaveProperty('team2Color');
+  });
 });
 
 describe('quick match team colour: volleyball board', () => {

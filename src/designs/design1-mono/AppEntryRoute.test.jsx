@@ -229,22 +229,26 @@ describe('app entry route contract', () => {
     // History and Stats are now one merged section reachable from a single tab.
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toBeInTheDocument();
     expect(within(appNav).queryByRole('button', { name: 'Stats', hidden: true })).not.toBeInTheDocument();
+    // No Live tab until a /live destination exists (Kit decision 4 lands with S6): no dead tab.
+    expect(within(appNav).queryByRole('button', { name: 'Live', hidden: true })).not.toBeInTheDocument();
+    // Dock icons are the hand-drawn layer (stroke 1.9 on 24), and the active tab is an ink fill.
+    for (const icon of appNav.querySelectorAll('.global-bottom-nav-icon svg')) {
+      expect(icon).toHaveAttribute('stroke-width', '1.9');
+    }
+    expect(appNav.querySelector('.global-bottom-nav-icon path')).toHaveAttribute('d', 'M2.6 12.2C6 9.2 9.2 6.4 13.1 3.2');
+    expect(navStyles).toMatch(/\.global-bottom-nav-account-cell\.is-active \{\s*background: var\(--se-color-ink\);\s*color: var\(--se-color-on-ink\);/);
   });
 
   it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
-    // The Play hub defaults new users to Guided; Browse (the ledger chooser) is one tap away
-    // and is remembered, so seed it to assert the browse-mode sport list directly.
-    globalThis.localStorage.setItem('se_play_mode', 'browse');
     const { container } = renderApp('/play');
 
-    expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'What are we scoring?' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveClass('global-bottom-nav-native');
     expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
 
-    // The /play hub was simplified into a ledger-style chooser: the quick-match
-    // action now navigates straight to the sport scorer.
+    // A Play hub tile starts that sport's quick setup.
     fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
 
     await waitFor(() => {

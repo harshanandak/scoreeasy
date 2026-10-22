@@ -922,6 +922,9 @@ export default function MonoQuickMatch() {
       status: 'completed',
       clientMatchId,
       sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
+      // The picked team colours stay with the local record so Home can show the last match in
+      // them. Local only: normalizeMatchForConvex does not send them.
+      ...(teamColourOn ? { team1Color, team2Color } : {}),
     };
 
     if (!persistQuickMatch(nextResult)) return false;

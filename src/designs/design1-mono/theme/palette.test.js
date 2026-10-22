@@ -205,7 +205,12 @@ describe('documented contrast pairs', () => {
 // ConfirmActionPanel drops its four inline reds (-4); the dialog CSS that left index.jsx's
 // inline <style> (-1) and the sheet backdrop in mono.css (-1) each lose an rgba() scrim to
 // --se-color-scrim. New marks add 0: their mask literals live once in sportMarks.js cutOut().
-const BASELINE = 662;
+// Kit S1 (Home + Play hub), 662 -> 653: Home drops its #999/#333/#444 ink-card greys and three
+// #dc2626 "live" dots (-6); the Guided wizard (NewUserFlow.jsx, only the old Play hub reached it)
+// goes with its #fff/#aaa literals and two rgba() (-12); the registry gains the nine sport
+// identity sources (+9), which the engine gates before anything is painted. The eight new tile
+// marks add 0 (cutOut()).
+const BASELINE = 653;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

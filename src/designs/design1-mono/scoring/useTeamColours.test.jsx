@@ -41,6 +41,10 @@ describe('useTeamColours', () => {
     const { result } = renderHook(() => useTeamColours('#d62828', '#1d4ed8', 'cricket'));
     expect(result.current).not.toHaveProperty('--sport-motif-a');
     expect(result.current).not.toHaveProperty('--sport-motif-b');
+  });
+
+  it('omits the mark for an id without one', () => {
+    const { result } = renderHook(() => useTeamColours('#d62828', '#1d4ed8', 'not-a-sport'));
     expect(result.current).not.toHaveProperty('--sport-mark');
   });
 

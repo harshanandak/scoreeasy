@@ -1,110 +1,41 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadSportTournaments, loadData } from '../../utils/storage';
-import { getActiveSessions } from '../../utils/universalStorage';
-import { getSportsList } from '../../models/sportRegistry';
-import NewUserFlow from './NewUserFlow';
-import MonoSportHome from './MonoSportHome';
+import { getSportsByCategory } from '../../models/sportRegistry';
+import { LATER_GROUP_LABEL, PRIORITY_GROUP_LABEL } from '../../models/sportFocus';
+import { sportIdentity } from '../../lib/sportIdentity';
+import { KitSection, KitTop, KitWash, SportTile } from './kit/KitParts';
 
-const MONO = 'var(--font-mono)';
-const PLAY_MODE_KEY = 'se_play_mode';
-const QM_KEY = 'se_quickmatches';
-
-/* Design-system tokens — single source of truth lives in index.css */
-const t = {
-  text: 'var(--foreground)',
-  muted: 'var(--muted-foreground)',
-  surface: 'var(--card)',
-  border: 'var(--border)',
-  green: 'var(--primary)',
-  inverse: 'var(--primary-foreground)',
-};
-
-/* Does this device already hold any saved play data?
-   Mirrors the dashboard's "new user" signal: matches, tournaments, or active sessions. */
-function hasAnyPlayData() {
-  if (getActiveSessions().length > 0) return true;
-  if (loadData(QM_KEY, []).length > 0) return true;
-  return getSportsList().some((sport) => loadSportTournaments(sport.storageKey).length > 0);
-}
-
-function readInitialMode() {
-  try {
-    const saved = globalThis.localStorage?.getItem(PLAY_MODE_KEY);
-    if (saved === 'guided' || saved === 'browse') return saved;
-  } catch {
-    // Ignore storage access failures (private mode / blocked storage); use the derived default.
-  }
-  return hasAnyPlayData() ? 'browse' : 'guided';
-}
-
-const MODES = [
-  { id: 'guided', label: 'Guided' },
-  { id: 'browse', label: 'Browse' },
-];
-
+/* Play hub (Kit, plan 2026-10-22 §9 S1): every registered sport as an engine-gated identity tile,
+   in sportFocus order. Popular is two columns with the hint line; More sports is three, name only.
+   A tile starts a quick match; that setup screen carries the switch to tournament setup. */
 export default function MonoPlayHub() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState(readInitialMode);
-
-  useEffect(() => {
-    try {
-      globalThis.localStorage?.setItem(PLAY_MODE_KEY, mode);
-    } catch {
-      // Ignore persistence failures (private mode / quota / blocked storage).
-    }
-  }, [mode]);
+  const groups = getSportsByCategory();
+  const popular = groups[PRIORITY_GROUP_LABEL];
+  const more = groups[LATER_GROUP_LABEL];
+  const start = (sport) => navigate(`/${sport.id}/quick`);
 
   return (
-    <div>
-      <div className="play-hub-toggle-shell">
-        <div
-          className="play-hub-toggle"
-          role="tablist"
-          aria-label="Play mode"
-          style={{ display: 'inline-flex', gap: 4, border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, padding: 4 }}
-        >
-          {MODES.map((m) => {
-            const isActive = mode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setMode(m.id)}
-                style={{
-                  border: 'none',
-                  borderRadius: 'calc(var(--radius) - 2px)',
-                  cursor: 'pointer',
-                  fontFamily: MONO,
-                  fontSize: '0.625rem',
-                  fontWeight: isActive ? 800 : 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  minHeight: 36,
-                  padding: '8px 18px',
-                  background: isActive ? t.green : 'transparent',
-                  color: isActive ? t.inverse : t.muted,
-                  transition: 'background 150ms ease, color 150ms ease',
-                }}
-              >
-                {m.label}
-              </button>
-            );
-          })}
+    <div className="kit-screen" data-screen="play">
+      <KitWash from={sportIdentity('kabaddi')?.tint} to={sportIdentity('hockey')?.tint} />
+      <KitTop title="Play" />
+      <h1 className="kit-title">What are we scoring?</h1>
+      <p className="kit-sub">Tap a sport to set up a quick match</p>
+
+      <section aria-labelledby="play-popular">
+        <KitSection id="play-popular" title={PRIORITY_GROUP_LABEL} aside={<span>{popular.length} sports</span>} />
+        <div className="kit-grid2">
+          {popular.map((sport) => <SportTile key={sport.id} sport={sport} onSelect={start} />)}
         </div>
-      </div>
+      </section>
 
-      {mode === 'guided' ? <NewUserFlow navigate={navigate} /> : <MonoSportHome />}
-
-      <style>{`
-        .play-hub-toggle-shell {
-          display: flex;
-          justify-content: center;
-          padding: 24px 16px 0;
-        }
-      `}</style>
+      {more.length > 0 && (
+        <section aria-labelledby="play-more">
+          <KitSection id="play-more" title={LATER_GROUP_LABEL} />
+          <div className="kit-grid3">
+            {more.map((sport) => <SportTile key={sport.id} sport={sport} mini onSelect={start} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
