@@ -339,9 +339,10 @@ describe('MonoSheet bottom-sheet primitive', () => {
 
     // Backdrop shares the established z-260 stacking baseline.
     expect(monoCss).toMatch(/\.mono-sheet-backdrop\s*\{[\s\S]*z-index:\s*260/);
-    // Brutalist frame: hard hairline border + hard offset shadow.
-    expect(monoCss).toMatch(/\.mono-sheet\s*\{[\s\S]*var\(--se-color-line-strong\)/);
-    expect(monoCss).toMatch(/\.mono-sheet\s*\{[\s\S]*var\(--se-shadow-hard\)/);
+    // Hard shell sitting on the bottom edge: 2px ink border, no shadow
+    // (colour audit §6.4; full contract in hardShellDialogs.test.jsx).
+    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*border:\s*var\(--se-modal-border\) solid var\(--se-color-ink\)/);
+    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*box-shadow:\s*none/);
     // HiFi soft top radii + safe-area padding + drag handle affordance.
     expect(monoCss).toContain('var(--se-blend-radius-soft-lg)');
     expect(monoCss).toContain('env(safe-area-inset-bottom, 0px)');

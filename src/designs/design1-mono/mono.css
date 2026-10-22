@@ -2331,10 +2331,192 @@ button.mono-stat-card {
   cursor: pointer;
 }
 /* ------------------------------------------------------------------ */
-/* MonoSheet — shared bottom-sheet primitive                          */
-/* Hard brutalist shell (hairline top border + hard offset shadow)    */
-/* with HiFi soft top radii; slide-up is reduced-motion gated.        */
-/* Shares the z-260 backdrop stacking baseline with .app-confirm.     */
+/* Modal surfaces: hard shell                                         */
+/* App confirm dialogs (AppConfirmDialog, MonoQuickMatch's            */
+/* ConfirmDialog, AppScoringConfirmDialog), MonoSheet and             */
+/* ConfirmActionPanel share one language: white surface, 2px ink      */
+/* border, solid ink offset shadow, ink overline, ink commit /        */
+/* danger-red destructive / white cancel buttons, one unblurred       */
+/* scrim. Green never appears here: it means go/live only.            */
+/* Source: docs/plans/2026-10-21-colour-system-audit.md, sections     */
+/* 6.1 and 6.4 (migration PR 6).                                      */
+/* ------------------------------------------------------------------ */
+
+/* Defined once, here, until the palette PRs move them into index.css.
+   --se-color-scrim, --se-shadow-hard-lg and --se-shadow-press are the
+   audit's new tokens. The --se-modal-* and --se-shadow-hard-ink tokens
+   carry the audit's target values for tokens whose app-wide value has
+   not moved yet: --se-color-surface (#ffffff, PR 4), --se-color-danger
+   (#b42318, PR 13), --se-border-standard (2px) and --se-shadow-hard
+   (3px 3px 0 ink, PR 5), button radius 10px (PR 7). Fold each into its
+   app-wide token when that PR lands. */
+:root {
+  --se-color-scrim: rgba(11, 11, 13, 0.45);
+  --se-modal-surface: #ffffff;
+  --se-modal-danger: #b42318;
+  --se-modal-border: 2px;
+  --se-modal-radius: 14px;
+  --se-modal-button-radius: 10px;
+  --se-shadow-hard-ink: 3px 3px 0 var(--se-color-ink);
+  --se-shadow-hard-lg: 4px 4px 0 var(--se-color-ink);
+  --se-shadow-press: 1px 1px 0 var(--se-color-ink);
+}
+
+/* Confirm dialogs sit on the z-300 tier, above sheets (z-260). */
+.app-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--se-color-scrim);
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+}
+
+.app-confirm-backdrop-button {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.app-confirm-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  overflow: auto;
+  border: var(--se-modal-border) solid var(--se-color-ink);
+  border-radius: var(--se-modal-radius);
+  background: var(--se-modal-surface);
+  color: var(--se-color-ink);
+  box-shadow: var(--se-shadow-hard-lg);
+  padding: 26px;
+}
+
+.app-confirm-eyebrow {
+  color: var(--se-color-ink-soft);
+  font-family: var(--se-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.app-confirm-title {
+  color: var(--se-color-ink);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+
+.app-confirm-message {
+  color: var(--se-color-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.app-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* One button set for dialogs, sheets and the inline confirm panel. */
+.app-confirm-primary,
+.app-confirm-secondary,
+.mono-sheet-primary,
+.mono-sheet-secondary {
+  min-height: 52px;
+  border: var(--se-modal-border) solid var(--se-color-ink);
+  border-radius: var(--se-modal-button-radius);
+  box-shadow: var(--se-shadow-hard-ink);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 800;
+  padding: 12px 18px;
+  touch-action: manipulation;
+}
+
+.app-confirm-primary:active,
+.app-confirm-secondary:active,
+.mono-sheet-primary:active,
+.mono-sheet-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-shadow-press);
+}
+
+/* Commit (End match, Save, Leave): ink. */
+.app-confirm-primary,
+.mono-sheet-primary {
+  background: var(--se-color-ink);
+  color: var(--se-color-inverse);
+}
+
+/* Destructive (Discard, Delete, Clear): danger red. MonoQuickMatch's
+   ConfirmDialog has no tone prop yet, so its Discard instance is matched
+   by idPrefix (pinned in MonoQuickMatch.hardening.test.jsx); drop that
+   selector once it passes a danger tone. */
+.app-confirm-danger,
+.app-confirm-dialog[aria-labelledby="discard-match-title"] .app-confirm-primary,
+.mono-sheet-danger {
+  background: var(--se-modal-danger);
+  color: var(--se-color-inverse);
+}
+
+/* Cancel (Keep scoring, Stay here): white. */
+.app-confirm-secondary,
+.mono-sheet-secondary {
+  background: var(--se-modal-surface);
+  color: var(--se-color-ink);
+}
+
+/* Inline confirm (ConfirmActionPanel): the same shell, in the page flow. */
+.app-confirm-panel {
+  border: var(--se-modal-border) solid var(--se-color-ink);
+  border-radius: var(--se-modal-radius);
+  background: var(--se-modal-surface);
+  box-shadow: var(--se-shadow-hard-ink);
+}
+
+.app-confirm-panel-message {
+  color: var(--se-color-ink);
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .app-confirm-backdrop {
+    align-items: flex-end;
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-confirm-dialog {
+    width: 100%;
+    max-height: min(88vh, 680px);
+    padding: 20px;
+  }
+
+  .app-confirm-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .app-confirm-primary,
+  .app-confirm-secondary {
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* MonoSheet: shared bottom-sheet primitive                           */
+/* Hard shell on the bottom edge: 2px ink border with no bottom edge, */
+/* 16px top radii, no shadow; slide-up is reduced-motion gated.       */
+/* Sits on the z-260 tier, below .app-confirm-backdrop (z-300).       */
 /* ------------------------------------------------------------------ */
 .mono-sheet-backdrop {
   position: fixed;
@@ -2343,8 +2525,7 @@ button.mono-stat-card {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(2px);
+  background: var(--se-color-scrim);
 }
 
 .mono-sheet-backdrop-button {
@@ -2361,12 +2542,13 @@ button.mono-stat-card {
   width: min(560px, 100%);
   max-height: min(88vh, 720px);
   overflow-y: auto;
-  border: var(--se-border-standard) solid var(--se-color-line-strong);
+  border: var(--se-modal-border) solid var(--se-color-ink);
+  border-bottom: 0;
   border-top-left-radius: var(--se-blend-radius-soft-lg);
   border-top-right-radius: var(--se-blend-radius-soft-lg);
-  background: var(--se-color-surface);
-  color: var(--se-color-ink-strong);
-  box-shadow: var(--se-shadow-hard);
+  background: var(--se-modal-surface);
+  color: var(--se-color-ink);
+  box-shadow: none;
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   animation: mono-sheet-rise var(--se-motion-standard, 250ms) ease;
 }
@@ -2377,11 +2559,11 @@ button.mono-stat-card {
   height: 4px;
   margin: 0 auto 14px;
   border-radius: var(--se-blend-radius-capsule);
-  background: var(--se-color-line-strong);
+  background: var(--se-color-ink);
 }
 
 .mono-sheet-title {
-  color: var(--se-color-ink-strong);
+  color: var(--se-color-ink);
   font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.2;
@@ -2399,33 +2581,6 @@ button.mono-stat-card {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
-}
-
-.mono-sheet-primary,
-.mono-sheet-secondary {
-  min-height: 48px;
-  border: var(--se-border-standard) solid var(--se-color-line-strong);
-  border-radius: var(--se-radius-button);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 700;
-  padding: 12px 18px;
-  touch-action: manipulation;
-}
-
-.mono-sheet-primary {
-  background: var(--se-color-action);
-  color: var(--se-color-inverse);
-}
-
-.mono-sheet-danger {
-  background: var(--se-color-ink-strong);
-  color: var(--se-color-inverse);
-}
-
-.mono-sheet-secondary {
-  background: var(--se-color-surface);
-  color: var(--se-color-ink-strong);
 }
 
 @keyframes mono-sheet-rise {
@@ -2451,7 +2606,6 @@ button.mono-stat-card {
   .mono-sheet-primary,
   .mono-sheet-secondary {
     width: 100%;
-    min-height: 50px;
   }
 }
 

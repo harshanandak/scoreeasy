@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 
+// Inline destructive confirm (clear a score, delete a tournament). Shares the
+// hard-shell confirm classes in mono.css with the app dialogs.
 export default function ConfirmActionPanel({
   message,
   confirmLabel,
@@ -8,27 +10,23 @@ export default function ConfirmActionPanel({
   confirmAriaLabel = undefined,
 }) {
   return (
-    <div
-      className="mt-3 p-3"
-      style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6 }}
-      role="alert"
-    >
-      <p className="text-sm mb-2" style={{ color: '#991b1b' }}>
+    <div className="app-confirm-panel mt-3 p-3" role="alert">
+      <p className="app-confirm-panel-message text-sm mb-3">
         {message}
       </p>
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={onConfirm}
-          className="mono-btn-primary flex-1"
-          style={{ minHeight: 44, background: '#dc2626' }}
+          className="app-confirm-primary app-confirm-danger flex-1"
           aria-label={confirmAriaLabel}
         >
           {confirmLabel}
         </button>
         <button
+          type="button"
           onClick={onCancel}
-          className="mono-btn flex-1"
-          style={{ minHeight: 44 }}
+          className="app-confirm-secondary flex-1"
         >
           Cancel
         </button>

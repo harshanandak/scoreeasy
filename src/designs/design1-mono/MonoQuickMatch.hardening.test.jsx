@@ -92,6 +92,9 @@ describe('MonoQuickMatch hardening (#106)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
     const dialog = screen.getByRole('dialog', { name: /Discard match/i });
     expect(dialog).toBeInTheDocument();
+    // mono.css styles this confirm as destructive (danger red) by this id —
+    // ConfirmDialog has no tone prop yet. See hardShellDialogs.test.jsx.
+    expect(dialog).toHaveAttribute('aria-labelledby', 'discard-match-title');
     expect(storageMock.clearData).not.toHaveBeenCalled();
     expect(nav).not.toHaveBeenCalled();
 
