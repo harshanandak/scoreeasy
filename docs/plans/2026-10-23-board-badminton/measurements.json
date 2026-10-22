@@ -1,0 +1,1468 @@
+[
+  {
+    "file": "after-cap-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "cap",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n29\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n29\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-early-360-dark.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "dark",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-early-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-early-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-finish-360-dark.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "dark",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nGame 1 · Games 0–0\n8–6\nKeep scoring\nEnd match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-finish-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nGame 1 · Games 0–0\n8–6\nKeep scoring\nEnd match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-finish-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nGame 1 · Games 0–0\n8–6\nKeep scoring\nEnd match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-finished-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "finished",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": null,
+      "keys": [],
+      "undersized": [],
+      "contrastFailures": [],
+      "result": "Full time\nBadminton · Best of 3\nDone\nWinner\nWinner:\nRoyals\n\nTook the last set 21–19\n\nRoyals\n2–0\n\nRunner-up:\nStrikers\n0\nSet 1\n21–18\n, Royals\nSet 2\n21–19\n, Royals\n\nRoyals won. Took the last set 21–19. Royals 2, Strikers 0.\n\nRematch\nShare\nHistory\nNew Match\n\nMatch saved to History on this device."
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      },
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-finished-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "finished",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": null,
+      "keys": [],
+      "undersized": [],
+      "contrastFailures": [],
+      "result": "Full time\nBadminton · Best of 3\nDone\nWinner\nWinner:\nRoyals\n\nTook the last set 21–19\n\nRoyals\n2–0\n\nRunner-up:\nStrikers\n0\nSet 1\n21–18\n, Royals\nSet 2\n21–19\n, Royals\n\nRoyals won. Took the last set 21–19. Royals 2, Strikers 0.\n\nRematch\nShare\nHistory\nNew Match\n\nMatch saved to History on this device."
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      },
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-gamepoint-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "gamepoint",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-gamepoint-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "gamepoint",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-gamewon-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "gamewon",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 20–19",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match optionsDoneGame 1 21–19, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-gamewon-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "gamewon",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 20–19",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match optionsDoneGame 1 21–19, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-history-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "history",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 20–19",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match options\nDone\nGame 1\n21–19\n, Royals won\nSwap sides\nCorrect Royals\n−1\nCorrect Strikers\n−1\nDiscard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-matchpoint-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "matchpoint",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match optionsDoneGame 1 21–18, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-matchpoint-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "matchpoint",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match optionsDoneGame 1 21–18, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-restore-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 20–19",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 2\nGames 1–0\n0:00",
+      "dialog": "Match optionsDoneGame 1 21–19, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-setupwalk-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "setupwalk",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nTeam A\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Team B\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Team A−1Correct Team B−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-single-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "single",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "First to 21\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "after-undo-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "undo",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      },
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-undo-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "undo",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n20\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n19\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": [
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      },
+      {
+        "level": "error",
+        "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+      }
+    ]
+  },
+  {
+    "file": "after-volleyball-early-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": true,
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "before-early-360-light.png",
+    "viewport": {
+      "width": 360,
+      "height": 640
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": null,
+      "keys": [],
+      "undo": {
+        "text": "",
+        "x": 12,
+        "y": 570,
+        "width": 58,
+        "height": 46,
+        "bottom": 616
+      },
+      "contrastFailures": []
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "before-early-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": false,
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": null,
+      "keys": [],
+      "undo": {
+        "text": "",
+        "x": 12,
+        "y": 774,
+        "width": 58,
+        "height": 46,
+        "bottom": 820
+      },
+      "contrastFailures": []
+    },
+    "consoleWarnings": []
+  },
+  {
+    "file": "before-volleyball-early-390-light.png",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "iframe": true,
+    "animationsDisabled": true,
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    },
+    "consoleWarnings": []
+  }
+]
