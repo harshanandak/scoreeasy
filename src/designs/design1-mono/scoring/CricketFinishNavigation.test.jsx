@@ -123,6 +123,11 @@ describe('cricket finish navigation', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' }));
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath);
+    const data = JSON.parse(localStorage.getItem(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket'));
+    const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
+    expect(saved).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw', completedAt: expect.any(String) });
+    expect(saved.innings).toHaveLength(4);
+    expect(saved.draftState).toBeUndefined();
   });
 
   it.each(['limited', 'test-tournament', 'test-quick'])('%s retains a scoring stroke and Undo after remount, then saves the corrected innings', async (kind) => {

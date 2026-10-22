@@ -2,6 +2,10 @@ Decisions needed: none.
 
 Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 now passes normally: setup leaves freely and scoring arms the existing guard. RA-9 also passes normally after the own-key registry lookup. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
 
+The guided save-failure, guided raw-innings, and active Test Finish follow-ups
+reserved below are implemented in the [cricket persistence follow-up](../2026-10-22-cricket-persistence/acceptance.md).
+The scope limits and validation counts below describe the completion-lock work.
+
 # Completion lock
 
 Baseline: `origin/master` (`cdae97d`, fetched before branching).
