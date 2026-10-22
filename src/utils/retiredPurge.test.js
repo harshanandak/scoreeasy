@@ -50,3 +50,15 @@ it('runs once behind the version flag', () => {
   expect(remove).not.toHaveBeenCalled();
   expect(localStorage.getItem('se_rugby')).toBe('[{}]');
 });
+
+it('purges only removed sport properties from current and legacy statistics', () => {
+  const kept = Object.fromEntries(getSportsList().map(({ id }) => [id, { played: 7 }]));
+  Object.assign(kept, { custom: { played: 3 }, unknown: null, metadata: ['keep'] });
+  for (const key of ['se_statistics', 'gamescore_statistics']) {
+    localStorage.setItem(key, JSON.stringify({ ...kept, ...Object.fromEntries(removed.map(id => [id, { played: 2 }])) }));
+  }
+  purge();
+  for (const key of ['se_statistics', 'gamescore_statistics']) {
+    expect(JSON.parse(localStorage.getItem(key))).toEqual(kept);
+  }
+});

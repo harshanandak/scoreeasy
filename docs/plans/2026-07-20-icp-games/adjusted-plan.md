@@ -45,7 +45,7 @@ Rationale for keeping these three but deregistering the other five: hockey/tenni
 
 ### DELETE — remove the five sports and their saved local data, with no retention
 
-> Decision (2026-10-22): there are no users yet. Delete the five sports, their assets and saved local data, with no retention. A one-time startup purge removes their per-sport and draft keys and shared rows whose sport explicitly names one of the five. Rows without a sport and registered-sport rows are untouched; no read-time filter or malformed-row repair is added. Old sport URLs use the normal not-found page, and live snapshots for any unregistered sport are unavailable. Convex data is unchanged; Harsha owns wiping the backend.
+> Decision (2026-10-22): there are no users yet. Delete the five sports, their assets and saved local data, with no retention. A one-time startup purge removes their per-sport and draft keys and shared rows whose sport explicitly names one of the five. The current and legacy statistics objects lose only the five sport properties. Rows without a sport and registered-sport rows are untouched; no read-time filter or malformed-row repair is added. Old sport URLs use the normal not-found page, and live snapshots for any unregistered sport are unavailable; Live now skips their cards with the same registry lookup. Convex data is unchanged; Harsha owns wiping the backend.
 
 | Sport | ICP justification for removal |
 |---|---|

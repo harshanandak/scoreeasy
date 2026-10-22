@@ -2,9 +2,9 @@
 
 Decision: 2026-10-22, before any users. Delete the five removed sports and their identified saved local data, with no retention. This replaces the earlier read-only and read-filter approaches.
 
-`purgeRetiredSportData()` runs at startup behind `se_retired_purge_v1`. It removes the five per-sport/draft keys and their old storage-prefix counterparts. Shared quick matches, sessions, history and templates lose only rows whose explicit `sport` names one of the five. Sportless rows (including real factory sessions/history), registered rows and malformed peers remain untouched. No schema repair or read-time predicate is added; storage readers retain master's behavior.
+`purgeRetiredSportData()` runs at startup behind `se_retired_purge_v1`. It removes the five per-sport/draft keys and their old storage-prefix counterparts. Shared quick matches, sessions, history and templates lose only rows whose explicit `sport` names one of the five. Both statistics objects lose only properties keyed by those five sport ids; all other properties remain. Sportless rows (including real factory sessions/history), registered rows and malformed peers remain untouched. No schema repair or read-time predicate is added; storage readers retain master's behavior.
 
-Deleted assets include five SVG icons, court motifs, showcase choices and obsolete sport fixtures. The retired catalog and recovery page are gone. Removed sport URLs use the ordinary not-found screen; direct live snapshots whose sport is absent from the registry use the existing unavailable screen. Cricket batter retirement and Convex are unchanged. Harsha owns wiping backend data; this PR does not claim to delete Convex-backed Profile history.
+Deleted assets include five SVG icons, court motifs, showcase choices and obsolete sport fixtures. The retired catalog and recovery page are gone. Removed sport URLs use the ordinary not-found screen; direct live snapshots whose sport is absent from the registry use the existing unavailable screen. Live now cards use that same registry lookup to skip unregistered sports. Cricket batter retirement and Convex are unchanged. Harsha owns wiping backend data; this PR does not claim to delete Convex-backed Profile history.
 
 ## Validation
 
@@ -29,3 +29,11 @@ The new exact-set assertion failed before removing throwball. Related-test verif
 
 
 After the app restart, the requested related-test rerun passed **60 files: 761 ordinary passes + 9 expected failures = 770 cases**, zero failures, with bun run test -- --changed origin/master --maxWorkers=1. This includes courtMotifs, sportMarks and the exact palette ratchet at BASELINE 668. No source changed between validation and commit.
+
+
+## Live feed and statistics follow-up
+
+Two new regressions failed before the fix: the mixed live feed rendered the removed-sport card, and current/legacy statistics retained the removed-sport properties. Each purge key is processed by synchronous, back-to-back read/filter/write calls with no await. A cross-tab lost update on shared arrays remains a known pre-existing read-modify-write limitation, filed separately as an issue; this PR does not add cross-tab coordination.
+
+
+The live-feed/statistics follow-up passed related validation: **61 files, 768 ordinary passes + 9 expected failures = 777 cases**, zero failures, using bun run test -- --changed origin/master --maxWorkers=1. Both new regressions were red before the fixes. The long run completed successfully without retries; process diagnostics were captured while it was slow.

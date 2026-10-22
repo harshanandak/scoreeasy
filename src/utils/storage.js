@@ -38,6 +38,7 @@ export function purgeRetiredSportData() {
       storage.removeItem(`se_quickmatch_draft_${sport}`);
       storage.removeItem(`gamescore_quickmatch_draft_${sport}`);
     }
+    // Keep each key's read/filter/write synchronous; other tabs can still race.
     for (const key of ['se_quickmatches', 'gamescore_quickmatches', 'gs_sessions', 'gs_history', 'gs_templates']) {
       const raw = storage.getItem(key);
       if (!raw) continue;
@@ -46,6 +47,15 @@ export function purgeRetiredSportData() {
       if (!Array.isArray(rows)) continue;
       const kept = rows.filter((row) => !removed.includes(row?.sport));
       if (kept.length !== rows.length) storage.setItem(key, JSON.stringify(kept));
+    }
+    for (const key of ['se_statistics', 'gamescore_statistics']) {
+      const raw = storage.getItem(key);
+      if (!raw) continue;
+      let stats;
+      try { stats = JSON.parse(raw); } catch { continue; }
+      if (!stats || typeof stats !== 'object' || Array.isArray(stats)) continue;
+      const kept = Object.fromEntries(Object.entries(stats).filter(([sport]) => !removed.includes(sport)));
+      if (Object.keys(kept).length !== Object.keys(stats).length) storage.setItem(key, JSON.stringify(kept));
     }
     storage.setItem('se_retired_purge_v1', '1');
   } catch {
