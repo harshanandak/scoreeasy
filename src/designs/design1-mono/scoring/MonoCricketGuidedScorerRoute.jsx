@@ -373,6 +373,7 @@ export default function MonoCricketGuidedScorerRoute() {
 const BREAK_STYLES = `
 .mono-break-screen { min-height: 100dvh; padding: 16px 14px 0; }
 .mono-break-shell { max-width: 390px; margin: 0 auto; }
+.mono-break-screen .mono-setup-screen { min-height: 0; }
 .mono-break-banner { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); color: var(--se-color-ink); padding: 16px 16px; }
 .mono-break-tag { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--se-color-ink-muted); }
 .mono-break-line { margin: 0; font-family: var(--se-font-sans); font-size: 1.0625rem; font-weight: 600; }

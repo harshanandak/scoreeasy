@@ -26,10 +26,13 @@ describe('cricket team-colour board', () => {
 
   it('uses the configured powerplay label through a scoring correction', () => {
     board({ format: { ...format, powerplay: [{ start: 1, end: 6, label: 'Powerplay 1' }] } });
-    expect(screen.getByText('Powerplay 1')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+    expect(screen.getByText('Powerplay 1').closest('.cricket-who')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'No-ball' }));
+    expect(screen.getByTestId('freehit-badge')).toHaveTextContent('FREE HIT');
+    expect(screen.getByText('Powerplay 1').closest('.cricket-who')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Undo last ball' }));
-    expect(screen.getByText('Powerplay 1')).toBeInTheDocument();
+    expect(screen.queryByTestId('freehit-badge')).not.toBeInTheDocument();
+    expect(screen.getByText('Powerplay 1').closest('.cricket-who')).toBeInTheDocument();
   });
 
   it('opens the engine-derived batting and bowling cards from options', () => {

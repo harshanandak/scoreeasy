@@ -29,7 +29,7 @@
   color: var(--cricket-on); box-shadow: var(--se-lift); text-align: left;
 }
 .cricket-mark { position: absolute; z-index: -1; right: -3%; bottom: -20%; width: 62%; aspect-ratio: 1.4; background: var(--cricket-motif); mask: var(--sport-mark) center / contain no-repeat; }
-.cricket-who { margin: 0 0 5px; font-size: 0.94rem; font-weight: 750; }
+.cricket-who { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 5px; font-size: 0.94rem; font-weight: 750; }
 .cricket-board .ck-hero-score { font-family: var(--se-font-num); font-size: 3.7rem; letter-spacing: -0.025em; padding: 0 4px; border-radius: 8px; background: var(--cricket-scrim); }
 .cricket-board .ck-hero-score .wk { font-size: 0.6em; color: inherit; }
 .cricket-board :is(.ck-hero-ov,.ck-hero-crr,.ck-hero-chase,.ck-hero-chase b,.ck-hero-chase .need) { color: var(--cricket-on); }

@@ -443,7 +443,10 @@ export default function MonoCricketGuidedScorer({
         {/* Batting identity, score and engine-derived chase figures. */}
         <div className="ck-hero cricket-hero">
           <span className="cricket-mark" aria-hidden="true" />
-          <p className="cricket-who">{battingTeamName} batting</p>
+          <p className="cricket-who">
+            <span>{battingTeamName} batting</span>
+            {getPowerplayPhase(format || {}, currentOverNo) && <span className="cricket-moment">{getPowerplayPhase(format || {}, currentOverNo).label}</span>}
+          </p>
           <div className="ck-hero-top">
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
               <span className="ck-hero-score mono-score" data-testid="hero-score">
@@ -470,7 +473,6 @@ export default function MonoCricketGuidedScorer({
           ) : null}
         </div>
 
-        {getPowerplayPhase(format || {}, currentOverNo) && <p className="cricket-moment">{getPowerplayPhase(format || {}, currentOverNo).label}</p>}
         {mode === 'power' ? (
           <div className="ck-power-ph" data-testid="power-placeholder">
             Power mode — coming next
