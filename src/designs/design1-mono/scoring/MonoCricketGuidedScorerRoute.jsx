@@ -126,6 +126,7 @@ export default function MonoCricketGuidedScorerRoute() {
   const completion = useMatchCompletion(match, matchIdentity);
 
   const [phase, setPhase] = useState(() => initialPhase(match));
+  const [pendingCompletion, setPendingCompletion] = useState(null);
 
   const navigateToTournament = () => {
     const destination = `/${sport || 'cricket'}/tournament/${id}`;
@@ -248,28 +249,35 @@ export default function MonoCricketGuidedScorerRoute() {
   };
 
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
-  const handleComplete2 = (payload) => completion.complete(() => {
-    const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
-    const agg = mirrorAggregate(finalInnings, fmt);
-    const updated = updateMatchInTournament(tournament, matchId, (m) => {
-      const completed = {
-        ...m,
-        status: 'completed',
-        battingOrder,
-        [slotForTeam(m, battingOrder[1])]: agg,
-        format: m.format,
-      };
-      const { winner, winDesc } = resolveWinner(completed);
-      return {
-        ...completed,
-        winner,
-        winDesc,
-        draftState: undefined,
-        completedAt: now(),
-      };
-    });
-    saveSportTournament(storageKey, updated);
-  }, navigateToTournament);
+  const handleComplete2 = (payload) => {
+    completion.complete(() => {
+      const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
+      const agg = mirrorAggregate(finalInnings, fmt);
+      const updated = updateMatchInTournament(tournament, matchId, (m) => {
+        const completed = {
+          ...m,
+          status: 'completed',
+          battingOrder,
+          [slotForTeam(m, battingOrder[1])]: agg,
+          format: m.format,
+        };
+        const { winner, winDesc } = resolveWinner(completed);
+        return {
+          ...completed,
+          winner,
+          winDesc,
+          guidedInnings: [m.draftState?.innings1 ?? null, finalInnings],
+          draftState: undefined,
+          completedAt: now(),
+        };
+      });
+      const saved = saveSportTournament(storageKey, updated);
+      setPendingCompletion(saved ? null : { ...payload, innings: finalInnings });
+      return saved;
+    }, navigateToTournament);
+    // The child freezes a finished innings independently of the match save.
+    // Retry belongs to this route and uses the same settled engine snapshot.
+  };
 
   // ---- render by phase ----
 
@@ -317,7 +325,13 @@ export default function MonoCricketGuidedScorerRoute() {
         (match.striker
           ? { striker: match.striker, nonStriker: match.nonStriker, bowler: match.bowler }
           : {});
-    return (
+    return (<>
+      {pendingCompletion && (
+        <div role="alert" className="mono-alert mono-alert-danger">
+          <p>Save failed. Your innings is still here. Free storage, then retry.</p>
+          <button type="button" className="mono-btn-primary" onClick={() => handleComplete2(pendingCompletion)}>Retry save</button>
+        </div>
+      )}
       <MonoCricketGuidedScorer
         key={phase}
         format={fmt}
@@ -333,7 +347,7 @@ export default function MonoCricketGuidedScorerRoute() {
         onStateChange={handleStateChange}
         onComplete={isInn2 ? handleComplete2 : handleComplete1}
       />
-    );
+    </>);
   }
 
   // phase === 'done' (or unexpected): the completed-match effect navigates away.
