@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoring/scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
@@ -352,6 +353,7 @@ export default function MonoQuickMatch() {
   const startedAtRef = useRef(null);
 
   const [phase, setPhase] = useState('setup'); // setup | scoring | result
+  const [restoredScoringStarted, setRestoredScoringStarted] = useState(false);
   const visible = true; // always visible; no fade-in needed for quick match
   const [setupStep, setSetupStep] = useState(() => {
     if (!isCricket || !preselectedFormat) return 2;
@@ -503,6 +505,13 @@ export default function MonoQuickMatch() {
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
 
+  const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
+    sets.some(set => set.score1 > 0 || set.score2 > 0) ||
+    Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0);
+  const { scoringStarted, resetScoringStarted } = useScoringProgress(
+    phase !== 'setup' && hasRecordedScore, phase === 'setup', restoredScoringStarted, sport,
+  );
+
   // Cricket: Free hit and trial ball state
   const [freeHit, setFreeHit] = useState(false);
   const [trialBallUsed, setTrialBallUsed] = useState(false);
@@ -554,6 +563,7 @@ export default function MonoQuickMatch() {
     draftHydratedSportRef.current = sport;
     restoredDraftRef.current = false;
     scoringSportRef.current = null;
+    setRestoredScoringStarted(false);
 
     const draft = loadData(quickMatchDraftKey, null);
     const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
@@ -576,6 +586,7 @@ export default function MonoQuickMatch() {
     }
 
     restoredDraftRef.current = true;
+    setRestoredScoringStarted(draft.scoringStarted === true);
     scoringSportRef.current = sport;
     setTeam1Name(draft.team1Name || '');
     setTeam2Name(draft.team2Name || '');
@@ -616,6 +627,7 @@ export default function MonoQuickMatch() {
     saveData(quickMatchDraftKey, {
       phase,
       sport,
+      scoringStarted,
       team1Name,
       team2Name,
       team1Color,
@@ -646,7 +658,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -1617,6 +1629,8 @@ export default function MonoQuickMatch() {
   };
 
   const resetMatchState = (nextPhase = 'setup', options = {}) => {
+    resetScoringStarted();
+    setRestoredScoringStarted(false);
     completion.reset();
     restoredDraftRef.current = false;
     setSaveWarning('');

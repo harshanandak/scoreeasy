@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
@@ -112,6 +113,10 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Load tournament and match
+  const { scoringStarted } = useScoringProgress(
+    score1 !== 0 || score2 !== 0, false, match?.draftState?.scoringStarted, `${sport}:${id}:${matchId}`,
+  );
+
   useEffect(() => {
     const config = getSportById(sport);
     if (!config) return;
@@ -292,11 +297,12 @@ export default function MonoGoalsLiveScore() {
   // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
   useEffect(() => {
     if (!tournament || !matchId || scoringPrompt.isInteractionLocked) return;
-    if (history.length === 0) return;
+    if (history.length === 0 && !scoringStarted) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
       draftState: {
+        scoringStarted,
         score1,
         score2,
         history: structuredClone(history.slice(-50)),
@@ -304,7 +310,7 @@ export default function MonoGoalsLiveScore() {
       },
     }));
     saveSportTournament(sportConfig.storageKey, updatedTournament);
-  }, [tournament, matchId, score1, score2, history, sportConfig, scoringPrompt.isInteractionLocked]);
+  }, [tournament, matchId, score1, score2, history, scoringStarted, sportConfig, scoringPrompt.isInteractionLocked]);
 
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {

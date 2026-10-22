@@ -690,7 +690,7 @@ export default function MonoWatchMatch() {
           }}
         >
           <Link
-            to="/"
+            to="/app"
             aria-label="Score Easy home"
             className="cursor-pointer"
             style={{
@@ -708,7 +708,7 @@ export default function MonoWatchMatch() {
             Score Easy
           </Link>
           <Link
-            to="/"
+            to="/app"
             className="font-mono cursor-pointer"
             style={{
               display: 'inline-flex',

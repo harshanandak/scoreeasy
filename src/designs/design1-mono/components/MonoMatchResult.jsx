@@ -122,9 +122,9 @@ export function MonoMatchResultView({
           >
             Done
           </button>
-          <button type="button" className="mono-result-cta" onClick={onRematch}>
+          {onRematch && <button type="button" className="mono-result-cta" onClick={onRematch}>
             Rematch
-          </button>
+          </button>}
           <button
             type="button"
             className="mono-result-cta"
@@ -251,7 +251,6 @@ export default function MonoMatchResult() {
       isSignedIn={isAuthenticated}
       cloudAuthAvailable={cloudAuthAvailable}
       onDone={() => navigate(`/${sport}/tournament/${id}`, { replace: true })}
-      onRematch={() => navigate(`/${sport}/quick`, { replace: true })}
       onScorecard={() => {}}
       onShare={() => {}}
       onSignIn={() => navigate('/login')}

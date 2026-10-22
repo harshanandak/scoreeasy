@@ -23,6 +23,7 @@ import {
   isProtectedScoringRoute,
   resolveProtectedScoringCompletion,
 } from '../../mobile/backButton';
+import { ScoringProgressContext } from './scoring/scoringProgressContext';
 import { ScoringCompletionContext } from './scoring/scoringCompletionContext';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
@@ -657,14 +658,15 @@ BottomNavAccountCell.propTypes = {
   onNavigate: PropTypes.func.isRequired,
 };
 
-function GlobalNavigation({ requestScoringExit }) {
+function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
-  const showBottomNav = isAppShellPath(pathname) && !isProtectedScoringPath(pathname);
+  const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
+  const showBottomNav = isAppShellPath(pathname) && !scoringStarted;
 
   useEffect(() => {
     setOpen(false);
@@ -733,7 +735,7 @@ function GlobalNavigation({ requestScoringExit }) {
   }, []);
 
   const go = (path) => {
-    if (path !== pathname && isProtectedScoringPath(pathname)) {
+    if (path !== pathname && scoringStarted) {
       setOpen(false);
       requestScoringExit({
         onConfirm: () => navigate(path),
@@ -755,7 +757,7 @@ function GlobalNavigation({ requestScoringExit }) {
   const accountLabel = isAuthenticated ? 'Account' : 'Sign in';
 
   const navItems = [
-    { tab: 'home', label: 'Home', path: '/' },
+    { tab: 'home', label: 'Home', path: homePath },
     { tab: 'play', label: 'Play', path: '/play' },
     { tab: 'history', label: 'History', path: '/history' },
   ];
@@ -815,7 +817,7 @@ function GlobalNavigation({ requestScoringExit }) {
           type="button"
           className="global-nav-brand"
           aria-label="Score Easy home"
-          onClick={() => go('/')}
+          onClick={() => go(homePath)}
         >
           <span aria-hidden="true">SCORE<br />EASY</span>
         </button>
@@ -1363,6 +1365,7 @@ function GlobalNavigation({ requestScoringExit }) {
 }
 
 GlobalNavigation.propTypes = {
+  scoringStarted: PropTypes.bool,
   requestScoringExit: PropTypes.func.isRequired,
 };
 
@@ -1405,6 +1408,10 @@ export default function Design1Mono() {
   // inside ConvexProviderWithClerk — so this flag doubles as proof that a
   // ConvexProvider is present, gating the reconnecting indicator safely.
   const { authMode } = useAuth();
+  const [startedRoute, setStartedRoute] = useState(null);
+  const scoringRouteKey = `${location.key}:${location.pathname}`;
+  const scoringStarted = isProtectedScoringPath(location.pathname) && startedRoute === scoringRouteKey;
+  const markScoringStarted = useCallback(started => setStartedRoute(started ? scoringRouteKey : null), [scoringRouteKey]);
   const [exitPrompt, setExitPrompt] = useState(null);
   const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
@@ -1449,7 +1456,7 @@ export default function Design1Mono() {
   }, [exitPrompt]);
 
   const navigateFromOfflineFallback = useCallback((path) => {
-    if (path !== location.pathname && isProtectedScoringPath(location.pathname)) {
+    if (path !== location.pathname && scoringStarted) {
       requestScoringExit({
         onConfirm: () => navigate(path),
       });
@@ -1457,20 +1464,21 @@ export default function Design1Mono() {
     }
 
     navigate(path);
-  }, [location.pathname, navigate, requestScoringExit]);
+  }, [location.pathname, scoringStarted, navigate, requestScoringExit]);
 
   useEffect(() => {
     nativeDeepLinkContextRef.current = {
+      scoringStarted,
       hash: location.hash || '',
       pathname: location.pathname,
       requestScoringExit,
       search: location.search,
     };
-  }, [location.hash, location.pathname, location.search, requestScoringExit]);
+  }, [location.hash, location.pathname, location.search, scoringStarted, requestScoringExit]);
 
   const confirmNativeDeepLinkNavigation = useCallback((targetPath) => {
-    const { hash, pathname, requestScoringExit: requestExit, search } = nativeDeepLinkContextRef.current;
-    if (!isProtectedScoringPath(pathname)) return Promise.resolve(true);
+    const { hash, pathname, scoringStarted: guardArmed, requestScoringExit: requestExit, search } = nativeDeepLinkContextRef.current;
+    if (!guardArmed) return Promise.resolve(true);
     if (targetPath === `${pathname}${search}${hash}`) {
       return Promise.resolve(true);
     }
@@ -1507,7 +1515,9 @@ export default function Design1Mono() {
       protectedRouteHistoryIndexRef.current = routeHistoryIndex > 0 ? routeHistoryIndex - 1 : NO_PRIOR_ROUTE_INDEX;
     }
 
-    if (protectedGuardRouteKeyRef.current !== routeKey) {
+    if (!scoringStarted && protectedGuardDepthRef.current === 0) return undefined;
+
+    if (scoringStarted && protectedGuardRouteKeyRef.current !== routeKey) {
       protectedGuardRouteKeyRef.current = routeKey;
       protectedGuardDepthRef.current += 1;
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
@@ -1567,6 +1577,16 @@ export default function Design1Mono() {
         return;
       }
 
+      if (!scoringStarted) {
+        // Rematch inherits the old guard entry; consume it only when Back is requested.
+        if (protectedGuardDepthRef.current > 0) {
+          protectedGuardDepthRef.current -= 1;
+          protectedGuardRouteKeyRef.current = null;
+          leaveProtectedRouteAfterConfirm();
+        }
+        return;
+      }
+
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
       requestScoringExit({
         onConfirm: leaveProtectedRouteAfterConfirm,
@@ -1574,7 +1594,7 @@ export default function Design1Mono() {
     };
 
     globalThis.addEventListener('popstate', handlePopState);
-    const cleanupNativeBackButton = installNativeBackButtonGuard({
+    const cleanupNativeBackButton = scoringStarted ? installNativeBackButtonGuard({
       getPathname: () => globalThis.location.pathname,
       confirmLeave: () => new Promise((resolve) => {
         requestScoringExit({
@@ -1591,14 +1611,14 @@ export default function Design1Mono() {
 
         navigate(path, options);
       },
-    });
+    }) : () => {};
 
     return () => {
       globalThis.removeEventListener('popstate', handlePopState);
       clearPendingFallbackNavigation();
       cleanupNativeBackButton();
     };
-  }, [location.pathname, location.search, navigate, requestScoringExit]);
+  }, [location.pathname, location.search, scoringStarted, navigate, requestScoringExit]);
 
   // Finish a protected scorer: land on its destination while unwinding
   // the scorer entry AND its protection guard entries, so Back from Result returns
@@ -1648,11 +1668,12 @@ export default function Design1Mono() {
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalNavigation requestScoringExit={requestScoringExit} />
+      <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
       <main id="main-content">
+        <ScoringProgressContext.Provider value={markScoringStarted}>
         <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
@@ -1716,6 +1737,7 @@ export default function Design1Mono() {
           </ErrorBoundary>
         </Suspense>
         </ScoringCompletionContext.Provider>
+        </ScoringProgressContext.Provider>
       </main>
       <AppConfirmDialog
         prompt={exitPrompt}

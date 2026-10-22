@@ -1,6 +1,6 @@
 Decisions needed: none. The full-suite lane was released for final integration and normal push.
 
-Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+Current expected-failure inventory after the navigation decisions: **4 routing / 7 repository-wide**. RA-5 now passes normally: setup leaves freely and scoring arms the existing guard. RA-9 also passes normally after the own-key registry lookup. SA-07 now passes normally after round two saves the final Undo with the persistent scoring-started latch; three stability failures remain. Counts in dated validation runs below describe those historical heads.
 
 Finishing tennis previously pushed the destination, leaving the completed scorer in Back history. Quick tennis then reopened a scorer whose draft had been cleared. Both completion paths now call the existing protected-scoring completion seam after the local save succeeds. The standalone fallback replaces the scorer entry.
 
@@ -25,7 +25,7 @@ Acceptance coverage (rung 4 unless marked otherwise):
 - [x] Lint: 0 errors, 29 warnings. Type-check passed. Normal merge commit hooks passed lint, type-check and agent-config sync. Sweep syntax check passed.
 - [ ] Full suite and build: verify the required CI `verify` check. The local pre-push hook selects related tests or the full suite for any tracked deletion/rename and test-environment changes; it does not build. No hosted-check pass is inferred from local validation.
 
-Known limit: the stability audit's SA-07 already records that Undo to an empty history is not autosaved, including tennis (`35cbce6e-7e28-49de-826a-204bb3e46904`). A temporary broader remount test reproduced this for both tennis modes: the board reverted, but storage retained the undone point. This routing patch does not fix that existing defect or claim every persistence scenario is safe. The committed regression covers nonempty history; the audit's four expected-failure stability cases remain unchanged. Winning-point refresh before Finish is also outside this routing proof (SA-04).
+Historical limit at the tennis completion integration: SA-07 recorded that Undo to an empty history was not autosaved, including tennis (`35cbce6e-7e28-49de-826a-204bb3e46904`). A temporary remount test reproduced it for both tennis modes: the board reverted, but storage retained the undone point. That completion patch covered nonempty history and left four stability cases expected failures. Navigation round two subsequently fixes SA-07 and adds zero-score/remount guard contracts for both tennis modes; see the [navigation evidence](../navigation-decisions/README.md). Winning-point refresh before Finish remains outside this original routing proof (SA-04).
 
 Key screenshots after Back:
 

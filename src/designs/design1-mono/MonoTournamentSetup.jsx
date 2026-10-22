@@ -449,7 +449,7 @@ export default function MonoTournamentSetup() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-6" aria-label="Breadcrumb">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="text-sm bg-transparent border-none cursor-pointer font-swiss"
             style={{ color: '#888' }}
           >

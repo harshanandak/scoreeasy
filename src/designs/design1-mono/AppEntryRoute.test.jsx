@@ -3,6 +3,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
+import { useScoringProgress } from './scoring/scoringProgressContext';
 
 // Renders the real app shell, which code-splits routes via React.lazy. Load every
 // route chunk during module collection so no test pays a cold dynamic import()
@@ -12,6 +13,7 @@ await preloadAppRoutes();
 
 let authState;
 let renderAuthUserButton;
+let simulatedScoringStarted;
 
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
@@ -48,7 +50,10 @@ vi.mock('./MonoProfile', () => ({
 }));
 
 vi.mock('./scoring/MonoTennisLiveScore', () => ({
-  default: () => <p>Tennis quick scorer</p>,
+  default: function TennisQuickScorerStub() {
+    useScoringProgress(simulatedScoringStarted);
+    return <p>Tennis quick scorer</p>;
+  },
 }));
 
 vi.mock('./scoring/MonoCricketTestLiveScore', () => ({
@@ -80,6 +85,7 @@ describe('app entry route contract', () => {
       user: null,
     };
     renderAuthUserButton = true;
+    simulatedScoringStarted = false;
     globalThis.localStorage.clear();
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
       callback?.(0);
@@ -408,7 +414,7 @@ describe('app entry route contract', () => {
     expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
   });
 
-  it('routes public Home clicks through the entry resolver', async () => {
+  it('keeps marketing Home and brand clicks on the public entry resolver', async () => {
     renderApp('/marketing');
 
     expect(await screen.findByText('Public marketing')).toBeInTheDocument();
@@ -418,19 +424,22 @@ describe('app entry route contract', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing');
     });
     expect(screen.queryByText('App dashboard')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Score Easy home' }));
+    await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing'));
   });
 
-  it('does not show app bottom navigation on protected scorer routes', async () => {
+  it('does not show app bottom navigation after scoring starts', async () => {
+    simulatedScoringStarted = true;
     globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
       status: 'in-progress',
     }));
 
-    renderApp('/tennis/quick/live/match-1');
+    const { container } = renderApp('/tennis/quick/live/match-1');
 
     expect(await screen.findByText('Tennis quick scorer')).toBeInTheDocument();
-    expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
+    await waitFor(() => expect(container.querySelector('.global-bottom-nav')).toBeNull());
   });
 
   it('marks mobile input focus so the bottom nav can hide for keyboards', async () => {

@@ -57,7 +57,7 @@ export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
             Continue as guest
           </button>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/app")}
             className="text-xs bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mx-auto"
             style={{ color: sportsTokens.color.inkMuted }}
           >

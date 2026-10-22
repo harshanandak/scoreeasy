@@ -138,7 +138,7 @@ export default function MonoProfile() {
   const displayUser = isOwnProfile ? currentUser : profileUser;
 
   if (!paramUsername && (authLoading || (isAuthenticated && !isUserReady))) {
-    return <LoadingState onBack={() => navigate("/")} />;
+    return <LoadingState onBack={() => navigate("/app")} />;
   }
 
   if (!paramUsername && !displayUser && !isAuthenticated) {
@@ -146,7 +146,7 @@ export default function MonoProfile() {
       <RecoveryActions
         cloudAuthAvailable={cloudAuthAvailable}
         message="You can sign in to sync your profile, or keep scoring locally as a guest."
-        onBack={() => navigate("/")}
+        onBack={() => navigate("/app")}
         onNavigate={navigate}
         title="Save your profile when you're ready"
       />
@@ -178,7 +178,7 @@ export default function MonoProfile() {
     <div className={`min-h-screen px-4 sm:px-6 py-8 sm:py-10 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}>
       <div className="mono-page-shell mono-profile-shell">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="text-xs bg-transparent border-none cursor-pointer font-swiss mb-10 flex items-center gap-1"
           style={{ color: "#888" }}
         >

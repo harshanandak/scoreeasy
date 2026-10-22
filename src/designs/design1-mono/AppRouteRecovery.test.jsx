@@ -332,7 +332,7 @@ describe('app route recovery', () => {
     fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Home' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
     });
   });
 });

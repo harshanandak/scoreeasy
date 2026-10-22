@@ -1,0 +1,126 @@
+[
+  {
+    "label": "navigation quick result keeps Rematch",
+    "path": "/football/quick",
+    "seed": "navigationQuickFinish",
+    "url": "/football/quick",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Football quick match",
+    "text": "Football quick match Football 0:09 LIVE RED 1 TAP +1 −1 BLUE 0 TAP +1 −1 SWAP DISCARD FINISH",
+    "bottomNav": false,
+    "dialog": "",
+    "historyLength": 3,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "initial quick state",
+        "url": "/football/quick",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Football quick match",
+        "text": "Football quick match Football 0:09 LIVE RED 1 TAP +1 −1 BLUE 0 TAP +1 −1 SWAP DISCARD FINISH",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "click End match: clicked"
+      },
+      {
+        "at": "quick result with Rematch",
+        "url": "/football/quick",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Red Won",
+        "text": "Match saved to History on this device. MATCH RESULT Red Won Duration: 0:09 Red 1 - 0 Blue Rematch Share View History See Stats New Match Home",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Rematch: clicked"
+      },
+      {
+        "at": "fresh rematch scorer",
+        "url": "/football/quick",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Football quick match",
+        "text": "Football quick match Football 0:00 LIVE RED 0 TAP +1 −1 BLUE 0 TAP +1 −1 SWAP DISCARD FINISH",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Home: clicked"
+      },
+      {
+        "at": "left fresh rematch freely",
+        "url": "/app",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Welcomeback.",
+        "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 1 RECENT 0 EVENTS In progress Red vs Blue Football · Quick match Resume → + + + + ● LAST MATCH FOOTBAL",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [
+          {
+            "label": "Resume Football: Red vs Blue",
+            "height": 44
+          }
+        ],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Welcomeback.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 1 RECENT 0 EVENTS In progress Red vs Blue Football · Quick match Resume → + + + + ● LAST MATCH FOOTBAL",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [
+        {
+          "label": "Resume Football: Red vs Blue",
+          "height": 44
+        }
+      ],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5194/src/mobile/haptics.js"
+    ]
+  }
+]
