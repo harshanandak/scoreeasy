@@ -2,7 +2,7 @@
 // the engines persisted. Pure, so each sport's truth is unit-tested away from the DOM. It never
 // decides a sport rule itself: winners come from the persisted scores, cricket margins from
 // cricketCalculations, set winners from the sets as stored.
-import { ballsToOvers, getLimitedOversResult } from '../../../utils/cricketCalculations';
+import { ballsToOvers, getLimitedOversResult, getTestMatchCompletion } from '../../../utils/cricketCalculations';
 
 const DASH = '–';
 
@@ -89,8 +89,32 @@ function drawHeadline(winner) {
  */
 export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets = 10 } = {}) {
   const r = result || {};
-  const name1 = r.team1 || 'Team 1';
-  const name2 = r.team2 || 'Team 2';
+  const name1 = r.team1 || r.team1Name || 'Team 1';
+  const name2 = r.team2 || r.team2Name || 'Team 2';
+
+  if (kind === 'cricket' && r.format?.totalInnings === 4 && Array.isArray(r.innings)) {
+    const teamScore = (teamId, name) => ({
+      name,
+      score: r.innings.filter(i => i.teamId === teamId && (num(i.balls) > 0 || num(i.runs) > 0 || num(i.wickets) > 0 || i.allOut || i.declared))
+        .map(i => `${num(i.runs)}/${num(i.wickets)}`).join(' & ') || '0/0',
+      unit: 'innings',
+    });
+    const team1 = teamScore(r.team1Id, name1);
+    const team2 = teamScore(r.team2Id, name2);
+    const nonTeamWinner = String(r.winner || '').toLowerCase();
+    const verdict = getTestMatchCompletion(r.innings, r.currentInningsIndex ?? r.innings.length - 1,
+      r.team1Id, r.team2Id, r.format);
+    const winnerSide = nonTeamWinner === 'draw' || nonTeamWinner === 'tie' ? null
+      : verdict?.winner === r.team1Id ? 'team1' : verdict?.winner === r.team2Id ? 'team2'
+        : r.winner === name1 ? 'team1' : r.winner === name2 ? 'team2' : null;
+    const tied = nonTeamWinner === 'tie' || (nonTeamWinner !== 'draw' && verdict?.winner === 'tie');
+    return finish({
+      outcome: winnerSide ? 'win' : 'draw', winnerSide,
+      headline: winnerSide === 'team1' ? name1 : winnerSide === 'team2' ? name2 : tied ? 'Match tied' : 'Match drawn',
+      detail: winnerSide ? r.winDesc || verdict?.desc || null : null,
+      team1, team2, chips: [],
+    });
+  }
 
   if (kind === 'cricket' && r.team1Score && r.team2Score) {
     const t1 = r.team1Score;

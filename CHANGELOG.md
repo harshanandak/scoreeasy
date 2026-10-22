@@ -4,6 +4,7 @@ All notable changes to Score Easy are documented in this file.
 
 ## Unreleased — 2026-10-22
 
+- Tennis and Test cricket quick matches finish on the shared Result screen with Rematch and History. Test results distinguish wins by runs or wickets, draws and ties; tennis keeps the saved set, game and tiebreak scores.
 - Deleted five removed sports and their assets. A one-time startup purge deletes their keys and explicitly sport-tagged shared local rows, with no retention; sportless rows stay untouched. Convex data is unchanged. Earlier release inventories below describe their historical versions.
 
 ---

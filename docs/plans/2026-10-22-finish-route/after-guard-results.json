@@ -1,0 +1,227 @@
+[
+  {
+    "label": "RA-1 cricket test-quick Finish -> Back",
+    "path": "/history",
+    "seed": "cricket-test-quick",
+    "url": "/history",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "History & Stats",
+    "text": "History & Stats Matches Stats 0 All matches 0 Quick 0 Tournaments FIND MATCH FILTERS + No match history yet Completed quick matches and tournaments will appear ",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "scorer",
+        "url": "/cricket/quick/test-match/300",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Cricket match scorer",
+        "text": "Cricket match scorer Cricket TEST MATCH 4TH INNINGS BETA BATTING 0 /0 (0 OV) RR 0.00 Trail by 1 runs Scorecard 0 1 2 3 4 FOUR 6 SIX 5 WD NB BYE LB OUT",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Four runs: clicked"
+      },
+      {
+        "at": "click Save & Return: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/cricket/quick?result=300",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Winner: Beta",
+        "text": "Full time Cricket Done Winner Winner: Beta Won by 10 wickets Beta 0/10 & 4/0 innings Runner-up: Alpha 1/10 & 0/10 innings Beta won. Won by 10 wickets. Alpha 1/1",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "after Back",
+        "url": "/history",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "History & Stats",
+        "text": "History & Stats Clear local history Matches Stats 1 All matches 1 Quick 0 Tournaments FIND MATCH FILTERS + ALL MATCHES Alpha vs Beta Beta won · Cricket · Quick ",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "after Forward",
+        "url": "/cricket/quick?result=300",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Winner: Beta",
+        "text": "Full time Cricket Done Winner Winner: Beta Won by 10 wickets Beta 0/10 & 4/0 innings Runner-up: Alpha 1/10 & 0/10 innings Beta won. Won by 10 wickets. Alpha 1/1",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/cricket/quick?result=300",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Winner: Beta",
+      "text": "Full time Cricket Done Winner Winner: Beta Won by 10 wickets Beta 0/10 & 4/0 innings Runner-up: Alpha 1/10 & 0/10 innings Beta won. Won by 10 wickets. Alpha 1/1",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5198/assets/MonoCricketTestLiveScore-BIqYOAFw.js"
+    ]
+  },
+  {
+    "label": "FLOW tennis quick Finish -> Back",
+    "path": "/app",
+    "seed": "tennisDraftWon",
+    "url": "/app",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Welcome back.",
+    "text": "Score Easy Welcome back. 0 matches scored so far In progress Ana v Bea Tennis · Quick match Resume",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [
+      {
+        "label": "Resume Tennis: Ana v Bea",
+        "height": 48
+      }
+    ],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "click Resume Tennis: Ana v Bea: clicked"
+      },
+      {
+        "at": "scorer (won)",
+        "url": "/tennis/quick/live/1761000000000",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Tennis match scorer",
+        "text": "Tennis match scorer Tennis SET 3 OF 3 MATCH COMPLETE Ana: 0. Bea: 0.Set 3 of 3. Serving: Ana. 2 – 0 SETS BEST OF 3 ● ANA 0 0 GAMES BEA 0 0 GAMES Set 1: 6-0 Set ",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 4,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Finish: clicked"
+      },
+      {
+        "at": "after Finish",
+        "url": "/tennis/quick?result=1761000000000",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Winner: Ana",
+        "text": "Full time Tennis Done Winner Winner: Ana Took the last set 6–0 Ana 2–0 Runner-up: Bea 0 Set 1 6–0 , Ana Set 2 6–0 , Ana Ana won. Took the last set 6–0. Ana 2, B",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "after Back",
+        "url": "/app",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Welcome back.",
+        "text": "Score Easy Welcome back. 1 match scored this week Last match Tennis Today Ana 2 Bea 0 Sets 6–0 · 6–0 Rematch Details Quick start Recently played Tennis",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "after Forward",
+        "url": "/tennis/quick?result=1761000000000",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Winner: Ana",
+        "text": "Full time Tennis Done Winner Winner: Ana Took the last set 6–0 Ana 2–0 Runner-up: Bea 0 Set 1 6–0 , Ana Set 2 6–0 , Ana Ana won. Took the last set 6–0. Ana 2, B",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/tennis/quick?result=1761000000000",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Winner: Ana",
+      "text": "Full time Tennis Done Winner Winner: Ana Took the last set 6–0 Ana 2–0 Runner-up: Bea 0 Set 1 6–0 , Ana Set 2 6–0 , Ana Ana won. Took the last set 6–0. Ana 2, B",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "savedMatchStatus": "completed",
+    "contractPassed": true,
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://127.0.0.1:5198/assets/MonoTennisLiveScore-BcpCoXL7.js"
+    ]
+  }
+]

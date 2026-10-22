@@ -345,6 +345,7 @@ export default function MonoQuickMatch() {
   const { sport } = useParams();
   const [searchParams] = useSearchParams();
   const preselectedFormat = searchParams.get('format');
+  const resultMatchId = searchParams.get('result');
   const sportConfig = getSportById(sport);
   const engine = sportConfig?.engine || 'goals';
   const isCricket = engine === 'custom-cricket';
@@ -562,12 +563,38 @@ export default function MonoQuickMatch() {
   }, [phase]);
 
   useEffect(() => {
-    if (draftHydratedSportRef.current === sport) return;
+    const hydrationKey = `${sport}:${resultMatchId || ''}`;
+    if (draftHydratedSportRef.current === hydrationKey) return;
     const previousSport = draftHydratedSportRef.current;
-    draftHydratedSportRef.current = sport;
+    draftHydratedSportRef.current = hydrationKey;
     restoredDraftRef.current = false;
     scoringSportRef.current = null;
     setRestoredScoringStarted(false);
+
+    if (resultMatchId) {
+      const saved = loadQuickMatch(resultMatchId);
+      if (!isCompletedMatch(saved) || saved.sport !== sport) {
+        navigate('/history', { replace: true });
+        return;
+      }
+      completion.hydrate(saved, `${sport}:quick:${resultMatchId}`);
+      restoredDraftRef.current = true;
+      setTeam1Name(saved.team1Name || saved.team1 || 'Team A');
+      setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
+      setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
+      setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
+      if (saved.format) setFormat(saved.format);
+      if (isCricket) {
+        const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
+          || CRICKET_FORMATS.find(f => f.id === (saved.format?.totalInnings === 4 ? 'test' : 'custom'));
+        setCricketPreset(preset.id);
+        setFormatMode(preset.customizable ? 'custom' : 'standard');
+        setSetupStep(preset.customizable ? 3 : 2);
+      }
+      setResult(saved);
+      setPhase('result');
+      return;
+    }
 
     const draft = loadData(quickMatchDraftKey, null);
     const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
@@ -621,7 +648,7 @@ export default function MonoQuickMatch() {
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
-  }, [quickMatchDraftKey, sport]);
+  }, [quickMatchDraftKey, sport, resultMatchId]);
 
   useEffect(() => {
     // A staged winner is still a draft until its terminal save succeeds.
@@ -1029,8 +1056,6 @@ export default function MonoQuickMatch() {
     if (!team1Name.trim() || !team2Name.trim()) return;
     setSaveWarning('');
     setShareStatus('');
-    setResult(null);
-    resetSync();
     clearData(quickMatchDraftKey);
     setVScore1(0);
     setVScore2(0);
@@ -1063,6 +1088,7 @@ export default function MonoQuickMatch() {
         team1Id: 'team1', team2Id: 'team2',
         team1: team1Name.trim(), team2: team2Name.trim(),
         team1Name: team1Name.trim(), team2Name: team2Name.trim(),
+        team1Color, team2Color,
         format,
         status: 'in-progress',
         innings: [],
@@ -1072,8 +1098,10 @@ export default function MonoQuickMatch() {
         createdAt: nowIso,
       };
       if (!persistQuickMatch(match)) return;
+      setResult(null);
+      resetSync();
       navigate(`/${sport}/quick/test-match/${matchId}`);
-      return;
+      return true;
     }
 
     if (isTennis) {
@@ -1088,16 +1116,22 @@ export default function MonoQuickMatch() {
         sets: null,
         nowIso,
       });
+      draft.team1Color = team1Color;
+      draft.team2Color = team2Color;
       if (!saveData(getTennisQuickDraftKey(matchId), draft)) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
         return;
       }
+      setResult(null);
+      resetSync();
       navigate(`/${sport}/quick/live/${matchId}`);
-      return;
+      return true;
     }
 
     // Mint the stable live-broadcast match id (R2) right before scoring begins —
     // tennis/test-cricket branches above navigate away and never reach this line.
+    setResult(null);
+    resetSync();
     liveMatchIdRef.current = Date.now();
     setPhase('scoring');
   };
@@ -1639,6 +1673,11 @@ export default function MonoQuickMatch() {
     resetScoringStarted();
     setRestoredScoringStarted(false);
     completion.reset();
+    if (resultMatchId) {
+      // Leave the saved-result address before creating any fresh scoring draft.
+      draftHydratedSportRef.current = `${sport}:`;
+      navigate(`/${sport}/quick`, { replace: true });
+    }
     restoredDraftRef.current = false;
     setSaveWarning('');
     setPhase(nextPhase);
@@ -3163,7 +3202,16 @@ export default function MonoQuickMatch() {
       team1Colour={result?.team1Color}
       team2Colour={result?.team2Color}
       onDone={() => navigate('/app')}
-      primary={{ label: 'Rematch', onClick: () => resetMatchState('scoring') }}
+      primary={{ label: 'Rematch', onClick: () => {
+        if (isTennis || (isCricket && format.totalInnings === 4)) {
+          if (startMatch()) {
+            completion.reset();
+            resetScoringStarted();
+          }
+        } else {
+          resetMatchState('scoring');
+        }
+      } }}
       secondary={[
         { label: 'Share', onClick: shareResult },
         { label: 'History', onClick: () => navigate('/history') },
