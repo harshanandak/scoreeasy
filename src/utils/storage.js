@@ -1,5 +1,7 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
+import { getSportById, getSportsList } from '../models/sportRegistry';
+import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -273,10 +275,23 @@ export const saveData = (key, data) => {
   return true;
 };
 
+function registeredSavedData(key, value, defaultValue) {
+  const draftSport = key.startsWith('se_quickmatch_draft_') ? key.slice('se_quickmatch_draft_'.length)
+    : key.startsWith(TENNIS_QUICK_DRAFT_PREFIX) ? 'tennis' : null;
+  const sport = draftSport || getSportsList().find((item) => item.storageKey === key)?.id;
+  const sharedRecords = key === STORAGE_KEYS.QUICK_MATCHES || key === 'gs_history' || key === 'gs_sessions';
+  if (!sport && !sharedRecords) return value;
+
+  const registered = (record) => record !== null && typeof record === 'object' && !Array.isArray(record)
+    && Boolean(getSportById(record.sport === undefined ? sport : record.sport));
+  if (draftSport) return registered(value) ? value : defaultValue;
+  return Array.isArray(value) ? value.filter(registered) : defaultValue;
+}
+
 export const loadData = (key, defaultValue = null) => {
   try {
     const data = getStorage().getItem(key);
-    return data ? JSON.parse(data) : defaultValue;
+    return data ? registeredSavedData(key, JSON.parse(data), defaultValue) : defaultValue;
   } catch (error) {
     console.error('Error loading data:', error);
     return defaultValue;
@@ -358,20 +373,8 @@ export const saveSportTournament = (storageKey, tournamentData) => {
 
 export const loadSportTournaments = (storageKey) => {
   const tournaments = loadData(storageKey, []);
-
-  // Apply format migration for backward compatibility
-  const migratedTournaments = migrateTournaments(tournaments);
-
-  // If any tournament was migrated, save the updated data back
-  const needsSave = migratedTournaments.some((t, i) =>
-    t.format?.formatMode && !tournaments[i]?.format?.formatMode
-  );
-
-  if (needsSave) {
-    saveData(storageKey, migratedTournaments);
-  }
-
-  return migratedTournaments;
+  // Adapt legacy formats in memory without persisting the filtered collection.
+  return migrateTournaments(tournaments);
 };
 
 export const deleteSportTournament = (storageKey, tournamentId) => {
@@ -387,11 +390,8 @@ export const saveQuickMatches = (matches) => {
 
 export const loadQuickMatches = () => {
   const stored = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
-  const normalized = normalizedQuickMatches(stored);
-  if (JSON.stringify(stored) !== JSON.stringify(normalized)) {
-    saveData(STORAGE_KEYS.QUICK_MATCHES, normalized);
-  }
-  return normalized;
+  // Reading must not persist the filtered view over ignored rows.
+  return normalizedQuickMatches(stored);
 };
 
 export const loadCompletedQuickMatches = () => {

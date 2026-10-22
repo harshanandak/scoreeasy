@@ -32,6 +32,7 @@ function seedOlderHistoryMatch() {
     JSON.stringify([
       {
         id: 'older-match-1',
+        sport: 'volleyball',
         gameName: 'Sunday Court',
         participants: ['North', 'South'],
         finalScores: { North: 21, South: 18 },
@@ -322,7 +323,7 @@ describe('MonoHistory', () => {
     expect(screen.queryByText('Performance')).not.toBeInTheDocument();
   });
 
-  it('keeps a deregistered-sport quick match readable with its sport label but no rematch', async () => {
+  it('ignores a deregistered-sport quick match', async () => {
     seedQuickMatch([
       {
         id: 'pb-1',
@@ -338,15 +339,12 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const row = await screen.findByRole('button', { name: 'View details: Dinks vs Lobs' });
-    expect(row).toHaveTextContent('Pickleball');
-    fireEvent.click(row);
-
-    expect(screen.getByText('Match details')).toBeInTheDocument();
+    expect(await screen.findByText('No match history yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Dinks vs Lobs' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Rematch' })).not.toBeInTheDocument();
   });
 
-  it('labels a quick match of an unknown sport generically', async () => {
+  it('ignores a quick match of an unknown sport', async () => {
     seedQuickMatch([
       {
         id: 'x-1',
@@ -362,11 +360,11 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const row = await screen.findByRole('button', { name: 'View details: Stones vs Brooms' });
-    expect(row).toHaveTextContent('Other sport');
+    expect(await screen.findByText('No match history yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Stones vs Brooms' })).not.toBeInTheDocument();
   });
 
-  it('still lists completed tournament matches saved under a deregistered sport', async () => {
+  it('ignores completed tournament matches saved under a deregistered sport', async () => {
     globalThis.localStorage.setItem('se_futsal', JSON.stringify([
       {
         id: 'cup-1',
@@ -389,9 +387,8 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const row = await screen.findByRole('button', { name: 'View details: Reds vs Blues' });
-    expect(row).toHaveTextContent('Futsal');
-    expect(row).toHaveTextContent('Futsal Cup');
+    expect(await screen.findByText('No match history yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View details: Reds vs Blues' })).not.toBeInTheDocument();
   });
 
   it('keeps history rows readable instead of disabled-looking', () => {

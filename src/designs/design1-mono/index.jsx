@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate, useParams, useLocation, useNavigate } from 'react-router-dom';
 import MonoLanding from './MonoLanding';
-import { getRetiredSport, getSportById } from '../../models/sportRegistry';
+import { getSportById } from '../../models/sportRegistry';
 import { loadData, loadQuickMatch } from '../../utils/storage';
 import { getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
 import { useAuth } from '../../hooks/useAuth';
@@ -136,30 +136,9 @@ export function LazyFallback() {
   );
 }
 
-// A deep link (/pickleball/quick, /squash/tournament/...) to a sport that was
-// deregistered: say so plainly and point at the sport chooser. Its saved
-// matches are still listed (read-only) in History.
-function RetiredSportRoute({ sportName }) {
-  return (
-    <RouteRecoveryActions
-      eyebrow="Sport retired"
-      title={`${sportName} is no longer offered`}
-      message={`Score Easy now focuses on fewer games. Your saved ${sportName} matches stay in History.`}
-      primaryLabel="Choose a sport"
-      primaryPath="/play"
-    />
-  );
-}
-
-RetiredSportRoute.propTypes = {
-  sportName: PropTypes.string.isRequired,
-};
-
 function NotFoundRoute() {
   const location = useLocation();
   const firstSegment = location.pathname.split('/').filter(Boolean)[0];
-  const retired = getRetiredSport(firstSegment);
-  if (retired) return <RetiredSportRoute sportName={retired.name} />;
   const sport = getSportById(firstSegment);
   const title = sport ? `This ${sport.name} screen is not available` : 'This screen is not available';
 
@@ -216,8 +195,7 @@ function TennisQuickScorerRoute() {
 function LegacyQuickMatchRoute() {
   const location = useLocation();
   const requestedSport = new URLSearchParams(location.search).get('sport')?.toLowerCase();
-  // A retired sport must not silently become a volleyball match — let the scorer choose.
-  if (getRetiredSport(requestedSport)) return <Navigate to="/play" replace />;
+  if (requestedSport && !getSportById(requestedSport)) return <Navigate to="/play" replace />;
   const sport = getSportById(requestedSport) ? requestedSport : 'volleyball';
   return <Navigate to={`/${sport}/quick`} replace />;
 }

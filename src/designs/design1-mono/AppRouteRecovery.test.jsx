@@ -90,26 +90,26 @@ describe('app route recovery', () => {
     expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
   });
 
-  it('explains a deregistered sport quick link and offers the sport chooser', async () => {
+  it('uses the existing 404 for a deregistered sport quick link', async () => {
     renderApp('/pickleball/quick');
 
-    const heading = await screen.findByRole('heading', { name: 'Pickleball is no longer offered' });
+    const heading = await screen.findByRole('heading', { name: 'This screen is not available' });
     const recoveryPanel = heading.closest('.max-w-2xl');
-    expect(within(recoveryPanel).getByText(/saved Pickleball matches stay in History/i)).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
     expect(within(recoveryPanel).queryByRole('button', { name: /Start Pickleball/i })).not.toBeInTheDocument();
 
-    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Choose a sport' }));
+    fireEvent.click(within(recoveryPanel).getByRole('button', { name: 'Play' }));
     await waitFor(() => {
       expectCurrentRoute('/play');
     });
   });
 
-  it('recovers a deep tournament scorer link of a deregistered sport', async () => {
-    renderApp('/squash/tournament/t-1/match/m-1/score');
+  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('uses the existing 404 for a deep %s tournament link', async (sport) => {
+    renderApp(`/${sport}/tournament/t-1/match/m-1/score`);
 
-    const heading = await screen.findByRole('heading', { name: 'Squash is no longer offered' });
+    const heading = await screen.findByRole('heading', { name: 'This screen is not available' });
     const recoveryPanel = heading.closest('.max-w-2xl');
-    expect(within(recoveryPanel).getByRole('button', { name: 'Choose a sport' })).toBeInTheDocument();
+    expect(within(recoveryPanel).getByRole('button', { name: 'Play' })).toBeInTheDocument();
     expect(within(recoveryPanel).getByRole('button', { name: 'Home' })).toBeInTheDocument();
   });
 
