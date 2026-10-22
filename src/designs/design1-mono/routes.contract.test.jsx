@@ -702,7 +702,8 @@ describe('navigation decisions (2026-10-21)', () => {
     seed(key, { sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: goals ? { mode: 'free' } : { sets: 3, pointsPerSet: 25 }, updatedAt: NOW_ISO });
     const view = renderApp([`/${sport}/quick`]);
     await settleRoute();
-    if (['basketball', 'kabaddi'].includes(sport)) fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+    if (sport === 'kabaddi') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+    else if (sport === 'basketball') fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
     else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
@@ -855,7 +856,9 @@ describe('navigation decisions (2026-10-21)', () => {
     const score = goals
       ? (mode === 'quick' ? 'Add 1 to Red' : 'Add 1 point to Red')
       : (mode === 'quick' ? 'Add point for Red' : /^Red: /);
-    if (mode === 'quick' && ['basketball', 'kabaddi'].includes(sport)) {
+    if (mode === 'quick' && sport === 'kabaddi') {
+      fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+    } else if (mode === 'quick' && sport === 'basketball') {
       fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
     } else fireEvent.click(screen.getByRole('button', { name: score }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());

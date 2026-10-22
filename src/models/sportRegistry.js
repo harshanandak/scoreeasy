@@ -247,6 +247,7 @@ export const SPORT_REGISTRY = {
 
   kabaddi: {
     id: 'kabaddi',
+    teamColour: true,
     identityColour: '#e11d74', // Rani pink
     name: 'Kabaddi',
     icon: '🤼',
