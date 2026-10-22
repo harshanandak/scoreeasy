@@ -138,7 +138,7 @@ function SportGrid({ selectedSport, pickSport }) {
           }}
         >
           <div style={{ marginBottom: 4, display: 'flex', justifyContent: 'center' }}>
-            <SportIcon name={sp.name} size={26} color={selectedSport === sp.id ? t.blue : t.text} />
+            <SportIcon name={sp.name} size={26} color={selectedSport === sp.id ? 'var(--se-color-action-on-ink)' : t.text} />
           </div>
           <div style={{ fontFamily: MONO, fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.04em' }}>{sp.name.toUpperCase()}</div>
         </button>

@@ -541,11 +541,12 @@ button.mono-stat-card {
   color: var(--se-color-ink-faint);
 }
 
+/* Focus is the ink ring (Kit §2), the same as every other control. */
 .mono-input:focus,
 .mono-input:focus-visible {
-  border-color: var(--se-color-action);
-  outline: 2px solid color-mix(in oklch, var(--se-color-action) 22%, transparent);
-  outline-offset: 2px;
+  border-color: var(--se-color-ink);
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
   box-shadow: var(--shadow-xs);
 }
 
@@ -898,9 +899,10 @@ button.mono-stat-card {
   background: transparent;
 }
 
+/* The pad fills its cell edge to edge, so the ink ring sits inside it instead of being clipped. */
 .mono-score-pad:focus-visible {
-  outline: 2px solid var(--se-color-action);
-  outline-offset: -3px;
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: -5px;
 }
 
 .mono-score-meta {
@@ -1055,9 +1057,10 @@ button.mono-stat-card {
   background: color-mix(in oklch, var(--score-accent, var(--se-color-action-soft)) 10%, var(--se-color-surface));
 }
 
+/* Each half fills the arena edge to edge, so the ink ring sits inside it instead of being clipped. */
 .mono-arena-half:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -3px;
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: -5px;
 }
 
 .mono-arena-half:disabled {
