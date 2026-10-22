@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SPORT_MARKS, cutOut, sportMarkMaskUrl } from './sportMarks';
-import { getSportById } from '../models/sportRegistry';
+import { getSportById, getSportsList } from '../models/sportRegistry';
 
 // The "show the game" mark on the scorer: a sport's ball-and-action silhouette, used as a CSS
 // mask so its colour and alpha come from the colour engine (--team-x-motif) and stay gated.
@@ -35,8 +35,16 @@ describe('sportMarkMaskUrl', () => {
     }
   });
 
-  it('returns null for sports without a mark, including inherited keys', () => {
-    expect(sportMarkMaskUrl('cricket')).toBeNull();
+  it('draws a mark for every registered sport (tiles and row badges show them)', () => {
+    for (const sport of getSportsList()) expect(sportMarkMaskUrl(sport.id), sport.id).toMatch(/^url\("data:/);
+  });
+
+  it('cuts filled panels too when asked, with the same two literals', () => {
+    expect(cutOut('z', "<circle r='1'/>", { fill: true })).toContain("<g fill='#000' stroke='#000'>");
+  });
+
+  it('returns null for ids without a mark, including inherited keys', () => {
+    expect(sportMarkMaskUrl('not-a-sport')).toBeNull();
     expect(sportMarkMaskUrl('toString')).toBeNull();
     expect(sportMarkMaskUrl(undefined)).toBeNull();
   });

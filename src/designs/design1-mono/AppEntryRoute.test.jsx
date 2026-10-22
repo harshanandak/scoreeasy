@@ -229,22 +229,30 @@ describe('app entry route contract', () => {
     // History and Stats are now one merged section reachable from a single tab.
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toBeInTheDocument();
     expect(within(appNav).queryByRole('button', { name: 'Stats', hidden: true })).not.toBeInTheDocument();
+    // No Live tab until a /live destination exists (Kit decision 4 lands with S6): no dead tab.
+    expect(within(appNav).queryByRole('button', { name: 'Live', hidden: true })).not.toBeInTheDocument();
+    // Dock icons are clean monolines, not the hand-drawn layer (that is for moments): one 1.9
+    // stroke on the 24 grid with round caps and joins. The active tab is an ink fill.
+    for (const icon of appNav.querySelectorAll('.global-bottom-nav-icon svg')) {
+      expect(icon).toHaveAttribute('stroke-width', '1.9');
+      expect(icon).toHaveAttribute('stroke-linecap', 'round');
+      expect(icon).toHaveAttribute('stroke-linejoin', 'round');
+      expect(icon).toHaveAttribute('viewBox', '0 0 24 24');
+    }
+    expect(appNav.querySelector('.global-bottom-nav-icon path')).toHaveAttribute('d', 'M3.5 10.5 12 3.5l8.5 7');
+    expect(navStyles).toMatch(/\.global-bottom-nav-account-cell\.is-active \{\s*background: var\(--se-color-ink\);\s*color: var\(--se-color-on-ink\);/);
   });
 
   it('keeps icon-led native app tabs active on the Play hub and cricket fast start', async () => {
-    // The Play hub defaults new users to Guided; Browse (the ledger chooser) is one tap away
-    // and is remembered, so seed it to assert the browse-mode sport list directly.
-    globalThis.localStorage.setItem('se_play_mode', 'browse');
     const { container } = renderApp('/play');
 
-    expect(await screen.findByRole('heading', { name: 'Play' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'What are we scoring?' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveClass('global-bottom-nav-native');
     expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
 
-    // The /play hub was simplified into a ledger-style chooser: the quick-match
-    // action now navigates straight to the sport scorer.
+    // A Play hub tile starts that sport's quick setup.
     fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
 
     await waitFor(() => {
@@ -274,6 +282,25 @@ describe('app entry route contract', () => {
     // Visible label is non-interactive chrome, hidden from assistive tech.
     const label = within(appNav).getByText('Account');
     expect(label).toHaveAttribute('aria-hidden', 'true');
+
+    // The signed-in trigger (Clerk's avatar button) and its loading fallback are thumb-sized:
+    // >= 48x48 hit areas. These rules live in the mobile media query, which jsdom does not match,
+    // so the declarations themselves are read from the shell's stylesheet.
+    const css = Array.from(container.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+    const rule = (selector) => {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const match = new RegExp(`${escaped}\\s*\\{([^}]*)\\}`).exec(css);
+      expect(match, selector).not.toBeNull();
+      return Object.fromEntries(match[1].split(';').map((d) => d.split(':').map((p) => p.trim())).filter(([k]) => k));
+    };
+    const px = (value) => Number.parseFloat(value);
+    const trigger = rule('.global-bottom-nav-account-control .cl-userButtonTrigger,\n          .global-bottom-nav-account-control .cl-userButtonBox');
+    expect(px(trigger.width)).toBeGreaterThanOrEqual(48);
+    expect(px(trigger.height)).toBeGreaterThanOrEqual(48);
+    const control = rule('.global-bottom-nav-account-control');
+    expect(px(control['min-width'])).toBeGreaterThanOrEqual(48);
+    expect(px(control['min-height'])).toBeGreaterThanOrEqual(48);
+    expect(px(rule('.global-bottom-nav-account-fallback')['min-height'])).toBeGreaterThanOrEqual(48);
   });
 
   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
@@ -336,7 +363,7 @@ describe('app entry route contract', () => {
     expect(navStyles).not.toContain('var(--se-color-action-soft)');
   });
 
-  it('paints the account tab active on the profile route with a >=44px tap target', async () => {
+  it('paints the account tab active on the profile route with a >=48px tap target', async () => {
     authState = {
       ...authState,
       authMode: 'cloud',
@@ -365,10 +392,10 @@ describe('app entry route contract', () => {
       .map((style) => style.textContent)
       .join('\n');
     expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
-    // Tap targets meet the >=44px bar — assert Clerk's OWN trigger/avatar box (the
-    // real hit area) is sized to 44px, not just that a 44px rule exists somewhere.
+    // Tap targets meet the >=48px bar — assert Clerk's OWN trigger/avatar box (the
+    // real hit area) is sized to 48px, not just that a 48px rule exists somewhere.
     expect(navStyles).toContain('.global-bottom-nav-account-control .cl-userButtonTrigger');
-    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 44px;[^}]*height: 44px;/);
+    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 48px;[^}]*height: 48px;/);
     expect(navStyles).not.toContain('min-height: 24px;');
   });
 

@@ -2,6 +2,10 @@
 // Each sport defines its engine type, scoring config, and UI settings.
 // Display order and tier grouping live in ./sportFocus.js
 // (ICP plan: docs/plans/2026-07-20-icp-games/adjusted-plan.md §A).
+//
+// identityColour is the sport's Kit identity source (plan 2026-10-22 §3). It is never painted
+// as is: src/lib/sportIdentity.js runs it through the team-colour engine, which gates the tile
+// label on every gradient stop, the sheen and the mark, exactly like a scorer key.
 
 import {
   LATER_GROUP_LABEL,
@@ -15,6 +19,7 @@ export const SPORT_REGISTRY = {
   // === SETS-BASED SPORTS (4) ===
   volleyball: {
     id: 'volleyball',
+    identityColour: '#fbbf24', // Sun yellow
     name: 'Volleyball',
     icon: '🏐',
     engine: 'sets',
@@ -46,6 +51,7 @@ export const SPORT_REGISTRY = {
 
   badminton: {
     id: 'badminton',
+    identityColour: '#7c3aed', // Shuttle violet
     name: 'Badminton',
     icon: '🏸',
     engine: 'sets',
@@ -74,6 +80,7 @@ export const SPORT_REGISTRY = {
 
   tabletennis: {
     id: 'tabletennis',
+    identityColour: '#0d9488', // Table teal
     name: 'Table Tennis',
     icon: '🏓',
     engine: 'sets',
@@ -102,6 +109,7 @@ export const SPORT_REGISTRY = {
 
   tennis: {
     id: 'tennis',
+    identityColour: '#c6e83a', // Optic volt
     name: 'Tennis',
     icon: '🎾',
     engine: 'sets',
@@ -134,6 +142,7 @@ export const SPORT_REGISTRY = {
   // === GOALS-BASED SPORTS (4) ===
   football: {
     id: 'football',
+    identityColour: '#16a34a', // Pitch green
     name: 'Football',
     icon: '⚽',
     engine: 'goals',
@@ -166,6 +175,7 @@ export const SPORT_REGISTRY = {
 
   basketball: {
     id: 'basketball',
+    identityColour: '#f97316', // Court orange
     name: 'Basketball',
     icon: '🏀',
     engine: 'goals',
@@ -202,6 +212,7 @@ export const SPORT_REGISTRY = {
 
   hockey: {
     id: 'hockey',
+    identityColour: '#38bdf8', // Turf sky
     name: 'Hockey',
     icon: '🏑',
     engine: 'goals',
@@ -234,6 +245,7 @@ export const SPORT_REGISTRY = {
 
   kabaddi: {
     id: 'kabaddi',
+    identityColour: '#e11d74', // Rani pink
     name: 'Kabaddi',
     icon: '🤼',
     engine: 'goals',
@@ -271,6 +283,7 @@ export const SPORT_REGISTRY = {
   // === CUSTOM (1) ===
   cricket: {
     id: 'cricket',
+    identityColour: '#2563eb', // Royal blue
     name: 'Cricket',
     icon: '🏏',
     engine: 'custom-cricket',

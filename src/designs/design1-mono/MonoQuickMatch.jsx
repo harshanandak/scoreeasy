@@ -385,8 +385,10 @@ export default function MonoQuickMatch() {
   const [team1Name, setTeam1Name] = useState(wizardTeams?.[0] || 'Team A');
   const [team2Name, setTeam2Name] = useState(wizardTeams?.[1] || 'Team B');
   // Direction E: each team's colour owns its half of the board, for sports that opt in.
-  const [team1Color, setTeam1Color] = useState(DEFAULT_TEAM_COLOURS.a);
-  const [team2Color, setTeam2Color] = useState(DEFAULT_TEAM_COLOURS.b);
+  // A Home Rematch hands over the saved pair; only plain hex survives, else the default pair.
+  const wizardColours = Array.isArray(location.state?.colours) ? location.state.colours : null;
+  const [team1Color, setTeam1Color] = useState(() => normaliseHex(wizardColours?.[0]) ?? DEFAULT_TEAM_COLOURS.a);
+  const [team2Color, setTeam2Color] = useState(() => normaliseHex(wizardColours?.[1]) ?? DEFAULT_TEAM_COLOURS.b);
   const teamColourOn = isTeamColourSport(sport);
   const teamColourStyle = useTeamColours(team1Color, team2Color, sport);
   const [saveWarning, setSaveWarning] = useState('');
@@ -922,6 +924,9 @@ export default function MonoQuickMatch() {
       status: 'completed',
       clientMatchId,
       sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
+      // The picked team colours stay with the local record so Home can show the last match in
+      // them. Local only: normalizeMatchForConvex does not send them.
+      ...(teamColourOn ? { team1Color, team2Color } : {}),
     };
 
     if (!persistQuickMatch(nextResult)) return false;

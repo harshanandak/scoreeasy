@@ -521,70 +521,49 @@ AppConfirmDialog.propTypes = {
   onConfirm: PropTypes.func.isRequired,
 };
 
+// Dock icons: clean geometric monolines (Kit S1; Harsha 2026-10-22: navigation chrome stays
+// polished and simple, hand-drawn is for moments). One 1.9 stroke on the 24 grid, round caps and
+// joins, no wobble; always paired with a label. Drawn inline, no icon dependency.
+const NAV_ICON_PATHS = {
+  home: [
+    'M3.5 10.5 12 3.5l8.5 7',
+    'M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9',
+  ],
+  play: [
+    'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+    'M10 8.75v6.5L15.25 12z',
+  ],
+  matches: [
+    'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8',
+    'M3 3v5h5',
+    'M12 7v5l3.5 2',
+  ],
+  account: [
+    'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+    'M4.5 20.5a7.5 7.5 0 0 1 15 0',
+  ],
+};
+
 function NavIcon({ name }) {
-  const commonProps = {
-    'aria-hidden': 'true',
-    fill: 'none',
-    height: 22,
-    stroke: 'currentColor',
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    strokeWidth: 1.8,
-    viewBox: '0 0 24 24',
-    width: 22,
-  };
-
-  if (name === 'home') {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 10.5 12 4l8 6.5" />
-        <path d="M6.5 10v9h11v-9" />
-        <path d="M10 19v-5h4v5" />
-      </svg>
-    );
-  }
-
-  if (name === 'play') {
-    return (
-      <svg {...commonProps}>
-        <path d="M8 5.5v13l10-6.5z" />
-      </svg>
-    );
-  }
-
-  if (name === 'matches') {
-    return (
-      <svg {...commonProps}>
-        <path d="M7 6h11" />
-        <path d="M7 12h11" />
-        <path d="M7 18h11" />
-        <path d="M4 6h.01" />
-        <path d="M4 12h.01" />
-        <path d="M4 18h.01" />
-      </svg>
-    );
-  }
-
-  if (name === 'stats') {
-    return (
-      <svg {...commonProps}>
-        <path d="M5 19V9" />
-        <path d="M12 19V5" />
-        <path d="M19 19v-7" />
-      </svg>
-    );
-  }
-
   return (
-    <svg {...commonProps}>
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
-      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={24}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.9}
+      viewBox="0 0 24 24"
+      width={24}
+    >
+      {NAV_ICON_PATHS[name].map((d) => <path key={d} d={d} />)}
     </svg>
   );
 }
 
 NavIcon.propTypes = {
-  name: PropTypes.oneOf(['home', 'play', 'matches', 'stats', 'account']).isRequired,
+  name: PropTypes.oneOf(['home', 'play', 'matches', 'account']).isRequired,
 };
 
 // Single account control for the mobile bottom nav. The bottom nav is the ONLY
@@ -998,9 +977,9 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
         .global-nav-link:hover,
         .global-nav-link[aria-current="page"] {
-          border-color: var(--se-color-action);
-          background: var(--se-color-action);
-          color: var(--se-color-inverse);
+          border-color: var(--se-color-ink);
+          background: var(--se-color-ink);
+          color: var(--se-color-on-ink);
         }
 
         .global-mobile-menu-button,
@@ -1209,8 +1188,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
           }
 
           .global-mobile-menu-item[aria-current="page"] {
-            background: var(--se-color-action);
-            color: var(--se-color-inverse);
+            background: var(--se-color-ink);
+            color: var(--se-color-on-ink);
           }
 
           .global-mobile-menu-item:last-child {
@@ -1255,15 +1234,13 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             gap: 3px;
             min-height: 54px;
             border: 0;
-            border-radius: 10px;
+            border-radius: 12px;
             background: transparent;
-            color: var(--se-color-ink-muted);
+            color: var(--se-color-ink-soft);
             cursor: pointer;
-            font-family: var(--se-font-mono);
-            font-size: 0.5625rem;
+            font-family: var(--se-font-sans);
+            font-size: 0.74rem;
             font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
             line-height: 1;
             position: relative;
           }
@@ -1279,8 +1256,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           .global-bottom-nav-icon svg {
             display: block;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
           }
 
           .global-bottom-nav-label {
@@ -1289,7 +1266,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           /* Account cell: one stacked control (Clerk button or fallback) plus a
              non-interactive label, laid out to match the other tabs. The cell
-             itself fills the grid track and carries the active cue + a >=44px
+             itself fills the grid track and carries the active cue + a >=48px
              tap target (the control/fallback stretch to fill it). */
           .global-bottom-nav-account-cell {
             display: flex;
@@ -1300,26 +1277,30 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             min-height: 54px;
             width: 100%;
             min-width: 0;
-            border-radius: 10px;
-            color: var(--se-color-ink-muted);
+            border-radius: 12px;
+            color: var(--se-color-ink-soft);
+            font-family: var(--se-font-sans);
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1;
           }
 
           .global-bottom-nav-account-control {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 48px;
+            min-height: 48px;
           }
 
           /* Clerk renders its own avatar trigger inside the control wrapper.
              Sizing only the wrapper leaves the real hit area (Clerk's avatar
-             button) at ~24px, so we expand Clerk's own trigger/avatar box to
-             the 44px target as well. */
+             button) at ~24px, so we expand Clerk's own trigger/box to the
+             48px target; the visible avatar stays 36px, centred in it. */
           .global-bottom-nav-account-control .cl-userButtonTrigger,
           .global-bottom-nav-account-control .cl-userButtonBox {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
           }
 
           .global-bottom-nav-account-control .cl-userButtonAvatarBox {
@@ -1332,7 +1313,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             align-items: center;
             justify-content: center;
             width: 100%;
-            min-height: 44px;
+            min-height: 48px;
             border: 0;
             border-radius: 10px;
             background: transparent;
@@ -1342,16 +1323,17 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           /* Unified active treatment: every nav surface (header link, mobile
              sheet item, bottom-nav item, account cell) paints the active tab
-             with the same solid action fill + inverse ink, so the "you are
-             here" cue is consistent across the shell. The account cell needs
+             with the same solid ink fill + on-ink text (Kit: green is spent on
+             the one Go and on Live, never on chrome), so the "you are here"
+             cue is consistent across the shell. The account cell needs
              its own selector because its interactive control is the Clerk
              button (no aria-current of its own) rather than a
              .global-bottom-nav-item, so the cue is driven by the cell's
              is-active state. */
           .global-bottom-nav-item[aria-current="page"],
           .global-bottom-nav-account-cell.is-active {
-            background: var(--se-color-action);
-            color: var(--se-color-inverse);
+            background: var(--se-color-ink);
+            color: var(--se-color-on-ink);
           }
 
           body.has-mobile-input-focus .global-bottom-nav {

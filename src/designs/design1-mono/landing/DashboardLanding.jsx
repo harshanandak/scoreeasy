@@ -6,89 +6,28 @@ import { getActiveSessions } from '../../../utils/universalStorage';
 import { getSportsList, getSportById } from '../../../models/sportRegistry';
 import { useAuth } from '../../../hooks/useAuth';
 import { isTournamentMatchCompleted } from '../../../utils/tournamentSync';
-import { MONO, SWISS } from './landingTheme';
-import SportIcon from './sportIcons';
+import { deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
+import { sportIdentity, sportIdentityVars } from '../../../lib/sportIdentity';
 import LiveNowStrip from '../live/LiveNowStrip';
 import ErrorBoundary from '../../../components/ErrorBoundary';
 import { loadInProgressMatches } from '../../../utils/appEntry';
+import {
+  Chevron, CoachArrow, GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge, SportTile,
+} from '../kit/KitParts';
+
+/* Home (Kit, plan 2026-10-22 §9 S1). One hero per screen and one Go: for a returning scorer the
+   hero is the last match in its team colours with Rematch as the Go; on first run it is the
+   "play your first match" prompt, with a hand-drawn arrow at its Go. Nothing here truncates:
+   long names wrap. */
 
 const QM_KEY = 'se_quickmatches';
-
-/* Going live is a property of an in-progress match: the LiveBroadcastBar that
-   owns the actual go-live trigger only appears inside a scoring screen. The
-   dashboard itself can only navigate, so the home's "Go live" hero entry is a
-   labelled shortcut into the start-a-match flow (the sport picker), where the
-   broadcast control then becomes available. */
-const GO_LIVE_PATH = '/play';
-
-/* ─── Tokens (CSS variables from the design system in index.css — single source of truth) ─── */
-const t = {
-  blue: 'var(--primary)', blueLight: 'var(--accent)',
-  bg: 'var(--background)', surface: 'var(--card)', text: 'var(--foreground)',
-  textSoft: 'var(--se-color-ink-soft)', textMuted: 'var(--muted-foreground)', textFaint: 'var(--muted-foreground)',
-  border: 'var(--border)', borderStrong: 'var(--border)',
-  /* Interior dividers dissect content softly; pure black is reserved for object edges. */
-  divider: 'color-mix(in oklch, var(--border) 14%, transparent)',
-  green: 'var(--primary)', greenLight: 'var(--accent)',
-  orange: 'var(--se-color-warning)', orangeLight: 'var(--se-color-warning-soft)',
-  cardShadow: 'var(--shadow-2xs)',
-  r: 'var(--radius)',
-};
-
-/* ─── Layered style tokens ─── */
-const s = {
-  sportCard: { background: t.surface, border: `1px solid ${t.border}`, borderRadius: 'calc(var(--radius) + 4px)', boxShadow: t.cardShadow, padding: '16px 12px' },
-  btn: { borderRadius: 'var(--radius)' },
-  activeRow: { background: t.blueLight, border: 'none', borderRadius: 0, boxShadow: 'none' },
-  darkCard: {
-    bg: 'var(--foreground)', text: 'var(--primary-foreground)', muted: '#999', border: '#333',
-    outer: { background: 'var(--foreground)', border: '1.5px solid #444', borderRadius: 0, boxShadow: `6px 6px 0 -1.5px var(--foreground), 6px 6px 0 0 ${t.blue}` },
-    // badges sit on the ink card, so they take the on-ink foregrounds, not the Go fill colour
-    badge: { background: 'color-mix(in oklch, var(--se-color-action-on-ink) 15%, transparent)', color: 'var(--se-color-action-on-ink)' },
-    pausedBadge: { background: 'color-mix(in oklch, var(--se-color-warning-on-ink) 15%, transparent)', color: 'var(--se-color-warning-on-ink)' },
-    resumeBtn: { background: t.blue, color: 'var(--primary-foreground)', border: 'none' },
-  },
-};
-
-const btnPrimary = {
-  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.04em',
-  padding: '10px 16px', background: t.blue, color: 'var(--primary-foreground)', border: 'none',
-  borderRadius: s.btn.borderRadius, cursor: 'pointer', textAlign: 'center',
-};
-const btnSecondary = {
-  fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.04em',
-  padding: '10px 16px', background: 'transparent', color: t.text,
-  border: `1px solid ${t.border}`, borderRadius: s.btn.borderRadius,
-  cursor: 'pointer', textAlign: 'center',
-};
-
-const bareButton = {
-  background: 'transparent',
-  border: 'none',
-  padding: 0,
-  margin: 0,
-  textAlign: 'inherit',
-};
-
-/* Corner cross marks — the landing scorecard's signature detail */
-function CardCross({ top, left, right, bottom }) {
-  return (
-    <span aria-hidden="true" style={{ position: 'absolute', top, left, right, bottom, fontFamily: MONO, fontSize: '0.5rem', color: t.textFaint, lineHeight: 1, userSelect: 'none', pointerEvents: 'none' }}>+</span>
-  );
-}
-CardCross.propTypes = {
-  top: PropTypes.number,
-  left: PropTypes.number,
-  right: PropTypes.number,
-  bottom: PropTypes.number,
-};
-
-const allSportsList = getSportsList();
-
-const SPORT_NAMES = allSportsList.map(sp => sp.name);
-
+const DAY_MS = 864e5;
+const WEEK_MS = 7 * DAY_MS;
+const RECENT_LIMIT = 4;
 // Empty-state featured tier: the first few sports in focus order (src/models/sportFocus.js).
 const DEFAULT_FEATURED_SPORT_COUNT = 3;
+
+const allSportsList = getSportsList();
 
 function collectTournamentsBySport(sports) {
   const tournaments = [];
@@ -101,7 +40,6 @@ function collectTournamentsBySport(sports) {
       tournaments.push({
         ...tr,
         sportName: sport.name,
-        sportIcon: sport.name,
         sportId: sport.id,
         completed,
         total,
@@ -112,42 +50,212 @@ function collectTournamentsBySport(sports) {
   tournaments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return tournaments;
 }
+
 function getSportFromName(name) {
   if (!name) return null;
   const lower = name.toLowerCase();
-  return SPORT_NAMES.find(s => lower.includes(s.toLowerCase())) || null;
+  return allSportsList.find((sp) => lower.includes(sp.name.toLowerCase())) || null;
 }
 
+const isDrawToken = (winner) => typeof winner === 'string' && ['draw', 'tie'].includes(winner.toLowerCase());
+
 function getWinnerLabel(winner) {
-  if (winner === 'draw') return 'Draw';
-  if (winner === 'tie') return 'Tied';
-  if (winner === 'Draw') return 'Draw';
-  if (winner === 'Tie') return 'Tied';
+  if (typeof winner === 'string' && winner.toLowerCase() === 'draw') return 'Draw';
+  if (typeof winner === 'string' && winner.toLowerCase() === 'tie') return 'Tied';
   return `${winner} won`;
 }
 
-function getScore(qm) {
-  if (typeof qm.score1 === 'number' && typeof qm.score2 === 'number') {
-    return `${qm.score1} \u2014 ${qm.score2}`;
-  }
-  if (Array.isArray(qm.innings) && qm.innings.length > 0 && typeof qm.score1 !== 'number') {
+/** The two sides' scores as display strings. */
+export function scorePair(qm) {
+  if (typeof qm.score1 === 'number' && typeof qm.score2 === 'number') return [String(qm.score1), String(qm.score2)];
+  if (Array.isArray(qm.innings) && qm.innings.length > 0) {
     const team1Id = qm.team1Id || 'team1';
     const team2Id = qm.team2Id || 'team2';
-    const score1 = qm.innings.filter((inn) => inn.teamId === team1Id).reduce((sum, inn) => sum + (inn.runs || 0), 0);
-    const score2 = qm.innings.filter((inn) => inn.teamId === team2Id).reduce((sum, inn) => sum + (inn.runs || 0), 0);
-    return `${score1} \u2014 ${score2}`;
+    const runs = (id) => qm.innings.filter((inn) => inn.teamId === id).reduce((sum, inn) => sum + (inn.runs || 0), 0);
+    return [String(runs(team1Id)), String(runs(team2Id))];
   }
   if (qm.team1Score) {
-    return `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score?.runs}/${qm.team2Score?.wickets}`;
+    return [`${qm.team1Score.runs}/${qm.team1Score.wickets}`, `${qm.team2Score?.runs ?? 0}/${qm.team2Score?.wickets ?? 0}`];
   }
-  return '0 \u2014 0';
+  return ['0', '0'];
 }
 
-/* ─── Existing User Dashboard ─── */
-function getDashboardDisplayName(user) {
+function matchTime(qm) {
+  const time = new Date(qm.completedAt || qm.date || qm.createdAt).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+/** "Today", "Yesterday", a weekday inside the week, else "12 Oct". */
+export function relativeDay(time, now = Date.now()) {
+  if (time === null) return '';
+  const startOf = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  const days = Math.round((startOf(now) - startOf(time)) / DAY_MS);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return new Date(time).toLocaleDateString('en-GB', { weekday: 'short' });
+  return new Date(time).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function getDisplayName(user) {
   return user?.username || user?.name || user?.displayName || null;
 }
 
+/* Header right: the account avatar when signed in, a Sign in control for a cloud guest. */
+function AccountControl({ cloudAuthAvailable, isAuthenticated, user, navigate }) {
+  if (!cloudAuthAvailable) return null;
+  if (isAuthenticated) {
+    const initial = (getDisplayName(user) || '?').trim().charAt(0).toUpperCase();
+    return (
+      <button type="button" className="kit-avatar" aria-label="Account" onClick={() => navigate('/profile')}>
+        <span aria-hidden="true">{initial}</span>
+      </button>
+    );
+  }
+  return (
+    <button type="button" className="se-ctl" onClick={() => navigate('/login?returnTo=%2Fapp')}>
+      Sign in
+    </button>
+  );
+}
+AccountControl.propTypes = {
+  cloudAuthAvailable: PropTypes.bool.isRequired,
+  isAuthenticated: PropTypes.bool.isRequired,
+  user: PropTypes.object,
+  navigate: PropTypes.func.isRequired,
+};
+
+function Greeting({ name, fallback }) {
+  return (
+    <h1 id="dashboard-welcome-title" className="kit-title">
+      {name ? <>Hi <HandUnderline>{name}</HandUnderline>.</> : <HandUnderline>{fallback}</HandUnderline>}
+    </h1>
+  );
+}
+Greeting.propTypes = { name: PropTypes.string, fallback: PropTypes.string.isRequired };
+
+/* The last match as one compact card on the normal surface (Harsha 2026-10-22: the full-bleed
+   two-gradient hero was too big and heavy). Team identity is a slim bar in each team's engine line
+   colour (>= 3:1 on the card) beside its name; the names and scores are ink on the surface. The
+   winner is bold. Rematch is the screen's one Go at control size; Details is a control. */
+function LastMatchHero({ match, navigate }) {
+  const sport = getSportById(match.sport);
+  const colours = teamColourVars(deriveTeamColours(match.team1Color, match.team2Color));
+  const [score1, score2] = scorePair(match);
+  const winnerSide = isDrawToken(match.winner) ? null : match.winner === match.team1 ? 'a' : match.winner === match.team2 ? 'b' : null;
+  const completedSets = Array.isArray(match.sets) ? match.sets.filter((set) => set?.completed) : [];
+  const when = relativeDay(matchTime(match));
+  const result = match.winner ? getWinnerLabel(match.winner) : 'Completed';
+  const team = (side, name, score) => (
+    <div className={`kit-last-team${winnerSide === side ? ' is-winner' : ''}`}>
+      <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
+      <span className="kit-last-name">{name}</span>
+      <span className="kit-last-score">{score}</span>
+    </div>
+  );
+
+  return (
+    <div className="kit-last" style={colours}>
+      <div className="kit-last-meta">
+        {sport && (
+          <span className="kit-sport-chip" style={sportIdentityVars(sport.id)}>
+            <i aria-hidden="true" />{sport.name}
+          </span>
+        )}
+        {when && <span>{when}</span>}
+      </div>
+      <div className="kit-last-teams" role="group" aria-label={`${match.team1} ${score1}, ${match.team2} ${score2}. ${result}`}>
+        {team('a', match.team1, score1)}
+        {team('b', match.team2, score2)}
+      </div>
+      <p className="kit-last-detail">
+        {completedSets.length > 0
+          ? <>Sets {completedSets.map((set) => `${set.score1}–${set.score2}`).join(' · ')}</>
+          : result}
+      </p>
+      <div className="kit-btnrow">
+        {sport && (
+          <button
+            type="button"
+            className="se-go kit-go-compact"
+            aria-label={`Rematch: ${match.team1} vs ${match.team2}`}
+            onClick={() => navigate(`/${match.sport}/quick`, {
+              // The pair the card shows goes with the rematch; quick setup validates it.
+              state: { teams: [match.team1, match.team2], colours: [match.team1Color, match.team2Color] },
+            })}
+          >
+            Rematch <GoArrow />
+          </button>
+        )}
+        <button type="button" className="se-ctl" aria-label="Last match details" onClick={() => navigate('/history')}>
+          Details
+        </button>
+      </div>
+    </div>
+  );
+}
+LastMatchHero.propTypes = {
+  match: PropTypes.shape({
+    sport: PropTypes.string,
+    team1: PropTypes.string,
+    team2: PropTypes.string,
+    team1Color: PropTypes.string,
+    team2Color: PropTypes.string,
+    winner: PropTypes.string,
+    sets: PropTypes.array,
+  }).isRequired,
+  navigate: PropTypes.func.isRequired,
+};
+
+function MatchRow({ qm, onOpen }) {
+  const sportName = getSportById(qm.sport)?.name || 'Custom';
+  const [score1, score2] = scorePair(qm);
+  const team1Won = !isDrawToken(qm.winner) && qm.winner === qm.team1;
+  const team2Won = !isDrawToken(qm.winner) && qm.winner === qm.team2;
+  const when = relativeDay(matchTime(qm));
+  return (
+    <button type="button" className="kit-row" onClick={onOpen}>
+      <SportBadge sportId={qm.sport} />
+      <span className="kit-row-text">
+        <span className="kit-row-title">
+          {team1Won ? <strong>{qm.team1}</strong> : qm.team1} v {team2Won ? <strong>{qm.team2}</strong> : qm.team2}
+        </span>
+        <span className="kit-row-sub">{[sportName, when].filter(Boolean).join(' · ')}</span>
+      </span>
+      <span className="kit-row-score">{`${score1}–${score2}`}</span>
+      <Chevron />
+    </button>
+  );
+}
+MatchRow.propTypes = {
+  qm: PropTypes.shape({
+    sport: PropTypes.string,
+    team1: PropTypes.string,
+    team2: PropTypes.string,
+    winner: PropTypes.string,
+  }).isRequired,
+  onOpen: PropTypes.func.isRequired,
+};
+
+function QuickStart({ sports, label, navigate }) {
+  if (sports.length === 0) return null;
+  return (
+    <section aria-labelledby="home-quick-start">
+      <KitSection id="home-quick-start" title="Quick start" aside={<span>{label}</span>} />
+      <div className="kit-grid3">
+        {sports.map((sport) => (
+          <SportTile key={sport.id} sport={sport} mini onSelect={(sp) => navigate(`/${sp.id}/quick`)} />
+        ))}
+      </div>
+    </section>
+  );
+}
+QuickStart.propTypes = {
+  sports: PropTypes.arrayOf(PropTypes.object).isRequired,
+  label: PropTypes.string.isRequired,
+  navigate: PropTypes.func.isRequired,
+};
+
+/* ─── Returning scorer ─── */
 function ExistingUserDashboard({
   cloudAuthAvailable,
   isAuthenticated,
@@ -157,373 +265,129 @@ function ExistingUserDashboard({
   inProgressMatches,
   allTournaments,
   recentMatches,
+  weekCount,
   playedCount,
-  showAllSports,
-  setShowAllSports,
 }) {
   const hasActive = sessions.length > 0;
-  const displayTournaments = allTournaments.slice(0, 4);
-  const displayName = getDashboardDisplayName(user);
-  const tournamentCount = allTournaments.length;
+  const displayName = getDisplayName(user);
+  const hero = !hasActive ? recentMatches[0] : null;
+  const listed = hero ? recentMatches.slice(1) : recentMatches;
+  const heroSport = hero ? getSportById(hero.sport) : null;
+  const heroColours = hero ? deriveTeamColours(hero.team1Color, hero.team2Color) : null;
 
   /* Featured tier: real favourites first; else sports they recently played; else no tier at all. */
   const favoriteIds = user?.favoriteGames || [];
-  const favoriteSports = allSportsList.filter(sp => favoriteIds.includes(sp.id));
-  const recentSportIds = [...new Set(recentMatches.map(qm => qm.sport).filter(Boolean))];
-  const recentSports = recentSportIds
-    .map(id => allSportsList.find(sp => sp.id === id))
-    .filter(Boolean)
-    .slice(0, 4);
-  const featuredSports = favoriteSports.length > 0 ? favoriteSports : recentSports;
-  const featuredLabel = favoriteSports.length > 0 ? 'Favourites' : 'Recently played';
-  const otherSports = allSportsList.filter(sp => !featuredSports.some(f => f.id === sp.id));
-  const visibleOthers = showAllSports ? otherSports : otherSports.slice(0, 7);
+  const favoriteSports = allSportsList.filter((sp) => favoriteIds.includes(sp.id));
+  const recentSports = [...new Set(recentMatches.map((qm) => qm.sport).filter(Boolean))]
+    .map((id) => getSportById(id))
+    .filter(Boolean);
+  const featuredSports = (favoriteSports.length > 0 ? favoriteSports : recentSports).slice(0, 6);
+  const featuredLabel = favoriteSports.length > 0 ? 'Your favourites' : 'Recently played';
+
+  const scored = weekCount > 0
+    ? `${weekCount} ${weekCount === 1 ? 'match' : 'matches'} scored this week`
+    : `${playedCount} ${playedCount === 1 ? 'match' : 'matches'} scored so far`;
+
   return (
-    <div style={{ maxWidth: 672, margin: '0 auto', padding: '20px 16px 96px' }}>
-      {/* ── Typographic header — no card, straight on the canvas ── */}
-      <header style={{ marginBottom: 24, position: 'relative' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', top: 30, right: 0, opacity: 0.12, transform: 'rotate(-8deg)', pointerEvents: 'none' }}>
-          <SportIcon name={featuredSports[0]?.name || 'Cricket'} size={48} color={t.text} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>
-            App dashboard
-          </span>
-          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 8px', borderRadius: 'var(--radius)', background: t.blueLight, color: 'var(--accent-foreground)', whiteSpace: 'nowrap' }}>
-            {isAuthenticated ? 'Signed in' : 'Guest mode'}
-          </span>
-        </div>
-        <h2 id="dashboard-welcome-title" style={{ fontSize: 'clamp(2rem, 9vw, 2.75rem)', fontWeight: 900, lineHeight: 0.95, letterSpacing: '-0.04em', margin: 0, color: t.text }}>
-          {displayName ? <>Welcome back,<br />{displayName}.</> : <>Welcome<br />back.</>}
-        </h2>
-        <div aria-hidden="true" style={{ height: 2, background: t.text, marginTop: 16 }} />
-      </header>
+    <div className="kit-screen" data-screen="home" style={heroSport ? { '--kit-underline': sportIdentity(heroSport.id)?.line } : undefined}>
+      <KitWash from={heroColours?.A.tint ?? sportIdentity('cricket')?.tint} to={heroColours?.B.tint ?? sportIdentity('hockey')?.tint} />
+      <KitTop title="Score Easy">
+        <AccountControl cloudAuthAvailable={cloudAuthAvailable} isAuthenticated={isAuthenticated} user={user} navigate={navigate} />
+      </KitTop>
+      <Greeting name={displayName} fallback="Welcome back." />
+      <p className="kit-sub">{scored}</p>
 
-      {/* ── Stat line — pure typography, no chrome ── */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap', marginBottom: 20 }}>
-        {[
-          ['Active', sessions.length + inProgressMatches.length],
-          ['Recent', playedCount],
-          ['Events', tournamentCount],
-        ].map(([label, value]) => (
-          <span key={label} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontFamily: MONO, fontSize: '1.125rem', fontWeight: 900, color: t.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>{label}</span>
-          </span>
-        ))}
-      </div>
-
-      {cloudAuthAvailable && (
-        isAuthenticated ? (
-          <button
-            type="button"
-            aria-label="Account"
-            onClick={() => navigate('/profile')}
-            style={{ ...bareButton, width: '100%', minHeight: 46, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, cursor: 'pointer', padding: '10px 14px', marginBottom: 12 }}
-          >
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.text }}>Account</span>
-            <span style={{ fontSize: '0.75rem', color: t.textMuted }}>Sync and profile settings &rarr;</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => navigate('/login?returnTo=%2Fapp')}
-            style={{ ...bareButton, width: '100%', minHeight: 46, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, cursor: 'pointer', padding: '10px 14px', marginBottom: 12 }}
-          >
-            <span style={{ fontSize: '0.8125rem', color: t.textSoft }}>Guest on this device</span>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue }}>Sign in &rarr;</span>
-          </button>
-        )
-      )}
-
-      {/* ── ACTIVE STATE ── */}
       {inProgressMatches.length > 0 && (
-        <section aria-labelledby="resume-matches-title" style={{ margin: '20px 0 28px' }}>
-          <h2 id="resume-matches-title" style={{ fontFamily: MONO, fontSize: '0.875rem', fontWeight: 800, margin: '0 0 12px' }}>In progress</h2>
-          {inProgressMatches.map((match) => {
-            const sportName = getSportById(match.sport)?.name || match.sport;
-            const title = match.kind === 'tournament'
-              ? match.name || `${sportName} tournament`
-              : `${match.team1Name || match.team1 || 'Team A'} vs ${match.team2Name || match.team2 || 'Team B'}`;
-            return (
-              <div key={match.entryPath} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: `1px solid ${t.divider}` }}>
-                <SportIcon name={sportName} size={24} color={t.text} />
-                <div style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
-                  <div style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{title}</div>
-                  <div style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: 4 }}>{sportName} &middot; {match.kind === 'tournament' ? 'Tournament' : 'Quick match'}</div>
+        <section aria-labelledby="resume-matches-title">
+          <KitSection id="resume-matches-title" title="In progress" />
+          <div className="kit-list">
+            {inProgressMatches.map((match) => {
+              const sportName = getSportById(match.sport)?.name || match.sport;
+              const title = match.kind === 'tournament'
+                ? match.name || `${sportName} tournament`
+                : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
+              return (
+                <div key={match.entryPath} className="kit-row">
+                  <SportBadge sportId={match.sport} />
+                  <span className="kit-row-text">
+                    <span className="kit-row-title">{title}</span>
+                    <span className="kit-row-sub">{sportName} · {match.kind === 'tournament' ? 'Tournament' : 'Quick match'}</span>
+                  </span>
+                  <button type="button" className="se-ctl" aria-label={`Resume ${sportName}: ${title}`} onClick={() => navigate(match.entryPath)}>
+                    Resume
+                  </button>
                 </div>
-                <button type="button" aria-label={`Resume ${sportName}: ${title}`} onClick={() => navigate(match.entryPath)} style={{ ...btnPrimary, minHeight: 44, minWidth: 80, flexShrink: 0 }}>Resume &rarr;</button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </section>
       )}
+
       {hasActive && (
-        <div style={{ marginTop: 20 }}>
-          <span style={{ fontSize: '0.6875rem', fontWeight: 400, letterSpacing: '0.1em', textTransform: 'uppercase', color: t.textMuted, display: 'block', marginBottom: 16 }}>Active</span>
-
-          {sessions.map((session) => {
-            const d = s.darkCard;
-            const participantNames = session.participants.map(p => p.name);
-            const scores = session.participants.map(p => session.scores[p.id]?.total ?? 0);
-            const sportName = getSportFromName(session.name);
-            const statusLabel = session.status === 'paused' ? 'PAUSED' : 'LIVE';
-            const badgeBg = session.status === 'paused' ? d.pausedBadge : d.badge;
-
-            return (
-              <button
-                key={session.id}
-                type="button"
-                style={{ ...bareButton, width: '100%', marginBottom: 12, cursor: 'pointer', ...d.outer, padding: 20 }}
-                onClick={() => navigate(`/game/${session.id}`)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <SportIcon name={sportName} size={20} color={d.text} />
-                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: d.text }}>{session.name}</span>
-                  </div>
-                  <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, padding: '3px 10px', borderRadius: 10, letterSpacing: '0.06em', ...badgeBg }}>{statusLabel}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', margin: '0 0 14px' }}>
-                  {participantNames.map((name, i) => (
-                    <div key={name} style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '0.6875rem', fontWeight: 600, color: d.muted, marginBottom: 4 }}>{name}</div>
-                      <div style={{ fontFamily: MONO, fontSize: '2rem', fontWeight: 800, color: d.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{scores[i]}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${d.border}`, paddingTop: 12 }}>
-                  <span style={{ fontFamily: MONO, fontSize: '0.625rem', color: d.muted, letterSpacing: '0.06em' }}>
-                    {session.status === 'paused' ? 'Paused' : 'In progress'}
+        <section aria-labelledby="active-sessions-title">
+          <KitSection id="active-sessions-title" title="Active" />
+          <div className="kit-list">
+            {sessions.map((session) => {
+              const sport = getSportFromName(session.name);
+              const scores = session.participants.map((p) => session.scores?.[p.id]?.total ?? 0);
+              const paused = session.status === 'paused';
+              return (
+                <button key={session.id} type="button" className="kit-row" onClick={() => navigate(`/game/${session.id}`)}>
+                  <SportBadge sportId={sport?.id} />
+                  <span className="kit-row-text">
+                    <span className="kit-row-title">{session.name}</span>
+                    <span className="kit-row-sub">{session.participants.map((p) => p.name).join(' v ')}</span>
                   </span>
-                  <span style={{ fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, padding: '8px 20px', borderRadius: s.btn.borderRadius, cursor: 'pointer', letterSpacing: '0.04em', ...d.resumeBtn }}>
-                    Resume &rarr;
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Hero scorecard — landing-style card when nothing is live.
-            Body tap = view the result in history; Rematch = quick match with the same teams. ── */}
-      {!hasActive && (
-        <div style={{ position: 'relative', border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, boxShadow: `4px 4px 0 ${t.blue}`, boxSizing: 'border-box' }}>
-          <CardCross top={3} left={6} />
-          <CardCross top={3} right={6} />
-          <CardCross bottom={3} left={6} />
-          <CardCross bottom={3} right={6} />
-          {recentMatches[0] ? (
-            <>
-              <button
-                type="button"
-                aria-label="View last match in history"
-                onClick={() => navigate('/history')}
-                style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 0', cursor: 'pointer' }}
-              >
-                <span style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em' }}>&#9679; LAST MATCH</span>
-                  {getSportById(recentMatches[0].sport)?.name && (
-                    <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textSoft }}>{getSportById(recentMatches[0].sport).name}</span>
-                  )}
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingBottom: 12 }}>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textSoft, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{recentMatches[0].team1}</span>
-                  <span style={{ flexShrink: 0, fontFamily: MONO, fontSize: '1.5rem', fontWeight: 900, color: t.text, fontVariantNumeric: 'tabular-nums' }}>{getScore(recentMatches[0])}</span>
-                  <span style={{ flex: 1, minWidth: 0, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.textSoft, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{recentMatches[0].team2}</span>
-                </span>
-              </button>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
-                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.textMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{recentMatches[0].winner ? getWinnerLabel(recentMatches[0].winner) : 'Completed'}</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: -10 }}>
-                  <button
-                    type="button"
-                    className="dash-action"
-                    aria-label="Go live"
-                    onClick={() => navigate(GO_LIVE_PATH)}
-                    style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', minHeight: 44 }}
-                  >
-                    <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
-                  </button>
-                  {/* Only offer Rematch when the stored match resolves to a real sport; legacy id-only records would build /undefined/quick. */}
-                  {getSportById(recentMatches[0].sport) && (
-                    <button
-                      type="button"
-                      className="dash-action"
-                      aria-label={`Rematch: ${recentMatches[0].team1} vs ${recentMatches[0].team2}`}
-                      onClick={() => navigate(`/${recentMatches[0].sport}/quick`, { state: { teams: [recentMatches[0].team1, recentMatches[0].team2] } })}
-                      style={{ ...bareButton, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', minHeight: 44 }}
-                    >
-                      Rematch &#9656;
-                    </button>
-                  )}
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => navigate('/play')}
-                style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px 12px', cursor: 'pointer' }}
-              >
-                <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
-                <span style={{ display: 'block', fontSize: '1.125rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>{inProgressMatches.length > 0 || hasActive ? 'Start another match.' : 'Start your first match.'}</span>
-                <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport below — scoring takes seconds.</span>
-              </button>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
-                <button
-                  type="button"
-                  className="dash-action"
-                  aria-label="Go live"
-                  onClick={() => navigate(GO_LIVE_PATH)}
-                  style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
-                >
-                  <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
+                  <span className={`kit-chip${paused ? '' : ' is-live'}`}>{paused ? 'Paused' : 'Live'}</span>
+                  <span className="kit-row-score">{scores.join('–')}</span>
+                  <Chevron />
                 </button>
-              </div>
-            </>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
-      {/* ── Sports ── */}
-      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 28, paddingTop: 24, marginBottom: 36 }}>
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>01 / Sports</span>
-        </div>
+      {hero && (
+        <section aria-labelledby="last-match-title">
+          <KitSection id="last-match-title" title="Last match" />
+          <LastMatchHero match={hero} navigate={navigate} />
+        </section>
+      )}
 
-        <p style={{ margin: '0 0 14px', fontSize: '0.75rem', color: t.textMuted }}>
-          Quick starts scoring now. Tournament builds a bracket.
-        </p>
+      <QuickStart sports={featuredSports} label={featuredLabel} navigate={navigate} />
 
-        {/* Featured tier — only when the user has favourites or recent play */}
-        {featuredSports.length > 0 && (
-          <div style={{ marginBottom: 18 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textFaint, display: 'block', marginBottom: 2 }}>{featuredLabel}</span>
-            {featuredSports.map((sp, i) => (
-              <div key={sp.id} className="dash-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: i < featuredSports.length - 1 ? `1px solid ${t.divider}` : 'none' }}>
-                <SportIcon name={sp.name} size={22} color={t.text} />
-                <span style={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 700, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
-                <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/quick`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Quick &#9656;</button>
-                <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/tournament`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.text, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Tournament</button>
-              </div>
+      {listed.length > 0 && (
+        <section aria-labelledby="recent-title">
+          <KitSection
+            id="recent-title"
+            title="Recent"
+            aside={<button type="button" className="kit-link" onClick={() => navigate('/history')}>See all</button>}
+          />
+          <div className="kit-list">
+            {listed.map((qm) => <MatchRow key={qm.id} qm={qm} onOpen={() => navigate('/history')} />)}
+          </div>
+        </section>
+      )}
+
+      {allTournaments.length > 0 && (
+        <section aria-labelledby="tournaments-title">
+          <KitSection id="tournaments-title" title="Tournaments" />
+          <div className="kit-list">
+            {allTournaments.slice(0, 4).map((tr) => (
+              <button key={tr.id} type="button" className="kit-row" onClick={() => navigate(`/${tr.sportId}/tournament/${tr.id}`)}>
+                <SportBadge sportId={tr.sportId} />
+                <span className="kit-row-text">
+                  <span className="kit-row-title">{tr.name}</span>
+                  <span className="kit-row-sub">{tr.teams?.length || 0} teams · {tr.sportName}</span>
+                </span>
+                <span className="kit-chip">{tr.isActive ? `${tr.completed}/${tr.total}` : 'Done'}</span>
+                <Chevron />
+              </button>
             ))}
           </div>
-        )}
-
-        {/* All sports — naked icon tiles, border appears on hover/press */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: 6 }}>
-          {visibleOthers.map(sp => (
-            <button
-              key={sp.id}
-              type="button"
-              className="dash-tile"
-              aria-label={`Quick match: ${sp.name}`}
-              onClick={() => navigate(`/${sp.id}/quick`)}
-              style={{ ...bareButton, padding: '12px 4px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, borderRadius: 'var(--radius)' }}
-            >
-              <SportIcon name={sp.name} size={22} color={t.text} />
-              <span style={{ width: '100%', fontSize: '0.625rem', fontWeight: 600, color: t.textSoft, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
-            </button>
-          ))}
-          {otherSports.length > 7 && (
-            <button
-              type="button"
-              className="dash-tile"
-              onClick={() => setShowAllSports(!showAllSports)}
-              style={{ ...bareButton, padding: '12px 4px 10px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, borderRadius: 'var(--radius)' }}
-            >
-              <span aria-hidden="true" style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: '1.05rem', fontWeight: 800, color: t.blue, lineHeight: 1 }}>{showAllSports ? '−' : '+'}</span>
-              <span style={{ width: '100%', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.blue, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{showAllSports ? 'Less' : `${otherSports.length - 7} more`}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Recent matches ── */}
-      {recentMatches.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 24, marginBottom: 36 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>02 / Recent</span>
-            <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
-          </div>
-          {recentMatches.map((qm, i) => {
-            const sportName = getSportById(qm.sport)?.name || 'Custom';
-            const team1Won = qm.winner === qm.team1;
-            const team2Won = qm.winner === qm.team2;
-            return (
-              <div key={qm.id}>
-                {i > 0 && <div style={{ height: 1, background: t.divider }} />}
-                <button
-                  type="button"
-                  className="dash-row"
-                  style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', cursor: 'pointer' }}
-                  onClick={() => navigate('/history')}
-                >
-                  <SportIcon name={sportName} size={18} color={t.textMuted} />
-                  <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                    <span style={{ display: 'block', fontSize: '0.875rem', color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontWeight: team1Won ? 800 : 500 }}>{qm.team1}</span>
-                      <span style={{ color: t.textFaint }}> vs </span>
-                      <span style={{ fontWeight: team2Won ? 800 : 500 }}>{qm.team2}</span>
-                    </span>
-                    <span style={{ display: 'block', marginTop: 2, fontSize: '0.6875rem', color: t.textMuted }}>
-                      {sportName ? `${sportName} · ` : ''}{qm.winner ? getWinnerLabel(qm.winner) : 'Completed'}
-                    </span>
-                  </span>
-                  <span style={{ fontFamily: MONO, fontSize: '1rem', fontWeight: 800, color: t.text, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{getScore(qm)}</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        </section>
       )}
-
-      {/* ── Tournaments ── */}
-      {displayTournaments.length > 0 && (
-        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>03 / Tournaments</span>
-            <button type="button" onClick={() => navigate('/play')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>View all &rarr;</button>
-          </div>
-          {displayTournaments.map((tr, i) => (
-            <div key={tr.id}>
-              {i > 0 && <div style={{ height: 1, background: t.divider }} />}
-              <button
-                type="button"
-                onClick={() => navigate(`/${tr.sportId}/tournament/${tr.id}`)}
-                style={{ ...bareButton, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', cursor: 'pointer' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius)', border: `1px solid ${t.border}`, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxSizing: 'border-box' }}>
-                    <SportIcon name={tr.sportIcon} size={18} color={t.text} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: t.text }}>{tr.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: 2 }}>{tr.teams?.length || 0} teams &middot; {tr.sportName}</div>
-                  </div>
-                </div>
-                <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 800, letterSpacing: '0.06em', padding: '4px 10px', borderRadius: 'var(--radius)', background: tr.isActive ? t.blueLight : t.greenLight, color: 'var(--accent-foreground)' }}>
-                  {tr.isActive ? `${tr.completed}/${tr.total}` : 'DONE'}
-                </span>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Micro-interactions for rows, actions, and tiles */}
-      <style>{`
-        .dash-row { transition: background 150ms ease; }
-        .dash-action { border-radius: var(--radius); transition: background 150ms ease, transform 120ms ease; }
-        .dash-action:hover { background: var(--muted); transform: translateY(-1px); }
-        .dash-action:active { transform: translateY(0); background: var(--accent); }
-        .dash-tile { border: 1px solid transparent; transition: border-color 150ms ease, background 150ms ease, transform 120ms ease, box-shadow 150ms ease; }
-        .dash-tile:hover { border-color: var(--border); background: var(--card); transform: translateY(-1px); box-shadow: var(--shadow-2xs); }
-        .dash-tile:active { transform: translateY(0); box-shadow: none; background: var(--accent); border-color: var(--border); }
-      `}</style>
     </div>
   );
 }
@@ -554,7 +418,6 @@ ExistingUserDashboard.propTypes = {
     name: PropTypes.string,
     sportId: PropTypes.string,
     sportName: PropTypes.string,
-    sportIcon: PropTypes.string,
     teams: PropTypes.array,
     completed: PropTypes.number,
     total: PropTypes.number,
@@ -567,144 +430,82 @@ ExistingUserDashboard.propTypes = {
     team2: PropTypes.string,
     winner: PropTypes.string,
   })).isRequired,
+  weekCount: PropTypes.number.isRequired,
   playedCount: PropTypes.number.isRequired,
-  showAllSports: PropTypes.bool.isRequired,
-  setShowAllSports: PropTypes.func.isRequired,
 };
 
-/* ─── Empty Dashboard (Variant A · Calm) ───
-   Shown when there is zero saved data. Mirrors the real dashboard layout with a
-   single brutal hero CTA, dimmed ghost rows, a get-started checklist, and featured
-   quick tiles — so the home never collapses into the setup wizard. */
+/* ─── First run (zero saved data) ───
+   The hero is the prompt to play; its Go is the screen's only Go, and a hand-drawn arrow points
+   at it. The arrow exists only here, so it is gone once anything has been scored. */
 const GET_STARTED_STEPS = [
   { label: 'Play a match', sub: 'Pick a sport and start scoring' },
   { label: 'Save the result', sub: 'Finish to log it automatically' },
   { label: 'See your stats', sub: 'Track wins, streaks, and history' },
 ];
 
-function EmptyDashboard({ navigate, isAuthenticated, user }) {
-  const displayName = getDashboardDisplayName(user);
+function EmptyDashboard({ navigate, cloudAuthAvailable, isAuthenticated, user }) {
+  const displayName = getDisplayName(user);
 
-  /* Featured tier: real favourites first; else a few popular defaults so the row is never empty. */
+  /* Featured tier: real favourites first; else the first sports in focus order. */
   const favoriteIds = user?.favoriteGames || [];
-  const favoriteSports = allSportsList.filter(sp => favoriteIds.includes(sp.id));
-  const defaultSports = allSportsList.slice(0, DEFAULT_FEATURED_SPORT_COUNT);
-  const featuredSports = favoriteSports.length > 0 ? favoriteSports : defaultSports;
-  const featuredLabel = favoriteSports.length > 0 ? 'Favourites' : 'Popular';
+  const favoriteSports = allSportsList.filter((sp) => favoriteIds.includes(sp.id));
+  const featuredSports = (favoriteSports.length > 0 ? favoriteSports : allSportsList.slice(0, DEFAULT_FEATURED_SPORT_COUNT)).slice(0, 6);
+  const featuredLabel = favoriteSports.length > 0 ? 'Your favourites' : 'Popular';
 
   return (
-    <div style={{ maxWidth: 672, margin: '0 auto', padding: '20px 16px 96px' }}>
-      {/* ── Typographic header — matches the returning dashboard's voice ── */}
-      <header style={{ marginBottom: 24, position: 'relative' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', top: 30, right: 0, opacity: 0.12, transform: 'rotate(-8deg)', pointerEvents: 'none' }}>
-          <SportIcon name={featuredSports[0]?.name || 'Cricket'} size={48} color={t.text} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>
-            App dashboard
-          </span>
-          <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 8px', borderRadius: 'var(--radius)', background: t.blueLight, color: 'var(--accent-foreground)', whiteSpace: 'nowrap' }}>
-            {isAuthenticated ? 'Signed in' : 'Guest mode'}
-          </span>
-        </div>
-        <h2 id="dashboard-welcome-title" style={{ fontSize: 'clamp(2rem, 9vw, 2.75rem)', fontWeight: 900, lineHeight: 0.95, letterSpacing: '-0.04em', margin: 0, color: t.text }}>
-          {displayName ? <>Welcome,<br />{displayName}.</> : <>Welcome.</>}
-        </h2>
-        <div aria-hidden="true" style={{ height: 2, background: t.text, marginTop: 16 }} />
-      </header>
+    <div className="kit-screen" data-screen="home-first-run">
+      <KitWash from={sportIdentity('cricket')?.tint} to={sportIdentity('hockey')?.tint} />
+      <KitTop title="Score Easy">
+        <AccountControl cloudAuthAvailable={cloudAuthAvailable} isAuthenticated={isAuthenticated} user={user} navigate={navigate} />
+      </KitTop>
+      <Greeting name={displayName} fallback="Welcome." />
+      <p className="kit-sub">Your scoreboard for any game</p>
 
-      {/* ── Hero — brutal scorecard CTA: the one decision moment on this screen ── */}
-      <div style={{ position: 'relative', border: `1px solid ${t.border}`, borderRadius: 'var(--radius)', background: t.surface, boxShadow: `4px 4px 0 ${t.blue}`, boxSizing: 'border-box' }}>
-        <CardCross top={3} left={6} />
-        <CardCross top={3} right={6} />
-        <CardCross bottom={3} left={6} />
-        <CardCross bottom={3} right={6} />
-        <button
-          type="button"
-          aria-label="Play your first match"
-          onClick={() => navigate('/play')}
-          style={{ ...bareButton, display: 'block', width: '100%', textAlign: 'left', padding: '16px 16px 14px', cursor: 'pointer' }}
-        >
-          <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.blue, letterSpacing: '0.06em', marginBottom: 8 }}>&#9679; READY</span>
-          <span style={{ display: 'block', fontSize: '1.375rem', fontWeight: 900, letterSpacing: '-0.02em', color: t.text, lineHeight: 1.1 }}>Play your first match.</span>
-          <span style={{ display: 'block', marginTop: 6, fontSize: '0.75rem', color: t.textMuted }}>Pick a sport and you are scoring in seconds.</span>
-          <span style={{ display: 'inline-flex', marginTop: 14, ...btnPrimary }}>Start playing &rarr;</span>
-        </button>
-        {/* Secondary entry: start a match and broadcast it live to spectators. */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', margin: '0 16px', borderTop: `1px solid ${t.divider}` }}>
-          <button
-            type="button"
-            className="dash-action"
-            aria-label="Go live"
-            onClick={() => navigate(GO_LIVE_PATH)}
-            style={{ ...bareButton, display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: t.text, letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer', padding: '14px 10px', marginRight: -10, minHeight: 44 }}
-          >
-            <span aria-hidden="true" style={{ color: '#dc2626' }}>&#9679;</span> Go live
-          </button>
+      <section aria-labelledby="first-match-title" style={{ marginTop: 26 }}>
+        <div className="kit-hero">
+          <div className="kit-hero-intro">
+            <h2 id="first-match-title">Play your first match.</h2>
+            <p>Pick a sport and you are scoring in seconds.</p>
+          </div>
+          <div className="kit-hero-foot">
+            <CoachArrow />
+            <button type="button" className="se-go" aria-label="Play your first match" onClick={() => navigate('/play')}>
+              Start playing <GoArrow />
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Ghost recent rows — a preview of where matches will land ── */}
-      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 28, paddingTop: 24 }}>
-        <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted, display: 'block', marginBottom: 12 }}>Recent</span>
-        <div aria-hidden="true">
-          {[0, 1].map((row) => (
-            <div key={row} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', opacity: 0.4, borderTop: row > 0 ? `1px solid ${t.divider}` : 'none' }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: t.divider, flexShrink: 0 }} />
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', height: 10, width: '60%', background: t.divider, borderRadius: 3 }} />
-                <span style={{ display: 'block', marginTop: 6, height: 8, width: '35%', background: t.divider, borderRadius: 3 }} />
+      <QuickStart sports={featuredSports} label={featuredLabel} navigate={navigate} />
+
+      <section aria-labelledby="get-started-title">
+        <KitSection id="get-started-title" title="Get started" />
+        <ol className="kit-list kit-steps">
+          {GET_STARTED_STEPS.map((step, i) => (
+            <li key={step.label} className="kit-row">
+              <span className="kit-step-num" aria-hidden="true">{i + 1}</span>
+              <span className="kit-row-text">
+                <span className="kit-row-title">{step.label}</span>
+                <span className="kit-row-sub">{step.sub}</span>
               </span>
-              <span style={{ height: 14, width: 40, background: t.divider, borderRadius: 3, flexShrink: 0 }} />
-            </div>
+            </li>
           ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="recent-empty-title">
+        <KitSection id="recent-empty-title" title="Recent" />
+        <div className="kit-list">
+          <p className="kit-empty-note">Your matches will appear here</p>
         </div>
-        <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: t.textMuted, textAlign: 'center' }}>Your matches will appear here</p>
-      </div>
-
-      {/* ── Get-started checklist ── */}
-      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 28, paddingTop: 24 }}>
-        <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted, display: 'block', marginBottom: 14 }}>Get started</span>
-        {GET_STARTED_STEPS.map((step, i) => (
-          <div key={step.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i > 0 ? `1px solid ${t.divider}` : 'none' }}>
-            <span style={{ width: 26, height: 26, borderRadius: '50%', border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 800, color: t.text }}>{i + 1}</span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: MONO, fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.text }}>{step.label}</span>
-              <span style={{ display: 'block', marginTop: 2, fontSize: '0.75rem', color: t.textMuted }}>{step.sub}</span>
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Featured sports — quick tiles, never empty ── */}
-      <div style={{ borderTop: `1px solid ${t.divider}`, marginTop: 28, paddingTop: 24 }}>
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ fontFamily: MONO, fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textMuted }}>01 / Sports</span>
-        </div>
-        <p style={{ margin: '0 0 14px', fontSize: '0.75rem', color: t.textMuted }}>Tap a sport to start scoring now.</p>
-        <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.textFaint, display: 'block', marginBottom: 2 }}>{featuredLabel}</span>
-        {featuredSports.map((sp, i) => (
-          <div key={sp.id} className="dash-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: i < featuredSports.length - 1 ? `1px solid ${t.divider}` : 'none' }}>
-            <SportIcon name={sp.name} size={22} color={t.text} />
-            <span style={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 700, color: t.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sp.name}</span>
-            <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/quick`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Quick &#9656;</button>
-            <button type="button" className="dash-action" onClick={() => navigate(`/${sp.id}/tournament`)} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: t.text, cursor: 'pointer', padding: '14px 8px', minHeight: 44 }}>Tournament</button>
-          </div>
-        ))}
-      </div>
-
-      <style>{`
-        .dash-row { transition: background 150ms ease; }
-        .dash-action { border-radius: var(--radius); transition: background 150ms ease, transform 120ms ease; }
-        .dash-action:hover { background: var(--muted); transform: translateY(-1px); }
-        .dash-action:active { transform: translateY(0); background: var(--accent); }
-      `}</style>
+      </section>
     </div>
   );
 }
 
 EmptyDashboard.propTypes = {
   navigate: PropTypes.func.isRequired,
+  cloudAuthAvailable: PropTypes.bool.isRequired,
   isAuthenticated: PropTypes.bool.isRequired,
   user: PropTypes.shape({
     favoriteGames: PropTypes.arrayOf(PropTypes.string),
@@ -725,14 +526,16 @@ function readDashboardState() {
 
   const savedMatches = loadData(QM_KEY, []);
   const qm = Array.isArray(savedMatches) ? savedMatches.filter((match) => match?.status !== 'in-progress') : [];
-  qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
+  qm.sort((a, b) => (matchTime(b) ?? 0) - (matchTime(a) ?? 0));
+  const now = Date.now();
 
   return {
     sessions,
     inProgressMatches: loadInProgressMatches(),
     allTournaments,
     playedCount: qm.length,
-    recentMatches: qm.slice(0, 3),
+    weekCount: qm.filter((match) => { const t = matchTime(match); return t !== null && now - t < WEEK_MS; }).length,
+    recentMatches: qm.slice(0, RECENT_LIMIT),
   };
 }
 
@@ -745,23 +548,20 @@ export default function DashboardLanding() {
   const [visible, setVisible] = useState(false);
   /* Lazy initializer: read every localStorage slice once, synchronously, before
      first paint — so the dashboard never flashes empty then re-renders populated. */
-  const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount }] = useState(readDashboardState);
-  const [showAllSports, setShowAllSports] = useState(false);
+  const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount, weekCount }] = useState(readDashboardState);
 
   useEffect(() => {
     /* Mount-only fade-in trigger; data is already loaded via lazy init above. */
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  /* Zero data = no tournaments AND no quick matches AND no active sessions.
-     The dashboard always renders; at zero data it shows the calm empty state
-     (the guided wizard now lives on /play, not here). */
+  /* Zero data = no tournaments AND no quick matches AND no active sessions. */
   const hasNoData = inProgressMatches.length === 0 && allTournaments.length === 0 && recentMatches.length === 0 && sessions.length === 0;
   return (
-    <div style={{ fontFamily: SWISS, background: t.bg, color: t.text, minHeight: '100vh' }}
-         className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <h1 className="sr-only">Dashboard</h1>
-
+    <div
+      style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink)', minHeight: '100vh' }}
+      className={`mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}
+    >
       {/* Public "live now" discovery rail (scoreeasy-3ws) — renders nothing when
           nothing is live. Isolated in an ErrorBoundary with a SILENT fallback so a
           backend hiccup (e.g. listLiveFeed not yet deployed during a rollout)
@@ -773,6 +573,7 @@ export default function DashboardLanding() {
       {hasNoData ? (
         <EmptyDashboard
           navigate={navigate}
+          cloudAuthAvailable={Boolean(cloudAuthAvailable)}
           isAuthenticated={Boolean(isAuthenticated)}
           user={user}
         />
@@ -786,14 +587,10 @@ export default function DashboardLanding() {
           inProgressMatches={inProgressMatches}
           allTournaments={allTournaments}
           recentMatches={recentMatches}
+          weekCount={weekCount}
           playedCount={playedCount}
-          showAllSports={showAllSports}
-          setShowAllSports={setShowAllSports}
         />
       )}
-
     </div>
   );
 }
-
-

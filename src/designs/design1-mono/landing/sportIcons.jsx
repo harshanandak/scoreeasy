@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 const iconPropTypes = {
   size: PropTypes.number,
   color: PropTypes.string,
+  strokeWidth: PropTypes.number,
 };
 
-function VolleyballIcon({ size = 32, color = 'currentColor' }) {
+function VolleyballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="16" cy="16" r="13.5" />
       <path d="M16 2.5c0 0-1.2 6.8 3.5 12.5s11.2 5.8 11.2 5.8" />
       <path d="M4.2 8.5c0 0 6.2 2.2 12.8 0s9-7.2 9-7.2" />
@@ -19,9 +20,9 @@ function VolleyballIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function CricketIcon({ size = 32, color = 'currentColor' }) {
+function CricketIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 28l3.5-5" />
       <path d="M9.5 23l4-6.5c0.8-1.3 2.5-1.5 3.5-0.5l1.5 1.5c0.8 0.8 0.5 2.2-0.5 3l-6.5 4z" />
       <line x1="22" y1="8" x2="22" y2="22" />
@@ -33,9 +34,9 @@ function CricketIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function TennisIcon({ size = 32, color = 'currentColor' }) {
+function TennisIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <ellipse cx="18" cy="11" rx="7.5" ry="9" transform="rotate(-20 18 11)" />
       <line x1="14" y1="6" x2="14.5" y2="17" />
       <line x1="18" y1="4" x2="18.5" y2="18.5" />
@@ -51,9 +52,9 @@ function TennisIcon({ size = 32, color = 'currentColor' }) {
 
 
 
-function FootballIcon({ size = 32, color = 'currentColor' }) {
+function FootballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="16" cy="16" r="13.5" />
       <path d="M16 8.5l4.5 3.2-1.8 5.3h-5.5l-1.8-5.3z" />
       <path d="M16 8.5l0-6" /><path d="M20.5 11.7l5-2.5" /><path d="M18.7 17l3.5 4.5" /><path d="M13.2 17l-3.5 4.5" /><path d="M11.5 11.7l-5-2.5" />
@@ -62,9 +63,9 @@ function FootballIcon({ size = 32, color = 'currentColor' }) {
 }
 
 
-function BasketballIcon({ size = 32, color = 'currentColor' }) {
+function BasketballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="16" cy="16" r="13.5" /><path d="M2.5 16h27" /><path d="M16 2.5v27" />
       <path d="M5 5.5c3.5 4 5.5 7 5.8 10.5" /><path d="M5.2 26c3.2-3.8 5.2-6.8 5.6-10" />
       <path d="M27 5.5c-3.5 4-5.5 7-5.8 10.5" /><path d="M26.8 26c-3.2-3.8-5.2-6.8-5.6-10" />
@@ -72,9 +73,9 @@ function BasketballIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function KabaddiIcon({ size = 32, color = 'currentColor' }) {
+function KabaddiIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="7" r="3" />
       <path d="M12 10l-2.5 7 4.5 4" />
       <path d="M10.5 14h7" />
@@ -90,9 +91,9 @@ function KabaddiIcon({ size = 32, color = 'currentColor' }) {
 
 KabaddiIcon.propTypes = iconPropTypes;
 
-function BadmintonIcon({ size = 32, color = 'currentColor' }) {
+function BadmintonIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <ellipse cx="16" cy="24" rx="3.5" ry="2.5" />
       <path d="M12.5 24c-2-4-3.5-10-2-16" />
       <path d="M19.5 24c2-4 3.5-10 2-16" />
@@ -104,9 +105,9 @@ function BadmintonIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function HockeyIcon({ size = 32, color = 'currentColor' }) {
+function HockeyIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 3l10 18" />
       <path d="M18 21c1 1.8 3 2.8 6 2.8" />
       <path d="M9.5 3.5l10 18" />
@@ -117,9 +118,9 @@ function HockeyIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function TableTennisIcon({ size = 32, color = 'currentColor' }) {
+function TableTennisIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="14" cy="12" r="8.5" />
       <path d="M8 5.5c3.5 3 8.5 9 12 13" />
       <path d="M20 19l4 6.5" />
@@ -130,18 +131,18 @@ function TableTennisIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function GolfIcon({ size = 32, color = 'currentColor' }) {
+function GolfIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 4v22" /><path d="M16 4l9 3.5-9 3.5" />
       <path d="M6 26c2.5-1.5 6-2 10-2s7.5 0.5 10 2" /><circle cx="22" cy="24.5" r="2" />
     </svg>
   );
 }
 
-function PoolIcon({ size = 32, color = 'currentColor' }) {
+function PoolIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 8l8 16h-16z" />
       <circle cx="16" cy="12" r="2" />
       <circle cx="14" cy="16.5" r="2" />
@@ -154,9 +155,9 @@ function PoolIcon({ size = 32, color = 'currentColor' }) {
   );
 }
 
-function ChessIcon({ size = 32, color = 'currentColor' }) {
+function ChessIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 4v3" /><path d="M14.5 5.5h3" /><path d="M11 10c0-2.8 2.2-3 5-3s5 0.2 5 3" /><path d="M10 10h12" />
       <path d="M11 10l-1 12" /><path d="M21 10l1 12" /><path d="M10 22h12" />
       <path d="M9 22l-0.5 2.5" /><path d="M23 22l0.5 2.5" /><path d="M8.5 24.5h15" /><path d="M8 27h16" />
@@ -166,9 +167,9 @@ function ChessIcon({ size = 32, color = 'currentColor' }) {
 }
 
 
-function FrisbeeIcon({ size = 32, color = 'currentColor' }) {
+function FrisbeeIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <ellipse cx="18" cy="15" rx="11" ry="4.5" transform="rotate(-8 18 15)" />
       <path d="M7.5 16.5c2.5 2.5 8 3.5 13 2.5s7-3 8-4.5" />
       <ellipse cx="18" cy="14.5" rx="5" ry="2" transform="rotate(-8 18 14.5)" />
@@ -188,7 +189,14 @@ export const ICON_MAP = {
   Pool: PoolIcon, Chess: ChessIcon, Frisbee: FrisbeeIcon,
 };
 
-export default function SportIcon({ name, size = 32, color = 'currentColor' }) {
+// The same hand-drawn doodles keyed by registry id (registry names differ in case, e.g. 'Table Tennis').
+export const ICON_BY_SPORT_ID = {
+  volleyball: VolleyballIcon, cricket: CricketIcon, tennis: TennisIcon,
+  football: FootballIcon, basketball: BasketballIcon, badminton: BadmintonIcon,
+  hockey: HockeyIcon, kabaddi: KabaddiIcon, tabletennis: TableTennisIcon,
+};
+
+export default function SportIcon({ name, size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   const Icon = ICON_MAP[name];
-  return Icon ? <Icon size={size} color={color} /> : null;
+  return Icon ? <Icon size={size} color={color} strokeWidth={strokeWidth} /> : null;
 }

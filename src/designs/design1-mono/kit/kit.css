@@ -1,0 +1,562 @@
+/* Kit app screens: Home and the Play hub (plan 2026-10-22 §2-§4, S1).
+   Colour only from --se-color-* tokens and engine vars (--sport-*, --team-a-*, --team-b-*), so
+   dark mode is a token swap; team and sport gradients are absolute (engine-gated). */
+
+.kit-screen {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 672px;
+  margin: 0 auto;
+  padding: 0 16px 112px;
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+}
+
+.kit-screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.kit-screen > .kit-wash {
+  position: absolute;
+  z-index: 0;
+}
+
+.kit-wash {
+  inset: 0 0 auto;
+  height: 300px;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 20% -10%, var(--kit-w1, transparent), transparent 60%),
+    radial-gradient(90% 80% at 95% 0%, var(--kit-w2, transparent), transparent 62%);
+}
+
+.dark .kit-wash {
+  opacity: 0.35;
+}
+
+/* ---- header ---- */
+.kit-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 0 8px;
+}
+
+.kit-brand {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font: 800 1.18rem/1 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-brand-mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--se-color-ink);
+}
+
+.kit-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+  color: var(--se-color-ink);
+  font: 800 1rem var(--se-font-display);
+  cursor: pointer;
+}
+
+.kit-title {
+  margin: 6px 0 12px;
+  font: 800 2.35rem/1.02 var(--se-font-display);
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.kit-sub {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.kit-sec {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 26px 2px 10px;
+}
+
+.kit-sec h2 {
+  margin: 0;
+  font: 750 1.05rem/1.15 var(--se-font-display);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.kit-sec > span {
+  flex: none;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* A quiet text action in a section head ("See all"); 48px tall for the thumb. */
+.kit-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  margin: -14px -8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  font: 600 0.85rem var(--se-font-sans);
+  cursor: pointer;
+}
+
+/* ---- hand-drawn accents (medium dosage, one per component) ---- */
+.kit-underlined {
+  position: relative;
+  display: inline-block;
+}
+
+.kit-underline {
+  position: absolute;
+  left: -2%;
+  bottom: -0.2em;
+  width: 104%;
+  height: 0.32em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--kit-underline, var(--se-color-ink));
+  stroke-width: 2.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-coach-arrow {
+  position: absolute;
+  right: 28px;
+  bottom: 70px;
+  width: 54px;
+  height: 54px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--se-color-ink);
+  stroke-width: 2.3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* ---- sport tiles ---- */
+.kit-grid2,
+.kit-grid3 {
+  display: grid;
+  gap: 10px;
+}
+
+.kit-grid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.kit-grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kit-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 116px;
+  padding: 14px 14px 12px;
+  border: 0;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--sport-hi, var(--se-color-surface)), var(--sport-core, var(--se-color-surface)) 52%, var(--sport-lo, var(--se-color-surface)));
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+  color: var(--sport-on, var(--se-color-ink));
+  font-family: var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kit-tile:active {
+  transform: scale(0.965);
+}
+
+/* The sport a link asked for (/play?sport=...): Kit's selected treatment is an ink ring, never a
+   new colour. A gap of canvas keeps it apart from the tile's own gradient edge. */
+.kit-tile.is-selected {
+  box-shadow: 0 0 0 3px var(--se-color-canvas), 0 0 0 6px var(--se-color-ink), var(--se-lift);
+}
+
+.kit-tile-mark {
+  position: absolute;
+  z-index: -1;
+  right: -16%;
+  bottom: -10%;
+  width: 82%;
+  aspect-ratio: 140 / 100;
+  background: var(--sport-motif);
+  -webkit-mask: var(--sport-mark) right bottom / contain no-repeat;
+  mask: var(--sport-mark) right bottom / contain no-repeat;
+  pointer-events: none;
+}
+
+.kit-tile-name {
+  font: 800 1.22rem/1.02 var(--se-font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.kit-tile-hint {
+  max-width: 92%;
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kit-tile-mini {
+  min-height: 92px;
+  padding: 14px 12px 12px;
+}
+
+/* Three across at 360 leaves ~79px of text width: the name scales so "Volleyball" fits whole
+   rather than breaking mid-word (it never ellipsizes). */
+.kit-tile-mini .kit-tile-name {
+  font-size: clamp(0.84rem, 3.9vw, 1.02rem);
+}
+
+/* ---- first-run hero card ---- */
+.kit-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+/* ---- the last match: one compact card on the surface ----
+   Team colour is a slim bar in the engine's line colour (>= 3:1 on card and page); every word
+   and numeral is ink on the surface, so nothing depends on a team gradient for contrast. */
+.kit-last {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+.kit-last-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.kit-sport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.kit-sport-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink-soft));
+}
+
+.kit-last-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kit-last-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.kit-last-bar {
+  flex: none;
+  width: 5px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.kit-last-bar-a {
+  background: var(--team-a-line);
+}
+
+.kit-last-bar-b {
+  background: var(--team-b-line);
+}
+
+.kit-last-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.02rem;
+  font-weight: 550;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kit-last-score {
+  flex: none;
+  font: 700 1.7rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-last-team.is-winner .kit-last-name {
+  font-weight: 850;
+}
+
+.kit-last-team.is-winner .kit-last-score {
+  font-weight: 800;
+}
+
+.kit-last-detail {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.84rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* The Go at control size inside a card: a normal 48px control, not a slab. */
+.kit-last .kit-btnrow {
+  margin-top: 4px;
+}
+
+.kit-last .kit-btnrow .se-go.kit-go-compact {
+  flex: none;
+  width: auto;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 1rem;
+}
+
+.kit-hero-foot {
+  position: relative;
+  padding: 14px 16px 16px;
+}
+
+.kit-btnrow {
+  display: flex;
+  gap: 10px;
+}
+
+.kit-btnrow .se-go {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-btnrow .se-ctl {
+  flex: none;
+}
+
+/* First run: the hero is a prompt, not a result. */
+.kit-hero-intro {
+  padding: 20px 16px 4px;
+}
+
+.kit-hero-intro h2 {
+  margin: 0;
+  font: 800 1.5rem/1.08 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-hero-intro p {
+  margin: 6px 0 0;
+  padding-right: 80px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Room on the right of the sub line for the arrow, which curls down onto the Go. */
+.kit-hero-intro + .kit-hero-foot {
+  padding-top: 18px;
+}
+
+.kit-hero-intro + .kit-hero-foot .kit-coach-arrow {
+  bottom: 70px;
+}
+
+/* ---- list rows (recent, in progress, tournaments) ---- */
+.kit-list {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: inherit;
+  text-align: left;
+}
+
+button.kit-row {
+  cursor: pointer;
+}
+
+.kit-row + .kit-row {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-row-title {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kit-row-title strong {
+  font-weight: 850;
+}
+
+.kit-row-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.kit-row-score {
+  flex: none;
+  font: 800 1.35rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.kit-chev {
+  flex: none;
+  opacity: 0.55;
+}
+
+.kit-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(168deg, var(--sport-hi, var(--se-color-surface-warm)), var(--sport-core, var(--se-color-surface-warm)) 55%, var(--sport-lo, var(--se-color-surface-warm)));
+  color: var(--sport-on, var(--se-color-ink));
+}
+
+.kit-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-chip.is-live {
+  background: var(--se-color-live-soft);
+  color: var(--se-color-live);
+}
+
+.kit-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-step-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font: 800 0.95rem var(--se-font-num);
+}
+
+.kit-empty-note {
+  margin: 0;
+  padding: 18px 14px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-tile {
+    transition: none;
+  }
+
+  .kit-tile:active {
+    transform: none;
+  }
+}
