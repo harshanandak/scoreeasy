@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LiveBroadcastBar from './LiveBroadcastBar';
+import MonoSheet from '../components/MonoSheet';
 
 // Navigate is mocked to a spy so we can assert the sign-in route; the rest of
 // react-router-dom (MemoryRouter, useLocation) stays real.
@@ -99,7 +100,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     const onEnableChange = vi.fn();
     renderBar({ broadcast, descriptor, enabled: true, onEnableChange });
 
-    expect(screen.getByText(/LIVE/)).toBeInTheDocument();
+    expect(screen.getByText('Live · public')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
 
     expect(broadcast.setVisibility).toHaveBeenCalledWith('private');
@@ -135,8 +136,8 @@ describe('LiveBroadcastBar (b0z)', () => {
     renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
-    expect(screen.getByRole('dialog', { name: 'Share live match' })).toBeInTheDocument();
-    expect(screen.getByText('https://scoreeasy.app/live/TOK')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Share the live score' })).toBeInTheDocument();
+    expect(screen.getByText('scoreeasy.app/live/TOK')).toBeInTheDocument();
   });
 
   // --- auth-aware behaviour (live-ux) ---
@@ -205,5 +206,54 @@ describe('LiveBroadcastBar (b0z)', () => {
     const { container } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByRole('button', { name: /Sign in to go live/i })).toBeNull();
+  });
+});
+
+describe('Kit live controls', () => {
+  it('closes only Share on Escape when nested in scorer options', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const closeOptions = vi.fn();
+    render(<MemoryRouter><MonoSheet open onClose={closeOptions} title="Match options">
+      <LiveBroadcastBar broadcast={makeBroadcast({ isLive: true, token: 'TOK' })} descriptor={descriptor} enabled onEnableChange={vi.fn()} />
+    </MonoSheet></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Done' }), { key: 'Escape' });
+    expect(closeOptions).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: 'Share the live score' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share' })).toHaveFocus();
+  });
+  it('offers consent in place with a headline and full-width Kit controls', () => {
+    renderBar({ broadcast: makeBroadcast(), descriptor, enabled: false, onEnableChange: vi.fn() });
+    expect(screen.getByRole('heading', { name: 'Share this match live?' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share live' })).toHaveClass('se-go');
+    expect(screen.getByRole('button', { name: 'Keep private' })).toHaveClass('se-ctl');
+  });
+
+  it('stops from the sheet with the same visibility action as the bar', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
+    const onEnableChange = vi.fn();
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange });
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stop sharing' }));
+    expect(broadcast.setVisibility).toHaveBeenCalledExactlyOnceWith('private');
+    expect(onEnableChange).toHaveBeenCalledWith(false);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('returns focus to Share after Done or Escape', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    renderBar({ broadcast: makeBroadcast({ isLive: true, token: 'TOK' }), descriptor, enabled: true, onEnableChange: vi.fn() });
+    const share = screen.getByRole('button', { name: 'Share' });
+    share.focus();
+    fireEvent.click(share);
+    expect(screen.getByRole('button', { name: 'Done' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(share).toHaveFocus();
+    fireEvent.click(share);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(share).toHaveFocus();
   });
 });
