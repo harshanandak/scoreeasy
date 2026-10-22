@@ -665,6 +665,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const [open, setOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
+  const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
   const showBottomNav = isAppShellPath(pathname) && !scoringStarted;
 
   useEffect(() => {
@@ -756,7 +757,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const accountLabel = isAuthenticated ? 'Account' : 'Sign in';
 
   const navItems = [
-    { tab: 'home', label: 'Home', path: APP_ENTRY_PATH },
+    { tab: 'home', label: 'Home', path: homePath },
     { tab: 'play', label: 'Play', path: '/play' },
     { tab: 'history', label: 'History', path: '/history' },
   ];
@@ -816,7 +817,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
           type="button"
           className="global-nav-brand"
           aria-label="Score Easy home"
-          onClick={() => go(APP_ENTRY_PATH)}
+          onClick={() => go(homePath)}
         >
           <span aria-hidden="true">SCORE<br />EASY</span>
         </button>
@@ -1525,20 +1526,7 @@ export default function Design1Mono() {
   const [startedRoute, setStartedRoute] = useState(null);
   const scoringRouteKey = `${location.key}:${location.pathname}`;
   const scoringStarted = isProtectedScoringPath(location.pathname) && startedRoute === scoringRouteKey;
-  const markScoringStarted = useCallback(started => {
-    setStartedRoute(started ? scoringRouteKey : null);
-    // A rematch reuses this URL. Remove the previous match's extra guard entry.
-    if (!started && protectedGuardDepthRef.current > 0 &&
-        protectedGuardRouteKeyRef.current === `${location.pathname}${location.search}`) {
-      allowNextProtectedPopRef.current = true;
-      globalThis.addEventListener('popstate', () => {
-        allowNextProtectedPopRef.current = false;
-      }, { once: true });
-      globalThis.history.go(-protectedGuardDepthRef.current);
-      protectedGuardDepthRef.current = 0;
-      protectedGuardRouteKeyRef.current = null;
-    }
-  }, [scoringRouteKey, location.pathname, location.search]);
+  const markScoringStarted = useCallback(started => setStartedRoute(started ? scoringRouteKey : null), [scoringRouteKey]);
   const [exitPrompt, setExitPrompt] = useState(null);
   const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
@@ -1642,9 +1630,9 @@ export default function Design1Mono() {
       protectedRouteHistoryIndexRef.current = routeHistoryIndex > 0 ? routeHistoryIndex - 1 : NO_PRIOR_ROUTE_INDEX;
     }
 
-    if (!scoringStarted) return undefined;
+    if (!scoringStarted && protectedGuardDepthRef.current === 0) return undefined;
 
-    if (protectedGuardRouteKeyRef.current !== routeKey) {
+    if (scoringStarted && protectedGuardRouteKeyRef.current !== routeKey) {
       protectedGuardRouteKeyRef.current = routeKey;
       protectedGuardDepthRef.current += 1;
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
@@ -1704,6 +1692,16 @@ export default function Design1Mono() {
         return;
       }
 
+      if (!scoringStarted) {
+        // Rematch inherits the old guard entry; consume it only when Back is requested.
+        if (protectedGuardDepthRef.current > 0) {
+          protectedGuardDepthRef.current -= 1;
+          protectedGuardRouteKeyRef.current = null;
+          leaveProtectedRouteAfterConfirm();
+        }
+        return;
+      }
+
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
       requestScoringExit({
         onConfirm: leaveProtectedRouteAfterConfirm,
@@ -1711,7 +1709,7 @@ export default function Design1Mono() {
     };
 
     globalThis.addEventListener('popstate', handlePopState);
-    const cleanupNativeBackButton = installNativeBackButtonGuard({
+    const cleanupNativeBackButton = scoringStarted ? installNativeBackButtonGuard({
       getPathname: () => globalThis.location.pathname,
       confirmLeave: () => new Promise((resolve) => {
         requestScoringExit({
@@ -1728,7 +1726,7 @@ export default function Design1Mono() {
 
         navigate(path, options);
       },
-    });
+    }) : () => {};
 
     return () => {
       globalThis.removeEventListener('popstate', handlePopState);

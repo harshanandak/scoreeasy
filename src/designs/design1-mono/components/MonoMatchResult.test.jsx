@@ -244,10 +244,11 @@ describe('MonoMatchResult — Sets container wiring', () => {
     expect(rt.navigate).toHaveBeenCalledWith('/volleyball/tournament/1', { replace: true });
   });
 
-  it('routes Rematch to a fresh quick match, REPLACING the Result entry', () => {
+  it('hides Rematch on a tournament result', () => {
     render(<MonoMatchResult />);
-    fireEvent.click(screen.getByRole('button', { name: /rematch/i }));
-    expect(rt.navigate).toHaveBeenCalledWith('/volleyball/quick', { replace: true });
+    expect(screen.getByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /rematch/i })).not.toBeInTheDocument();
+    expect(rt.navigate).not.toHaveBeenCalled();
   });
 
   it('falls back to a safe recovery surface when the match is missing', () => {

@@ -456,8 +456,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
   });
 
   // RA-4 (P1). The cricket Test scorer renders "Loading..." forever when the
-  // match id is unknown (stale resume link, deleted match), with the bottom nav
-  // hidden and Back answering "Your unsaved scoring progress may be lost".
+  // match id is unknown (stale resume link, deleted match). Guard activation
+  // is covered separately by the first-score contracts.
   // Fix PR: "Validate :id / :matchId routes: recovery instead of Loading".
   it.fails('RA-4: an unknown cricket Test match id shows a recovery screen, not endless Loading', async () => {
     renderApp(['/cricket/quick/test-match/999']);
@@ -649,5 +649,45 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(document.querySelector('.global-nav-brand'));
     await waitFor(() => expect(currentRoute()).toBe('/app'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('Rematch does not queue navigation before a fresh point can arm the guard', async () => {
+    const historyGo = vi.spyOn(globalThis.history, 'go').mockImplementation(() => {});
+    try {
+      seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', gScore1: 1, gScore2: 0, format: { mode: 'free' }, updatedAt: NOW_ISO });
+      renderApp(['/football/quick']);
+      await settleRoute();
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Rematch' }));
+      expect(historyGo).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Red' }));
+      await act(async () => {});
+      act(() => globalThis.dispatchEvent(new Event('popstate')));
+      expect(screen.getByRole('dialog')).toHaveTextContent('Leave this page?');
+    } finally {
+      historyGo.mockRestore();
+    }
+  });
+
+  it('Back on an unscored Rematch unwinds the previous guard without a warning', async () => {
+    const historyGo = vi.spyOn(globalThis.history, 'go').mockImplementation(() => {});
+    const historyBack = vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
+    try {
+      seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', gScore1: 1, gScore2: 0, format: { mode: 'free' }, updatedAt: NOW_ISO });
+      renderApp(['/football/quick']);
+      await settleRoute();
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Rematch' }));
+      expect(historyGo).not.toHaveBeenCalled();
+      expect(historyBack).not.toHaveBeenCalled();
+      act(() => globalThis.dispatchEvent(new Event('popstate')));
+      expect(historyGo.mock.calls.length + historyBack.mock.calls.length).toBeGreaterThan(0);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    } finally {
+      historyGo.mockRestore();
+      historyBack.mockRestore();
+    }
   });
 });

@@ -305,9 +305,9 @@ describe('MonoWatchMatch', () => {
 
     const siteNav = screen.getByRole('navigation', { name: 'Site' });
     const home = within(siteNav).getByRole('link', { name: 'Score Easy home' });
-    expect(home).toHaveAttribute('href', '/');
+    expect(home).toHaveAttribute('href', '/app');
     const cta = within(siteNav).getByRole('link', { name: /open app/i });
-    expect(cta).toHaveAttribute('href', '/');
+    expect(cta).toHaveAttribute('href', '/app');
   });
 
   it('does not render the brand bar in kiosk mode', () => {
