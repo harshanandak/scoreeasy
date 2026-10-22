@@ -1,3 +1,4 @@
+import { getSportsList } from '../models/sportRegistry';
 import {
   saveData,
   loadData,
@@ -345,17 +346,7 @@ describe('Quick match persistence normalization', () => {
   });
 
   it('stores completed quick matches for every registered sport with terminal status', () => {
-    const sports = [
-      'volleyball',
-      'badminton',
-      'tabletennis',
-      'tennis',
-      'football',
-      'basketball',
-      'hockey',
-      'kabaddi',
-      'cricket',
-    ];
+    const sports = getSportsList().map((sport) => sport.id);
 
     sports.forEach((sport, index) => {
       expect(saveQuickMatch({

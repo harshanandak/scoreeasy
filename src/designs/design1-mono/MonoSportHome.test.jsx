@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoSportHome from './MonoSportHome';
+import { getSportsList } from '../../models/sportRegistry';
 
 let scrollSpy;
 let addedScrollIntoView = false;
@@ -115,10 +116,7 @@ describe('MonoSportHome sport chooser', () => {
     const quickButtons = within(getChooser())
       .getAllByRole('button', { name: /^Quick match: / })
       .map((button) => button.getAttribute('aria-label').replace('Quick match: ', ''));
-    expect(quickButtons).toEqual([
-      'Cricket', 'Kabaddi', 'Volleyball', 'Badminton', 'Football', 'Basketball',
-      'Tennis', 'Table Tennis', 'Hockey',
-    ]);
+    expect(quickButtons).toEqual(getSportsList().map((sport) => sport.name));
   });
 
   it('no longer offers the deregistered sports', () => {
