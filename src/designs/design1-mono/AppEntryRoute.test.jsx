@@ -14,10 +14,11 @@ await preloadAppRoutes();
 let authState;
 let renderAuthUserButton;
 let simulatedScoringStarted;
+let liveFeed = [];
 
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
-  useQuery: () => [],
+  useQuery: () => liveFeed,
   useConvexConnectionState: () => ({
     isWebSocketConnected: true,
     hasEverConnected: true,
@@ -80,6 +81,7 @@ function renderApp(initialEntry) {
 
 describe('app entry route contract', () => {
   beforeEach(() => {
+    liveFeed = [];
     authState = {
       authMode: 'local',
       cloudAuthAvailable: false,
@@ -220,7 +222,7 @@ describe('app entry route contract', () => {
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveAttribute('aria-label', 'App navigation');
     expect(appNav).toHaveClass('global-bottom-nav-native');
-    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
     const navStyles = Array.from(container.querySelectorAll('style'))
       .map((style) => style.textContent)
       .join('\n');
@@ -233,8 +235,7 @@ describe('app entry route contract', () => {
     // History and Stats are now one merged section reachable from a single tab.
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toBeInTheDocument();
     expect(within(appNav).queryByRole('button', { name: 'Stats', hidden: true })).not.toBeInTheDocument();
-    // No Live tab until a /live destination exists (Kit decision 4 lands with S6): no dead tab.
-    expect(within(appNav).queryByRole('button', { name: 'Live', hidden: true })).not.toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Live', hidden: true })).toBeInTheDocument();
     // Dock icons are clean monolines, not the hand-drawn layer (that is for moments): one 1.9
     // stroke on the 24 grid with round caps and joins. The active tab is an ink fill.
     for (const icon of appNav.querySelectorAll('.global-bottom-nav-icon svg')) {
@@ -253,7 +254,7 @@ describe('app entry route contract', () => {
     expect(await screen.findByRole('heading', { name: 'What are we scoring?' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     expect(appNav).toHaveClass('global-bottom-nav-native');
-    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(3);
+    expect(appNav.querySelectorAll('.global-bottom-nav-icon')).toHaveLength(4);
     expect(within(appNav).getByRole('button', { name: 'Play', hidden: true })).toHaveAttribute('aria-current', 'page');
 
     // A Play hub tile starts that sport's quick setup.
@@ -356,6 +357,39 @@ describe('app entry route contract', () => {
     // accessible name — it is hidden from assistive tech.
     expect(brand.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
     expect(within(container).getByRole('button', { name: 'Score Easy home', hidden: true })).toBe(brand);
+  });
+
+  it('opens Live with the dock, keeps the count reactive, and returns Home', async () => {
+    authState = { ...authState, cloudAuthAvailable: true };
+    liveFeed = [{ token: 'one', sport: 'tennis', lastEventAt: Date.now(), teamA: { name: 'A' }, teamB: { name: 'B' } }];
+    const { container, rerender } = renderApp('/app');
+    await screen.findByText('App dashboard');
+    const dock = () => container.querySelector('.global-bottom-nav');
+    expect(within(dock()).getAllByRole('button', { hidden: true }).map(b => b.textContent)).toEqual(['Home', 'Play', 'Live', 'History', 'Sign in']);
+    fireEvent.click(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true }));
+    await screen.findByRole('heading', { name: 'Live now' });
+    expect(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
+    expect(container.querySelector('.global-nav-links [aria-current="page"]')).toHaveTextContent('Live');
+    expect(dock().querySelector('.kit-nav-live-dot')).toBeInTheDocument();
+    // JSDOM has no native dialog.showModal; model only the browser's open flag.
+    const dialogPrototype = HTMLDialogElement.prototype;
+    const showModal = Object.getOwnPropertyDescriptor(dialogPrototype, 'showModal');
+    Object.defineProperty(dialogPrototype, 'showModal', { configurable: true, value() { this.open = true; } });
+    try {
+      fireEvent.click(container.querySelector('.global-mobile-menu-button'));
+      expect(within(container.querySelector('.global-mobile-menu-panel')).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
+      fireEvent.click(container.querySelector('.global-mobile-menu-close'));
+    } finally {
+      if (showModal) Object.defineProperty(dialogPrototype, 'showModal', showModal);
+      else delete dialogPrototype.showModal;
+    }
+    liveFeed = [];
+    rerender(<MemoryRouter initialEntries={['/app']}><LocationProbe /><Design1Mono /></MemoryRouter>);
+    expect(dock().querySelector('.kit-nav-live-dot')).toBeNull();
+    expect(within(dock()).getByRole('button', { name: 'Live', hidden: true })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(within(dock()).getByRole('button', { name: 'Home', hidden: true }));
+    await screen.findByText('App dashboard');
+    expect(within(dock()).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
   });
 
   it('marks the active tab consistently across header and bottom navigation', async () => {

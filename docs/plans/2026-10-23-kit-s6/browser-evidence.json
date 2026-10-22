@@ -1,0 +1,104 @@
+{
+  "environment": "local Vite harness, mocked useQuery, no backend writes",
+  "viewport": "360x640 and 390x844, DPR 2",
+  "checks": [
+    {
+      "name": "four rows with one Paused",
+      "value": true
+    },
+    {
+      "name": "five dock targets at least 48px",
+      "value": true
+    },
+    {
+      "name": "labels fit",
+      "value": true
+    },
+    {
+      "name": "filter forward",
+      "value": true
+    },
+    {
+      "name": "filter reverse",
+      "value": true
+    },
+    {
+      "name": "spectator destination without dock",
+      "value": true
+    },
+    {
+      "name": "back restores Live",
+      "value": true
+    },
+    {
+      "name": "empty has no presence dot",
+      "value": true
+    },
+    {
+      "name": "Score a match opens Play",
+      "value": true
+    },
+    {
+      "name": "back restores empty",
+      "value": true
+    },
+    {
+      "name": "loading contains feed state",
+      "value": true
+    },
+    {
+      "name": "error contains feed state",
+      "value": true
+    },
+    {
+      "name": "no cloud keeps four tabs and empty",
+      "value": true
+    },
+    {
+      "name": "signed in has account control",
+      "value": true
+    },
+    {
+      "name": "dark tokens active",
+      "value": true
+    },
+    {
+      "name": "dark has no overflow",
+      "value": true
+    },
+    {
+      "name": "desktop header agrees",
+      "value": true
+    },
+    {
+      "name": "running timer advances three Live rows to Paused after simulated clock advance",
+      "value": true
+    },
+    {
+      "name": "running timer restores fresh rows when clock is restored",
+      "value": true
+    }
+  ],
+  "measurementPixels": {
+    "390x844": {
+      "dockButtonWidth": [
+        70.390625,
+        70.40625,
+        70.390625,
+        70.40625,
+        70.40625
+      ],
+      "dockButtonHeight": 54
+    },
+    "360x640": {
+      "dockButtonWidth": [
+        64.390625,
+        64.40625,
+        64.390625,
+        64.40625,
+        64.40625
+      ],
+      "dockButtonHeight": 54
+    }
+  }
+}
