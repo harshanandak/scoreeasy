@@ -294,7 +294,7 @@ describe('app-owned scoring prompts', () => {
     expect(quickMatchSource).not.toContain('autoFocus');
     expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('mono-btn-danger w-full mb-4');
 
-    // Goals scorer (football / basketball / kabaddi / rugby):
+    // Goals scorer (football / basketball / kabaddi):
     // - quick-button sports show an informational score DISPLAY, not a disabled
     //   <button> control (I-049): the display half carries mono-arena-half-display
     //   and its score aria-label, and is no longer a disabled button.

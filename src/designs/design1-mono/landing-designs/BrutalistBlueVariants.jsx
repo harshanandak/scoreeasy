@@ -18,9 +18,7 @@ const sports = [
   { icon: '⛳', name: 'Golf' },
   { icon: '🎱', name: 'Pool' },
   { icon: '♟️', name: 'Chess' },
-  { icon: '🏈', name: 'Rugby' },
   { icon: '🥏', name: 'Frisbee' },
-  { icon: '🤾', name: 'Handball' },
 ];
 
 const features = [

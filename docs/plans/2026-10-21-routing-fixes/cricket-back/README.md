@@ -1,5 +1,7 @@
 # Cricket completion: Finish must leave the scorer behind
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 Finishing a cricket tournament match previously pushed its tournament screen onto the browser history. Back reopened the completed scorer; Test cricket could reopen at the first innings. Cricket completion now uses the app-owned completion seam, which unwinds the scorer and its exit-guard entries. Test quick matches land on History. Isolated scorers without the provider replace their current entry.
 
 ## Acceptance evidence

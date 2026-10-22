@@ -1,6 +1,6 @@
 // Central registry for the 9 registered sports
 // Each sport defines its engine type, scoring config, and UI settings.
-// Display order, tier grouping and the deregistered sports live in ./sportFocus.js
+// Display order and tier grouping live in ./sportFocus.js
 // (ICP plan: docs/plans/2026-07-20-icp-games/adjusted-plan.md §A).
 
 import {
@@ -8,7 +8,6 @@ import {
   LATER_SPORT_IDS,
   PRIORITY_GROUP_LABEL,
   PRIORITY_SPORT_IDS,
-  RETIRED_SPORTS,
   SPORT_ORDER,
 } from './sportFocus';
 
@@ -321,7 +320,9 @@ export const getSetsSports = () => getSportsList().filter((s) => s.engine === 's
 
 export const getGoalsSports = () => getSportsList().filter((s) => s.engine === 'goals');
 
-export const getSportById = (id) => SPORT_REGISTRY[id] || null;
+export const getSportById = (id) =>
+  (typeof id === 'string' && Object.prototype.hasOwnProperty.call(SPORT_REGISTRY, id) ? SPORT_REGISTRY[id] : null);
+
 
 // Direction E team colour is rolled out one sport at a time: a sport opts in with
 // `teamColour: true` on its own registry entry, and its boards switch to the team-colour arena.
@@ -333,13 +334,3 @@ export const getSportsByCategory = () => ({
   [PRIORITY_GROUP_LABEL]: pickRegistered(PRIORITY_SPORT_IDS),
   [LATER_GROUP_LABEL]: pickRegistered(LATER_SPORT_IDS),
 });
-
-/** A deregistered sport's label/engine/storage key, so its saved matches stay readable. */
-export const getRetiredSport = (id) =>
-  (id && Object.prototype.hasOwnProperty.call(RETIRED_SPORTS, id) ? RETIRED_SPORTS[id] : null);
-
-export const getRetiredSportsList = () => Object.values(RETIRED_SPORTS);
-
-/** Human label for any stored sport id — registered, retired, or unknown. */
-export const getSportLabel = (id) =>
-  getSportById(id)?.name || getRetiredSport(id)?.name || 'Other sport';

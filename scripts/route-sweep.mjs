@@ -81,9 +81,6 @@ for (const sport of genericResumeSports) {
     },
   };
 }
-seeds.retiredDrafts = Object.fromEntries(['pickleball', 'squash', 'rugby', 'futsal', 'handball'].map((sport) => [
-  `se_quickmatch_draft_${sport}`, { phase: 'scoring', sport, team1Name: 'Dinks', team2Name: 'Lobs', updatedAt: iso },
-]));
 
 // [label, path, seedName?, steps?]
 const cases = [
@@ -106,7 +103,6 @@ const cases = [
     { eval: `document.querySelector('button[aria-label^="Resume "]').click()` }, { wait: 3500 },
     { eval: 'location.reload()' }, { wait: 5000 },
   ]]),
-  ['RA3 retired drafts have no Resume on Home', '/app', 'retiredDrafts'],
   ['RA3 all resumable matches on Home', '/', 'resumeCatalog'],
   ['RA3 resume tennis from Home', '/app', 'resumeCatalog', [
     { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 }, { eval: 'location.reload()' }, { wait: 5000 },
@@ -169,7 +165,6 @@ const cases = [
   ['tennis quick', '/tennis/quick'],
   ['cricket quick', '/cricket/quick'],
   ['football quick', '/football/quick'],
-  ['pickleball quick (to deregister)', '/pickleball/quick'],
   ['bogus sport quick', '/madeupsport/quick'],
   ['uppercase sport', '/Volleyball/quick'],
   ['sport root only', '/volleyball'],

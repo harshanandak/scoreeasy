@@ -1,5 +1,7 @@
 # Stability and reliability audit (2026-10-21)
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 **Decisions needed:** sport-rule alignment (SA-12), public-profile privacy (SA-16), and ownership of shared dev deployment recovery (SA-05). These are follow-up decisions; this audit PR makes no rule, application, or deployment changes.
 
 **Why this exists.** Harsha, 2026-10-21: "we need to improve application stability and reliability." AGENTS.md has two non-negotiables that matter most here: *the scorer never loses a point*, and *the board stays truthful*. The original audit found failures of both on the base below.

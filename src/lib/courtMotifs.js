@@ -3,15 +3,12 @@
 // Each drawing is SVG body markup in viewBox 0 0 400 260, black stroke on transparent, team A's
 // half on the left and B's on the right, to regulation proportions. They are used as a CSS mask,
 // so the line colour and alpha always come from the colour engine (--team-x-motif) and stay
-// contrast-gated. Volleyball, throwball, badminton, football, basketball and kabaddi are ported from
+// contrast-gated. Volleyball, badminton, football, basketball and kabaddi are ported from
 // docs/plans/2026-07-26-icp-games-design/directions/e-broadcast/motifs.html.
 
 // The same markup again, mirrored about the centre line (x = 200): draw A's half once.
 const mirror = (s) => `${s}<g transform='matrix(-1 0 0 1 400 0)'>${s}</g>`;
 const dots = (pts, r) => pts.map(([x, y]) => `<circle cx='${x}' cy='${y}' r='${r}' fill='#000' stroke='none'/>`).join('');
-const hatch = (id) =>
-  `<defs><pattern id='${id}' width='7' height='7' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>` +
-  `<path d='M0 0V7' stroke='#000' stroke-width='1.3'/></pattern></defs>`;
 
 export const COURT_MOTIFS = Object.freeze({
   // court 18 x 9 m, net band with mesh + posts, 3 m attack lines with their dashed extensions
@@ -21,16 +18,6 @@ export const COURT_MOTIFS = Object.freeze({
     `<rect x='195' y='24' width='10' height='212' stroke-width='1.6'/>` +
     `<path d='${Array.from({ length: 20 }, (_, i) => `M195 ${34 + i * 10}H205`).join('')}' stroke-width='1'/>` +
     dots([[200, 18], [200, 242]], 4),
-
-  // court + net, hatched neutral zone either side of the net, dashed throw arc ending in a ball
-  // (Tier-0 game being added to the registry; drawn ahead so its board has a court on day one)
-  throwball:
-    hatch('h') +
-    `<rect x='40' y='24' width='320' height='212'/><rect x='182.5' y='24' width='35' height='212' fill='url(#h)' stroke-width='1.4'/>` +
-    `<path d='M200 8V252' stroke-width='3.2'/>` +
-    dots([[200, 6], [200, 254]], 4) +
-    `<path d='M92 214Q200 -70 302 200' stroke-dasharray='3 8' stroke-width='2.2'/><circle cx='308' cy='212' r='9' stroke-width='2.2'/>` +
-    `<path d='M300 208q8 6 16 0M302 217q6 -4 12 0' stroke-width='1.4'/>`,
 
   // doubles court 13.4 x 6.1 m: singles + doubles sidelines, short/long service lines, centre line, net, shuttle
   badminton:
@@ -54,23 +41,6 @@ export const COURT_MOTIFS = Object.freeze({
     mirror(`<path d='M108.5 71.1V188.9M108.5 130H200M30 130H37'/>`) +
     `<path d='M200 38.5V221.5' stroke-width='3'/>` +
     dots([[200, 36], [200, 224]], 3.5),
-
-  // court 13.41 x 6.10 m: hatched non-volley zone (kitchen) either side of the net, centre lines, net
-  pickleball:
-    hatch('k') +
-    `<rect x='30' y='52.7' width='340' height='154.6'/>` +
-    `<rect x='146' y='52.7' width='108' height='154.6' fill='url(#k)' stroke-width='1.6'/>` +
-    mirror(`<path d='M30 130H146'/>`) +
-    `<path d='M200 45V215' stroke-width='3'/>` +
-    dots([[200, 42], [200, 218]], 3.5),
-
-  // court 6.4 x 9.75 m seen from above, front wall at the top: short line, half-court line,
-  // service boxes; A takes the left box, B the right
-  squash:
-    `<rect x='124.5' y='15' width='151' height='230'/><path d='M124.5 15H275.5' stroke-width='4'/>` +
-    `<path d='M124.5 143.4H275.5M200 143.4V245'/>` +
-    mirror(`<path d='M162.3 143.4V181.2H124.5'/>`) +
-    `<circle cx='232' cy='70' r='4' stroke-width='1.8'/>`,
 
   // pitch 105 x 68 m: halfway, centre circle, boxes, spots, D, goals, corner arcs
   football:
@@ -102,40 +72,11 @@ export const COURT_MOTIFS = Object.freeze({
         dots([[45.2, 130]], 2),
     ),
 
-  // court 40 x 20 m: centre line, 6 m goal area, dashed 9 m free-throw line, 7 m and 4 m marks, goals
-  handball:
-    `<rect x='20' y='40' width='360' height='180'/><path d='M200 40V220'/>` +
-    mirror(
-      `<path d='M20 62.5A54 54 0 0 1 74 116.5V143.5A54 54 0 0 1 20 197.5'/>` +
-        `<path d='M46.6 40A81 81 0 0 1 101 116.5V143.5A81 81 0 0 1 46.6 220' stroke-dasharray='6 5'/>` +
-        `<path d='M83 125.5V134.5M56 128.2V131.8M20 116.5H11V143.5H20'/>`,
-    ),
-
-  // court 40 x 20 m: centre circle and spot, 6 m penalty areas, penalty and 10 m marks, goals, corner arcs
-  futsal:
-    `<rect x='20' y='40' width='360' height='180'/><path d='M200 40V220'/><circle cx='200' cy='130' r='27'/>` +
-    dots([[200, 130]], 2.4) +
-    mirror(
-      `<path d='M20 62.5A54 54 0 0 1 74 116.5V143.5A54 54 0 0 1 20 197.5'/>` +
-        `<path d='M20 116.5H11V143.5H20M20 42.3A2.3 2.3 0 0 0 22.3 40M22.3 220A2.3 2.3 0 0 0 20 217.7'/>` +
-        dots([[74, 130], [110, 130]], 2),
-    ),
-
   // mat 13 x 10 m + 1 m lobbies, midline, baulk lines, dashed bonus lines
   kabaddi:
     `<rect x='30' y='16' width='340' height='228'/><path d='M30 35H370M30 225H370'/>` +
     `<path d='M200 16V244' stroke-width='3.4'/>` +
     mirror(`<path d='M102 35V225'/><path d='M75.7 35V225' stroke-dasharray='7 6'/>`),
-
-  // pitch 100 x 70 m + 10 m in-goals: try lines, halfway, 22 m lines, dashed 10 m, 5 m and 15 m lines, posts
-  rugby:
-    `<rect x='20' y='25' width='360' height='210'/><path d='M200 25V235'/>` +
-    `<path d='M50 40H350M50 220H350M50 70H350M50 190H350' stroke-width='1.4' stroke-dasharray='5 9'/>` +
-    mirror(
-      `<path d='M50 25V235' stroke-width='3'/><path d='M116 25V235'/><path d='M170 25V235' stroke-dasharray='6 5'/>` +
-        `<path d='M50 121.6V138.4' stroke-width='3.4'/>` +
-        dots([[50, 121.6], [50, 138.4]], 2.6),
-    ),
 });
 
 const svgFor = (markup, viewBox) =>

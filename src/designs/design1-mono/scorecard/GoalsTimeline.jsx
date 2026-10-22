@@ -4,13 +4,8 @@ import { goalsState } from '../../../models/live/goals';
 import { sideName, DEFAULT_TEAM_A, DEFAULT_TEAM_B } from './sideName';
 import { eyebrowStyle, tabularNums } from './scorecardStyles';
 
-// Scoring-events timeline for ANY goals/period sport (research §4.D football
-// match-centre + rugby/kabaddi templates). One row per scoring event from
-// `goalsState(events, config).timeline`, each carrying its period label, minute,
-// team, signed value, sport subtype, and stored running totals. Supports +N rows
-// — rugby `TRY +5 → 5-0`, kabaddi raid/tackle — by surfacing the event TYPE (only
-// when it is not a plain "point") alongside the value. Newest-first toggle;
-// lead-change rows flagged with ► + bold "Lead change".
+// Shared goals/period timeline: period, minute, signed value, scoring subtype
+// and running totals come from goalsState. Supports newest-first ordering.
 //
 // The lead-change flag is computed in chronological order (comparing each row's
 // running lead sign against the previous decisive row), THEN the list is reversed
@@ -22,7 +17,7 @@ function sign(n) {
   return 0;
 }
 
-/** Signs a value for display: rugby +5, an undo/correction -2, a zero 0. */
+/** Signs positive values for display; corrections keep their negative sign. */
 function signed(value) {
   if (value > 0) return `+${value}`;
   return `${value}`;

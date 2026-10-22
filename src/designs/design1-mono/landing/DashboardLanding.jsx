@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
 import { getActiveSessions } from '../../../utils/universalStorage';
-import { getSportsList, getSportById, getSportLabel } from '../../../models/sportRegistry';
+import { getSportsList, getSportById } from '../../../models/sportRegistry';
 import { useAuth } from '../../../hooks/useAuth';
 import { isTournamentMatchCompleted } from '../../../utils/tournamentSync';
 import { MONO, SWISS } from './landingTheme';
@@ -448,7 +448,7 @@ function ExistingUserDashboard({
             <button type="button" onClick={() => navigate('/history')} style={{ ...bareButton, fontFamily: MONO, fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.blue, cursor: 'pointer' }}>History &rarr;</button>
           </div>
           {recentMatches.map((qm, i) => {
-            const sportName = qm.sport ? getSportLabel(qm.sport) : null;
+            const sportName = getSportById(qm.sport)?.name || 'Custom';
             const team1Won = qm.winner === qm.team1;
             const team2Won = qm.winner === qm.team2;
             return (

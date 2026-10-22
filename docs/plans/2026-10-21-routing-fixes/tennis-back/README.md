@@ -1,5 +1,7 @@
 Decisions needed: none. The full-suite lane was released for final integration and normal push.
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 Finishing tennis previously pushed the destination, leaving the completed scorer in Back history. Quick tennis then reopened a scorer whose draft had been cleared. Both completion paths now call the existing protected-scoring completion seam after the local save succeeds. The standalone fallback replaces the scorer entry.
 
 Evidence baseline: fetched master `4da859d0674d48e9ee814b391d72e576c9f7526f`; normal merge `eb22dde807e17319c3f0126ee0d5450ef38f02cf`. Conflicts in the audit document, route contracts and route-sweep script were resolved from master's versions, retaining the revised sweep security fix and RA-3 work. Only tennis routing coverage was reapplied.

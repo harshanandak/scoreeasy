@@ -43,9 +43,9 @@ Tier = ICP centrality, not current support state.
 
 Rationale for keeping these three but deregistering the other five: hockey/tennis/TT have real school/college ICP footprint AND are already correctly engined, so keeping them listed costs nothing and preserves optionality; the deregistered five are thin-ICP AND generic-engine with no real customization to lose.
 
-### DEREGISTER — removed from sportRegistry.js (can no longer be started), saved match data kept read-only, revisit later properly customized (per user decision 1)
+### DELETE — remove the five sports and their saved local data, with no retention
 
-> Retention decision (2026-10-21, PR #161): deregistration does **not** drop match data. A device or Convex row may still hold these matches, and the scorer never loses a point, so `src/models/sportFocus.js` `RETIRED_SPORTS` keeps just enough to label and list them read-only in History. Any data drop would be a separate, explicit migration.
+> Decision (2026-10-22): there are no users yet. Delete the five sports, their assets and saved local data, with no retention. A one-time startup purge removes their per-sport and draft keys and shared rows whose sport explicitly names one of the five. The current and legacy statistics objects lose only the five sport properties. Rows without a sport and registered-sport rows are untouched; no read-time filter or malformed-row repair is added. Old sport URLs use the normal not-found page, and live snapshots for any unregistered sport are unavailable; Live now skips their cards with the same registry lookup. Convex data is unchanged; Harsha owns wiping the backend.
 
 | Sport | ICP justification for removal |
 |---|---|
@@ -84,7 +84,7 @@ Each priority game gets a dedicated workflow running these phases. The workflow 
 
 ### C.3 NEW items
 
-- **CHORE — Deregister low-ICP games** (M1): remove pickleball, squash, rugby, futsal, handball from sportRegistry.js; keep their saved matches read-only (see the retention decision above); declutter the India-first picker.
+- **CHORE — Deregister low-ICP games** (M1): delete pickleball, squash, rugby, futsal and handball code and assets, and purge their identified saved local data once with no retention (2026-10-22 decision above); declutter the India-first picker.
 - **CHORE — Throwball sets registry entry** (M1): zero bespoke engine; cheap win; validates the add-via-registry path; unlocks the girls' segment.
 - **EPIC — Raid scoring family (shared turn-based / non-counter engine)** (M1 kickoff): umbrella establishing the shared turn-based scoring family so config/UI/stat surfacing is reused across kabaddi + kho kho + langdi.
   - ISSUE **Kabaddi raid engine** (Tier-0, high) — move kabaddi off goals (registry ~line 348) onto bespoke raid: raid/tackle/do-or-die/empty/super/bonus/all-out+2/revivals/2×20. Correctness fix, anchor of the family.

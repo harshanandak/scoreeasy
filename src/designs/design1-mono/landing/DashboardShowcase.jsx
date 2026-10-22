@@ -40,9 +40,7 @@ const allSports = [
   { id: 'golf', name: 'Golf', icon: 'Golf' },
   { id: 'pool', name: 'Pool', icon: 'Pool' },
   { id: 'chess', name: 'Chess', icon: 'Chess' },
-  { id: 'rugby', name: 'Rugby', icon: 'Rugby' },
   { id: 'frisbee', name: 'Frisbee', icon: 'Frisbee' },
-  { id: 'handball', name: 'Handball', icon: 'Handball' },
 ];
 const mockMatches = [
   { sport: 'Tennis', teams: 'Player 1 vs Player 2', score: '6 \u2014 4', winner: 'Player 1 won', date: '24.02', icon: 'Tennis' },

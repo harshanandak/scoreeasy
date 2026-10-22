@@ -10,7 +10,7 @@ import {
   loadReturningPlayerState,
   loadInProgressMatches,
 } from './appEntry';
-import { getRetiredSportsList, getSportsList } from '../models/sportRegistry';
+import { getSportsList } from '../models/sportRegistry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 describe('app entry contract', () => {
@@ -41,21 +41,6 @@ describe('app entry contract', () => {
     expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
     expect(JSON.stringify(localStorage)).toBe(before);
     expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
-  });
-
-  it('never resumes retired-sport drafts or tournaments and preserves their saved data', () => {
-    const now = new Date().toISOString();
-    for (const sport of getRetiredSportsList()) {
-      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ phase: 'scoring', updatedAt: now }));
-      localStorage.setItem(sport.storageKey, JSON.stringify([{ id: 1, matches: [{ status: 'pending' }] }]));
-    }
-    localStorage.setItem('se_quickmatches', JSON.stringify(getRetiredSportsList().map((sport) => ({
-      id: sport.id, sport: sport.id, status: 'in-progress', updatedAt: now,
-    }))));
-    const before = JSON.stringify(localStorage);
-    expect(loadInProgressMatches()).toEqual([]);
-    expect(loadAppEntryState().draftEntryPath).toBeNull();
-    expect(JSON.stringify(localStorage)).toBe(before);
   });
 
   it('excludes setup, expired and completed drafts from the resume catalog', () => {
@@ -128,7 +113,7 @@ describe('app entry contract', () => {
       sport: 'volleyball',
       updatedAt: '2026-05-30T12:00:00.000Z',
     }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     const state = loadAppEntryState();
 
@@ -231,7 +216,7 @@ describe('app entry contract', () => {
       status: 'in-progress',
       updatedAt: '2026-05-30T12:00:00.000Z',
     }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     const state = loadAppEntryState();
 
@@ -256,7 +241,7 @@ describe('app entry contract', () => {
 
   it('keeps corrupt session storage from hiding other returning-player state', () => {
     globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     expect(loadActiveSessionSummaries()).toEqual([]);
     expect(loadReturningPlayerState()).toBe(true);

@@ -14,6 +14,9 @@ import {
 import { setupNativeChrome } from './mobile/nativeChrome';
 import { shouldLoadReactGrab } from './utils/reactGrab';
 import './index.css';
+import { purgeRetiredSportData } from './utils/storage';
+
+purgeRetiredSportData();
 
 const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
