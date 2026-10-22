@@ -484,8 +484,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/cricket/quick?result=300']);
     fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
     expect(currentRoute()).toBe('/cricket/quick');
-    expect(screen.getByText('Test Match')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Start Cricket' }));
+    expect(screen.getByRole('button', { name: 'Test' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Start cricket' }));
     await waitFor(() => expect(currentRoute()).toMatch(/^\/cricket\/quick\/test-match\//));
   });
 

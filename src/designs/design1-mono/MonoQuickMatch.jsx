@@ -562,7 +562,6 @@ export default function MonoQuickMatch() {
           || CRICKET_FORMATS.find(f => f.id === (saved.format?.totalInnings === 4 ? 'test' : 'custom'));
         setCricketPreset(preset.id);
         setFormatMode(preset.customizable ? 'custom' : 'standard');
-        setSetupStep(preset.customizable ? 3 : 2);
       }
       setResult(saved);
       setPhase('result');
