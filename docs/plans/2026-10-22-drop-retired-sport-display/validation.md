@@ -26,4 +26,12 @@ Full-suite and pre-push build validation were deliberately not run at this hold 
 
 After the lane opened, the first normal pre-push run completed without worker errors: 129 files, 1,498 passes, 9 expected failures and 3 failures; the production build passed. Two failures used sportless fixtures to represent registered matches, so those fixtures now identify their sport. The third showed that RA-9 had genuinely been fixed by the own-key registry lookup: its unchanged route assertions passed, so only that `it.fails` marker was converted to a normal `it`.
 
-The affected `OfflineFallback.test.jsx`, `AppEntryRoute.test.jsx` and `routes.contract.test.jsx` then passed with **57 passes + 5 expected failures = 62 cases** (40.47 seconds), using `--maxWorkers=1`. The application source and the boundary counterfactual above are unchanged by these test/documentation corrections. The remaining full-suite expected-failure count is nine. This is correction of deterministic failures, not a flaky-run retry; the subsequent normal pre-push result is reported in the PR.
+The affected `OfflineFallback.test.jsx`, `AppEntryRoute.test.jsx` and `routes.contract.test.jsx` then passed with **57 passes + 5 expected failures = 62 cases** (40.47 seconds), using `--maxWorkers=1`. The application source and the boundary counterfactual above are unchanged by these test/documentation corrections. The remaining full-suite expected-failure count is nine. This is correction of deterministic failures, not a flaky-run retry.
+
+## CI gate decision
+
+Harsha moved the full-suite and build gate to GitHub CI's required `verify` check. The RAM poller was stopped. Publication uses the explicitly authorized `LEFTHOOK_EXCLUDE=test,build`; local pre-commit lint, type-check and configuration checks remain enabled. No current-head local full-suite or build pass is claimed. Their publication result comes from CI `verify`.
+
+Master's completion lock (`c324713`, PR #172) was merged without conflicts. Its completion and navigation changes remain intact alongside the `loadData` filter. Focused verification after this merge includes the route contracts, completion lock, completed-match hydration, cricket finish navigation and completion hook.
+
+The post-merge focused run passed **17 files: 368 passes + 6 expected failures = 374 cases**, with `--maxWorkers=1` (219.84 seconds). Normal pre-commit hooks also passed: lint had 0 errors and 29 warnings, type-check passed, and configuration sync passed. The palette assertion remains exact equality with BASELINE 669.
