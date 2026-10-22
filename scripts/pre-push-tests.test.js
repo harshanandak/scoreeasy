@@ -1,17 +1,21 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, linkSync, mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { delimiter, join, resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '..');
 const fixtures = [];
 const gitLocalVariables = spawnSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' });
 if (gitLocalVariables.status !== 0) throw new Error('Cannot identify Git repository-local environment variables');
 
-function run(root, command, args) {
+function run(root, command, args, overrides = {}) {
   const env = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
+  for (const [name, value] of Object.entries(overrides)) {
+    const key = Object.keys(env).find((candidate) => candidate.toLowerCase() === name.toLowerCase()) ?? name;
+    env[key] = value;
+  }
   // Hooks export repository-local Git state; foreign fixture repositories must
   // clear those variables as prescribed by githooks(5).
   for (const name of gitLocalVariables.stdout.trim().split('\n')) delete env[name.trim()];
@@ -63,6 +67,23 @@ afterEach(() => {
 });
 
 describe('real pre-push hook selection', () => {
+  it('ignores substituted git and bun executables at the front of PATH', () => {
+    const root = fixture();
+    const bun = run(root, 'bun', ['--print', 'process.execPath']);
+    expect(bun.status, bun.output).toBe(0);
+    const traps = join(root, 'traps');
+    mkdirSync(traps);
+    const suffix = process.platform === 'win32' ? '.exe' : '';
+    copyFileSync(process.execPath, join(traps, `git${suffix}`));
+    linkSync(join(traps, `git${suffix}`), join(traps, `bun${suffix}`));
+    writeFileSync(join(root, 'leaf.js'), 'export const value = 42; // changed\n');
+    const result = run(root, bun.output.trim(), ['scripts/pre-push-tests.mjs'], {
+      PATH: [traps, process.env.PATH].join(delimiter),
+    });
+    expect(result.status, result.output).toBe(0);
+    expect(result.output).toMatch(/Test Files\s+1 passed \(1\)/);
+  }, 45000);
+
   it('isolates foreign repositories from exported hook Git state', () => {
     const parent = fixture();
     const priorDir = process.env.GIT_DIR;
