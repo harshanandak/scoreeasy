@@ -3,8 +3,9 @@
 //
 // Each mark is SVG body markup in viewBox 0 0 140 100, black on transparent, drawn travelling
 // right (towards the net when it sits on the left key; the board mirrors it for the right key).
-// Only alpha matters to a mask: shapes paint in the default currentColor (opaque); the two literals
-// left are the luminance <mask> that cuts the seams out (white keeps, black cuts).
+// Only alpha matters to a mask: shapes paint in the default currentColor (opaque). Detail is cut
+// out of a solid shape with an SVG luminance <mask>; the only two colour literals that takes
+// (white keeps, black cuts) live once in cutOut() below, so a new mark adds 0 raw literals.
 // It is used as a CSS mask, so its colour and alpha always come from the colour engine
 // (--team-x-motif) and every label and numeral over it stays contrast-gated.
 
@@ -18,12 +19,30 @@ const VOLLEYBALL_SEAMS = [
   'M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5',
 ].map((d) => `<path d='${d}'/>`).join('');
 
+/**
+ * A luminance mask that keeps the whole 140 x 100 mark box and cuts `cutMarkup` out of it.
+ * `cutMarkup` inherits the cut colour from the wrapping group, so a mark only supplies
+ * geometry. Reference the result with mask='url(#<id>)'.
+ * @param {string} id mask id, unique within one mark
+ * @param {string} cutMarkup SVG markup for what to cut (paths, lines, circles)
+ * @param {{transform?: string, strokeAttrs?: string}} [options] group transform and extra
+ *   stroke attributes (stroke-width, stroke-linecap, ...)
+ * @returns {string} a <defs><mask> block
+ */
+export function cutOut(id, cutMarkup, { transform = '', strokeAttrs = '' } = {}) {
+  const t = transform ? ` transform='${transform}'` : '';
+  const extra = strokeAttrs ? ` ${strokeAttrs}` : '';
+  return `<defs><mask id='${id}' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'>` +
+    `<rect width='140' height='100' fill='#fff'/>` +
+    `<g${t} fill='none' stroke='#000'${extra}>${cutMarkup}</g></mask></defs>`;
+}
+
 export const SPORT_MARKS = Object.freeze({
   volleyball:
-    `<defs><mask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'>` +
-    `<rect width='140' height='100' fill='#fff'/>` +
-    `<g transform='translate(92 50) scale(4.6) translate(-12 -12)' fill='none' stroke='#000' ` +
-    `stroke-width='1.15' stroke-linecap='round'>${VOLLEYBALL_SEAMS}</g></mask></defs>` +
+    cutOut('m', VOLLEYBALL_SEAMS, {
+      transform: 'translate(92 50) scale(4.6) translate(-12 -12)',
+      strokeAttrs: "stroke-width='1.15' stroke-linecap='round'",
+    }) +
     `<circle cx='92' cy='50' r='46' mask='url(#m)'/>` +
     `<path d='M16 30H34M4 50H36M16 70H34' fill='none' stroke='currentColor' stroke-width='6' stroke-linecap='round'/>`,
 });

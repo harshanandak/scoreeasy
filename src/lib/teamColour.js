@@ -122,11 +122,12 @@ const over = (base, top, al) => {
 
 // --- the engine -----------------------------------------------------------------------
 
-// Light neutrals: the literal values of --background, --card and --foreground in src/index.css.
-const NEUTRAL = Object.freeze({
-  bg: fromOklch({ L: 0.9782, C: 0.0039, h: 145.5458 }),
-  surface: fromOklch({ L: 0.9855, C: 0.0026, h: 145.5558 }),
-  ink: '#000000',
+// Light neutrals: the literal values of --background, --card and --foreground in src/index.css
+// (the Kit canvas, surface and ink; teamColour.test.js pins them to palette.js).
+export const NEUTRAL = Object.freeze({
+  bg: '#f4f5f7',
+  surface: '#ffffff',
+  ink: '#0b0b0d',
 });
 
 const WHITE = '#ffffff';

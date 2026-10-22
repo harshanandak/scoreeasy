@@ -206,11 +206,10 @@ describe('app-owned scoring prompts', () => {
   });
 
   it('layers the app confirm backdrop above the mono sheet backdrop', () => {
-    const indexSource = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
     const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
 
     const confirmZ = Number(
-      /\.app-confirm-backdrop\s*\{[^}]*z-index:\s*(\d+)/.exec(indexSource)?.[1],
+      /\.app-confirm-backdrop\s*\{[^}]*z-index:\s*(\d+)/.exec(monoCss)?.[1],
     );
     const sheetZ = Number(
       /\.mono-sheet-backdrop\s*\{[^}]*z-index:\s*(\d+)/.exec(monoCss)?.[1],
@@ -224,6 +223,7 @@ describe('app-owned scoring prompts', () => {
 
   it('keeps the shared app confirmation shell mobile-safe and app-owned', () => {
     const source = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
+    const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
     const confirmUtils = readFileSync(`${import.meta.dirname}/../components/appConfirmUtils.js`, 'utf8');
 
     expect(source).toContain('handleAppConfirmKeyDown');
@@ -235,10 +235,11 @@ describe('app-owned scoring prompts', () => {
     expect(confirmUtils).toContain('!hasBrowserModifier');
     expect(source).toContain('tabIndex={-1}');
     expect(source).toContain("tone: 'danger'");
-    expect(source).toContain('.app-confirm-danger');
     expect(source).toContain('.app-scoring-notice');
-    expect(source).toContain('@media (max-width: 767px)');
-    expect(source).toContain('env(safe-area-inset-bottom, 0px)');
+    // The confirm dialog shell lives in mono.css (colour audit migration PR 6).
+    expect(monoCss).toContain('.app-confirm-danger');
+    expect(monoCss).toMatch(/@media \(max-width: 767px\)\s*\{\s*\.app-confirm-backdrop/);
+    expect(monoCss).toMatch(/\.app-confirm-backdrop\s*\{[^}]*env\(safe-area-inset-bottom, 0px\)/);
   });
 
   it('keeps active scorer layouts compact and thumb-reachable on mobile', () => {

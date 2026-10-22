@@ -533,7 +533,7 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
       <div style={{ marginBottom: 20 }}>
         <label style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>TOURNAMENT NAME</label>
         <input value={tourneyName} onChange={e => setTourneyName(e.target.value)} placeholder="e.g. Office Volleyball Cup"
-          style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${tourneyName.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
+          style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${tourneyName.trim() ? t.blue : t.border}`, background: 'transparent', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
       </div>
       <div style={{ marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -547,7 +547,7 @@ function TournamentInput({ tourneyName, setTourneyName, tourneyTeams, filledTour
             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontFamily: MONO, fontSize: '0.5625rem', fontWeight: 700, color: tm.trim() ? t.blue : t.textFaint, width: 18, textAlign: 'center', flexShrink: 0 }}>{idx + 1}</span>
               <input value={tm} onChange={e => updateTourneyTeam(idx, e.target.value)} placeholder={`Team ${idx + 1}`}
-                style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `1.5px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
+                style={{ flex: 1, padding: '8px 10px', fontSize: '0.8125rem', border: 'none', borderBottom: `1.5px solid ${tm.trim() ? t.blue : t.border}`, background: 'transparent', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box', minWidth: 0 }} />
               {tourneyTeams.length > 3 && (
                 <span
                   role="button"
@@ -591,13 +591,13 @@ function QuickMatchInput({ team1, setTeam1, team2, setTeam2, mobile }) {
         <div style={{ flex: 1 }}>
           <label style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 1</label>
           <input value={team1} onChange={e => setTeam1(e.target.value)} placeholder="e.g. Eagles"
-            style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team1 ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team1 ? t.blue : t.border}`, background: 'transparent', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
         </div>
         <div style={{ fontFamily: MONO, fontSize: '0.625rem', color: t.textFaint, fontWeight: 600, padding: mobile ? '0' : '0 8px', alignSelf: mobile ? 'center' : 'flex-end', marginBottom: mobile ? 0 : 12 }}>VS</div>
         <div style={{ flex: 1 }}>
           <label style={{ fontFamily: MONO, fontSize: '0.5625rem', color: t.textMuted, letterSpacing: '0.06em', display: 'block', marginBottom: 6 }}>PLAYER / TEAM 2</label>
           <input value={team2} onChange={e => setTeam2(e.target.value)} placeholder="e.g. Hawks"
-            style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team2 ? t.blue : t.border}`, background: 'transparent', outline: 'none', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '10px 12px', fontSize: '0.875rem', border: 'none', borderBottom: `2px solid ${team2 ? t.blue : t.border}`, background: 'transparent', color: t.text, fontFamily: SWISS, transition: 'border-color 200ms ease', boxSizing: 'border-box' }} />
         </div>
       </div>
     </div>

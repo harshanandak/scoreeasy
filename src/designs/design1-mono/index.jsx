@@ -1019,98 +1019,6 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
           min-height: 34px;
         }
 
-        .app-confirm-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 300;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.28);
-          padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
-          backdrop-filter: blur(2px);
-        }
-
-        .app-confirm-backdrop-button {
-          position: absolute;
-          inset: 0;
-          border: 0;
-          background: transparent;
-          cursor: pointer;
-        }
-
-        .app-confirm-dialog {
-          position: relative;
-          z-index: 1;
-          width: min(480px, 100%);
-          max-height: min(720px, calc(100vh - 40px));
-          overflow: auto;
-          border: var(--se-border-standard) solid var(--se-color-line-strong);
-          border-radius: var(--se-radius-card);
-          background: var(--se-color-surface);
-          color: var(--se-color-ink-strong);
-          box-shadow: var(--se-shadow-hard);
-          padding: 26px;
-        }
-
-        .app-confirm-eyebrow {
-          color: var(--se-color-action);
-          font-family: var(--se-font-mono);
-          font-size: 0.6875rem;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          margin: 0 0 10px;
-          text-transform: uppercase;
-        }
-
-        .app-confirm-title {
-          color: var(--se-color-ink-strong);
-          font-size: 1.25rem;
-          font-weight: 800;
-          line-height: 1.2;
-          margin: 0 0 10px;
-        }
-
-        .app-confirm-message {
-          color: var(--se-color-ink-soft);
-          font-size: 0.9375rem;
-          line-height: 1.5;
-          margin: 0 0 24px;
-        }
-
-        .app-confirm-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-        }
-
-        .app-confirm-primary,
-        .app-confirm-secondary {
-          min-height: 48px;
-          border: var(--se-border-standard) solid var(--se-color-line-strong);
-          border-radius: var(--se-radius-button);
-          cursor: pointer;
-          font-size: 0.875rem;
-          font-weight: 700;
-          padding: 12px 18px;
-          touch-action: manipulation;
-        }
-
-        .app-confirm-primary {
-          background: var(--se-color-action);
-          color: var(--se-color-inverse);
-        }
-
-        .app-confirm-danger {
-          background: var(--se-color-ink-strong);
-          color: var(--se-color-inverse);
-        }
-
-        .app-confirm-secondary {
-          background: var(--se-color-surface);
-          color: var(--se-color-ink-strong);
-        }
-
         .app-scoring-notice {
           display: flex;
           align-items: center;
@@ -1174,29 +1082,6 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           body.has-mobile-input-focus {
             padding-bottom: 0;
-          }
-
-          .app-confirm-backdrop {
-            align-items: flex-end;
-            padding: 16px 16px max(16px, env(safe-area-inset-bottom, 0px));
-          }
-
-          .app-confirm-dialog {
-            width: 100%;
-            max-height: min(88vh, 680px);
-            padding: 20px;
-            box-shadow: var(--se-shadow-hard);
-          }
-
-          .app-confirm-actions {
-            flex-direction: column-reverse;
-            align-items: stretch;
-          }
-
-          .app-confirm-primary,
-          .app-confirm-secondary {
-            width: 100%;
-            min-height: 50px;
           }
 
           .app-scoring-notice {

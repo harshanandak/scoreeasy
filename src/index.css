@@ -1,33 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&family=Barlow+Condensed:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&family=Barlow+Condensed:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=Figtree:wght@400..900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.9782 0.0039 145.5458);
-  --foreground: oklch(0 0 0);
-  --card: oklch(0.9855 0.0026 145.5558);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(0.9855 0.0026 145.5558);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.6230 0.1688 149.1777);
+  --background: #f4f5f7;
+  --foreground: #0b0b0d;
+  --card: #ffffff;
+  --card-foreground: #0b0b0d;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0d;
+  --primary: #00662a;
   --primary-foreground: oklch(1.0000 0 0);
   --secondary: oklch(0.6270 0.1940 149.2140);
   --secondary-foreground: oklch(1.0000 0 0);
-  --muted: oklch(0.9398 0.0035 145.5478);
-  --muted-foreground: oklch(0.5103 0 0);
+  --muted: #eceef2;
+  --muted-foreground: #5f6067;
   --accent: oklch(0.9231 0.0773 156.7494);
-  --accent-foreground: oklch(0.4104 0.1066 149.9393);
-  --destructive: oklch(0.5308 0.2178 29.2339);
+  --accent-foreground: #004720;
+  --destructive: #b42318;
   --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0 0 0);
-  --input: oklch(0 0 0);
+  --border: #0b0b0d;
+  --input: #0b0b0d;
   --ring: oklch(0.6230 0.1688 149.1777);
   --chart-1: oklch(0.6230 0.1688 149.1777);
   --chart-2: oklch(0.6082 0.1213 58.2537);
   --chart-3: oklch(0.5740 0.1219 238.1136);
   --chart-4: oklch(0.8153 0.1652 85.6698);
-  --chart-5: oklch(0.3211 0 0);
+  --chart-5: #4a4b52;
   --sidebar: oklch(0.9782 0.0039 145.5458);
   --sidebar-foreground: oklch(0 0 0);
   --sidebar-primary: oklch(0.6230 0.1688 149.1777);
@@ -36,7 +36,7 @@
   --sidebar-accent-foreground: oklch(0.4104 0.1066 149.9393);
   --sidebar-border: oklch(0 0 0);
   --sidebar-ring: oklch(0.6230 0.1688 149.1777);
-  --font-sans: Inter, ui-sans-serif, sans-serif, system-ui;
+  --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif;
   --font-serif: Merriweather, ui-serif, serif;
   --font-mono: JetBrains Mono, ui-monospace, monospace;
   --radius: 0.25rem;
@@ -57,8 +57,16 @@
   --tracking-normal: 0;
   --se-font-mono: var(--font-mono);
   --se-font-sans: var(--font-sans);
+  /* Kit type (plan 2026-10-22 §4): display headlines, UI text, tabular numerals */
+  --se-font-display: 'Bricolage Grotesque', var(--font-sans);
+  --se-font-num: 'Barlow Condensed', var(--font-sans);
+
+  /* Kit colour roles (plan 2026-10-22 §2). Light is primary; `.dark` on <html> swaps the
+     neutrals (block below). palette.js mirrors every value; palette.test.js gates drift
+     and contrast in both themes. */
   --se-color-action: var(--primary);
-  --se-color-focus-ring: oklch(0.58 0.22 255);
+  --se-color-action-hi: #007c34;
+  --se-color-focus-ring: var(--se-color-ink);
   --se-color-action-soft: var(--accent);
   --se-color-action-strong: var(--accent-foreground);
   --se-color-canvas: var(--background);
@@ -71,11 +79,36 @@
   --se-color-ink-faint: var(--muted-foreground);
   --se-color-line: var(--border);
   --se-color-line-strong: var(--border);
+  --se-color-line-soft: color-mix(in srgb, var(--se-color-ink) 10%, transparent);
   --se-color-inverse: var(--primary-foreground);
-  --se-color-danger: oklch(0.49 0.17 29);
-  --se-color-danger-soft: oklch(0.96 0.04 29);
-  --se-color-warning: oklch(0.54 0.12 78);
-  --se-color-warning-soft: oklch(0.96 0.05 86);
+  --se-color-on-ink: #ffffff;
+  --se-color-live: #00662a;
+  --se-color-live-soft: #d9f6dd;
+  --se-color-gold: #f5b700;
+  --se-color-gold-ink: #7a5410;
+  --se-color-gold-soft: #fff1c2;
+  --se-color-on-gold: #0b0b0d;
+  /* foregrounds for text and marks that sit ON an ink surface (dark banners, hero cards):
+     the Go green is a fill and fails as text on ink (2.75:1), so ink surfaces get their own */
+  --se-color-action-on-ink: #5ee08f;
+  --se-color-warning-on-ink: var(--se-color-gold);
+  --se-color-danger: #b42318;
+  --se-color-danger-soft: #fbe9e7;
+  --se-color-warning: var(--se-color-gold-ink);
+  --se-color-warning-soft: var(--se-color-gold-soft);
+  --se-color-scrim: rgba(11, 11, 13, 0.45);
+  --se-color-shadow: var(--se-color-ink);
+
+  /* Mono-strength controls (.se-ctl, .se-go) and the soft lift every other surface gets */
+  --se-ctl-border: 2px;
+  --se-ctl-radius: 14px;
+  --se-ctl-bg: var(--se-color-surface);
+  --se-ctl-shadow: 3px 3px 0 var(--se-color-ink);
+  --se-ctl-shadow-press: 1px 1px 0 var(--se-color-ink);
+  --se-go-edge: var(--se-color-ink);
+  --se-modal-lift: 0 24px 60px -28px color-mix(in oklab, var(--se-color-shadow) 60%, transparent);
+  --se-lift: 0 1px 2px color-mix(in oklab, var(--se-color-ink) 6%, transparent),
+    0 14px 30px -18px color-mix(in oklab, var(--se-color-ink) 45%, transparent);
   --se-border-standard: 1.5px;
   --se-radius-button: var(--radius);
   --se-radius-card: calc(var(--radius) + 4px);
@@ -87,9 +120,10 @@
      HiFi-BLEND TOKEN LAYER  ·  M1 foundation  ·  FROZEN API (blend-8a30cb91)
      ----------------------------------------------------------------------------
      Additive only. These rounded/soft/gold/live properties sit ON TOP of the
-     brutalist Mono tokens above (pure-black ink & borders, hard `3px 3px 0`
-     zero-blur shadow, tight 4-8px radii, Inter/JetBrains Mono) — none of which
-     change. Downstream screens opt into blend; scoring/live exceptions follow
+     role tokens above (the Kit roles since 2026-10-22: near-black ink and
+     edges, hard `3px 3px 0` control shadow, Figtree/Barlow Condensed).
+     --se-blend-gold is now an alias of --se-color-gold (Kit §2).
+     Downstream screens opt into blend; scoring/live exceptions follow
      rule 7 below.
 
      ── BLEND-GOVERNANCE CONTRACT (full text: BLEND-GOVERNANCE.md) ──────────────
@@ -130,7 +164,7 @@
   --se-blend-shadow-cta: 0 8px 24px -6px rgba(35, 120, 75, 0.42);
 
   /* Gold milestone accent — ONE per screen (contract §2) */
-  --se-blend-gold: #b8862e;
+  --se-blend-gold: var(--se-color-gold);
   --se-blend-gold-bright: #e8b64c;
 
   /* LIVE breathing pulse timing (helper class + reduced-motion gate below) */
@@ -154,6 +188,41 @@
   --team-b-tint: #e4edff;
   --team-b-line: #2d57be;
   --team-b-motif: rgba(0, 0, 0, 0.17);
+}
+
+/* Kit dark (plan 2026-10-22 §2 and §4): swaps the neutral roles only; Go, sport and team
+   gradients keep their values because the engine gates are absolute. Opt-in with `.dark`
+   on <html> (the aliases above resolve there); nothing sets it yet. */
+.dark {
+  color-scheme: dark;
+  --background: #0e0f12;
+  --foreground: #f4f5f7;
+  --card: #191a1f;
+  --card-foreground: #f4f5f7;
+  --popover: #191a1f;
+  --popover-foreground: #f4f5f7;
+  --muted: #25272d;
+  --muted-foreground: #a2a4ab;
+  --border: #f4f5f7;
+  --input: #f4f5f7;
+  --chart-5: #b9bbc2;
+  --se-color-line-soft: color-mix(in srgb, var(--se-color-ink) 12%, transparent);
+  --se-color-on-ink: #0b0b0d;
+  --se-color-action-on-ink: #00662a;
+  --se-color-warning-on-ink: #7a5410;
+  --se-color-live: #7ee2a2;
+  --se-color-live-soft: #123321;
+  --se-color-gold-ink: #f5c84c;
+  --se-color-gold-soft: #3a2f0c;
+  --se-color-danger: #ff8f84;
+  --se-color-danger-soft: #3a1714;
+  --se-color-scrim: rgba(0, 0, 0, 0.6);
+  --se-color-shadow: #000000;
+  --se-ctl-bg: #202228;
+  --se-ctl-shadow: 3px 3px 0 #000000, 3px 3px 0 1px rgba(244, 245, 247, 0.35);
+  --se-ctl-shadow-press: 1px 1px 0 #000000;
+  --se-go-edge: #000000;
+  --se-lift: 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 30px -18px rgba(0, 0, 0, 0.9);
 }
 
 @theme inline {
@@ -279,10 +348,72 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Focus is ink (Kit §2): a 3px outline 3px off the control, so it never sits on a team or
+   sport colour and never replaces a control's own offset shadow. */
 :where(button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 3px solid var(--se-color-focus-ring);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px color-mix(in oklch, var(--se-color-focus-ring) 18%, transparent);
+}
+
+/* ---- Kit controls (plan 2026-10-22 §4) ----
+   .se-ctl: the Mono-strength control. Anything you press keeps a defined edge: 2px ink border,
+   3px ink offset shadow, a 2px press. Every other surface gets a hairline and the soft lift.
+   .se-go: the ONE forward action per screen, a 168deg Go gradient with a white label (5.34:1 on
+   the lightest stop, 7.16:1 on the core). Never a second one on the same screen. */
+.se-ctl,
+.se-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: var(--se-ctl-border) solid var(--se-color-ink);
+  border-radius: var(--se-ctl-radius);
+  box-shadow: var(--se-ctl-shadow);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.se-ctl {
+  background: var(--se-ctl-bg);
+  color: var(--se-color-ink);
+}
+
+.se-go {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 20px;
+  border-color: var(--se-go-edge);
+  background: linear-gradient(168deg, var(--se-color-action-hi), var(--se-color-action) 55%, var(--se-color-action-strong));
+  color: var(--se-color-inverse);
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+:where(.se-ctl, .se-go):active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+/* Disabled stays visible (Undo is always on screen): a dashed edge, no lift, quieter ink. */
+.se-ctl:disabled {
+  cursor: default;
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  box-shadow: none;
+  color: color-mix(in oklab, var(--se-color-ink) 62%, var(--se-color-surface));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se-ctl,
+  .se-go {
+    transition: none;
+  }
 }
 
 :where(button, input, select, textarea):disabled,

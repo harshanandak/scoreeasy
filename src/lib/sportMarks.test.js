@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SPORT_MARKS, sportMarkMaskUrl } from './sportMarks';
+import { SPORT_MARKS, cutOut, sportMarkMaskUrl } from './sportMarks';
 import { getSportById } from '../models/sportRegistry';
 
 // The "show the game" mark on the scorer: a sport's ball-and-action silhouette, used as a CSS
@@ -18,6 +18,21 @@ describe('sportMarkMaskUrl', () => {
 
   it('cuts the ball seams out of the silhouette (a mask, not a stroke)', () => {
     expect(SPORT_MARKS.volleyball).toContain('<mask');
+  });
+
+  it('cuts with the shared luminance mask, so a mark carries no colour literal of its own', () => {
+    const mask = cutOut('x', "<path d='M0 0H1'/>", { transform: 'scale(2)', strokeAttrs: "stroke-width='3'" });
+    expect(mask).toBe(
+      "<defs><mask id='x' maskUnits='userSpaceOnUse' x='0' y='0' width='140' height='100'>"
+        + "<rect width='140' height='100' fill='#fff'/>"
+        + "<g transform='scale(2)' fill='none' stroke='#000' stroke-width='3'><path d='M0 0H1'/></g></mask></defs>",
+    );
+    expect(cutOut('y', '')).toContain("<g fill='none' stroke='#000'></g>");
+    // Everything a mark adds beyond cutOut() is geometry: no hex or colour function.
+    for (const [id, markup] of Object.entries(SPORT_MARKS)) {
+      const own = markup.replace(/<defs>[\s\S]*?<\/defs>/g, '');
+      expect(own, id).not.toMatch(/#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch)\(/i);
+    }
   });
 
   it('returns null for sports without a mark, including inherited keys', () => {
