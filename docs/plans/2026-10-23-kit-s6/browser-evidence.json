@@ -1,32 +1,2349 @@
 {
-  "status": "T3 screenshots and viewport measurements pending for Harsha",
-  "browser": "T3 integrated tools only after the updated instruction",
+  "status": "captured and measured with T3 html_preview",
+  "evidenceRung": 5,
+  "evidenceBoundary": "Rendered isolated fixture pages using real components; no deployed backend or real Clerk widget exercised.",
+  "browser": "T3 html_preview only",
   "liveSystemWrites": false,
-  "previewPanel": "Unavailable for this thread, confirmed by Harsha",
-  "htmlPreviewAttempts": [
-    {
-      "width": 390,
-      "iframeHeight": 844,
-      "route": "/live?feed=full",
-      "appearance": "light",
-      "result": "the page did not finish loading within 20 seconds"
-    },
-    {
-      "width": 390,
-      "iframeHeight": 844,
-      "route": "/.kit-preview/probe.html",
-      "appearance": "light",
-      "result": "the page did not finish loading within 20 seconds"
-    },
-    {
-      "width": 360,
-      "iframeHeight": 640,
-      "route": "/live?feed=empty&theme=dark",
-      "appearance": "dark",
-      "result": "the page did not finish loading within 20 seconds"
-    }
+  "outerViewportWorkaround": "For 844px frames, scroll only the outer wrapper by 44px before full-page capture so the dock labels rasterize; the iframe remains 390x844 at scrollY 0.",
+  "originalPrHead": "9aa5c3e1b1e44f313b5dc1e2f6a4607f8c9323c7",
+  "rebasedProductHead": "0a4aa76658fddf10c2e32ed3208abef19b346d3c",
+  "baselineRefs": [
+    "0e7d3b702e524e32e62352cb8341d7601ee31947",
+    "997abde2fb17ce8b8925d02d5c9547af9cb6748e"
   ],
-  "pngsProduced": 0,
-  "localFixtureHarness": ".kit-preview/ (uncommitted), port 5181",
-  "previousCapturesRemovedFromFinalContents": true
+  "baselineFiles": [
+    "src/designs/design1-mono/index.jsx",
+    "src/designs/design1-mono/live/LiveNowStrip.jsx"
+  ],
+  "baselineFilesIdenticalAcrossRefs": true,
+  "pngsProduced": 21,
+  "localFixtureHarness": ".kit-preview/ (uncommitted)",
+  "captureAdaptations": [
+    "IIFE library build; auth and Convex use existing mock.jsx",
+    "Only Home and Live route implementations bundled; captured routes eagerly imported",
+    "Embedded app fonts; viewport CSS units converted to exact frame pixels",
+    "Home mount fade settled for capture only",
+    "Extra compact list capture scrolled to show Paused above dock"
+  ],
+  "discardedAttempts": [
+    "preview document exceeded 512000 characters before route trimming",
+    "early lazy-route skeleton and Home fade",
+    "transient preview timeouts; retried with lower concurrency"
+  ],
+  "visualBugsFound": [],
+  "limitations": [
+    "Actual Clerk widget not exercised: Account uses supplied 48x48 mock",
+    "Filter and browser-back transitions retain existing unit-test evidence; not walked by this capture task"
+  ],
+  "captures": [
+    {
+      "file": "before-home-in-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "before",
+        "state": "home-in",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 81,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 81,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 98,
+          "y": 564.15625,
+          "width": 81,
+          "height": 62.84375,
+          "target": {
+            "x": 98,
+            "y": 564.15625,
+            "width": 81,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 181,
+          "y": 564.15625,
+          "width": 81,
+          "height": 62.84375,
+          "target": {
+            "x": 181,
+            "y": 564.15625,
+            "width": 81,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 264,
+          "y": 564.15625,
+          "width": 81,
+          "height": 62.84375,
+          "target": {
+            "x": 280.5,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "before-home-out-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "before",
+        "state": "home-out",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 15,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 98,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 98,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 181,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 181,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Sign in",
+          "x": 264,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 264,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 36.78125,
+          "textWidth": 36.78125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "before-home-in-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "before",
+        "state": "home-in",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 88.5,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 88.5,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 105.5,
+          "y": 768.15625,
+          "width": 88.5,
+          "height": 62.84375,
+          "target": {
+            "x": 105.5,
+            "y": 768.15625,
+            "width": 88.5,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 196,
+          "y": 768.15625,
+          "width": 88.5,
+          "height": 62.84375,
+          "target": {
+            "x": 196,
+            "y": 768.15625,
+            "width": 88.5,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 286.5,
+          "y": 768.15625,
+          "width": 88.5,
+          "height": 62.84375,
+          "target": {
+            "x": 306.75,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "before-home-out-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "before",
+        "state": "home-out",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 777,
+          "width": 88.5,
+          "height": 54,
+          "target": {
+            "x": 15,
+            "y": 777,
+            "width": 88.5,
+            "height": 54
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 105.5,
+          "y": 777,
+          "width": 88.5,
+          "height": 54,
+          "target": {
+            "x": 105.5,
+            "y": 777,
+            "width": 88.5,
+            "height": 54
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 196,
+          "y": 777,
+          "width": 88.5,
+          "height": 54,
+          "target": {
+            "x": 196,
+            "y": 777,
+            "width": 88.5,
+            "height": 54
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Sign in",
+          "x": 286.5,
+          "y": 777,
+          "width": 88.5,
+          "height": 54,
+          "target": {
+            "x": 286.5,
+            "y": 777,
+            "width": 88.5,
+            "height": 54
+          },
+          "labelWidth": 36.78125,
+          "textWidth": 36.78125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-home-in-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "home-in",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-home-out-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "home-out",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 573,
+          "width": 64.390625,
+          "height": 54,
+          "target": {
+            "x": 15,
+            "y": 573,
+            "width": 64.390625,
+            "height": 54
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 573,
+          "width": 64.40625,
+          "height": 54,
+          "target": {
+            "x": 81.390625,
+            "y": 573,
+            "width": 64.40625,
+            "height": 54
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 573,
+          "width": 64.390625,
+          "height": 54,
+          "target": {
+            "x": 147.796875,
+            "y": 573,
+            "width": 64.390625,
+            "height": 54
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 573,
+          "width": 64.40625,
+          "height": 54,
+          "target": {
+            "x": 214.1875,
+            "y": 573,
+            "width": 64.40625,
+            "height": 54
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Sign in",
+          "x": 280.59375,
+          "y": 573,
+          "width": 64.40625,
+          "height": 54,
+          "target": {
+            "x": 280.59375,
+            "y": 573,
+            "width": 64.40625,
+            "height": 54
+          },
+          "labelWidth": 36.78125,
+          "textWidth": 36.78125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-home-in-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "home-in",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-home-out-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "home-out",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 777,
+          "width": 70.390625,
+          "height": 54,
+          "target": {
+            "x": 15,
+            "y": 777,
+            "width": 70.390625,
+            "height": 54
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 777,
+          "width": 70.40625,
+          "height": 54,
+          "target": {
+            "x": 87.390625,
+            "y": 777,
+            "width": 70.40625,
+            "height": 54
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 777,
+          "width": 70.390625,
+          "height": 54,
+          "target": {
+            "x": 159.796875,
+            "y": 777,
+            "width": 70.390625,
+            "height": 54
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 777,
+          "width": 70.40625,
+          "height": 54,
+          "target": {
+            "x": 232.1875,
+            "y": 777,
+            "width": 70.40625,
+            "height": 54
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Sign in",
+          "x": 304.59375,
+          "y": 777,
+          "width": 70.40625,
+          "height": 54,
+          "target": {
+            "x": 304.59375,
+            "y": 777,
+            "width": 70.40625,
+            "height": 54
+          },
+          "labelWidth": 36.78125,
+          "textWidth": 36.78125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-full-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-full",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 4,
+        "paused": 1,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-empty-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-empty",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-loading-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-loading",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": true,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-dark-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-dark",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 4,
+        "paused": 1,
+        "loading": false,
+        "empty": false,
+        "dark": true,
+        "canvas": "#0e0f12"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-empty-dark-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-empty-dark",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": true,
+        "canvas": "#0e0f12"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-full-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-full",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 4,
+        "paused": 1,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-empty-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-empty",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-loading-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-loading",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": true,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-dark-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-dark",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 4,
+        "paused": 1,
+        "loading": false,
+        "empty": false,
+        "dark": true,
+        "canvas": "#0e0f12"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-empty-dark-390.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-empty-dark",
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "bodyScrollWidth": 390,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": true,
+        "canvas": "#0e0f12"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 87.390625,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 87.390625,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 159.796875,
+          "y": 768.15625,
+          "width": 70.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 159.796875,
+            "y": 768.15625,
+            "width": 70.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 232.1875,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 232.1875,
+            "y": 768.15625,
+            "width": 70.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 304.59375,
+          "y": 768.15625,
+          "width": 70.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 315.796875,
+            "y": 768.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-error-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-error",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-offline-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-offline",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 0,
+        "liveRows": 0,
+        "paused": 0,
+        "loading": false,
+        "empty": true,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 15,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 98,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 98,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 181,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 181,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 264,
+          "y": 573,
+          "width": 81,
+          "height": 54,
+          "target": {
+            "x": 264,
+            "y": 573,
+            "width": 81,
+            "height": 54
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    },
+    {
+      "file": "after-live-scrolled-360.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      },
+      "measurements": {
+        "version": "after",
+        "state": "live-scrolled",
+        "width": 360,
+        "height": 640,
+        "scrollWidth": 360,
+        "bodyScrollWidth": 360,
+        "horizontalOverflow": false,
+        "dockLiveDots": 1,
+        "liveRows": 4,
+        "paused": 1,
+        "loading": false,
+        "empty": false,
+        "dark": false,
+        "canvas": "#f4f5f7"
+      },
+      "dockTabs": [
+        {
+          "label": "Home",
+          "x": 15,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 15,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 32.65625,
+          "textWidth": 32.65625,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Play",
+          "x": 81.390625,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 81.390625,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 23.03125,
+          "textWidth": 23.03125,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Live",
+          "x": 147.796875,
+          "y": 564.15625,
+          "width": 64.390625,
+          "height": 62.84375,
+          "target": {
+            "x": 147.796875,
+            "y": 564.15625,
+            "width": 64.390625,
+            "height": 62.84375
+          },
+          "labelWidth": 22.421875,
+          "textWidth": 22.421875,
+          "labelClipped": false,
+          "ariaCurrent": "page"
+        },
+        {
+          "label": "History",
+          "x": 214.1875,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 214.1875,
+            "y": 564.15625,
+            "width": 64.40625,
+            "height": 62.84375
+          },
+          "labelWidth": 40.34375,
+          "textWidth": 40.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        },
+        {
+          "label": "Account",
+          "x": 280.59375,
+          "y": 564.15625,
+          "width": 64.40625,
+          "height": 62.84375,
+          "target": {
+            "x": 288.796875,
+            "y": 564.15625,
+            "width": 48,
+            "height": 48
+          },
+          "labelWidth": 46.34375,
+          "textWidth": 46.34375,
+          "labelClipped": false,
+          "ariaCurrent": null
+        }
+      ]
+    }
+  ]
 }
