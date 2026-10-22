@@ -1,0 +1,516 @@
+/* Kit History and Profile (plan 2026-10-22 §9 S4, prototype `history` / `profile`).
+   Compact cards, no slabs. Colour only from --se-color-* tokens and engine output (--sport-* from
+   sportIdentity), so dark mode is a token swap. Hand-drawn: the row doodle badges (KitParts
+   SportBadge) and the empty-history scorebook; numbers, scores and names are never hand-drawn. */
+
+.kit-card {
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+/* ---- the month card: total, the stack bar and its legend (one set of counts) ---- */
+.kit-month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.kit-month-head h2 {
+  margin: 0;
+  color: var(--se-color-ink);
+  font: 750 1rem/1.2 var(--se-font-display);
+  letter-spacing: -0.01em;
+}
+
+.kit-month-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.kit-month-total b {
+  font: 800 2.5rem/0.95 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-stack {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  margin: 10px 0;
+}
+
+.kit-stack i {
+  display: block;
+  min-width: 6px;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sport-hi, var(--se-color-ink-soft)), var(--sport-core, var(--se-color-ink-soft)));
+}
+
+.kit-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.84rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.kit-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kit-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink-soft));
+}
+
+.kit-legend b {
+  color: var(--se-color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- filters ---- */
+.kit-chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 2px 16px 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kit-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.kit-chips-wrap {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.kit-fchip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--se-color-ink);
+  font: 650 0.94rem var(--se-font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-fchip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink-soft));
+}
+
+.kit-fchip b {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-fchip[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  box-shadow: none;
+  color: var(--se-color-on-ink);
+}
+
+/* The sport dot on an ink fill gets a ring of on-ink so a dark sport colour stays visible. */
+.kit-fchip[aria-pressed='true'] i {
+  box-shadow: 0 0 0 2px var(--se-color-on-ink);
+}
+
+.kit-findbar {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.kit-search {
+  flex: 1;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--se-color-ink);
+  font: 550 1rem var(--se-font-sans);
+}
+
+.kit-search::placeholder {
+  color: var(--se-color-ink-muted);
+}
+
+.kit-filter-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+
+.kit-filter-panel h3 {
+  margin: 0 0 8px;
+  color: var(--se-color-ink-soft);
+  font: 700 0.85rem/1.2 var(--se-font-sans);
+}
+
+/* ---- list extras ---- */
+.kit-row-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kit-row-score.is-long {
+  font-size: 1.05rem;
+}
+
+.kit-quiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-danger);
+  font: 650 0.9rem var(--se-font-sans);
+  cursor: pointer;
+}
+
+.kit-quiet.kit-clear {
+  color: var(--se-color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kit-confirm {
+  margin-top: 12px;
+}
+
+.kit-confirm p {
+  margin: 0 0 4px;
+  font-weight: 750;
+}
+
+.kit-confirm p + p {
+  margin-bottom: 12px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.kit-btnstack {
+  display: grid;
+  gap: 10px;
+}
+
+.kit-btnstack .se-go {
+  min-height: 52px;
+}
+
+.se-ctl.kit-danger {
+  border-color: var(--se-color-danger);
+  box-shadow: 3px 3px 0 var(--se-color-danger);
+  color: var(--se-color-danger);
+}
+
+/* ---- empty History ---- */
+.kit-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12px;
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+
+.kit-empty-art {
+  width: 150px;
+  height: auto;
+  margin-bottom: 8px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--se-color-ink);
+  stroke-width: 2.25px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-empty h2 {
+  margin: 0;
+  font: 800 1.3rem/1.15 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-empty p {
+  margin: 6px 0 16px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+}
+
+.kit-empty .kit-btnstack {
+  width: 100%;
+}
+
+/* ---- the status / undo bar: above the dock, so it is visible wherever the list is scrolled ---- */
+.kit-toast {
+  position: fixed;
+  z-index: 205;
+  right: 16px;
+  bottom: 24px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  min-height: 48px;
+  margin: 0 auto;
+  padding: 6px 6px 6px 16px;
+  border-radius: 16px;
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.kit-toast span {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-toast button {
+  flex: none;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font: 800 0.92rem var(--se-font-sans);
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .kit-toast {
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---- match details sheet ---- */
+.kit-detail {
+  color: var(--se-color-ink);
+}
+
+.kit-detail-meta {
+  margin: 0 0 12px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.kit-detail-teams {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.kit-detail-team {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 1.05rem;
+  font-weight: 550;
+}
+
+.kit-detail-team span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.kit-detail-team.is-winner {
+  font-weight: 850;
+}
+
+.kit-detail-result {
+  margin: 0 0 16px;
+  font: 800 1.6rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Profile ---- */
+.kit-prof {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0 0;
+  text-align: center;
+}
+
+.kit-ring {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  padding: 7px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--kit-ring, var(--se-color-surface-warm));
+}
+
+.kit-ring > * {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  box-shadow: 0 0 0 3px var(--se-color-canvas);
+  object-fit: cover;
+  font: 800 2rem var(--se-font-display);
+  letter-spacing: -0.03em;
+}
+
+.kit-prof h1 {
+  margin: 12px 0 2px;
+  font: 800 1.7rem/1.05 var(--se-font-display);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.kit-prof .kit-sub {
+  font-size: 0.9rem;
+}
+
+.kit-statline {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-stat-cols, 3), minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-statline li {
+  text-align: center;
+}
+
+.kit-statline b {
+  display: block;
+  font: 800 2rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-statline span {
+  color: var(--se-color-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.kit-brow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 14px;
+}
+
+.kit-brow + .kit-brow {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-brow-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.kit-brow-track {
+  height: 8px;
+  margin: 6px 0 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+}
+
+.kit-brow-track i {
+  display: block;
+  width: var(--kit-p, 0%);
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sport-hi, var(--se-color-ink-soft)), var(--sport-core, var(--se-color-ink-soft)));
+}
+
+.kit-brow-sub {
+  color: var(--se-color-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-brow-count {
+  font: 800 1.45rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-note {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+}
+
+.kit-recovery h1 {
+  margin: 0 0 6px;
+  font: 800 1.45rem/1.12 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-recovery p {
+  margin: 0 0 16px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.92rem;
+}

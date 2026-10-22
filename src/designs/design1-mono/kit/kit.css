@@ -551,6 +551,40 @@ button.kit-row {
   text-align: center;
 }
 
+/* ---- segmented control (S2 setup formats, S4 History's Matches / Stats tabs) ----
+   A sunk track; the chosen one (aria-pressed, or aria-selected for tabs) is a Mono-strength control. */
+.kit-seg {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-seg-cols, 3), minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--se-color-surface-warm);
+}
+
+.kit-seg button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 650 0.94rem/1.12 var(--se-font-sans);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-seg button[aria-pressed='true'],
+.kit-seg button[aria-selected='true'] {
+  border-color: var(--se-color-ink);
+  background: var(--se-ctl-bg);
+  box-shadow: 2px 2px 0 var(--se-color-ink);
+  font-weight: 800;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kit-tile {
     transition: none;

@@ -79,9 +79,26 @@ describe('MonoHistory', () => {
     const detailsButton = await screen.findByRole('button', { name: 'View details: Team A vs Team B' });
     fireEvent.click(detailsButton);
 
-    expect(screen.getByText('Match details')).toBeInTheDocument();
-    expect(screen.getAllByText('Team A vs Team B').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Rematch' })).toBeInTheDocument();
+    const sheet = screen.getByRole('dialog', { name: 'Match details' });
+    expect(within(sheet).getByRole('group', { name: 'Team A vs Team B' })).toBeInTheDocument();
+    expect(within(sheet).getByText('25–22')).toBeInTheDocument();
+    expect(within(sheet).getByText('Team A won')).toBeInTheDocument();
+
+    // Rematch from History carries the pair to quick setup, as Home's does.
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Rematch' }));
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/volleyball/quick');
+  });
+
+  it('closes match details without changing anything', async () => {
+    seedQuickMatch();
+
+    renderHistory();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'View details: Team A vs Team B' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('dialog', { name: 'Match details' })).not.toBeInTheDocument();
+    expect(readQuickMatches()).toHaveLength(1);
   });
 
   it('requires confirmation before deleting a quick match and supports undo', async () => {
@@ -89,16 +106,26 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Delete match Team A vs Team B' }));
+    // Delete lives in the match's details sheet, behind a confirm.
+    fireEvent.click(await screen.findByRole('button', { name: 'View details: Team A vs Team B' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete match Team A vs Team B' }));
 
     expect(screen.getByText('Delete this quick match?')).toBeInTheDocument();
     expect(readQuickMatches()).toHaveLength(1);
 
+    // Cancel keeps the match and returns to its details.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Rematch' })).toBeInTheDocument();
+    expect(readQuickMatches()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete match Team A vs Team B' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => {
       expect(readQuickMatches()).toHaveLength(0);
     });
+    expect(screen.queryByRole('dialog', { name: 'Match details' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Quick match deleted.');
     expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo delete' }));
@@ -179,26 +206,26 @@ describe('MonoHistory', () => {
     expect(screen.queryByRole('button', { name: 'View details: Falcons vs Sharks' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    const sportChips = screen.getByRole('group', { name: 'Filter by sport' });
+    fireEvent.click(within(sportChips).getByRole('button', { name: 'Football' }));
+    expect(within(sportChips).getByRole('button', { name: 'Football' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(sportChips).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Sport' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Sport options' })).getByRole('button', { name: 'Football' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Draws' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Draws' }));
 
     expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Result' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Result options' })).getByRole('button', { name: 'Close' }));
+    expect(within(sportChips).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Close' }));
 
     expect(screen.getByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: City vs United' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Sort' }));
-    fireEvent.click(within(screen.getByRole('group', { name: 'Sort options' })).getByRole('button', { name: 'Oldest' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Sort' })).getByRole('button', { name: 'Oldest' }));
 
     const rows = screen.getAllByRole('button', { name: /^View details:/ });
     expect(rows[0]).toHaveAccessibleName('View details: City vs United');
@@ -281,8 +308,11 @@ describe('MonoHistory', () => {
     renderHistory();
 
     expect(await screen.findByRole('button', { name: 'View details: Real A vs Real B' })).toBeInTheDocument();
-    const summary = screen.getByLabelText('History summary');
-    expect(within(summary).getByText('Quick').parentElement).toHaveTextContent('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    const types = screen.getByRole('group', { name: 'Match type' });
+    expect(within(types).getByRole('button', { name: 'All 1' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(types).getByRole('button', { name: 'Quick 1' })).toBeInTheDocument();
+    expect(within(types).getByRole('button', { name: 'Tournaments 0' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Draft A vs Draft B' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View details: Ghost A vs Ghost B' })).not.toBeInTheDocument();
 
@@ -319,15 +349,94 @@ describe('MonoHistory', () => {
     expect(screen.queryByText('Performance')).not.toBeInTheDocument();
   });
 
-  it('keeps history rows readable instead of disabled-looking', () => {
-    const source = readFileSync(`${import.meta.dirname}/MonoHistory.jsx`, 'utf8');
+  it('keeps History and Profile on tokens: no raw greys (the #888 family) or any other literal', () => {
+    // Kit S4: secondary text is --se-color-ink-soft / -ink-muted; the audit's #888/#bbb greys fail 4.5:1.
+    const literal = /#[0-9a-f]{3,8}\b|rgba?\(/i;
+    for (const file of ['MonoHistory.jsx', 'MonoProfile.jsx', 'kit/history.css']) {
+      const source = readFileSync(`${import.meta.dirname}/${file}`, 'utf8');
+      expect(source, file).not.toMatch(literal);
+    }
+  });
 
-    expect(source).not.toContain("color: '#bbb'");
-    expect(source).not.toContain("color: '#dc2626'");
-    expect(source).not.toContain("borderColor: '#dc2626'");
-    expect(source).not.toContain("border: '1.5px solid #dc2626'");
-    expect(source).toContain('mono-muted-text');
-    expect(source).toContain("var(--muted-foreground)");
-    expect(source).toContain("var(--foreground)");
+  it('sums the month card stack bar and legend to that month\'s list', async () => {
+    const now = new Date();
+    const thisMonth = (day) => new Date(now.getFullYear(), now.getMonth(), day, 12).toISOString();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 10, 12).toISOString();
+    seedQuickMatch([
+      { id: 'a', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 3, score2: 1, winner: 'Royals', completedAt: thisMonth(1) },
+      { id: 'b', sport: 'volleyball', team1: 'Aces', team2: 'Royals', score1: 1, score2: 3, winner: 'Royals', completedAt: thisMonth(1) },
+      { id: 'c', sport: 'cricket', team1: 'Lions', team2: 'Tigers', score1: 164, score2: 158, winner: 'Lions', completedAt: thisMonth(1) },
+      { id: 'd', sport: 'football', team1: 'City', team2: 'United', score1: 2, score2: 2, winner: 'Draw', completedAt: lastMonth },
+    ]);
+
+    renderHistory();
+
+    const monthName = now.toLocaleString('en-GB', { month: 'long' });
+    const sumsToList = async (expected) => {
+      // The card and this month's list section share the month's name.
+      const [card, section] = await screen.findAllByRole('region', { name: monthName });
+      const legend = within(card).getByRole('list', { name: `${monthName} by sport` });
+      const counts = within(legend).getAllByRole('listitem').map((item) => Number(item.querySelector('b').textContent));
+      const bar = [...card.querySelectorAll('.kit-stack i')].map((segment) => Number.parseFloat(segment.style.flexGrow || segment.style.flex));
+      const total = counts.reduce((a, b) => a + b, 0);
+      expect(counts).toEqual(expected);
+      expect(bar).toEqual(counts);
+      expect(card).toHaveTextContent(`${total} matches scored`);
+      expect(within(section).getAllByRole('button', { name: /^View details:/ })).toHaveLength(total);
+      return card;
+    };
+
+    const card = await sumsToList([2, 1]);
+    expect(card).toHaveTextContent('2 sports');
+    // Last month's draw is its own section, outside the card's count.
+    expect(screen.getAllByRole('button', { name: /^View details:/ })).toHaveLength(4);
+
+    // A sport chip re-scopes the card to the filtered list, and it still sums.
+    fireEvent.click(within(screen.getByRole('group', { name: 'Filter by sport' })).getByRole('button', { name: 'Volleyball' }));
+    expect(await sumsToList([2])).toHaveTextContent('1 sport');
+  });
+
+  it('bolds only the winner in row titles and leaves draws plain', async () => {
+    seedQuickMatch([
+      { id: 'w1', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 3, score2: 1, winner: 'Royals', completedAt: '2026-05-18T12:00:00.000Z' },
+      { id: 'w2', sport: 'basketball', team1: 'Hoops', team2: 'Dunkers', score1: 58, score2: 64, winner: 'Dunkers', completedAt: '2026-05-17T12:00:00.000Z' },
+      { id: 'd1', sport: 'football', team1: 'City', team2: 'United', score1: 2, score2: 2, winner: 'Draw', completedAt: '2026-05-16T12:00:00.000Z' },
+    ]);
+
+    renderHistory();
+
+    const strongIn = async (name) => [...(await screen.findByRole('button', { name })).querySelectorAll('strong')].map((el) => el.textContent);
+    expect(await strongIn('View details: Royals vs Strikers')).toEqual(['Royals']);
+    expect(await strongIn('View details: Hoops vs Dunkers')).toEqual(['Dunkers']);
+    expect(await strongIn('View details: City vs United')).toEqual([]);
+  });
+
+  it('paints the selected filter chip as an ink fill', () => {
+    const css = readFileSync(`${import.meta.dirname}/kit/history.css`, 'utf8');
+    const rule = /\.kit-fchip\[aria-pressed='true'\]\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    expect(rule).toContain('background: var(--se-color-ink)');
+    expect(rule).toContain('color: var(--se-color-on-ink)');
+    expect(/\.kit-fchip\s*\{([^}]*)\}/.exec(css)?.[1]).toContain('min-height: 48px');
+  });
+
+  it('badges each row with the sport\'s hand-drawn doodle', async () => {
+    seedQuickMatch();
+
+    renderHistory();
+
+    const row = await screen.findByRole('button', { name: 'View details: Team A vs Team B' });
+    const badge = row.querySelector('.kit-badge');
+    expect(badge).not.toBeNull();
+    expect(badge.style.getPropertyValue('--sport-core')).not.toBe('');
+    expect(badge.querySelector('svg')).not.toBeNull();
+  });
+
+  it('draws the empty state with the hand-drawn scorebook, never over text', () => {
+    renderHistory();
+
+    const empty = screen.getByRole('region', { name: 'No match history yet' });
+    const art = empty.querySelector('svg.kit-empty-art');
+    expect(art).toHaveAttribute('aria-hidden', 'true');
+    expect(art.querySelector('text')).toBeNull();
   });
 });

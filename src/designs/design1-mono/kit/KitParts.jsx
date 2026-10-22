@@ -74,6 +74,69 @@ export function CoachArrow() {
 }
 
 /**
+ * Empty History (empty-history.svg from the hand-drawn layer): an open scorebook with a shuttle and
+ * a pencil, built from the sport doodles. Ink, non-scaling 2.25px strokes; decorative only.
+ */
+export function EmptyHistoryArt() {
+  const strokes = [
+    'M80 34C62 27 42 26 22 30.6C22.6 50 22.4 70 21.6 88.4C42 84 62 85 80.6 92',
+    'M80 34C98 27 118 26 138 30.6C137.4 50 137.6 70 138.4 88.4C118 84 98 85 79.4 92',
+    'M80.2 30C80.6 50 80.4 72 80 96',
+    'M31 45C45 43.4 59 44.2 71 47.4',
+    'M31 57C45 55.4 59 56.2 71 59.4',
+    'M31 69C43 67.6 53 68.2 62 70.4',
+    'M118 99L144 71',
+    'M123.6 102.6L149.4 75',
+    'M118.4 98.6L114.4 106.4L123.4 102.4',
+    'M144.4 70.6C146 69 148.4 69 149.8 70.6C151.2 72.2 151 74.4 149.2 75.6',
+  ];
+  const shuttle = [
+    'M12.5 24c-2-4-3.5-10-2-16',
+    'M19.5 24c2-4 3.5-10 2-16',
+    'M10.5 8c1.5-1 3.2-1.5 5.5-1.5s4 0.5 5.5 1.5',
+    'M13 21c-0.5-3.5-0.5-8 1-13',
+    'M19 21c0.5-3.5 0.5-8-1-13',
+    'M16 22v-15',
+  ];
+  return (
+    <svg className="kit-empty-art" viewBox="0 0 160 110" aria-hidden="true" focusable="false">
+      {strokes.map((d) => <path key={d} d={d} vectorEffect="non-scaling-stroke" />)}
+      <g transform="translate(95 34) rotate(14 16.8 16.8) scale(1.05)">
+        <ellipse cx="16" cy="24" rx="3.5" ry="2.5" vectorEffect="non-scaling-stroke" />
+        {shuttle.map((d) => <path key={d} d={d} vectorEffect="non-scaling-stroke" />)}
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * A filter chip: round, 48px, surface with a hairline; the selected one is an ink fill with
+ * aria-pressed, so selection never rests on colour alone. An optional sport dot leads the label.
+ */
+export function FilterChip({ label, count, sportId, pressed, onClick }) {
+  return (
+    <button
+      type="button"
+      className="kit-fchip"
+      aria-pressed={pressed ? 'true' : 'false'}
+      style={sportId ? sportIdentityVars(sportId) : undefined}
+      onClick={onClick}
+    >
+      {sportId && <i aria-hidden="true" />}
+      {label}
+      {count !== undefined && <>{' '}<b>{count}</b></>}
+    </button>
+  );
+}
+FilterChip.propTypes = {
+  label: PropTypes.string.isRequired,
+  count: PropTypes.number,
+  sportId: PropTypes.string,
+  pressed: PropTypes.bool.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+/**
  * A sport tile: the engine-gated identity gradient, the clean filled mark cropped at the edge,
  * the sport name and (full tiles) its one-line hint. Never hand-drawn.
  */

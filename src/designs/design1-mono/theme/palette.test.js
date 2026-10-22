@@ -217,7 +217,10 @@ describe('documented contrast pairs', () => {
 // shadows (#aaa, #333, #fff x2, #eee x3, #f5f5f5 x2, #dbeafe, two rgba()) for tokens (-12), and
 // TeamColourPicker loses the #000000 custom-input fallback (-1). Its eleven kit source colours stay;
 // swatches paint engine output (deriveIdentityColour), and the setup's hand-drawn "v" is ink (+0).
-const BASELINE = 638;
+// Kit S4 (History + Profile), 638 -> 601: Profile drops its #888 x18, #bbb x3, #111 x8, #666 and
+// #eee greys (-31) and History its six #111 inks (-6). The month bar, legend, chips, ring and row
+// badges paint sportIdentity engine output; the empty-history scorebook is ink (+0).
+const BASELINE = 601;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
