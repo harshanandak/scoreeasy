@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import '../kit/live.css';
 import { useQuery } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { useAuth } from '../../../hooks/useAuth';
@@ -21,8 +23,9 @@ export default function LiveNowStrip() {
     <section className="live-strip" aria-label="Live now">
       <div className="live-strip-head">
         <span className="live-strip-title">
-          <span aria-hidden="true" style={{ color: '#dc2626' }}>●</span> Live now
+          <span aria-hidden="true" style={{ color: 'var(--se-color-live)' }}>●</span> Live now
         </span>
+        <Link className="kit-live-see-all" to="/live">See all</Link>
       </div>
       <div className="live-strip-rail">
         {registeredMatches.map((m) => (

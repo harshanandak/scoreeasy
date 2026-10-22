@@ -43,7 +43,7 @@ describe('LiveNowStrip', () => {
     mocks.feed = [{ ...item('old', 'Removed A', 'Removed B'), sport: 'rugby' }, item('kept', 'Reds', 'Blues')];
     render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);
     expect(screen.queryByRole('link', { name: /Removed A versus Removed B/i })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getAllByRole('link')).toHaveLength(2);
     expect(screen.getByRole('link', { name: /Reds versus Blues/i })).toHaveAttribute('href', '/live/kept');
   });
 
@@ -72,8 +72,7 @@ describe('LiveNowStrip', () => {
     render(<MemoryRouter><LiveNowStrip /></MemoryRouter>);
     expect(mocks.useQuery).toHaveBeenCalledWith('live:listLiveFeed', { limit: 6 }); // compact peek
     expect(screen.getByText(/Live now/)).toBeInTheDocument();
-    // No "See all" link — there is no dedicated /live page; cards link to the watch page.
-    expect(screen.queryByRole('link', { name: 'See all' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'See all' })).toHaveAttribute('href', '/live');
     expect(screen.getByRole('link', { name: /Reds versus Blues/i })).toHaveAttribute('href', '/live/T1');
   });
 

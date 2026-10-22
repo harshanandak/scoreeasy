@@ -221,7 +221,8 @@ describe('documented contrast pairs', () => {
 // #eee greys (-31) and History its six #111 inks (-6). The month bar, legend, chips, ring and row
 // badges paint sportIdentity engine output; the empty-history scorebook is ink (+0).
 // Kit S5 (go live + share), 601 -> 598: the sign-in live dot, share scrim and QR well use tokens (-3).
-const BASELINE = 598;
+// Kit S6 (Live destination), 598 -> 597: the Home strip dot uses the Live token (-1).
+const BASELINE = 597;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
