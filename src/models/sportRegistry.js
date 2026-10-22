@@ -55,6 +55,7 @@ export const SPORT_REGISTRY = {
     name: 'Badminton',
     icon: '🏸',
     engine: 'sets',
+    teamColour: true,
     desc: 'Rally points, best of 3',
     storageKey: 'se_badminton',
     config: {
@@ -68,6 +69,7 @@ export const SPORT_REGISTRY = {
       ],
       defaultSetFormat: 1, // Best of 3
       serviceRotation: 1, // Service changes every point
+      setLabel: 'Game',
     },
     standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],
     features: [

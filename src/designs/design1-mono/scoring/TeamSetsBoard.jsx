@@ -18,6 +18,8 @@ import './teamBoard.css';
 export default function TeamSetsBoard({
   title,
   subtitle,
+  sportColour,
+  setUnit = 'Set',
   isLive,
   colourStyle,
   halves,
@@ -42,7 +44,7 @@ export default function TeamSetsBoard({
   return (
     <div className="sb tsb" style={colourStyle} data-team-board="">
       {notice}
-      <BoardHeader title={title} subtitle={subtitle} isLive={isLive} onFinish={onFinish} />
+      <BoardHeader title={title} subtitle={subtitle} sportColour={sportColour} isLive={isLive} onFinish={onFinish} />
 
       <p className="tsb-meta">
         {meta.map((m) => <span key={m} className="tsb-meta-item">{m}</span>)}
@@ -87,7 +89,7 @@ export default function TeamSetsBoard({
         onDiscard={onDiscard}
       >
         {setHistory.length > 0 && (
-          <div className="tsb-sets" aria-label="Completed sets">
+          <div className="tsb-sets" aria-label={`Completed ${setUnit.toLowerCase()}s`}>
             {setHistory.map((s) => (
               <span key={s.label} className={`tsb-set tsb-win-${s.winnerKey}`}>
                 {s.label} <b>{s.left}&ndash;{s.right}</b>
@@ -127,6 +129,8 @@ const half = PropTypes.shape({
 TeamSetsBoard.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
+  sportColour: PropTypes.string,
+  setUnit: PropTypes.string,
   isLive: PropTypes.bool,
   colourStyle: PropTypes.object.isRequired,
   halves: PropTypes.arrayOf(half).isRequired,

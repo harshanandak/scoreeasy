@@ -110,7 +110,7 @@ describe('quick match team colour: the finished record', () => {
   });
 
   it('adds no colours for a sport that has not opted in', async () => {
-    seedSets('badminton', { team1Color: '#facc15' });
+    seedSets('tabletennis', { team1Color: '#facc15' });
     render(<MonoQuickMatch />);
     const saved = await finishAfterOnePoint();
     expect(saved.status).toBe('completed');
@@ -227,8 +227,8 @@ describe('quick match team colour: volleyball board', () => {
 });
 
 describe('quick match team colour: sports not yet opted in', () => {
-  it('leaves the badminton board and live meta as they were', async () => {
-    seedSets('badminton', { team1Color: '#facc15' });
+  it('leaves the table tennis board and live meta as they were', async () => {
+    seedSets('tabletennis', { team1Color: '#facc15' });
     render(<MonoQuickMatch />);
     await screen.findByRole('button', { name: 'Add point for Reds' });
     expect(board()).toBeNull();
@@ -249,7 +249,7 @@ describe('quick match team colour: setup', () => {
   });
 
   it('offers no picker for a sport that has not opted in', async () => {
-    ctx.sport = 'badminton';
+    ctx.sport = 'tabletennis';
     render(<MonoQuickMatch />);
     await screen.findByLabelText('Team A name');
     expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();

@@ -2516,6 +2516,7 @@ export default function MonoQuickMatch() {
     if (teamColourOn) {
       // Direction E board (team colour). Same state and handlers as the classic screen below;
       // the board only renders them. Keys and band follow the team, not the side.
+      const setUnit = sportConfig?.config?.setLabel || 'Set';
       const boardHalves = setHalves.map((h) => ({
         key: h.team === 1 ? 'a' : 'b',
         team: h.team,
@@ -2537,7 +2538,7 @@ export default function MonoQuickMatch() {
           const winnerTeam = s.score1 > s.score2 ? 1 : 2;
           const scoreOf = (team) => (team === 1 ? s.score1 : s.score2);
           return {
-            label: `Set ${i + 1}`,
+            label: `${setUnit} ${i + 1}`,
             left: scoreOf(boardHalves[0].team),
             right: scoreOf(boardHalves[1].team),
             winnerKey: winnerTeam === 1 ? 'a' : 'b',
@@ -2546,7 +2547,7 @@ export default function MonoQuickMatch() {
         })
         : [];
       const boardStatus = format.type === 'best-of'
-        ? [`Set ${currentSet + 1}`, `Sets ${leftSetsWon}–${rightSetsWon}`]
+        ? [`${setUnit} ${currentSet + 1}`, `${setUnit}s ${leftSetsWon}–${rightSetsWon}`]
         : [`First to ${format.target}`];
       const boardScore = boardHalves.map((h) => h.score).join('–');
       // The dialogs say exactly which score they act on, in the board's order.
@@ -2564,6 +2565,8 @@ export default function MonoQuickMatch() {
           <TeamSetsBoard
             title={`${team1Name} v ${team2Name}`}
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
+            setUnit={setUnit}
+            sportColour={sportConfig?.config?.setLabel ? sportIdentity(sport)?.core : undefined}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}
