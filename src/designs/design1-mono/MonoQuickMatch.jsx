@@ -14,6 +14,7 @@ import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
 import { useTeamColours } from './scoring/useTeamColours';
 import TeamSetsBoard from './scoring/TeamSetsBoard';
+import TeamGoalsBoard from './scoring/TeamGoalsBoard';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
@@ -1525,7 +1526,7 @@ export default function MonoQuickMatch() {
   };
 
   // Goals: Add score for a team
-  const addGoal = (team, value = 1) => {
+  const addGoal = (team, value = 1, actionLabel) => {
     if (completion.locked) return;
     // Timed mode: once the clock hits zero scoring is locked — EXCEPT the one
     // deciding score a no-draw tie still needs (scoringLocked encodes that). This
@@ -1544,7 +1545,9 @@ export default function MonoQuickMatch() {
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
-    setLastAction(`${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
+    setLastAction(teamColourOn && actionLabel
+      ? `${getTeamLabel(team)} · ${actionLabel}`
+      : `${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
 
     // Auto-end in points mode
     if (isPointsMode && format.target) {
@@ -2389,6 +2392,38 @@ export default function MonoQuickMatch() {
     if (isGoals) {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
+
+      if (teamColourOn) {
+        const halves = [leftTeam, rightTeam].map((team) => ({
+          key: team === 1 ? 'a' : 'b', team, name: getTeamLabel(team), score: team === 1 ? gScore1 : gScore2,
+        }));
+        const last = gScoreHistory.at(-1);
+        const undoHint = last ? `back to ${halves.map(h => Math.max(0, h.score - (last.team === h.team ? last.value : 0))).join('–')}` : '';
+        const boardScore = halves.map(h => h.score).join('–');
+        const status = isTimeUp ? 'Full Time' : isPointsMode ? `First to ${format.target}` : '';
+        const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}{status ? ` · ${status}` : ''}</span><strong>{boardScore}</strong></div>;
+        return <>
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+          {renderEndMatchDialog({ className: 'sb-confirm', summary })}
+          {renderDiscardDialog({ className: 'sb-confirm', summary })}
+          <TeamGoalsBoard
+            sportConfig={sportConfig}
+            title={`${team1Name} v ${team2Name}`}
+            subtitle={`${isTimedMode ? `${timeLimit / 60} min match · ` : ''}${goalsDrawAllowed ? 'Draws allowed' : 'No draws'}`}
+            colourStyle={teamColourStyle} halves={halves}
+            clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
+            status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}
+            lastLine={lastAction ? `${lastAction} · ${boardScore}` : 'Choose a scoring action for either team'}
+            momentTeam={last && lastAction === `${getTeamLabel(last.team)} · All Out (+2)` ? last.team : undefined}
+            actionCount={gScoreHistory.length} canUndo={gScoreHistory.length > 0} undoHint={undoHint}
+            isLive={Boolean(live?.isLive)} onScore={addGoal} onUndo={undoGoal}
+            onSwap={handleSideSwap} onCorrect={(team) => adjustGoalScore(team, -1)}
+            onFinish={requestEndMatch} onDiscard={requestDiscardQuickMatch}
+            notice={<ScoringNotice message={saveWarning} />}
+            live={cloudAuthAvailable ? <LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} /> : null}
+          />
+        </>;
+      }
 
       const goalHalves = [
         { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: teamAccent(leftScore, rightScore), leading: leftScore > rightScore },
