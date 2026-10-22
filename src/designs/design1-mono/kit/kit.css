@@ -209,6 +209,12 @@
   transform: scale(0.965);
 }
 
+/* The sport a link asked for (/play?sport=...): Kit's selected treatment is an ink ring, never a
+   new colour. A gap of canvas keeps it apart from the tile's own gradient edge. */
+.kit-tile.is-selected {
+  box-shadow: 0 0 0 3px var(--se-color-canvas), 0 0 0 6px var(--se-color-ink), var(--se-lift);
+}
+
 .kit-tile-mark {
   position: absolute;
   z-index: -1;

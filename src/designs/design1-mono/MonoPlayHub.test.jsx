@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoPlayHub from './MonoPlayHub';
@@ -12,9 +12,9 @@ function LocationProbe() {
   return <output aria-label="Current route">{location.pathname}</output>;
 }
 
-function renderPlayHub() {
+function renderPlayHub(path = '/play') {
   return render(
-    <MemoryRouter initialEntries={['/play']}>
+    <MemoryRouter initialEntries={[path]}>
       <LocationProbe />
       <Routes>
         <Route path="/play" element={<MonoPlayHub />} />
@@ -89,6 +89,45 @@ describe('MonoPlayHub (Kit S1)', () => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/cricket/quick');
     });
     expect(screen.getByText('Quick setup')).toBeInTheDocument();
+  });
+
+  // /play?sport=<id> comes from marketing sport links and the quick scorer's Back.
+  describe('a requested sport (?sport=)', () => {
+    let scrolled;
+    beforeEach(() => {
+      scrolled = [];
+      Element.prototype.scrollIntoView = vi.fn(function scrollIntoView(options) { scrolled.push([this, options]); });
+    });
+    afterEach(() => {
+      delete Element.prototype.scrollIntoView;
+    });
+
+    it.each(['/play?sport=hockey', '/play?sport=HOCKEY'])('%s rings the Hockey tile and scrolls it into view', (path) => {
+      const { container } = renderPlayHub(path);
+      const hockey = screen.getByRole('button', { name: 'Quick match: Hockey' });
+
+      expect(hockey).toHaveClass('is-selected');
+      expect(hockey).toHaveAttribute('aria-current', 'true');
+      expect(container.querySelectorAll('.kit-tile.is-selected')).toHaveLength(1);
+      expect(container.querySelectorAll('[aria-current]')).toHaveLength(1);
+      expect(scrolled).toEqual([[hockey, { block: 'center' }]]);
+      // Selected is an ink ring, not a new colour: the tile keeps its own identity vars.
+      expect(hockey.style.getPropertyValue('--sport-core')).toBe(sportIdentity('hockey').core);
+    });
+
+    it.each(['/play?sport=chess', '/play?sport=toString', '/play?sport=', '/play'])('%s highlights nothing and does not scroll', (path) => {
+      const { container } = renderPlayHub(path);
+      expect(screen.getAllByRole('button', { name: /^Quick match: / })).toHaveLength(9);
+      expect(container.querySelector('.kit-tile.is-selected')).toBeNull();
+      expect(container.querySelector('[aria-current]')).toBeNull();
+      expect(scrolled).toEqual([]);
+    });
+
+    it('still starts that sport from its ringed tile', async () => {
+      renderPlayHub('/play?sport=volleyball');
+      fireEvent.click(screen.getByRole('button', { name: 'Quick match: Volleyball' }));
+      await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick'));
+    });
   });
 
   it('has exactly one h1 and no Go on the hub (a tile is the choice)', () => {

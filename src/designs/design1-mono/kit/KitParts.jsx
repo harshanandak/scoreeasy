@@ -77,13 +77,15 @@ export function CoachArrow() {
  * A sport tile: the engine-gated identity gradient, the clean filled mark cropped at the edge,
  * the sport name and (full tiles) its one-line hint. Never hand-drawn.
  */
-export function SportTile({ sport, mini = false, onSelect }) {
+export function SportTile({ sport, mini = false, selected = false, onSelect }) {
   return (
     <button
       type="button"
-      className={`kit-tile${mini ? ' kit-tile-mini' : ''}`}
+      id={`sport-tile-${sport.id}`}
+      className={`kit-tile${mini ? ' kit-tile-mini' : ''}${selected ? ' is-selected' : ''}`}
       style={sportIdentityVars(sport.id)}
       data-sport={sport.id}
+      aria-current={selected ? 'true' : undefined}
       aria-label={`Quick match: ${sport.name}`}
       onClick={() => onSelect(sport)}
     >
@@ -96,6 +98,7 @@ export function SportTile({ sport, mini = false, onSelect }) {
 SportTile.propTypes = {
   sport: PropTypes.shape({ id: PropTypes.string.isRequired, name: PropTypes.string.isRequired, desc: PropTypes.string }).isRequired,
   mini: PropTypes.bool,
+  selected: PropTypes.bool,
   onSelect: PropTypes.func.isRequired,
 };
 

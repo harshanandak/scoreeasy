@@ -146,12 +146,13 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(hero.style.getPropertyValue('--team-b-core')).toBe(B.core);
     });
 
-    it('rematches with the same teams into quick setup', async () => {
+    it('rematches with the same teams and colours into quick setup', async () => {
       seed([volleyball]);
       renderDashboard();
       fireEvent.click(screen.getByRole('button', { name: /Rematch:/ }));
       await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick'));
-      expect(screen.getByLabelText('Route state')).toHaveTextContent('{"teams":["Royals","Strikers"]}');
+      expect(JSON.parse(screen.getByLabelText('Route state').textContent))
+        .toEqual({ teams: ['Royals', 'Strikers'], colours: ['#d62828', '#1d4ed8'] });
     });
 
     it('keeps a sportless stored match without offering an invalid rematch path', () => {

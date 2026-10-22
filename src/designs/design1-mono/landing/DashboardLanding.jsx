@@ -167,7 +167,10 @@ function LastMatchHero({ match, navigate }) {
               type="button"
               className="se-go"
               aria-label={`Rematch: ${match.team1} vs ${match.team2}`}
-              onClick={() => navigate(`/${match.sport}/quick`, { state: { teams: [match.team1, match.team2] } })}
+              onClick={() => navigate(`/${match.sport}/quick`, {
+                // The pair the hero shows goes with the rematch; quick setup validates it.
+                state: { teams: [match.team1, match.team2], colours: [match.team1Color, match.team2Color] },
+              })}
             >
               Rematch <GoArrow />
             </button>
