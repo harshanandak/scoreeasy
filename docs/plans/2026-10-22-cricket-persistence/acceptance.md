@@ -56,5 +56,42 @@ failure was injected at the browser storage boundary. This is evidence rung 4.
 The first fixed run passed two files and 21 tests in 72.27 seconds. Final focused
 validation, phone-size captures, and hook results are recorded in the PR.
 
+The expanded counterfactual restored both production files from the same master
+ref and ran the persistence and navigation files again: nine tests failed and
+13 passed. See [the complete output](counterfactual.txt). Both fixed production
+files were restored byte-for-byte afterward.
+
+The broad focused run passed 24 files, with 421 passing tests and eight expected
+failures; the new persistence file had two replacement taps rejected by the
+scorer's debounce. Its clock is now controlled and advances before that tap.
+The subsequent four-file run passed 27 tests in navigation and natural Test
+completion; persistence and palette workers failed to start. That run is not
+green. The PR records the normal pre-push hook separately, and CI `verify` owns
+the full-suite result. No timeout, worker-start assertion, or gate was weakened.
+
+## Running-app demo
+
+These are running-app captures at exactly 390 by 844 CSS pixels, with synthetic
+Alpha/Beta matches and external requests blocked. The collaborative preview and
+fallback browser timed out; local headless Chromium captured the evidence.
+The dev server was stopped after capture. This reaches evidence rung 5 for local
+browser storage and navigation, not hosted Convex or public broadcast.
+
+- Guided: [before the failed save](before/guided-failed-save.png),
+  [failure remains on the scorer](after/guided-failed-save.png), and
+  [retry completes the match](after/guided-retry-saved.png).
+- Test tournament: [before the fix](before/test-tournament-failed-save.png),
+  [failure stays editable](after/test-tournament-failed-save.png), and
+  [retry saves the Undo correction](after/test-tournament-retry-saved.png).
+- Test quick: [before the fix](before/test-quick-failed-save.png),
+  [failure stays editable](after/test-quick-failed-save.png), and
+  [retry reaches completed history](after/test-quick-retry-saved.png).
+- [Before storage readback](before/evidence.json) includes the completed guided
+  record without its archive. [After storage readback](after/evidence.json)
+  includes both raw guided innings and both completed Test records after Undo.
+
+Separate follow-ups filed during this work: legacy guided overs mapping
+(`7c0ee44e`) and Forge's native-Bun/Vitest validation wrapper (`e302f676`).
+
 The palette ratchet remains exact equality at 668. Historical counts in the
 completion-lock audit describe its earlier heads and remain historical.

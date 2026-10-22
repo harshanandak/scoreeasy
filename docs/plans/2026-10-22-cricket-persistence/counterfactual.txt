@@ -1,0 +1,259 @@
+
+ RUN  v4.1.6 C:/Users/harsha_befach/.t3/worktrees/scoreeasy/t3-9506c9da
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx (7 tests | 7 failed) 4126ms
+     × guided failed final save stays open, retains the winning ball on refresh, and retries once 1272ms
+     × guided completion archives both raw engine innings before clearing the draft 287ms
+     × test-tournament manual finish persists an unfinished match as a draw 362ms
+     × test-quick manual finish persists an unfinished match as a draw 214ms
+     × test-tournament failed manual finish preserves scoring and Undo before retry 275ms
+     × test-quick failed manual finish preserves scoring and Undo before retry 213ms
+     × guided retains both played innings through lineups, break, refresh, and completion 1498ms
+ ❯ src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx (15 tests | 2 failed) 6100ms
+     × test-tournament also protects the Finish & save menu exit 224ms
+     × test-quick also protects the Finish & save menu exit 209ms
+
+ Test Files  2 failed (2)
+      Tests  9 failed | 13 passed (22)
+   Start at  15:20:15
+   Duration  103.34s (transform 5.26s, setup 16.71s, import 5.74s, tests 10.23s, environment 60.62s)
+
+$ vitest run "--maxWorkers=1" "src/designs/design1-mono/scoring/CricketPersistence.test.jsx" "src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx"
+stderr | src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > guided failed final save stays open, retains the winning ball on refresh, and retries once
+[ScoreEasy] Storage quota exceeded when saving "se_cricket".
+[ScoreEasy] Failed to save "se_cricket": QuotaExceededError
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx > cricket finish navigation > test-tournament also protects the Finish & save menu exit
+AssertionError: expected { id: 'm1', team1Id: 'A', …(4) } to match object { status: 'completed', …(2) }
+(16 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "completedAt": Any<String>,
+-   "status": "completed",
+-   "winner": "draw",
++   "status": "in-progress",
+  }
+
+ ❯ src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx:128:19
+    126|     const data = JSON.parse(localStorage.getItem(kind === 'test-quick'…
+    127|     const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
+    128|     expect(saved).toMatchObject({ status: 'completed', winner: kind ==…
+       |                   ^
+    129|     expect(saved.innings).toHaveLength(4);
+    130|     expect(saved.draftState).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx > cricket finish navigation > test-quick also protects the Finish & save menu exit
+AssertionError: expected { id: 300, team1Id: 'A', …(10) } to match object { status: 'completed', …(2) }
+(21 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "completedAt": Any<String>,
+-   "status": "completed",
+-   "winner": "Draw",
++   "status": "in-progress",
++   "winner": null,
+  }
+
+ ❯ src/designs/design1-mono/scoring/CricketFinishNavigation.test.jsx:128:19
+    126|     const data = JSON.parse(localStorage.getItem(kind === 'test-quick'…
+    127|     const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
+    128|     expect(saved).toMatchObject({ status: 'completed', winner: kind ==…
+       |                   ^
+    129|     expect(saved.innings).toHaveLength(4);
+    130|     expect(saved.draftState).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > guided failed final save stays open, retains the winning ball on refresh, and retries once
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/cricket/tournament/100",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:64:26
+     62|     const failure = rejectResults('guided');
+     63|     fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+     64|     expect(complete).not.toHaveBeenCalled();
+       |                          ^
+     65|     expect(screen.getByRole('alert')).toHaveTextContent(/save failed/i…
+     66|     expect(stored('guided').draftState.guidedInnings.deliveries).toHav…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > guided completion archives both raw engine innings before clearing the draft
+AssertionError: expected undefined to deeply equal [ { battingTeam: 'A', …(8) }, …(1) ]
+
+- Expected:
+[
+  {
+    "battingTeam": "A",
+    "bowler": "B1",
+    "bowlingTeam": "B",
+    "deliveries": [
+      {
+        "ballInOver": 1,
+        "batsmanRuns": 1,
+        "bowler": "B1",
+        "extras": [],
+        "freeHit": false,
+        "legal": true,
+        "nonStriker": "A2",
+        "overNo": 1,
+        "overthrow": null,
+        "striker": "A1",
+        "wicket": null,
+      },
+    ],
+    "freeHit": false,
+    "nonStriker": "A1",
+    "playersPerSide": 11,
+    "striker": "A2",
+    "target": null,
+  },
+  ObjectContaining {
+    "deliveries": Any<Array>,
+  },
+]
+
++ Received:
+undefined
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:87:33
+     85|     const saved = stored('guided');
+     86|     expect(saved.status).toBe('completed');
+     87|     expect(saved.guidedInnings).toEqual([firstInnings, expect.objectCo…
+       |                                 ^
+     88|     expect(saved.guidedInnings[1].deliveries).toHaveLength(1);
+     89|     expect(saved.draftState).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-tournament manual finish persists an unfinished match as a draw
+AssertionError: expected { id: 'm1', team1Id: 'A', …(4) } to match object { status: 'completed', …(2) }
+(17 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "completedAt": Any<String>,
+-   "status": "completed",
+-   "winner": "draw",
++   "status": "in-progress",
+  }
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:98:26
+     96|     fireEvent.click(screen.getByRole('button', { name: '1 run', exact:…
+     97|     manualFinish();
+     98|     expect(stored(kind)).toMatchObject({ status: 'completed', winner: …
+       |                          ^
+     99|     expect(stored(kind).innings[3]).toMatchObject({ runs: 1, balls: 1 …
+    100|     expect(stored(kind).draftState).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-quick manual finish persists an unfinished match as a draw
+AssertionError: expected { id: 300, team1Id: 'A', …(10) } to match object { status: 'completed', …(2) }
+(22 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "completedAt": Any<String>,
+-   "status": "completed",
+-   "winner": "Draw",
++   "status": "in-progress",
++   "winner": null,
+  }
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:98:26
+     96|     fireEvent.click(screen.getByRole('button', { name: '1 run', exact:…
+     97|     manualFinish();
+     98|     expect(stored(kind)).toMatchObject({ status: 'completed', winner: …
+       |                          ^
+     99|     expect(stored(kind).innings[3]).toMatchObject({ runs: 1, balls: 1 …
+    100|     expect(stored(kind).draftState).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-tournament failed manual finish preserves scoring and Undo before retry
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/cricket/tournament/100",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:113:26
+    111|     const complete = vi.fn();
+    112|     const first = mount(kind, complete);
+    113|     fireEvent.click(screen.getByRole('button', { name: '1 run', exact:…
+       |                          ^
+    114|     const failure = rejectResults(kind);
+    115|     manualFinish();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-quick failed manual finish preserves scoring and Undo before retry
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/history",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:113:26
+    111|     const complete = vi.fn();
+    112|     const first = mount(kind, complete);
+    113|     fireEvent.click(screen.getByRole('button', { name: '1 run', exact:…
+       |                          ^
+    114|     const failure = rejectResults(kind);
+    115|     manualFinish();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > guided retains both played innings through lineups, break, refresh, and completion
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:153:18
+    151|     expect(firstInnings.deliveries).toHaveLength(6);
+    152|     first.unmount();
+    153|     mount('guided', complete);
+       |                  ^
+    154|     lineup('B1', 'B2', 'A1');
+    155|     fireEvent.click(screen.getByRole('button', { name: 'Wide', exact: …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+error: script "test" exited with code 1
