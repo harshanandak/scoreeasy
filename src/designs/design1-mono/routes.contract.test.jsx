@@ -472,7 +472,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
   it('RA-5: the scoring exit guard is not armed while a quick match is still in setup', async () => {
     renderApp(['/volleyball/quick']);
     await settleRoute();
-    expect(screen.getByRole('button', { name: 'Start Volleyball' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start volleyball' })).toBeInTheDocument();
 
     expect(nativeBack.install).not.toHaveBeenCalled();
   });

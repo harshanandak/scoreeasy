@@ -127,7 +127,7 @@ describe('app route recovery', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick');
     });
-    expect(await screen.findByRole('button', { name: 'Start Volleyball' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Start volleyball' })).toBeEnabled();
   });
 
   it('honors supported sport query params on legacy quick-match links', async () => {
@@ -136,7 +136,7 @@ describe('app route recovery', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Current route')).toHaveTextContent('/tennis/quick');
     });
-    expect(await screen.findByRole('button', { name: 'Start Tennis' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Start tennis' })).toBeEnabled();
   });
 
   it('redirects legacy tournament links to the sport chooser when no sport is supplied', async () => {

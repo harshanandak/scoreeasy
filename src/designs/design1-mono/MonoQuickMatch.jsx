@@ -7,7 +7,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
-import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
+import { validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
 import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
 import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
@@ -28,7 +28,19 @@ import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } fro
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
-import { getSportStartLabel } from '../../utils/startActions';
+import { getSetupStartLabel } from '../../utils/startActions';
+import { KitWash, GoArrow } from './kit/KitParts';
+import { KitSegmented, KitStepper, MatchupPreview } from './kit/KitSetupParts';
+import {
+  applyFormatChoice,
+  applyGoalsDetail,
+  formatChoices,
+  goalsDetail,
+  selectedFormatChoice,
+  setPointPresets,
+  setupRulesLine,
+} from './kit/setupFormats';
+import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
 import { shareText } from '../../mobile/share';
 import { CRICKET_RUN_VALUES } from '../../utils/cricketRunControls';
 import { buildTennisQuickDraft, getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
@@ -304,41 +316,6 @@ function getRestoredTimerElapsed(draft) {
   return savedElapsed + Math.max(0, Math.floor((Date.now() - savedAt) / 1000));
 }
 
-function formatMinutes(seconds) {
-  if (!Number.isFinite(seconds) || seconds <= 0) return 'No time limit';
-  const minutes = Math.round(seconds / 60);
-  return `${minutes} min`;
-}
-
-function getRuleSummary({ engine, format, formatMode, isCricket, isGoals, sportConfig, selectedCricketFormat }) {
-  if (isCricket) {
-    const formatName = selectedCricketFormat?.name || 'Cricket';
-    const limit = format.trackOvers === false
-      ? `${format.maxBalls || 'unlimited'} balls`
-      : `${format.overs || 'unlimited'} overs`;
-    const innings = (format.totalInnings || 2) === 4 ? '2 innings per side' : '1 innings per side';
-    return `${formatName} - ${limit} - ${format.players || 6} players - ${innings}`;
-  }
-
-  if (engine === 'sets') {
-    const winBy = format.customization?.winBy || sportConfig?.config?.winBy || 2;
-    if (format.type === 'best-of') {
-      return `Best of ${format.sets || 3} - ${format.points || sportConfig?.config?.pointsPerSet || 25} pts - win by ${winBy}`;
-    }
-    return `Single set - first to ${format.target || format.points || sportConfig?.config?.pointsPerSet || 25} - win by ${winBy}`;
-  }
-
-  if (isGoals) {
-    if (format.mode === 'timed') return `Timed match - ${formatMinutes(format.timeLimit)}`;
-    if (format.mode === 'points') {
-      return `First to ${format.target || sportConfig?.config?.winPoints || 5} ${sportConfig?.config?.scoringUnit || 'point'}s`;
-    }
-    return 'Free play - tap to score';
-  }
-
-  return formatMode === 'standard' ? 'Standard rules' : 'Custom rules';
-}
-
 export default function MonoQuickMatch() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -357,13 +334,9 @@ export default function MonoQuickMatch() {
   const [phase, setPhase] = useState('setup'); // setup | scoring | result
   const [restoredScoringStarted, setRestoredScoringStarted] = useState(false);
   const visible = true; // always visible; no fade-in needed for quick match
-  const [setupStep, setSetupStep] = useState(() => {
-    if (!isCricket || !preselectedFormat) return 2;
-    const preset = CRICKET_FORMATS.find(f => f.id === preselectedFormat);
-    return preset?.customizable ? 3 : 2;
-  }); // 1: Format, 2: Rules (when editing), 3: Teams
+  // Setup is one screen; the rules editor (cricket Gully/Custom, sets points) opens over it.
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false); // flip left/right teams for referee scoring
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [showInningsBreak, setShowInningsBreak] = useState(false);
@@ -750,7 +723,7 @@ export default function MonoQuickMatch() {
     setCricketPreset(nextPreset);
     setFormatMode(preset?.customizable ? 'custom' : 'standard');
     setFormat(buildCricketFormat(nextPreset));
-    setSetupStep(preset?.customizable ? 3 : 2);
+    setRulesOpen(false);
   }, [isCricket, preselectedFormat, sport]);
 
   // Reset defaults when leaving cricket on the same mounted quick-match route.
@@ -759,7 +732,7 @@ export default function MonoQuickMatch() {
     if (isCricket || !sport) return;
 
     setFormatMode('standard');
-    setSetupStep(2);
+    setRulesOpen(false);
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
       setFormat(applyStandardDefaults(sport, {}));
@@ -1698,888 +1671,412 @@ export default function MonoQuickMatch() {
   };
 
   // === SETUP PHASE ===
-  // Determine if cricket has customizable rules (gully/custom need a Rules step)
+  // Kit S2 (plan 2026-10-22 §9 S2): one compact screen. The matchup preview, both teams (name +
+  // colour), the format as one segmented control and its rules line, then the one Go. Cricket's
+  // Gully/Custom and the sets sports' points live one tap away in the rules editor.
   const cricketHasRules = isCricket && (cricketPreset === 'gully' || cricketPreset === 'custom');
-  const hasRulesStep = cricketHasRules || (!isCricket && formatMode === 'custom');
-  // Cricket: Format → [Rules] → Teams | Non-cricket: Format → [Rules] → Teams
-  const totalSteps = hasRulesStep ? 3 : 2;
-  const stepLabels = hasRulesStep
-    ? ['Format', 'Match Rules', 'Teams']
-    : ['Format', 'Teams'];
-
-  // Current step label for display
-  const currentStepLabel = stepLabels[setupStep - 1] || '';
-
-  // Derived: selected cricket format info for summary
+  const setPoints = engine === 'sets' && !isTennis ? setPointPresets(sportConfig) : [];
+  const hasRulesEditor = cricketHasRules || setPoints.length > 0;
   const selectedCricketFormat = isCricket
     ? CRICKET_FORMATS.find(f => f.id === cricketPreset)
     : null;
-  const ruleSummary = getRuleSummary({
-    engine,
-    format,
-    formatMode,
-    isCricket,
-    isGoals,
-    sportConfig,
-    selectedCricketFormat,
-  });
+  const rulesLine = setupRulesLine(sportConfig, format);
+  const { kind: formatKind, choices: formatOptions } = formatChoices(sportConfig);
+  const selectedFormat = selectedFormatChoice(sportConfig, format, cricketPreset);
+  const goalsRow = goalsDetail(sportConfig, format);
   const teamNamesReady = Boolean(team1Name.trim() && team2Name.trim());
-  const isTeamSetupStep = setupStep === totalSteps;
   const showRosterSetup = showTeam1Roster || showTeam2Roster;
   const playerCount = team1Players.length + team2Players.length;
-  const startButtonLabel = getSportStartLabel(sportConfig);
+  const startButtonLabel = getSetupStartLabel(sportConfig);
+  const sportName = sportConfig?.name || 'Quick match';
+  const sportVars = sportIdentityVars(sport);
+  const sportTint = sportIdentity(sport)?.tint;
   const toggleRosterSetup = () => {
     const nextState = !showRosterSetup;
     setShowTeam1Roster(nextState);
     setShowTeam2Roster(nextState);
   };
   const quickMatchScoringHeading = `${sportConfig?.name || sport || 'Sport'} quick match`;
-  const handleSetupBack = () => {
-    if (isTeamSetupStep) {
-      const browserHistoryIndex = globalThis.history?.state?.idx;
-      const hasPriorRoute = typeof browserHistoryIndex === 'number'
-        ? browserHistoryIndex > 0
-        : location.key !== 'default';
-      if (hasPriorRoute) {
-        navigate(-1);
-        return;
-      }
-      navigate(`/play?sport=${sport}`, { replace: true });
+  const chooseCricketFormat = (presetId) => {
+    const preset = CRICKET_FORMATS.find(f => f.id === presetId);
+    if (!preset) return;
+    setCricketPreset(preset.id);
+    setFormatMode(preset.customizable ? 'custom' : 'standard');
+    setFormat(buildCricketFormat(preset.id));
+    setShowCustomOvers(false);
+    setCustomOvers('');
+  };
+  const chooseFormat = (choiceId) => {
+    if (formatKind === 'cricket') {
+      chooseCricketFormat(choiceId);
       return;
     }
-    setSetupStep(totalSteps);
+    setFormat(prev => applyFormatChoice(sportConfig, choiceId, prev));
+  };
+  const handleSetupBack = () => {
+    if (rulesOpen) {
+      setRulesOpen(false);
+      return;
+    }
+    const browserHistoryIndex = globalThis.history?.state?.idx;
+    const hasPriorRoute = typeof browserHistoryIndex === 'number'
+      ? browserHistoryIndex > 0
+      : location.key !== 'default';
+    if (hasPriorRoute) {
+      navigate(-1);
+      return;
+    }
+    navigate(`/play?sport=${sport}`, { replace: true });
   };
 
-  if (phase === 'setup') {
+  const setupHeader = (title, subtitle, backLabel, aside = null) => (
+    <div className="kit-setup-top">
+      <button type="button" className="se-ctl kit-setup-back" onClick={handleSetupBack} aria-label={backLabel}>
+        <BackArrow size={20} />
+      </button>
+      <span className="kit-setup-badge" aria-hidden="true" />
+      <div className="kit-setup-title">
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {aside}
+    </div>
+  );
+
+  if (phase === 'setup' && rulesOpen && hasRulesEditor) {
+    const players = format.players || 6;
+    const maxPlayers = format.solo ? 10 : 11;
+    const oversValue = showCustomOvers ? 'custom' : (format.overs === null ? 'none' : `ov-${format.overs}`);
+    const chooseOvers = (id) => {
+      if (id === 'custom') {
+        setShowCustomOvers(true);
+        setCustomOvers('');
+        return;
+      }
+      setFormat(prev => ({ ...prev, overs: id === 'none' ? null : Number(id.slice(3)) }));
+      setCustomOvers('');
+      setShowCustomOvers(false);
+    };
+    const houseRules = [
+      { key: 'lastManStands', label: 'Last man bats' },
+      { key: 'trialBall', label: 'Trial ball' },
+      { key: 'oneTipOneHand', label: 'One tip one hand' },
+    ];
+    const setsSingle = format.type !== 'best-of';
     return (
-      <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-        <div className="max-w-2xl mx-auto">
-          {saveWarning && (
-            <div className="mono-alert mono-alert-danger mb-4">
-              {saveWarning}
+      <div className="kit-screen kit-setup" data-screen="setup-rules" style={sportVars}>
+        <KitWash from={sportTint} to={sportTint} />
+        {setupHeader('Match rules', isCricket ? selectedCricketFormat?.name : sportName, 'Return to match setup')}
+
+        {isCricket && (
+          <>
+            {cricketPreset === 'custom' && (
+              <div className="kit-rules-group">
+                <p id="rules-scoring-label" className="kit-setup-label">Scoring format</p>
+                <KitSegmented
+                  labelledBy="rules-scoring-label"
+                  options={[{ id: 'overs', label: 'By overs' }, { id: 'balls', label: 'By balls' }]}
+                  value={format.trackOvers === false ? 'balls' : 'overs'}
+                  onChange={(id) => setFormat(prev => (id === 'balls'
+                    ? { ...prev, trackOvers: false, overs: null, powerplay: [] }
+                    : { ...prev, trackOvers: true, maxBalls: null }))}
+                />
+              </div>
+            )}
+
+            {format.trackOvers !== false && (
+              <div className="kit-rules-group">
+                <p id="rules-overs-label" className="kit-setup-label">Overs</p>
+                <KitSegmented
+                  labelledBy="rules-overs-label"
+                  options={[
+                    { id: 'none', label: 'No limit' },
+                    ...OVERS_PRESETS.map(p => ({ id: `ov-${p.value}`, label: String(p.value) })),
+                    { id: 'custom', label: 'Custom' },
+                  ]}
+                  value={oversValue}
+                  onChange={chooseOvers}
+                />
+                {showCustomOvers && (
+                  <div className="kit-rules-custom">
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      inputMode="numeric"
+                      className="kit-setup-input"
+                      aria-label="Custom overs (1 to 50)"
+                      placeholder="1-50"
+                      value={customOvers}
+                      onChange={(e) => {
+                        const v = Number.parseInt(e.target.value, 10);
+                        setCustomOvers(e.target.value);
+                        if (v >= 1 && v <= 50) setFormat(prev => ({ ...prev, overs: v }));
+                      }}
+                    />
+                    <span className="kit-setup-hint">overs a side</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {cricketPreset === 'custom' && format.trackOvers === false && (
+              <div className="kit-rules-group">
+                <p id="rules-balls-label" className="kit-setup-label">Ball limit</p>
+                <div className="kit-rules-custom">
+                  <KitStepper
+                    label="balls"
+                    labelledBy="rules-balls-label"
+                    value={format.maxBalls || '∞'}
+                    onDecrease={() => setFormat(prev => ({ ...prev, maxBalls: Math.max(6, (prev.maxBalls || 30) - 6) }))}
+                    onIncrease={() => setFormat(prev => ({ ...prev, maxBalls: (prev.maxBalls || 24) + 6 }))}
+                  />
+                  <button
+                    type="button"
+                    className="se-ctl"
+                    aria-pressed={!format.maxBalls ? 'true' : 'false'}
+                    onClick={() => setFormat(prev => ({ ...prev, maxBalls: null }))}
+                  >
+                    No limit
+                  </button>
+                </div>
+                <p className="kit-setup-hint">No overs: just runs and balls</p>
+              </div>
+            )}
+
+            <div className="kit-rules-group">
+              <p id="rules-players-label" className="kit-setup-label">Players per side</p>
+              <KitStepper
+                label="players"
+                labelledBy="rules-players-label"
+                value={players}
+                canDecrease={players > 2}
+                canIncrease={players < maxPlayers}
+                onDecrease={() => setFormat(prev => ({ ...prev, players: Math.max(2, (prev.players || 6) - 1) }))}
+                onIncrease={() => setFormat(prev => ({ ...prev, players: Math.min(prev.solo ? 10 : 11, (prev.players || 6) + 1) }))}
+              />
+              <p className="kit-setup-hint">{players - 1} wickets to bowl a team out</p>
+            </div>
+
+            <div className="kit-rules-group">
+              <p id="rules-type-label" className="kit-setup-label">Match type</p>
+              <KitSegmented
+                labelledBy="rules-type-label"
+                options={[{ id: 'solo', label: 'Bat only' }, { id: 'both', label: 'Bat and bowl' }]}
+                value={format.solo ? 'solo' : (format.solo === false ? 'both' : null)}
+                onChange={(id) => setFormat(prev => (id === 'solo'
+                  ? { ...prev, solo: true, players: Math.min(prev.players || 6, 10) }
+                  : { ...prev, solo: false }))}
+              />
+              <p className="kit-setup-hint">{format.solo ? 'One team bats, the other bowls' : 'Both teams bat and bowl'}</p>
+            </div>
+
+            <div className="kit-rules-group">
+              <p id="rules-innings-label" className="kit-setup-label">Innings</p>
+              <KitSegmented
+                labelledBy="rules-innings-label"
+                options={[{ id: '1', label: '1 per side' }, { id: '2', label: '2 per side (Test)' }]}
+                value={(format.totalInnings || 2) === 4 ? '2' : '1'}
+                onChange={(id) => setFormat(prev => (id === '2'
+                  ? { ...prev, totalInnings: 4, declaration: true, followOn: true }
+                  : { ...prev, totalInnings: 2, declaration: false, followOn: false }))}
+              />
+            </div>
+
+            {cricketPreset === 'gully' && (
+              <div className="kit-rules-group">
+                <p id="rules-house-label" className="kit-setup-label">House rules</p>
+                <div className="kit-seg" role="group" aria-labelledby="rules-house-label" style={{ '--kit-seg-cols': 3 }}>
+                  {houseRules.map(rule => (
+                    <button
+                      key={rule.key}
+                      type="button"
+                      aria-pressed={format[rule.key] ? 'true' : 'false'}
+                      onClick={() => setFormat(prev => ({ ...prev, [rule.key]: !prev[rule.key] }))}
+                    >
+                      {rule.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="kit-setup-hint">
+                  {[
+                    format.lastManStands && 'Last batter plays alone',
+                    format.trialBall && 'First ball doesn’t count',
+                    format.oneTipOneHand && 'One-bounce catch is out',
+                  ].filter(Boolean).join(' · ') || 'Tap a rule to turn it on'}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {!isCricket && setPoints.length > 0 && (
+          <div className="kit-rules-group">
+            <p id="rules-points-label" className="kit-setup-label">{setsSingle ? 'Points to win' : 'Points per set'}</p>
+            <KitSegmented
+              labelledBy="rules-points-label"
+              options={setPoints.map(n => ({ id: `p-${n}`, label: String(n) }))}
+              value={setsSingle ? `p-${format.target}` : `p-${format.points}`}
+              onChange={(id) => {
+                const n = Number(id.slice(2));
+                setFormat(prev => (setsSingle ? { ...prev, target: n } : { ...prev, points: n }));
+              }}
+            />
+          </div>
+        )}
+
+        <p className="kit-setup-rules">{rulesLine}</p>
+        <button type="button" className="se-ctl kit-rules-done" onClick={() => setRulesOpen(false)}>
+          Done
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'setup') {
+    const teamFields = [
+      {
+        n: 1, letter: 'A', ref: team1Ref, name: team1Name, setName: setTeam1Name,
+        show: showTeam1Suggestions, setShow: setShowTeam1Suggestions, loading: team1Loading,
+        empty: team1Empty, results: sortedTeam1, query: debouncedTeam1, colour: team1Color, setColour: setTeam1Color,
+      },
+      {
+        n: 2, letter: 'B', ref: team2Ref, name: team2Name, setName: setTeam2Name,
+        show: showTeam2Suggestions, setShow: setShowTeam2Suggestions, loading: team2Loading,
+        empty: team2Empty, results: sortedTeam2, query: debouncedTeam2, colour: team2Color, setColour: setTeam2Color,
+      },
+    ];
+    return (
+      <div className="kit-screen kit-setup" data-screen="setup" style={sportVars}>
+        <KitWash from={sportTint} to={sportTint} />
+        {setupHeader(sportName, 'Quick match', 'Go back', (
+          <button
+            type="button"
+            className="kit-setup-link"
+            onClick={() => navigate(`/${sport}/tournament`)}
+            aria-label="Switch to tournament setup"
+          >
+            Tournament
+          </button>
+        ))}
+        {saveWarning && (
+          <div className="mono-alert mono-alert-danger mb-4" role="alert">
+            {saveWarning}
+          </div>
+        )}
+
+        <MatchupPreview nameA={team1Name} nameB={team2Name} coloured={teamColourOn} colourStyle={teamColourStyle} />
+
+        {teamFields.map(t => (
+          <div key={t.n} ref={t.ref} className="kit-setup-field">
+            <label htmlFor={`quick-team-${t.n}`} className="kit-setup-label">
+              Team {t.letter} name
+            </label>
+            <input
+              id={`quick-team-${t.n}`}
+              type="text"
+              className="kit-setup-input"
+              placeholder={`Team ${t.letter}`}
+              value={t.name}
+              onChange={e => { t.setName(e.target.value); t.setShow(e.target.value.length >= 2); }}
+              onFocus={() => t.setShow(true)}
+              maxLength={50}
+              autoComplete="off"
+            />
+            {t.show && (t.loading || t.empty || t.results.length > 0) && (
+              <div className="kit-setup-suggest">
+                {t.loading && <p role="status">Searching teams…</p>}
+                {t.empty && <p role="status">No saved teams match “{t.query}”.</p>}
+                {t.results.map(r => (
+                  <button
+                    key={r._id}
+                    type="button"
+                    onClick={() => { t.setName(r.name); t.setShow(false); }}
+                    onMouseDown={e => e.preventDefault()}
+                  >
+                    <span>{r.name}</span>
+                    <small>{r.matchCount} match{r.matchCount !== 1 ? 'es' : ''}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+            {teamColourOn && (
+              <TeamColourPicker label={`Team ${t.letter} colour`} value={t.colour} onChange={t.setColour} />
+            )}
+          </div>
+        ))}
+
+        <section className="kit-setup-field" aria-labelledby="setup-format-label">
+          <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
+          <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />
+          {goalsRow && (
+            <div className="kit-rules-group" style={{ marginTop: 12 }}>
+              <p id="setup-detail-label" className="kit-setup-label">{goalsRow.label}</p>
+              <KitSegmented
+                labelledBy="setup-detail-label"
+                options={goalsRow.options}
+                value={goalsRow.selected}
+                onChange={(id) => setFormat(prev => applyGoalsDetail(prev, id))}
+              />
             </div>
           )}
-          {/* Header */}
-          <nav className="flex items-center gap-4 mb-6">
-            <button
-              onClick={handleSetupBack}
-              className="text-sm bg-transparent border-none cursor-pointer font-swiss"
-              style={{ color: 'var(--se-color-ink-muted)' }}
-              aria-label={isTeamSetupStep ? 'Go back' : 'Return to match setup'}
-            >
-              <BackArrow />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold tracking-tight" style={{ color: 'var(--se-color-ink)' }}>
-                {sportConfig?.icon || '\u{1F3D0}'} Quick Match
-              </h1>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--se-color-ink-muted)' }}>
-                {isTeamSetupStep ? 'Setup match' : `Edit ${currentStepLabel.toLowerCase()}`}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate(`/${sport}/tournament`)}
-              className="bg-transparent border-none cursor-pointer"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.625rem', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--primary)', padding: '12px 0', minHeight: 44 }}
-              aria-label="Switch to tournament setup"
-            >
-              Tournament &rarr;
-            </button>
-          </nav>
+          <div className="kit-setup-rules-row">
+            <p className="kit-setup-rules">{rulesLine}</p>
+            {hasRulesEditor && (
+              <button type="button" className="kit-setup-link" onClick={() => setRulesOpen(true)}>
+                Edit rules
+              </button>
+            )}
+          </div>
+        </section>
 
-          {/* Step progress bar */}
-          {!isTeamSetupStep && (
-            <div className="flex gap-1 mb-8">
-              {Array.from({ length: totalSteps }, (_, i) => (
-                <div
-                  key={`step-bar-${i}`}
-                  className="flex-1"
-                  style={{
-                    height: '3px',
-                    background: i < setupStep ? 'var(--primary)' : 'var(--muted)',
-                    transition: 'background 0.2s ease',
-                  }}
-                />
+        <div className="kit-setup-field">
+          <button type="button" onClick={toggleRosterSetup} className="kit-setup-link" aria-expanded={showRosterSetup}>
+            {showRosterSetup ? 'Hide players' : 'Add players'}
+            {playerCount > 0 && !showRosterSetup && <span>&nbsp;({playerCount})</span>}
+          </button>
+          {showRosterSetup && (
+            <div className="kit-setup-roster">
+              {teamFields.map(t => (
+                <div key={t.n}>
+                  <h3>Team {t.letter} players</h3>
+                  <PlayerSearchInput
+                    players={t.n === 1 ? team1Players : team2Players}
+                    onAdd={p => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => [...prev, p])}
+                    onRemove={i => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => prev.filter((_, idx) => idx !== i))}
+                    placeholder="Search @username or type name"
+                  />
+                </div>
               ))}
             </div>
           )}
-
-          {/* ──────── STEP 1: FORMAT ──────── */}
-          {setupStep === 1 && (
-            <>
-              {/* Cricket Format Cards */}
-              {isCricket && (
-                <div className="mb-8">
-                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    Choose Format
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {CRICKET_FORMATS.map(cf => {
-                      const isSelected = cricketPreset === cf.id;
-                      return (
-                        <button
-                          key={cf.id}
-                          onClick={() => {
-                            setCricketPreset(cf.id);
-                            setFormatMode(cf.customizable ? 'custom' : 'standard');
-                            setFormat(buildCricketFormat(cf.id));
-                            setShowCustomOvers(false);
-                            setCustomOvers('');
-                          }}
-                          className={`mono-setup-option text-left ${isSelected ? 'mono-setup-option-selected' : ''}`}
-                          style={{
-                            padding: '16px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>
-                            {cf.name}
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>{cf.desc}</p>
-                          {cf.id !== 'custom' && (
-                            <p className="text-xs font-mono mt-2" style={{ color: '#aaa' }}>
-                              {cf.overs ? `${cf.overs} ov` : 'Unlimited'} &middot; {cf.players}p
-                            </p>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Non-cricket: Format Mode */}
-              {!isCricket && (
-                <div className="mb-8">
-                  <label className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    Format Mode
-                  </label>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setFormatMode('standard')}
-                      className={`mono-setup-option flex-1 text-left ${formatMode === 'standard' ? 'mono-setup-option-selected' : ''}`}
-                      style={{
-                        padding: '16px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>Standard</p>
-                      <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Official rules for {sportConfig?.name || 'this sport'}</p>
-                    </button>
-                    <button
-                      onClick={() => setFormatMode('custom')}
-                      className={`mono-setup-option flex-1 text-left ${formatMode === 'custom' ? 'mono-setup-option-selected' : ''}`}
-                      style={{
-                        padding: '16px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--se-color-ink)' }}>Custom</p>
-                      <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Set your own rules</p>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Next button */}
-              <button
-                onClick={() => setSetupStep(2)}
-                className="mono-btn-primary w-full"
-                style={{ padding: '12px', fontSize: '0.9375rem' }}
-              >
-                Next: {hasRulesStep ? 'Match Rules' : 'Teams'}
-              </button>
-            </>
+          {showRefereeOption && (
+            <label className="kit-setup-check">
+              <input
+                type="checkbox"
+                checked={isRefereeing}
+                onChange={e => setIsRefereeing(e.target.checked)}
+              />
+              <span>I&apos;m refereeing this match</span>
+            </label>
           )}
+        </div>
 
-          {/* ──────── STEP 2: MATCH RULES (conditional) ──────── */}
-          {setupStep === 2 && hasRulesStep && (
-            <>
-              {/* Format summary card */}
-              {isCricket && selectedCricketFormat && (
-                <div className="mono-soft-panel mb-6 flex items-center gap-3" style={{ padding: '12px 16px' }}>
-                  <span className="text-2xl">🏏</span>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--se-color-ink)' }}>{selectedCricketFormat.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>{selectedCricketFormat.desc}</p>
-                  </div>
-                  <button
-                    onClick={() => setSetupStep(1)}
-                    className="ml-auto text-xs bg-transparent border-none cursor-pointer"
-                    style={{ color: 'var(--primary)' }}
-                  >
-                    Change
-                  </button>
-                </div>
-              )}
-
-              {/* Cricket customizable rules */}
-              {isCricket && cricketHasRules && (
-                <div className="mb-6">
-                  {/* Scoring Format toggle (Custom only) */}
-                  {cricketPreset === 'custom' && (
-                    <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        Scoring format
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, trackOvers: true, maxBalls: null }))}
-                          className={format.trackOvers !== false ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                        >
-                          Track by Overs
-                        </button>
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, trackOvers: false, overs: null, powerplay: [] }))}
-                          className={format.trackOvers === false ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                        >
-                          Track by Balls
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Overs (when tracking overs) */}
-                  {format.trackOvers !== false && (
-                    <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        Overs
-                      </span>
-                      <div className="flex gap-2 flex-wrap mb-3">
-                        <button
-                          onClick={() => {
-                            setFormat(prev => ({ ...prev, overs: null }));
-                            setCustomOvers('');
-                            setShowCustomOvers(false);
-                          }}
-                          className={format.overs === null && !showCustomOvers ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          No limit
-                        </button>
-                        {OVERS_PRESETS.map(preset => (
-                          <button
-                            key={preset.value}
-                            onClick={() => {
-                              setFormat(prev => ({ ...prev, overs: preset.value }));
-                              setCustomOvers('');
-                              setShowCustomOvers(false);
-                            }}
-                            className={format.overs === preset.value && !showCustomOvers ? 'mono-btn-primary' : 'mono-btn'}
-                            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                          >
-                            {preset.label}
-                          </button>
-                        ))}
-                        <button
-                          onClick={() => { setShowCustomOvers(true); setCustomOvers(''); }}
-                          className={showCustomOvers ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          Custom
-                        </button>
-                      </div>
-                      {showCustomOvers && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <input
-                            type="number" min="1" max="50"
-                            className="mono-input"
-                            style={{ width: '80px', textAlign: 'center' }}
-                            placeholder="1-50" value={customOvers}
-                            onChange={(e) => {
-                              const v = Number.parseInt(e.target.value);
-                              setCustomOvers(e.target.value);
-                              if (v >= 1 && v <= 50) setFormat(prev => ({ ...prev, overs: v }));
-                            }}
-                          />
-                          <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>overs</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Ball limit (when tracking balls only, Custom) */}
-                  {cricketPreset === 'custom' && format.trackOvers === false && (
-                    <div className="mb-6">
-                      <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        Ball limit
-                      </span>
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, maxBalls: null }))}
-                          className={!format.maxBalls ? 'mono-btn-primary' : 'mono-btn'}
-                          style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                        >
-                          No limit
-                        </button>
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, maxBalls: Math.max(6, (prev.maxBalls || 30) - 6) }))}
-                          className="mono-btn"
-                          style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.25rem', fontWeight: 700 }}
-                        >
-                          &minus;
-                        </button>
-                        <span className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                          {format.maxBalls || '\u221E'}
-                        </span>
-                        <button
-                          onClick={() => setFormat(prev => ({ ...prev, maxBalls: (prev.maxBalls || 24) + 6 }))}
-                          className="mono-btn"
-                          style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.25rem', fontWeight: 700 }}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>No over structure — just track runs and balls</p>
-                    </div>
-                  )}
-
-                  <hr className="mono-divider mb-6" />
-
-                  {/* Players */}
-                  <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                      Players per side
-                    </span>
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, players: Math.max(2, (prev.players || 6) - 1) }))}
-                        className="mono-btn"
-                        style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.25rem', fontWeight: 700 }}
-                        disabled={format.players <= 2}
-                      >
-                        &minus;
-                      </button>
-                      <span className="text-2xl font-bold font-mono" style={{ color: 'var(--se-color-ink)', minWidth: '36px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                        {format.players || 6}
-                      </span>
-                      <button
-                        onClick={() => {
-                          const maxPlayers = format.solo ? 10 : 11;
-                          setFormat(prev => ({ ...prev, players: Math.min(maxPlayers, (prev.players || 6) + 1) }));
-                        }}
-                        className="mono-btn"
-                        style={{ width: '40px', height: '40px', padding: 0, fontSize: '1.25rem', fontWeight: 700 }}
-                        disabled={format.players >= (format.solo ? 10 : 11)}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
-                      {(format.players || 6) - 1} wickets to bowl a team out
-                    </p>
-                  </div>
-
-                  {/* Match type */}
-                  <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                      Match type
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, solo: true, players: Math.min(prev.players || 6, 10) }))}
-                        className={format.solo ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                      >
-                        Bat Only
-                      </button>
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, solo: false }))}
-                        className={format.solo === false ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                      >
-                        Bat &amp; Bowl
-                      </button>
-                    </div>
-                    <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
-                      {format.solo
-                        ? 'One team bats, other bowls'
-                        : 'Both teams bat and bowl'
-                      }
-                    </p>
-                  </div>
-
-                  {/* Innings Format (Gully and Custom) */}
-                  <div className="mb-6">
-                    <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                      Innings
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, totalInnings: 2, declaration: false, followOn: false }))}
-                        className={(format.totalInnings || 2) === 2 ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                      >
-                        1 per side
-                      </button>
-                      <button
-                        onClick={() => setFormat(prev => ({ ...prev, totalInnings: 4, declaration: true, followOn: true }))}
-                        className={format.totalInnings === 4 ? 'mono-btn-primary' : 'mono-btn'}
-                        style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                      >
-                        2 per side (Test style)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* House Rules (Gully only) */}
-                  {cricketPreset === 'gully' && (
-                    <div className="mb-6">
-                      <button
-                        onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="text-xs bg-transparent border-none cursor-pointer font-swiss"
-                        style={{ color: 'var(--primary)', padding: '8px 0', marginBottom: showAdvanced ? 8 : 0 }}
-                      >
-                        {showAdvanced ? '- Hide advanced options' : '+ Advanced options'}
-                      </button>
-                      {showAdvanced && (
-                        <div>
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                            House rules
-                          </span>
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => setFormat(prev => ({ ...prev, lastManStands: !prev.lastManStands }))}
-                              className={format.lastManStands ? 'mono-btn-primary' : 'mono-btn'}
-                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                            >
-                              Last Man Batting
-                            </button>
-                            <button
-                              onClick={() => setFormat(prev => ({ ...prev, trialBall: !prev.trialBall }))}
-                              className={format.trialBall ? 'mono-btn-primary' : 'mono-btn'}
-                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                            >
-                              Trial Ball
-                            </button>
-                            <button
-                              onClick={() => setFormat(prev => ({ ...prev, oneTipOneHand: !prev.oneTipOneHand }))}
-                              className={format.oneTipOneHand ? 'mono-btn-primary' : 'mono-btn'}
-                              style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                            >
-                              One Tip One Hand
-                            </button>
-                          </div>
-                          <p className="text-xs mt-2" style={{ color: 'var(--se-color-ink-faint)' }}>
-                            {format.lastManStands && 'Last batter plays alone \u00B7 '}
-                            {format.trialBall && 'First ball doesn\'t count \u00B7 '}
-                            {format.oneTipOneHand && 'One-bounce catch = out'}
-                            {!format.lastManStands && !format.trialBall && !format.oneTipOneHand && 'Toggle rules on/off'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Non-cricket custom rules */}
-              {!isCricket && formatMode === 'custom' && (
-                <div className="mb-6">
-                  {/* Sets sports */}
-                  {engine === 'sets' && sportConfig?.config?.setFormats && (
-                    <>
-                      <div className="mb-6">
-                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                          Format
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setFormat(prev => ({ type: 'best-of', sets: 3, points: prev.points || 25 }))}
-                            className={format.type === 'best-of' ? 'mono-btn-primary' : 'mono-btn'}
-                            style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                          >
-                            Best-of
-                          </button>
-                          <button
-                            onClick={() => setFormat(prev => ({ type: 'single', target: prev.target || 15, points: prev.points || 25 }))}
-                            className={format.type === 'single' ? 'mono-btn-primary' : 'mono-btn'}
-                            style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                          >
-                            Single set
-                          </button>
-                        </div>
-                      </div>
-
-                      {format.type === 'best-of' && (
-                        <>
-                          <div className="mb-6">
-                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                              Sets
-                            </span>
-                            <div className="flex gap-2 flex-wrap">
-                              {sportConfig.config.setFormats.filter(f => f.sets > 1).map((formatOption, idx) => (
-                                <button
-                                  key={`set-format-${formatOption.sets}-${idx}`}
-                                  onClick={() => setFormat(prev => ({ ...prev, type: 'best-of', sets: formatOption.sets }))}
-                                  className={format.sets === formatOption.sets ? 'mono-btn-primary' : 'mono-btn'}
-                                  style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                                >
-                                  {formatOption.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="mb-6">
-                            <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                              Points per set
-                            </span>
-                            <div className="flex gap-2 flex-wrap">
-                              {POINTS_PRESETS.map(preset => (
-                                <button
-                                  key={preset.value}
-                                  onClick={() => setFormat(prev => ({ ...prev, points: preset.value }))}
-                                  className={format.points === preset.value ? 'mono-btn-primary' : 'mono-btn'}
-                                  style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                                >
-                                  {preset.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {format.type === 'single' && (
-                        <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                            Points to win
-                          </span>
-                          <div className="flex gap-2 flex-wrap">
-                            {POINTS_PRESETS.map(preset => (
-                              <button
-                                key={preset.value}
-                                onClick={() => setFormat(prev => ({ ...prev, type: 'single', target: preset.value }))}
-                                className={format.target === preset.value ? 'mono-btn-primary' : 'mono-btn'}
-                                style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                              >
-                                {preset.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* Goals sports */}
-                  {isGoals && (
-                    <>
-                      <div className="mb-6">
-                        <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                          How are you playing?
-                        </span>
-                        <div className="flex gap-2">
-                          {[
-                            { key: 'free', label: 'Free play' },
-                            { key: 'timed', label: 'By time' },
-                            { key: 'points', label: 'By points' },
-                          ].map(opt => (
-                            <button
-                              key={opt.key}
-                              onClick={() => setFormat({ mode: opt.key })}
-                              className={format.mode === opt.key ? 'mono-btn-primary' : 'mono-btn'}
-                              style={{ padding: '8px 16px', fontSize: '0.8125rem', flex: 1 }}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {format.mode === 'timed' && (
-                        <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                            Time limit
-                          </span>
-                          <div className="flex gap-2 flex-wrap">
-                            {(sportConfig?.config?.timePresets || [
-                              { label: '10 min', value: 600 },
-                              { label: '20 min', value: 1200 },
-                              { label: '30 min', value: 1800 },
-                            ]).map(opt => (
-                              <button
-                                key={opt.label}
-                                onClick={() => setFormat({ mode: 'timed', timeLimit: opt.value })}
-                                className={format.timeLimit === opt.value ? 'mono-btn-primary' : 'mono-btn'}
-                                style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {format.mode === 'points' && (
-                        <div className="mb-6">
-                          <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                            First to
-                          </span>
-                          <div className="flex gap-2 flex-wrap">
-                            {(sportConfig?.config?.pointPresets || [5, 10, 15, 20]).map(pts => (
-                              <button
-                                key={pts}
-                                onClick={() => setFormat({ mode: 'points', target: pts })}
-                                className={format.target === pts ? 'mono-btn-primary' : 'mono-btn'}
-                                style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-                              >
-                                {pts} {sportConfig?.config?.scoringUnit || 'point'}s
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Next button */}
-              <button
-                onClick={() => setSetupStep(hasRulesStep ? 3 : 2)}
-                className="mono-btn-primary w-full"
-                style={{ padding: '12px', fontSize: '0.9375rem' }}
-              >
-                Next: Teams
-              </button>
-            </>
-          )}
-
-          {/* ──────── FINAL STEP: TEAMS ──────── */}
-          {setupStep === totalSteps && (
-            <>
-              {/* Format summary */}
-              <section className="mono-soft-panel mb-6" style={{ padding: '16px' }} aria-labelledby="quick-match-rules-heading">
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span className="text-2xl">{sportConfig?.icon || '\u{1F3D0}'}</span>
-                    <div>
-                      <h2 id="quick-match-rules-heading" className="text-sm font-semibold" style={{ color: 'var(--se-color-ink)' }}>
-                        Match rules
-                      </h2>
-                      <p className="text-sm mt-1" style={{ color: '#333' }}>
-                        {isCricket && selectedCricketFormat ? selectedCricketFormat.name : sportConfig?.name}
-                      </p>
-                      <p className="text-xs font-mono mt-1" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        {ruleSummary}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSetupStep(1)}
-                    className="text-xs bg-transparent cursor-pointer w-full sm:w-auto"
-                    style={{
-                      minHeight: 44,
-                      border: '1.5px solid var(--primary)',
-                      color: 'var(--primary)',
-                      padding: '0 12px',
-                    }}
-                  >
-                    Edit Rules
-                  </button>
-                </div>
-              </section>
-
-              {/* Team names */}
-              <fieldset className="mb-8 border-0 p-0">
-                <legend className="text-xs uppercase tracking-widest font-normal mb-4 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                  Teams
-                </legend>
-
-                {/* Team 1 */}
-                <div ref={team1Ref} className="relative mb-5">
-                  <label htmlFor="quick-team-1" className="text-xs font-semibold mb-2 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    Team A name
-                  </label>
-                  <input
-                    id="quick-team-1"
-                    type="text"
-                    className="mono-input mb-1"
-                    placeholder="Team A"
-                    value={team1Name}
-                    onChange={e => { setTeam1Name(e.target.value); setShowTeam1Suggestions(e.target.value.length >= 2); }}
-                    onFocus={() => setShowTeam1Suggestions(true)}
-                    maxLength={50}
-                  />
-                  {showTeam1Suggestions && (team1Loading || team1Empty || sortedTeam1.length > 0) && (
-                    <div
-                      className="absolute left-0 right-0"
-                      style={{
-                        background: '#fff', border: '1px solid #eee',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 10,
-                        maxHeight: 180, overflowY: 'auto',
-                      }}
-                    >
-                      {team1Loading && (
-                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>Searching teams…</p>
-                      )}
-                      {team1Empty && (
-                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>No saved teams match “{debouncedTeam1}”.</p>
-                      )}
-                      {sortedTeam1.map(t => (
-                        <button
-                          key={t._id}
-                          onClick={() => { setTeam1Name(t.name); setShowTeam1Suggestions(false); }}
-                          onMouseDown={e => e.preventDefault()}
-                          className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
-                          style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
-                        >
-                          <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>{t.name}</span>
-                          <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-faint)' }}>
-                            {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {teamColourOn && (
-                    <div className="mt-3">
-                      <TeamColourPicker label="Team A colour" value={team1Color} onChange={setTeam1Color} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Team 2 */}
-                <div ref={team2Ref} className="relative">
-                  <label htmlFor="quick-team-2" className="text-xs font-semibold mb-2 block" style={{ color: 'var(--se-color-ink-muted)' }}>
-                    Team B name
-                  </label>
-                  <input
-                    id="quick-team-2"
-                    type="text"
-                    className="mono-input mb-1"
-                    placeholder="Team B"
-                    value={team2Name}
-                    onChange={e => { setTeam2Name(e.target.value); setShowTeam2Suggestions(e.target.value.length >= 2); }}
-                    onFocus={() => setShowTeam2Suggestions(true)}
-                    maxLength={50}
-                  />
-                  {showTeam2Suggestions && (team2Loading || team2Empty || sortedTeam2.length > 0) && (
-                    <div
-                      className="absolute left-0 right-0"
-                      style={{
-                        background: '#fff', border: '1px solid #eee',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)', zIndex: 10,
-                        maxHeight: 180, overflowY: 'auto',
-                      }}
-                    >
-                      {team2Loading && (
-                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>Searching teams…</p>
-                      )}
-                      {team2Empty && (
-                        <p role="status" className="text-sm" style={{ padding: '8px 12px', color: 'var(--se-color-ink-muted)' }}>No saved teams match “{debouncedTeam2}”.</p>
-                      )}
-                      {sortedTeam2.map(t => (
-                        <button
-                          key={t._id}
-                          onClick={() => { setTeam2Name(t.name); setShowTeam2Suggestions(false); }}
-                          onMouseDown={e => e.preventDefault()}
-                          className="w-full text-left bg-transparent border-none cursor-pointer flex items-center justify-between"
-                          style={{ padding: '8px 12px', borderBottom: '1px solid #f5f5f5' }}
-                        >
-                          <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>{t.name}</span>
-                          <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-faint)' }}>
-                            {t.matchCount} match{t.matchCount !== 1 ? 'es' : ''}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {teamColourOn && (
-                    <div className="mt-3">
-                      <TeamColourPicker label="Team B colour" value={team2Color} onChange={setTeam2Color} />
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={toggleRosterSetup}
-                  className="text-xs bg-transparent cursor-pointer font-swiss mt-4 mb-3"
-                  style={{
-                    alignItems: 'center',
-                    border: '1.5px solid #dbeafe',
-                    color: 'var(--primary)',
-                    display: 'inline-flex',
-                    minHeight: 44,
-                    padding: '0 12px',
-                  }}
-                >
-                  {showRosterSetup ? 'Hide players' : 'Add players'}
-                  {playerCount > 0 && !showRosterSetup && (
-                    <span style={{ color: 'var(--se-color-ink-muted)', marginLeft: 4 }}>({playerCount})</span>
-                  )}
-                </button>
-
-                {showRosterSetup && (
-                  <div className="mb-4 grid gap-4" style={{ paddingLeft: 8, borderLeft: '2px solid #eee' }}>
-                    <div>
-                      <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        Team A players
-                      </h3>
-                      <PlayerSearchInput
-                        players={team1Players}
-                        onAdd={p => setTeam1Players(prev => [...prev, p])}
-                        onRemove={i => setTeam1Players(prev => prev.filter((_, idx) => idx !== i))}
-                        placeholder="Search @username or type name"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
-                        Team B players
-                      </h3>
-                      <PlayerSearchInput
-                        players={team2Players}
-                        onAdd={p => setTeam2Players(prev => [...prev, p])}
-                        onRemove={i => setTeam2Players(prev => prev.filter((_, idx) => idx !== i))}
-                        placeholder="Search @username or type name"
-                      />
-                    </div>
-                  </div>
-                )}
-              </fieldset>
-
-              {/* Referee checkbox */}
-              {showRefereeOption && (
-                <label
-                  className="flex items-center gap-3 mb-6 cursor-pointer"
-                  style={{ padding: '12px 0' }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isRefereeing}
-                    onChange={e => setIsRefereeing(e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
-                  />
-                  <span className="text-sm" style={{ color: 'var(--se-color-ink)' }}>
-                    I'm refereeing this match
-                  </span>
-                </label>
-              )}
-
-              <button
-                onClick={startMatch}
-                className="mono-btn-primary w-full"
-                style={{
-                  minHeight: 52,
-                  padding: '12px',
-                  fontSize: '0.9375rem',
-                }}
-                aria-disabled={!teamNamesReady}
-                aria-describedby={!teamNamesReady ? 'start-match-hint' : undefined}
-              >
-                {startButtonLabel}
-              </button>
-              {!teamNamesReady && (
-                <p id="start-match-hint" role="status" className="text-xs text-center mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>
-                  Add both team names to start the match.
-                </p>
-              )}
-            </>
+        <div className="kit-setup-cta">
+          <button
+            type="button"
+            onClick={startMatch}
+            className="se-go"
+            aria-disabled={!teamNamesReady}
+            aria-describedby={!teamNamesReady ? 'start-match-hint' : undefined}
+          >
+            {startButtonLabel}
+            <GoArrow />
+          </button>
+          {!teamNamesReady && (
+            <p id="start-match-hint" role="status" className="kit-setup-hint">
+              Add both team names to start the match.
+            </p>
           )}
         </div>
       </div>
