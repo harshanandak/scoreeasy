@@ -38,7 +38,7 @@ The `*_scorer.png` and `*_after_Finish.png` files record the scoring and result 
 - Lint: **0 errors, 29 warnings**. Type-check passed.
 - Browser sweep: before **0/2** completion contracts satisfied; after **4/4** satisfied. JSON and screenshots are alongside this file.
 - Expected failures: routing **7 before / 7 after**; repository-wide **11 before / 11 after**. Master had no separate cricket expected-failure contract to flip; five passing cricket route cases were added.
-- Full suite and production build: **not run at this checkpoint**. The normal pre-push hook owns both after “lane free”. No hosted checks or PR exist yet.
+- Full suite and production build: **not run at this checkpoint**. At the time, the normal pre-push hook owned both after “lane free”; no hosted checks or PR existed yet. For current validation, read the required CI `verify` check; local pre-push does not build.
 
 The master merge retains Home RA-3 and goals RA-1 fixes. On “lane free”, fetch and merge master again, retain the incoming tennis fix in the audit and contract files, rerun focused validation, and push through the normal hooks before opening the PR.
 
@@ -48,4 +48,4 @@ The master merge retains Home RA-3 and goals RA-1 fixes. On “lane free”, fet
 - Route contracts: **37 total; 31 normal passes; 6 expected failures**. Home RA-3, goals RA-1 and tennis RA-1/RA-2 remain normal contracts.
 - Expected failures against tennis master: **6 before / 6 after routing; 10 before / 10 after repository-wide**. The earlier 7/11 baseline fell to 6/10 through tennis #169; cricket adds five passing route cases and does not change the remaining expected failures.
 - The palette remains exactly **669**, with no BASELINE or exclusion change. The cricket implementations and the inspected demo captures are unchanged by the tennis integration.
-- Full-suite/build terminal results from the normal pre-push hook are reported in the PR. Hosted checks are separate evidence.
+- Full-suite/build terminal results from the normal pre-push hook at the time are reported in the PR. Hosted checks are separate evidence. The current full-suite/build gate is the required CI `verify` check.

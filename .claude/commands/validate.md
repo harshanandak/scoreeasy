@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
 > **Note:** Three things share the "validate" name in Forge:
 > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
 > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
-> - `lefthook run pre-commit` / `lefthook run pre-push`: Local checks — pre-commit runs lint, type-check, and agent-config-sync; pre-push runs only related tests since `origin/master` (does NOT rebase; fetch `origin master` first). The required CI `verify` check (`.github/workflows/ci.yml`) is the full-suite gate: build, all tests, lint, and type-check. CI does **not** run `sync:agents --check`, so commits made outside the local hook can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
+> - `lefthook run pre-commit` / `lefthook run pre-push`: Local checks — pre-commit runs lint, type-check, and agent-config-sync; pre-push selects related tests since `origin/master`, or the full suite for source deletions/renames and test-environment changes (does NOT rebase; fetch `origin master` first). The required CI `verify` check (`.github/workflows/ci.yml`) is the full-suite gate: build, all tests, lint, and type-check. CI does **not** run `sync:agents --check`, so commits made outside the local hook can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
 
 Run comprehensive validation including type checking, linting, code review, security review, and tests.
 
@@ -23,7 +23,7 @@ Or use the validation script (checks only — no rebase):
 
 ```bash
 lefthook run pre-commit   # lint + type-check + agent-config-sync
-lefthook run pre-push     # related tests since origin/master; no local build
+lefthook run pre-push     # related tests, or full suite for conservative triggers; no local build
                           # Neither rebases. Use /validate for the full workflow (rebase + checks).
 ```
 
@@ -68,7 +68,7 @@ reflect the true state of what will be merged.
 
 ## What This Command Does
 
-**Quick Start**: Run `lefthook run pre-commit && lefthook run pre-push` for the local checks (`lefthook.yml`). Pre-push uses `bun run test --changed origin/master --passWithNoTests`, which selects tests through source imports and reports success when no related tests exist. Git errors still fail; detached HEAD works with the explicit base ref. The required CI `verify` check runs the full test suite and build, plus lint and type-check. The workflow command is `/validate`. See individual steps below for details.
+**Quick Start**: Run `lefthook run pre-commit && lefthook run pre-push` for the local checks (`lefthook.yml`). Pre-push calls `bun scripts/pre-push-tests.mjs`: source deletions/renames or changes to `package.json`, `bun.lock`, `vite.config.*`, `vitest.config.*`, `tsconfig*.json`, `src/test/**`, or the selection script run the full suite. Otherwise `--changed origin/master --passWithNoTests` selects tests through source imports and explicitly reports success when none are related. Missing base/history blocks with recovery instructions; detached HEAD is supported. See `docs/agents/forge-workflow.md` for the source-file definition and staged/unstaged rules. The required CI `verify` check runs the full test suite and build, plus lint and type-check. The workflow command is `/validate`. See individual steps below for details.
 
 ### Step 1: Type Check
 ```bash

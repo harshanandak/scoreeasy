@@ -35,7 +35,7 @@ Fresh recovery checks and ownership boundaries are recorded below. A passing `it
 - [x] Read the live Forge inventory and verify every SA-01 through SA-20 ID against the report: 20 issues, four P0 and sixteen P1, all open with acceptance criteria. No issue was closed or duplicated.
 - [x] Separate historical browser/deployment evidence from fresh checks and identify parallel ownership overlaps. No app fixes or deployment operations are included.
 
-Commit/push hooks run lint, type checking, agent-config synchronization, the full test suite and a build. Their final outcomes and the hosted-check snapshot belong in the PR handoff; the focused checks above do not substitute for those hooks. Native behavior and the historical browser table still need fresh proof in the relevant fix PRs.
+At the time of this audit, commit/push hooks ran lint, type checking, agent-config synchronization, the full test suite and a build. Their recorded outcomes remain historical evidence. Current validation uses the required CI `verify` check as the full-suite/build gate; local pre-commit checks lint, types and agent-config synchronization, and pre-push selects related tests or the full suite for source deletions/renames and test-environment changes. Native behavior and the historical browser table still need fresh proof in the relevant fix PRs.
 
 ## Integration against landed master (2026-10-21)
 
