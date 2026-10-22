@@ -21,6 +21,7 @@ import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
+import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useScoringCompletion } from './scoringCompletionContext';
 
 const isTouchDevice = 'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
@@ -69,7 +70,8 @@ export default function MonoGoalsLiveScore() {
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
   const [overtimePeriod, setOvertimePeriod] = useState(0);
-  const scoringPrompt = useAppScoringPrompt();
+  const completion = useMatchCompletion();
+  const scoringPrompt = useAppScoringPrompt(completion);
   const showScoringWarning = scoringPrompt.showWarning;
 
   // Live broadcast (dkt/b0z/6fj): mirror each scoring action to the public watch
@@ -86,7 +88,6 @@ export default function MonoGoalsLiveScore() {
   // Debounce ref for rapid clicks
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
-  const autoFinishTimeoutRef = useRef(null);
   // Track current scores for history snapshots
   const score1Ref = useRef(score1);
   const score2Ref = useRef(score2);
@@ -126,6 +127,7 @@ export default function MonoGoalsLiveScore() {
     }
     if (!foundMatch) return;
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, completeMatch)) return;
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
@@ -158,6 +160,26 @@ export default function MonoGoalsLiveScore() {
     }
   }, [tournament, timerStarted]);
 
+  const finishMatch = (finalScore1, finalScore2) => completion.complete(() => {
+    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
+      ...m,
+      score1: finalScore1,
+      score2: finalScore2,
+      status: 'completed',
+      winner: determineWinner(finalScore1, finalScore2, m),
+      draftState: undefined,
+      completedAt: new Date().toISOString(),
+    }));
+    if (!saveSportTournament(sportConfig.storageKey, updatedTournament)) {
+      setSaveWarning('Save failed - storage may be full. Export your data.');
+      return false;
+    }
+    setSaveWarning('');
+    saveTournamentToConvex(updatedTournament);
+    live.finalize();
+    return true;
+  }, completeMatch, 300);
+
   // Auto-end match when time expires in timed mode
   useEffect(() => {
     if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
@@ -185,36 +207,7 @@ export default function MonoGoalsLiveScore() {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
 
-      autoFinishTimeoutRef.current = setTimeout(() => {
-        if (scoringPrompt.isInteractionLocked) return;
-
-        const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-          ...m,
-          score1,
-          score2,
-          status: 'completed',
-          winner: determineWinner(score1, score2, m),
-          draftState: undefined,
-          completedAt: new Date().toISOString(),
-        }));
-        const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-        if (!ok) {
-          setSaveWarning('Save failed - storage may be full. Export your data.');
-          return;
-        }
-        setSaveWarning('');
-        saveTournamentToConvex(updatedTournament);
-        live.finalize();
-        completeMatch();
-        autoFinishTimeoutRef.current = null;
-      }, 300);
-
-      return () => {
-        if (autoFinishTimeoutRef.current) {
-          clearTimeout(autoFinishTimeoutRef.current);
-          autoFinishTimeoutRef.current = null;
-        }
-      };
+      finishMatch(score1, score2);
     }
 
     return undefined;
@@ -278,27 +271,7 @@ export default function MonoGoalsLiveScore() {
         triggerConfetti();
         triggerHaptic([100, 100, 100, 100, 100]);
 
-        // Save match as completed
-        setTimeout(() => {
-          const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-            ...m,
-            score1: newScore1,
-            score2: newScore2,
-            status: 'completed',
-            winner: determineWinner(newScore1, newScore2, m),
-            draftState: undefined,
-            completedAt: new Date().toISOString(),
-          }));
-          const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-          if (!ok) {
-            setSaveWarning('Save failed - storage may be full. Export your data.');
-            return;
-          }
-          setSaveWarning('');
-          saveTournamentToConvex(updatedTournament);
-          live.finalize();
-          completeMatch();
-        }, 300);
+        finishMatch(newScore1, newScore2);
       }
     }
   };
@@ -383,35 +356,14 @@ export default function MonoGoalsLiveScore() {
       triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
     }
 
-    const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
-      ...m,
-      score1,
-      score2,
-      status: 'completed',
-      winner: determineWinner(score1, score2, m),
-      draftState: undefined,
-      completedAt: new Date().toISOString(),
-    }));
-
-    const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
-    if (!ok) {
-      setSaveWarning('Save failed - storage may be full. Export your data.');
-      return;
-    }
-    setSaveWarning('');
-    saveTournamentToConvex(updatedTournament);
-    live.finalize();
-
-    // Delay navigation slightly to show confetti
-    setTimeout(() => {
-      completeMatch();
-    }, 300);
+    finishMatch(score1, score2);
   };
 
   // Cancel and return
   // Discard the in-progress draft for this match (revert to its committed state),
   // then return to the bracket. Saving is automatic, so plain navigation keeps it.
   const discardAndExit = () => {
+    if (completion.locked) return;
     if (tournament && matchId) {
       const reverted = updateMatchInTournament(tournament, matchId, m => ({
         ...m,

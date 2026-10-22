@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
@@ -113,7 +114,6 @@ export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
   const navigate = useNavigate();
   const completeProtectedScoring = useScoringCompletion();
-  const completionStarted = useRef(false);
 
   const sportConfig = getSportById(sport);
   const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -122,13 +122,12 @@ export default function MonoCricketGuidedScorerRoute() {
   const match =
     tournament?.matches?.find((m) => m.id === matchId || m.id === Number(matchId)) ||
     (tournament?.knockoutMatches || []).find((m) => m.id === matchId || m.id === Number(matchId));
+  const matchIdentity = `${sport}:${id}:${matchId}`;
+  const completion = useMatchCompletion(match, matchIdentity);
 
   const [phase, setPhase] = useState(() => initialPhase(match));
 
   const navigateToTournament = () => {
-    // Finishing also triggers the completed-match effect on the next render.
-    if (completionStarted.current) return;
-    completionStarted.current = true;
     const destination = `/${sport || 'cricket'}/tournament/${id}`;
     if (completeProtectedScoring) {
       completeProtectedScoring(destination);
@@ -139,9 +138,9 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // A completed match is never re-scored — bounce back to the tournament.
   useEffect(() => {
-    if (match && match.status === 'completed') navigateToTournament();
+    completion.hydrate(match, matchIdentity, navigateToTournament);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [match?.status]);
+  }, [match?.status, matchIdentity]);
 
   if (!tournament || !match) {
     return (
@@ -156,7 +155,7 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // A completed match redirects via the effect above; render nothing meanwhile so
   // the active-scoring setup screen never flashes for one frame before the bounce.
-  if (match.status === 'completed') return null;
+  if (isCompletedMatch(match)) return null;
 
   const fmt = migrateCricketFormat(
     match.format || tournament?.knockoutConfig?.format || tournament?.format
@@ -212,6 +211,7 @@ export default function MonoCricketGuidedScorerRoute() {
   // Live persistence for the current innings: mirror the batting aggregate and
   // keep the raw engine innings in the draft (single-innings bridge, per phase).
   const handleStateChange = (innings) => {
+    if (completion.locked) return;
     persist((m) => ({
       ...m,
       status: 'in-progress',
@@ -248,7 +248,7 @@ export default function MonoCricketGuidedScorerRoute() {
   };
 
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
-  const handleComplete2 = (payload) => {
+  const handleComplete2 = (payload) => completion.complete(() => {
     const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
     const agg = mirrorAggregate(finalInnings, fmt);
     const updated = updateMatchInTournament(tournament, matchId, (m) => {
@@ -269,8 +269,7 @@ export default function MonoCricketGuidedScorerRoute() {
       };
     });
     saveSportTournament(storageKey, updated);
-    navigateToTournament();
-  };
+  }, navigateToTournament);
 
   // ---- render by phase ----
 

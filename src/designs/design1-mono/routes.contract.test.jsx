@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import Design1Mono from './index';
@@ -98,6 +98,8 @@ function RouterProbe() {
       <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>
       <button type="button" onClick={() => navigate(-1)}>Probe back</button>
       <button type="button" onClick={() => navigate('/history')}>Probe go history</button>
+      <button type="button" onClick={() => navigate('/football/tournament/100')}>Probe tournament</button>
+      <button type="button" onClick={() => navigate('/football/tournament/100/match/m1/score')}>Probe scorer</button>
     </div>
   );
 }
@@ -219,6 +221,49 @@ describe('route contracts: already correct (pinned)', () => {
 });
 
 describe('route contracts: goals completion (RA-1/RA-2)', () => {
+  it('cannot reopen a completed football match through browser Forward and score into a draft', async () => {
+    seed('se_football', [footballTournament()]);
+    globalThis.history.replaceState({ idx: 0 }, '', '/history');
+    render(<BrowserRouter><RouterProbe /><Design1Mono /></BrowserRouter>);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe tournament' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe scorer' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    const finished = JSON.parse(localStorage.getItem('se_football'));
+    await act(async () => {
+      const popped = new Promise(resolve => globalThis.addEventListener('popstate', resolve, { once: true }));
+      globalThis.history.forward();
+      await popped;
+    });
+    await settleRoute();
+    const score = screen.queryByRole('button', { name: 'Add 1 point to Red' });
+    if (score) fireEvent.click(score);
+    fireEvent.keyDown(globalThis, { key: 'q' });
+    expect(JSON.parse(localStorage.getItem('se_football'))).toEqual(finished);
+    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    expect(screen.queryByRole('button', { name: 'Add 1 point to Red' })).not.toBeInTheDocument();
+  });
+
+  it('reuses the unwound tournament entry so one Back leaves it', async () => {
+    seed('se_football', [footballTournament()]);
+    globalThis.history.replaceState({ idx: 0 }, '', '/history');
+    render(<BrowserRouter><RouterProbe /><Design1Mono /></BrowserRouter>);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe tournament' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe scorer' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    await pressProbeBack();
+    await waitFor(() => expect(currentRoute()).toBe('/history'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
   it('covers every registered goals-engine sport', () => {
     expect(getGoalsSports().map(({ id }) => id).sort()).toEqual(['basketball', 'football', 'hockey', 'kabaddi']);
   });
