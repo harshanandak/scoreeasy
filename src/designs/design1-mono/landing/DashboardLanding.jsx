@@ -7,7 +7,7 @@ import { getSportsList, getSportById } from '../../../models/sportRegistry';
 import { useAuth } from '../../../hooks/useAuth';
 import { isTournamentMatchCompleted } from '../../../utils/tournamentSync';
 import { deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
-import { sportIdentity } from '../../../lib/sportIdentity';
+import { sportIdentity, sportIdentityVars } from '../../../lib/sportIdentity';
 import LiveNowStrip from '../live/LiveNowStrip';
 import ErrorBoundary from '../../../components/ErrorBoundary';
 import { loadInProgressMatches } from '../../../utils/appEntry';
@@ -133,52 +133,62 @@ function Greeting({ name, fallback }) {
 }
 Greeting.propTypes = { name: PropTypes.string, fallback: PropTypes.string.isRequired };
 
-/* The last match in its team colours. Rematch is the screen's one Go; Details is a control. */
+/* The last match as one compact card on the normal surface (Harsha 2026-10-22: the full-bleed
+   two-gradient hero was too big and heavy). Team identity is a slim bar in each team's engine line
+   colour (>= 3:1 on the card) beside its name; the names and scores are ink on the surface. The
+   winner is bold. Rematch is the screen's one Go at control size; Details is a control. */
 function LastMatchHero({ match, navigate }) {
   const sport = getSportById(match.sport);
   const colours = teamColourVars(deriveTeamColours(match.team1Color, match.team2Color));
   const [score1, score2] = scorePair(match);
-  const long = Math.max(score1.length, score2.length) > 3;
-  const winnerSide = match.winner === match.team1 ? 'a' : match.winner === match.team2 ? 'b' : null;
+  const winnerSide = isDrawToken(match.winner) ? null : match.winner === match.team1 ? 'a' : match.winner === match.team2 ? 'b' : null;
   const completedSets = Array.isArray(match.sets) ? match.sets.filter((set) => set?.completed) : [];
-  const half = (side, name, score) => (
-    <div className={`kit-half kit-half-${side}`}>
-      {winnerSide === side && <span className="kit-won">Won</span>}
-      <span className="kit-half-name">{name}</span>
-      <span className={`kit-half-score${long ? ' is-long' : ''}`}>{score}</span>
+  const when = relativeDay(matchTime(match));
+  const result = match.winner ? getWinnerLabel(match.winner) : 'Completed';
+  const team = (side, name, score) => (
+    <div className={`kit-last-team${winnerSide === side ? ' is-winner' : ''}`}>
+      <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
+      <span className="kit-last-name">{name}</span>
+      <span className="kit-last-score">{score}</span>
     </div>
   );
 
   return (
-    <div className="kit-hero" style={colours}>
-      <div className="kit-hero-teams" role="group" aria-label={`${match.team1} ${score1}, ${match.team2} ${score2}`}>
-        {half('a', match.team1, score1)}
-        {half('b', match.team2, score2)}
+    <div className="kit-last" style={colours}>
+      <div className="kit-last-meta">
+        {sport && (
+          <span className="kit-sport-chip" style={sportIdentityVars(sport.id)}>
+            <i aria-hidden="true" />{sport.name}
+          </span>
+        )}
+        {when && <span>{when}</span>}
       </div>
-      <div className="kit-hero-foot">
-        <p>
-          {completedSets.length > 0
-            ? <>Sets <b>{completedSets.map((set) => `${set.score1}–${set.score2}`).join(' · ')}</b></>
-            : <b>{match.winner ? getWinnerLabel(match.winner) : 'Completed'}</b>}
-        </p>
-        <div className="kit-btnrow">
-          {sport && (
-            <button
-              type="button"
-              className="se-go"
-              aria-label={`Rematch: ${match.team1} vs ${match.team2}`}
-              onClick={() => navigate(`/${match.sport}/quick`, {
-                // The pair the hero shows goes with the rematch; quick setup validates it.
-                state: { teams: [match.team1, match.team2], colours: [match.team1Color, match.team2Color] },
-              })}
-            >
-              Rematch <GoArrow />
-            </button>
-          )}
-          <button type="button" className="se-ctl" aria-label="Last match details" onClick={() => navigate('/history')}>
-            Details
+      <div className="kit-last-teams" role="group" aria-label={`${match.team1} ${score1}, ${match.team2} ${score2}. ${result}`}>
+        {team('a', match.team1, score1)}
+        {team('b', match.team2, score2)}
+      </div>
+      <p className="kit-last-detail">
+        {completedSets.length > 0
+          ? <>Sets {completedSets.map((set) => `${set.score1}–${set.score2}`).join(' · ')}</>
+          : result}
+      </p>
+      <div className="kit-btnrow">
+        {sport && (
+          <button
+            type="button"
+            className="se-go kit-go-compact"
+            aria-label={`Rematch: ${match.team1} vs ${match.team2}`}
+            onClick={() => navigate(`/${match.sport}/quick`, {
+              // The pair the card shows goes with the rematch; quick setup validates it.
+              state: { teams: [match.team1, match.team2], colours: [match.team1Color, match.team2Color] },
+            })}
+          >
+            Rematch <GoArrow />
           </button>
-        </div>
+        )}
+        <button type="button" className="se-ctl" aria-label="Last match details" onClick={() => navigate('/history')}>
+          Details
+        </button>
       </div>
     </div>
   );
@@ -340,11 +350,7 @@ function ExistingUserDashboard({
 
       {hero && (
         <section aria-labelledby="last-match-title">
-          <KitSection
-            id="last-match-title"
-            title={heroSport ? `Last match · ${heroSport.name}` : 'Last match'}
-            aside={<span>{relativeDay(matchTime(hero))}</span>}
-          />
+          <KitSection id="last-match-title" title="Last match" />
           <LastMatchHero match={hero} navigate={navigate} />
         </section>
       )}

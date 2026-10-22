@@ -118,32 +118,42 @@ describe('DashboardLanding (Kit Home)', () => {
   });
 
   describe('returning scorer', () => {
-    it('shows the last match in its team colours, and Rematch is the only Go', () => {
+    it('shows the last match as a compact card with team colour accents, and Rematch is the only Go', () => {
       seed([volleyball, kabaddi]);
       const { container } = renderDashboard();
 
-      expect(screen.getByRole('heading', { name: 'Last match · Volleyball' })).toBeInTheDocument();
-      const hero = container.querySelector('.kit-hero');
+      expect(screen.getByRole('heading', { name: 'Last match' })).toBeInTheDocument();
+      const card = container.querySelector('.kit-last');
+      // Meta line: the sport chip and the day.
+      expect(card.querySelector('.kit-last-meta')).toHaveTextContent('Volleyball');
+      expect(card.querySelector('.kit-last-meta')).toHaveTextContent('Yesterday');
+      // Team identity is the engine's line colour on a slim bar beside each name.
       const { A, B } = deriveTeamColours('#d62828', '#1d4ed8');
-      expect(hero.style.getPropertyValue('--team-a-core')).toBe(A.core);
-      expect(hero.style.getPropertyValue('--team-b-core')).toBe(B.core);
-      expect(within(hero).getByRole('group', { name: 'Royals 3, Strikers 1' })).toBeInTheDocument();
-      expect(within(hero).getByText('Won').closest('.kit-half')).toHaveClass('kit-half-a');
-      expect(hero).toHaveTextContent('Sets 25–21 · 22–25 · 25–19 · 25–23');
+      expect(card.style.getPropertyValue('--team-a-line')).toBe(A.line);
+      expect(card.style.getPropertyValue('--team-b-line')).toBe(B.line);
+      expect(card.querySelectorAll('.kit-last-bar')).toHaveLength(2);
+      // Names and scores are ink on the card surface; the winner is bold.
+      expect(within(card).getByRole('group', { name: 'Royals 3, Strikers 1. Royals won' })).toBeInTheDocument();
+      expect(card.querySelector('.kit-last-team.is-winner')).toHaveTextContent('Royals3');
+      expect(card.querySelectorAll('.kit-last-team.is-winner')).toHaveLength(1);
+      expect(card.querySelector('.kit-last-detail')).toHaveTextContent('Sets 25–21 · 22–25 · 25–19 · 25–23');
+      // No full-bleed team gradient any more.
+      expect(container.querySelector('.kit-half, .kit-hero-teams')).toBeNull();
 
       const gos = container.querySelectorAll('.se-go');
       expect(gos).toHaveLength(1);
       expect(gos[0]).toHaveAccessibleName('Rematch: Royals vs Strikers');
-      expect(within(hero).getByRole('button', { name: 'Last match details' })).toHaveClass('se-ctl');
+      expect(gos[0]).toHaveClass('kit-go-compact');
+      expect(within(card).getByRole('button', { name: 'Last match details' })).toHaveClass('se-ctl');
     });
 
     it('falls back to the engine default pair for records saved without colours', () => {
       seed([kabaddi]);
       const { container } = renderDashboard();
       const { A, B } = deriveTeamColours();
-      const hero = container.querySelector('.kit-hero');
-      expect(hero.style.getPropertyValue('--team-a-core')).toBe(A.core);
-      expect(hero.style.getPropertyValue('--team-b-core')).toBe(B.core);
+      const card = container.querySelector('.kit-last');
+      expect(card.style.getPropertyValue('--team-a-line')).toBe(A.line);
+      expect(card.style.getPropertyValue('--team-b-line')).toBe(B.line);
     });
 
     it('rematches with the same teams and colours into quick setup', async () => {
@@ -165,9 +175,9 @@ describe('DashboardLanding (Kit Home)', () => {
 
     it('marks no winner on a draw', () => {
       seed([football]);
-      renderDashboard();
-      expect(screen.queryByText('Won')).not.toBeInTheDocument();
-      expect(screen.getByText('Draw')).toBeInTheDocument();
+      const { container } = renderDashboard();
+      expect(container.querySelector('.kit-last-team.is-winner')).toBeNull();
+      expect(container.querySelector('.kit-last-detail')).toHaveTextContent('Draw');
     });
 
     it('lists the other recent matches with doodle badges, bolding the winner only', () => {
@@ -229,7 +239,7 @@ describe('DashboardLanding (Kit Home)', () => {
       vi.unstubAllGlobals();
       seed([volleyball]);
       renderDashboard();
-      expect(screen.getByRole('heading', { name: 'Last match · Volleyball' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Last match' })).toBeInTheDocument();
       expect(screen.queryByText('Your matches will appear here')).not.toBeInTheDocument();
     });
 
@@ -237,7 +247,7 @@ describe('DashboardLanding (Kit Home)', () => {
       globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
       seed([volleyball]);
       renderDashboard();
-      expect(screen.getByRole('heading', { name: 'Last match · Volleyball' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Last match' })).toBeInTheDocument();
     });
 
     it('does not render a second navigation inside the app shell', () => {

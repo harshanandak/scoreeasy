@@ -85,7 +85,7 @@ describe('Home Rematch keeps the saved team colours', () => {
     renderApp('/app');
     await settleRoute();
     const expected = deriveTeamColours(YELLOW, GREEN);
-    expect(document.querySelector('.kit-hero').style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
+    expect(document.querySelector('.kit-last').style.getPropertyValue('--team-a-line')).toBe(expected.A.line);
     fireEvent.click(screen.getByRole('button', { name: 'Rematch: Royals vs Strikers' }));
     await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/volleyball/quick'));
     await settleRoute();

@@ -253,7 +253,7 @@
   font-size: clamp(0.84rem, 3.9vw, 1.02rem);
 }
 
-/* ---- the Home hero: the last match in its team colours ---- */
+/* ---- first-run hero card ---- */
 .kit-hero {
   position: relative;
   overflow: hidden;
@@ -262,115 +262,125 @@
   box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
 }
 
-.kit-hero-teams {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-height: 176px;
-}
-
-/* The blend between the two teams lives in a narrow centre seam that no text reaches, so every
-   label stays on its own engine-gated gradient (a full-width blend would put white text on an
-   ungated mix for pairs like red v yellow). */
-.kit-hero-teams::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 56px;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, var(--team-a-core), var(--team-b-core));
-  pointer-events: none;
-}
-
-.kit-half {
-  position: relative;
+/* ---- the last match: one compact card on the surface ----
+   Team colour is a slim bar in the engine's line colour (>= 3:1 on card and page); every word
+   and numeral is ink on the surface, so nothing depends on a team gradient for contrast. */
+.kit-last {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 4px;
-  min-width: 0;
-  padding: 50px 34px 16px 16px;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
 }
 
-.kit-half-b {
-  padding: 50px 16px 16px 34px;
+.kit-last-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
-.kit-half-a {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
-    linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo));
-  color: var(--team-a-on);
-}
-
-.kit-half-b {
-  align-items: flex-end;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
-    linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo));
-  color: var(--team-b-on);
-  text-align: right;
-}
-
-.kit-half-name {
-  font-size: 1rem;
+.kit-sport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.78rem;
   font-weight: 750;
-  line-height: 1.15;
+}
+
+.kit-sport-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink-soft));
+}
+
+.kit-last-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kit-last-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.kit-last-bar {
+  flex: none;
+  width: 5px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.kit-last-bar-a {
+  background: var(--team-a-line);
+}
+
+.kit-last-bar-b {
+  background: var(--team-b-line);
+}
+
+.kit-last-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.02rem;
+  font-weight: 550;
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
-.kit-half-score {
-  font: 800 4.6rem/0.9 var(--se-font-num);
+.kit-last-score {
+  flex: none;
+  font: 700 1.7rem/1 var(--se-font-num);
   font-variant-numeric: tabular-nums;
 }
 
-.kit-half-score.is-long {
-  font-size: 3.2rem;
+.kit-last-team.is-winner .kit-last-name {
+  font-weight: 850;
 }
 
-.kit-won {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 8px;
-  font-size: 0.76rem;
+.kit-last-team.is-winner .kit-last-score {
   font-weight: 800;
 }
 
-.kit-half-a .kit-won {
-  background: var(--team-a-on);
-  color: var(--team-a-core);
+.kit-last-detail {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.84rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
-.kit-half-b .kit-won {
-  right: 14px;
-  left: auto;
-  background: var(--team-b-on);
-  color: var(--team-b-core);
+/* The Go at control size inside a card: a normal 48px control, not a slab. */
+.kit-last .kit-btnrow {
+  margin-top: 4px;
+}
+
+.kit-last .kit-btnrow .se-go.kit-go-compact {
+  flex: none;
+  width: auto;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 1rem;
 }
 
 .kit-hero-foot {
   position: relative;
   padding: 14px 16px 16px;
-}
-
-.kit-hero-foot p {
-  margin: 0 0 12px;
-  color: var(--se-color-ink-soft);
-  font-size: 0.86rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-.kit-hero-foot p b {
-  color: var(--se-color-ink);
 }
 
 .kit-btnrow {

@@ -231,11 +231,15 @@ describe('app entry route contract', () => {
     expect(within(appNav).queryByRole('button', { name: 'Stats', hidden: true })).not.toBeInTheDocument();
     // No Live tab until a /live destination exists (Kit decision 4 lands with S6): no dead tab.
     expect(within(appNav).queryByRole('button', { name: 'Live', hidden: true })).not.toBeInTheDocument();
-    // Dock icons are the hand-drawn layer (stroke 1.9 on 24), and the active tab is an ink fill.
+    // Dock icons are clean monolines, not the hand-drawn layer (that is for moments): one 1.9
+    // stroke on the 24 grid with round caps and joins. The active tab is an ink fill.
     for (const icon of appNav.querySelectorAll('.global-bottom-nav-icon svg')) {
       expect(icon).toHaveAttribute('stroke-width', '1.9');
+      expect(icon).toHaveAttribute('stroke-linecap', 'round');
+      expect(icon).toHaveAttribute('stroke-linejoin', 'round');
+      expect(icon).toHaveAttribute('viewBox', '0 0 24 24');
     }
-    expect(appNav.querySelector('.global-bottom-nav-icon path')).toHaveAttribute('d', 'M2.6 12.2C6 9.2 9.2 6.4 13.1 3.2');
+    expect(appNav.querySelector('.global-bottom-nav-icon path')).toHaveAttribute('d', 'M3.5 10.5 12 3.5l8.5 7');
     expect(navStyles).toMatch(/\.global-bottom-nav-account-cell\.is-active \{\s*background: var\(--se-color-ink\);\s*color: var\(--se-color-on-ink\);/);
   });
 
