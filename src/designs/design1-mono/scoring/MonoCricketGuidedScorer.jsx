@@ -803,10 +803,10 @@ const STYLES = `
 .ck-hero-ov { font-family: var(--se-font-mono); font-size: 0.75rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); margin-left: 8px; }
 .ck-hero-crr { font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
 .ck-hero-bar { height: 4px; border-radius: 99px; background: color-mix(in oklch, var(--se-color-inverse) 22%, transparent); margin: 10px 0; overflow: hidden; }
-.ck-hero-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.ck-hero-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--se-color-action-on-ink); }
 .ck-hero-chase { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-family: var(--se-font-mono); font-size: 0.6875rem; color: color-mix(in oklch, var(--se-color-inverse) 60%, transparent); }
 .ck-hero-chase b { color: var(--se-color-inverse); font-weight: 700; }
-.ck-hero-chase .need { color: var(--primary); font-weight: 800; }
+.ck-hero-chase .need { color: var(--se-color-action-on-ink); font-weight: 800; }
 
 .ck-power-ph { margin-top: 10px; padding: 40px 16px; text-align: center; border: 1px dashed color-mix(in oklch, var(--se-color-line) 40%, transparent); border-radius: 14px; font-family: var(--se-font-mono); font-size: 0.8125rem; font-weight: 700; color: var(--se-color-ink-muted); }
 

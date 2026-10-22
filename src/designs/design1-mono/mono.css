@@ -1791,7 +1791,6 @@ button.mono-stat-card {
 :where(button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 3px solid var(--se-color-focus-ring, var(--se-color-action));
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px color-mix(in oklch, var(--se-color-focus-ring, var(--se-color-action)) 18%, transparent);
 }
 
 /* --- Reduced Motion (Accessibility) --- */

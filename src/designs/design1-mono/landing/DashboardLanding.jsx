@@ -43,7 +43,9 @@ const s = {
   darkCard: {
     bg: 'var(--foreground)', text: 'var(--primary-foreground)', muted: '#999', border: '#333',
     outer: { background: 'var(--foreground)', border: '1.5px solid #444', borderRadius: 0, boxShadow: `6px 6px 0 -1.5px var(--foreground), 6px 6px 0 0 ${t.blue}` },
-    badge: { background: `color-mix(in oklch, ${t.blue} 15%, transparent)`, color: t.blue },
+    // badges sit on the ink card, so they take the on-ink foregrounds, not the Go fill colour
+    badge: { background: 'color-mix(in oklch, var(--se-color-action-on-ink) 15%, transparent)', color: 'var(--se-color-action-on-ink)' },
+    pausedBadge: { background: 'color-mix(in oklch, var(--se-color-warning-on-ink) 15%, transparent)', color: 'var(--se-color-warning-on-ink)' },
     resumeBtn: { background: t.blue, color: 'var(--primary-foreground)', border: 'none' },
   },
 };
@@ -266,7 +268,7 @@ function ExistingUserDashboard({
             const scores = session.participants.map(p => session.scores[p.id]?.total ?? 0);
             const sportName = getSportFromName(session.name);
             const statusLabel = session.status === 'paused' ? 'PAUSED' : 'LIVE';
-            const badgeBg = session.status === 'paused' ? { background: `color-mix(in oklch, ${t.orange} 15%, transparent)`, color: t.orange } : d.badge;
+            const badgeBg = session.status === 'paused' ? d.pausedBadge : d.badge;
 
             return (
               <button

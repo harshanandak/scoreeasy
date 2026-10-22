@@ -88,6 +88,10 @@
   --se-color-gold-ink: #7a5410;
   --se-color-gold-soft: #fff1c2;
   --se-color-on-gold: #0b0b0d;
+  /* foregrounds for text and marks that sit ON an ink surface (dark banners, hero cards):
+     the Go green is a fill and fails as text on ink (2.75:1), so ink surfaces get their own */
+  --se-color-action-on-ink: #5ee08f;
+  --se-color-warning-on-ink: var(--se-color-gold);
   --se-color-danger: #b42318;
   --se-color-danger-soft: #fbe9e7;
   --se-color-warning: var(--se-color-gold-ink);
@@ -204,6 +208,8 @@
   --chart-5: #b9bbc2;
   --se-color-line-soft: color-mix(in srgb, var(--se-color-ink) 12%, transparent);
   --se-color-on-ink: #0b0b0d;
+  --se-color-action-on-ink: #00662a;
+  --se-color-warning-on-ink: #7a5410;
   --se-color-live: #7ee2a2;
   --se-color-live-soft: #123321;
   --se-color-gold-ink: #f5c84c;
