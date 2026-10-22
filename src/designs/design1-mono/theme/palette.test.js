@@ -8,9 +8,11 @@ import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   contrastRatio,
+  cssDarkDeclarations,
   cssDeclarations,
   oklchToHex,
   palette,
+  paletteDarkHex,
   paletteHex,
   roleTokens,
   toHex,
@@ -21,10 +23,11 @@ const INDEX_CSS = readFileSync(join(SRC_DIR, 'index.css'), 'utf8');
 
 const normalise = (value) => value.replaceAll(/\s+/g, ' ').trim();
 
-// Declarations of the first top-level `:root { ... }` block in index.css.
-function parseRootDeclarations(css) {
-  const start = css.indexOf(':root {');
-  if (start === -1) throw new Error('index.css has no :root block');
+// Declarations of the first top-level `<header> { ... }` block in index.css.
+function parseBlockDeclarations(css, header) {
+  const found = css.indexOf(`\n${header} {`);
+  if (found === -1) throw new Error(`index.css has no ${header} block`);
+  const start = found + 1;
   let depth = 0;
   let end = start;
   for (let i = css.indexOf('{', start); i < css.length; i += 1) {
@@ -45,7 +48,8 @@ function parseRootDeclarations(css) {
   return declarations;
 }
 
-const rootDeclarations = parseRootDeclarations(INDEX_CSS);
+const rootDeclarations = parseBlockDeclarations(INDEX_CSS, ':root');
+const darkDeclarations = parseBlockDeclarations(INDEX_CSS, '.dark');
 
 describe('palette.js mirrors index.css (drift)', () => {
   it.each(Object.entries(cssDeclarations))('%s matches its index.css declaration', (name, value) => {
@@ -62,6 +66,18 @@ describe('palette.js mirrors index.css (drift)', () => {
       .sort();
     const pinned = Object.keys(cssDeclarations).filter((name) => expected.includes(name)).sort();
     expect(pinned).toEqual(expected);
+  });
+
+  it.each(Object.entries(cssDarkDeclarations))('dark %s matches its index.css .dark declaration', (name, value) => {
+    expect(darkDeclarations[name], `${name} is not declared in index.css .dark`).toBeDefined();
+    expect(normalise(value)).toBe(darkDeclarations[name]);
+  });
+
+  it('pins every dark --se-color-* role and every dark override of a pinned light value', () => {
+    const expected = Object.keys(darkDeclarations)
+      .filter((name) => name.startsWith('--se-color-') || name in cssDeclarations)
+      .sort();
+    expect(Object.keys(cssDarkDeclarations).sort()).toEqual(expected);
   });
 
   it('resolves every role to a literal colour value, never a var()', () => {
@@ -84,7 +100,7 @@ describe('oklch -> sRGB conversion', () => {
   it('matches reference conversions of the current CSS values', () => {
     expect(oklchToHex('oklch(0 0 0)')).toBe('#000000');
     expect(oklchToHex('oklch(1.0000 0 0)')).toBe('#ffffff');
-    // Current --primary ≈ #16a249 and --se-color-danger ≈ #ac281e.
+    // The pre-Kit --primary ≈ #16a249 and --se-color-danger ≈ #ac281e.
     expect(oklchToHex('oklch(0.6230 0.1688 149.1777)')).toBe('#16a249');
     expect(oklchToHex('oklch(0.49 0.17 29)')).toBe('#ac281e');
     expect(toHex('#e7f4ee')).toBe('#e7f4ee');
@@ -97,44 +113,64 @@ describe('oklch -> sRGB conversion', () => {
   });
 });
 
-// Current pairs. `knownGap` describes a pair below its threshold today;
+// Kit pairs (plan 2026-10-22 §2). `knownGap` describes a pair below its threshold today;
 // the test asserts it STILL fails so a value change must update the entry.
-// These gaps prescribe neither replacement values nor a future visual policy.
+// `themes` defaults to both; a light-only pair names a role the dark block does not
+// redefine yet (dark is opt-in and no screen sets it).
+const BOTH = ['light', 'dark'];
+const LIGHT = ['light'];
 const CONTRAST_PAIRS = [
   { fg: 'ink', bg: 'canvas', min: 4.5, use: 'body text on the page' },
   { fg: 'ink', bg: 'surface', min: 4.5, use: 'text on cards, dialogs, sheets' },
+  { fg: 'inkSoft', bg: 'canvas', min: 4.5, use: 'secondary text on the page' },
   { fg: 'inkSoft', bg: 'surface', min: 4.5, use: 'body copy, overlines' },
   { fg: 'inkMuted', bg: 'surface', min: 4.5, use: 'meta and placeholder text' },
   { fg: 'inkMuted', bg: 'canvas', min: 4.5, use: 'meta text on the page' },
-  { fg: 'ink', bg: 'actionSoft', min: 4.5, use: 'ink on the green wash' },
-  { fg: 'inverse', bg: 'actionStrong', min: 4.5, use: 'label on pressed action' },
+  { fg: 'inkMuted', bg: 'surfaceWarm', min: 4.5, use: 'meta text in a sunk well' },
+  { fg: 'ink', bg: 'actionSoft', min: 4.5, use: 'ink on the green wash', themes: LIGHT },
+  { fg: 'inverse', bg: 'action', min: 4.5, use: 'Go label on the core stop' },
+  { fg: 'inverse', bg: 'actionHi', min: 4.5, use: 'Go label on the lightest stop' },
+  { fg: 'inverse', bg: 'actionStrong', min: 4.5, use: 'Go label on the deepest stop' },
+  { fg: 'action', bg: 'canvas', min: 4.5, use: 'green text on the page', themes: LIGHT },
+  { fg: 'onInk', bg: 'ink', min: 4.5, use: 'label on an ink fill' },
+  { fg: 'live', bg: 'liveSoft', min: 4.5, use: 'the Live chip' },
+  { fg: 'onGold', bg: 'gold', min: 4.5, use: 'ink text on the gold fill' },
+  { fg: 'goldInk', bg: 'goldSoft', min: 4.5, use: 'warning / offline banner text' },
+  { fg: 'goldInk', bg: 'surface', min: 4.5, use: 'gold-ink text on a card' },
   { fg: 'danger', bg: 'surface', min: 4.5, use: 'danger text' },
   { fg: 'danger', bg: 'dangerSoft', min: 4.5, use: 'error notice text' },
-  { fg: 'inverse', bg: 'danger', min: 4.5, use: 'label on destructive fill' },
+  { fg: 'onInk', bg: 'danger', min: 4.5, use: 'label on the destructive fill' },
   { fg: 'warning', bg: 'surface', min: 4.5, use: 'warning text' },
   { fg: 'warning', bg: 'warningSoft', min: 4.5, use: 'warning notice text' },
-  { fg: 'focusRing', bg: 'canvas', min: 3, use: 'focus ring (non-text, 1.4.11)' },
-  { fg: 'blendGold', bg: 'surface', min: 3, use: 'gold milestone fill/edge (non-text)' },
-  { fg: 'inverse', bg: 'action', min: 4.5, use: 'label on the primary action', knownGap: 'current primary fill lacks text contrast' },
-  { fg: 'action', bg: 'canvas', min: 4.5, use: 'green text on the page', knownGap: 'current primary text lacks page contrast' },
-  { fg: 'surface', bg: 'canvas', min: 1.1, use: 'card separates from page', knownGap: 'current card and page have little separation' },
+  { fg: 'focusRing', bg: 'canvas', min: 3, use: 'focus ring on the page (non-text, 1.4.11)' },
+  { fg: 'focusRing', bg: 'surface', min: 3, use: 'focus ring on a card or sheet (non-text, 1.4.11)' },
+  { fg: 'surface', bg: 'canvas', min: 1.1, use: 'card separates from page', knownGap: 'cards separate by hairline and lift, not fill (§2)', themes: LIGHT },
 ];
 
+const THEMES = { light: paletteHex, dark: paletteDarkHex };
+const casesFor = (pairs) => pairs.flatMap((pair) => (pair.themes ?? BOTH)
+  .map((theme) => ({ ...pair, theme, ratio: contrastRatio(THEMES[theme][pair.fg], THEMES[theme][pair.bg]) })));
+
 describe('documented contrast pairs', () => {
-  it.each(CONTRAST_PAIRS.filter((pair) => !pair.knownGap))(
-    '$fg on $bg >= $min ($use)',
-    ({ fg, bg, min }) => {
-      expect(contrastRatio(paletteHex[fg], paletteHex[bg])).toBeGreaterThanOrEqual(min);
+  it.each(casesFor(CONTRAST_PAIRS.filter((pair) => !pair.knownGap)))(
+    '$theme: $fg on $bg >= $min ($use)',
+    ({ ratio, min }) => {
+      expect(ratio).toBeGreaterThanOrEqual(min);
     },
   );
 
-  it.each(CONTRAST_PAIRS.filter((pair) => pair.knownGap))(
-    '$fg on $bg is a known gap until $knownGap',
-    ({ fg, bg, min }) => {
+  it.each(casesFor(CONTRAST_PAIRS.filter((pair) => pair.knownGap)))(
+    '$theme: $fg on $bg is a known gap: $knownGap',
+    ({ ratio, min }) => {
       // If this fails, the value got fixed: remove `knownGap` from the entry.
-      expect(contrastRatio(paletteHex[fg], paletteHex[bg])).toBeLessThan(min);
+      expect(ratio).toBeLessThan(min);
     },
   );
+
+  it('the focus ring is ink in both themes', () => {
+    expect(paletteHex.focusRing).toBe(paletteHex.ink);
+    expect(paletteDarkHex.focusRing).toBe(paletteDarkHex.ink);
+  });
 });
 
 // ---------------------------------------------------------------------------

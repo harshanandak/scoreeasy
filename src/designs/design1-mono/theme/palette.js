@@ -1,7 +1,7 @@
 // Score Easy colour palette: a JS snapshot of the current root CSS values.
 //
-// This file pins the current values exactly as
-// src/index.css declares them; it changes no pixel. palette.test.js fails if
+// This file pins the current values (the Kit roles, plan 2026-10-22 §2: light
+// `:root` and `.dark`) exactly as src/index.css declares them; it changes no pixel. palette.test.js fails if
 // this file and index.css drift apart, if a documented contrast pair drops
 // below its threshold, or if raw colour literals exceed the recorded baseline.
 //
@@ -17,23 +17,24 @@
  * @type {Readonly<Record<string, string>>}
  */
 export const cssDeclarations = Object.freeze({
-  // shadcn layer: the values the --se-color-* aliases resolve to today
-  '--background': 'oklch(0.9782 0.0039 145.5458)',
-  '--foreground': 'oklch(0 0 0)',
-  '--card': 'oklch(0.9855 0.0026 145.5558)',
-  '--primary': 'oklch(0.6230 0.1688 149.1777)',
+  // shadcn layer: the values the --se-color-* aliases resolve to (Kit, plan 2026-10-22 §2)
+  '--background': '#f4f5f7',
+  '--foreground': '#0b0b0d',
+  '--card': '#ffffff',
+  '--primary': '#00662a',
   '--primary-foreground': 'oklch(1.0000 0 0)',
-  '--muted': 'oklch(0.9398 0.0035 145.5478)',
-  '--muted-foreground': 'oklch(0.5103 0 0)',
+  '--muted': '#eceef2',
+  '--muted-foreground': '#5f6067',
   '--accent': 'oklch(0.9231 0.0773 156.7494)',
-  '--accent-foreground': 'oklch(0.4104 0.1066 149.9393)',
-  '--destructive': 'oklch(0.5308 0.2178 29.2339)',
-  '--border': 'oklch(0 0 0)',
-  '--chart-5': 'oklch(0.3211 0 0)',
+  '--accent-foreground': '#004720',
+  '--destructive': '#b42318',
+  '--border': '#0b0b0d',
+  '--chart-5': '#4a4b52',
 
   // --se-color-* role layer (the intended API)
   '--se-color-action': 'var(--primary)',
-  '--se-color-focus-ring': 'oklch(0.58 0.22 255)',
+  '--se-color-action-hi': '#007c34',
+  '--se-color-focus-ring': 'var(--se-color-ink)',
   '--se-color-action-soft': 'var(--accent)',
   '--se-color-action-strong': 'var(--accent-foreground)',
   '--se-color-canvas': 'var(--background)',
@@ -46,17 +47,50 @@ export const cssDeclarations = Object.freeze({
   '--se-color-ink-faint': 'var(--muted-foreground)',
   '--se-color-line': 'var(--border)',
   '--se-color-line-strong': 'var(--border)',
+  '--se-color-line-soft': 'color-mix(in srgb, var(--se-color-ink) 10%, transparent)',
   '--se-color-inverse': 'var(--primary-foreground)',
-  '--se-color-danger': 'oklch(0.49 0.17 29)',
-  '--se-color-danger-soft': 'oklch(0.96 0.04 29)',
-  '--se-color-warning': 'oklch(0.54 0.12 78)',
-  '--se-color-warning-soft': 'oklch(0.96 0.05 86)',
+  '--se-color-on-ink': '#ffffff',
+  '--se-color-live': '#00662a',
+  '--se-color-live-soft': '#d9f6dd',
+  '--se-color-gold': '#f5b700',
+  '--se-color-gold-ink': '#7a5410',
+  '--se-color-gold-soft': '#fff1c2',
+  '--se-color-on-gold': '#0b0b0d',
+  '--se-color-danger': '#b42318',
+  '--se-color-danger-soft': '#fbe9e7',
+  '--se-color-warning': 'var(--se-color-gold-ink)',
+  '--se-color-warning-soft': 'var(--se-color-gold-soft)',
+  '--se-color-scrim': 'rgba(11, 11, 13, 0.45)',
 
   // HiFi-blend colours (FROZEN names; BLEND-GOVERNANCE.md)
   '--se-blend-green-wash': '#e7f4ee',
   '--se-blend-green-wash-strong': '#d6ecdf',
-  '--se-blend-gold': '#b8862e',
+  '--se-blend-gold': 'var(--se-color-gold)',
   '--se-blend-gold-bright': '#e8b64c',
+});
+
+/**
+ * index.css `.dark` declarations (Kit dark, plan 2026-10-22 §2), copied string-for-string.
+ * They override cssDeclarations; anything not listed keeps its light value.
+ * @type {Readonly<Record<string, string>>}
+ */
+export const cssDarkDeclarations = Object.freeze({
+  '--background': '#0e0f12',
+  '--foreground': '#f4f5f7',
+  '--card': '#191a1f',
+  '--muted': '#25272d',
+  '--muted-foreground': '#a2a4ab',
+  '--border': '#f4f5f7',
+  '--chart-5': '#b9bbc2',
+  '--se-color-line-soft': 'color-mix(in srgb, var(--se-color-ink) 12%, transparent)',
+  '--se-color-on-ink': '#0b0b0d',
+  '--se-color-live': '#7ee2a2',
+  '--se-color-live-soft': '#123321',
+  '--se-color-gold-ink': '#f5c84c',
+  '--se-color-gold-soft': '#3a2f0c',
+  '--se-color-danger': '#ff8f84',
+  '--se-color-danger-soft': '#3a1714',
+  '--se-color-scrim': 'rgba(0, 0, 0, 0.6)',
 });
 
 /**
@@ -75,7 +109,15 @@ export const roleTokens = Object.freeze({
   line: '--se-color-line',
   lineStrong: '--se-color-line-strong',
   inverse: '--se-color-inverse',
+  onInk: '--se-color-on-ink',
+  live: '--se-color-live',
+  liveSoft: '--se-color-live-soft',
+  gold: '--se-color-gold',
+  goldInk: '--se-color-gold-ink',
+  goldSoft: '--se-color-gold-soft',
+  onGold: '--se-color-on-gold',
   action: '--se-color-action',
+  actionHi: '--se-color-action-hi',
   actionStrong: '--se-color-action-strong',
   actionSoft: '--se-color-action-soft',
   danger: '--se-color-danger',
@@ -92,24 +134,32 @@ export const roleTokens = Object.freeze({
 
 const VAR_REF = /^var\((--[\w-]+)\)$/;
 
-/** Follow `var(--x)` aliases inside cssDeclarations to a literal value. */
-function resolveDeclaration(name, seen = new Set()) {
-  const value = cssDeclarations[name];
+/** Follow `var(--x)` aliases inside the declarations to a literal value. */
+function resolveDeclaration(name, declarations, seen = new Set()) {
+  const value = declarations[name];
   if (value === undefined) throw new Error(`palette: ${name} is not pinned`);
   const ref = VAR_REF.exec(value);
   if (!ref) return value;
   if (seen.has(name)) throw new Error(`palette: alias cycle at ${name}`);
   seen.add(name);
-  return resolveDeclaration(ref[1], seen);
+  return resolveDeclaration(ref[1], declarations, seen);
 }
+
+const resolveRoles = (declarations) => Object.freeze(
+  Object.fromEntries(Object.entries(roleTokens).map(([role, token]) => [role, resolveDeclaration(token, declarations)])),
+);
 
 /**
  * Role -> resolved literal, exactly as written in index.css (oklch or hex).
  * @type {Readonly<Record<string, string>>}
  */
-export const palette = Object.freeze(
-  Object.fromEntries(Object.entries(roleTokens).map(([role, token]) => [role, resolveDeclaration(token)])),
-);
+export const palette = resolveRoles(cssDeclarations);
+
+/**
+ * Role -> resolved literal under `.dark` (dark overrides on top of the light declarations).
+ * @type {Readonly<Record<string, string>>}
+ */
+export const paletteDark = resolveRoles({ ...cssDeclarations, ...cssDarkDeclarations });
 
 const clamp01 = (n) => Math.min(1, Math.max(0, n));
 const encodeSrgb = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
@@ -155,13 +205,21 @@ export function toHex(value) {
   throw new Error(`palette: unsupported colour literal: ${value}`);
 }
 
+const toHexRoles = (resolved) => Object.freeze(
+  Object.fromEntries(Object.entries(resolved).map(([role, value]) => [role, toHex(value)])),
+);
+
 /**
  * Role -> sRGB hex, for JS APIs that need a literal.
  * @type {Readonly<Record<string, string>>}
  */
-export const paletteHex = Object.freeze(
-  Object.fromEntries(Object.entries(palette).map(([role, value]) => [role, toHex(value)])),
-);
+export const paletteHex = toHexRoles(palette);
+
+/**
+ * Role -> sRGB hex under `.dark`.
+ * @type {Readonly<Record<string, string>>}
+ */
+export const paletteDarkHex = toHexRoles(paletteDark);
 
 const channel = (byte) => {
   const c = byte / 255;

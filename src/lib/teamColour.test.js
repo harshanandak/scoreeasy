@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TEAM_COLOURS,
+  NEUTRAL,
   PRESETS,
   contrast,
   contrastReport,
@@ -10,6 +11,7 @@ import {
   oklch,
   teamColourVars,
 } from './teamColour';
+import { paletteHex } from '../designs/design1-mono/theme/palette';
 
 const failing = (derived) => contrastReport(derived).filter(([, ratio, min]) => ratio < min);
 
@@ -17,6 +19,12 @@ const hueGap = (x, y) => {
   const d = Math.abs(oklch(x).h - oklch(y).h) % 360;
   return d > 180 ? 360 - d : d;
 };
+
+describe('NEUTRAL (engine lockstep with the tokens)', () => {
+  it('gates lines and tints against the live canvas, surface and ink values', () => {
+    expect(NEUTRAL).toEqual({ bg: paletteHex.canvas, surface: paletteHex.surface, ink: paletteHex.ink });
+  });
+});
 
 describe('normaliseHex', () => {
   it('accepts #rgb and #rrggbb, with or without the hash, and lower-cases', () => {
