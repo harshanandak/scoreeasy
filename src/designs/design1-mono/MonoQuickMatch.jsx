@@ -25,7 +25,9 @@ import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
-import { buildResultShareText, getResultSetSummary, getShareStatusText } from '../../utils/quickMatchResult';
+import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
+import KitFinish from './kit/KitFinish';
+import { finishFromQuickResult, formatDuration } from './kit/finishModel';
 import { getSportStartLabel } from '../../utils/startActions';
 import { shareText } from '../../mobile/share';
 import { CRICKET_RUN_VALUES } from '../../utils/cricketRunControls';
@@ -3136,190 +3138,59 @@ export default function MonoQuickMatch() {
     );
   }
 
-  // === RESULT PHASE ===
-  const isDraw = result?.winner === 'Draw';
-  const isTie = result?.winner === 'Tie';
-  const isNoWinner = isDraw || isTie;
-  const resultSetSummary = getResultSetSummary(result);
-
-  const formatElapsed = (secs) => {
-    if (!secs) return null;
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
+  // === RESULT PHASE: the Kit Finish (plan 2026-10-22 §9 S3) ===
+  // The saved result becomes one display model (finishModel.js); winner and margins come from the
+  // persisted scores. Rematch keeps the teams and their colours (PR #180); Done goes Home (/app).
+  const finishModel = finishFromQuickResult(result, {
+    kind: isCricket ? 'cricket' : isGoals ? 'goals' : 'sets',
+    unit: scoringUnit,
+    maxWickets,
+  });
+  const resultFormat = result?.format || format;
+  const finishMeta = [
+    isCricket && resultFormat?.overs ? `${resultFormat.overs} overs` : null,
+    !isCricket && !isGoals && resultFormat?.type === 'best-of' ? `Best of ${resultFormat.sets || 3}` : null,
+    formatDuration(result?.elapsedSeconds),
+  ].filter(Boolean).join(' · ');
+  const syncTone = syncState === 'failed' ? 'mono-alert-danger' : syncState === 'synced' ? 'mono-alert-success' : 'mono-alert-info';
 
   return (
-    <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-2xl mx-auto">
-        {saveWarning && (
-          <div className="mono-alert mono-alert-danger mb-4">
-            {saveWarning}
-          </div>
-        )}
-        {result && !saveWarning && (
-          <div className="mono-alert mono-alert-success mb-4">
-            Match saved to History on this device.
-          </div>
-        )}
-        {isAuthenticated && syncState !== 'idle' && (
-          <div
-            className={`mono-alert mb-4 ${syncState === 'failed' ? 'mono-alert-danger' : syncState === 'synced' ? 'mono-alert-success' : 'mono-alert-info'}`}
-            style={{
-              borderColor: syncState === 'failed' ? 'var(--destructive)' : syncState === 'synced' ? 'var(--primary)' : 'var(--primary)',
-              color: syncState === 'failed' ? 'var(--destructive)' : syncState === 'synced' ? 'var(--se-color-action-strong)' : 'var(--primary)',
-            }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm" style={{ margin: 0 }}>
-                {syncState === 'syncing' && 'Syncing this match to your profile...'}
-                {syncState === 'synced' && 'Synced to your profile.'}
-                {syncState === 'failed' && (syncError || 'Could not sync this match to your profile.')}
-              </p>
-              {syncState === 'failed' && (
-                <button
-                  onClick={retryResultSync}
-                  className="mono-btn"
-                  style={{ padding: '6px 10px', fontSize: '0.75rem' }}
-                >
-                  Retry
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        <div className="text-center mb-10" style={{ paddingTop: '40px' }}>
-          <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>
-            Match Result
-          </p>
-
-          {isNoWinner ? (
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--se-color-ink)' }}>
-              {isDraw ? 'Match Drawn' : 'Match Tied'}
-            </h1>
-          ) : (
-            <>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--se-color-ink)' }}>
-                {result.winner} Won
-              </h1>
-              {isCricket && result.team1Score && result.team2Score && (
-                <p className="text-sm" style={{ color: 'var(--se-color-ink-muted)' }}>
-                  by {Math.abs(result.team1Score.runs - result.team2Score.runs)} runs
+    <KitFinish
+      model={finishModel}
+      sportId={sport}
+      sportName={sportConfig?.name}
+      meta={finishMeta || undefined}
+      team1Colour={result?.team1Color}
+      team2Colour={result?.team2Color}
+      onDone={() => navigate('/app')}
+      primary={{ label: 'Rematch', onClick: () => resetMatchState('scoring') }}
+      secondary={[
+        { label: 'Share', onClick: shareResult },
+        { label: 'History', onClick: () => navigate('/history') },
+        { label: 'New Match', onClick: () => resetMatchState('setup', { resetTeams: true }) },
+      ]}
+      notices={(
+        <>
+          {saveWarning && <div className="mono-alert mono-alert-danger">{saveWarning}</div>}
+          {result && !saveWarning && <p className="kit-fin-note" role="status">Match saved to History on this device.</p>}
+          {shareStatus && <p className="kit-fin-note" role="status">{shareStatus}</p>}
+          {isAuthenticated && syncState !== 'idle' && (
+            <div className={`mono-alert ${syncTone}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm" style={{ margin: 0 }}>
+                  {syncState === 'syncing' && 'Syncing this match to your profile...'}
+                  {syncState === 'synced' && 'Synced to your profile.'}
+                  {syncState === 'failed' && (syncError || 'Could not sync this match to your profile.')}
                 </p>
-              )}
-            </>
-          )}
-
-          {result?.elapsedSeconds > 0 && (
-            <p className="text-xs font-mono mt-3" style={{ color: 'var(--se-color-ink-muted)' }}>
-              Duration: {formatElapsed(result.elapsedSeconds)}
-            </p>
-          )}
-        </div>
-
-        {shareStatus && (
-          <div className="mono-alert mono-alert-info mb-4">
-            {shareStatus}
-          </div>
-        )}
-
-        {/* Scorecard */}
-        <div className="mono-brutal-panel mb-8" style={{ padding: '20px 24px' }}>
-          {isCricket && result.team1Score ? (
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium" style={{ color: result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                  {result.team1}
-                </span>
-                <span className="font-mono font-bold" style={{ color: result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                  {result.team1Score.runs}/{result.team1Score.wickets} ({ballsToOvers(result.team1Score.balls)} ov)
-                </span>
-              </div>
-              <hr className="mono-divider" />
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium" style={{ color: result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                  {result.team2}
-                </span>
-                <span className="font-mono font-bold" style={{ color: result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                  {result.team2Score.runs}/{result.team2Score.wickets} ({ballsToOvers(result.team2Score.balls)} ov)
-                </span>
+                {syncState === 'failed' && (
+                  <button type="button" onClick={retryResultSync} className="se-ctl">Retry</button>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team1 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                {result.team1}
-              </span>
-              <span className="text-2xl font-bold font-mono mono-score" style={{ color: 'var(--se-color-ink)' }}>
-                {result.score1} - {result.score2}
-              </span>
-              <span className="text-sm font-medium" style={{ color: !isNoWinner && result.winner === result.team2 ? 'var(--se-color-ink)' : 'var(--se-color-ink-muted)' }}>
-                {result.team2}
-              </span>
-            </div>
           )}
-        </div>
-
-        {resultSetSummary && (
-          <div className="mono-soft-panel mb-8" style={{ padding: '18px 20px' }}>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--se-color-ink-muted)', margin: 0 }}>
-                Set breakdown
-              </p>
-              <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink)' }}>
-                {resultSetSummary.text}
-              </span>
-            </div>
-            <div className="flex flex-col gap-3">
-              {resultSetSummary.rows.map((row) => (
-                <div
-                  key={row.id}
-                  className="flex items-center justify-between gap-3"
-                  style={{ minHeight: 32 }}
-                >
-                  <span className="text-xs" style={{ color: '#666' }}>{row.label}</span>
-                  <span className="font-mono font-semibold" style={{ color: 'var(--se-color-ink)' }}>
-                    {row.score1} - {row.score2}
-                  </span>
-                  <span className="text-xs text-right" style={{ color: '#666', minWidth: 88 }}>
-                    {row.winner || 'Level'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div
-          className="grid gap-2"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))' }}
-        >
-          <button onClick={() => resetMatchState('scoring')} className="mono-btn-primary" style={{ minHeight: 48, padding: '12px' }}>
-            Rematch
-          </button>
-          <button onClick={shareResult} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
-            Share
-          </button>
-          <button onClick={() => navigate('/history')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
-            View History
-          </button>
-          <button onClick={() => navigate('/statistics')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
-            See Stats
-          </button>
-          <button
-            onClick={() => resetMatchState('setup', { resetTeams: true })}
-            className="mono-btn"
-            style={{ minHeight: 48, padding: '12px' }}
-          >
-            New Match
-          </button>
-          <button onClick={() => navigate('/app')} className="mono-btn" style={{ minHeight: 48, padding: '12px' }}>
-            Home
-          </button>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    />
   );
 }
 

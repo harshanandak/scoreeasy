@@ -210,7 +210,10 @@ describe('documented contrast pairs', () => {
 // goes with its #fff/#aaa literals and two rgba() (-12); the registry gains the nine sport
 // identity sources (+9), which the engine gates before anything is painted. The eight new tile
 // marks add 0 (cutOut()).
-const BASELINE = 653;
+// Kit S3 (Finish), 653 -> 651: the quick-match result drops its set breakdown's two #666 greys.
+// The winner card, loser row and set chips take only tokens and teamColour.js engine output; the
+// hand-drawn confetti, trophy and circle paint in currentColor and --se-color-gold (+0).
+const BASELINE = 651;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

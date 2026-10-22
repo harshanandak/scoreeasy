@@ -92,6 +92,23 @@ describe('quick match team colour: the finished record', () => {
     expect(saved).toMatchObject({ status: 'completed', team1Color: '#facc15', team2Color: '#16a34a' });
   });
 
+  // Kit S3: the Finish winner card is the winner's engine-gated colour, the loser row its tint.
+  it('paints the Finish in the picked colours: winner card in the winner\'s, loser row in the other\'s tint', async () => {
+    seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
+    render(<MonoQuickMatch />);
+    await finishAfterOnePoint();
+    const { A, B } = deriveTeamColours('#facc15', '#16a34a');
+    const screenRoot = await screen.findByRole('region', { name: 'Match result' });
+    expect(screenRoot.style.getPropertyValue('--kit-win-core')).toBe(A.core);
+    expect(screenRoot.style.getPropertyValue('--kit-win-on')).toBe(A.on);
+    expect(screenRoot.style.getPropertyValue('--kit-lose-tint')).toBe(B.tint);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winner: Reds');
+    expect(document.querySelector('.kit-fin-row')).toHaveTextContent('Blues');
+    // Rematch is the only Go; the rest are Mono-strength controls.
+    expect([...document.querySelectorAll('.se-go')].map((b) => b.textContent)).toEqual(['Rematch']);
+    expect(screen.getByRole('button', { name: 'History' })).toHaveClass('se-ctl');
+  });
+
   it('adds no colours for a sport that has not opted in', async () => {
     seedSets('badminton', { team1Color: '#facc15' });
     render(<MonoQuickMatch />);
