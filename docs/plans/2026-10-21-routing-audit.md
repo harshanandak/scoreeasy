@@ -269,7 +269,7 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 
 ## Contract tests
 
-`src/designs/design1-mono/routes.contract.test.jsx` has five open expected failures (RA-4 through RA-8); RA-9 passes normally. The earlier pre-completion-lock run had 37 tests (31 normal, 6 expected failures):
+`src/designs/design1-mono/routes.contract.test.jsx` has four open expected failures (RA-4, RA-6, RA-7, RA-8); RA-5 and RA-9 pass normally. The earlier pre-completion-lock run had 37 tests (31 normal, 6 expected failures):
 - **Pinned (pass today):** generic 404 with Play/Home; sport-scoped 404 on `/volleyball`; single draft auto-resumes from `/`.
 - **RA-3 fixed:** 10 normal passing cases verify Home Resume, the multi-match entry chooser and all eight generic sport quick scorers; tennis uses its dedicated saved-draft scorer.
 - **Goals RA-1 fixed / quick regression:** 9 normal passing cases pin the four registered goals sports, tournament Finish and Back with Undo, and quick-match saved-result preservation. Tennis and cricket completion are pinned separately.

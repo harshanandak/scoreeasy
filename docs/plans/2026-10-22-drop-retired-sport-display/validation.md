@@ -11,7 +11,7 @@ Deleted assets include five SVG icons, court motifs, showcase choices and obsole
 - Initial red run: 7 failures (two purge tests and five live-link cases), with `--maxWorkers=1`.
 - Initial green run: 4 files, 115 passes, including purge, live links, URL recovery and palette.
 - Palette exact equality is now BASELINE 668. Removing the remaining unregistered throwball motif also removes the unused hatch helper and one raw colour literal (669 -> 668).
-- Expected-failure inventory: 5 routing / 9 repository-wide. RA-9 passes normally after the own-key registry lookup; five routing and four stability markers remain unchanged.
+- Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 now passes normally after delaying the leave guard until scoring starts; RA-9 also passes normally after the own-key registry lookup. Four routing and four stability markers remain. Counts in dated validation runs below describe those historical heads.
 - Required CI `verify` gates the full suite and build. The owner-authorized push uses `LEFTHOOK_EXCLUDE=test,build`; normal pre-commit lint, type-check and configuration checks remain enabled.
 
 No dev server, Convex deployment or production writes were used.

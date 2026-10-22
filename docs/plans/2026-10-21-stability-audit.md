@@ -1,6 +1,6 @@
 # Stability and reliability audit (2026-10-21)
 
-Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 now passes normally: setup leaves freely and scoring arms the existing guard. RA-9 also passes normally after the own-key registry lookup. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
 
 **Decisions needed:** sport-rule alignment (SA-12), public-profile privacy (SA-16), and ownership of shared dev deployment recovery (SA-05). These are follow-up decisions; this audit PR makes no rule, application, or deployment changes.
 
