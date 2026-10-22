@@ -1,0 +1,113 @@
+=== Missing completion lock ===
+Command: bun run test --maxWorkers=1 src/designs/design1-mono/scoring/CricketPersistence.test.jsx -t "manual finish persists an unfinished"
+Exit: 1
+
+ RUN  v4.1.6 C:/Users/harsha_befach/.t3/worktrees/scoreeasy/t3-9506c9da
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx (7 tests | 2 failed | 5 skipped) 566ms
+     × test-tournament manual finish persists an unfinished match as a draw 477ms
+     × test-quick manual finish persists an unfinished match as a draw 86ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 skipped (7)
+   Start at  16:37:53
+   Duration  34.93s (transform 6.16s, setup 3.40s, import 6.50s, tests 566ms, environment 22.40s)
+
+$ vitest run "--maxWorkers=1" "src/designs/design1-mono/scoring/CricketPersistence.test.jsx" -t "manual finish persists an unfinished"
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-tournament manual finish persists an unfinished match as a draw
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-quick manual finish persists an unfinished match as a draw
+Error: expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  /^1$/
+Received:
+  5
+ ❯ expectVisibleInnings src/designs/design1-mono/scoring/CricketPersistence.test.jsx:57:29
+     55|   const score = document.querySelector('.mono-scorer-score-value');
+     56|   expect(score).toBeVisible();
+     57|   expect(score.children[0]).toHaveTextContent(new RegExp(`^${runs}$`));
+       |                             ^
+     58|   expect(score.children[1]).toHaveTextContent('/0');
+     59|   expect(score.children[2]).toHaveTextContent(`(${overs} ov)`);
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:118:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+error: script "test" exited with code 1
+
+
+Production source restored byte-for-byte. SHA256: ebc27bf258f5565a46feda95ef3f4368c11e2f4057e564e099516ab932934ca0
+
+
+=== Retry saves stale hydrated innings ===
+Command: bun run test --maxWorkers=1 src/designs/design1-mono/scoring/CricketPersistence.test.jsx -t "failed manual finish preserves"
+Exit: 1
+
+ RUN  v4.1.6 C:/Users/harsha_befach/.t3/worktrees/scoreeasy/t3-9506c9da
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx (7 tests | 2 failed | 5 skipped) 1379ms
+     × test-tournament failed manual finish preserves scoring and Undo before retry 1015ms
+     × test-quick failed manual finish preserves scoring and Undo before retry 360ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 skipped (7)
+   Start at  16:40:36
+   Duration  35.01s (transform 22.25s, setup 1.39s, import 22.69s, tests 1.38s, environment 6.43s)
+
+$ vitest run "--maxWorkers=1" "src/designs/design1-mono/scoring/CricketPersistence.test.jsx" -t "failed manual finish preserves"
+stderr | src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-tournament failed manual finish preserves scoring and Undo before retry
+[ScoreEasy] Storage quota exceeded when saving "se_cricket".
+[ScoreEasy] Failed to save "se_cricket": QuotaExceededError
+
+stderr | src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-quick failed manual finish preserves scoring and Undo before retry
+[ScoreEasy] Storage quota exceeded when saving "se_quickmatches".
+[ScoreEasy] Failed to save "se_quickmatches": QuotaExceededError
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-tournament failed manual finish preserves scoring and Undo before retry
+ FAIL  src/designs/design1-mono/scoring/CricketPersistence.test.jsx > cricket persistence transactions > test-quick failed manual finish preserves scoring and Undo before retry
+AssertionError: expected { Object (teamId, runs, ...) } to match object { runs: +0, balls: 1 }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "balls": 1,
+-   "runs": 0,
++   "runs": 1,
+  }
+
+ ❯ src/designs/design1-mono/scoring/CricketPersistence.test.jsx:150:37
+    148|     manualFinish();
+    149|     expectVisibleInnings(0, '0.1');
+    150|     expect(stored(kind).innings[3]).toMatchObject({ runs: 0, balls: 1 …
+       |                                     ^
+    151|     expect(stored(kind).status).toBe('completed');
+    152|     expect(complete).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+error: script "test" exited with code 1
+
+
+=== Restored production code ===
+Exit: 0
+
+ RUN  v4.1.6 C:/Users/harsha_befach/.t3/worktrees/scoreeasy/t3-9506c9da
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  16:41:24
+   Duration  38.60s (transform 2.53s, setup 5.25s, import 2.87s, tests 3.56s, environment 24.62s)
+
+$ vitest run "--maxWorkers=1" "src/designs/design1-mono/scoring/CricketPersistence.test.jsx"
+
+
+Production source restored byte-for-byte. SHA256: ebc27bf258f5565a46feda95ef3f4368c11e2f4057e564e099516ab932934ca0

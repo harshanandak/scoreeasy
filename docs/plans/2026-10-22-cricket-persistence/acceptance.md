@@ -95,3 +95,28 @@ Separate follow-ups filed during this work: legacy guided overs mapping
 
 The palette ratchet remains exact equality at 668. Historical counts in the
 completion-lock audit describe its earlier heads and remain historical.
+
+## Review: prove the tests detect the defects
+
+The post-Finish regression enables the real desktop keyboard handler and proves
+keyboard scoring works before Finish. Each later keyboard/tap attempt occurs one
+second beyond the preceding attempt, outside the 150 ms debounce, and checks both
+the visible score and completed stored innings. Its fixture keeps the chase open
+so natural completion cannot supply a second lock that masks a broken Finish lock.
+
+The retry regression checks Undo's visible zero-run, zero-ball state and disabled
+Undo control, then records a dot. It checks the visible and draft zero-run,
+one-ball innings before retry and the completed zero-run, one-ball innings after.
+
+Both deliberately broken variants fail in tournament and quick modes (rung 4):
+
+- Disconnect the scoring prompt's completion lock and bypass the innings lock:
+  two failures, with visible runs expected 1 and received 5 after keyboard Four.
+- Save the hydrated draft innings instead of current innings on Finish: two
+  failures, with completed runs expected 0 and received the stale 1 after retry.
+
+The production file was restored byte-for-byte after each mutation, verified by
+SHA-256. The restored regression file passes all seven tests (38.60 seconds).
+See [the complete mutation and restoration evidence](review-test-counterfactuals.txt).
+These changes cover the two review test gaps; the separate storage-growth finding
+is unchanged.
