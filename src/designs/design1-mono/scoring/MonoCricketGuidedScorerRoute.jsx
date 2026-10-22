@@ -1,5 +1,6 @@
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
+import { useScoringProgress } from './scoringProgressContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
@@ -126,6 +127,7 @@ export default function MonoCricketGuidedScorerRoute() {
   const completion = useMatchCompletion(match, matchIdentity);
 
   const [phase, setPhase] = useState(() => initialPhase(match));
+  useScoringProgress([match?.team1Score, match?.team2Score].some(score => score?.balls > 0 || score?.runs > 0 || score?.wickets > 0));
 
   const navigateToTournament = () => {
     const destination = `/${sport || 'cricket'}/tournament/${id}`;

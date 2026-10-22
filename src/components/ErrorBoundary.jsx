@@ -35,7 +35,7 @@ class ErrorBoundary extends React.Component {
   };
 
   handleHome = () => {
-    globalThis.location.assign('/');
+    globalThis.location.assign('/app');
   };
 
   handlePlay = () => {

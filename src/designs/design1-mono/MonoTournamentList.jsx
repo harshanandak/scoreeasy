@@ -98,7 +98,7 @@ export default function MonoTournamentList() {
         {/* Header */}
         <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1"
             style={{ color: '#888' }}
             aria-label="Go back to home"

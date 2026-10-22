@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
@@ -112,6 +113,8 @@ export default function MonoGoalsLiveScore() {
   };
 
   // Load tournament and match
+  useScoringProgress(score1 !== 0 || score2 !== 0);
+
   useEffect(() => {
     const config = getSportById(sport);
     if (!config) return;

@@ -99,7 +99,7 @@ export default function MonoLiveGame() {
   }, [session, pauseGame, resumeGame, timer]);
 
   const handleBackToHome = useCallback(() => {
-    navigate('/');
+    navigate('/app');
   }, [navigate]);
 
   if (!session) {

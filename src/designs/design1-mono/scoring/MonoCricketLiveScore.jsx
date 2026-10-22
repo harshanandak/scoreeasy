@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -115,6 +116,8 @@ export default function MonoCricketLiveScore() {
   };
 
   // Load tournament and match
+  useScoringProgress(Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0));
+
   useEffect(() => {
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const tournaments = loadSportTournaments(storageKey);

@@ -59,7 +59,7 @@ export default function MonoSetup() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-10 text-sm" aria-label="Breadcrumb">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="bg-transparent border-none cursor-pointer font-swiss"
             style={{ color: '#888' }}
           >

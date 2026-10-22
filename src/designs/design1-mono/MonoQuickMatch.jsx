@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoring/scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
@@ -500,6 +501,11 @@ export default function MonoQuickMatch() {
 
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
+
+  const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
+    sets.some(set => set.score1 > 0 || set.score2 > 0) ||
+    Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0);
+  const setScoringStarted = useScoringProgress(phase !== 'setup' && hasRecordedScore, phase === 'setup');
 
   // Cricket: Free hit and trial ball state
   const [freeHit, setFreeHit] = useState(false);
@@ -1615,6 +1621,7 @@ export default function MonoQuickMatch() {
   };
 
   const resetMatchState = (nextPhase = 'setup', options = {}) => {
+    setScoringStarted?.(false);
     completion.reset();
     restoredDraftRef.current = false;
     setSaveWarning('');

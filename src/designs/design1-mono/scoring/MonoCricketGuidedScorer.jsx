@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
@@ -129,6 +130,8 @@ export default function MonoCricketGuidedScorer({
     if (completionReason(next, deriveInnings(next, fmt))) completion.lock();
     setInnings(next);
   };
+
+  useScoringProgress(innings.deliveries.length > 0);
 
   // Fire onStateChange after each committed ball (skip the initial mount).
   const mounted = useRef(false);

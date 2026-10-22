@@ -1,0 +1,333 @@
+[
+  {
+    "label": "navigation Home with one draft",
+    "path": "/volleyball/tournament",
+    "seed": "volleyDraftOnly",
+    "url": "/volleyball/tournament",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "🏐 Volleyball Tournaments",
+    "text": "Home 🏐 Volleyball Tournaments New Volleyball Tournament 🏐 No tournaments yet Build a match list, track standings, and resume the next game from one place. 1 N",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "before Home",
+        "url": "/volleyball/tournament",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "🏐 Volleyball Tournaments",
+        "text": "Home 🏐 Volleyball Tournaments New Volleyball Tournament 🏐 No tournaments yet Build a match list, track standings, and resume the next game from one place. 1 N",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 2,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Home: clicked"
+      },
+      {
+        "at": "Home dashboard",
+        "url": "/app",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Welcomeback.",
+        "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 0 RECENT 0 EVENTS In progress Sharks vs Jets Volleyball · Quick match Resume → + + + + ● READY Start a",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [
+          {
+            "label": "Resume Volleyball: Sharks vs Jets",
+            "height": 44.00001525878906
+          }
+        ],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Welcomeback.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome back. 1 ACTIVE 0 RECENT 0 EVENTS In progress Sharks vs Jets Volleyball · Quick match Resume → + + + + ● READY Start a",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [
+        {
+          "label": "Resume Volleyball: Sharks vs Jets",
+          "height": 44
+        }
+      ],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": []
+  },
+  {
+    "label": "navigation setup leaves freely",
+    "path": "/volleyball/quick",
+    "seed": "",
+    "url": "/volleyball/quick",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "🏐 Quick Match",
+    "text": "🏐 Quick Match Setup match TOURNAMENT → 🏐 Match rules Volleyball Best of 3 - 25 pts - win by 2 Edit Rules TEAMS Team A name + Team B name + Add players Start V",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "setup with bottom nav",
+        "url": "/volleyball/quick",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "🏐 Quick Match",
+        "text": "🏐 Quick Match Setup match TOURNAMENT → 🏐 Match rules Volleyball Best of 3 - 25 pts - win by 2 Edit Rules TEAMS Team A name + Team B name + Add players Start V",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 2,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Home: clicked"
+      },
+      {
+        "at": "left setup without prompt",
+        "url": "/app",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Welcome.",
+        "text": "Dashboard APP DASHBOARD GUEST MODE Welcome. + + + + ● READY Play your first match. Pick a sport and you are scoring in seconds. Start playing → ● GO LIVE RECENT",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/app",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Welcome.",
+      "text": "Dashboard APP DASHBOARD GUEST MODE Welcome. + + + + ● READY Play your first match. Pick a sport and you are scoring in seconds. Start playing → ● GO LIVE RECENT",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": []
+  },
+  {
+    "label": "navigation first point arms guard",
+    "path": "/football/tournament/100/match/m1/score",
+    "seed": "football",
+    "url": "/football/tournament/100/match/m1/score",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Football match scorer",
+    "text": "Football match scorer Football LIVE SCORING Red: 0. Blue: 0. RED 0 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "before first point",
+        "url": "/football/tournament/100/match/m1/score",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Football match scorer",
+        "text": "Football match scorer Football LIVE SCORING Red: 0. Blue: 0. RED 0 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 2,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Add 1 point to Red: clicked"
+      },
+      {
+        "at": "after first point",
+        "url": "/football/tournament/100/match/m1/score",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Football match scorer",
+        "text": "Football match scorer Football LIVE SCORING Red: 1. Blue: 0. RED 1 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "leave warning after scoring",
+        "url": "/football/tournament/100/match/m1/score",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Leave this page?",
+        "text": "Football match scorer Football LIVE SCORING Red: 1. Blue: 0. RED 1 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+        "bottomNav": false,
+        "dialog": "SCORE EASY Leave this page? Your unsaved scoring progress may be lost. Stay here Leave pag",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Stay here: clicked"
+      },
+      {
+        "at": "stayed with score",
+        "url": "/football/tournament/100/match/m1/score",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Football match scorer",
+        "text": "Football match scorer Football LIVE SCORING Red: 1. Blue: 0. RED 1 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+        "bottomNav": false,
+        "dialog": "",
+        "historyLength": 3,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/football/tournament/100/match/m1/score",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Football match scorer",
+      "text": "Football match scorer Football LIVE SCORING Red: 1. Blue: 0. RED 1 TAP +1 BLUE 0 TAP +1 Free play · Draws allowed Keyboard: Q = Red · P = Blue · U = Undo UNDO S",
+      "bottomNav": false,
+      "dialog": "",
+      "historyLength": 3,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": [
+      "log: Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromes http://localhost:5194/src/designs/design1-mono/scoring/MonoGoalsLiveScore.jsx?t=1792663664072"
+    ]
+  },
+  {
+    "label": "navigation tournament result hides Rematch",
+    "path": "/volleyball/tournament/200/match/m1/result",
+    "seed": "volleyballDone",
+    "url": "/volleyball/tournament/200/match/m1/result",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "heading": "Sharks win 2–0",
+    "text": "FULL TIME 🏆 Sharks win 2–0 Sharks take the match 2 – 0 SETS Sharks Jets 25–20 · 25–18 Sharks win 2–0. Sharks 2, Jets 0. Done Scorecard Share",
+    "bottomNav": true,
+    "dialog": "",
+    "historyLength": 2,
+    "resumeActions": [],
+    "horizontalOverflow": false,
+    "stuckLoading": false,
+    "snaps": [
+      {
+        "at": "tournament result without Rematch",
+        "url": "/volleyball/tournament/200/match/m1/result",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Sharks win 2–0",
+        "text": "FULL TIME 🏆 Sharks win 2–0 Sharks take the match 2 – 0 SETS Sharks Jets 25–20 · 25–18 Sharks win 2–0. Sharks 2, Jets 0. Done Scorecard Share",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 2,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      },
+      {
+        "at": "click Done: clicked"
+      },
+      {
+        "at": "back to tournament",
+        "url": "/volleyball/tournament/200",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heading": "Beach Cup",
+        "text": "← Tournaments Beach Cup COMPLETE Volleyball · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Sharks 2 vs Jets 0 25-20 25-18 Edit Scor",
+        "bottomNav": true,
+        "dialog": "",
+        "historyLength": 2,
+        "resumeActions": [],
+        "horizontalOverflow": false,
+        "stuckLoading": false
+      }
+    ],
+    "final": {
+      "url": "/volleyball/tournament/200",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "heading": "Beach Cup",
+      "text": "← Tournaments Beach Cup COMPLETE Volleyball · 2 teams · Round Robin 1/1 Matches Standings Teams MATCH 1 COMPLETED Clear Sharks 2 vs Jets 0 25-20 25-18 Edit Scor",
+      "bottomNav": true,
+      "dialog": "",
+      "historyLength": 2,
+      "resumeActions": [],
+      "horizontalOverflow": false,
+      "stuckLoading": false
+    },
+    "errors": []
+  }
+]

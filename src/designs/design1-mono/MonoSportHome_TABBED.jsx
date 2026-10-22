@@ -37,7 +37,7 @@ export default function MonoSportHome() {
         <nav className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/app')}
               className="text-sm bg-transparent border-none cursor-pointer font-swiss"
               style={{ color: '#888' }}
             >

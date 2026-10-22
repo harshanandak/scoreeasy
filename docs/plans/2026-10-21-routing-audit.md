@@ -1,6 +1,6 @@
 # Routing audit (2026-10-21)
 
-Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 is now a normal contract: setup leaves without a warning and scorers arm the existing guard after a recorded point or ball. RA-9 also passes normally. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
 
 ## Problem
 
@@ -30,10 +30,10 @@ The original audit did not change app code. Its only code additions were `src/de
 1. **Back after finishing a match goes back into the match** (RA-1, RA-2). **Goals tournament completion is fixed** for football, basketball, hockey and kabaddi: manual, timed and target-score completion now use the existing app completion seam after a successful local save. Sets tournament completion already used that seam. Tennis quick and tournament completion are also fixed through that seam after a successful local save (RA-2 and the tennis portion of RA-1). Cricket limited-overs, Test (tournament and quick) and guided completion now also use the app-owned seam. Limited-overs quick completion remains in place and has a saved-result/Undo regression. Originally, tennis quick Back reopened a dead "Match not found" page with the exit guard armed. Goals quick matches already finish in place; their saved result and Undo are pinned separately.
 2. **RA-3 fixed: Home lists resumable matches.** Home and cold entry share a catalog of active-sport quick drafts, tennis drafts, cricket Test matches and unfinished tournaments. Each destination has a Resume action. Under the 2026-10-22 decision (no users), the five removed sports and their identified saved local data are deleted with no retention. A one-time startup purge deletes their keys and explicitly sport-tagged shared rows; sportless rows stay untouched. Normal reads retain master behavior, and Convex data is unchanged. Originally, Home hid quick drafts and could strand an in-progress tennis match.
 3. **Stale cricket Test links hang on "Loading..." forever** (RA-4). The bottom nav is hidden, and Back warns about losing unsaved progress for a match that does not exist.
-4. **The exit warning fires before a match even starts** (RA-5). `/:sport/quick` is guarded by URL, so the untouched setup form already asks "Leave this page? Your unsaved scoring progress may be lost." That trains scorers to tap Leave without reading.
+4. **RA-5 fixed: setup leaves without a warning.** Scorers report recorded progress to the app-owned guard. The first point or ball arms browser, native Back, shell navigation and deep-link protection; Undo to zero keeps it armed during that scorer visit. Untouched setup retains bottom navigation.
 5. **One crash sticks** (RA-6). The route error boundary never resets. After any screen throws, every later in-app navigation still shows "App route crashed" until a full reload. The public `/live/:token` page has no boundary of its own (RA-11).
 6. **Ids are validated five different ways** (RA-4, RA-7). Some screens show recovery for a bad id and some spin forever. **RA-9 is fixed:** the own-key registry lookup rejects prototype keys such as `/constructor/quick`; its contract is now a normal passing test.
-7. **Back and Home are not consistent** (RA-8, RA-10, RA-12). `navigate(-1)` with no fallback can leave the app. In-app back arrows push while hardware Back pops. "Home" means `/` on some buttons and `/app` on others, so Home on a 404 can drop you straight into a live scorer.
+7. **Back still needs work** (RA-8, RA-12). `navigate(-1)` with no fallback can leave the app. In-app back arrows push while hardware Back pops. **RA-10 is fixed:** in-app Home and brand actions go directly to `/app`, including recovery screens, instead of cold entry resuming a scorer.
 
 No P0 was demonstrated by these routing cases. They exposed lost *track* of matches, Back loops and dead ends. This audit does not establish that autosave always succeeds or that scored points cannot be lost; persistence failures need separate stability proof.
 
@@ -274,7 +274,7 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 - **RA-3 fixed:** 10 normal passing cases verify Home Resume, the multi-match entry chooser and all eight generic sport quick scorers; tennis uses its dedicated saved-draft scorer.
 - **Goals RA-1 fixed / quick regression:** 9 normal passing cases pin the four registered goals sports, tournament Finish and Back with Undo, and quick-match saved-result preservation. Tennis and cricket completion are pinned separately.
 - **Tennis RA-1/RA-2 fixed:** the quick-match expected failure is now ordinary; a new tournament Back regression and two saved-draft/Undo remount cases pass normally.
-- **`it.fails` (encode the correct behaviour, fail today):** RA-4, RA-5, RA-6, RA-7, RA-8. Each one was first run as a plain `it` to confirm it fails on its contract assertion, not on the harness. The fix PR for each finding flips its test to `it`. RA-9 now passes normally after the own-key registry fix; the other markers are unchanged.
+- **`it.fails` (encode the correct behaviour, fail today):** RA-4, RA-6, RA-7, RA-8. Each one was first run as a plain `it` to confirm it fails on its contract assertion, not on the harness. The fix PR for each finding flips its test to `it`. RA-5 and RA-9 now pass normally.
 
 Sync with RA-3 master (`4da859d`): routing expected failures decrease from 8 to 7 by replacing the single goals RA-1 expected failure with parameterized normal tests. The four stability cases are unchanged, so the repository total decreased from 12 to 11 at that integration. Tennis then converts RA-2, leaving 6 routing expected failures and 10 repository-wide (the same 4 stability cases). Master's RA-3 tests and every open contract from RA-4 onward are preserved without duplication; tennis RA-2 becomes a normal passing contract.
 
@@ -299,7 +299,7 @@ The original plan below groups fixes by scorer impact. Harsha's current delivery
 | 3 | **Validate `:id`/`:matchId` routes: one resolver, recovery instead of Loading** | RA-4, RA-7 | new `resolveTournamentMatch(sportId, id, matchId)` beside `utils/storage.js`; use it in the dispatcher, the result screen and every scorer; not-found branch in `MonoCricketTestLiveScore` quick mode (`RouteRecoveryActions`) | Low to medium: touches 6 screens, but they converge on the dispatcher's existing rule | RA-4, RA-7; runs #58-59, #82-83 |
 | 4 | **Validate `:sport` with an own-key lookup** | RA-9, RA-18 | `models/sportRegistry.js:460` (`Object.hasOwn`; optional lowercase redirect for RA-18) | Low. Coordinate with `feat/icp-game-focus`, which edits the same registry | RA-9; runs #46, #89-91 |
 | 5 | **Route error boundaries: reset on navigation, plus one around `/live/:token`** | RA-6, RA-11 | `index.jsx:1772` (key the boundary by `location.pathname`), `MonoWatchMatch` boundary falling back to `UnavailableScreen` | Low | RA-6; runs #33, #84 |
-| 6 | **Arm the exit guard from the scorer, not from the URL** | RA-5 | `index.jsx` guard effect, `mobile/backButton.js` (`isProtectedScoringRoute`), `MonoQuickMatch.jsx` (signal "scoring" phase), bottom-nav visibility | **Medium to high**: every scorer depends on this guard. Decision recorded below: protect scoring, not setup | RA-5; runs #77, #81; Android device: Back on setup vs. mid-match |
+| 6 (fixed) | **Arm the existing exit guard after recorded scoring** | RA-5 | `scoringProgressContext.js`, every scorer family, `index.jsx` guard consumers and bottom navigation | The app retains confirmation and history ownership; Undo stays protected and Rematch resets progress | RA-5 plus quick/tournament first-point and dot-ball contracts; phone demo linked below. Native device behavior is not claimed |
 | 7 | **Safe Back and one meaning of Home** | RA-8, RA-10, RA-12 | `goBackOr(navigate, fallback)` helper; replace `navigate(-1)` in `MonoProfile`, `MonoUserSearch`; point in-app "Home" buttons at `/app` (`RouteRecoveryActions`, `MonoTournamentList`, `MonoTournamentSetup`, `MonoProfile`, `MonoAuthPageFrame`, `ErrorBoundary`); make scorer Cancel/Discard exits unwind instead of push | Low to medium | RA-8; runs #85, #87 |
 | 8 | **Route table out of `index.jsx`** | maintainability | move the `<Route>` list, legacy redirects and guards into `routes.jsx` / `routeGuards.jsx`; `index.jsx` keeps the shell | Low: pure move, guarded by `routes.contract.test.jsx` + `AppRouteRecovery.test.jsx` | full suite + full sweep diff identical |
 | 9 | **Path builders per area** (extends `src/utils/appPaths.js` from PR #158) | RA-14, RA-20, the 94 literals | `quickPath`, `tournamentPath`, `tournamentMatchPath(…, 'score'\|'result')`, `testMatchPath`, `tennisLivePath`, `livePath`, `loginPath(returnTo)`; replace call sites screen by screen, one PR per area (dashboard, quick match, tournaments, scorers, auth) | Low | grep for `navigate('/` literals trending to 0; sweep unchanged |
@@ -314,12 +314,14 @@ Plan items 2a (goals), 2b (tennis quick and tournament) and 2c (cricket limited-
 
 > **Decided by Harsha, 2026-10-21:**
 > - **RA-5:** the leave-match guard turns on only once scoring starts; quick-match setup shows the bottom nav and leaves without a warning.
-> - **RA-10:** every in-app Home goes to `/app`; `/` stays for the logo and cold start.
-> - **Rematch:** hidden on tournament match results (tournament results offer Back to tournament / Next match); quick-match results keep Rematch.
+> - **RA-10:** every in-app Home and brand link goes to `/app`; marketing links and cold entry keep their existing destinations.
+> - **Rematch:** hidden on tournament match results; Done returns to the tournament. Quick-match results keep Rematch.
 > - **RA-13** (who publishes the app-link files, and when) is still open: it needs the release signing fingerprint and Apple Team ID.
 
 
 The guard, Home and Rematch decisions above are settled. The remaining release question is **RA-13:** who publishes the association files, and when. It is outside this audit integration leaf.
+
+Implementation evidence for the guard, Home and Rematch decisions: [phone acceptance walk and counterfactuals](2026-10-21-routing-fixes/navigation-decisions/README.md).
 
 ## Forge issues (P0/P1)
 

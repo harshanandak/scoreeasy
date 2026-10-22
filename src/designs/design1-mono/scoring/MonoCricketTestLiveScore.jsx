@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
@@ -132,6 +133,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   // Load match data
+  useScoringProgress(innings.some(innings => innings.balls > 0 || innings.runs > 0 || innings.wickets > 0));
+
   useEffect(() => {
     let loaded;
     let found = null;

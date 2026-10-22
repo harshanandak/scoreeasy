@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
@@ -369,6 +370,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   };
 
   // Load tournament/quick match data
+  useScoringProgress(sets.some(set => set.games1 > 0 || set.games2 > 0 || set.points1 > 0 || set.points2 > 0 || set.tiebreakPoints1 > 0 || set.tiebreakPoints2 > 0));
+
   useEffect(() => {
     const config = getSportById(sport);
     if (!config) return;

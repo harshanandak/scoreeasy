@@ -35,6 +35,11 @@ vi.mock('../../mobile/backButton', async (importOriginal) => ({
 
 describe('app-owned scoring exit guard', () => {
   beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+      sport: 'volleyball', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue',
+      sets: [{ score1: 1, score2: 0, completed: false }], updatedAt: new Date().toISOString(),
+    }));
     nativeBackButtonMock.installNativeBackButtonGuard.mockClear();
     nativeBackButtonMock.installNativeBackButtonGuard.mockReturnValue(vi.fn());
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {

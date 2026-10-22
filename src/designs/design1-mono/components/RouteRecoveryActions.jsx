@@ -24,7 +24,7 @@ export default function RouteRecoveryActions({
     sport ? { label: 'Choose another sport', path: playPath, primary: false } : null,
     // Every recovery screen offers a guaranteed escape Home, including
     // sport-scoped 404s that previously dead-ended at "Choose another sport".
-    { label: 'Home', path: '/', primary: false },
+    { label: 'Home', path: '/app', primary: false },
   ].filter(Boolean);
 
   return (

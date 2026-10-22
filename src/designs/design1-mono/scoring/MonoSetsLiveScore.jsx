@@ -1,3 +1,4 @@
+import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -100,6 +101,8 @@ export default function MonoSetsLiveScore() {
   };
 
   // Load tournament and match
+  useScoringProgress(sets.some(set => set.score1 > 0 || set.score2 > 0));
+
   useEffect(() => {
     const config = getSportById(sport);
     if (!config) { setLoadStatus('notfound'); return; }
