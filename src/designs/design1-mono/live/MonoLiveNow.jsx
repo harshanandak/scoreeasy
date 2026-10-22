@@ -12,6 +12,10 @@ import { KitTop, KitWash, SportBadge } from '../kit/KitParts';
 import { liveStatus, updateAge } from './liveStatus';
 import '../kit/live.css';
 
+// Badminton counts games, not sets (the scorer says "Game 2 · Games 1–0"); one is singular.
+const SET_UNIT = { badminton: 'game' };
+const setCount = (sport, n) => `${n} ${SET_UNIT[sport] || 'set'}${n === 1 ? '' : 's'}`;
+
 function EmptyLive() {
   return (
     <div className="kit-live-empty">
@@ -42,7 +46,7 @@ function LiveRow({ item, now }) {
             <span className="kit-live-team-dot" aria-hidden="true" style={{ backgroundColor: `var(--team-${side.toLowerCase()}-core)` }} />
             <span className="kit-live-name">{item[`team${side}`]?.name || `Team ${side}`}</span>
             <span className="kit-live-score">
-              {sets && <span className="kit-live-sets" aria-label={`${item[`sets${side}`]} sets`}>{item[`sets${side}`]}<small>sets</small></span>}
+              {sets && <span className="kit-live-sets" aria-label={setCount(item.sport, item[`sets${side}`])}>{item[`sets${side}`]}<small>{setCount(item.sport, item[`sets${side}`]).split(' ')[1]}</small></span>}
               <span>{item[`points${side}`]}</span>
             </span>
           </div>

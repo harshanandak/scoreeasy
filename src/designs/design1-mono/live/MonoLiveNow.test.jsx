@@ -76,11 +76,20 @@ describe('Live now', () => {
     view.rerender(<MemoryRouter><MonoLiveNow /></MemoryRouter>);
     expect(screen.getByText('Nothing live right now')).toBeInTheDocument();
   });
-  it('uses default team colours and shows sets at zero for badminton', () => {
-    mock.feed = [{ ...item('one', 'badminton'), teamA: { name: 'A' }, teamB: { name: 'B' } }];
+  it('uses default team colours and counts games, not sets, for badminton', () => {
+    mock.feed = [{ ...item('one', 'badminton'), teamA: { name: 'A' }, teamB: { name: 'B' }, setsB: 1 }];
     mount();
     const row = screen.getByRole('link', { name: /A versus B/ });
     expect(row.style.getPropertyValue('--team-a-core')).toBe(deriveTeamColours().A.core);
-    expect(within(row).getAllByLabelText('0 sets')).toHaveLength(2);
+    expect(within(row).getByLabelText('0 games')).toHaveTextContent('0games');
+    expect(within(row).getByLabelText('1 game')).toHaveTextContent('1game');
+    expect(within(row).queryByLabelText(/sets?$/)).toBeNull();
+  });
+  it('says one set, not one sets', () => {
+    mock.feed = [{ ...item('one'), setsA: 1 }];
+    mount();
+    const row = screen.getByRole('link', { name: /Reds versus Blues/ });
+    expect(within(row).getByLabelText('1 set')).toHaveTextContent('1set');
+    expect(within(row).getByLabelText('0 sets')).toBeInTheDocument();
   });
 });
