@@ -1,16 +1,17 @@
-// Hard-shell contract for every app modal surface and confirm UI: the app
-// confirm dialogs (AppConfirmDialog in index.jsx, ConfirmDialog in
-// MonoQuickMatch.jsx, AppScoringConfirmDialog), MonoSheet and the inline
-// ConfirmActionPanel. Values come from the colour audit
-// (docs/plans/2026-10-21-colour-system-audit.md §6.1 and §6.4, migration PR 6).
+// Kit modal skin (plan 2026-10-22 §4, F0) for every app modal surface and confirm UI: the app
+// confirm dialogs (AppConfirmDialog in index.jsx, ConfirmDialog in MonoQuickMatch.jsx,
+// AppScoringConfirmDialog), MonoSheet and the inline ConfirmActionPanel. A hairline-and-lift
+// container, Mono-strength buttons, and a danger fill for anything destructive.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import ConfirmActionPanel from './ConfirmActionPanel';
 
 const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
+const indexCss = readFileSync(`${import.meta.dirname}/../../../index.css`, 'utf8');
 const indexSource = readFileSync(`${import.meta.dirname}/../index.jsx`, 'utf8');
 const panelSource = readFileSync(`${import.meta.dirname}/ConfirmActionPanel.jsx`, 'utf8');
+const quickMatchSource = readFileSync(`${import.meta.dirname}/../MonoQuickMatch.jsx`, 'utf8');
 
 const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch)\(/i;
 
@@ -54,26 +55,11 @@ const declared = (selector, property) => {
 };
 const modalRules = rules.filter((rule) => /\.app-confirm|\.mono-sheet/.test(rule.selector));
 
-describe('hard-shell modal tokens', () => {
-  const rootBlocks = rules.filter((rule) => rule.selector === ':root');
-  const tokens = Object.assign({}, ...rootBlocks.map((rule) => rule.declarations));
-
-  it('defines the audit values once, in one :root block in mono.css that points at the audit', () => {
-    expect(rootBlocks).toHaveLength(1);
-    expect(tokens).toMatchObject({
-      '--se-color-scrim': 'rgba(11, 11, 13, 0.45)',
-      '--se-modal-surface': '#ffffff',
-      '--se-modal-danger': '#b42318',
-      '--se-modal-border': '2px',
-      '--se-modal-radius': '14px',
-      '--se-modal-button-radius': '10px',
-      '--se-shadow-hard-ink': '3px 3px 0 var(--se-color-ink)',
-      '--se-shadow-hard-lg': '4px 4px 0 var(--se-color-ink)',
-      '--se-shadow-press': '1px 1px 0 var(--se-color-ink)',
-    });
-    expect(monoCss).toContain('docs/plans/2026-10-21-colour-system-audit.md');
-    for (const token of Object.keys(tokens)) {
-      expect(indexSource).not.toContain(`${token}:`);
+describe('modal tokens', () => {
+  it('uses the app-wide Kit tokens; mono.css defines no modal tokens of its own', () => {
+    expect(rules.filter((rule) => rule.selector === ':root')).toHaveLength(0);
+    for (const token of ['--se-color-scrim', '--se-color-shadow', '--se-modal-lift', '--se-ctl-shadow', '--se-ctl-shadow-press']) {
+      expect(indexCss, token).toContain(`${token}:`);
     }
   });
 
@@ -93,7 +79,7 @@ describe('hard-shell modal tokens', () => {
   });
 });
 
-describe('app confirm dialog shell', () => {
+describe('app confirm dialog skin', () => {
   it('lives in mono.css, not in the inline <style> of index.jsx', () => {
     expect(indexSource).not.toMatch(/\.app-confirm-[\w-]+\s*[,{]/);
     expect(topLevel('.app-confirm-dialog')).toHaveLength(1);
@@ -109,76 +95,74 @@ describe('app confirm dialog shell', () => {
     }
   });
 
-  it('frames the panel as a hard shell: white surface, 2px ink border, 14px radius, solid 4px ink shadow', () => {
-    expect(declared('.app-confirm-dialog', 'background')).toBe('var(--se-modal-surface)');
-    expect(declared('.app-confirm-dialog', 'border')).toBe('var(--se-modal-border) solid var(--se-color-ink)');
-    expect(declared('.app-confirm-dialog', 'border-radius')).toBe('var(--se-modal-radius)');
-    expect(declared('.app-confirm-dialog', 'box-shadow')).toBe('var(--se-shadow-hard-lg)');
-    // No breakpoint swaps the shell back to a softer shadow.
+  it('frames the dialog with a hairline and a soft lift, never a hard shell', () => {
+    expect(declared('.app-confirm-dialog', 'background')).toBe('var(--se-color-surface)');
+    expect(declared('.app-confirm-dialog', 'border')).toBe('1px solid var(--se-color-line-soft)');
+    expect(declared('.app-confirm-dialog', 'border-radius')).toBe('24px');
+    expect(declared('.app-confirm-dialog', 'box-shadow')).toBe('var(--se-modal-lift)');
     for (const rule of rules.filter((r) => r.selectors.includes('.app-confirm-dialog'))) {
-      if (rule.declarations['box-shadow']) expect(rule.declarations['box-shadow']).toBe('var(--se-shadow-hard-lg)');
+      if (rule.declarations['box-shadow']) expect(rule.declarations['box-shadow']).toBe('var(--se-modal-lift)');
     }
   });
 
-  it('sets the overline in ink, never green', () => {
+  it('sets the overline in sentence case and the title in the display face', () => {
     expect(declared('.app-confirm-eyebrow', 'color')).toBe('var(--se-color-ink-soft)');
+    expect(declared('.app-confirm-eyebrow', 'text-transform')).toBeUndefined();
     expect(declared('.app-confirm-title', 'color')).toBe('var(--se-color-ink)');
+    expect(declared('.app-confirm-title', 'font-family')).toBe('var(--se-font-display)');
   });
 
-  it('fills a neutral commit in ink, a destructive confirm in danger red and Cancel in white', () => {
+  it('fills a commit in ink, a destructive confirm in danger and Cancel in the control surface', () => {
     expect(declared('.app-confirm-primary', 'background')).toBe('var(--se-color-ink)');
-    expect(declared('.app-confirm-primary', 'color')).toBe('var(--se-color-inverse)');
-    expect(declared('.app-confirm-danger', 'background')).toBe('var(--se-modal-danger)');
-    expect(declared('.app-confirm-danger', 'color')).toBe('var(--se-color-inverse)');
-    expect(declared('.app-confirm-secondary', 'background')).toBe('var(--se-modal-surface)');
+    expect(declared('.app-confirm-primary', 'color')).toBe('var(--se-color-on-ink)');
+    expect(declared('.app-confirm-danger', 'background')).toBe('var(--se-color-danger)');
+    expect(declared('.app-confirm-danger', 'color')).toBe('var(--se-color-on-ink)');
+    expect(declared('.app-confirm-secondary', 'background')).toBe('var(--se-ctl-bg)');
     expect(declared('.app-confirm-secondary', 'color')).toBe('var(--se-color-ink)');
   });
 
-  it('marks the quick-match Discard confirm as destructive until it can pass tone="danger"', () => {
-    // MonoQuickMatch.jsx's ConfirmDialog has no tone prop; its Discard instance is
-    // identified by its idPrefix (pinned in MonoQuickMatch.hardening.test.jsx).
-    const danger = topLevel('.app-confirm-danger')[0];
-    expect(danger.selectors).toContain('.app-confirm-dialog[aria-labelledby="discard-match-title"] .app-confirm-primary');
+  it('marks the quick-match Discard confirm as destructive through its tone, not its id', () => {
+    expect(topLevel('.app-confirm-danger')[0].selectors).not.toContainEqual(expect.stringContaining('aria-labelledby'));
+    expect(quickMatchSource).toMatch(/idPrefix="discard-match"\s+tone="danger"/);
   });
 
-  it('gives every button a thumb-sized hard key with a pressed state', () => {
+  it('gives every button a thumb-sized Mono-strength key with a pressed state', () => {
     for (const prefix of ['.app-confirm', '.mono-sheet']) {
       const base = `${prefix}-primary`;
-      expect(declared(base, 'border'), base).toBe('var(--se-modal-border) solid var(--se-color-ink)');
-      expect(declared(base, 'border-radius'), base).toBe('var(--se-modal-button-radius)');
-      expect(declared(base, 'box-shadow'), base).toBe('var(--se-shadow-hard-ink)');
+      expect(declared(base, 'border'), base).toBe('var(--se-ctl-border) solid var(--se-color-ink)');
+      expect(declared(base, 'border-radius'), base).toBe('var(--se-ctl-radius)');
+      expect(declared(base, 'box-shadow'), base).toBe('var(--se-ctl-shadow)');
       expect(Number.parseInt(declared(base, 'min-height'), 10), base).toBeGreaterThanOrEqual(52);
       expect(topLevel(`${prefix}-secondary`)[0].selectors, prefix).toContain(base);
       const pressed = topLevel(`${base}:active`)[0];
       expect(pressed?.declarations, prefix).toMatchObject({
         transform: 'translate(2px, 2px)',
-        'box-shadow': 'var(--se-shadow-press)',
+        'box-shadow': 'var(--se-ctl-shadow-press)',
       });
     }
     for (const rule of modalRules) {
       const minHeight = rule.declarations['min-height'];
-      if (minHeight) expect(Number.parseInt(minHeight, 10), rule.selector).toBeGreaterThanOrEqual(44);
+      if (minHeight) expect(Number.parseInt(minHeight, 10), rule.selector).toBeGreaterThanOrEqual(48);
     }
   });
 });
 
-describe('MonoSheet shell', () => {
-  it('sits on the bottom edge: 2px ink border with no bottom edge, white surface, no shadow', () => {
-    expect(declared('.mono-sheet', 'border')).toBe('var(--se-modal-border) solid var(--se-color-ink)');
-    expect(declared('.mono-sheet', 'border-bottom')).toBe('0');
-    expect(declared('.mono-sheet', 'background')).toBe('var(--se-modal-surface)');
-    expect(declared('.mono-sheet', 'box-shadow')).toBe('none');
+describe('MonoSheet skin', () => {
+  it('sits on the bottom edge as a lifted surface with no hard frame', () => {
+    expect(declared('.mono-sheet', 'border')).toBe('0');
+    expect(declared('.mono-sheet', 'background')).toBe('var(--se-color-surface)');
+    expect(declared('.mono-sheet', 'box-shadow')).toMatch(/var\(--se-color-shadow\)/);
   });
 
   it('shares the dialog button set', () => {
     expect(declared('.mono-sheet-primary', 'background')).toBe('var(--se-color-ink)');
-    expect(declared('.mono-sheet-danger', 'background')).toBe('var(--se-modal-danger)');
-    expect(declared('.mono-sheet-secondary', 'background')).toBe('var(--se-modal-surface)');
+    expect(declared('.mono-sheet-danger', 'background')).toBe('var(--se-color-danger)');
+    expect(declared('.mono-sheet-secondary', 'background')).toBe('var(--se-ctl-bg)');
   });
 });
 
 describe('ConfirmActionPanel', () => {
-  it('renders the inline destructive confirm in the hard-shell language', () => {
+  it('renders the inline destructive confirm in the Kit skin', () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();
     render(
@@ -204,7 +188,8 @@ describe('ConfirmActionPanel', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(onCancel).toHaveBeenCalledTimes(1);
 
-    expect(declared('.app-confirm-panel', 'border')).toBe('var(--se-modal-border) solid var(--se-color-ink)');
-    expect(declared('.app-confirm-panel', 'background')).toBe('var(--se-modal-surface)');
+    expect(declared('.app-confirm-panel', 'border')).toBe('1px solid var(--se-color-line-soft)');
+    expect(declared('.app-confirm-panel', 'background')).toBe('var(--se-color-surface)');
+    expect(declared('.app-confirm-panel', 'box-shadow')).toBe('var(--se-lift)');
   });
 });

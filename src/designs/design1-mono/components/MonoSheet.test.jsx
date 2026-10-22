@@ -333,18 +333,18 @@ describe('MonoSheet bottom-sheet primitive', () => {
     globalThis.removeEventListener('keydown', scorerHotkey);
   });
 
-  it('keeps the shared sheet shell brutalist-framed, soft-topped and mobile-safe', () => {
+  it('keeps the shared sheet in the Kit skin, soft-topped and mobile-safe', () => {
     const monoCss = readFileSync(`${import.meta.dirname}/../mono.css`, 'utf8');
     const confirmUtils = readFileSync(`${import.meta.dirname}/appConfirmUtils.js`, 'utf8');
 
     // Backdrop shares the established z-260 stacking baseline.
     expect(monoCss).toMatch(/\.mono-sheet-backdrop\s*\{[\s\S]*z-index:\s*260/);
-    // Hard shell sitting on the bottom edge: 2px ink border, no shadow
-    // (colour audit §6.4; full contract in hardShellDialogs.test.jsx).
-    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*border:\s*var\(--se-modal-border\) solid var\(--se-color-ink\)/);
-    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*box-shadow:\s*none/);
-    // HiFi soft top radii + safe-area padding + drag handle affordance.
-    expect(monoCss).toContain('var(--se-blend-radius-soft-lg)');
+    // Kit sheet (plan 2026-10-22 §4): no hard frame, a lift instead
+    // (full contract in modalSkin.test.jsx).
+    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*border:\s*0/);
+    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*box-shadow:\s*0 -18px 40px -24px/);
+    // Soft 24px top radii + safe-area padding + drag handle affordance.
+    expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*border-top-left-radius:\s*24px/);
     expect(monoCss).toContain('env(safe-area-inset-bottom, 0px)');
     expect(monoCss).toContain('.mono-sheet-handle');
     // Reduced-motion neutralizes the slide-up animation.

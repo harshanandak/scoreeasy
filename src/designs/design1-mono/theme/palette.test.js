@@ -198,7 +198,11 @@ describe('documented contrast pairs', () => {
 // 669 on feat/team-colour-volleyball (PR #157): lib/sportMarks.js (+2), the white/black
 // luminance <mask> inside its data-URI SVG, where CSS variables cannot reach.
 // Removing the unused court hatch helper drops one raw literal: 669 -> 668.
-const BASELINE = 668;
+// Kit F0 (plan 2026-10-22): the confirm dialogs and sheet move onto tokens, 668 -> 662.
+// ConfirmActionPanel drops its four inline reds (-4); the dialog CSS that left index.jsx's
+// inline <style> (-1) and the sheet backdrop in mono.css (-1) each lose an rgba() scrim to
+// --se-color-scrim. New marks add 0: their mask literals live once in sportMarks.js cutOut().
+const BASELINE = 662;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

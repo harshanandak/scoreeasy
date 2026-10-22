@@ -61,6 +61,7 @@ export const cssDeclarations = Object.freeze({
   '--se-color-warning': 'var(--se-color-gold-ink)',
   '--se-color-warning-soft': 'var(--se-color-gold-soft)',
   '--se-color-scrim': 'rgba(11, 11, 13, 0.45)',
+  '--se-color-shadow': 'var(--se-color-ink)',
 
   // HiFi-blend colours (FROZEN names; BLEND-GOVERNANCE.md)
   '--se-blend-green-wash': '#e7f4ee',
@@ -91,6 +92,7 @@ export const cssDarkDeclarations = Object.freeze({
   '--se-color-danger': '#ff8f84',
   '--se-color-danger-soft': '#3a1714',
   '--se-color-scrim': 'rgba(0, 0, 0, 0.6)',
+  '--se-color-shadow': '#000000',
 });
 
 /**

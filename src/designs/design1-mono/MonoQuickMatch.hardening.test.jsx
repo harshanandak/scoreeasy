@@ -92,9 +92,8 @@ describe('MonoQuickMatch hardening (#106)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
     const dialog = screen.getByRole('dialog', { name: /Discard match/i });
     expect(dialog).toBeInTheDocument();
-    // mono.css styles this confirm as destructive (danger red) by this id —
-    // ConfirmDialog has no tone prop yet. See hardShellDialogs.test.jsx.
-    expect(dialog).toHaveAttribute('aria-labelledby', 'discard-match-title');
+    // Discard is destructive: its confirm button takes the danger fill (tone="danger").
+    expect(within(dialog).getByRole('button', { name: 'Discard' })).toHaveClass('app-confirm-primary', 'app-confirm-danger');
     expect(storageMock.clearData).not.toHaveBeenCalled();
     expect(nav).not.toHaveBeenCalled();
 
@@ -307,12 +306,12 @@ describe('MonoQuickMatch hardening on the team-colour board (volleyball)', () =>
   it('keeps the live-broadcast bar mounted when cloud auth is available, and omits it offline', () => {
     seedVolleyball();
     const { container, unmount } = render(<MonoQuickMatch />);
-    expect(container.querySelector('.tsb-sheet-live')).not.toBeNull();
+    expect(container.querySelector('.sb-sheet-live')).not.toBeNull();
     unmount();
 
     ctx.cloudAuthAvailable = false;
     seedVolleyball();
     const { container: offlineContainer } = render(<MonoQuickMatch />);
-    expect(offlineContainer.querySelector('.tsb-sheet-live')).toBeNull();
+    expect(offlineContainer.querySelector('.sb-sheet-live')).toBeNull();
   });
 });

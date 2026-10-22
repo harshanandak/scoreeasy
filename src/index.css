@@ -93,6 +93,7 @@
   --se-color-warning: var(--se-color-gold-ink);
   --se-color-warning-soft: var(--se-color-gold-soft);
   --se-color-scrim: rgba(11, 11, 13, 0.45);
+  --se-color-shadow: var(--se-color-ink);
 
   /* Mono-strength controls (.se-ctl, .se-go) and the soft lift every other surface gets */
   --se-ctl-border: 2px;
@@ -101,6 +102,7 @@
   --se-ctl-shadow: 3px 3px 0 var(--se-color-ink);
   --se-ctl-shadow-press: 1px 1px 0 var(--se-color-ink);
   --se-go-edge: var(--se-color-ink);
+  --se-modal-lift: 0 24px 60px -28px color-mix(in oklab, var(--se-color-shadow) 60%, transparent);
   --se-lift: 0 1px 2px color-mix(in oklab, var(--se-color-ink) 6%, transparent),
     0 14px 30px -18px color-mix(in oklab, var(--se-color-ink) 45%, transparent);
   --se-border-standard: 1.5px;
@@ -209,6 +211,7 @@
   --se-color-danger: #ff8f84;
   --se-color-danger-soft: #3a1714;
   --se-color-scrim: rgba(0, 0, 0, 0.6);
+  --se-color-shadow: #000000;
   --se-ctl-bg: #202228;
   --se-ctl-shadow: 3px 3px 0 #000000, 3px 3px 0 1px rgba(244, 245, 247, 0.35);
   --se-ctl-shadow-press: 1px 1px 0 #000000;
