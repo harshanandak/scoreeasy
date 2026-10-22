@@ -1,0 +1,510 @@
+[
+  {
+    "kind": "guided",
+    "failed": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/cricket/tournament/100/match/m1/score",
+      "match": {
+        "id": "m1",
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "in-progress",
+        "format": {
+          "preset": "custom",
+          "overs": 1,
+          "players": 11,
+          "totalInnings": 2,
+          "trackOvers": true,
+          "guided": true
+        },
+        "draftState": {
+          "phase": "innings2",
+          "target": 2,
+          "openers2": {
+            "striker": "Batter 1",
+            "nonStriker": "Batter 2",
+            "bowler": "Bowler"
+          },
+          "innings1": {
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "target": null,
+            "deliveries": [
+              {
+                "batsmanRuns": 1,
+                "extras": [],
+                "overthrow": null,
+                "wicket": null,
+                "freeHit": false,
+                "legal": true,
+                "striker": "A1",
+                "nonStriker": "A2",
+                "bowler": "B1",
+                "overNo": 1,
+                "ballInOver": 1
+              }
+            ],
+            "striker": "A2",
+            "nonStriker": "A1",
+            "bowler": "B1",
+            "playersPerSide": 11,
+            "freeHit": false
+          },
+          "guidedInnings": {
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "target": 2,
+            "deliveries": [
+              {
+                "batsmanRuns": 4,
+                "extras": [],
+                "overthrow": null,
+                "wicket": null,
+                "freeHit": false,
+                "legal": true,
+                "striker": "Batter 1",
+                "nonStriker": "Batter 2",
+                "bowler": "Bowler",
+                "overNo": 1,
+                "ballInOver": 1
+              }
+            ],
+            "striker": "Batter 1",
+            "nonStriker": "Batter 2",
+            "bowler": "Bowler",
+            "playersPerSide": 11,
+            "freeHit": false
+          },
+          "savedAt": "2026-10-22T09:54:47.032Z"
+        },
+        "team1Score": {
+          "runs": 1,
+          "balls": 6,
+          "wickets": 0,
+          "allOut": false
+        },
+        "team2Score": {
+          "runs": 4,
+          "wickets": 0,
+          "balls": 1,
+          "allOut": false
+        }
+      }
+    },
+    "saved": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/cricket/tournament/100",
+      "match": {
+        "id": "m1",
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "completed",
+        "format": {
+          "preset": "custom",
+          "overs": 1,
+          "players": 11,
+          "totalInnings": 2,
+          "trackOvers": true,
+          "guided": true
+        },
+        "team1Score": {
+          "runs": 1,
+          "balls": 6,
+          "wickets": 0,
+          "allOut": false
+        },
+        "team2Score": {
+          "runs": 4,
+          "wickets": 0,
+          "balls": 1,
+          "allOut": false
+        },
+        "battingOrder": [
+          "A",
+          "B"
+        ],
+        "winner": "B",
+        "winDesc": "Won by 10 wickets",
+        "guidedInnings": [
+          {
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "target": null,
+            "deliveries": [
+              {
+                "batsmanRuns": 1,
+                "extras": [],
+                "overthrow": null,
+                "wicket": null,
+                "freeHit": false,
+                "legal": true,
+                "striker": "A1",
+                "nonStriker": "A2",
+                "bowler": "B1",
+                "overNo": 1,
+                "ballInOver": 1
+              }
+            ],
+            "striker": "A2",
+            "nonStriker": "A1",
+            "bowler": "B1",
+            "playersPerSide": 11,
+            "freeHit": false
+          },
+          {
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "target": 2,
+            "deliveries": [
+              {
+                "batsmanRuns": 4,
+                "extras": [],
+                "overthrow": null,
+                "wicket": null,
+                "freeHit": false,
+                "legal": true,
+                "striker": "Batter 1",
+                "nonStriker": "Batter 2",
+                "bowler": "Bowler",
+                "overNo": 1,
+                "ballInOver": 1
+              }
+            ],
+            "striker": "Batter 1",
+            "nonStriker": "Batter 2",
+            "bowler": "Bowler",
+            "playersPerSide": 11,
+            "freeHit": false
+          }
+        ],
+        "completedAt": "2026-10-22T09:54:48.613Z"
+      }
+    }
+  },
+  {
+    "kind": "test-tournament",
+    "failed": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/cricket/tournament/100/match/m1/score",
+      "match": {
+        "id": "m1",
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "in-progress",
+        "format": {
+          "preset": "test",
+          "overs": null,
+          "players": 11,
+          "totalInnings": 4,
+          "trackOvers": true,
+          "declaration": true,
+          "followOn": true
+        },
+        "draftState": {
+          "innings": [
+            {
+              "teamId": "A",
+              "runs": 1,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "B",
+              "runs": 0,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "A",
+              "runs": 0,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "B",
+              "runs": 1,
+              "balls": 1,
+              "wickets": 0,
+              "allOut": false
+            }
+          ],
+          "currentInningsIndex": 3,
+          "followOnEnforced": false,
+          "history": [
+            {
+              "innings": [
+                {
+                  "teamId": "A",
+                  "runs": 1,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "B",
+                  "runs": 0,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "A",
+                  "runs": 0,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "B",
+                  "runs": 0,
+                  "balls": 0,
+                  "wickets": 0,
+                  "allOut": false
+                }
+              ],
+              "currentInningsIndex": 3,
+              "followOnEnforced": false
+            }
+          ],
+          "savedAt": "2026-10-22T09:54:58.993Z"
+        }
+      }
+    },
+    "saved": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/cricket/tournament/100",
+      "match": {
+        "id": "m1",
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "completed",
+        "format": {
+          "preset": "test",
+          "overs": null,
+          "players": 11,
+          "totalInnings": 4,
+          "trackOvers": true,
+          "declaration": true,
+          "followOn": true
+        },
+        "innings": [
+          {
+            "teamId": "A",
+            "runs": 1,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "B",
+            "runs": 0,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "A",
+            "runs": 0,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "B",
+            "runs": 0,
+            "balls": 0,
+            "wickets": 0,
+            "allOut": false
+          }
+        ],
+        "currentInningsIndex": 3,
+        "winner": "draw",
+        "winDesc": "Match Drawn",
+        "followOnEnforced": false,
+        "completedAt": "2026-10-22T09:55:08.251Z"
+      }
+    }
+  },
+  {
+    "kind": "test-quick",
+    "failed": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/cricket/quick/test-match/300",
+      "match": {
+        "id": 300,
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "in-progress",
+        "format": {
+          "preset": "test",
+          "overs": null,
+          "players": 11,
+          "totalInnings": 4,
+          "trackOvers": true,
+          "declaration": true,
+          "followOn": true
+        },
+        "draftState": {
+          "innings": [
+            {
+              "teamId": "A",
+              "runs": 1,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "B",
+              "runs": 0,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "A",
+              "runs": 0,
+              "balls": 6,
+              "wickets": 10,
+              "allOut": true
+            },
+            {
+              "teamId": "B",
+              "runs": 1,
+              "balls": 1,
+              "wickets": 0,
+              "allOut": false
+            }
+          ],
+          "currentInningsIndex": 3,
+          "followOnEnforced": false,
+          "history": [
+            {
+              "innings": [
+                {
+                  "teamId": "A",
+                  "runs": 1,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "B",
+                  "runs": 0,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "A",
+                  "runs": 0,
+                  "balls": 6,
+                  "wickets": 10,
+                  "allOut": true
+                },
+                {
+                  "teamId": "B",
+                  "runs": 0,
+                  "balls": 0,
+                  "wickets": 0,
+                  "allOut": false
+                }
+              ],
+              "currentInningsIndex": 3,
+              "followOnEnforced": false
+            }
+          ],
+          "savedAt": "2026-10-22T09:55:27.918Z"
+        },
+        "sport": "cricket",
+        "team1": "Alpha",
+        "team2": "Beta",
+        "team1Name": "Alpha",
+        "team2Name": "Beta",
+        "winner": null
+      }
+    },
+    "saved": {
+      "viewport": [
+        390,
+        844
+      ],
+      "path": "/history",
+      "match": {
+        "id": 300,
+        "team1Id": "A",
+        "team2Id": "B",
+        "status": "completed",
+        "format": {
+          "preset": "test",
+          "overs": null,
+          "players": 11,
+          "totalInnings": 4,
+          "trackOvers": true,
+          "declaration": true,
+          "followOn": true
+        },
+        "sport": "cricket",
+        "team1": "Alpha",
+        "team2": "Beta",
+        "team1Name": "Alpha",
+        "team2Name": "Beta",
+        "winner": "Draw",
+        "completedAt": "2026-10-22T09:55:30.495Z",
+        "innings": [
+          {
+            "teamId": "A",
+            "runs": 1,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "B",
+            "runs": 0,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "A",
+            "runs": 0,
+            "balls": 6,
+            "wickets": 10,
+            "allOut": true
+          },
+          {
+            "teamId": "B",
+            "runs": 0,
+            "balls": 0,
+            "wickets": 0,
+            "allOut": false
+          }
+        ],
+        "currentInningsIndex": 3,
+        "score1": 1,
+        "score2": 0,
+        "winDesc": "Match Drawn",
+        "followOnEnforced": false,
+        "date": "2026-10-22T09:55:30.495Z"
+      }
+    }
+  }
+]

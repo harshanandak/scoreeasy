@@ -463,8 +463,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Persist the terminal state before finalizing its broadcast. In particular,
   // the winning ball must survive a refresh on the result screen.
-  const persistCompleteMatch = () => {
-    const { innings, currentInningsIndex, followOnEnforced, result } = terminalSnapshotRef.current;
+  const persistCompleteMatch = (snapshot = terminalSnapshotRef.current) => {
+    const { innings, currentInningsIndex, followOnEnforced, result } = snapshot;
     const winner = result.winner || null;
     const winDesc = result.desc || '';
     const completedAt = new Date().toISOString();
@@ -588,8 +588,15 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   const handleFinish = () => {
-    if (completion.locked) return;
-    finishScoring();
+    if (scoringPrompt.isInteractionLocked) return;
+    const snapshot = structuredClone({
+      innings: inningsRef.current,
+      currentInningsIndex,
+      followOnEnforced,
+      result: getTestMatchCompletion(inningsRef.current, currentInningsIndex, team1Id, team2Id, format)
+        || { winner: 'draw', desc: 'Match Drawn' },
+    });
+    completion.complete(() => persistCompleteMatch(snapshot), finishScoring);
   };
 
   // Continuous auto-save
