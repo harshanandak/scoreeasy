@@ -241,17 +241,17 @@ describe('quick match team colour: setup', () => {
   it('offers a colour picker per team for volleyball', async () => {
     ctx.sport = 'volleyball';
     render(<MonoQuickMatch />);
-    const teamA = await screen.findByRole('radiogroup', { name: 'Team A colour' });
-    expect(screen.getByRole('radiogroup', { name: 'Team B colour' })).toBeInTheDocument();
-    const yellow = teamA.querySelector('[aria-label="Yellow"]');
+    const teamA = await screen.findByRole('group', { name: 'Team A colour' });
+    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
+    const yellow = within(teamA).getByRole('button', { name: 'Yellow' });
     fireEvent.click(yellow);
-    expect(yellow).toHaveAttribute('aria-checked', 'true');
+    expect(yellow).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('offers no picker for a sport that has not opted in', async () => {
     ctx.sport = 'badminton';
     render(<MonoQuickMatch />);
     await screen.findByLabelText('Team A name');
-    expect(screen.queryByRole('radiogroup', { name: 'Team A colour' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
   });
 });

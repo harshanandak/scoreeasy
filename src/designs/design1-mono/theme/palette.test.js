@@ -213,7 +213,11 @@ describe('documented contrast pairs', () => {
 // Kit S3 (Finish), 653 -> 651: the quick-match result drops its set breakdown's two #666 greys.
 // The winner card, loser row and set chips take only tokens and teamColour.js engine output; the
 // hand-drawn confetti, trophy and circle paint in currentColor and --se-color-gold (+0).
-const BASELINE = 651;
+// Kit S2 (Quick setup), 651 -> 638: the setup screen drops its twelve greys, whites and rgba()
+// shadows (#aaa, #333, #fff x2, #eee x3, #f5f5f5 x2, #dbeafe, two rgba()) for tokens (-12), and
+// TeamColourPicker loses the #000000 custom-input fallback (-1). Its eleven kit source colours stay;
+// swatches paint engine output (deriveIdentityColour), and the setup's hand-drawn "v" is ink (+0).
+const BASELINE = 638;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

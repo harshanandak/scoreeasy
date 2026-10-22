@@ -48,7 +48,7 @@ async function settleRoute() {
   await act(async () => {});
 }
 
-const checkedSwatch = (group) => within(screen.getByRole('radiogroup', { name: group })).getByRole('radio', { checked: true });
+const checkedSwatch = (group) => within(screen.getByRole('group', { name: group })).getByRole('button', { pressed: true });
 
 describe('Home Rematch keeps the saved team colours', () => {
   beforeEach(() => {
@@ -91,13 +91,13 @@ describe('Home Rematch keeps the saved team colours', () => {
     await settleRoute();
 
     // 3. The setup pickers hold yellow v green ...
-    expect(await screen.findByRole('radiogroup', { name: 'Team A colour' })).toBeInTheDocument();
+    expect(await screen.findByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
     expect(checkedSwatch('Team A colour')).toHaveAccessibleName('Yellow');
     expect(checkedSwatch('Team B colour')).toHaveAccessibleName('Green');
     expect(screen.getByLabelText('Team A name')).toHaveValue('Royals');
 
     // ... and the match that starts is painted yellow v green.
-    fireEvent.click(screen.getByRole('button', { name: 'Start Volleyball' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
     await screen.findByRole('button', { name: 'Add point for Royals' });
     const board = document.querySelector('[data-team-board]');
     expect(board.style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
@@ -113,7 +113,7 @@ describe('Home Rematch keeps the saved team colours', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Rematch: Royals vs Strikers' }));
     await settleRoute();
-    await screen.findByRole('radiogroup', { name: 'Team A colour' });
+    await screen.findByRole('group', { name: 'Team A colour' });
     expect(checkedSwatch('Team A colour')).toHaveAccessibleName('Red');
     expect(checkedSwatch('Team B colour')).toHaveAccessibleName('Blue');
   });

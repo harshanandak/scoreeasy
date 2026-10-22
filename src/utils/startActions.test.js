@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPriorityStartActions, getSportStartLabel } from './startActions';
+import { getPriorityStartActions, getSetupStartLabel, getSportStartLabel } from './startActions';
 
 describe('start action labels', () => {
   it('uses sport names instead of generic match copy', () => {
@@ -7,6 +7,12 @@ describe('start action labels', () => {
     expect(getSportStartLabel('cricket')).toBe('Start Cricket');
     expect(getSportStartLabel('football')).toBe('Start Football');
     expect(getSportStartLabel('missing-sport')).toBe('Start Match');
+  });
+
+  it('names the quick setup Go in sentence case', () => {
+    expect(getSetupStartLabel('volleyball')).toBe('Start volleyball');
+    expect(getSetupStartLabel('tabletennis')).toBe('Start table tennis');
+    expect(getSetupStartLabel('missing-sport')).toBe('Start match');
   });
 
   it('keeps cricket and football ahead of volleyball in priority starts', () => {
