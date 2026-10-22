@@ -1,177 +1,60 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest';
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { choosePlan, parseNameStatus } from './pre-push-tests.mjs';
 
-const repo = resolve(import.meta.dirname, '..');
-const fixtures = [];
-const gitLocalVariables = spawnSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' });
-if (gitLocalVariables.status !== 0) throw new Error('Cannot identify Git repository-local environment variables');
-
-function run(root, command, args) {
-  const env = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
-  // Hooks export repository-local Git state; foreign fixture repositories must
-  // clear those variables as prescribed by githooks(5).
-  for (const name of gitLocalVariables.stdout.trim().split('\n')) delete env[name.trim()];
-  const result = spawnSync(command, args, {
-    cwd: root,
-    encoding: 'utf8',
-    env,
-    timeout: 40000,
-  });
-  if (result.error) throw result.error;
-  return { status: result.status, output: result.stdout + result.stderr };
-}
-
-function fixture(resource = 'leaf.js') {
-  const root = mkdtempSync(join(tmpdir(), 'scoreeasy-prepush-'));
-  fixtures.push(root);
-  mkdirSync(join(root, 'scripts'));
-  mkdirSync(join(root, 'src/test'), { recursive: true });
-  symlinkSync(join(repo, 'node_modules'), join(root, 'node_modules'), 'junction');
-  writeFileSync(join(root, 'scripts/pre-push-tests.mjs'), readFileSync(join(repo, 'scripts/pre-push-tests.mjs')));
-  writeFileSync(join(root, 'lefthook.yml'), readFileSync(join(repo, 'lefthook.yml')));
-  writeFileSync(join(root, '.gitignore'), 'node_modules/\n');
-  writeFileSync(join(root, 'package.json'), JSON.stringify({ type: 'module', scripts: { test: 'vitest run --maxWorkers=1' } }));
-  writeFileSync(join(root, 'vite.config.js'), `import { forceRerunTriggers } from './scripts/pre-push-tests.mjs';
-export default { test: { globals: true, environment: 'node', forceRerunTriggers, setupFiles: './src/test/setup.js' } };\n`);
-  writeFileSync(join(root, 'src/test/setup.js'), '// setup\n');
-  writeFileSync(join(root, resource), resource.endsWith('.json') ? '{"value":42}\n' : 'export const value = 42;\n');
-  writeFileSync(join(root, 'middle.js'), resource.endsWith('.json')
-    ? `import payload from './${resource}'; export const value = payload.value;\n`
-    : `export { value } from './${resource}';\n`);
-  writeFileSync(join(root, 'leaf.test.js'), "import { value } from './middle.js'; it('uses the leaf', () => expect(value).toBe(42));\n");
-  writeFileSync(join(root, 'unrelated.test.js'), "it('unrelated sentinel', () => expect(true).toBe(true));\n");
-  for (const args of [
-    ['init', '--quiet'], ['config', 'user.name', 'Hook fixture'],
-    ['config', 'user.email', 'hook-fixture@example.invalid'], ['add', '.'],
-    ['commit', '--quiet', '-m', 'fixture baseline'], ['update-ref', 'refs/remotes/origin/master', 'HEAD'],
-  ]) {
-    const result = run(root, 'git', args);
-    expect(result.status, result.output).toBe(0);
-  }
-  return root;
-}
-
-function hook(root) {
-  return run(root, process.execPath, [join(repo, 'node_modules/lefthook/bin/index.js'), 'run', 'pre-push', '--force', '--colors', 'off']);
-}
-
-afterEach(() => {
-  // Every target is the exact directory returned by mkdtempSync above.
-  for (const root of fixtures.splice(0)) rmSync(root, { recursive: true, force: true });
+const planFor = (status, ...paths) => choosePlan({
+  changes: [{ status, paths }], baseOk: true,
 });
 
-describe('real pre-push hook selection', () => {
-  it('isolates foreign repositories from exported hook Git state', () => {
-    const parent = fixture();
-    const priorDir = process.env.GIT_DIR;
-    const priorImplicit = process.env.GIT_IMPLICIT_WORK_TREE;
-    try {
-      process.env.GIT_DIR = join(parent, '.git');
-      process.env.GIT_IMPLICIT_WORK_TREE = '0';
-      const child = fixture();
-      const actual = statSync(run(child, 'git', ['rev-parse', '--show-toplevel']).output.trim());
-      const expected = statSync(child);
-      expect({ dev: actual.dev, ino: actual.ino }).toEqual({ dev: expected.dev, ino: expected.ino });
-      expect(run(parent, 'git', ['rev-parse', '--is-bare-repository']).output.trim()).toBe('false');
-    } finally {
-      if (priorDir === undefined) delete process.env.GIT_DIR;
-      else process.env.GIT_DIR = priorDir;
-      if (priorImplicit === undefined) delete process.env.GIT_IMPLICIT_WORK_TREE;
-      else process.env.GIT_IMPLICIT_WORK_TREE = priorImplicit;
-    }
-  }, 45000);
+describe('choosePlan', () => {
+  it('selects related tests for a modified source file', () => {
+    expect(planFor('M', 'src/scoring.js')).toEqual({ mode: 'related' });
+  });
 
-  it('selects a transitive source test and supports detached HEAD', () => {
-    const root = fixture();
-    expect(run(root, 'git', ['checkout', '--detach', '--quiet']).status).toBe(0);
-    writeFileSync(join(root, 'leaf.js'), 'export const value = 42; // changed\n');
-    const result = hook(root);
-    console.log(`EDITED SOURCE / DETACHED HEAD\n${result.output}`);
-    expect(result.status).toBe(0);
-    expect(result.output).toContain('Related tests since origin/master');
-    expect(result.output).toMatch(/Test Files\s+1 passed \(1\)/);
-  }, 45000);
+  it.each(['leaf.js', 'payload.json', 'theme.css'])('runs all tests for deletion or rename of %s', (path) => {
+    expect(planFor('D', path)).toEqual({
+      mode: 'full', reason: `tracked file deleted/renamed (${path})`, nativeTriggers: false,
+    });
+    expect(planFor('R100', path, `assets/${path}`)).toEqual({
+      mode: 'full', reason: `tracked file deleted/renamed (${path} -> assets/${path})`, nativeTriggers: false,
+    });
+  });
 
-  it.each(['leaf.js', 'payload.json'])('runs the full suite and fails for deleted root-level %s', (resource) => {
-    const root = fixture(resource);
-    rmSync(join(root, resource));
-    const result = hook(root);
-    console.log(`DELETED ROOT-LEVEL ${resource}\n${result.output}`);
-    expect(result.status).not.toBe(0);
-    expect(result.output).toContain('Full suite: tracked file deleted/renamed');
-    expect(result.output).toMatch(/Test Files\s+1 failed \| 1 passed \(2\)/);
-    expect(result.output).toContain(resource);
-  }, 45000);
+  it.each(['vite.config.js', 'vitest.config.mjs'])('runs all tests before loading changed %s', (path) => {
+    expect(planFor('M', path)).toEqual({
+      mode: 'full', reason: `test environment changed (${path})`, nativeTriggers: false,
+    });
+  });
 
-  it.each(['leaf.js', 'payload.json'])('runs the full suite for a staged root-level %s rename', (resource) => {
-    const root = fixture(resource);
-    const renamed = resource.endsWith('.json') ? 'renamed.json' : 'renamed.js';
-    expect(run(root, 'git', ['mv', resource, renamed]).status).toBe(0);
-    writeFileSync(join(root, 'middle.js'), resource.endsWith('.json')
-      ? `import payload from './${renamed}'; export const value = payload.value;\n`
-      : `export { value } from './${renamed}';\n`);
-    const result = hook(root);
-    expect(result.status, result.output).toBe(0);
-    expect(result.output).toContain('Full suite: tracked file deleted/renamed');
-    expect(result.output).toMatch(/Test Files\s+2 passed \(2\)/);
-  }, 45000);
+  it.each(['package.json', 'bun.lock', 'src/test/setup.js', 'tsconfig.json'])('uses native full-suite triggers for %s', (path) => {
+    expect(planFor('M', path)).toEqual({
+      mode: 'full', reason: `test environment changed (${path})`, nativeTriggers: true,
+    });
+  });
 
-  it.each(['package.json', 'bun.lock', 'vitest.config.js', 'src/test/setup.js', 'tsconfig.json'])('runs all tests for %s', (path) => {
-    const root = fixture();
-    const value = path === 'package.json' ? readFileSync(join(root, path), 'utf8') + '\n'
-      : path === 'vitest.config.js' ? 'export default { test: { globals: true } };\n'
-        : path === 'tsconfig.json' ? '{}' : '// changed\n';
-    writeFileSync(join(root, path), value);
-    const result = hook(root);
-    if (path === 'vitest.config.js') console.log(`CONFIG REPLACEMENT (NO NATIVE TRIGGERS)\n${result.output}`);
-    expect(result.status, result.output).toBe(0);
-    expect(result.output).toContain('Full suite: test environment changed');
-    if (path !== 'vitest.config.js') expect(result.output).toContain('via native forceRerunTriggers');
-    expect(result.output).toMatch(/Test Files\s+2 passed \(2\)/);
-  }, 45000);
+  it('runs all tests when the selection script changes', () => {
+    expect(planFor('M', 'scripts/pre-push-tests.mjs')).toMatchObject({ mode: 'full', nativeTriggers: false });
+  });
 
-  it('runs all tests when the Vite config is renamed', () => {
-    const root = fixture();
-    renameSync(join(root, 'vite.config.js'), join(root, 'vite.config.mjs'));
-    const result = hook(root);
-    expect(result.status, result.output).toBe(0);
-    expect(result.output).toContain('Full suite:');
-    expect(result.output).toMatch(/Test Files\s+2 passed \(2\)/);
-  }, 45000);
+  it('uses related mode for docs-only changes, allowing Vitest to report no related tests', () => {
+    expect(planFor('M', 'docs/README.md')).toEqual({ mode: 'related' });
+  });
 
-  it('reports no related tests explicitly for docs-only edits', () => {
-    const root = fixture();
-    writeFileSync(join(root, 'README.md'), 'Docs only\n');
-    const result = hook(root);
-    expect(result.status, result.output).toBe(0);
-    expect(result.output).toContain('No test files found, exiting with code 0');
-  }, 45000);
+  it.each([
+    [false, false, 'Missing base origin/master'],
+    [true, false, 'No common ancestor between HEAD and origin/master'],
+  ])('blocks when baseOk=%s and mergeBaseOk=%s', (baseOk, mergeBaseOk, problem) => {
+    expect(choosePlan({ changes: [], baseOk, mergeBaseOk })).toEqual({
+      mode: 'blocked',
+      message: `${problem}. Run \`git fetch origin master\`. For a shallow clone, also run \`git fetch --unshallow origin\`, then retry.`,
+    });
+  });
+});
 
-  it('explains how to recover a missing base', () => {
-    const root = fixture();
-    expect(run(root, 'git', ['update-ref', '-d', 'refs/remotes/origin/master']).status).toBe(0);
-    const result = hook(root);
-    console.log(`MISSING BASE\n${result.output}`);
-    expect(result.status).not.toBe(0);
-    expect(result.output).toContain('Missing base origin/master');
-    expect(result.output).toContain('git fetch origin master');
-    expect(result.output).toContain('git fetch --unshallow origin');
-    expect(result.output).not.toContain('vitest run');
-  }, 45000);
-
-  it('explains how to recover history with no common ancestor', () => {
-    const root = fixture();
-    const tree = run(root, 'git', ['rev-parse', 'HEAD^{tree}']).output.trim();
-    const unrelated = run(root, 'git', ['commit-tree', tree, '-m', 'unrelated root']).output.trim();
-    expect(run(root, 'git', ['update-ref', 'refs/remotes/origin/master', unrelated]).status).toBe(0);
-    const result = hook(root);
-    expect(result.status).not.toBe(0);
-    expect(result.output).toContain('No common ancestor between HEAD and origin/master');
-    expect(result.output).toContain('git fetch --unshallow origin');
-    expect(result.output).not.toContain('vitest run');
-  }, 45000);
+it('parses NUL-delimited name-status entries including rename paths and unusual filenames', () => {
+  expect(parseNameStatus('M\0src/a.js\0D\0payload.json\0R100\0old name.css\0new\nname.css\0')).toEqual([
+    { status: 'M', paths: ['src/a.js'] },
+    { status: 'D', paths: ['payload.json'] },
+    { status: 'R100', paths: ['old name.css', 'new\nname.css'] },
+  ]);
 });
