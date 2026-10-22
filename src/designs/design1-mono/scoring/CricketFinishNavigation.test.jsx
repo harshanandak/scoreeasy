@@ -12,7 +12,7 @@ vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: fa
 vi.mock('../utils/confetti', () => ({ triggerConfetti: vi.fn() }));
 
 const tournamentPath = '/cricket/tournament/100';
-const quickCompletionPath = '/history';
+const quickCompletionPath = '/cricket/quick?result=300';
 const cases = ['limited', 'test-tournament', 'test-quick', 'guided'];
 
 function CompletionDestination() {
@@ -36,7 +36,7 @@ function renderScorer(kind, complete) {
           <Route path="/:sport/tournament/:id/match/:matchId/score" element={scorer} />
           <Route path="/:sport/quick/test-match/:matchId" element={scorer} />
           <Route path={tournamentPath} element={<CompletionDestination />} />
-          <Route path={quickCompletionPath} element={<CompletionDestination />} />
+          <Route path="/cricket/quick" element={<CompletionDestination />} />
           <Route path="/app" element={<h1>Prior page</h1>} />
         </Routes>
       </ScoringCompletionContext.Provider>

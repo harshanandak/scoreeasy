@@ -19,7 +19,7 @@ vi.mock('../utils/confetti', () => ({ triggerConfetti: vi.fn() }));
 
 function Location() {
   const location = useLocation();
-  return <output aria-label="Hydrated route">{location.pathname}</output>;
+  return <output aria-label="Hydrated route">{`${location.pathname}${location.search}`}</output>;
 }
 
 const cases = [
@@ -70,7 +70,8 @@ describe.each(cases)('persisted completion: $name', ({ sport, Component, result,
     const key = quick ? 'se_quickmatches' : `se_${sport}`;
     const persisted = JSON.parse(localStorage.getItem(key));
     const start = quick ? (sport === 'tennis' ? '/tennis/quick/live/300' : `/${sport}/quick`) : `/${sport}/tournament/100/match/m1/score`;
-    const destination = quick ? '/history' : `/${sport}/tournament/100${result ? '/match/m1/result' : ''}`;
+    const destination = quick ? (sport === 'tennis' ? '/tennis/quick?result=300' : '/history')
+      : `/${sport}/tournament/100${result ? '/match/m1/result' : ''}`;
     render(
       <MemoryRouter initialEntries={[start]}>
         <Location />
@@ -78,7 +79,7 @@ describe.each(cases)('persisted completion: $name', ({ sport, Component, result,
           <Route path="/:sport/tournament/:id/match/:matchId/score" element={<Component />} />
           <Route path="/:sport/quick/live/:matchId" element={<Component storageMode="quick" />} />
           <Route path="/:sport/quick" element={<Component />} />
-          <Route path={destination} element={<h1>Saved result</h1>} />
+          <Route path={destination.split('?')[0]} element={<h1>Saved result</h1>} />
         </Routes>
       </MemoryRouter>,
     );

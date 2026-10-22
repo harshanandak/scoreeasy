@@ -129,3 +129,74 @@ describe('helpers', () => {
     expect(formatDuration(0)).toBeNull();
   });
 });
+
+describe('quick tennis result', () => {
+  it('shows completed games and tiebreak points in board order, omitting the unplayed set', () => {
+    const m = finishFromQuickResult({ team1Name: 'Ana', team2Name: 'Bea', score1: 2, score2: 0, sets: [
+      { games1: 6, games2: 4, completed: true },
+      { games1: 7, games2: 6, isTiebreak: true, tiebreakPoints1: 8, tiebreakPoints2: 6, completed: true },
+      { games1: 0, games2: 0, completed: false },
+    ] }, { kind: 'sets' });
+    expect(m).toMatchObject({ winnerSide: 'team1', headline: 'Ana', team1: { score: '2' }, team2: { score: '0' } });
+    expect(m.chips.map(c => [c.score, c.side])).toEqual([['6–4', 'team1'], ['7–6 (8–6)', 'team1']]);
+    expect(m.detail).toBe('Took the last set 7–6');
+  });
+});
+
+describe('quick Test cricket result', () => {
+  const inn = (teamId, runs, wickets = 10) => ({ teamId, runs, wickets, balls: 60, allOut: wickets === 10 });
+  const result = (innings, extra = {}) => ({
+    team1: 'Alpha', team2: 'Beta', team1Id: 'A', team2Id: 'B', status: 'completed',
+    format: { preset: 'test', totalInnings: 4, players: 11 }, innings,
+    currentInningsIndex: 3, ...extra,
+  });
+
+  it('shows each innings and a chase margin in wickets', () => {
+    const m = finishFromQuickResult(result([inn('A', 200), inn('B', 180), inn('A', 100), inn('B', 121, 3)]), { kind: 'cricket' });
+    expect(m).toMatchObject({ outcome: 'win', winnerSide: 'team2', headline: 'Beta', detail: 'Won by 7 wickets' });
+    expect(m.team1).toEqual({ name: 'Alpha', score: '200/all & 100/all', unit: 'innings' });
+    expect(m.team2).toEqual({ name: 'Beta', score: '180/all & 121/3', unit: 'innings' });
+    expect(m.ariaSummary).toContain('Alpha 200/all & 100/all, Beta 180/all & 121/3.');
+  });
+
+  it('shows a defended target as a runs margin', () => {
+    expect(finishFromQuickResult(result([inn('A', 200), inn('B', 180), inn('A', 100), inn('B', 90)]), { kind: 'cricket' }))
+      .toMatchObject({ outcome: 'win', winnerSide: 'team1', detail: 'Won by 30 runs' });
+  });
+
+  it('handles a follow-on innings victory without displaying the unplayed innings', () => {
+    const m = finishFromQuickResult(result([inn('A', 400), inn('B', 100), inn('B', 150), { teamId: 'A', runs: 0, wickets: 0, balls: 0 }],
+      { currentInningsIndex: 2 }), { kind: 'cricket' });
+    expect(m).toMatchObject({ winnerSide: 'team1', detail: 'Won by an innings and 150 runs' });
+    expect(m.team1.score).toBe('400/all');
+    expect(m.team2.score).toBe('100/all & 150/all');
+  });
+
+  it('marks declared and all-out innings the way the Test scorer does, including a follow-on', () => {
+    const declared = (teamId, runs, wickets) => ({ teamId, runs, wickets, balls: 60, allOut: false, declared: true });
+    const m = finishFromQuickResult(result([declared('A', 450, 7), inn('B', 150), inn('B', 200), { teamId: 'A', runs: 0, wickets: 0, balls: 0 }],
+      { currentInningsIndex: 2, format: { preset: 'test', totalInnings: 4, players: 11, followOnMargin: 200 } }), { kind: 'cricket' });
+    expect(m).toMatchObject({ winnerSide: 'team1', detail: 'Won by an innings and 100 runs' });
+    expect(m.team1.score).toBe('450/7d');
+    expect(m.team2.score).toBe('150/all & 200/all');
+    expect(m.ariaSummary).toContain('Alpha 450/7d, Beta 150/all & 200/all.');
+  });
+
+  it('keeps a manual draw truthful when aggregate runs are unequal', () => {
+    expect(finishFromQuickResult(result([inn('A', 200), inn('B', 180, 2)],
+      { winner: 'Draw', winDesc: 'Match Drawn', currentInningsIndex: 1 }), { kind: 'cricket' }))
+      .toMatchObject({ outcome: 'draw', winnerSide: null, headline: 'Match drawn', detail: null });
+  });
+
+  it('distinguishes a completed tie from a draw', () => {
+    expect(finishFromQuickResult(result([inn('A', 200), inn('B', 180), inn('A', 100), inn('B', 120)],
+      { winner: 'Tie' }), { kind: 'cricket' }))
+      .toMatchObject({ outcome: 'draw', winnerSide: null, headline: 'Match tied', detail: null });
+  });
+
+  it('an explicitly saved draw overrides a computed tie at equal totals', () => {
+    expect(finishFromQuickResult(result([inn('A', 200), inn('B', 180), inn('A', 100), inn('B', 120)],
+      { winner: 'Draw', winDesc: 'Match Drawn' }), { kind: 'cricket' }))
+      .toMatchObject({ outcome: 'draw', winnerSide: null, headline: 'Match drawn', detail: null });
+  });
+});

@@ -314,7 +314,9 @@ const PUBLIC_SHELL_PREFIXES = [
   '/showcase',
 ];
 
-function isProtectedScoringPath(pathname = '') {
+function isProtectedScoringPath(pathname = '', search = '') {
+  // Saved quick results share the setup route but have already consumed the scorer guard.
+  if (/^\/[^/]+\/quick$/.test(normalizePathname(pathname)) && new URLSearchParams(search).get('result')) return false;
   return isProtectedScoringRoute(pathname);
 }
 
@@ -392,7 +394,7 @@ function OnboardingReminder() {
     isLoading ||
     !cloudAuthAvailable ||
     !needsOnboarding ||
-    isProtectedScoringPath(location.pathname) ||
+    isProtectedScoringPath(location.pathname, location.search) ||
     !shouldDeferOnboardingForPath(location.pathname)
   ) {
     return null;
@@ -1392,7 +1394,7 @@ export default function Design1Mono() {
   const { authMode } = useAuth();
   const [startedRoute, setStartedRoute] = useState(null);
   const scoringRouteKey = `${location.key}:${location.pathname}`;
-  const scoringStarted = isProtectedScoringPath(location.pathname) && startedRoute === scoringRouteKey;
+  const scoringStarted = isProtectedScoringPath(location.pathname, location.search) && startedRoute === scoringRouteKey;
   const markScoringStarted = useCallback(started => setStartedRoute(started ? scoringRouteKey : null), [scoringRouteKey]);
   const [exitPrompt, setExitPrompt] = useState(null);
   const exitPromptRef = useRef(null);
@@ -1481,7 +1483,7 @@ export default function Design1Mono() {
 
   // Browser back button protection for active game/scoring routes
   useEffect(() => {
-    const isGameRoute = isProtectedScoringPath(location.pathname);
+    const isGameRoute = isProtectedScoringPath(location.pathname, location.search);
 
     if (!isGameRoute) {
       allowNextProtectedPopRef.current = false;
@@ -1547,7 +1549,7 @@ export default function Design1Mono() {
       globalThis.history.back();
       fallbackTimeoutId = globalThis.setTimeout(() => {
         clearPendingFallbackNavigation();
-        if (isProtectedScoringPath(globalThis.location.pathname)) {
+        if (isProtectedScoringPath(globalThis.location.pathname, globalThis.location.search)) {
           navigate(protectedBackFallback, { replace: true });
         }
       }, 300);

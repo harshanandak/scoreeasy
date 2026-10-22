@@ -187,6 +187,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     setCurrentInningsIndex(restoredIndex);
     setFollowOnEnforced(restoredFollowOn);
     setHistory(draft?.history || []);
+    if (committed && isQuickMatch) completion.leave(finishScoring);
   }, [id, matchId, sport, storageMode]);
 
   // Derived values
@@ -585,7 +586,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   const finishScoring = () => {
     const destination = isQuickMatch
-      ? '/history'
+      ? `/${sport || 'cricket'}/quick?result=${encodeURIComponent(matchId)}`
       : `/${sport || 'cricket'}/tournament/${id}`;
     if (completeProtectedScoring) {
       completeProtectedScoring(destination);
