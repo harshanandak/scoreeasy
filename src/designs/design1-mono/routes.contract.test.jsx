@@ -221,6 +221,33 @@ describe('route contracts: already correct (pinned)', () => {
 });
 
 describe('route contracts: goals completion (RA-1/RA-2)', () => {
+  it('cannot reopen a completed football match through browser Forward and score into a draft', async () => {
+    seed('se_football', [footballTournament()]);
+    globalThis.history.replaceState({ idx: 0 }, '', '/history');
+    render(<BrowserRouter><RouterProbe /><Design1Mono /></BrowserRouter>);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe tournament' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Probe scorer' }));
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    const finished = JSON.parse(localStorage.getItem('se_football'));
+    await act(async () => {
+      const popped = new Promise(resolve => globalThis.addEventListener('popstate', resolve, { once: true }));
+      globalThis.history.forward();
+      await popped;
+    });
+    await settleRoute();
+    const score = screen.queryByRole('button', { name: 'Add 1 point to Red' });
+    if (score) fireEvent.click(score);
+    fireEvent.keyDown(globalThis, { key: 'q' });
+    expect(JSON.parse(localStorage.getItem('se_football'))).toEqual(finished);
+    await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
+    expect(screen.queryByRole('button', { name: 'Add 1 point to Red' })).not.toBeInTheDocument();
+  });
+
   it('reuses the unwound tournament entry so one Back leaves it', async () => {
     seed('se_football', [footballTournament()]);
     globalThis.history.replaceState({ idx: 0 }, '', '/history');

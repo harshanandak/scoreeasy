@@ -127,6 +127,7 @@ export default function MonoGoalsLiveScore() {
     }
     if (!foundMatch) return;
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, completeMatch)) return;
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);

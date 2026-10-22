@@ -122,66 +122,45 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Load match data
   useEffect(() => {
+    let loaded;
+    let found = null;
+    isKnockoutRef.current = false;
     if (isQuickMatch) {
-      const qm = loadQuickMatch(matchId);
-      if (!qm) return;
-      setMatch(qm);
-      const fmt = migrateCricketFormat(qm.format);
-      setFormat(fmt);
-
-      // Initialize innings team assignments
-      const initInnings = [
-        { teamId: qm.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: qm.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-      ];
-
-      if (qm.draftState) {
-        commitInnings(qm.draftState.innings);
-        setCurrentInningsIndex(qm.draftState.currentInningsIndex);
-        setFollowOnEnforced(qm.draftState.followOnEnforced || false);
-        setHistory(qm.draftState.history || []);
-      } else if (qm.innings && qm.innings.length === 4) {
-        commitInnings(qm.innings);
-      } else {
-        commitInnings(initInnings);
-      }
+      loaded = loadQuickMatch(matchId);
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const tournaments = loadSportTournaments(storageKey);
-      const found = tournaments.find(t => t.id === Number(id) || t.id === id);
+      found = tournaments.find(t => t.id === Number(id) || t.id === id);
       if (!found) return;
-      let foundMatch = found.matches.find(m => m.id === matchId || m.id === Number(matchId));
-      if (!foundMatch) {
-        foundMatch = (found.knockoutMatches || []).find(m => m.id === matchId || m.id === Number(matchId));
-        if (foundMatch) isKnockoutRef.current = true;
-      }
-      if (!foundMatch) return;
-
-      setTournament(found);
-      setMatch(foundMatch);
-      const fmt = migrateCricketFormat(foundMatch.format || (isKnockoutRef.current && found.knockoutConfig?.format) || found.format);
-      setFormat(fmt);
-
-      const initInnings = [
-        { teamId: foundMatch.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team1Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-        { teamId: foundMatch.team2Id, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false },
-      ];
-
-      if (foundMatch.draftState) {
-        commitInnings(foundMatch.draftState.innings);
-        setCurrentInningsIndex(foundMatch.draftState.currentInningsIndex);
-        setFollowOnEnforced(foundMatch.draftState.followOnEnforced || false);
-        setHistory(foundMatch.draftState.history || []);
-      } else if (foundMatch.innings && foundMatch.innings.length === 4) {
-        commitInnings(foundMatch.innings);
-      } else {
-        commitInnings(initInnings);
+      loaded = found.matches.find(m => m.id === matchId || m.id === Number(matchId));
+      if (!loaded) {
+        loaded = (found.knockoutMatches || []).find(m => m.id === matchId || m.id === Number(matchId));
+        isKnockoutRef.current = Boolean(loaded);
       }
     }
+    if (!loaded) return;
+
+    const terminal = completion.hydrate(loaded, `${sport}:${storageMode || 'tournament'}:${id}:${matchId}`);
+    const draft = terminal ? null : loaded.draftState;
+    const initInnings = [loaded.team1Id, loaded.team2Id, loaded.team1Id, loaded.team2Id]
+      .map(teamId => ({ teamId, runs: 0, balls: 0, wickets: 0, allOut: false, declared: false }));
+    const restored = draft?.innings || (loaded.innings?.length === 4 ? loaded.innings : initInnings);
+    const lastPlayed = restored.reduce((last, inn, index) =>
+      inn.runs || inn.balls || inn.wickets || inn.allOut || inn.declared ? index : last, 0);
+    const winner = isQuickMatch && loaded.winner && loaded.winner === (loaded.team1Name || loaded.team1) ? loaded.team1Id
+      : isQuickMatch && loaded.winner && loaded.winner === (loaded.team2Name || loaded.team2) ? loaded.team2Id : loaded.winner;
+
+    setTournament(found);
+    setMatch(loaded);
+    setFormat(migrateCricketFormat(loaded.format || (isKnockoutRef.current && found?.knockoutConfig?.format) || found?.format));
+    // Hydration publishes the stored snapshot; scoring updates remain lock-checked.
+    inningsRef.current = restored;
+    setInnings(restored);
+    setCurrentInningsIndex(draft?.currentInningsIndex ?? loaded.currentInningsIndex ?? lastPlayed);
+    setFollowOnEnforced(draft?.followOnEnforced ?? loaded.followOnEnforced ?? false);
+    setHistory(draft?.history || []);
+    setMatchComplete(terminal);
+    setMatchResult(terminal ? { winner, desc: loaded.winDesc || 'Match Complete' } : null);
   }, [id, matchId, sport, storageMode]);
 
   // Derived values
@@ -567,6 +546,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         team1: team1Name,
         team2: team2Name,
         innings,
+        currentInningsIndex,
         score1: team1Total,
         score2: team2Total,
         winner: winnerLabel,
@@ -586,6 +566,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
         ...m,
         innings,
+        currentInningsIndex,
         winner,
         winDesc,
         status: 'completed',
@@ -677,7 +658,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   // Continuous auto-save
   useEffect(() => {
-    if (completion.locked || !match || !format || matchComplete) return;
+    // A failed terminal save still needs the settled winning innings as a draft.
+    if (completion.committed || !match || !format) return;
     if (history.length === 0) return;
     const draftState = {
       innings: structuredClone(innings),

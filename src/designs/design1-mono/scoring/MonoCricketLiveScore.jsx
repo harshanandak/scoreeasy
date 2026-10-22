@@ -128,6 +128,11 @@ export default function MonoCricketLiveScore() {
     }
     if (!foundMatch) return;
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, () => {
+      const destination = `/${sport || 'cricket'}/tournament/${id}`;
+      if (completeProtectedScoring) completeProtectedScoring(destination);
+      else navigate(destination, { replace: true });
+    })) return;
     setTournament(found);
     setMatch(foundMatch);
 

@@ -59,6 +59,7 @@ it.each([false, true])('Test cricket commits the winning ball before finalizing 
   if (retry) {
     expect(h.finalize).not.toHaveBeenCalled();
     expect(h.complete).not.toHaveBeenCalled();
+    expect(h.stored.matches[0].draftState.innings[3].runs).toBe(2);
     expect(screen.getByRole('button', { name: 'Save & Return' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Save & Return' }));
   }

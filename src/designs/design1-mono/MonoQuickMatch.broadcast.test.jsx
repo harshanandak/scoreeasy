@@ -45,6 +45,7 @@ vi.mock('../../lib/live/liveSession', () => ({
 }));
 vi.mock('../../utils/storage', () => ({
   loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+  loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),
   clearData: vi.fn(),
   saveQuickMatch: vi.fn(() => true),
@@ -86,6 +87,53 @@ beforeEach(() => {
 });
 
 describe('MonoQuickMatch live broadcast wiring', () => {
+  it('scopes a completed lock to its match when another sport draft hydrates in the same mount', () => {
+    vi.useFakeTimers();
+    try {
+      seedGoals();
+      const view = render(<MonoQuickMatch />);
+      fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+      expect(live.finalize).toHaveBeenCalledOnce();
+      const finished = structuredClone(saveQuickMatch.mock.calls.at(-1)[0]);
+      seedVolleyball();
+      act(() => vi.advanceTimersByTime(200));
+      view.rerender(<MonoQuickMatch />);
+      fireEvent.click(screen.getByRole('button', { name: 'Add point for Reds' }));
+      const nextDraft = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_volleyball').at(-1)?.[1];
+      expect(nextDraft?.sets[0].score1).toBe(1);
+      expect(live.point.mock.calls.at(-1)[0].snapshot.pointsA).toBe(1);
+      expect(saveQuickMatch.mock.calls.at(-1)[0]).toEqual(finished);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('persists the settled winning delivery as a draft if terminal saving fails, including across refresh', () => {
+    vi.useFakeTimers();
+    try {
+      seedCricket();
+      ctx.draft.innings = 2;
+      ctx.draft.battingTeam = 2;
+      ctx.draft.scores.team1.runs = 1;
+      ctx.draft.scores.team2.runs = 1;
+      ctx.draft.scores.team2.balls = 1;
+      const first = render(<MonoQuickMatch />);
+      saveQuickMatch.mockReturnValue(false);
+      fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
+      const settled = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_cricket').at(-1)[1];
+      expect(settled.scores.team2.runs).toBe(5);
+      expect(settled.cricketHistory.at(-1)).toMatchObject({ value: 4 });
+      expect(live.finalize).not.toHaveBeenCalled();
+      first.unmount();
+      ctx.draft = structuredClone(settled);
+      render(<MonoQuickMatch />);
+      const restored = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_cricket').at(-1)[1];
+      expect(restored.scores.team2.runs).toBe(5);
+      expect(saveQuickMatch.mock.calls.at(-1)[0].team2Score.runs).toBe(5);
+      expect(live.finalize).not.toHaveBeenCalled();
+    } finally { saveQuickMatch.mockReturnValue(true); vi.useRealTimers(); }
+  });
+
   it('preserves Undo followed by a new delivery in the same batch before completion', () => {
     seedCricket();
     ctx.draft.scores.team1.runs = 4;

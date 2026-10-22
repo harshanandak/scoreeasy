@@ -4,6 +4,35 @@ import { useMatchCompletion } from './useMatchCompletion';
 
 afterEach(() => vi.useRealTimers());
 
+it('starts locked from persisted completion and hydrates navigation without saving again', () => {
+  const record = { id: 1, status: 'completed' };
+  const { result } = renderHook(() => useMatchCompletion(record, 'football:1'));
+  expect(result.current.locked).toBe(true);
+  expect(result.current.committed).toBe(true);
+  const commit = vi.fn();
+  const navigate = vi.fn();
+  act(() => {
+    expect(result.current.hydrate(record, 'football:1', navigate)).toBe(true);
+    result.current.hydrate(record, 'football:1', navigate);
+    result.current.complete(commit, navigate);
+  });
+  expect(commit).not.toHaveBeenCalled();
+  expect(navigate).toHaveBeenCalledOnce();
+});
+
+it('only releases a completed lock for a different hydrated match identity', () => {
+  const { result } = renderHook(useMatchCompletion);
+  act(() => result.current.hydrate({ status: 'completed' }, 'football:1'));
+  act(() => result.current.hydrate({ status: 'in-progress' }, 'football:1'));
+  expect(result.current.locked).toBe(true);
+  act(() => result.current.hydrate({ status: 'in-progress' }, 'volleyball:2'));
+  expect(result.current.locked).toBe(false);
+  expect(result.current.committed).toBe(false);
+  const commit = vi.fn(() => true);
+  act(() => result.current.complete(commit));
+  expect(commit).toHaveBeenCalledOnce();
+});
+
 it('locks synchronously, commits once, and keeps the lock throughout navigation', () => {
   vi.useFakeTimers();
   const { result } = renderHook(useMatchCompletion);

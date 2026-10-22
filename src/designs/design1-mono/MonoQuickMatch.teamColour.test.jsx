@@ -41,6 +41,7 @@ vi.mock('../../utils/storage', () => {
   storage.saveData = vi.fn(() => true);
   return {
     loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+    loadQuickMatch: vi.fn(() => null),
     saveData: storage.saveData,
     clearData: vi.fn(),
     saveQuickMatch: vi.fn(() => true),

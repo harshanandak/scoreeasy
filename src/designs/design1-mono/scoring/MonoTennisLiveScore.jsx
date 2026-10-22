@@ -1,4 +1,4 @@
-import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
+import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
@@ -11,6 +11,7 @@ import {
   clearData,
   isStaleQuickMatchDraft,
   loadData,
+  loadQuickMatch,
   loadSportTournaments,
   saveData,
   saveQuickMatch as saveStoredQuickMatch,
@@ -375,6 +376,11 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     if (isQuickMatch) {
       const draftKey = getTennisQuickDraftKey(matchId);
       const draft = loadData(draftKey, null);
+      const saved = loadQuickMatch(matchId);
+      if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${matchId}`, () => {
+        clearData(draftKey);
+        completeScoring('/history');
+      })) return;
       if (isStaleQuickMatchDraft(draft)) {
         clearData(draftKey);
         navigate(`/${sport}/quick`);
@@ -405,6 +411,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       || (found.knockoutMatches || []).find(m => m.id === matchId);
     if (!foundMatch) return;
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, () => completeScoring(`/${sport}/tournament/${id}`))) return;
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);

@@ -1,4 +1,4 @@
-import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
+import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
@@ -113,7 +113,6 @@ function initialPhase(match) {
 export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
   const navigate = useNavigate();
-  const completion = useMatchCompletion();
   const completeProtectedScoring = useScoringCompletion();
 
   const sportConfig = getSportById(sport);
@@ -123,6 +122,8 @@ export default function MonoCricketGuidedScorerRoute() {
   const match =
     tournament?.matches?.find((m) => m.id === matchId || m.id === Number(matchId)) ||
     (tournament?.knockoutMatches || []).find((m) => m.id === matchId || m.id === Number(matchId));
+  const matchIdentity = `${sport}:${id}:${matchId}`;
+  const completion = useMatchCompletion(match, matchIdentity);
 
   const [phase, setPhase] = useState(() => initialPhase(match));
 
@@ -137,12 +138,9 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // A completed match is never re-scored — bounce back to the tournament.
   useEffect(() => {
-    if (match && match.status === 'completed') {
-      if (completion.committed) completion.leave(navigateToTournament);
-      else completion.complete(() => true, navigateToTournament);
-    }
+    completion.hydrate(match, matchIdentity, navigateToTournament);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [match?.status]);
+  }, [match?.status, matchIdentity]);
 
   if (!tournament || !match) {
     return (
@@ -157,7 +155,7 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // A completed match redirects via the effect above; render nothing meanwhile so
   // the active-scoring setup screen never flashes for one frame before the bounce.
-  if (match.status === 'completed') return null;
+  if (isCompletedMatch(match)) return null;
 
   const fmt = migrateCricketFormat(
     match.format || tournament?.knockoutConfig?.format || tournament?.format

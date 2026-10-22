@@ -1,4 +1,4 @@
-import { useMatchCompletion } from '../../hooks/useMatchCompletion';
+import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
 import { POINTS_PRESETS, validateSingleSetScore } from '../../utils/volleyballCalculations';
-import { clearData, saveData, loadData, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
+import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
 import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
 import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
@@ -554,13 +554,19 @@ export default function MonoQuickMatch() {
     scoringSportRef.current = null;
 
     const draft = loadData(quickMatchDraftKey, null);
+    const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
+    if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${draft?.quickMatchId || 'setup'}`, () => {
+      clearData(quickMatchDraftKey);
+      navigate('/history', { replace: true });
+    })) return;
     if (isStaleQuickMatchDraft(draft)) {
       clearData(quickMatchDraftKey);
     }
 
     if (!draft || isStaleQuickMatchDraft(draft) || draft.sport !== sport || draft.phase !== 'scoring') {
-      if (previousSport && phase === 'scoring') {
+      if (previousSport && phase !== 'setup') {
         setPhase('setup');
+        setResult(null);
         timer.pause();
         setSaveWarning('');
       }
@@ -601,7 +607,8 @@ export default function MonoQuickMatch() {
   }, [quickMatchDraftKey, sport]);
 
   useEffect(() => {
-    if (completion.locked || phase !== 'scoring') return;
+    // A staged winner is still a draft until its terminal save succeeds.
+    if (completion.committed || phase !== 'scoring') return;
     if (scoringSportRef.current !== sport) return;
 
     saveData(quickMatchDraftKey, {
@@ -893,9 +900,12 @@ export default function MonoQuickMatch() {
   const finalizeMatch = (entry) => completion.complete(() => {
     void endMatchImpact();
 
-    const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, entry.id);
+    const matchId = liveMatchIdRef.current || entry.id;
+    const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
     const nextResult = {
       ...entry,
+      id: matchId,
+      status: 'completed',
       clientMatchId,
       sync: createSyncMeta(isAuthenticated && user ? 'syncing' : 'idle'),
     };

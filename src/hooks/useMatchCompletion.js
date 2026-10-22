@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-// The ref closes the event-handler window before React renders disabled controls.
-// Only a failed durable save releases the lock; navigation never releases it.
-export function useMatchCompletion() {
-  const locked = useRef(false);
-  const committed = useRef(false);
+export const isCompletedMatch = (match) => match?.status === 'completed';
+
+// Hydration and Finish share one authority: a persisted result is already committed.
+export function useMatchCompletion(initialMatch = null, initialIdentity = null) {
+  const locked = useRef(isCompletedMatch(initialMatch));
+  const committed = useRef(isCompletedMatch(initialMatch));
+  const identity = useRef(initialIdentity);
   const committing = useRef(false);
   const timeout = useRef(null);
   const navigationStarted = useRef(false);
-  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(() => isCompletedMatch(initialMatch));
 
   useEffect(() => () => globalThis.clearTimeout(timeout.current), []);
 
@@ -19,6 +21,7 @@ export function useMatchCompletion() {
     committed.current = false;
     committing.current = false;
     navigationStarted.current = false;
+    identity.current = null;
     setIsCompleting(false);
   }, []);
 
@@ -28,6 +31,19 @@ export function useMatchCompletion() {
     if (delay) timeout.current = globalThis.setTimeout(navigate, delay);
     else navigate();
   }, []);
+
+  const hydrate = useCallback((match, matchIdentity, navigate) => {
+    if (identity.current !== matchIdentity) {
+      reset();
+      identity.current = matchIdentity;
+    }
+    if (!isCompletedMatch(match)) return false;
+    locked.current = true;
+    committed.current = true;
+    setIsCompleting(true);
+    if (navigate) leave(navigate);
+    return true;
+  }, [leave, reset]);
 
   const lock = useCallback(() => {
     if (locked.current) return false;
@@ -66,8 +82,9 @@ export function useMatchCompletion() {
     get committed() { return committed.current; },
     isCompleting,
     complete,
+    hydrate,
     reset,
     leave,
     lock,
-  }), [complete, isCompleting, reset, leave, lock]);
+  }), [complete, hydrate, isCompleting, reset, leave, lock]);
 }

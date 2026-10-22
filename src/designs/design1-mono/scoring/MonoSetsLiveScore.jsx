@@ -123,6 +123,11 @@ export default function MonoSetsLiveScore() {
     }
     if (!foundMatch) { setLoadStatus('notfound'); return; }
 
+    if (completion.hydrate(foundMatch, `${sport}:${id}:${matchId}`, () => {
+      const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
+      if (completeProtectedScoring) completeProtectedScoring(resultPath);
+      else navigate(resultPath, { replace: true });
+    })) return;
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);

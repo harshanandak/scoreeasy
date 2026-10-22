@@ -32,7 +32,9 @@ single navigation. Its ref blocks stale callbacks before React renders disabled
 controls. A winning handler can acquire the lock immediately and commit the
 settled snapshot in an effect, preserving the winning-point-before-finalize
 ordering. A failed local save releases the lock for retry. Unmount cancels a
-pending navigation timer. Only starting a new quick match resets a completed lock.
+pending navigation timer. Completion state belongs to the hydrated match identity;
+a different match starts a new scope, while a persisted completed match restores
+its committed lock.
 
 The existing scoring-prompt hook exposes that same lock to control disabling and
 the existing scoring/draft guards. Goals' three save paths now share one result
@@ -134,3 +136,82 @@ this work. SA-07, SA-09, guided failed-save navigation,
 Test cricket's active "Finish & save" persistence, and guided raw-innings retention
 remain outside scope. Test cricket's terminal result commit is distinct from its
 active "Finish & save" action.
+
+## Round 2: persisted completion owns hydration
+
+The review reproduced a missing boundary on PR head `ce2bf6b`: the latch survived
+only within a mount. Completed records could therefore reopen through refresh or
+Forward, and a completed quick match's latch could survive into another sport's
+draft. A staged winning ball also skipped draft autosave before its result save
+had succeeded.
+
+`isCompletedMatch` and `useMatchCompletion.hydrate` now own the shared rule. A
+loader binds the match identity and persisted status before publishing mutable
+state. A completed record is already committed: it cannot score, autosave, save
+again or finalize again. A different identity resets the completion scope and
+cancels the previous scope's pending navigation. A stale in-progress snapshot of
+the same identity cannot release an existing committed latch.
+
+| Hydration path | Completed record behavior |
+| --- | --- |
+| Goals, all four sports | Lock and return through protected completion to the tournament. Browser Forward cannot reopen scoring. |
+| Sets | Lock and open the existing match result. |
+| Tennis tournament | Lock and return to the tournament. |
+| Tennis quick | Check completed history before restoring a draft, remove only that match's obsolete draft and open history. This also handles a completed match whose draft was already removed. |
+| Limited-overs cricket | Lock and return through protected completion to the tournament. |
+| Guided cricket | Initialize the latch from persisted status, render no mutable child and return through protected completion. |
+| Test cricket, tournament and quick | Restore the persisted innings, innings index, follow-on state, winner and description into the terminal screen. Save & Return only navigates; it does not save or finalize the record again. |
+| Quick goals, sets and cricket | Bind the restored draft's match identity. Completed history overrides a stale draft of that same match and routes to history. A different match gets its own unlocked scope. Result persistence retains the stable draft/live match ID and explicitly records completed status. |
+
+Quick and Test-cricket draft autosave now distinguish a staged UI lock from a
+successful terminal commit. The settled winning snapshot is still saved as a
+draft until the result save succeeds. Thus a failed result save can release its
+latch for retry without dropping the winning ball on refresh. After a successful
+commit or completed hydration, draft autosave stops.
+
+Failing-before evidence (rung 4), written and run before the implementation:
+
+- Test draw, refresh before Return: both storage branches lost their terminal
+  screen and reopened at the first innings.
+- Real BrowserRouter Finish then Forward then attempted score: completed 1-0
+  changed to an in-progress draft at 2-0.
+- Complete football, then hydrate a volleyball draft in the same mounted quick
+  route: the new point and draft write were blocked by the old latch.
+- Quick cricket failed result save: the last persisted draft still held 1 run
+  instead of the settled winning 5.
+
+Those four scenarios produced five failing tests (both Test storage branches are
+covered), with 54 passing tests and six existing expected failures in the same
+three-file run. Two hook lifecycle regressions also failed before implementation.
+The subsequent targeted run passed all five files: 74 tests plus six expected
+failures. This includes the nine-case completed-hydration matrix, seeded through
+the ordinary storage APIs so format migrations are not mistaken for score writes.
+
+An additional Test-cricket failed-save assertion reproduced the same draft gap:
+its winning 2 remained persisted as 0. The shared committed-state autosave rule
+fixes that path too; the focused Test/tennis/quick-hardening run then passed all
+36 tests. SA-07's empty-history guard is unchanged. The separate active Test
+"Finish & save", guided failed-save navigation, guided raw-innings retention and
+SA-09 remain outside this round.
+
+Final round-2 focused result: **24 files passed; 335 tests passed and nine existing
+expected failures remained (344 total); zero runner errors**, in 650.98 seconds.
+This expands the hydration matrix to ten cases, including tennis quick completion
+after its draft has already been removed, and includes quick team-colour tests
+whose storage mock gained the completed-history lookup.
+
+```text
+bun run test src/designs/design1-mono/scoring src/designs/design1-mono/MonoQuickMatch.broadcast.test.jsx src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx src/designs/design1-mono/MonoQuickMatch.teamColour.test.jsx src/designs/design1-mono/routes.contract.test.jsx src/hooks/useMatchCompletion.test.jsx src/designs/design1-mono/theme/palette.test.js --maxWorkers=1
+```
+
+The preceding two-worker attempt passed 21 files / 298 tests, but three workers
+failed to start (sets stability, routing contracts and cricket extras). That was
+not a passing matrix. The complete selection was rerun with one worker; no
+assertion, test isolation or timeout was weakened. Palette equality still passes
+at **669**. SA-07 was also rerun temporarily as an ordinary test: the point-save
+prerequisite passed, then its final undo persistence assertion failed with
+expected 0, received 1. Its `it.fails` source was restored byte-for-byte.
+
+Lint, type-check and agent-config sync run through the normal commit hook. The
+round-2 full suite, push and PR-body update remain held until the owner releases
+the full-suite lane; no production write or deployment is part of this round.
