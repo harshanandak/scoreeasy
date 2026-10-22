@@ -1,9 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
+import MonoQuickMatch from './MonoQuickMatch';
 import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
+import { shareText } from '../../mobile/share';
+
+vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
+// MonoQuickMatch (the Rematch target) reads Convex; History itself does not.
+vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => [] }));
+
+/** A History row's accessible name: "<team1> <score> <team2>, <result>, <sport>, <day>. View details". */
+function row(team1, team2) {
+  const escape = (text) => text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  return new RegExp(String.raw`^${escape(team1)} \S+ ${escape(team2)}, .*\. View details$`);
+}
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
 const OLDER_HISTORY_KEY = 'gs_history';
@@ -46,8 +58,29 @@ function readQuickMatches() {
 
 function LocationProbe() {
   const location = useLocation();
-  return <div data-testid="current-route">{`${location.pathname}${location.search}`}</div>;
+  return (
+    <>
+      <div data-testid="current-route">{`${location.pathname}${location.search}`}</div>
+      <div data-testid="route-state">{JSON.stringify(location.state ?? null)}</div>
+    </>
+  );
 }
+
+const routeState = () => JSON.parse(screen.getByTestId('route-state').textContent);
+
+// History and the real quick setup behind it, so a Rematch can be followed to the screen it opens.
+function renderHistoryAndSetup() {
+  return render(
+    <MemoryRouter initialEntries={['/history']}>
+      <Routes>
+        <Route path="/history" element={<MonoHistory />} />
+        <Route path="/:sport/quick" element={<MonoQuickMatch />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+const swatch = (team, name) => within(screen.getByRole('group', { name: `Team ${team} colour` })).getByRole('button', { name });
 
 function renderHistory() {
   return render(
@@ -76,7 +109,7 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const detailsButton = await screen.findByRole('button', { name: 'View details: Team A vs Team B' });
+    const detailsButton = await screen.findByRole('button', { name: row('Team A', 'Team B') });
     fireEvent.click(detailsButton);
 
     const sheet = screen.getByRole('dialog', { name: 'Match details' });
@@ -87,6 +120,101 @@ describe('MonoHistory', () => {
     // Rematch from History carries the pair to quick setup, as Home's does.
     fireEvent.click(within(sheet).getByRole('button', { name: 'Rematch' }));
     expect(screen.getByTestId('current-route')).toHaveTextContent('/volleyball/quick');
+    // This record saved no colours, so only the teams travel.
+    expect(routeState()).toEqual({ teams: ['Team A', 'Team B'] });
+  });
+
+  it('rematches with the teams and the colours the match was scored in', async () => {
+    seedQuickMatch([{
+      id: 'match-c',
+      sport: 'volleyball',
+      team1: 'Royals',
+      team2: 'Strikers',
+      team1Color: '#7a1020',
+      team2Color: '#38bdf8',
+      score1: 3,
+      score2: 1,
+      winner: 'Royals',
+      completedAt: '2026-05-18T12:00:00.000Z',
+    }]);
+
+    renderHistory();
+
+    fireEvent.click(await screen.findByRole('button', { name: row('Royals', 'Strikers') }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Rematch' }));
+
+    expect(screen.getByTestId('current-route')).toHaveTextContent('/volleyball/quick');
+    expect(routeState()).toEqual({ teams: ['Royals', 'Strikers'], colours: ['#7a1020', '#38bdf8'] });
+  });
+
+  it('opens quick setup in the saved colours, and in the default pair for an old record without them', async () => {
+    seedQuickMatch([
+      {
+        id: 'with-colours', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', team1Color: '#7a1020', team2Color: '#38bdf8',
+        score1: 3, score2: 1, winner: 'Royals', completedAt: '2026-05-18T12:00:00.000Z',
+      },
+      {
+        // Older than S1: no colours stored. A crafted value is dropped the same way.
+        id: 'old', sport: 'volleyball', team1: 'Aces', team2: 'Hawks', team1Color: 'url(x)',
+        score1: 1, score2: 3, winner: 'Hawks', completedAt: '2026-05-17T12:00:00.000Z',
+      },
+    ]);
+
+    const first = renderHistoryAndSetup();
+    fireEvent.click(await screen.findByRole('button', { name: row('Royals', 'Strikers') }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Rematch' }));
+    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Royals');
+    expect(swatch('A', 'Maroon')).toHaveAttribute('aria-pressed', 'true');
+    expect(swatch('B', 'Sky')).toHaveAttribute('aria-pressed', 'true');
+    first.unmount();
+
+    renderHistoryAndSetup();
+    fireEvent.click(await screen.findByRole('button', { name: row('Aces', 'Hawks') }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Rematch' }));
+    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Aces');
+    expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Hawks');
+    // The default pair, Red v Blue.
+    expect(swatch('A', 'Red')).toHaveAttribute('aria-pressed', 'true');
+    expect(swatch('B', 'Blue')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shares the result from the details sheet and says how it went', async () => {
+    shareText.mockReset();
+    shareText.mockResolvedValueOnce({ shared: true, method: 'clipboard' });
+    seedQuickMatch();
+
+    renderHistory();
+
+    fireEvent.click(await screen.findByRole('button', { name: row('Team A', 'Team B') }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Share' }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Result copied.'));
+    expect(shareText).toHaveBeenCalledTimes(1);
+    expect(shareText).toHaveBeenCalledWith(expect.objectContaining({ text: 'Team A vs Team B - 25 - 22 - Team A won' }));
+    // Sharing changes nothing stored.
+    expect(readQuickMatches()).toHaveLength(1);
+
+    // A failed share says so rather than claiming success.
+    shareText.mockRejectedValueOnce(new Error('denied'));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Share' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Could not share result.'));
+  });
+
+  it('labels each row with what it shows: teams, score, result, sport and day; a draw names no winner', async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(12, 0, 0, 0);
+    const completedAt = yesterday.toISOString();
+    seedQuickMatch([
+      { id: 'w', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 3, score2: 1, winner: 'Royals', completedAt },
+      { id: 'd', sport: 'football', team1: 'City', team2: 'United', score1: 2, score2: 2, winner: 'Draw', completedAt },
+    ]);
+
+    renderHistory();
+
+    expect(await screen.findByRole('button', { name: 'Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details' })).toBeInTheDocument();
+    const draw = screen.getByRole('button', { name: 'City 2–2 United, Draw, Football, Yesterday. View details' });
+    expect(draw.getAttribute('aria-label')).not.toMatch(/won/i);
   });
 
   it('closes match details without changing anything', async () => {
@@ -94,7 +222,7 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'View details: Team A vs Team B' }));
+    fireEvent.click(await screen.findByRole('button', { name: row('Team A', 'Team B') }));
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Close' }));
 
     expect(screen.queryByRole('dialog', { name: 'Match details' })).not.toBeInTheDocument();
@@ -106,9 +234,16 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    // Delete lives in the match's details sheet, behind a confirm.
-    fireEvent.click(await screen.findByRole('button', { name: 'View details: Team A vs Team B' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Delete match Team A vs Team B' }));
+    // Delete lives only in the match's details sheet, behind a confirm: the list has no delete
+    // control (the old per-row × was "Delete match Team A vs Team B" too, so the name alone proves nothing).
+    const listRow = await screen.findByRole('button', { name: row('Team A', 'Team B') });
+    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+    expect(listRow.querySelector('button, [role="button"]')).toBeNull();
+    fireEvent.click(listRow);
+    const sheet = screen.getByRole('dialog', { name: 'Match details' });
+    expect(within(sheet).getByRole('button', { name: 'Delete match Team A vs Team B' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /delete/i })).toHaveLength(1);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Delete match Team A vs Team B' }));
 
     expect(screen.getByText('Delete this quick match?')).toBeInTheDocument();
     expect(readQuickMatches()).toHaveLength(1);
@@ -134,6 +269,55 @@ describe('MonoHistory', () => {
       expect(readQuickMatches()).toHaveLength(1);
     });
     expect(screen.getByRole('status')).toHaveTextContent('Quick match restored.');
+  });
+
+  it('keeps focus through a delete: on the confirm, then on the next row, else the list heading', async () => {
+    seedQuickMatch([
+      { id: 'm1', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 3, score2: 1, winner: 'Royals', completedAt: '2026-05-18T12:00:00.000Z' },
+      { id: 'm2', sport: 'volleyball', team1: 'Aces', team2: 'Hawks', score1: 1, score2: 3, winner: 'Hawks', completedAt: '2026-05-17T12:00:00.000Z' },
+    ]);
+
+    renderHistory();
+
+    const deleteFromSheet = (team1, team2) => {
+      const listRow = screen.getByRole('button', { name: row(team1, team2) });
+      listRow.focus();
+      fireEvent.click(listRow);
+      fireEvent.click(screen.getByRole('button', { name: `Delete match ${team1} vs ${team2}` }));
+      // The confirm replaced the Delete button that had focus; focus moves into it, not to <body>.
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+      fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    };
+
+    await screen.findByRole('button', { name: row('Royals', 'Strikers') });
+    deleteFromSheet('Royals', 'Strikers');
+    await waitFor(() => expect(readQuickMatches()).toHaveLength(1));
+    expect(screen.getByRole('button', { name: row('Aces', 'Hawks') })).toHaveFocus();
+
+    // No next row: the list heading takes focus.
+    deleteFromSheet('Aces', 'Hawks');
+    await waitFor(() => expect(readQuickMatches()).toHaveLength(0));
+    expect(screen.getByRole('heading', { name: 'No match history yet' })).toHaveFocus();
+    expect(document.body).not.toHaveFocus();
+  });
+
+  it('sends focus to the list heading when the deleted row was the last one in the list', async () => {
+    seedQuickMatch([
+      { id: 'm1', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 3, score2: 1, winner: 'Royals', completedAt: '2026-05-18T12:00:00.000Z' },
+      { id: 'm2', sport: 'volleyball', team1: 'Aces', team2: 'Hawks', score1: 1, score2: 3, winner: 'Hawks', completedAt: '2026-05-17T12:00:00.000Z' },
+    ]);
+
+    renderHistory();
+
+    const last = await screen.findByRole('button', { name: row('Aces', 'Hawks') });
+    last.focus();
+    fireEvent.click(last);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete match Aces vs Hawks' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(readQuickMatches()).toHaveLength(1));
+    // The month section's heading (the month card above shares its name).
+    expect(document.getElementById('history-month-2026-05')).toHaveFocus();
   });
 
   it('uses user-facing local history language for clear-all recovery', async () => {
@@ -197,13 +381,13 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'View details: Riders vs Kings' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: row('Falcons', 'Sharks') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('Riders', 'Kings') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('City', 'United') })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Find match'), { target: { value: 'riders' } });
-    expect(screen.getByRole('button', { name: 'View details: Riders vs Kings' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: Falcons vs Sharks' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('Riders', 'Kings') })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Falcons', 'Sharks') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     const sportChips = screen.getByRole('group', { name: 'Filter by sport' });
@@ -213,22 +397,22 @@ describe('MonoHistory', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Draws' }));
 
-    expect(screen.getByRole('button', { name: 'View details: City vs United' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('City', 'United') })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Riders', 'Kings') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     expect(within(sportChips).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Close' }));
 
-    expect(screen.getByRole('button', { name: 'View details: Falcons vs Sharks' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: Riders vs Kings' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: City vs United' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('Falcons', 'Sharks') })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Riders', 'Kings') })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('City', 'United') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     fireEvent.click(within(screen.getByRole('group', { name: 'Sort' })).getByRole('button', { name: 'Oldest' }));
 
-    const rows = screen.getAllByRole('button', { name: /^View details:/ });
-    expect(rows[0]).toHaveAccessibleName('View details: City vs United');
+    const rows = screen.getAllByRole('button', { name: /View details$/ });
+    expect(rows[0]).toHaveAccessibleName(row('City', 'United'));
   });
 
   it('shows filtered empty recovery and clears discovery filters', async () => {
@@ -236,7 +420,7 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: row('Team A', 'Team B') })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Find match'), { target: { value: 'missing team' } });
 
@@ -245,7 +429,7 @@ describe('MonoHistory', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
 
-    expect(screen.getByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('Team A', 'Team B') })).toBeInTheDocument();
   });
 
   it('routes empty history to the sport chooser', async () => {
@@ -307,14 +491,14 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    expect(await screen.findByRole('button', { name: 'View details: Real A vs Real B' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: row('Real A', 'Real B') })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     const types = screen.getByRole('group', { name: 'Match type' });
     expect(within(types).getByRole('button', { name: 'All 1' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(types).getByRole('button', { name: 'Quick 1' })).toBeInTheDocument();
     expect(within(types).getByRole('button', { name: 'Tournaments 0' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: Draft A vs Draft B' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'View details: Ghost A vs Ghost B' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Draft A', 'Draft B') })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Ghost A', 'Ghost B') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
@@ -330,7 +514,7 @@ describe('MonoHistory', () => {
     renderHistory();
 
     // Default view is the match list.
-    expect(await screen.findByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: row('Team A', 'Team B') })).toBeInTheDocument();
     const viewTabs = screen.getByRole('tablist', { name: 'History and statistics views' });
     expect(within(viewTabs).getByRole('tab', { name: 'Matches' })).toBeInTheDocument();
 
@@ -341,11 +525,11 @@ describe('MonoHistory', () => {
     expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
     expect(screen.getByText('Top team')).toBeInTheDocument();
     // The match list is hidden while viewing Stats.
-    expect(screen.queryByRole('button', { name: 'View details: Team A vs Team B' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: row('Team A', 'Team B') })).not.toBeInTheDocument();
 
     // Switch back to Matches: the list is restored.
     fireEvent.click(within(viewTabs).getByRole('tab', { name: 'Matches' }));
-    expect(screen.getByRole('button', { name: 'View details: Team A vs Team B' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: row('Team A', 'Team B') })).toBeInTheDocument();
     expect(screen.queryByText('Performance')).not.toBeInTheDocument();
   });
 
@@ -382,14 +566,14 @@ describe('MonoHistory', () => {
       expect(counts).toEqual(expected);
       expect(bar).toEqual(counts);
       expect(card).toHaveTextContent(`${total} matches scored`);
-      expect(within(section).getAllByRole('button', { name: /^View details:/ })).toHaveLength(total);
+      expect(within(section).getAllByRole('button', { name: /View details$/ })).toHaveLength(total);
       return card;
     };
 
     const card = await sumsToList([2, 1]);
     expect(card).toHaveTextContent('2 sports');
     // Last month's draw is its own section, outside the card's count.
-    expect(screen.getAllByRole('button', { name: /^View details:/ })).toHaveLength(4);
+    expect(screen.getAllByRole('button', { name: /View details$/ })).toHaveLength(4);
 
     // A sport chip re-scopes the card to the filtered list, and it still sums.
     fireEvent.click(within(screen.getByRole('group', { name: 'Filter by sport' })).getByRole('button', { name: 'Volleyball' }));
@@ -406,9 +590,9 @@ describe('MonoHistory', () => {
     renderHistory();
 
     const strongIn = async (name) => [...(await screen.findByRole('button', { name })).querySelectorAll('strong')].map((el) => el.textContent);
-    expect(await strongIn('View details: Royals vs Strikers')).toEqual(['Royals']);
-    expect(await strongIn('View details: Hoops vs Dunkers')).toEqual(['Dunkers']);
-    expect(await strongIn('View details: City vs United')).toEqual([]);
+    expect(await strongIn(row('Royals', 'Strikers'))).toEqual(['Royals']);
+    expect(await strongIn(row('Hoops', 'Dunkers'))).toEqual(['Dunkers']);
+    expect(await strongIn(row('City', 'United'))).toEqual([]);
   });
 
   it('paints the selected filter chip as an ink fill', () => {
@@ -424,8 +608,8 @@ describe('MonoHistory', () => {
 
     renderHistory();
 
-    const row = await screen.findByRole('button', { name: 'View details: Team A vs Team B' });
-    const badge = row.querySelector('.kit-badge');
+    const historyRow = await screen.findByRole('button', { name: row('Team A', 'Team B') });
+    const badge = historyRow.querySelector('.kit-badge');
     expect(badge).not.toBeNull();
     expect(badge.style.getPropertyValue('--sport-core')).not.toBe('');
     expect(badge.querySelector('svg')).not.toBeNull();
