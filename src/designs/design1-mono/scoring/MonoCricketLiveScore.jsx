@@ -116,7 +116,10 @@ export default function MonoCricketLiveScore() {
   };
 
   // Load tournament and match
-  useScoringProgress(Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0));
+  const { scoringStarted } = useScoringProgress(
+    Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0),
+    false, match?.draftState?.scoringStarted, `${sport}:${id}:${matchId}`,
+  );
 
   useEffect(() => {
     const storageKey = sportConfig?.storageKey || 'se_cricket';
@@ -495,6 +498,7 @@ export default function MonoCricketLiveScore() {
       ...m,
       status: 'in-progress',
       draftState: {
+        scoringStarted,
         scores: structuredClone(scores),
         battingTeam,
         innings,
@@ -653,12 +657,13 @@ export default function MonoCricketLiveScore() {
   // Continuous auto-save
   useEffect(() => {
     if (!tournament || !match || !format || isMatchComplete) return;
-    if (history.length === 0) return;
+    if (history.length === 0 && !scoringStarted) return;
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
       draftState: {
+        scoringStarted,
         scores: structuredClone(scores),
         battingTeam,
         innings,
@@ -673,7 +678,7 @@ export default function MonoCricketLiveScore() {
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
     }
-  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed]);
+  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed, scoringStarted]);
 
   // Broadcast the latest ball/undo AFTER its state commits (§87d snapshot). A ball
   // may end an innings (the innings switch is applied in a later effect pass), so

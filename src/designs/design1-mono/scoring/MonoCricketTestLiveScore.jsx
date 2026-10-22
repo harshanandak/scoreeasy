@@ -133,7 +133,10 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   };
 
   // Load match data
-  useScoringProgress(innings.some(innings => innings.balls > 0 || innings.runs > 0 || innings.wickets > 0));
+  const { scoringStarted } = useScoringProgress(
+    innings.some(innings => innings.balls > 0 || innings.runs > 0 || innings.wickets > 0),
+    false, match?.draftState?.scoringStarted, `${sport}:${storageMode}:${id}:${matchId}`,
+  );
 
   useEffect(() => {
     let loaded;
@@ -434,6 +437,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     if (scoringPrompt.isInteractionLocked) return;
 
     const draftState = {
+      scoringStarted,
       innings: structuredClone(innings),
       currentInningsIndex,
       followOnEnforced,
@@ -606,9 +610,10 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   useEffect(() => {
     // A failed terminal save still needs the settled winning innings as a draft.
     if (completion.committed || !match || !format) return;
-    if (history.length === 0 && !terminalSnapshot) return;
+    if (history.length === 0 && !terminalSnapshot && !scoringStarted) return;
     const settled = terminalSnapshot || { innings, currentInningsIndex, followOnEnforced };
     const draftState = {
+      scoringStarted,
       innings: structuredClone(settled.innings),
       currentInningsIndex: settled.currentInningsIndex,
       followOnEnforced: settled.followOnEnforced,
@@ -625,7 +630,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
       }));
       saveSportTournament(storageKey, updatedTournament);
     }
-  }, [innings, currentInningsIndex, followOnEnforced, terminalSnapshot]);
+  }, [innings, currentInningsIndex, followOnEnforced, terminalSnapshot, scoringStarted]);
 
   const confirmPendingPrompt = () => {
     const promptType = scoringPrompt.pendingPrompt?.type;

@@ -127,7 +127,10 @@ export default function MonoCricketGuidedScorerRoute() {
   const completion = useMatchCompletion(match, matchIdentity);
 
   const [phase, setPhase] = useState(() => initialPhase(match));
-  useScoringProgress([match?.team1Score, match?.team2Score].some(score => score?.balls > 0 || score?.runs > 0 || score?.wickets > 0));
+  const { recordScoringStarted } = useScoringProgress(
+    [match?.team1Score, match?.team2Score].some(score => score?.balls > 0 || score?.runs > 0 || score?.wickets > 0),
+    false, match?.draftState?.scoringStarted, matchIdentity,
+  );
   const [pendingCompletion, setPendingCompletion] = useState(null);
 
   const navigateToTournament = () => {
@@ -174,7 +177,13 @@ export default function MonoCricketGuidedScorerRoute() {
   const battingSlot = slotForTeam(match, battingTeamId);
 
   const persist = (updater) =>
-    saveSportTournament(storageKey, updateMatchInTournament(tournament, matchId, updater));
+    saveSportTournament(storageKey, updateMatchInTournament(tournament, matchId, m => {
+      const next = updater(m);
+      return next.draftState ? {
+        ...next,
+        draftState: { ...next.draftState, scoringStarted: recordScoringStarted(false) },
+      } : next;
+    }));
 
   // ---- transitions ----
 
@@ -215,6 +224,7 @@ export default function MonoCricketGuidedScorerRoute() {
   // keep the raw engine innings in the draft (single-innings bridge, per phase).
   const handleStateChange = (innings) => {
     if (completion.locked) return;
+    recordScoringStarted(innings.deliveries.length > 0);
     persist((m) => ({
       ...m,
       status: 'in-progress',

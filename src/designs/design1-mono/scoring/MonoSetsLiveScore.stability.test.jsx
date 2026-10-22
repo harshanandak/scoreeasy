@@ -107,11 +107,8 @@ describe('MonoSetsLiveScore — stability audit 2026-10-21', () => {
     expect(screen.getByText(/wins Set 1!/)).toBeTruthy();
   });
 
-  // SA-07 (P1): the autosave effect returns early when history is empty, so
-  // undoing back to the start of the match never persists — a refresh brings the
-  // undone point back. Reproduced in the browser sweep (badminton tournament).
-  // Fix PR: "fix(scorers): persist the draft after undo-to-empty".
-  it.fails('SA-07 undo back to 0-0 persists, so a refresh cannot resurrect the point', async () => {
+  // SA-07 fixed: started matches still autosave when Undo empties the history.
+  it('SA-07 undo back to 0-0 persists, so a refresh cannot resurrect the point', async () => {
     await renderScorer();
     const [left] = arenaButtons();
     // Autosave runs in a React effect, not a timer: flush the point's save

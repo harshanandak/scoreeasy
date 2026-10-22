@@ -585,6 +585,152 @@ describe('navigation decisions (2026-10-21)', () => {
 
   const ordinarySports = ['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi'];
 
+  it.each(ordinarySports)('Round 2: %s quick keeps its guard after scoring, Undo to zero and remount', async sport => {
+    const goals = getGoalsSports().some(config => config.id === sport);
+    const key = `se_quickmatch_draft_${sport}`;
+    seed(key, { sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: goals ? { mode: 'free' } : { sets: 3, pointsPerSet: 25 }, updatedAt: NOW_ISO });
+    const view = renderApp([`/${sport}/quick`]);
+    await settleRoute();
+    if (['basketball', 'kabaddi'].includes(sport)) fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+    else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
+    await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    const saved = JSON.parse(localStorage.getItem(key));
+    expect(goals ? saved.gScore1 : saved.vScore1).toBe(0);
+    view.unmount();
+    nativeBack.install.mockClear();
+    renderApp([`/${sport}/quick`]);
+    await settleRoute();
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+    expect(JSON.parse(localStorage.getItem(key)).scoringStarted).toBe(true);
+  });
+
+  it.each(['privacy', 'terms', 'contact'])('Round 2: legal %s brand opens /app with one resumable draft', async page => {
+    seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', gScore1: 1, updatedAt: NOW_ISO });
+    renderApp([`/${page}`]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('link', { name: 'SCORE EASY' }));
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+  });
+
+  async function remountAndCheckGuard(view, path) {
+    view.unmount();
+    nativeBack.install.mockClear();
+    renderApp([path]);
+    await settleRoute();
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+  }
+
+  it.each(ordinarySports)('Round 2: %s tournament persists the final Undo and guard through remount', async sport => {
+    const goals = getGoalsSports().some(config => config.id === sport);
+    const tournament = footballTournament();
+    tournament.format = goals ? { mode: 'free' } : { sets: 3, pointsPerSet: 25 };
+    seed(`se_${sport}`, [tournament]);
+    const path = `/${sport}/tournament/100/match/m1/score`;
+    const view = renderApp([path]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 point to Red' : /^Red: / }));
+    await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    const saved = JSON.parse(localStorage.getItem(`se_${sport}`))[0].matches[0].draftState;
+    expect(goals ? saved.score1 : saved.sets[0].score1).toBe(0);
+    expect(saved.history).toEqual([]);
+    await remountAndCheckGuard(view, path);
+  });
+
+  it.each(['quick', 'tournament'])('Round 2: tennis %s keeps its guard after Undo to zero and remount', async mode => {
+    const draftState = { currentSet: 0, sets: [{ ...blankTennisSet }], history: [] };
+    if (mode === 'quick') seed(`se_tennis_quick_draft_${TENNIS_ID}`, { id: TENNIS_ID, sport: 'tennis', team1Name: 'Red', team2Name: 'Blue', format: { sets: 1 }, status: 'in-progress', draftState, updatedAt: NOW_ISO });
+    else {
+      const tournament = footballTournament();
+      tournament.format = { sets: 1 };
+      tournament.matches[0].draftState = draftState;
+      seed('se_tennis', [tournament]);
+    }
+    const path = mode === 'quick' ? `/tennis/quick/live/${TENNIS_ID}` : '/tennis/tournament/100/match/m1/score';
+    const view = renderApp([path]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
+    await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Undo', exact: true }));
+    const saved = mode === 'quick' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)) : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
+    expect(saved.draftState.sets[0].points1).toBe(0);
+    expect(saved.draftState.history).toEqual([]);
+    await remountAndCheckGuard(view, path);
+  });
+
+  it.each(['quick', 'limited', 'test-tournament', 'test-quick', 'guided'])('Round 2: cricket %s keeps its guard after Undo of its first dot ball and remount', async kind => {
+    const zero = { runs: 0, balls: 0, wickets: 0, allOut: false };
+    if (kind === 'quick') seed('se_quickmatch_draft_cricket', { sport: 'cricket', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { preset: 'custom', overs: 1, totalInnings: 2, players: 11, trackOvers: true }, updatedAt: NOW_ISO });
+    else {
+      const entries = cricketFinishSeed(kind);
+      const match = kind === 'test-quick' ? entries.se_quickmatches[0] : entries.se_cricket[0].matches[0];
+      if (kind.startsWith('test')) match.draftState = { currentInningsIndex: 0, history: [], innings: [{ ...zero, teamId: 'A' }, { ...zero, teamId: 'B' }, { ...zero, teamId: 'A' }, { ...zero, teamId: 'B' }] };
+      else if (kind === 'guided') { match.team1Score = { ...zero }; match.draftState = { phase: 'innings1', openers1: { striker: 'Batter 1', nonStriker: 'Batter 2', bowler: 'Bowler' } }; }
+      else match.draftState = { innings: 1, battingTeam: 1, history: [], scores: { team1: { ...zero }, team2: { ...zero } } };
+      Object.entries(entries).forEach(([key, value]) => seed(key, value));
+    }
+    const path = kind === 'quick' ? '/cricket/quick' : kind === 'test-quick' ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score';
+    const view = renderApp([path]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: kind === 'guided' ? 'Dot' : kind === 'limited' ? '0' : '0 runs', exact: true }));
+    await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    const saved = kind === 'quick' ? JSON.parse(localStorage.getItem('se_quickmatch_draft_cricket')) : kind === 'test-quick' ? JSON.parse(localStorage.getItem('se_quickmatches'))[0] : JSON.parse(localStorage.getItem('se_cricket'))[0].matches[0];
+    if (kind === 'quick') expect(saved.scores.team1.balls).toBe(0);
+    else if (kind === 'guided') expect(saved.draftState.guidedInnings.deliveries).toEqual([]);
+    else if (kind.startsWith('test')) expect(saved.draftState.innings[0].balls).toBe(0);
+    else expect(saved.draftState.scores.team1.balls).toBe(0);
+    await remountAndCheckGuard(view, path);
+  });
+
+  it('Round 2: football draft resume restores the latch independently of its empty score and history', async () => {
+    seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: { mode: 'free' }, updatedAt: NOW_ISO });
+    const view = renderApp(['/football/quick']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Red' }));
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    view.unmount();
+    renderApp(['/app']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: /resume/i }));
+    await settleRoute();
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+  });
+
+  it.each(['Rematch', 'New Match'])('Round 2: %s clears the latch and stays unguarded after remount', async action => {
+    seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', gScore1: 1, format: { mode: 'free' }, updatedAt: NOW_ISO });
+    const view = renderApp(['/football/quick']);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+    fireEvent.click(await screen.findByRole('button', { name: action, exact: true }));
+    const draft = JSON.parse(localStorage.getItem('se_quickmatch_draft_football'));
+    if (action === 'Rematch') expect(draft.scoringStarted).toBe(false);
+    else expect(draft).toBeNull();
+    view.unmount();
+    renderApp(['/football/quick']);
+    await settleRoute();
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['break', 'innings2'])('Round 2: guided cricket restores its match latch during %s without current deliveries', async phase => {
+    const entries = cricketFinishSeed('guided');
+    const match = entries.se_cricket[0].matches[0];
+    match.team1Score = { runs: 0, balls: 0, wickets: 0, allOut: false };
+    match.draftState = { phase, scoringStarted: true, target: 1, openers2: { striker: 'Batter 1', nonStriker: 'Batter 2', bowler: 'Bowler' } };
+    Object.entries(entries).forEach(([key, value]) => seed(key, value));
+    renderApp(['/cricket/tournament/100/match/m1/score']);
+    await settleRoute();
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+  });
+
   it.each(ordinarySports.flatMap(sport => ['quick', 'tournament'].map(mode => ({ sport, mode }))))('$sport $mode arms only after its first point and stays armed after Undo', async ({ sport, mode }) => {
     const goals = getGoalsSports().some(config => config.id === sport);
     const tournament = footballTournament();

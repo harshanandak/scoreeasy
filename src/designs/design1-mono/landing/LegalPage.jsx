@@ -40,7 +40,7 @@ export default function LegalPage({ type }) {
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text }}>
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 72px' }}>
-        <Link to="/" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none' }}>
+        <Link to="/app" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none' }}>
           SCORE EASY
         </Link>
         <p style={{ fontFamily: MONO, fontSize: '0.75rem', letterSpacing: '0.12em', color: t.textFaint, margin: '48px 0 12px' }}>

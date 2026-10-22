@@ -1,6 +1,6 @@
 # Routing audit (2026-10-21)
 
-Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 is now a normal contract: setup leaves without a warning and scorers arm the existing guard after a recorded point or ball. RA-9 also passes normally. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+Current expected-failure inventory after the navigation decisions: **4 routing / 7 repository-wide**. RA-5 is now a normal contract: setup leaves without a warning and scorers arm the existing guard after a recorded point or ball. RA-9 also passes normally. SA-07 now passes normally after round two saves the final Undo with the persistent scoring-started latch; three stability failures remain. Counts in dated validation runs below describe those historical heads.
 
 ## Problem
 
@@ -284,7 +284,7 @@ Merged `origin/master` at `8384956` using the master audit files as the base, pr
 
 ### Tennis completion integration evidence
 
-Tennis RA-1 and RA-2 now route successful completion through `ScoringCompletionContext`; failed local saves stay in the scorer. The tournament contract is a new ordinary test; the quick-match contract changed from `it.fails` to `it`. Saved results and nonempty Undo/draft history have focused regression coverage. The existing SA-07 undo-to-empty persistence defect remains open; this is not a general persistence repair.
+Tennis RA-1 and RA-2 route successful completion through `ScoringCompletionContext`; failed local saves stay in the scorer. The tournament contract is a new ordinary test; the quick-match contract changed from `it.fails` to `it`. That completion integration covered saved results and nonempty Undo/draft history and left SA-07 open. Navigation round two subsequently fixes SA-07 while persisting the scoring-started latch; its zero-score/remount contracts are recorded in the [navigation acceptance notes](2026-10-21-routing-fixes/navigation-decisions/README.md).
 
 At the pre-push hold: seven focused files pass with 134 ordinary passes and 11 expected failures; lint has 0 errors and 29 warnings; type-check passes; the palette count remains exactly 669. The 390x844 browser comparison reproduces both old Back failures and verifies the fixed destinations without a dialog. See [the walkthrough and all 12 inspected screenshots](2026-10-21-routing-fixes/tennis-back/README.md). That hold preceded the final master integration. After merging goals master `0038e60`, eight focused files pass with 175 ordinary passes and 10 expected failures (6 routing plus 4 stability). Goals RA-1, tennis RA-1/RA-2 and RA-3 all retained normal contracts; cricket was still open at that integration. At the time, full-suite/build results belonged to the final normal push hook; hosted checks remain separate evidence. Current validation uses the required CI `verify` check as the full-suite/build gate.
 

@@ -370,7 +370,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   };
 
   // Load tournament/quick match data
-  useScoringProgress(sets.some(set => set.games1 > 0 || set.games2 > 0 || set.points1 > 0 || set.points2 > 0 || set.tiebreakPoints1 > 0 || set.tiebreakPoints2 > 0));
+  const { scoringStarted } = useScoringProgress(
+    sets.some(set => set.games1 > 0 || set.games2 > 0 || set.points1 > 0 || set.points2 > 0 || set.tiebreakPoints1 > 0 || set.tiebreakPoints2 > 0),
+    false, match?.draftState?.scoringStarted, `${sport}:${id}:${matchId}`,
+  );
 
   useEffect(() => {
     const config = getSportById(sport);
@@ -528,7 +531,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   // pile up blank drafts, and the draft is cleared on finish/discard. Tournament
   // matches autosave into the bracket so a resumable in-progress draft survives.
   useEffect(() => {
-    if (completion.locked || !match || isMatchComplete || history.length === 0) return;
+    if (completion.locked || !match || isMatchComplete || (history.length === 0 && !scoringStarted)) return;
     if (isQuickMatch) {
       if (!quickDraftKey) return;
       saveData(quickDraftKey, {
@@ -536,6 +539,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         sets,
         status: 'in-progress',
         draftState: {
+          scoringStarted,
           currentSet,
           sets,
           history,
@@ -547,6 +551,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         ...m,
         status: 'in-progress',
         draftState: {
+          scoringStarted,
           currentSet,
           sets,
           history,
@@ -558,7 +563,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
       }
     }
-  }, [isQuickMatch, quickDraftKey, match, tournament, matchId, sportConfig, isMatchComplete, sets, currentSet, history]);
+  }, [isQuickMatch, quickDraftKey, match, tournament, matchId, sportConfig, isMatchComplete, sets, currentSet, history, scoringStarted]);
 
   // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
   // point can finish a game/set, which React applies asynchronously, so we read
@@ -624,6 +629,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         ...entry,
         sets,
         draftState: {
+          scoringStarted,
           currentSet,
           sets,
           history,
@@ -686,6 +692,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         winner: isMatchComplete ? winner : null,
         completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
         draftState: isMatchComplete ? undefined : {
+          scoringStarted,
           currentSet,
           sets,
           history,

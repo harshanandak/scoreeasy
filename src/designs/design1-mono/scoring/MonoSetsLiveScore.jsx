@@ -101,7 +101,9 @@ export default function MonoSetsLiveScore() {
   };
 
   // Load tournament and match
-  useScoringProgress(sets.some(set => set.score1 > 0 || set.score2 > 0));
+  const { scoringStarted } = useScoringProgress(
+    sets.some(set => set.score1 > 0 || set.score2 > 0), false, match?.draftState?.scoringStarted, `${sport}:${id}:${matchId}`,
+  );
 
   useEffect(() => {
     const config = getSportById(sport);
@@ -395,12 +397,13 @@ export default function MonoSetsLiveScore() {
   // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
   useEffect(() => {
     if (!tournament || !matchId || isInteractionLocked) return;
-    if (history.length === 0) return;
+    if (history.length === 0 && !scoringStarted) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
       format: { ...(m.format || effectiveFormat || {}), scoringMode },
       draftState: {
+        scoringStarted,
         currentSet,
         sets: structuredClone(sets),
         history: structuredClone(history.slice(-50)),
@@ -410,7 +413,7 @@ export default function MonoSetsLiveScore() {
       },
     }));
     saveSportTournament(sportConfig.storageKey, updatedTournament);
-  }, [tournament, matchId, isInteractionLocked, sets, currentSet, history, servingTeam, scoringMode, effectiveFormat, sportConfig]);
+  }, [tournament, matchId, isInteractionLocked, sets, currentSet, history, scoringStarted, servingTeam, scoringMode, effectiveFormat, sportConfig]);
 
   // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
   // point may end a set and open the next, so we read the settled sets/serving
@@ -486,6 +489,7 @@ export default function MonoSetsLiveScore() {
       scoringMode,
       completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
       draftState: isMatchComplete ? undefined : {
+        scoringStarted,
         currentSet,
         sets: structuredClone(sets),
         history: structuredClone(history.slice(-50)),

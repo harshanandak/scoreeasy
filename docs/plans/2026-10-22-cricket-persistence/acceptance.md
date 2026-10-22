@@ -40,7 +40,7 @@ another Finish. Natural terminal results keep their existing locked retry screen
 - [x] Test active Finish persists completed status, timestamp, result and four innings in quick and tournament modes.
 - [x] Test failed manual Finish stays editable; Undo and a replacement delivery precede a successful retry.
 - [x] Existing natural completion, pending terminal recovery, completed hydration and protected Finish navigation remain covered by focused tests.
-- [x] Current expected-failure inventory after the navigation decisions is **4 routing / 8 repository-wide**. Cricket persistence repairs convert no expected failures; the navigation guard fix converts RA-5. Counts in dated validation runs below describe those historical heads.
+- [x] Current expected-failure inventory after the navigation decisions is **4 routing / 7 repository-wide**. Cricket persistence repairs convert no expected failures; the navigation guard fix converts RA-5 and its round-two persistence fix converts SA-07. Counts in dated validation runs below describe those historical heads.
 
 ## Counterfactual
 

@@ -1,6 +1,6 @@
 Decisions needed: none.
 
-Current expected-failure inventory after the navigation decisions: **4 routing / 8 repository-wide**. RA-5 now passes normally: setup leaves freely and scoring arms the existing guard. RA-9 also passes normally after the own-key registry lookup. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+Current expected-failure inventory after the navigation decisions: **4 routing / 7 repository-wide**. RA-5 now passes normally: setup leaves freely and scoring arms the existing guard. RA-9 also passes normally after the own-key registry lookup. SA-07 now passes normally after round two saves the final Undo with the persistent scoring-started latch; three stability failures remain. Counts in dated validation runs below describe those historical heads.
 
 The guided save-failure, guided raw-innings, and active Test Finish follow-ups
 reserved below are implemented in the [cricket persistence follow-up](../2026-10-22-cricket-persistence/acceptance.md).
