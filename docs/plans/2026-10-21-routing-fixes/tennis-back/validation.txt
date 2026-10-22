@@ -1,4 +1,6 @@
-Current inventory after PR #175: 5 routing + 4 stability = 9 repository-wide; RA-9 now passes normally. Recorded run counts below are historical.
+Current inventory after navigation round two: 4 routing / 7 repository-wide (4 routing + 3 stability); RA-5, RA-9 and SA-07 pass normally.
+
+Historical run counts (retained unchanged from the tennis completion integrations):
 
 Focused: 7 files passed; 134 passed; 11 expected fail; 145 total; duration 33.03s.
 Lint: exit 0; 0 errors; 29 warnings.
