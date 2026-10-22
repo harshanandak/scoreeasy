@@ -207,14 +207,14 @@ describe('DashboardLanding start flow', () => {
     expect(screen.queryByText('Favourites')).not.toBeInTheDocument();
   });
 
-  it('ignores a stored match with no resolvable sport', async () => {
+  it('keeps a sportless stored match without offering an invalid rematch path', async () => {
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
       { id: 'recent-1', team1: 'A', team2: 'B' },
     ]));
 
     renderDashboard();
 
-    expect(await screen.findByText('Play your first match.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Welcome\s*back/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Rematch:/i })).not.toBeInTheDocument();
   });
 

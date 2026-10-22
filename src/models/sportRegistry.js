@@ -10,6 +10,7 @@ import {
   PRIORITY_SPORT_IDS,
   SPORT_ORDER,
 } from './sportFocus';
+import { getPresetById } from './presets';
 
 export const SPORT_REGISTRY = {
   // === SETS-BASED SPORTS (4) ===
@@ -322,6 +323,16 @@ export const getGoalsSports = () => getSportsList().filter((s) => s.engine === '
 
 export const getSportById = (id) =>
   (typeof id === 'string' && Object.prototype.hasOwnProperty.call(SPORT_REGISTRY, id) ? SPORT_REGISTRY[id] : null);
+
+// Legacy factory records have templateId rather than sport. Unknown/custom
+// templates do not identify a sport, so their absence must not discard a match.
+export const isSupportedMatchRecord = (record, fallbackSport) => {
+  if (record === null || typeof record !== 'object' || Array.isArray(record)) return false;
+  const preset = getPresetById(record.templateId);
+  const templateSport = preset && preset.id !== 'preset_custom' ? preset.id.slice('preset_'.length) : undefined;
+  const sport = record.sport === undefined ? templateSport ?? fallbackSport : record.sport;
+  return sport === undefined || Boolean(getSportById(sport));
+};
 
 // Direction E team colour is rolled out one sport at a time: a sport opts in with
 // `teamColour: true` on its own registry entry, and its boards switch to the team-colour arena.

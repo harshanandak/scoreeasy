@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
+import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 
 const QUICK_MATCHES_KEY = 'se_quickmatches';
 const OLDER_HISTORY_KEY = 'gs_history';
@@ -27,19 +28,14 @@ function seedQuickMatch(matches = [
 }
 
 function seedOlderHistoryMatch() {
+  const participants = ['North', 'South'].map(name => createParticipant({ name }));
+  const session = createGameSession({ templateId: 'preset_volleyball', name: 'Sunday Court', participants });
+  session.scores[participants[0].id].total = 21;
+  session.scores[participants[1].id].total = 18;
+  session.winner = participants[0].id;
   globalThis.localStorage.setItem(
     OLDER_HISTORY_KEY,
-    JSON.stringify([
-      {
-        id: 'older-match-1',
-        sport: 'volleyball',
-        gameName: 'Sunday Court',
-        participants: ['North', 'South'],
-        finalScores: { North: 21, South: 18 },
-        winner: 'North',
-        completedAt: '2026-05-18T11:00:00.000Z',
-      },
-    ]),
+    JSON.stringify([createHistoryRecord(session)]),
   );
 }
 

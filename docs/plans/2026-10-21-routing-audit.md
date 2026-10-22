@@ -1,5 +1,7 @@
 # Routing audit (2026-10-21)
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 ## Problem
 
 Harsha, 2026-10-21: "check other routing also, I believe a lot of routing is bad right now; we need to improve application stability and reliability."
@@ -26,7 +28,7 @@ The original audit did not change app code. Its only code additions were `src/de
 ## Top findings in plain words
 
 1. **Back after finishing a match goes back into the match** (RA-1, RA-2). **Goals tournament completion is fixed** for football, basketball, hockey and kabaddi: manual, timed and target-score completion now use the existing app completion seam after a successful local save. Sets tournament completion already used that seam. Tennis quick and tournament completion are also fixed through that seam after a successful local save (RA-2 and the tennis portion of RA-1). Cricket limited-overs, Test (tournament and quick) and guided completion now also use the app-owned seam. Limited-overs quick completion remains in place and has a saved-result/Undo regression. Originally, tennis quick Back reopened a dead "Match not found" page with the exit guard armed. Goals quick matches already finish in place; their saved result and Undo are pinned separately.
-2. **RA-3 fixed: Home lists resumable matches.** Home and cold entry share a catalog of active-sport quick drafts, tennis drafts, cricket Test matches and unfinished tournaments. Each destination has a Resume action. Under the 2026-10-22 decision (no users), unregistered-sport matches and drafts are ignored and not displayed; storage is not migrated or actively deleted. Originally, Home hid quick drafts and could strand an in-progress tennis match.
+2. **RA-3 fixed: Home lists resumable matches.** Home and cold entry share a catalog of active-sport quick drafts, tennis drafts, cricket Test matches and unfinished tournaments. Each destination has a Resume action. Under the 2026-10-22 decision (no users), unregistered-sport matches and drafts are ignored and not displayed; retired rows are ignored on read and may be dropped the next time that collection is saved; no migration is added. Originally, Home hid quick drafts and could strand an in-progress tennis match.
 3. **Stale cricket Test links hang on "Loading..." forever** (RA-4). The bottom nav is hidden, and Back warns about losing unsaved progress for a match that does not exist.
 4. **The exit warning fires before a match even starts** (RA-5). `/:sport/quick` is guarded by URL, so the untouched setup form already asks "Leave this page? Your unsaved scoring progress may be lost." That trains scorers to tap Leave without reading.
 5. **One crash sticks** (RA-6). The route error boundary never resets. After any screen throws, every later in-app navigation still shows "App route crashed" until a full reload. The public `/live/:token` page has no boundary of its own (RA-11).
@@ -267,7 +269,7 @@ Guest, fresh context per row, 390×844 mobile emulation, `bunx vite --port 5193`
 
 ## Contract tests
 
-`src/designs/design1-mono/routes.contract.test.jsx`, 37 tests (31 normal, 6 expected failures):
+`src/designs/design1-mono/routes.contract.test.jsx` has five open expected failures (RA-4 through RA-8); RA-9 passes normally. The earlier pre-completion-lock run had 37 tests (31 normal, 6 expected failures):
 - **Pinned (pass today):** generic 404 with Play/Home; sport-scoped 404 on `/volleyball`; single draft auto-resumes from `/`.
 - **RA-3 fixed:** 10 normal passing cases verify Home Resume, the multi-match entry chooser and all eight generic sport quick scorers; tennis uses its dedicated saved-draft scorer.
 - **Goals RA-1 fixed / quick regression:** 9 normal passing cases pin the four registered goals sports, tournament Finish and Back with Undo, and quick-match saved-result preservation. Tennis and cricket completion are pinned separately.
@@ -332,4 +334,4 @@ The guard, Home and Rematch decisions above are settled. The remaining release q
 
 Cricket finish exits use `completeProtectedScoring`, with replace navigation when the provider is absent. Limited-overs quick cricket already finishes in place; its restored Undo and saved innings are pinned as a regression. Draft/Discard navigation is outside this fix. Completed results retain their scores and innings; completed drafts are intentionally cleared, while Undo is verified before completion and across scorer remount.
 
-The earlier master (`0038e60`) contained no separate cricket expected-failure test. Five normal cricket route cases are added without altering tennis or any existing fixes: at the first hold, routing expected failures remained **7 before / 7 after** and repository-wide expected failures remained **11 before / 11 after**. After merging tennis master (`cdae97d`, PR #169), the current baseline is **6 routing / 10 repository-wide**, unchanged by cricket. Home RA-3, goals RA-1 and tennis RA-1/RA-2 remain fixed alongside all five cricket contracts. Full-suite/build terminal results are reported in the PR from the normal push hook; hosted checks are read independently.
+The earlier master (`0038e60`) contained no separate cricket expected-failure test. Five normal cricket route cases are added without altering tennis or any existing fixes: at the first hold, routing expected failures remained **7 before / 7 after** and repository-wide expected failures remained **11 before / 11 after**. After merging tennis master (`cdae97d`, PR #169), the baseline at that integration was **6 routing / 10 repository-wide**, unchanged by cricket; PR #175 subsequently fixes RA-9, leaving **5 routing / 9 repository-wide**. Home RA-3, goals RA-1 and tennis RA-1/RA-2 remain fixed alongside all five cricket contracts. Full-suite/build terminal results are reported in the PR from the normal push hook; hosted checks are read independently.

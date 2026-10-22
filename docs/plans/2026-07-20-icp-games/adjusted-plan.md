@@ -45,7 +45,7 @@ Rationale for keeping these three but deregistering the other five: hockey/tenni
 
 ### DEREGISTER — removed from sportRegistry.js; saved matches are ignored and not shown; revisit later properly customized
 
-> Decision (2026-10-22): there are no users yet, so retired-sport saved data does not need a display or recovery path. Matches and drafts for unregistered sports are ignored and not shown in History, Home, stats or app entry. Storage is not migrated or actively deleted.
+> Decision (2026-10-22): there are no users yet, so retired-sport saved data does not need a display or recovery path. Matches and drafts for unregistered sports are ignored and not shown in History, Home, stats or app entry. Retired rows are ignored on read and may be dropped the next time that collection is saved; no migration is added.
 
 | Sport | ICP justification for removal |
 |---|---|

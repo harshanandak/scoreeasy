@@ -16,7 +16,7 @@ const unregisteredSports = ['pickleball', 'squash', 'rugby', 'futsal', 'handball
 function seedUnsupported(sport) {
   const match = { id: sport, sport, status: 'completed', team1: 'Removed A', team2: 'Removed B',
     score1: 10, score2: 7, winner: 'Removed A', completedAt: '2026-10-22T10:00:00Z' };
-  localStorage.setItem('se_quickmatches', JSON.stringify([match, null, 'broken', {}]));
+  localStorage.setItem('se_quickmatches', JSON.stringify([match, null, 'broken', { sport }]));
   localStorage.setItem(`se_quickmatch_draft_${sport}`, JSON.stringify({
     ...match, phase: 'scoring', status: 'in-progress', sets: [null], gScoreHistory: [null],
   }));
@@ -37,7 +37,7 @@ describe('unregistered saved data is ignored at the load boundary', () => {
   });
   afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-  it.each(unregisteredSports)('excludes %s and malformed peers from History and stats without changing storage', async (sport) => {
+  it.each(unregisteredSports)('ignores %s on History and stats reads; collection saves may drop ignored rows', async (sport) => {
     seedUnsupported(sport);
     const before = { ...localStorage };
     const write = vi.spyOn(Storage.prototype, 'setItem');
@@ -97,20 +97,14 @@ describe('unregistered saved data is ignored at the load boundary', () => {
     expect(screen.getByText('No match history yet')).toBeInTheDocument();
   });
 
-  it('rejects sportless legacy rows before History and Home can inspect malformed payloads', () => {
+  it('rejects invalid legacy envelopes without requiring a sport on object records', () => {
     for (const key of ['gs_sessions', 'gs_history']) {
-      localStorage.setItem(key, JSON.stringify([null, [], {}, { id: 'broken', participants: null }]));
-      expect(loadData(key, [])).toEqual([]);
+      localStorage.setItem(key, JSON.stringify([null, [], 'broken', {}, { id: 'unknown' }]));
+      expect(loadData(key, [])).toEqual([{}, { id: 'unknown' }]);
     }
-    expect(loadAppEntryState().returningPlayerState).toBe(false);
-    const history = show(MonoHistory);
-    expect(screen.getByText('No match history yet')).toBeInTheDocument();
-    history.unmount();
-    show(DashboardLanding);
-    expect(screen.getByText('Play your first match.')).toBeInTheDocument();
   });
 
-  it('does not write filtered tournament reads over ignored rows when adapting an old format', () => {
+  it('adapts tournament formats in memory on read; collection saves may drop ignored rows', () => {
     localStorage.setItem('se_volleyball', JSON.stringify([
       { id: 'ignored', sport: 'pickleball', teams: [null], matches: { malformed: true } },
       { id: 'active', format: { type: 'single' }, teams: [], matches: [] }, null,

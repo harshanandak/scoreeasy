@@ -340,7 +340,7 @@ export default function MonoHistory() {
         rawId: qm.id,
         source: 'quick',
         sport: qm.sport,
-        sportName: getSportById(qm.sport).name,
+        sportName: getSportById(qm.sport)?.name || 'Custom',
         team1: qm.team1,
         team2: qm.team2,
         score,

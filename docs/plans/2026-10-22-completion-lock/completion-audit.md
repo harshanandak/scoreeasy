@@ -1,5 +1,7 @@
 Decisions needed: none.
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 # Completion lock
 
 Baseline: `origin/master` (`cdae97d`, fetched before branching).
@@ -296,8 +298,8 @@ existing expected failures (397 total), zero runner errors**, in **422.32 s**:
 bun run test src/designs/design1-mono/scoring src/designs/design1-mono/MonoQuickMatch.broadcast.test.jsx src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx src/designs/design1-mono/MonoQuickMatch.teamColour.test.jsx src/designs/design1-mono/routes.contract.test.jsx src/hooks/useMatchCompletion.test.jsx src/designs/design1-mono/theme/palette.test.js src/utils/cricketCalculations.test.js --maxWorkers=1
 ```
 
-Routing retains its six executed expected failures. A source inventory confirms
-all ten repository-wide expected-failure declarations remain unchanged, including
+At the completion-lock head, routing retained its six executed expected failures. That historical source inventory confirmed
+all ten repository-wide expected-failure declarations were unchanged, including
 SA-07 and the storage expected failure outside this focused selection. Palette
 equality remains **669**. Diff whitespace checks pass. Normal commit hooks run
 lint, type-check and agent-configuration sync. The full suite, build, push and PR

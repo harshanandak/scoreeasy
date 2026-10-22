@@ -1,5 +1,7 @@
 # Goals Finish and Back demo
 
+Current expected-failure inventory after PR #175: **5 routing / 9 repository-wide**. RA-9 passes as a normal test because the registry lookup now rejects Object.prototype keys. The four stability failures are unchanged. Counts in dated validation runs below describe those historical heads.
+
 Football tournament Finish used to push the tournament page above the scorer and its guard entries. Browser Back reopened the completed scorer. Completion now uses the existing app seam after saving successfully.
 
 Captured in the running guest app at `http://localhost:5173`, CSS viewport and PNG dimensions 390×844. Before uses the goals scorer from master (28c4bdb); after uses the fix. Only local synthetic Red/Blue matches were scored. All eight screenshots were opened and inspected.

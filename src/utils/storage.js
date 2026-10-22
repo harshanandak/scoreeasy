@@ -1,6 +1,6 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
-import { getSportById, getSportsList } from '../models/sportRegistry';
+import { isSupportedMatchRecord, getSportsList } from '../models/sportRegistry';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
@@ -282,8 +282,7 @@ function registeredSavedData(key, value, defaultValue) {
   const sharedRecords = key === STORAGE_KEYS.QUICK_MATCHES || key === 'gs_history' || key === 'gs_sessions';
   if (!sport && !sharedRecords) return value;
 
-  const registered = (record) => record !== null && typeof record === 'object' && !Array.isArray(record)
-    && Boolean(getSportById(record.sport === undefined ? sport : record.sport));
+  const registered = (record) => isSupportedMatchRecord(record, sport);
   if (draftSport) return registered(value) ? value : defaultValue;
   return Array.isArray(value) ? value.filter(registered) : defaultValue;
 }
@@ -373,7 +372,7 @@ export const saveSportTournament = (storageKey, tournamentData) => {
 
 export const loadSportTournaments = (storageKey) => {
   const tournaments = loadData(storageKey, []);
-  // Adapt legacy formats in memory without persisting the filtered collection.
+  // Adapt formats in memory; the next collection save may drop ignored rows.
   return migrateTournaments(tournaments);
 };
 
@@ -390,7 +389,7 @@ export const saveQuickMatches = (matches) => {
 
 export const loadQuickMatches = () => {
   const stored = loadData(STORAGE_KEYS.QUICK_MATCHES, []);
-  // Reading must not persist the filtered view over ignored rows.
+  // Normalize in memory; the next collection save may drop ignored rows.
   return normalizedQuickMatches(stored);
 };
 
