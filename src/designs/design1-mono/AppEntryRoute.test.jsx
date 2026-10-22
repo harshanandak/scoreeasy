@@ -330,14 +330,14 @@ describe('app entry route contract', () => {
     expect(screen.getByText('Profile screen')).toBeInTheDocument();
   });
 
-  it('labels the fourth tab Sign in for a cloud guest on History and sends it to sign-in', async () => {
+  it('labels the last tab Sign in for a cloud guest on History and sends it to sign-in', async () => {
     authState = { ...authState, authMode: 'cloud', cloudAuthAvailable: true, isAuthenticated: false };
     const { container } = renderApp('/history');
 
     expect(await screen.findByRole('heading', { name: 'No match history yet' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     const tabs = within(appNav).getAllByRole('button', { hidden: true });
-    expect(tabs.map((tab) => tab.textContent.trim())).toEqual(['Home', 'Play', 'History', 'Sign in']);
+    expect(tabs.map((tab) => tab.textContent.trim())).toEqual(['Home', 'Play', 'Live', 'History', 'Sign in']);
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toHaveAttribute('aria-current', 'page');
 
     fireEvent.click(within(appNav).getByRole('button', { name: 'Sign in', hidden: true }));
