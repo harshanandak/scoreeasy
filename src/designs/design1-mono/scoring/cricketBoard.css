@@ -8,7 +8,7 @@
   --cricket-scrim: var(--team-a-scrim);
   background: var(--se-color-canvas);
   color: var(--se-color-ink);
-  padding: 0 12px env(safe-area-inset-bottom, 0px);
+  padding: 0 12px;
 }
 .cricket-board[data-batting="b"] {
   --cricket-core: var(--team-b-core);
@@ -18,9 +18,9 @@
   --cricket-motif: var(--team-b-motif);
   --cricket-scrim: var(--team-b-scrim);
 }
-.cricket-board .crb { max-width: 520px; min-height: 100dvh; gap: 8px; padding: 0 0 10px; }
+.cricket-board .crb { max-width: 520px; min-height: 100dvh; gap: 8px; padding: 0 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
 .cricket-board button { min-width: 48px; min-height: 48px; }
-.cricket-board .sb-top { padding: 12px 2px 4px; min-height: 66px; }
+.cricket-board .sb-top { padding-inline: 2px; padding-bottom: 4px; min-height: 66px; }
 .cricket-board .sb-title small { white-space: normal; }
 .cricket-board .cricket-hero {
   position: relative; isolation: isolate; overflow: hidden;

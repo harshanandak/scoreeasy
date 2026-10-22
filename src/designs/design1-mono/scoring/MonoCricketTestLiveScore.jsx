@@ -793,9 +793,11 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         <BoardOptionsSheet id="cricket-test-options" open={showActions} onClose={() => setShowActions(false)} onDiscard={handleDiscard}>
           <LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport: sport || 'cricket', scorecardKind: 'cricket', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />
           <BoardSheetGroup>
+            <div role="menu" aria-label="Test match actions">
             {showDeclare && !isInningsOver && <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleDeclare(); }}>Declare innings</button>}
             <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleDraw(); }}>End as draw</button>
             <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleFinish(); }}>Finish &amp; save</button>
+                      </div>
           </BoardSheetGroup>
         </BoardOptionsSheet>
 

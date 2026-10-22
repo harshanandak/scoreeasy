@@ -349,8 +349,8 @@ export default function MonoCricketGuidedScorerRoute() {
         format={fmt}
         battingTeamName={teamName(tournament, battingTeamId)}
         battingTeam={battingTeamId === match.team2Id ? 2 : 1}
-        team1Color={match.team1Color || tournament.teams.find(t => t.id === match.team1Id)?.color}
-        team2Color={match.team2Color || tournament.teams.find(t => t.id === match.team2Id)?.color}
+        team1Color={match.team1Color || tournament.teams?.find(t => t.id === match.team1Id)?.color}
+        team2Color={match.team2Color || tournament.teams?.find(t => t.id === match.team2Id)?.color}
         striker={openers.striker ?? 'Batter 1'}
         nonStriker={openers.nonStriker ?? 'Batter 2'}
         bowler={openers.bowler ?? 'Bowler'}
