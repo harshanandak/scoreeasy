@@ -1266,7 +1266,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 
           /* Account cell: one stacked control (Clerk button or fallback) plus a
              non-interactive label, laid out to match the other tabs. The cell
-             itself fills the grid track and carries the active cue + a >=44px
+             itself fills the grid track and carries the active cue + a >=48px
              tap target (the control/fallback stretch to fill it). */
           .global-bottom-nav-account-cell {
             display: flex;
@@ -1289,18 +1289,18 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 48px;
+            min-height: 48px;
           }
 
           /* Clerk renders its own avatar trigger inside the control wrapper.
              Sizing only the wrapper leaves the real hit area (Clerk's avatar
-             button) at ~24px, so we expand Clerk's own trigger/avatar box to
-             the 44px target as well. */
+             button) at ~24px, so we expand Clerk's own trigger/box to the
+             48px target; the visible avatar stays 36px, centred in it. */
           .global-bottom-nav-account-control .cl-userButtonTrigger,
           .global-bottom-nav-account-control .cl-userButtonBox {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
           }
 
           .global-bottom-nav-account-control .cl-userButtonAvatarBox {
@@ -1313,7 +1313,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             align-items: center;
             justify-content: center;
             width: 100%;
-            min-height: 44px;
+            min-height: 48px;
             border: 0;
             border-radius: 10px;
             background: transparent;

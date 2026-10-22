@@ -282,6 +282,25 @@ describe('app entry route contract', () => {
     // Visible label is non-interactive chrome, hidden from assistive tech.
     const label = within(appNav).getByText('Account');
     expect(label).toHaveAttribute('aria-hidden', 'true');
+
+    // The signed-in trigger (Clerk's avatar button) and its loading fallback are thumb-sized:
+    // >= 48x48 hit areas. These rules live in the mobile media query, which jsdom does not match,
+    // so the declarations themselves are read from the shell's stylesheet.
+    const css = Array.from(container.querySelectorAll('style')).map((style) => style.textContent).join('\n');
+    const rule = (selector) => {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const match = new RegExp(`${escaped}\\s*\\{([^}]*)\\}`).exec(css);
+      expect(match, selector).not.toBeNull();
+      return Object.fromEntries(match[1].split(';').map((d) => d.split(':').map((p) => p.trim())).filter(([k]) => k));
+    };
+    const px = (value) => Number.parseFloat(value);
+    const trigger = rule('.global-bottom-nav-account-control .cl-userButtonTrigger,\n          .global-bottom-nav-account-control .cl-userButtonBox');
+    expect(px(trigger.width)).toBeGreaterThanOrEqual(48);
+    expect(px(trigger.height)).toBeGreaterThanOrEqual(48);
+    const control = rule('.global-bottom-nav-account-control');
+    expect(px(control['min-width'])).toBeGreaterThanOrEqual(48);
+    expect(px(control['min-height'])).toBeGreaterThanOrEqual(48);
+    expect(px(rule('.global-bottom-nav-account-fallback')['min-height'])).toBeGreaterThanOrEqual(48);
   });
 
   it('keeps signed-in account tab navigation while Clerk account menu is loading', async () => {
@@ -344,7 +363,7 @@ describe('app entry route contract', () => {
     expect(navStyles).not.toContain('var(--se-color-action-soft)');
   });
 
-  it('paints the account tab active on the profile route with a >=44px tap target', async () => {
+  it('paints the account tab active on the profile route with a >=48px tap target', async () => {
     authState = {
       ...authState,
       authMode: 'cloud',
@@ -373,10 +392,10 @@ describe('app entry route contract', () => {
       .map((style) => style.textContent)
       .join('\n');
     expect(navStyles).toContain('.global-bottom-nav-account-cell.is-active');
-    // Tap targets meet the >=44px bar — assert Clerk's OWN trigger/avatar box (the
-    // real hit area) is sized to 44px, not just that a 44px rule exists somewhere.
+    // Tap targets meet the >=48px bar — assert Clerk's OWN trigger/avatar box (the
+    // real hit area) is sized to 48px, not just that a 48px rule exists somewhere.
     expect(navStyles).toContain('.global-bottom-nav-account-control .cl-userButtonTrigger');
-    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 44px;[^}]*height: 44px;/);
+    expect(navStyles).toMatch(/\.cl-userButtonBox\s*\{[^}]*width: 48px;[^}]*height: 48px;/);
     expect(navStyles).not.toContain('min-height: 24px;');
   });
 
