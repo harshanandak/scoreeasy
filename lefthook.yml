@@ -11,7 +11,5 @@ pre-commit:
 pre-push:
   parallel: false
   jobs:
-    - name: test
-      run: bun run test
-    - name: build
-      run: bun run build
+    - name: related-tests
+      run: bun scripts/pre-push-tests.mjs

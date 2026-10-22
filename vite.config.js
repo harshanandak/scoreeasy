@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { forceRerunTriggers } from './scripts/pre-push-tests.mjs';
 
 const isVercelPreview = process.env.VERCEL_ENV === 'preview';
 
@@ -136,6 +137,7 @@ export default defineConfig({
     sourcemap: false,
   },
   test: {
+    forceRerunTriggers,
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',

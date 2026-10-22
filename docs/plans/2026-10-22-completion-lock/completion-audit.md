@@ -120,7 +120,8 @@ bun run test src/designs/design1-mono/scoring src/designs/design1-mono/MonoQuick
 The palette test still requires equality with **669**, and passed unchanged.
 `git diff --check` and the staged equivalent passed.
 
-The first normal pre-push hook passed **130 files, 1,510 tests and 10 expected
+The first normal pre-push hook, under its full-suite/build behavior at the time,
+passed **130 files, 1,510 tests and 10 expected
 failures (1,520 total)** in 443.26 seconds. Its production build transformed
 **658 modules**, compiled in 43.03 seconds and generated **70 PWA precache entries
 (1,246.57 KiB)**. After master moved to PR #171, the focused selection and normal
@@ -134,8 +135,9 @@ also exposed deferred updater execution; synchronous innings publication fixed
 those without weakening their assertions. All corresponding regressions pass in
 the final focused run.
 
-The owner released the full-suite lane. The normal pre-push hook runs the full
-suite and build; their terminal results are reported in the PR. The running-app
+The owner released the full-suite lane. At the time, the normal pre-push hook ran
+the full suite and build; their terminal results are reported in the PR. Current
+validation uses the required CI `verify` check as the full-suite/build gate. The running-app
 demo was repeated after the merge: attempted taps at 2.6 ms and 174 ms left the
 completed 1-0 result intact. No Convex deployment or production write is part of
 this work. SA-07, SA-09, guided failed-save navigation,
