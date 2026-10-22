@@ -112,7 +112,7 @@ describe('cricket persistence transactions', () => {
     expect(stored(kind)).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw', completedAt: expect.any(String) });
     expect(stored(kind).innings[3]).toMatchObject({ runs: 1, balls: 1 });
     expect(stored(kind).draftState).toBeUndefined();
-    expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? '/history' : '/cricket/tournament/100');
+    expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? '/cricket/quick?result=300' : '/cricket/tournament/100');
     vi.setSystemTime(new Date('2026-10-22T12:00:01Z'));
     fireEvent.keyDown(globalThis, { key: '4' });
     expectVisibleInnings(1, '0.1');

@@ -385,7 +385,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       const saved = loadQuickMatch(matchId);
       if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${matchId}`, () => {
         clearData(draftKey);
-        completeScoring('/history');
+        completeScoring(`/${sport}/quick?result=${encodeURIComponent(matchId)}`);
       })) return;
       if (isStaleQuickMatchDraft(draft)) {
         clearData(draftKey);
@@ -654,7 +654,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     clearData(quickDraftKey);
     setSaveWarning('');
     live.finalize();
-    completeScoring('/history');
+    completeScoring(`/${sport}/quick?result=${encodeURIComponent(matchId)}`);
   };
 
   // Save match and return

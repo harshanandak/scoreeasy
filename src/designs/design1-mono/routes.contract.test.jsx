@@ -97,6 +97,7 @@ function RouterProbe() {
     <div>
       <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>
       <button type="button" onClick={() => navigate(-1)}>Probe back</button>
+      <button type="button" onClick={() => navigate(1)}>Probe forward</button>
       <button type="button" onClick={() => navigate('/history')}>Probe go history</button>
       <button type="button" onClick={() => navigate('/football/tournament/100')}>Probe tournament</button>
       <button type="button" onClick={() => navigate('/football/tournament/100/match/m1/score')}>Probe scorer</button>
@@ -167,12 +168,22 @@ describe('route contracts: already correct (pinned)', () => {
     } else {
       fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
     }
-    await waitFor(() => expect(currentRoute()).toBe(quick ? '/history' : '/cricket/tournament/100'));
+    await waitFor(() => expect(currentRoute()).toBe(quick ? '/cricket/quick?result=300' : '/cricket/tournament/100'));
+    if (quick) {
+      expect(await screen.findByRole('region', { name: 'Match result' })).toHaveAttribute('data-screen', 'finish');
+      expect(screen.getByText('Won by 10 wickets')).toBeInTheDocument();
+    }
     const saved = JSON.parse(localStorage.getItem(storageKey));
     expect(quick ? saved[0] : saved[0].matches[0]).toMatchObject({ status: 'completed', winner: quick ? 'Beta' : 'B' });
     await pressProbeBack();
     await waitFor(() => expect(currentRoute()).toBe('/history'));
     expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+    if (quick) {
+      fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
+      expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+    }
   });
 
   it('RA-1 cricket regression: limited-overs quick Finish preserves restored Undo and the saved innings through Back', async () => {
@@ -347,7 +358,10 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/app', `/tennis/quick/live/${TENNIS_ID}`]);
     await settleRoute();
     fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
-    await waitFor(() => expect(currentRoute()).toBe('/history'));
+    await waitFor(() => expect(currentRoute()).toBe(`/tennis/quick?result=${TENNIS_ID}`));
+    expect(await screen.findByRole('region', { name: 'Match result' })).toHaveAttribute('data-screen', 'finish');
+    expect(screen.getByText('Took the last set 6–0')).toBeInTheDocument();
+    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
 
     await pressProbeBack();
 
@@ -360,6 +374,9 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
       sport: 'tennis', status: 'completed', setsWon1: 2, setsWon2: 0,
       sets: [{ score1: 6, score2: 0, completed: true }, { score1: 6, score2: 0, completed: true }, { score1: 0, score2: 0, completed: false }],
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
+    expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
   });
 
   it.each(['quick', 'tournament'])('tennis %s keeps the saved draft and Undo history across a remount', async (mode) => {
@@ -400,6 +417,100 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     await waitFor(() => expect(savedDraft().sets).toEqual(sets));
     expect(savedDraft().history).toEqual(history);
     expect(screen.getByRole('button', { name: /^Ana: 30/ })).toBeEnabled();
+  });
+
+  it.each(['tennis', 'cricket'])('%s quick Finish refreshes safely and Rematch starts its own engine with the saved setup', async sport => {
+    const format = sport === 'tennis' ? { sets: 3 } : { preset: 'test', players: 11, totalInnings: 4, overs: null };
+    const finished = {
+      id: 300, sport, status: 'completed', team1: 'Alpha', team2: 'Beta', team1Name: 'Alpha', team2Name: 'Beta',
+      team1Id: 'A', team2Id: 'B', team1Color: '#123456', team2Color: '#654321', format,
+      winner: 'Alpha', winDesc: 'Won by 1 run', completedAt: NOW_ISO, score1: 2, score2: 0,
+      sets: [{ score1: 6, score2: 4, completed: true }, { score1: 6, score2: 2, completed: true }],
+      innings: [{ teamId: 'A', runs: 2, wickets: 10, balls: 6 }, { teamId: 'B', runs: 1, wickets: 10, balls: 6 }],
+    };
+    seed('se_quickmatches', [finished]);
+    const first = renderApp([`/${sport}/quick?result=300`]);
+    expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    first.unmount();
+    renderApp([`/${sport}/quick?result=300`]);
+    expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([finished]);
+    expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Rematch' }));
+    await waitFor(() => expect(currentRoute()).toMatch(sport === 'tennis' ? /^\/tennis\/quick\/live\// : /^\/cricket\/quick\/test-match\//));
+    const nextId = currentRoute().split('/').pop();
+    const fresh = sport === 'tennis' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${nextId}`))
+      : JSON.parse(localStorage.getItem('se_quickmatches')).find(m => String(m.id) === nextId);
+    expect(fresh).toMatchObject({ team1Name: 'Alpha', team2Name: 'Beta', team1Color: '#123456', team2Color: '#654321', format, status: 'in-progress' });
+    expect(JSON.parse(localStorage.getItem('se_quickmatches')).find(m => m.id === 300)).toEqual(finished);
+  });
+
+  it.each(['tennis', 'cricket'])('a completed %s quick scorer deep link opens Finish without rewriting its saved result', async sport => {
+    const saved = {
+      ...cricketFinishSeed('test-quick').se_quickmatches[0], sport, status: 'completed', winner: 'Draw', winDesc: 'Match Drawn',
+      completedAt: NOW_ISO, draftState: undefined,
+    };
+    seed('se_quickmatches', [saved]);
+    renderApp([sport === 'tennis' ? '/tennis/quick/live/300' : '/cricket/quick/test-match/300']);
+    expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    expect(currentRoute()).toBe(`/${sport}/quick?result=300`);
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([JSON.parse(JSON.stringify(saved))]);
+    expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
+  });
+
+  it.each(['missing', 'wrong-sport', 'unfinished'])('rejects a %s quick result link without changing any saved match or draft', async kind => {
+    const match = cricketFinishSeed('test-quick').se_quickmatches[0];
+    match.winner = null;
+    if (kind !== 'unfinished') {
+      match.status = 'completed';
+      match.completedAt = NOW_ISO;
+      delete match.draftState;
+    } else {
+      match.sport = 'tennis';
+    }
+    seed('se_quickmatches', [match]);
+    const draft = { sport: 'tennis', phase: 'scoring', team1Name: 'Do not change', quickMatchId: 100 };
+    seed('se_quickmatch_draft_tennis', draft);
+    renderApp([`/tennis/quick?result=${kind === 'missing' ? '999' : '300'}`]);
+    await waitFor(() => expect(currentRoute()).toBe('/history'));
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([match]);
+    expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_tennis'))).toEqual(draft);
+  });
+
+  it('New Match after Test Finish keeps the displayed format consistent with the scorer it starts', async () => {
+    const match = { ...cricketFinishSeed('test-quick').se_quickmatches[0], status: 'completed', winner: 'Draw',
+      completedAt: NOW_ISO, draftState: undefined };
+    seed('se_quickmatches', [match]);
+    renderApp(['/cricket/quick?result=300']);
+    fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
+    expect(currentRoute()).toBe('/cricket/quick');
+    expect(screen.getByRole('button', { name: 'Test' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Start cricket' }));
+    await waitFor(() => expect(currentRoute()).toMatch(/^\/cricket\/quick\/test-match\//));
+  });
+
+  it.each(['tennis', 'cricket'])('a failed %s Rematch preserves the completed result and permits retry', async sport => {
+    const match = { ...cricketFinishSeed('test-quick').se_quickmatches[0], sport, status: 'completed', winner: 'Alpha',
+      completedAt: NOW_ISO, draftState: undefined, score1: 2, score2: 0,
+      sets: [{ score1: 6, score2: 4, completed: true }, { score1: 6, score2: 2, completed: true }] };
+    seed('se_quickmatches', [match]);
+    renderApp([`/${sport}/quick?result=300`]);
+    expect(await screen.findByRole('heading', { name: /winner: alpha/i })).toBeInTheDocument();
+    const write = Storage.prototype.setItem;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (sport === 'tennis' ? key.startsWith('se_tennis_quick_draft_') : key === 'se_quickmatches') {
+        throw new DOMException('Storage full', 'QuotaExceededError');
+      }
+      return write.call(this, key, value);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Rematch' }));
+    expect(screen.getByRole('heading', { name: /winner: alpha/i })).toBeInTheDocument();
+    expect(screen.getByText(/save failed/i)).toBeInTheDocument();
+    expect(currentRoute()).toBe(`/${sport}/quick?result=300`);
+    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([JSON.parse(JSON.stringify(match))]);
+    failure.mockRestore();
+    fireEvent.click(screen.getByRole('button', { name: 'Rematch' }));
+    await waitFor(() => expect(currentRoute()).toMatch(sport === 'tennis' ? /^\/tennis\/quick\/live\// : /^\/cricket\/quick\/test-match\//));
   });
 
   // RA-3 fixed: Home exposes the same resumable catalog as cold entry.
@@ -814,6 +925,43 @@ describe('navigation decisions (2026-10-21)', () => {
     } finally {
       historyGo.mockRestore();
     }
+  });
+
+  it('a native Back event after Test Finish does not unwind the consumed scorer guard again', async () => {
+    const historyGo = vi.spyOn(globalThis.history, 'go').mockImplementation(() => {});
+    const historyBack = vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
+    try {
+      Object.entries(cricketFinishSeed('test-quick')).forEach(([key, value]) => seed(key, value));
+      globalThis.history.replaceState({ idx: 1 }, '', '/cricket/quick/test-match/300');
+      renderApp(['/history', '/cricket/quick/test-match/300']);
+      await settleRoute();
+      fireEvent.click(await screen.findByRole('button', { name: 'Four runs' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Save & Return' }));
+      expect(historyGo).toHaveBeenCalled();
+      act(() => globalThis.dispatchEvent(new Event('popstate')));
+      expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+      expect(currentRoute()).toBe('/cricket/quick?result=300');
+      const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+      historyGo.mockClear();
+      historyBack.mockClear();
+      act(() => globalThis.dispatchEvent(new Event('popstate')));
+      expect(historyGo).not.toHaveBeenCalled();
+      expect(historyBack).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
+    } finally {
+      historyGo.mockRestore();
+      historyBack.mockRestore();
+    }
+  });
+
+  it('a result query on a nested quick scorer still protects the active match', async () => {
+    Object.entries(cricketFinishSeed('test-quick')).forEach(([key, value]) => seed(key, value));
+    renderApp(['/cricket/quick/test-match/300?result=300']);
+    await settleRoute();
+    expect(nativeBack.install).toHaveBeenCalled();
+    act(() => globalThis.dispatchEvent(new Event('popstate')));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Leave this page?');
   });
 
   it('Back on an unscored Rematch unwinds the previous guard without a warning', async () => {

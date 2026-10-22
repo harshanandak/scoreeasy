@@ -115,7 +115,7 @@ describe.each(modes)('%s terminal Test snapshot', (mode) => {
     expect(saved.innings[3].runs).toBe(2);
     expect(saved.draftState).toBeUndefined();
     expect(live.finalize).toHaveBeenCalledOnce();
-    expect(complete).toHaveBeenCalledExactlyOnceWith(mode === 'test-quick' ? '/history' : '/cricket/tournament/100');
+    expect(complete).toHaveBeenCalledExactlyOnceWith(mode === 'test-quick' ? '/cricket/quick?result=300' : '/cricket/tournament/100');
   });
 
   it.each([

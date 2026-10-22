@@ -93,9 +93,17 @@ const cases = [
       ...(kind === 'guided' ? [{ click: 'button', aria: 'Four' }]
         : kind.startsWith('test') ? [{ click: 'button', aria: 'Four runs' }, { until: "document.body.innerText.includes('Save & Return')" }, { click: 'button', text: 'Save & Return' }]
           : [{ click: 'button', text: 'Finish' }]),
-      { until: `location.pathname === '${kind === 'test-quick' ? '/history' : '/cricket/tournament/100'}' && document.body.innerText.includes('${kind === 'test-quick' ? 'History & Stats' : 'Cricket Cup'}')` },
+      { until: kind === 'test-quick'
+        ? "location.pathname + location.search === '/cricket/quick?result=300' && !!document.querySelector('[data-screen=finish]')"
+        : "location.pathname === '/cricket/tournament/100' && document.body.innerText.includes('Cricket Cup')" },
       { snap: 'after Finish' },
       { back: true }, { wait: 2500 },
+      ...(kind === 'test-quick' ? [
+        { snap: 'after Back' },
+        { eval: 'history.forward()' },
+        { until: "!!document.querySelector('[data-screen=finish]')" },
+        { snap: 'after Forward' },
+      ] : []),
     ],
   ]),
 
@@ -210,11 +218,15 @@ const cases = [
     { back: true }, { wait: 1500 },
   ]],
   ['FLOW tennis quick Finish -> Back', '/app', 'tennisDraftWon', [
-    { click: 'button', aria: 'Resume Tennis: Ana vs Bea' }, { wait: 5000 },
+    { click: 'button', aria: 'Resume Tennis: Ana v Bea' }, { wait: 5000 },
     { snap: 'scorer (won)' },
     { click: 'button', text: 'Finish' }, { wait: 3000 },
     { snap: 'after Finish' },
     { back: true }, { wait: 3000 },
+    { snap: 'after Back' },
+    { eval: 'history.forward()' },
+    { until: "!!document.querySelector('[data-screen=finish]')" },
+    { snap: 'after Forward' },
   ]],
   ['FLOW football Finish -> Back', '/football/tournament/100', 'football', [
     { click: 'button', text: 'Enter Score' }, { wait: 4000 },
@@ -414,7 +426,7 @@ async function runSweep(ws) {
             if (value) { ready = true; break; }
             await sleep(200);
           }
-          if (!ready) throw new Error(`Page did not become ready: ${step.until}`);
+          if (!ready) throw new Error(`Page did not become ready: ${step.until}; state=${JSON.stringify(await evalSnap())}; errors=${JSON.stringify(errors.map(redactDiagnostic))}`);
         }
         else if (step.back) await send('Runtime.evaluate', { expression: 'history.back()' }, sessionId);
         else if (step.goto) { await send('Page.navigate', { url: BASE + step.goto }, sessionId); }
@@ -433,7 +445,7 @@ async function runSweep(ws) {
             if (r === 'clicked') break;
             await sleep(200);
           }
-          if (r !== 'clicked') throw new Error(`Click target did not appear: ${step.aria || step.text}`);
+          if (r !== 'clicked') throw new Error(`Click target did not appear: ${step.aria || step.text}; state=${JSON.stringify(await evalSnap())}`);
           result.snaps.push({ at: `click ${step.aria || step.text}: ${r}` });
         }
       }
@@ -446,7 +458,22 @@ async function runSweep(ws) {
         returnByValue: true,
       }, sessionId);
       result.savedMatchStatus = saved.result.value;
-      result.contractPassed = result.savedMatchStatus === 'completed' && result.final?.url === '/history' && !result.final?.dialog;
+      const back = result.snaps.find((snap) => snap.at === 'after Back') || result.final;
+      const expectedFinal = seedName === 'cricket-test-quick' ? '/cricket/quick?result=300' : '/history';
+      result.contractPassed = result.savedMatchStatus === 'completed'
+        && back?.url === '/history' && !back?.dialog
+        && result.final?.url === expectedFinal && !result.final?.dialog;
+    }
+    if (label === 'FLOW tennis quick Finish -> Back') {
+      const back = result.snaps.find((snap) => snap.at === 'after Back');
+      const saved = await send('Runtime.evaluate', {
+        expression: `JSON.parse(localStorage.getItem('se_quickmatches') || '[]').find(match => String(match.id) === '${TENNIS_ID}')?.status`,
+        returnByValue: true,
+      }, sessionId);
+      result.savedMatchStatus = saved.result.value;
+      result.contractPassed = result.savedMatchStatus === 'completed'
+        && back?.url === '/app' && !back?.dialog
+        && result.final?.url === `/tennis/quick?result=${TENNIS_ID}` && !result.final?.dialog;
     }
     result.errors = [...new Set(errors.map(redactDiagnostic))].slice(0, 6);
     await capture();

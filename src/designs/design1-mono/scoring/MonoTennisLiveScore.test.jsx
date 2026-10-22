@@ -174,7 +174,7 @@ describe('MonoTennisLiveScore completion navigation', () => {
     await waitFor(() => expect(finish).toBeEnabled());
     fireEvent.click(finish);
 
-    expect(complete).toHaveBeenCalledWith(mode === 'quick' ? '/history' : '/tennis/tournament/100');
+    expect(complete).toHaveBeenCalledWith(mode === 'quick' ? '/tennis/quick?result=q1' : '/tennis/tournament/100');
     expect(h.navigate).not.toHaveBeenCalled();
     const save = mode === 'quick' ? saveQuickMatch : saveSportTournament;
     expect(save.mock.invocationCallOrder[0]).toBeLessThan(complete.mock.invocationCallOrder[0]);
@@ -187,7 +187,7 @@ describe('MonoTennisLiveScore completion navigation', () => {
     const finish = await screen.findByRole('button', { name: 'Finish' });
     await waitFor(() => expect(finish).toBeEnabled());
     fireEvent.click(finish);
-    expect(h.navigate).toHaveBeenCalledWith(mode === 'quick' ? '/history' : '/tennis/tournament/100', { replace: true });
+    expect(h.navigate).toHaveBeenCalledWith(mode === 'quick' ? '/tennis/quick?result=q1' : '/tennis/tournament/100', { replace: true });
   });
 
   it.each(['quick', 'tournament'])('stays in the %s scorer if saving the result fails', async (mode) => {
