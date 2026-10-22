@@ -37,15 +37,16 @@ export function KitWash({ from, to }) {
 }
 KitWash.propTypes = { from: PropTypes.string, to: PropTypes.string };
 
-export function KitSection({ title, aside, id }) {
+/** `focusable` lets a screen move focus to the heading (History does after a delete). */
+export function KitSection({ title, aside, id, focusable = false }) {
   return (
     <div className="kit-sec">
-      <h2 id={id}>{title}</h2>
+      <h2 id={id} tabIndex={focusable ? -1 : undefined}>{title}</h2>
       {aside}
     </div>
   );
 }
-KitSection.propTypes = { title: PropTypes.string.isRequired, aside: PropTypes.node, id: PropTypes.string };
+KitSection.propTypes = { title: PropTypes.string.isRequired, aside: PropTypes.node, id: PropTypes.string, focusable: PropTypes.bool };
 
 /**
  * Hand-drawn swoosh under a word (moment-underline.svg). Decorative, never under a number.

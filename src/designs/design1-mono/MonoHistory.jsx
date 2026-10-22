@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
@@ -35,6 +35,8 @@ const RESULT_DRAW = 'draw';
 const RESULT_CLOSE = 'close';
 const SORT_NEWEST = 'newest';
 const SORT_OLDEST = 'oldest';
+// After a delete, focus goes to the next row, or to the list heading when there is none.
+const FOCUS_LIST_HEADING = 'list-heading';
 const RESULT_LABELS = {
   [RESULT_DECIDED]: 'Decided',
   [RESULT_DRAW]: 'Draws',
@@ -256,6 +258,9 @@ export default function MonoHistory() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [historyStatus, setHistoryStatus] = useState('');
+  const [focusAfterDelete, setFocusAfterDelete] = useState(null);
+  const rowRefs = useRef(new Map());
+  const matchesPanelRef = useRef(null);
 
   // A plain status line ("Result copied.") clears itself; an undo stays until the next action.
   const undoOffered = Boolean(pendingDelete?.deleted || pendingClear?.cleared);
@@ -397,6 +402,9 @@ export default function MonoHistory() {
 
   const completeDeleteQuickMatch = () => {
     if (!pendingDelete?.entry?.rawId) return;
+    const index = filteredEntries.findIndex((entry) => entry.id === pendingDelete.entry.id);
+    const next = index >= 0 ? filteredEntries[index + 1] : null;
+    setFocusAfterDelete(next ? next.id : FOCUS_LIST_HEADING);
     deleteQuickMatch(pendingDelete.entry.rawId);
     setSelectedEntry((current) => (current?.id === pendingDelete.entry.id ? null : current));
     setPendingDelete({
@@ -474,6 +482,15 @@ export default function MonoHistory() {
     });
   };
 
+  // Runs after the sheet has closed, whose cleanup aims focus at the deleted (now unmounted) row.
+  useEffect(() => {
+    if (!focusAfterDelete || selectedEntry) return;
+    const headings = matchesPanelRef.current?.querySelectorAll('.kit-sec h2, .kit-empty h2') ?? [];
+    const target = rowRefs.current.get(focusAfterDelete) ?? headings[headings.length - 1];
+    target?.focus();
+    setFocusAfterDelete(null);
+  }, [focusAfterDelete, selectedEntry]);
+
   const closeDetails = () => {
     setSelectedEntry(null);
     if (pendingDelete && !pendingDelete.deleted) setPendingDelete(null);
@@ -528,11 +545,11 @@ export default function MonoHistory() {
           <MonoStatisticsPanel />
         </div>
       ) : (
-        <div id="tabpanel-history-matches" role="tabpanel" aria-labelledby="tab-history-matches">
+        <div id="tabpanel-history-matches" role="tabpanel" aria-labelledby="tab-history-matches" ref={matchesPanelRef}>
           {totalCount === 0 ? (
             <section className="kit-card kit-empty" aria-labelledby="history-empty-title">
               <EmptyHistoryArt />
-              <h2 id="history-empty-title">No match history yet</h2>
+              <h2 id="history-empty-title" tabIndex={-1}>No match history yet</h2>
               <p>Completed quick matches and tournaments will appear here.</p>
               <div className="kit-btnstack">
                 <button type="button" className="se-go" onClick={() => navigate('/play')}>
@@ -594,7 +611,7 @@ export default function MonoHistory() {
 
               {filteredEntries.length === 0 ? (
                 <section className="kit-card kit-empty" aria-labelledby="history-none-title">
-                  <h2 id="history-none-title">No matches found</h2>
+                  <h2 id="history-none-title" tabIndex={-1}>No matches found</h2>
                   <p>Try a different search, sport, result, or date filter.</p>
                   <div className="kit-btnstack">
                     <button type="button" className="se-ctl" onClick={resetDiscoveryFilters}>Clear filters</button>
@@ -606,12 +623,21 @@ export default function MonoHistory() {
                   <section key={group.key} aria-labelledby={`history-month-${group.key}`}>
                     <KitSection
                       id={`history-month-${group.key}`}
+                      focusable
                       title={group.label}
                       aside={<span>{group.entries.length === 1 ? '1 match' : `${group.entries.length} matches`}</span>}
                     />
                     <div className="kit-list">
                       {group.entries.map((entry) => (
-                        <HistoryRow key={entry.id} entry={entry} onOpen={() => setSelectedEntry(entry)} />
+                        <HistoryRow
+                          key={entry.id}
+                          entry={entry}
+                          onOpen={() => setSelectedEntry(entry)}
+                          buttonRef={(node) => {
+                            if (node) rowRefs.current.set(entry.id, node);
+                            else rowRefs.current.delete(entry.id);
+                          }}
+                        />
                       ))}
                     </div>
                   </section>
@@ -748,18 +774,28 @@ function entryLabel(entry) {
   return entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`;
 }
 
+/* What a screen reader hears for a row: its visible content in reading order, then the action.
+   "Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details"; a draw names no winner. */
+function rowLabel(entry, context, day) {
+  const score = displayScore(entry.score);
+  const title = entry.isLegacy ? `${entry.tournamentName} ${score}` : `${entry.team1} ${score} ${entry.team2}`;
+  const result = normalizeNonTeamWinner(entry.winner) ? winnerLabel(entry.winner) : null;
+  return `${[title, result, entry.sportName, context, day].filter(Boolean).join(', ')}. View details`;
+}
+
 /* A History row, the S1 Home row: the doodle badge, the winner bold (draws plain), the sport and
    day, the score in numerals. The whole row opens the match. */
-function HistoryRow({ entry, onOpen }) {
+function HistoryRow({ entry, onOpen, buttonRef = undefined }) {
   const score = displayScore(entry.score);
   const context = entry.source === 'quick' ? null : (entry.isLegacy ? entry.participants : entry.tournamentName);
+  const day = relativeDay(toTimestamp(entry.date) || null);
   return (
-    <button type="button" className="kit-row" onClick={onOpen} aria-label={`View details: ${entryLabel(entry)}`}>
+    <button type="button" className="kit-row" ref={buttonRef} onClick={onOpen} aria-label={rowLabel(entry, context, day)}>
       <SportBadge sportId={entry.sport} />
       <span className="kit-row-text">
         <span className="kit-row-title">{entryTitle(entry)}</span>
         <span className="kit-row-sub">
-          {[entry.sportName, context, relativeDay(toTimestamp(entry.date) || null)].filter(Boolean).join(' · ')}
+          {[entry.sportName, context, day].filter(Boolean).join(' · ')}
         </span>
       </span>
       <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>
@@ -770,6 +806,31 @@ function HistoryRow({ entry, onOpen }) {
 HistoryRow.propTypes = {
   entry: PropTypes.object.isRequired,
   onOpen: PropTypes.func.isRequired,
+  buttonRef: PropTypes.func,
+};
+
+/* The delete confirm replaces the details in the open sheet, so it takes focus itself (Cancel, the
+   safe choice) instead of leaving it on the Delete button that just unmounted. */
+function ConfirmDelete({ entry, onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+  useEffect(() => {
+    cancelRef.current?.focus();
+  }, []);
+  return (
+    <div className="kit-confirm" style={{ marginTop: 0 }}>
+      <p>Delete this quick match?</p>
+      <p>{entry.team1} vs {entry.team2} will be removed from History.</p>
+      <div className="kit-btnrow">
+        <button type="button" ref={cancelRef} className="se-ctl" style={{ flex: 1 }} onClick={onCancel}>Cancel</button>
+        <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={onConfirm}>Delete</button>
+      </div>
+    </div>
+  );
+}
+ConfirmDelete.propTypes = {
+  entry: PropTypes.object.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
 };
 
 function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, onConfirmDelete, onCancelDelete, onClose }) {
@@ -784,16 +845,7 @@ function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, o
   ].filter(Boolean).join(' · ');
 
   if (confirmingDelete) {
-    return (
-      <div className="kit-confirm" style={{ marginTop: 0 }}>
-        <p>Delete this quick match?</p>
-        <p>{entry.team1} vs {entry.team2} will be removed from History.</p>
-        <div className="kit-btnrow">
-          <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={onCancelDelete}>Cancel</button>
-          <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={onConfirmDelete}>Delete</button>
-        </div>
-      </div>
-    );
+    return <ConfirmDelete entry={entry} onConfirm={onConfirmDelete} onCancel={onCancelDelete} />;
   }
 
   return (
