@@ -124,7 +124,7 @@ describe('app entry route contract', () => {
   });
 
   it('sends returning local players with recent matches to the app dashboard route', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     renderApp('/');
 

@@ -21,3 +21,9 @@ The then-current **21 regression cases all failed** against `origin/master` (`5d
 The subsequent 22nd regression exposed a write from the tournament loader's existing format migration: one `localStorage.setItem` call would persist the filtered collection. It failed before the fix and passed after format adaptation was kept in memory. Quick-match normalization likewise no longer writes on read. Spy assertions cover both `setItem` and `removeItem`.
 
 Full-suite and pre-push build validation were deliberately not run at this hold point; another worker owns that lane. No dev server was started for this task.
+
+## Publication follow-up
+
+After the lane opened, the first normal pre-push run completed without worker errors: 129 files, 1,498 passes, 9 expected failures and 3 failures; the production build passed. Two failures used sportless fixtures to represent registered matches, so those fixtures now identify their sport. The third showed that RA-9 had genuinely been fixed by the own-key registry lookup: its unchanged route assertions passed, so only that `it.fails` marker was converted to a normal `it`.
+
+The affected `OfflineFallback.test.jsx`, `AppEntryRoute.test.jsx` and `routes.contract.test.jsx` then passed with **57 passes + 5 expected failures = 62 cases** (40.47 seconds), using `--maxWorkers=1`. The application source and the boundary counterfactual above are unchanged by these test/documentation corrections. The remaining full-suite expected-failure count is nine. This is correction of deterministic failures, not a flaky-run retry; the subsequent normal pre-push result is reported in the PR.

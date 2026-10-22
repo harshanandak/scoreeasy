@@ -466,11 +466,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument();
   });
 
-  // RA-9 (P2). getSportById is `SPORT_REGISTRY[id] || null` on a plain object,
-  // so inherited keys pass every sport guard: /constructor/quick opens a quick
-  // match for sport "Object" that can be started and saved. Fix PR: "Validate
-  // :sport with an own-key lookup".
-  it.fails('RA-9: an Object.prototype key is not accepted as a :sport slug', async () => {
+  // RA-9 is fixed by the own-key registry lookup used at the saved-data boundary.
+  it('RA-9: an Object.prototype key is not accepted as a :sport slug', async () => {
     renderApp(['/constructor/quick']);
     await settleRoute();
 
