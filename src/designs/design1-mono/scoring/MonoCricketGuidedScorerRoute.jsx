@@ -347,6 +347,10 @@ export default function MonoCricketGuidedScorerRoute() {
       <MonoCricketGuidedScorer
         key={phase}
         format={fmt}
+        battingTeamName={teamName(tournament, battingTeamId)}
+        battingTeam={battingTeamId === match.team2Id ? 2 : 1}
+        team1Color={match.team1Color || tournament.teams.find(t => t.id === match.team1Id)?.color}
+        team2Color={match.team2Color || tournament.teams.find(t => t.id === match.team2Id)?.color}
         striker={openers.striker ?? 'Batter 1'}
         nonStriker={openers.nonStriker ?? 'Batter 2'}
         bowler={openers.bowler ?? 'Bowler'}
@@ -369,9 +373,9 @@ export default function MonoCricketGuidedScorerRoute() {
 const BREAK_STYLES = `
 .mono-break-screen { min-height: 100dvh; padding: 16px 14px 0; }
 .mono-break-shell { max-width: 390px; margin: 0 auto; }
-.mono-break-banner { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-ink); color: var(--se-color-inverse); padding: 16px 16px; }
-.mono-break-tag { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: color-mix(in oklch, var(--se-color-inverse) 62%, transparent); }
+.mono-break-banner { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); color: var(--se-color-ink); padding: 16px 16px; }
+.mono-break-tag { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--se-color-ink-muted); }
 .mono-break-line { margin: 0; font-family: var(--se-font-sans); font-size: 1.0625rem; font-weight: 600; }
 .mono-break-line b { font-weight: 800; }
-.mono-break-target { color: var(--se-color-action-on-ink); font-family: var(--se-font-mono); }
+.mono-break-target { color: var(--se-color-ink); font-family: var(--se-font-mono); }
 `;

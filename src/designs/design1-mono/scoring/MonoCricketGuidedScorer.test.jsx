@@ -77,6 +77,7 @@ describe('MonoCricketGuidedScorer', () => {
   it('Guided⇄Power toggle flips to a Power placeholder', () => {
     renderScorer();
     expect(screen.queryByTestId('power-placeholder')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
     fireEvent.click(screen.getByRole('button', { name: 'Power' }));
     expect(screen.getByTestId('power-placeholder')).toBeInTheDocument();
   });

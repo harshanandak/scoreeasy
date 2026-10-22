@@ -59,8 +59,8 @@ NumCell.defaultProps = {
   emphasis: false,
 };
 
-export default function BowlingCard({ deliveries, players }) {
-  const rows = buildBowlingCard(deliveries);
+export default function BowlingCard({ deliveries, players, scorerRows }) {
+  const rows = scorerRows ?? buildBowlingCard(deliveries);
   const headStyle = { ...eyebrowStyle, padding: '0 8px 8px', textAlign: 'right' };
 
   return (
@@ -123,6 +123,7 @@ export default function BowlingCard({ deliveries, players }) {
 }
 
 BowlingCard.propTypes = {
+  scorerRows: PropTypes.arrayOf(PropTypes.object),
   deliveries: PropTypes.arrayOf(PropTypes.object).isRequired,
   players: PropTypes.object,
 };

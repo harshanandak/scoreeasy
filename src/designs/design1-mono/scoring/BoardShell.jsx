@@ -38,10 +38,10 @@ BoardHeader.propTypes = {
 };
 
 /** Bottom thumb bar: Undo is always visible (disabled, dashed, when there is nothing to undo). */
-export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore }) {
+export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore, undoLabel = 'Undo last action', moreLabel = 'Match options' }) {
   return (
     <div className="sb-bar">
-      <button type="button" className="se-ctl sb-undo" onClick={onUndo} disabled={!canUndo} aria-label="Undo last action">
+      <button type="button" className="se-ctl sb-undo" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-2" />
         </svg>
@@ -51,7 +51,7 @@ export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore
       <button
         type="button"
         className="se-ctl sb-more"
-        aria-label="Match options"
+        aria-label={moreLabel}
         aria-haspopup="dialog"
         aria-expanded={sheetOpen}
         aria-controls={sheetId}
@@ -64,6 +64,8 @@ export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore
 }
 
 BoardBar.propTypes = {
+  undoLabel: PropTypes.string,
+  moreLabel: PropTypes.string,
   canUndo: PropTypes.bool.isRequired,
   undoHint: PropTypes.string,
   onUndo: PropTypes.func.isRequired,

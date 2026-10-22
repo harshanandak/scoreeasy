@@ -1,3 +1,5 @@
+import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
+import './scoring/cricketBoard.css';
 import { useScoringProgress } from './scoring/scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
@@ -483,6 +485,7 @@ export default function MonoQuickMatch() {
 
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
+  const [cricketOptionsOpen, setCricketOptionsOpen] = useState(false);
 
   const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
     sets.some(set => set.score1 > 0 || set.score2 > 0) ||
@@ -2226,26 +2229,18 @@ export default function MonoQuickMatch() {
         : `${otherScore.balls} balls`;
 
       return (
-        <div className="mono-scorer-screen mono-arena-screen">
-          <div className="mono-scorer-shell mono-cricket-shell">
+        <div className="mono-scorer-screen cricket-board" data-cricket-board="" style={teamColourStyle} data-batting={battingTeam === 2 ? 'b' : 'a'}>
+          <div className="mono-scorer-shell sb crb">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {/* Cricket ends via EndMatchButton + keypad (no ThumbActionBar), so it
-                has no Discard trigger — no discardDialog rendered here. */}
+            {discardDialog}
             <ScoringNotice message={saveWarning} />
             <ScoringStatusStrip lastAction={lastAction} />
-            {/* Top bar */}
-            <div className="mono-scorer-topbar">
-              <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Cricket'}</span>
-              <div className="mono-scorer-topbar-actions">
-                {presetLabel && <span className="mono-badge">{presetLabel}</span>}
-                <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>{timer.formatted}</span>
-                {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
-                <span className="mono-badge mono-badge-live">Innings {innings}</span>
-                <EndMatchButton onEnd={requestEndMatch} />
-              </div>
-            </div>
-
+            <BoardHeader title={presetLabel || 'Cricket'} sportColour={sportIdentity('cricket')?.core}
+              subtitle={`Innings ${innings} · Over ${ballsToOvers(currentScore.balls)}${target !== null ? ` · Chasing ${target + 1}` : ''}`}
+              isLive={live.isLive} onFinish={requestEndMatch} />
+            <BoardOptionsSheet id="cricket-quick-options" open={cricketOptionsOpen} onClose={() => setCricketOptionsOpen(false)} onDiscard={requestDiscardQuickMatch}>
+              <p className="text-xs">{timer.formatted}{isRefereeing ? ' \u00b7 Referee' : ''}</p>
             {/* Live broadcast control, held in a fixed-height slot so the score
                 doesn't jump when the bar hydrates from null -> control. Gated on
                 cloudAuthAvailable so offline builds (bar always null) don't reserve
@@ -2261,6 +2256,7 @@ export default function MonoQuickMatch() {
               </div>
             )}
 
+            </BoardOptionsSheet>
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
               <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
@@ -2281,7 +2277,8 @@ export default function MonoQuickMatch() {
             )}
 
             {/* Batting team — hero */}
-            <div className="mono-scorer-main-score mono-quick-cricket-score">
+            <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
+              <span className="cricket-mark" aria-hidden="true" />
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
@@ -2295,6 +2292,8 @@ export default function MonoQuickMatch() {
                 {projectedScore !== null ? ` · Proj ${projectedScore}` : ''}
                 {target !== null ? ` · Need ${Math.max(0, target + 1 - currentScore.runs)}${totalBalls !== Infinity ? ` (${totalBalls - currentScore.balls} b)` : ''}` : ''}
               </p>
+
+              {target !== null && <p className="text-sm" style={{ marginTop: 4 }}>Target {target + 1} {totalBalls !== Infinity && totalBalls > currentScore.balls ? `\u00b7 RRR ${calculateRunRate(Math.max(0, target + 1 - currentScore.runs), totalBalls - currentScore.balls).toFixed(2)}` : ''}</p>}
 
               {/* This over */}
               {overPips.length > 0 && (
@@ -2323,8 +2322,8 @@ export default function MonoQuickMatch() {
               </p>
             </div>
 
-            {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
-            <div className="mono-cricket-keypad">
+            {/* Existing run and extra actions, in the cricket board dialect. */}
+            <div className="mono-cricket-keypad cricket-aggregate-pad">
               <div className="mono-cricket-keys">
                 {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
                   <button
@@ -2360,19 +2359,12 @@ export default function MonoQuickMatch() {
                 <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
                   {freeHit ? 'Run Out Only' : 'OUT'}
                 </button>
-                <button
-                  type="button"
-                  onClick={undoCricketAction}
-                  disabled={cricketHistory.length === 0}
-                  className="mono-cricket-undo-line"
-                  aria-label="Undo last action"
-                  title="Undo last action"
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <UndoIcon />
-                </button>
+
               </div>
             </div>
+            <BoardBar canUndo={cricketHistory.length > 0 && !scoringLocked}
+              undoHint={(() => { const last = cricketHistory.at(-1); if (!last || !scores[last.key] || typeof last.innings !== 'number') return 'Previous delivery'; const balls = scores[last.key].balls; const legal = last.type !== 'extra' || last.extraType === 'bye' || last.extraType === 'legBye'; const overs = ballsToOvers(Math.max(0, balls - (legal ? 1 : 0))); return `Back to ${overs.includes('.') ? overs : `${overs}.0`} · Innings ${last.innings}`; })()}
+              onUndo={undoCricketAction} sheetId="cricket-quick-options" sheetOpen={cricketOptionsOpen} onMore={() => setCricketOptionsOpen(true)} />
           </div>
         </div>
       );
