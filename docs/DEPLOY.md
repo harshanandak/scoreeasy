@@ -146,3 +146,22 @@ The shared backend needs the corresponding development auth configuration too.
 
 Use `bunx convex dev` to watch and push backend changes to your development
 deployment. CI handles production deployments on merge to `master`.
+
+## Build artifacts and evidence images
+
+Android's `android-debug-builds` artifact is retained for 3 days on pull requests
+and 14 days on master pushes or manual runs. The iOS simulator build log is
+uploaded only after a failure and retained for 7 days. These settings apply to
+new uploads; existing artifacts and Actions caches are unchanged.
+
+Before committing PNG evidence, run `bun run evidence:compress <paths...>` with
+files or directories, for example `bun run evidence:compress docs/plans/my-board`.
+The script recursively quantises PNGs in place, preserves pixel dimensions, and
+keeps the original when compression would not save bytes. Check the result for
+legibility before committing.
+
+CI's `verify` job rejects added or modified images under `docs/` larger than
+250 KB (250,000 bytes), including renamed images. Untouched images are excluded.
+The guard covers PNG, JPEG, WebP, GIF, AVIF, SVG, BMP, TIFF and ICO; the compression
+script handles PNG only. For other formats, reduce or re-export the image.
+Run the guard locally after committing with `bun run evidence:check origin/master`.
