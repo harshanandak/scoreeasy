@@ -80,4 +80,11 @@ describe('every started match stays resumable', () => {
     expect(inProgressSummary(match).score).toBe('12–9');
     expect(inProgressSummary({ ...match, sport: 'kabaddi', gScore1: 29, gScore2: 22 }).score).toBe('29–22');
   });
+
+  it('uses the latest save time and the scorer unit when summarizing resumed matches', () => {
+    const savedAt = '2026-10-23T12:00:00Z';
+    expect(inProgressSummary({ sport: 'tennis', updatedAt: '2020-01-01', draftState: { savedAt } }).timestamp).toBe(Date.parse(savedAt));
+    expect(inProgressSummary({ sport: 'badminton', draftState: { currentSet: 1, sets: [{ completed: true }, { score1: 12, score2: 9 }] } }).detail).toBe('Game 2');
+    expect(inProgressSummary({ sport: 'cricket', team1Score: { runs: 50, wickets: 1 }, draftState: { phase: 'innings2' } }).detail).toBe('Innings 2');
+  });
 });

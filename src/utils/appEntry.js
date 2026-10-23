@@ -3,6 +3,7 @@ import { listDataKeys, loadData } from './storage';
 import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
+import { inProgressTimestamp } from './inProgressMatch';
 
 export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
@@ -117,7 +118,7 @@ export function loadInProgressMatches(sports = getSportsList()) {
     });
   });
   return [...new Map([...quickMatches, ...tournaments].map((match) => [match.entryPath, match])).values()]
-    .sort((a, b) => new Date(b.updatedAt || b.draftState?.savedAt || b.createdAt || 0) - new Date(a.updatedAt || a.draftState?.savedAt || a.createdAt || 0));
+    .sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0));
 }
 
 export function loadAppEntryState() {

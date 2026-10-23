@@ -1,6 +1,13 @@
 import { clearData, deleteQuickMatch, loadData, saveData } from './storage';
 import { getSportById } from '../models/sportRegistry';
 
+export function inProgressTimestamp(match) {
+  const times = [match.updatedAt, match.savedAt, match.draftState?.savedAt, match.createdAt, match.date, match.startedAt]
+    .filter(value => value !== undefined && value !== null)
+    .map(value => new Date(value).getTime()).filter(Number.isFinite);
+  return times.length ? Math.max(...times) : null;
+}
+
 export function inProgressSummary(match) {
   const state = match.draftState || match;
   const title = match.kind === 'tournament' ? match.name || 'Tournament'
@@ -17,17 +24,17 @@ export function inProgressSummary(match) {
     detail = `Innings ${state.currentInningsIndex !== undefined ? state.currentInningsIndex + 1 : state.innings.length}`;
   } else if (match.team1Score) {
     score = `${match.team1Score.runs}/${match.team1Score.wickets}–${match.team2Score?.runs || 0}/${match.team2Score?.wickets || 0}`;
-    detail = `Innings ${state.innings || 1}`;
+    detail = state.phase === 'break' ? 'Innings break' : `Innings ${state.innings || (['innings2', 'setup2'].includes(state.phase) ? 2 : 1)}`;
   } else if (Array.isArray(state.sets) && state.sets.length && (match.sport === 'tennis' || match.format?.type === 'best-of' || state.gScore1 === undefined && state.vScore1 === undefined)) {
     const index = state.currentSet ?? Math.max(0, state.sets.findIndex(set => !set.completed));
     const set = state.sets[index] || {};
     score = `${set.games1 ?? set.score1 ?? 0}–${set.games2 ?? set.score2 ?? 0}`;
-    detail = `Set ${index + 1}${match.sport === 'tennis' ? ' · Games' : ''}`;
+    detail = `${getSportById(match.sport)?.config?.setLabel || 'Set'} ${index + 1}${match.sport === 'tennis' ? ' · Games' : ''}`;
   } else if (match.kind !== 'tournament') {
     const goals = getSportById(match.sport)?.engine === 'goals';
     score = `${(goals ? state.gScore1 : state.vScore1) ?? state.score1 ?? 0}–${(goals ? state.gScore2 : state.vScore2) ?? state.score2 ?? 0}`;
   }
-  const timestamp = match.updatedAt || state.savedAt || match.createdAt || match.date || match.startedAt;
+  const timestamp = inProgressTimestamp(match);
   return { title, score, detail: match.tournamentName ? `${match.tournamentName} · ${detail === 'Quick match' ? 'Tournament match' : detail}` : detail, timestamp };
 }
 
