@@ -1548,7 +1548,9 @@ export default function MonoQuickMatch() {
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
-    setLastAction(teamColourOn && actionLabel
+    setLastAction(sport === 'basketball' && teamColourOn
+      ? `${getTeamLabel(team)} +${value}`
+      : teamColourOn && actionLabel
       ? `${getTeamLabel(team)} · ${actionLabel}`
       : `${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
 
@@ -2392,7 +2394,7 @@ export default function MonoQuickMatch() {
         const last = gScoreHistory.at(-1);
         const undoHint = last ? `back to ${halves.map(h => Math.max(0, h.score - (last.team === h.team ? last.value : 0))).join('–')}` : '';
         const boardScore = halves.map(h => h.score).join('–');
-        const status = isTimeUp ? 'Full Time' : isPointsMode ? `First to ${format.target}` : '';
+        const status = isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? `First to ${format.target}` : '';
         const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}{status ? ` · ${status}` : ''}</span><strong>{boardScore}</strong></div>;
         return <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
@@ -2406,7 +2408,7 @@ export default function MonoQuickMatch() {
             clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
             status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}
             lastLine={lastAction ? `${lastAction} · ${boardScore}` : 'Choose a scoring action for either team'}
-            momentTeam={last && (lastAction === `${getTeamLabel(last.team)} · All Out (+2)` || (!sportConfig.config.quickButtons?.length && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value} ${scoringUnit}${last.value === 1 ? '' : 's'}`)) ? last.team : undefined}
+            momentTeam={last && (lastAction === `${getTeamLabel(last.team)} · All Out (+2)` || (sport === 'basketball' && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value}`) || (!sportConfig.config.quickButtons?.length && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value} ${scoringUnit}${last.value === 1 ? '' : 's'}`)) ? last.team : undefined}
             actionCount={gScoreHistory.length} canUndo={gScoreHistory.length > 0} undoHint={undoHint}
             isLive={Boolean(live?.isLive)} onScore={addGoal} onUndo={undoGoal}
             onSwap={handleSideSwap} onCorrect={(team) => adjustGoalScore(team, -1)}

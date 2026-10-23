@@ -1,0 +1,2647 @@
+{
+  "method": "T3 html_preview with inlined real MonoQuickMatch; local auth/Convex fixtures; no remote writes. Reduced state applies the real bundled prefers-reduced-motion CSS rules through CSSOM because html_preview has no OS motion preference option.",
+  "files": [
+    {
+      "file": "after-basketball-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-win-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-decider-undo-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-two-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-correction-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-three-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-undo-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-timeup-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-level-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-decider-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-walk-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-restore-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-reduced-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-three-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-two-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-early-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-correction-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-timeup-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-undo-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-decider-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-level-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-win-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-restore-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-walk-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-decider-undo-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-options-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-basketball-three-390x844-dark.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-early-390x844-dark.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-win-390x844-dark.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-level-390x844-dark.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "after-basketball-early-360x640-dark.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "before-basketball-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "before-basketball-early-390x844-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "before-basketball-early-390x844-dark.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "before-football-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "before-kabaddi-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-kabaddi-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "before-hockey-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-hockey-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    },
+    {
+      "file": "after-football-early-360x640-light.png",
+      "width": 360,
+      "height": 640
+    }
+  ],
+  "comparisons": [
+    {
+      "sport": "kabaddi",
+      "changedPixels": 0
+    },
+    {
+      "sport": "football",
+      "changedPixels": 0
+    },
+    {
+      "sport": "hockey",
+      "changedPixels": 0
+    }
+  ],
+  "minWidth": 64,
+  "minHeight": 48,
+  "captures": {
+    "after-basketball-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "CLOCK_TICK 39:48 -> 39:47"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:47\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-win-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "FINISH_OK Hoops 52-49"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"win\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":1,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Done\",\"x\":265.390625,\"y\":15,\"width\":78.609375,\"height\":48,\"bottom\":63}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Rematch\",\"x\":16,\"y\":356.0625,\"width\":328,\"height\":56,\"bottom\":412.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Share\",\"x\":16,\"y\":424.0625,\"width\":102.65625,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"History\",\"x\":128.65625,\"y\":424.0625,\"width\":102.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"New Match\",\"x\":241.328125,\"y\":424.0625,\"width\":102.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-decider-undo-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"decider-undo\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Undid last score · 49–49\",\"scores\":\"49,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":350.671875,\"width\":139.5,\"height\":48,\"bottom\":398.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":406.671875,\"width\":139.5,\"height\":48,\"bottom\":454.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":462.671875,\"width\":139.5,\"height\":48,\"bottom\":510.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":350.671875,\"width\":139.5,\"height\":48,\"bottom\":398.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":406.671875,\"width\":139.5,\"height\":48,\"bottom\":454.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":462.671875,\"width\":139.5,\"height\":48,\"bottom\":510.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-two-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"two\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 55–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Dunkers +2 · 55–51\",\"scores\":\"55,51\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-correction-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"correction\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 55–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops -1 correction · 54–49\",\"scores\":\"54,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-three-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"three\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-undo-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"undo\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Undid last score · 52–49\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-timeup-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"timeup\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-level-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"level\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"49,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":350.671875,\"width\":139.5,\"height\":48,\"bottom\":398.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":406.671875,\"width\":139.5,\"height\":48,\"bottom\":454.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":462.671875,\"width\":139.5,\"height\":48,\"bottom\":510.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":350.671875,\"width\":139.5,\"height\":48,\"bottom\":398.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":406.671875,\"width\":139.5,\"height\":48,\"bottom\":454.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":462.671875,\"width\":139.5,\"height\":48,\"bottom\":510.671875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-decider-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"decider\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 49–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Dunkers +2 · 49–51\",\"scores\":\"49,51\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-walk-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "RESTORE_OK score=55,49"
+        },
+        {
+          "level": "log",
+          "text": "WALK_OK all six actions + Undo, correction + Undo, Finish cancellation"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"walk\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Undid last score · 52–49\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-restore-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "RESTORE_OK score=55,49"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"restore\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-reduced-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"reduced\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"none\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-three-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"three\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-two-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"two\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 55–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Dunkers +2 · 55–51\",\"scores\":\"55,51\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-early-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "CLOCK_TICK 39:48 -> 39:47"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:47\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-correction-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"correction\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 55–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops -1 correction · 54–49\",\"scores\":\"54,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-timeup-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"timeup\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-undo-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"undo\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Undid last score · 52–49\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-decider-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"decider\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 49–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Dunkers +2 · 49–51\",\"scores\":\"49,51\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-level-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"level\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"49,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-win-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "FINISH_OK Hoops 52-49"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"win\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":1,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Done\",\"x\":295.390625,\"y\":15,\"width\":78.609375,\"height\":48,\"bottom\":63}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Rematch\",\"x\":16,\"y\":356.0625,\"width\":358,\"height\":56,\"bottom\":412.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Share\",\"x\":16,\"y\":424.0625,\"width\":112.65625,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"History\",\"x\":138.65625,\"y\":424.0625,\"width\":112.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"New Match\",\"x\":261.328125,\"y\":424.0625,\"width\":112.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-restore-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "RESTORE_OK score=55,49"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"restore\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-walk-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "RESTORE_OK score=55,49"
+        },
+        {
+          "level": "log",
+          "text": "WALK_OK all six actions + Undo, correction + Undo, Finish cancellation"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"walk\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Undid last score · 52–49\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-decider-undo-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"decider-undo\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Undid last score · 49–49\",\"scores\":\"49,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-options-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"options\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Close match options\",\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Done\",\"x\":265.09375,\"y\":312,\"width\":76.90625,\"height\":48,\"bottom\":360}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap sides\",\"x\":17,\"y\":375,\"width\":326,\"height\":54,\"bottom\":429}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":17,\"y\":429,\"width\":326,\"height\":54,\"bottom\":483}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":17,\"y\":483,\"width\":326,\"height\":54,\"bottom\":537}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard match\",\"x\":17,\"y\":553,\"width\":326,\"height\":54,\"bottom\":607}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-basketball-three-390x844-dark": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"three\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"Undoback to 52–49\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Hoops +3 · 55–49\",\"scores\":\"55,49\",\"winnerCards\":0,\"moment\":\"tgb-bump\"}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-early-390x844-dark": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "CLOCK_TICK 39:48 -> 39:47"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:47\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":445.375,\"width\":154.5,\"height\":48,\"bottom\":493.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":501.375,\"width\":154.5,\"height\":48,\"bottom\":549.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":557.375,\"width\":154.5,\"height\":48,\"bottom\":605.375}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-win-390x844-dark": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "FINISH_OK Hoops 52-49"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"win\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":1,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Done\",\"x\":295.390625,\"y\":15,\"width\":78.609375,\"height\":48,\"bottom\":63}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Rematch\",\"x\":16,\"y\":356.0625,\"width\":358,\"height\":56,\"bottom\":412.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Share\",\"x\":16,\"y\":424.0625,\"width\":112.65625,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"History\",\"x\":138.65625,\"y\":424.0625,\"width\":112.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"New Match\",\"x\":261.328125,\"y\":424.0625,\"width\":112.671875,\"height\":48,\"bottom\":472.0625}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-level-390x844-dark": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"level\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844,\"bottom\":844},\"undo\":{\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"Time's up!\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"49,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":298.109375,\"y\":14,\"width\":75.890625,\"height\":48,\"bottom\":62}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":208.5,\"y\":459.578125,\"width\":154.5,\"height\":48,\"bottom\":507.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":208.5,\"y\":515.578125,\"width\":154.5,\"height\":48,\"bottom\":563.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":208.5,\"y\":571.578125,\"width\":154.5,\"height\":48,\"bottom\":619.578125}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":766,\"width\":283,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":309,\"y\":766,\"width\":64,\"height\":60,\"bottom\":826}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "after-basketball-early-360x640-dark": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "CLOCK_TICK 39:48 -> 39:47"
+        },
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:47\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +2 for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +3 for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "before-basketball-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":22.09375,\"y\":437,\"width\":43.8125,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":71.90625,\"y\":437,\"width\":45.921875,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":123.828125,\"y\":437,\"width\":45.5625,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":70.0625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":190.59375,\"y\":437,\"width\":43.8125,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":240.40625,\"y\":437,\"width\":45.921875,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":292.328125,\"y\":437,\"width\":45.5625,\"height\":44,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":238.5625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":12,\"y\":570,\"width\":58,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap\",\"x\":70,\"y\":570,\"width\":92.65625,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard\",\"x\":162.65625,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":255.328125,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "before-basketball-early-390x844-light": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"basketball\",\"theme\":\"light\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":29.59375,\"y\":641,\"width\":43.8125,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":79.40625,\"y\":641,\"width\":45.921875,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":131.328125,\"y\":641,\"width\":45.5625,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":77.5625,\"y\":697,\"width\":51.375,\"height\":40,\"bottom\":737}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":213.09375,\"y\":641,\"width\":43.8125,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":262.90625,\"y\":641,\"width\":45.921875,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":314.828125,\"y\":641,\"width\":45.5625,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":261.0625,\"y\":697,\"width\":51.375,\"height\":40,\"bottom\":737}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":12,\"y\":774,\"width\":58,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap\",\"x\":70,\"y\":774,\"width\":102.65625,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard\",\"x\":172.65625,\"y\":774,\"width\":102.671875,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":275.328125,\"y\":774,\"width\":102.671875,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "before-basketball-early-390x844-dark": {
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"basketball\",\"theme\":\"dark\",\"viewport\":{\"width\":390,\"height\":844},\"document\":{\"width\":390,\"height\":844},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":29.59375,\"y\":641,\"width\":43.8125,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":79.40625,\"y\":641,\"width\":45.921875,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":131.328125,\"y\":641,\"width\":45.5625,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":77.5625,\"y\":697,\"width\":51.375,\"height\":40,\"bottom\":737}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+1\",\"x\":213.09375,\"y\":641,\"width\":43.8125,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+2\",\"x\":262.90625,\"y\":641,\"width\":45.921875,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"+3\",\"x\":314.828125,\"y\":641,\"width\":45.5625,\"height\":44,\"bottom\":685}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":261.0625,\"y\":697,\"width\":51.375,\"height\":40,\"bottom\":737}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":12,\"y\":774,\"width\":58,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap\",\"x\":70,\"y\":774,\"width\":102.65625,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard\",\"x\":172.65625,\"y\":774,\"width\":102.671875,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":275.328125,\"y\":774,\"width\":102.671875,\"height\":46,\"bottom\":820}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0721472783287405"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    "before-football-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"football\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Hoops\",\"x\":14,\"y\":149.359375,\"width\":159.5,\"height\":404.640625,\"bottom\":554}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Dunkers\",\"x\":183.5,\"y\":149.359375,\"width\":159.5,\"height\":404.640625,\"bottom\":554}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0464784388995092"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "before-kabaddi-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"kabaddi\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add Super Tackle (+2) for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add All Out (+2) for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add Super Tackle (+2) for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add All Out (+2) for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0369610449698707"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-kabaddi-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"kabaddi\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Hoops\",\"x\":24,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add Super Tackle (+2) for Hoops\",\"x\":24,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add All Out (+2) for Hoops\",\"x\":24,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add +1 for Dunkers\",\"x\":193.5,\"y\":336.46875,\"width\":139.5,\"height\":48,\"bottom\":384.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add Super Tackle (+2) for Dunkers\",\"x\":193.5,\"y\":392.46875,\"width\":139.5,\"height\":48,\"bottom\":440.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add All Out (+2) for Dunkers\",\"x\":193.5,\"y\":448.46875,\"width\":139.5,\"height\":48,\"bottom\":496.46875}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0369610449698707"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "before-hockey-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":true,\"sport\":\"hockey\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Hoops\",\"x\":12,\"y\":36.5,\"width\":167.5,\"height\":444.5,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":70.0625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Dunkers\",\"x\":180.5,\"y\":36.5,\"width\":167.5,\"height\":444.5,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":238.5625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":12,\"y\":570,\"width\":58,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap\",\"x\":70,\"y\":570,\"width\":92.65625,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard\",\"x\":162.65625,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":255.328125,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0751051542070438"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-hockey-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"hockey\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":null,\"undo\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"scores\":\"\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Hoops\",\"x\":12,\"y\":36.5,\"width\":167.5,\"height\":444.5,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Hoops\",\"x\":70.0625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Dunkers\",\"x\":180.5,\"y\":36.5,\"width\":167.5,\"height\":444.5,\"bottom\":481}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Subtract one from Dunkers\",\"x\":238.5625,\"y\":493,\"width\":51.375,\"height\":40,\"bottom\":533}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":12,\"y\":570,\"width\":58,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Swap\",\"x\":70,\"y\":570,\"width\":92.65625,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Discard\",\"x\":162.65625,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":255.328125,\"y\":570,\"width\":92.671875,\"height\":46,\"bottom\":616}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0751051542070438"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    "after-football-early-360x640-light": {
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "G6_DIM {\"state\":\"early\",\"before\":false,\"sport\":\"football\",\"theme\":\"light\",\"viewport\":{\"width\":360,\"height\":640},\"document\":{\"width\":360,\"height\":640},\"board\":{\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640},\"undo\":{\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626,\"text\":\"UndoNothing to undo\"}}"
+        },
+        {
+          "level": "log",
+          "text": "G6_STATE {\"clock\":\"39:48\",\"last\":\"Choose a scoring action for either team\",\"scores\":\"52,49\",\"winnerCards\":0,\"moment\":null}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Finish\",\"x\":268.109375,\"y\":10,\"width\":75.890625,\"height\":48,\"bottom\":58}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Hoops\",\"x\":14,\"y\":149.359375,\"width\":159.5,\"height\":404.640625,\"bottom\":554}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Add 1 to Dunkers\",\"x\":183.5,\"y\":149.359375,\"width\":159.5,\"height\":404.640625,\"bottom\":554}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Undo last action\",\"x\":14,\"y\":566,\"width\":253,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_TARGET {\"name\":\"Match options\",\"x\":279,\"y\":566,\"width\":64,\"height\":60,\"bottom\":626}"
+        },
+        {
+          "level": "log",
+          "text": "G6_ENGINE 1.0464784388995092"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    }
+  }
+}

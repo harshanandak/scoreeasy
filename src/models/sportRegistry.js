@@ -180,6 +180,7 @@ export const SPORT_REGISTRY = {
 
   basketball: {
     id: 'basketball',
+    teamColour: true,
     identityColour: '#f97316', // Court orange
     name: 'Basketball',
     icon: '🏀',

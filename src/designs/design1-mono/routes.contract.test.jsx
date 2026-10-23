@@ -703,7 +703,7 @@ describe('navigation decisions (2026-10-21)', () => {
     const view = renderApp([`/${sport}/quick`]);
     await settleRoute();
     if (sport === 'kabaddi') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
-    else if (sport === 'basketball') fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+    else if (sport === 'basketball') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
@@ -859,7 +859,7 @@ describe('navigation decisions (2026-10-21)', () => {
     if (mode === 'quick' && sport === 'kabaddi') {
       fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     } else if (mode === 'quick' && sport === 'basketball') {
-      fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+      fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     } else fireEvent.click(screen.getByRole('button', { name: score }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     const installs = nativeBack.install.mock.calls.length;
