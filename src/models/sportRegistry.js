@@ -111,6 +111,7 @@ export const SPORT_REGISTRY = {
 
   tennis: {
     id: 'tennis',
+    teamColour: true,
     identityColour: '#c6e83a', // Optic volt
     name: 'Tennis',
     icon: '🎾',

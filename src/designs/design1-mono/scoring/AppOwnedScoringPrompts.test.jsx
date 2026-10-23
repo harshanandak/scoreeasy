@@ -260,6 +260,16 @@ describe('app-owned scoring prompts', () => {
     expect(monoCss).toContain('@media (max-width: 640px) and (max-height: 740px)');
 
     for (const [componentFile, source] of Object.entries(sourceByComponent)) {
+      if (componentFile === 'MonoTennisLiveScore.jsx') {
+        expect(source).toContain('sb tsb tennis-board');
+        expect(source).toContain('<BoardBar');
+        expect(source).toContain('className="tsb-big mono-score-animate"');
+        const shellCss = readFileSync(`${import.meta.dirname}/boardShell.css`, 'utf8');
+        expect(shellCss).toContain('min-height: 100dvh');
+        expect(shellCss).toContain('min-height: 60px');
+        expect(shellCss).toContain('env(safe-area-inset-bottom, 0px)');
+        continue;
+      }
       expect(source, componentFile).toContain('mono-scorer-screen');
       expect(source, componentFile).toContain('mono-scorer-score-value');
       // Cricket now uses the shared thumb bar, including its Undo action and

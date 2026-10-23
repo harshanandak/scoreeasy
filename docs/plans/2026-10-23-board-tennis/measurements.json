@@ -1,0 +1,4299 @@
+[
+  {
+    "name": "after-fifteen-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "fifteen",
+    "contact": "contact-0",
+    "x": 0,
+    "audit": {
+      "state": "fifteen",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 15. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "15",
+        "0"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-deuce-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "deuce",
+    "contact": "contact-0",
+    "x": 390,
+    "audit": {
+      "state": "deuce",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–30 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3Deuce",
+      "scores": [
+        "40",
+        "40"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-advantage-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "advantage",
+    "contact": "contact-0",
+    "x": 780,
+    "audit": {
+      "state": "advantage",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "AD",
+        "40"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-game-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "game",
+    "contact": "contact-3",
+    "x": 0,
+    "audit": {
+      "state": "game",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Anya wins Game 1 (Set 1)!",
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-set-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "set",
+    "contact": "contact-3",
+    "x": 390,
+    "audit": {
+      "state": "set",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "toast": "Anya wins Set 1!",
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tiebreak-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "tiebreak",
+    "contact": "contact-3",
+    "x": 780,
+    "audit": {
+      "state": "tiebreak",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Ravi wins Game 6 (Set 1)!",
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tbpoint-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "tbpoint",
+    "contact": "contact-6",
+    "x": 0,
+    "audit": {
+      "state": "tbpoint",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 1. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "1",
+        "0"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-complete-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "complete",
+    "contact": "contact-6",
+    "x": 390,
+    "audit": {
+      "state": "complete",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 2"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Match Complete2 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4Set 2: 6-3",
+      "toast": "Anya wins Set 2!",
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-game-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "undo-game",
+    "contact": "contact-9",
+    "x": 0,
+    "audit": {
+      "state": "undo-game",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-set-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "undo-set",
+    "contact": "contact-9",
+    "x": 390,
+    "audit": {
+      "state": "undo-set",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-tbpoint-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "undo-tbpoint",
+    "contact": "contact-9",
+    "x": 780,
+    "audit": {
+      "state": "undo-tbpoint",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 3.232755107396923
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-complete-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "undo-complete",
+    "contact": "contact-100",
+    "x": 0,
+    "audit": {
+      "state": "undo-complete",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-restore-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "restore",
+    "contact": "contact-100",
+    "x": 780,
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 2 log RESTORE_OK 1 remount and Undo"
+      }
+    ]
+  },
+  {
+    "name": "after-setup-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "setup",
+    "contact": "contact-101",
+    "x": 0,
+    "audit": {
+      "state": "setup",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Team A: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Team B: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 0 log SETUP_PICKERS 2"
+      },
+      {
+        "level": "log",
+        "text": "FRAME 0 log SETUP_BOARD true"
+      }
+    ]
+  },
+  {
+    "name": "before-advantage-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "advantage",
+    "before": true,
+    "contact": "contact-101",
+    "x": 390,
+    "audit": {
+      "state": "advantage",
+      "before": true,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 12,
+          "y": 85,
+          "width": 182.5,
+          "height": 666,
+          "bottom": 751
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 195.5,
+          "y": 85,
+          "width": 182.5,
+          "height": 666,
+          "bottom": 751
+        },
+        {
+          "name": "Undo",
+          "x": 12,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Swap",
+          "x": 103.5,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Discard",
+          "x": 195,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Finish",
+          "x": 286.5,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-fifteen-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "fifteen",
+    "contact": "contact-102",
+    "x": 0,
+    "audit": {
+      "state": "fifteen",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 15. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "15",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-deuce-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "deuce",
+    "contact": "contact-102",
+    "x": 360,
+    "audit": {
+      "state": "deuce",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 40–30 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3Deuce",
+      "scores": [
+        "40",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-advantage-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "advantage",
+    "contact": "contact-102",
+    "x": 720,
+    "audit": {
+      "state": "advantage",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 40–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "AD",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-game-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "game",
+    "contact": "contact-103",
+    "x": 0,
+    "audit": {
+      "state": "game",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Anya wins Game 1 (Set 1)!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-set-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "set",
+    "contact": "contact-103",
+    "x": 360,
+    "audit": {
+      "state": "set",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "toast": "Anya wins Set 1!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tiebreak-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "tiebreak",
+    "contact": "contact-103",
+    "x": 720,
+    "audit": {
+      "state": "tiebreak",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 0–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Ravi wins Game 6 (Set 1)!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tbpoint-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "tbpoint",
+    "contact": "contact-104",
+    "x": 0,
+    "audit": {
+      "state": "tbpoint",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 1. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "1",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-complete-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "complete",
+    "contact": "contact-104",
+    "x": 360,
+    "audit": {
+      "state": "complete",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "Undoback to 40–0 · Set 2"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Match Complete2 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4Set 2: 6-3",
+      "toast": "Anya wins Set 2!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-game-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-game",
+    "contact": "contact-105",
+    "x": 0,
+    "audit": {
+      "state": "undo-game",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-set-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-set",
+    "contact": "contact-105",
+    "x": 360,
+    "audit": {
+      "state": "undo-set",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-tbpoint-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-tbpoint",
+    "contact": "contact-105",
+    "x": 720,
+    "audit": {
+      "state": "undo-tbpoint",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-complete-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-complete",
+    "contact": "contact-106",
+    "x": 0,
+    "audit": {
+      "state": "undo-complete",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 192.375,
+          "width": 161,
+          "height": 355.625,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-restore-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "restore",
+    "contact": "contact-106",
+    "x": 360,
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 1 log RESTORE_OK 1 remount and Undo"
+      }
+    ]
+  },
+  {
+    "name": "after-setup-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "setup",
+    "contact": "contact-106",
+    "x": 720,
+    "audit": {
+      "state": "setup",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Team A: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Team B: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 2 log SETUP_PICKERS 2"
+      },
+      {
+        "level": "log",
+        "text": "FRAME 2 log SETUP_BOARD false"
+      }
+    ]
+  },
+  {
+    "name": "after-fifteen-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "fifteen",
+    "contact": "contact-107",
+    "x": 0,
+    "audit": {
+      "state": "fifteen",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 15. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "15",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-deuce-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "deuce",
+    "contact": "contact-107",
+    "x": 390,
+    "audit": {
+      "state": "deuce",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–30 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3Deuce",
+      "scores": [
+        "40",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-advantage-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "advantage",
+    "contact": "contact-107",
+    "x": 780,
+    "audit": {
+      "state": "advantage",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "AD",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-game-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "game",
+    "contact": "contact-108",
+    "x": 0,
+    "audit": {
+      "state": "game",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Anya wins Game 1 (Set 1)!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-set-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "set",
+    "contact": "contact-108",
+    "x": 390,
+    "audit": {
+      "state": "set",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "toast": "Anya wins Set 1!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tiebreak-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "tiebreak",
+    "contact": "contact-108",
+    "x": 780,
+    "audit": {
+      "state": "tiebreak",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–40 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "toast": "Ravi wins Game 6 (Set 1)!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-game-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "undo-game",
+    "contact": "contact-110",
+    "x": 0,
+    "audit": {
+      "state": "undo-game",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-set-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "undo-set",
+    "contact": "contact-110",
+    "x": 390,
+    "audit": {
+      "state": "undo-set",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-tbpoint-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "undo-tbpoint",
+    "contact": "contact-110",
+    "x": 780,
+    "audit": {
+      "state": "undo-tbpoint",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-complete-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "undo-complete",
+    "contact": "contact-111",
+    "x": 0,
+    "audit": {
+      "state": "undo-complete",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 2 of 31 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "0"
+      ],
+      "strip": "Set 1: 6-4",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-restore-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "restore",
+    "contact": "contact-111",
+    "x": 390,
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 1 log RESTORE_OK 1 remount and Undo"
+      }
+    ]
+  },
+  {
+    "name": "after-setup-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "setup",
+    "contact": "contact-111",
+    "x": 780,
+    "audit": {
+      "state": "setup",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Team A: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Team B: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 2 log SETUP_PICKERS 2"
+      },
+      {
+        "level": "log",
+        "text": "FRAME 2 log SETUP_BOARD true"
+      }
+    ]
+  },
+  {
+    "name": "after-undo-tiebreak-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-tiebreak",
+    "contact": "contact-113",
+    "x": 0,
+    "audit": {
+      "state": "undo-tiebreak",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "before-advantage-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "advantage",
+    "before": true,
+    "contact": "contact-113",
+    "x": 360,
+    "audit": {
+      "state": "advantage",
+      "before": true,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 12,
+          "y": 67,
+          "width": 167.5,
+          "height": 480,
+          "bottom": 547
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 180.5,
+          "y": 67,
+          "width": 167.5,
+          "height": 480,
+          "bottom": 547
+        },
+        {
+          "name": "Undo",
+          "x": 12,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Swap",
+          "x": 96,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Discard",
+          "x": 180,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Finish",
+          "x": 264,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "before-advantage-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "advantage",
+    "before": true,
+    "contact": "contact-114",
+    "x": 0,
+    "audit": {
+      "state": "advantage",
+      "before": true,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 12,
+          "y": 85,
+          "width": 182.5,
+          "height": 666,
+          "bottom": 751
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 195.5,
+          "y": 85,
+          "width": 182.5,
+          "height": 666,
+          "bottom": 751
+        },
+        {
+          "name": "Undo",
+          "x": 12,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Swap",
+          "x": 103.5,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Discard",
+          "x": 195,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        },
+        {
+          "name": "Finish",
+          "x": 286.5,
+          "y": 776,
+          "width": 91.5,
+          "height": 44,
+          "bottom": 820
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-tbpoint-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "tbpoint",
+    "contact": "contact-116",
+    "x": 0,
+    "audit": {
+      "state": "tbpoint",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 0–0 · Set 1"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 1. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 150.21875,
+          "width": 176,
+          "height": 601.78125,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Tiebreak0 – 0 sets · best of 3 ",
+      "scores": [
+        "1",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-complete-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "complete",
+    "contact": "contact-117",
+    "x": 0,
+    "audit": {
+      "state": "complete",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "undo": {
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826,
+        "text": "Undoback to 40–0 · Set 2"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 298.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 200,
+          "y": 192.375,
+          "width": 176,
+          "height": 559.625,
+          "bottom": 752
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        {
+          "name": "Match options",
+          "x": 309,
+          "y": 766,
+          "width": 64,
+          "height": 60,
+          "bottom": 826
+        }
+      ],
+      "stateText": "Match Complete2 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "strip": "Set 1: 6-4Set 2: 6-3",
+      "toast": "Anya wins Set 2!",
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-fifteen-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-fifteen",
+    "contact": "contact-119",
+    "x": 0,
+    "audit": {
+      "state": "undo-fifteen",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 0. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 0. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "0",
+        "0"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-deuce-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-deuce",
+    "contact": "contact-120",
+    "x": 0,
+    "audit": {
+      "state": "undo-deuce",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 30. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3 ",
+      "scores": [
+        "40",
+        "30"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-undo-advantage-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "undo-advantage",
+    "contact": "contact-121",
+    "x": 0,
+    "audit": {
+      "state": "undo-advantage",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "undo": {
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622,
+        "text": "UndoNothing to undo"
+      },
+      "targets": [
+        {
+          "name": "Finish",
+          "x": 268.109375,
+          "y": 14,
+          "width": 75.890625,
+          "height": 48,
+          "bottom": 62
+        },
+        {
+          "name": "Anya: 40. Press Enter or click to add point",
+          "x": 14,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 185,
+          "y": 150.21875,
+          "width": 161,
+          "height": 397.78125,
+          "bottom": 548
+        },
+        {
+          "name": "Undo last action",
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        {
+          "name": "Match options",
+          "x": 279,
+          "y": 562,
+          "width": 64,
+          "height": 60,
+          "bottom": 622
+        }
+      ],
+      "stateText": "Set 1 of 30 – 0 sets · best of 3Deuce",
+      "scores": [
+        "40",
+        "40"
+      ],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "before-advantage-360x640-dark",
+    "w": 360,
+    "h": 640,
+    "theme": "dark",
+    "state": "advantage",
+    "before": true,
+    "contact": "contact-122",
+    "x": 0,
+    "audit": {
+      "state": "advantage",
+      "before": true,
+      "theme": "dark",
+      "document": {
+        "width": 360,
+        "height": 640
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Anya: AD. Press Enter or click to add point",
+          "x": 12,
+          "y": 67,
+          "width": 167.5,
+          "height": 480,
+          "bottom": 547
+        },
+        {
+          "name": "Ravi: 40. Press Enter or click to add point",
+          "x": 180.5,
+          "y": 67,
+          "width": 167.5,
+          "height": 480,
+          "bottom": 547
+        },
+        {
+          "name": "Undo",
+          "x": 12,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Swap",
+          "x": 96,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Discard",
+          "x": 180,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        },
+        {
+          "name": "Finish",
+          "x": 264,
+          "y": 572,
+          "width": 84,
+          "height": 44,
+          "bottom": 616
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": []
+  },
+  {
+    "name": "after-finish-390x844-dark",
+    "w": 390,
+    "h": 844,
+    "theme": "dark",
+    "state": "finish",
+    "contact": "contact-124",
+    "x": 0,
+    "audit": {
+      "result": true,
+      "state": "finish",
+      "before": false,
+      "theme": "dark",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Done",
+          "x": 295.390625,
+          "y": 15,
+          "width": 78.609375,
+          "height": 48,
+          "bottom": 63
+        },
+        {
+          "name": "Rematch",
+          "x": 16,
+          "y": 406.0625,
+          "width": 358,
+          "height": 56,
+          "bottom": 462.0625
+        },
+        {
+          "name": "Share",
+          "x": 16,
+          "y": 474.0625,
+          "width": 112.65625,
+          "height": 48,
+          "bottom": 522.0625
+        },
+        {
+          "name": "History",
+          "x": 138.65625,
+          "y": 474.0625,
+          "width": 112.671875,
+          "height": 48,
+          "bottom": 522.0625
+        },
+        {
+          "name": "New Match",
+          "x": 261.328125,
+          "y": 474.0625,
+          "width": 112.671875,
+          "height": 48,
+          "bottom": 522.0625
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 0 log FINISH_RESULT false"
+      }
+    ]
+  },
+  {
+    "name": "after-finish-390x844-light",
+    "w": 390,
+    "h": 844,
+    "theme": "light",
+    "state": "finish",
+    "contact": "contact-125",
+    "x": 0,
+    "audit": {
+      "result": true,
+      "state": "finish",
+      "before": false,
+      "theme": "light",
+      "document": {
+        "width": 390,
+        "height": 844
+      },
+      "board": null,
+      "undo": null,
+      "targets": [
+        {
+          "name": "Done",
+          "x": 295.390625,
+          "y": 15,
+          "width": 78.609375,
+          "height": 48,
+          "bottom": 63
+        },
+        {
+          "name": "Rematch",
+          "x": 16,
+          "y": 406.0625,
+          "width": 358,
+          "height": 56,
+          "bottom": 462.0625
+        },
+        {
+          "name": "Share",
+          "x": 16,
+          "y": 474.0625,
+          "width": 112.65625,
+          "height": 48,
+          "bottom": 522.0625
+        },
+        {
+          "name": "History",
+          "x": 138.65625,
+          "y": 474.0625,
+          "width": 112.671875,
+          "height": 48,
+          "bottom": 522.0625
+        },
+        {
+          "name": "New Match",
+          "x": 261.328125,
+          "y": 474.0625,
+          "width": 112.671875,
+          "height": 48,
+          "bottom": 522.0625
+        }
+      ],
+      "scores": [],
+      "contrastMin": 4.630189671546443
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 0 log FINISH_RESULT false"
+      }
+    ]
+  },
+  {
+    "name": "after-finish-360x640-light",
+    "w": 360,
+    "h": 640,
+    "theme": "light",
+    "state": "finish",
+    "contact": "contact-126",
+    "x": 0,
+    "audit": {
+      "error": "Missing audit",
+      "messages": [
+        {
+          "level": "log",
+          "text": "FRAME 0 log FINISH_RESULT false"
+        }
+      ]
+    },
+    "logs": [
+      {
+        "level": "log",
+        "text": "FRAME 0 log FINISH_RESULT false"
+      }
+    ]
+  }
+]

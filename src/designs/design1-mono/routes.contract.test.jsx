@@ -413,7 +413,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/app', path]);
     await settleRoute();
     expect(await screen.findByRole('button', { name: /^Ana: 40/ })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
     await waitFor(() => expect(savedDraft().sets).toEqual(sets));
     expect(savedDraft().history).toEqual(history);
     expect(screen.getByRole('button', { name: /^Ana: 30/ })).toBeEnabled();
@@ -766,7 +766,7 @@ describe('navigation decisions (2026-10-21)', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole('button', { name: 'Undo', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action', exact: true }));
     const saved = mode === 'quick' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)) : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
     expect(saved.draftState.sets[0].points1).toBe(0);
     expect(saved.draftState.history).toEqual([]);

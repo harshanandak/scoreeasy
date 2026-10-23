@@ -103,14 +103,14 @@ describe('MonoTennisLiveScore render', () => {
   it('renders a serving indicator dot on the serving team', async () => {
     const { container } = await renderScorer();
     // Set 1 was 6-4 (10 games, even) -> set 2 first game: team 1 (Alpha, left) serves.
-    const overlines = container.querySelectorAll('.mono-arena-overline');
+    const overlines = container.querySelectorAll('.tsb-who');
     expect(overlines[0].textContent).toContain('●');
     expect(overlines[1].textContent).not.toContain('●');
   });
 
   it('shows a completed-set history strip', async () => {
     const { container } = await renderScorer();
-    const strip = container.querySelector('.mono-score-history-strip');
+    const strip = container.querySelector('.tennis-strip');
     expect(strip).toBeTruthy();
     expect(strip.textContent).toContain('Set 1: 6-4');
   });
@@ -132,8 +132,9 @@ describe('MonoTennisLiveScore render', () => {
 
   it('the Discard button is visually distinguished from Finish (destructive class)', async () => {
     await renderScorer();
-    const discard = screen.getByRole('button', { name: 'Discard' });
-    expect(discard.className).toContain('mono-btn-danger');
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    const discard = screen.getByRole('button', { name: 'Discard match' });
+    expect(discard.className).toContain('sb-row-danger');
     const finish = screen.getByRole('button', { name: 'Finish' });
     expect(finish.className).not.toContain('mono-btn-danger');
   });
