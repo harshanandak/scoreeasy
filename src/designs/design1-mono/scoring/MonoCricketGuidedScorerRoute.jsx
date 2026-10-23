@@ -129,7 +129,7 @@ export default function MonoCricketGuidedScorerRoute() {
   const [phase, setPhase] = useState(() => initialPhase(match));
   const { recordScoringStarted } = useScoringProgress(
     [match?.team1Score, match?.team2Score].some(score => score?.balls > 0 || score?.runs > 0 || score?.wickets > 0),
-    false, match?.draftState?.scoringStarted, matchIdentity,
+    false, match?.draftState?.scoringStarted, matchIdentity, phase !== 'setup1',
   );
   const [pendingCompletion, setPendingCompletion] = useState(null);
 
