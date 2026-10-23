@@ -231,6 +231,7 @@ describe('MonoQuickMatch live broadcast wiring', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Add 1 to Reds' }));
     await waitFor(() => expect(live.point).toHaveBeenCalledTimes(1));
 
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
     fireEvent.click(screen.getByRole('button', { name: 'Subtract one from Reds' }));
     await waitFor(() => expect(live.undo).toHaveBeenCalledTimes(1));
   });

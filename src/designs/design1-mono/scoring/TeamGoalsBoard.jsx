@@ -18,7 +18,7 @@ export default function TeamGoalsBoard({
   const closeAnd = (action) => { action(); setOptionsOpen(false); };
   const contents = (h) => <>
     <span className="tgb-name">{h.name}</span>
-    <span key={actionCount} aria-label={`${h.name} score`} className={`tgb-score${momentTeam === h.team ? ' tgb-moment' : ''}`}>{h.score}</span>
+    <span key={actionCount} aria-label={`${h.name} score`} className={`tgb-score${hasActions && momentTeam === h.team ? ' tgb-moment' : ''}`}>{h.score}</span>
   </>;
 
   return (
@@ -32,9 +32,9 @@ export default function TeamGoalsBoard({
       </div>
       <p className="tgb-last" aria-label="Last action" aria-live="polite">{lastLine}</p>
       <div className="tgb-keys">
-        {halves.map((h) => (
+        {halves.map((h) => hasActions ? (
           <div key={h.team} className={`tgb-team tgb-team-${h.key}`} data-team={h.key} role="group" aria-label={`Score for ${h.name}`}>
-            {hasActions ? <>
+            <>
               {contents(h)}
               <div className="tgb-actions">
                 {actions.map((action) => <button
@@ -43,10 +43,15 @@ export default function TeamGoalsBoard({
                   onClick={() => onScore(h.team, action.value, action.label)}
                 >{action.label}</button>)}
               </div>
-            </> : <button type="button" className="tgb-whole" disabled={scoringLocked} aria-label={`Add 1 to ${h.name}`} onClick={() => onScore(h.team, sportConfig.config.pointIncrement || 1)}>
-              {contents(h)}<span>Tap +1</span>
-            </button>}
+            </>
           </div>
+        ) : (
+          <button key={h.team} type="button" data-team={h.key} data-action={actionCount % 2}
+            className={`tgb-team tgb-team-${h.key} tgb-whole${momentTeam === h.team ? ' tgb-moment' : ''}`}
+            disabled={scoringLocked} aria-label={`Add 1 to ${h.name}`}
+            onClick={() => onScore(h.team, sportConfig.config.pointIncrement || 1)}>
+            {contents(h)}<span>Tap +1</span>
+          </button>
         ))}
       </div>
       <BoardBar canUndo={canUndo} undoHint={undoHint} onUndo={onUndo} sheetId={sheetId} sheetOpen={optionsOpen} onMore={() => setOptionsOpen(true)} />

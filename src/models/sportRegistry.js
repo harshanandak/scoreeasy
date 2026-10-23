@@ -146,6 +146,7 @@ export const SPORT_REGISTRY = {
   // === GOALS-BASED SPORTS (4) ===
   football: {
     id: 'football',
+    teamColour: true,
     identityColour: '#16a34a', // Pitch green
     name: 'Football',
     icon: '⚽',

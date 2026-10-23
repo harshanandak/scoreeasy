@@ -83,9 +83,15 @@
 .tgb-actions button:active { transform: translateY(2px); box-shadow: none; }
 .tgb-actions button:disabled, .tgb-whole:disabled { cursor: default; border-style: dashed; box-shadow: none; }
 .tgb button:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 3px; }
-.tgb-whole { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 240px; border: 0; background: transparent; color: inherit; }
+.tgb-whole { min-height: 260px; width: 100%; }
+.tgb-whole:active { transform: scale(0.985); }
 .tgb-moment { animation: tgb-bump 260ms ease-out; }
+.tgb-whole.tgb-moment { animation-name: tgb-key-bump; }
+/* Alternate names restart the moment on consecutive goals without remounting a focused key. */
+.tgb-whole.tgb-moment[data-action='0'] { animation-name: tgb-key-bump-repeat; }
 @keyframes tgb-bump { 0% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump-repeat { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
 @media (max-height: 680px) {
   .tgb .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); }
   .tgb .sb-bar { padding-top: 12px; padding-bottom: 14px; }
@@ -93,6 +99,6 @@
   .tgb-score { margin: 4px 0 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tgb-moment { animation: none; }
-  .tgb-actions button:active { transform: none; }
+  .tgb-moment, .tgb .tgb-whole.tgb-moment { animation: none; }
+  .tgb-actions button:active, .tgb-whole:active { transform: none; }
 }
