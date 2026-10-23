@@ -1,0 +1,47 @@
+name: Convex Preview Cleanup
+
+# Closed same-repository PRs release their isolated Convex preview. Manual sweeps
+# inspect all project previews and select only closed same-repository PRs.
+# Dry run is the manual default. No token means a notice and a successful skip.
+# Uses trusted default-branch code, never the closing PR's checkout.
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only report previews that would be deleted
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# Share the PR preview's group so close cleanup waits for an in-flight upload.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('cloudflare-preview-pr-{0}', github.event.pull_request.number) || 'convex-preview-sweep' }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted cleanup script
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Clean up closed PR previews
+        env:
+          CONVEX_TEAM_ACCESS_TOKEN: ${{ secrets.CONVEX_TEAM_ACCESS_TOKEN }}
+          CONVEX_PROJECT_ID: ${{ vars.CONVEX_PROJECT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
+          CLEANUP_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: node scripts/convex-preview-cleanup.mjs
