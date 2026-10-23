@@ -70,6 +70,15 @@ export function latestMonthSummary(entries, now = Date.now()) {
   return { key, label: monthLabel(key, now), total: inMonth.length, sports: sportCounts(inMonth) };
 }
 
+/** A finished quick match's score as History lists it: cricket shows runs/wickets a side. */
+export function quickMatchScore(qm) {
+  if (Array.isArray(qm.innings) && qm.innings.length > 0) return `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`;
+  if (qm.team1Score && qm.team2Score) {
+    return `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score.runs}/${qm.team2Score.wickets}`;
+  }
+  return `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`;
+}
+
 /** "25 - 22" -> "25–22", "164/6 vs 158/9" -> "164/6–158/9". Never changes a number. */
 export function displayScore(score) {
   return String(score ?? '--').replace(/\s+(?:-|vs)\s+/gi, '–');

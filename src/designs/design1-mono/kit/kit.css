@@ -489,6 +489,11 @@ button.kit-row {
   letter-spacing: 0.01em;
 }
 
+/* Long scores (cricket "164/6–158/9") step down so the names keep their room (Home and History). */
+.kit-row-score.is-long {
+  font-size: 1.05rem;
+}
+
 .kit-chev {
   flex: none;
   opacity: 0.55;
@@ -593,4 +598,19 @@ button.kit-row {
   .kit-tile:active {
     transform: none;
   }
+}
+
+/* Home v2: with matches in progress, "Start a match" is the one Go. It follows the In progress list
+   and stays in the thumb zone, sticky above the dock (the quick-setup Go's pattern, setup.css). */
+.kit-screen > .kit-home-cta {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  margin-top: 14px;
+  padding: 14px 0 16px;
+  background: linear-gradient(180deg, transparent, var(--se-color-canvas) 30%);
+}
+
+body.has-mobile-bottom-nav .kit-screen > .kit-home-cta {
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
 }

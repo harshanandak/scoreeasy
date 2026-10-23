@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { displayScore, groupByMonth, latestMonthSummary, monthLabel, sportCounts, UNDATED, winnerSide } from './historyModel';
+import { displayScore, groupByMonth, latestMonthSummary, monthLabel, quickMatchScore, sportCounts, UNDATED, winnerSide } from './historyModel';
 
 const at = (y, m, d) => new Date(y, m - 1, d, 12).toISOString();
 const NOW = new Date(2026, 9, 23, 12).getTime();
@@ -61,5 +61,14 @@ describe('historyModel', () => {
     expect(winnerSide({ team1: 'A', team2: 'B', winner: 'tie' })).toBeNull();
     expect(winnerSide({ team1: 'A', team2: 'B', winner: 'C' })).toBeNull();
     expect(winnerSide({ team1: 'Same', team2: 'Same', winner: 'Same' })).toBeNull();
+  });
+});
+
+describe('quickMatchScore', () => {
+  it('lists a finished quick match the way History always has', () => {
+    expect(displayScore(quickMatchScore({ score1: 3, score2: 1 }))).toBe('3–1');
+    expect(displayScore(quickMatchScore({ score1: 164, score2: 158, team1Score: { runs: 164, wickets: 6 }, team2Score: { runs: 158, wickets: 9 } }))).toBe('164/6–158/9');
+    expect(displayScore(quickMatchScore({ score1: 120, score2: 98, innings: [{ teamId: 'team1', runs: 120 }], team1Score: { runs: 1, wickets: 1 }, team2Score: { runs: 1, wickets: 1 } }))).toBe('120–98');
+    expect(displayScore(quickMatchScore({}))).toBe('0–0');
   });
 });
