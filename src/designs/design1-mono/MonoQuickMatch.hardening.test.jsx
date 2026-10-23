@@ -169,7 +169,7 @@ describe('MonoQuickMatch hardening (#106)', () => {
     render(<MonoQuickMatch />);
 
     // The deciding-score control is still enabled at 0-0 time-up.
-    const plusOne = screen.getAllByRole('button', { name: '+1' })[0];
+    const plusOne = screen.getByRole('button', { name: 'Add +1 for Reds' });
     expect(plusOne).toBeEnabled();
     fireEvent.click(plusOne);
 
