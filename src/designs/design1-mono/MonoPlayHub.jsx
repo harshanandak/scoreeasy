@@ -17,7 +17,7 @@ export default function MonoPlayHub() {
   const groups = getSportsByCategory();
   const popular = groups[PRIORITY_GROUP_LABEL];
   const more = groups[LATER_GROUP_LABEL];
-  const start = (sport) => navigate(`/${sport.id}/quick`);
+  const start = (sport) => navigate(`/${sport.id}/quick`, { state: { newMatch: true } });
 
   useEffect(() => {
     if (!requestedId) return;

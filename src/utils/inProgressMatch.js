@@ -13,11 +13,19 @@ export function inProgressSummary(match) {
   const title = match.kind === 'tournament' ? match.name || 'Tournament'
     : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
   let score = '';
+  let scoreParts = null;
   let detail = match.kind === 'tournament' ? 'Tournament' : 'Quick match';
   const scores = state.scores;
   if (match.sport === 'cricket' && scores) {
-    score = `${scores.team1?.runs || 0}/${scores.team1?.wickets || 0}–${scores.team2?.runs || 0}/${scores.team2?.wickets || 0}`;
-    detail = `Innings ${state.innings || 1}`;
+    const innings = state.innings || 1;
+    const battingTeam = state.battingTeam || (innings === 2 ? 2 : 1);
+    scoreParts = [1, 2].map(team => ({
+      team: match[`team${team}Name`] || match[`team${team}`] || (team === 1 ? 'Team A' : 'Team B'),
+      value: innings === 1 && team !== battingTeam ? 'yet to bat'
+        : `${scores[`team${team}`]?.runs ?? 0}/${scores[`team${team}`]?.wickets ?? 0}`,
+    }));
+    score = scoreParts.map(part => `${part.team} ${part.value}`).join(' · ');
+    detail = `Innings ${innings}${innings === 2 ? ` · Chasing ${(scores[battingTeam === 2 ? 'team1' : 'team2']?.runs ?? 0) + 1}` : ''}`;
   } else if (Array.isArray(state.innings) && state.innings.length) {
     const total = id => state.innings.filter(inn => inn.teamId === id).reduce((sum, inn) => sum + (inn.runs || 0), 0);
     score = `${total(match.team1Id || 'team1')}–${total(match.team2Id || 'team2')}`;
@@ -35,7 +43,7 @@ export function inProgressSummary(match) {
     score = `${(goals ? state.gScore1 : state.vScore1) ?? state.score1 ?? 0}–${(goals ? state.gScore2 : state.vScore2) ?? state.score2 ?? 0}`;
   }
   const timestamp = inProgressTimestamp(match);
-  return { title, score, detail: match.tournamentName ? `${match.tournamentName} · ${detail === 'Quick match' ? 'Tournament match' : detail}` : detail, timestamp };
+  return { title, score, scoreParts, detail: match.tournamentName ? `${match.tournamentName} · ${detail === 'Quick match' ? 'Tournament match' : detail}` : detail, timestamp };
 }
 
 export function deleteInProgressMatch(match) {

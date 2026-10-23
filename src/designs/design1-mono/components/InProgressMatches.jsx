@@ -39,11 +39,16 @@ export default function InProgressMatches() {
         return <article className="kit-row kept-match" key={match.entryPath}>
           <SportBadge sportId={match.sport} />
           <div className="kit-row-text">
-            <span className="kit-row-title">{summary.title}</span>
+            {summary.scoreParts ? <span className="kit-row-title kept-cricket-score" aria-label={summary.score}>
+              {summary.scoreParts.map((part, index) => <span className="kept-cricket-innings" key={index}>
+                <span className="kept-cricket-team" title={part.team}>{part.team}</span>{' '}
+                <span className="kept-cricket-value">{part.value}</span>
+              </span>)}
+            </span> : <span className="kit-row-title">{summary.title}</span>}
             <span className="kit-row-sub">{sport} · {summary.detail}</span>
             {lastPlayed && <span className="kit-row-sub">Last played {lastPlayed}</span>}
           </div>
-          {summary.score && <span className="kit-row-score">{summary.score}</span>}
+          {summary.score && !summary.scoreParts && <span className="kit-row-score">{summary.score}</span>}
           <div className="kept-match-actions">
             <button type="button" className="se-ctl" data-resume-path={match.entryPath} aria-label={`Resume ${sport}: ${summary.title}`} onClick={() => navigate(match.entryPath)}>Resume</button>
             {match.kind !== 'tournament' && <button type="button" className="se-ctl kept-match-delete" aria-label={`Delete ${sport}: ${summary.title}`} onClick={() => setPending({ match, summary })}>Delete</button>}

@@ -43,6 +43,7 @@ vi.mock('../../lib/live/liveSession', () => ({
   saveSession: vi.fn(),
 }));
 vi.mock('../../utils/storage', () => ({
+  listDataKeys: () => [],
   loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}_${ctx.draft?.quickMatchId || 'fixture'}` ? ctx.draft : def)),
   loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),

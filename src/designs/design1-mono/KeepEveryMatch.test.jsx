@@ -5,6 +5,7 @@ import MonoQuickMatch from './MonoQuickMatch';
 import MonoHistory from './MonoHistory';
 import MonoTennisLiveScore from './scoring/MonoTennisLiveScore';
 import DashboardLanding from './landing/DashboardLanding';
+import MonoPlayHub from './MonoPlayHub';
 import { loadInProgressMatches } from '../../utils/appEntry';
 import { loadQuickMatches } from '../../utils/storage';
 
@@ -16,7 +17,7 @@ vi.mock('./MonoStatistics', () => ({ MonoStatisticsPanel: () => null }));
 
 function Navigation() {
   const navigate = useNavigate();
-  return <nav><button onClick={() => navigate('/app')}>Test Home</button><button onClick={() => navigate('/history')}>Test History</button><button onClick={() => navigate('/cricket/quick')}>New cricket</button></nav>;
+  return <nav><button onClick={() => navigate('/app')}>Test Home</button><button onClick={() => navigate('/history')}>Test History</button><button onClick={() => navigate('/play')}>Test Play</button></nav>;
 }
 function open(path) {
   return render(<MemoryRouter initialEntries={[path]}><Navigation /><Routes>
@@ -24,6 +25,7 @@ function open(path) {
     <Route path="/:sport/quick/live/:matchId" element={<MonoTennisLiveScore storageMode="quick" />} />
     <Route path="/history" element={<MonoHistory />} />
     <Route path="/app" element={<DashboardLanding />} />
+    <Route path="/play" element={<MonoPlayHub />} />
   </Routes></MemoryRouter>);
 }
 function seed(sport, id, overrides = {}) {
@@ -53,7 +55,8 @@ it('keeps cricket A when leaving and starting B, and Home and History offer both
   fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
   const first = loadInProgressMatches()[0];
   fireEvent.click(screen.getByRole('button', { name: 'Test Home' }));
-  fireEvent.click(screen.getByRole('button', { name: 'New cricket' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Test Play' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Quick match: Cricket' }));
   fireEvent.click(await screen.findByRole('button', { name: /Start cricket/i }));
   await waitFor(() => expect(loadInProgressMatches()).toHaveLength(2));
   fireEvent.click(screen.getByRole('button', { name: 'Six runs' }));
@@ -63,6 +66,28 @@ it('keeps cricket A when leaving and starting B, and Home and History offer both
   const homePaths = [...screen.getAllByRole('button', { name: /^Resume / })].map(b => b.getAttribute('data-resume-path'));
   fireEvent.click(screen.getByRole('button', { name: 'Test History' }));
   expect(screen.getAllByRole('button', { name: /^Resume / }).map(b => b.getAttribute('data-resume-path'))).toEqual(homePaths);
+});
+
+it('the plain quick route restores the latest started match even at zero, without replacing its peer', async () => {
+  const older = seed('volleyball', 31, { updatedAt: '2026-10-22', vScore1: 7 });
+  seed('volleyball', 32, { updatedAt: '2026-10-23', vScore1: 0, vScore2: 0, sets: [{ score1: 0, score2: 0 }], vScoreHistory: [] });
+  open('/volleyball/quick');
+  expect(await screen.findByRole('button', { name: 'Add point for Royals 32' })).toHaveTextContent('0');
+  expect(loadInProgressMatches()).toHaveLength(2);
+  expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_31'))).toEqual(older);
+});
+
+it.each(['/app', '/history'])('%s shows named cricket innings, unplayed opponents and the chase target', async path => {
+  seed('cricket', 41, { team1Name: 'Royals', team2Name: 'Strikers', innings: 1, battingTeam: 1, scores: { team1: { runs: 12, wickets: 1, balls: 15 }, team2: { runs: 0, wickets: 0, balls: 0 } } });
+  seed('cricket', 42, { team1Name: 'Falcons', team2Name: 'Tigers', innings: 2, battingTeam: 2, scores: { team1: { runs: 64, wickets: 3, balls: 48 }, team2: { runs: 29, wickets: 2, balls: 24 } } });
+  open(path);
+  const first = (await screen.findByRole('button', { name: /Resume Cricket: Royals/ })).closest('article');
+  expect(first).toHaveTextContent('Royals 12/1');
+  expect(first).toHaveTextContent('Strikers yet to bat');
+  const second = screen.getByRole('button', { name: /Resume Cricket: Falcons/ }).closest('article');
+  expect(second).toHaveTextContent('Falcons 64/3');
+  expect(second).toHaveTextContent('Tigers 29/2');
+  expect(second).toHaveTextContent('Chasing 65');
 });
 
 it('resumes an old kabaddi match with its own score and undo after leaving', async () => {

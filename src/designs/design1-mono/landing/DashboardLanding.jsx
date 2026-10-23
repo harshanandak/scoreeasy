@@ -232,7 +232,7 @@ function QuickStart({ sports, label, navigate }) {
       <KitSection id="home-quick-start" title="Quick start" aside={<span>{label}</span>} />
       <div className="kit-grid3">
         {sports.map((sport) => (
-          <SportTile key={sport.id} sport={sport} mini onSelect={(sp) => navigate(`/${sp.id}/quick`)} />
+          <SportTile key={sport.id} sport={sport} mini onSelect={(sp) => navigate(`/${sp.id}/quick`, { state: { newMatch: true } })} />
         ))}
       </div>
     </section>

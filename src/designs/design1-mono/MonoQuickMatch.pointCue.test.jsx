@@ -13,6 +13,7 @@ vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn(), isLive: false }) }));
 vi.mock('../../lib/live/liveSession', () => ({ getConsent: () => 'declined', loadSession: () => null, saveSession: vi.fn() }));
 vi.mock('../../utils/storage', () => ({
+  listDataKeys: () => [],
   loadData: (key, fallback) => key === `se_quickmatch_draft_${ctx.sport}_3003` ? ctx.draft : fallback,
   loadQuickMatch: () => null, clearData: vi.fn(), saveQuickMatch: () => true,
   isStaleQuickMatchDraft: () => false,

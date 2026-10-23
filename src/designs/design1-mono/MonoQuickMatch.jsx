@@ -12,6 +12,8 @@ import BackArrow from './components/BackArrow';
 import { validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch } from '../../utils/storage';
 import { createQuickMatchId, getQuickMatchDraftKey, migrateQuickMatchDraft } from '../../utils/quickMatchDrafts';
+import { loadQuickMatchDrafts } from '../../utils/appEntry';
+import { inProgressTimestamp } from '../../utils/inProgressMatch';
 import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
 import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
@@ -328,6 +330,7 @@ export default function MonoQuickMatch() {
   const preselectedFormat = searchParams.get('format');
   const resultMatchId = searchParams.get('result');
   const resumeMatchId = searchParams.get('resume');
+  const startNewMatch = location.state?.newMatch === true || Array.isArray(location.state?.teams);
   const sportConfig = getSportById(sport);
   const engine = sportConfig?.engine || 'goals';
   const isCricket = engine === 'custom-cricket';
@@ -544,7 +547,7 @@ export default function MonoQuickMatch() {
   }, [phase]);
 
   useEffect(() => {
-    const hydrationKey = `${sport}:${resultMatchId || ''}:${resumeMatchId || ''}`;
+    const hydrationKey = startNewMatch ? `${sport}:new` : `${sport}:${resultMatchId || ''}:${resumeMatchId || ''}`;
     if (draftHydratedSportRef.current === hydrationKey) return;
     const previousSport = draftHydratedSportRef.current;
     draftHydratedSportRef.current = hydrationKey;
@@ -577,7 +580,12 @@ export default function MonoQuickMatch() {
     }
 
     const migrated = migrateQuickMatchDraft(sport);
-    const restoredKey = resumeMatchId ? getQuickMatchDraftKey(sport, resumeMatchId) : migrated?.key;
+    // The old bare address still resumes after refresh. Creation links opt into
+    // setup explicitly so starting another match never replaces this snapshot.
+    const currentDraft = !resumeMatchId && !startNewMatch
+      ? loadQuickMatchDrafts([sportConfig]).sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0))[0]
+      : null;
+    const restoredKey = resumeMatchId ? getQuickMatchDraftKey(sport, resumeMatchId) : startNewMatch ? null : currentDraft?.draftKey || migrated?.key;
     const draft = restoredKey ? (migrated?.key === restoredKey ? migrated.draft : loadData(restoredKey, null)) : null;
     hydratedDraftKeyRef.current = restoredKey;
     setActiveDraftKey(restoredKey || null);
@@ -633,7 +641,7 @@ export default function MonoQuickMatch() {
       draftHydratedSportRef.current = `${sport}::${draft.quickMatchId}`;
       navigate(`/${sport}/quick?resume=${encodeURIComponent(draft.quickMatchId)}`, { replace: true });
     }
-  }, [sport, resultMatchId, resumeMatchId]);
+  }, [sport, resultMatchId, resumeMatchId, startNewMatch]);
 
   useEffect(() => {
     // A staged winner is still a draft until its terminal save succeeds.
@@ -1675,8 +1683,8 @@ export default function MonoQuickMatch() {
     completion.reset();
     if (resultMatchId) {
       // Leave the saved-result address before creating any fresh scoring draft.
-      draftHydratedSportRef.current = `${sport}::`;
-      navigate(`/${sport}/quick`, { replace: true });
+      draftHydratedSportRef.current = `${sport}:new`;
+      navigate(`/${sport}/quick`, { replace: true, state: { newMatch: true } });
     }
     restoredDraftRef.current = false;
     setSaveWarning('');

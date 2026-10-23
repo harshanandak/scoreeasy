@@ -6,6 +6,12 @@ import { deleteInProgressMatch, inProgressSummary } from './inProgressMatch';
 beforeEach(() => localStorage.clear());
 
 describe('every started match stays resumable', () => {
+  it('names cricket innings and derives the target from the first batting side, including a zero chase', () => {
+    const match = { sport: 'cricket', team1Name: 'Royals', team2Name: 'Strikers', innings: 1, battingTeam: 2, scores: { team1: { runs: 0, wickets: 0, balls: 0 }, team2: { runs: 12, wickets: 1, balls: 15 } } };
+    expect(inProgressSummary(match).score).toBe('Royals yet to bat · Strikers 12/1');
+    expect(inProgressSummary({ ...match, innings: 2, battingTeam: 1 }).detail).toBe('Innings 2 · Chasing 13');
+    expect(inProgressSummary({ ...match, innings: 2, battingTeam: 2 }).detail).toBe('Innings 2 · Chasing 1');
+  });
   it('keeps new match identities distinct across reloads with the same device clock', async () => {
     const clock = vi.spyOn(Date, 'now').mockReturnValue(1792770000000);
     try {
