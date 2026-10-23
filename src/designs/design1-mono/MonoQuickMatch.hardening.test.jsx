@@ -64,9 +64,8 @@ function seedVolleyball(extra = {}) {
   };
 }
 
-// Classic sets-screen guarantees stay pinned on table tennis while volleyball and badminton
-// use the team-colour board.
-function seedClassicSets(extra = {}) {
+// Preserve the former classic-screen guarantees on the table tennis team board.
+function seedTableTennis(extra = {}) {
   seedVolleyball(extra);
   ctx.sport = 'tabletennis';
   ctx.draft.sport = 'tabletennis';
@@ -85,11 +84,12 @@ beforeEach(() => {
 
 describe('MonoQuickMatch hardening (#106)', () => {
   it('gates Discard behind a confirm dialog and wipes only on confirm', () => {
-    seedClassicSets();
+    seedTableTennis();
     render(<MonoQuickMatch />);
 
     // First tap only opens the dialog — nothing is wiped yet.
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
     const dialog = screen.getByRole('dialog', { name: /Discard match/i });
     expect(dialog).toBeInTheDocument();
     // Discard is destructive: its confirm button takes the danger fill (tone="danger").
@@ -106,10 +106,11 @@ describe('MonoQuickMatch hardening (#106)', () => {
   });
 
   it('keeps the match when the Discard dialog is dismissed', () => {
-    seedClassicSets();
+    seedTableTennis();
     render(<MonoQuickMatch />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
     const dialog = screen.getByRole('dialog', { name: /Discard match/i });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Keep scoring' }));
 
@@ -177,27 +178,27 @@ describe('MonoQuickMatch hardening (#106)', () => {
   });
 
   it('announces the last scoring action in an aria-live region inside the scorer', () => {
-    seedClassicSets({ lastAction: 'Reds +1' });
+    seedTableTennis({ lastAction: 'Reds +1' });
     render(<MonoQuickMatch />);
 
-    const lastActionText = screen.getByText(/Last: Reds \+1/);
+    const lastActionText = screen.getByText('Reds +1');
     expect(lastActionText).toBeInTheDocument();
     // The strip lives in a polite live region so each action is announced.
     expect(lastActionText.closest('[aria-live="polite"]')).not.toBeNull();
   });
 
-  it('reserves a fixed live-broadcast slot when cloud auth is available, and omits it offline', () => {
-    seedClassicSets();
+  it('keeps the live-broadcast bar mounted in options when cloud auth is available, and omits it offline', () => {
+    seedTableTennis();
     const { container, unmount } = render(<MonoQuickMatch />);
-    // The slot holds space even before the bar hydrates, so the score won't jump.
-    expect(container.querySelector('.mono-live-slot')).not.toBeNull();
+    // The hidden sheet keeps live-sharing mounted without displacing the score.
+    expect(container.querySelector('.sb-sheet-live')).not.toBeNull();
     unmount();
 
     // Offline build (no cloud auth): no permanent empty slot.
     ctx.cloudAuthAvailable = false;
-    seedClassicSets();
+    seedTableTennis();
     const { container: offlineContainer } = render(<MonoQuickMatch />);
-    expect(offlineContainer.querySelector('.mono-live-slot')).toBeNull();
+    expect(offlineContainer.querySelector('.sb-sheet-live')).toBeNull();
   });
 
   // Cricket innings transitions moved from inside the setScores updaters to a single

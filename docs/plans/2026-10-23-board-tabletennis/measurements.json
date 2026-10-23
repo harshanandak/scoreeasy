@@ -1,0 +1,1837 @@
+[
+  {
+    "state": "early",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "sport": "tabletennis",
+    "name": "before-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": null,
+      "keys": [],
+      "undo": {
+        "text": "",
+        "x": 12,
+        "y": 774,
+        "width": 58,
+        "height": 46,
+        "bottom": 820
+      },
+      "undersized": [
+        {
+          "text": "−1",
+          "rect": {
+            "x": 77.5625,
+            "y": 697,
+            "width": 51.375,
+            "height": 40,
+            "bottom": 737
+          }
+        },
+        {
+          "text": "−1",
+          "rect": {
+            "x": 261.0625,
+            "y": 697,
+            "width": 51.375,
+            "height": 40,
+            "bottom": 737
+          }
+        },
+        {
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 774,
+            "width": 58,
+            "height": 46,
+            "bottom": 820
+          }
+        },
+        {
+          "text": "SWAP",
+          "rect": {
+            "x": 70,
+            "y": 774,
+            "width": 102.65625,
+            "height": 46,
+            "bottom": 820
+          }
+        },
+        {
+          "text": "DISCARD",
+          "rect": {
+            "x": 172.65625,
+            "y": 774,
+            "width": 102.671875,
+            "height": 46,
+            "bottom": 820
+          }
+        },
+        {
+          "text": "FINISH",
+          "rect": {
+            "x": 275.328125,
+            "y": 774,
+            "width": 102.671875,
+            "height": 46,
+            "bottom": 820
+          }
+        }
+      ],
+      "contrastFailures": []
+    }
+  },
+  {
+    "state": "early",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "sport": "tabletennis",
+    "name": "after-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "early",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "sport": "tabletennis",
+    "name": "after-early-360-light",
+    "audit": {
+      "state": "early",
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "early",
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-early-360-dark",
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "dark",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "early",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": true,
+    "sport": "tabletennis",
+    "name": "before-early-360-light",
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": null,
+      "keys": [],
+      "undo": {
+        "text": "",
+        "x": 12,
+        "y": 570,
+        "width": 58,
+        "height": 46,
+        "bottom": 616
+      },
+      "undersized": [
+        {
+          "text": "−1",
+          "rect": {
+            "x": 70.0625,
+            "y": 493,
+            "width": 51.375,
+            "height": 40,
+            "bottom": 533
+          }
+        },
+        {
+          "text": "−1",
+          "rect": {
+            "x": 238.5625,
+            "y": 493,
+            "width": 51.375,
+            "height": 40,
+            "bottom": 533
+          }
+        },
+        {
+          "text": "",
+          "rect": {
+            "x": 12,
+            "y": 570,
+            "width": 58,
+            "height": 46,
+            "bottom": 616
+          }
+        },
+        {
+          "text": "SWAP",
+          "rect": {
+            "x": 70,
+            "y": 570,
+            "width": 92.65625,
+            "height": 46,
+            "bottom": 616
+          }
+        },
+        {
+          "text": "DISCARD",
+          "rect": {
+            "x": 162.65625,
+            "y": 570,
+            "width": 92.671875,
+            "height": 46,
+            "bottom": 616
+          }
+        },
+        {
+          "text": "FINISH",
+          "rect": {
+            "x": 255.328125,
+            "y": 570,
+            "width": 92.671875,
+            "height": 46,
+            "bottom": 616
+          }
+        }
+      ],
+      "contrastFailures": []
+    }
+  },
+  {
+    "state": "deuce",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-deuce-390-light",
+    "audit": {
+      "state": "deuce",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n10\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "deuce",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-deuce-360-light",
+    "audit": {
+      "state": "deuce",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n10\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "gamewon",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-gamewon-390-light",
+    "audit": {
+      "state": "gamewon",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 10–9",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 2\nSets 1–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–9, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "gamewon",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-gamewon-360-light",
+    "audit": {
+      "state": "gamewon",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 10–9",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 2\nSets 1–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–9, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "undo",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-undo-390-light",
+    "audit": {
+      "state": "undo",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n9\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "undo",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-undo-360-light",
+    "audit": {
+      "state": "undo",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n9\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "matchpoint",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-matchpoint-390-light",
+    "audit": {
+      "state": "matchpoint",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n9\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 3\nSets 2–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–8, Royals wonSet 2 11–8, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "matchpoint",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-matchpoint-360-light",
+    "audit": {
+      "state": "matchpoint",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n9\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 3\nSets 2–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–8, Royals wonSet 2 11–8, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "finish",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-finish-390-light",
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nSet 1 · Sets 0–0\n8–6\nKeep scoring\nEnd match"
+    }
+  },
+  {
+    "state": "finish",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-finish-360-light",
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nSet 1 · Sets 0–0\n8–6\nKeep scoring\nEnd match"
+    }
+  },
+  {
+    "state": "finish",
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-finish-360-dark",
+    "audit": {
+      "state": "finish",
+      "before": false,
+      "theme": "dark",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nSet 1 · Sets 0–0\n8–6\nKeep scoring\nEnd match"
+    }
+  },
+  {
+    "state": "finished",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-finished-390-light",
+    "audit": {
+      "state": "finished",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": null,
+      "keys": [],
+      "undersized": [],
+      "contrastFailures": [],
+      "result": "Full time\nTable Tennis · Best of 5\nDone\nWinner\nWinner:\nRoyals\n\nTook the last set 11–9\n\nRoyals\n3–0\n\nRunner-up:\nStrikers\n0\nSet 1\n11–8\n, Royals\nSet 2\n11–8\n, Royals\nSet 3\n11–9\n, Royals\n\nRoyals won. Took the last set 11–9. Royals 3, Strikers 0.\n\nRematch\nShare\nHistory\nNew Match\n\nMatch saved to History on this device."
+    }
+  },
+  {
+    "state": "finished",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-finished-360-light",
+    "audit": {
+      "state": "finished",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 644,
+      "bodyWidth": 360,
+      "board": null,
+      "keys": [],
+      "undersized": [],
+      "contrastFailures": [],
+      "result": "Full time\nTable Tennis · Best of 5\nDone\nWinner\nWinner:\nRoyals\n\nTook the last set 11–9\n\nRoyals\n3–0\n\nRunner-up:\nStrikers\n0\nSet 1\n11–8\n, Royals\nSet 2\n11–8\n, Royals\nSet 3\n11–9\n, Royals\n\nRoyals won. Took the last set 11–9. Royals 3, Strikers 0.\n\nRematch\nShare\nHistory\nNew Match\n\nMatch saved to History on this device."
+    }
+  },
+  {
+    "state": "restore",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-restore-390-light",
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Royals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 10–9",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 2\nSets 1–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–9, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "restore",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-restore-360-light",
+    "audit": {
+      "state": "restore",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 10–9",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 2\nSets 1–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–9, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "single",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-single-360-light",
+    "audit": {
+      "state": "single",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "First to 11\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "setupwalk",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-setupwalk-360-light",
+    "audit": {
+      "state": "setupwalk",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Team A\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Team B\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Team A−1Correct Team B−1Discard match"
+    }
+  },
+  {
+    "state": "undo-deuce",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-undo-deuce-360-light",
+    "audit": {
+      "state": "undo-deuce",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n10\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n10\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "cancel-finish",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-cancel-finish-360-light",
+    "audit": {
+      "state": "cancel-finish",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "state": "manual-finished",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-manual-finished-360-light",
+    "audit": {
+      "state": "manual-finished",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": null,
+      "keys": [],
+      "undersized": [],
+      "contrastFailures": [],
+      "result": "Full time\nTable Tennis · Best of 5\nDone\nWinner\nWinner:\nRoyals\n\nRoyals\n8–6\n\nRunner-up:\nStrikers\n6\nSet 1\n8–6\n, Royals\n\nRoyals won. Royals 8, Strikers 6.\n\nRematch\nShare\nHistory\nNew Match\n\nMatch saved to History on this device."
+    }
+  },
+  {
+    "state": "history",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "before": false,
+    "sport": "tabletennis",
+    "name": "after-history-360-light",
+    "audit": {
+      "state": "history",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n0\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n0\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nback to 10–9",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 2\nSets 1–0\n0:00",
+      "dialog": "Match options\nDone\nSet 1\n11–9\n, Royals won\nSwap sides\nCorrect Royals\n−1\nCorrect Strikers\n−1\nDiscard match"
+    }
+  },
+  {
+    "state": "undo-late",
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "sport": "tabletennis",
+    "before": false,
+    "name": "after-undo-late-360-light",
+    "audit": {
+      "state": "undo-late",
+      "before": false,
+      "theme": "light",
+      "width": 360,
+      "height": 640,
+      "bodyHeight": 640,
+      "bodyWidth": 360,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 360,
+        "height": 640,
+        "bottom": 640
+      },
+      "keys": [
+        {
+          "text": "Royals\n9\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        },
+        {
+          "text": "Strikers\n8\nTap +1",
+          "rect": {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 562,
+        "width": 253,
+        "height": 60,
+        "bottom": 622
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 3\nSets 2–0\n0:00",
+      "dialog": "Match optionsDoneSet 1 11–8, Royals wonSet 2 11–8, Royals wonSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "sport": "volleyball",
+    "before": true,
+    "state": "early",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "name": "before-volleyball-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "sport": "volleyball",
+    "before": false,
+    "state": "early",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "name": "after-volleyball-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Set 1\nSets 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "sport": "badminton",
+    "before": true,
+    "state": "early",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "name": "before-badminton-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": true,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  },
+  {
+    "sport": "badminton",
+    "before": false,
+    "state": "early",
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "name": "after-badminton-early-390-light",
+    "audit": {
+      "state": "early",
+      "before": false,
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "board": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "bottom": 844
+      },
+      "keys": [
+        {
+          "text": "Serving\nRoyals\n8\nTap +1",
+          "rect": {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": true
+        },
+        {
+          "text": "Strikers\n6\nTap +1",
+          "rect": {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          "mark": false
+        }
+      ],
+      "undo": {
+        "text": "Undo\nNothing to undo",
+        "x": 14,
+        "y": 766,
+        "width": 283,
+        "height": 60,
+        "bottom": 826
+      },
+      "undersized": [],
+      "contrastFailures": [],
+      "meta": "Game 1\nGames 0–0\n0:00",
+      "dialog": "Match optionsDoneSwap sidesCorrect Royals−1Correct Strikers−1Discard match"
+    }
+  }
+]
