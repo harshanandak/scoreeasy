@@ -10,6 +10,7 @@
 // Motion plays once and is off under prefers-reduced-motion (confetti gone, circle drawn still).
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useScoringBoard } from '../scoring/scoringProgressContext';
 import { NEUTRAL, colourVars, deriveTeamColours } from '../../../lib/teamColour';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { GoArrow } from './KitParts';
@@ -146,6 +147,7 @@ export default function KitFinish({
   model, sportId, sportName, meta, team1Colour, team2Colour,
   primary, secondary = [], onDone, doneLabel = 'Done', notices, footer, reduceMotion,
 }) {
+  useScoringBoard();
   const headingRef = useRef(null);
   const reduced = useReducedMotion(reduceMotion);
   const won = model.outcome === 'win' && (model.winnerSide === 'team1' || model.winnerSide === 'team2');

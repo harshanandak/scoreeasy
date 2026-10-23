@@ -133,6 +133,113 @@ async function pressProbeBack() {
   await settleRoute();
 }
 
+function expectBoardDock(hidden) {
+  expect(Boolean(document.querySelector('.global-bottom-nav'))).toBe(!hidden);
+  expect(document.body.classList.contains('has-mobile-bottom-nav')).toBe(!hidden);
+}
+
+describe('board dock visibility', () => {
+  it('keeps guided cricket lineup setup in the app shell', async () => {
+    const entries = cricketFinishSeed('guided');
+    const match = entries.se_cricket[0].matches[0];
+    match.team1Score = { runs: 0, balls: 0, wickets: 0, allOut: false };
+    match.draftState = { phase: 'setup1' };
+    Object.entries(entries).forEach(([key, value]) => seed(key, value));
+    renderApp(['/cricket/tournament/100/match/m1/score']);
+    await settleRoute();
+    expectBoardDock(false);
+    expect(nativeBack.install).not.toHaveBeenCalled();
+  });
+
+  it.each(['volleyball', 'cricket', 'kabaddi'])('%s hides the dock from Start through an unscored refresh and Back', async sport => {
+    const path = `/${sport}/quick`;
+    let view = renderApp(['/history', path]);
+    await settleRoute();
+    expectBoardDock(false);
+    fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Red' } });
+    fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Blue' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Start/ }));
+    await settleRoute();
+    expectBoardDock(true);
+    expect(nativeBack.install).not.toHaveBeenCalled();
+    view.unmount();
+    view = renderApp(['/history', path]);
+    await settleRoute();
+    expectBoardDock(true);
+    expect(nativeBack.install).not.toHaveBeenCalled();
+    await pressProbeBack();
+    expect(currentRoute()).toBe('/history');
+    expectBoardDock(false);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['volleyball', 'cricket', 'kabaddi'])('%s stays dock-free after a point, Undo and scored draft restore, then restores the dock on leave', async sport => {
+    const path = `/${sport}/quick`;
+    seed(`se_quickmatch_draft_${sport}`, {
+      sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', updatedAt: NOW_ISO,
+      format: sport === 'cricket' ? { preset: 't20', overs: 20, totalInnings: 2, players: 11, trackOvers: true }
+        : sport === 'kabaddi' ? { mode: 'free' } : { sets: 3, pointsPerSet: 25 },
+    });
+    const view = renderApp(['/history', path]);
+    await settleRoute();
+    const score = sport === 'cricket' ? '0 runs' : sport === 'kabaddi' ? 'Add +1 for Red' : 'Add point for Red';
+    fireEvent.click(screen.getByRole('button', { name: score, exact: true }));
+    expectBoardDock(true);
+    await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    expectBoardDock(true);
+    view.unmount();
+    renderApp(['/history', path]);
+    await settleRoute();
+    expectBoardDock(true);
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+    fireEvent.click(screen.getByRole('button', { name: 'Leave page' }));
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    expectBoardDock(false);
+  });
+
+  it('keeps a tournament board dock-free before scoring and after an unscored remount, then restores the dock on Back', async () => {
+    const tournament = footballTournament();
+    tournament.format = { sets: 3, pointsPerSet: 25 };
+    seed('se_volleyball', [tournament]);
+    const path = '/volleyball/tournament/100/match/m1/score';
+    let view = renderApp(['/history', path]);
+    await settleRoute();
+    expectBoardDock(true);
+    expect(nativeBack.install).not.toHaveBeenCalled();
+    view.unmount();
+    view = renderApp(['/history', path]);
+    await settleRoute();
+    expectBoardDock(true);
+    await pressProbeBack();
+    expect(currentRoute()).toBe('/history');
+    expectBoardDock(false);
+  });
+
+  it('keeps a tournament board dock-free after a point, Undo and draft restore, then restores the dock on leave', async () => {
+    const tournament = footballTournament();
+    tournament.format = { sets: 3, pointsPerSet: 25 };
+    seed('se_volleyball', [tournament]);
+    const path = '/volleyball/tournament/100/match/m1/score';
+    const view = renderApp([path]);
+    await settleRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Add point for Red' }));
+    expectBoardDock(true);
+    fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    expectBoardDock(true);
+    view.unmount();
+    renderApp([path]);
+    await settleRoute();
+    expectBoardDock(true);
+    fireEvent.click(document.querySelector('.global-nav-brand'));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
+    fireEvent.click(screen.getByRole('button', { name: 'Leave page' }));
+    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    expectBoardDock(false);
+  });
+});
+
 beforeEach(() => {
   globalThis.localStorage?.clear();
   globalThis.sessionStorage?.clear();
@@ -171,6 +278,7 @@ describe('route contracts: already correct (pinned)', () => {
     await waitFor(() => expect(currentRoute()).toBe(quick ? '/cricket/quick?result=300' : '/cricket/tournament/100'));
     if (quick) {
       expect(await screen.findByRole('region', { name: 'Match result' })).toHaveAttribute('data-screen', 'finish');
+      expectBoardDock(true);
       expect(screen.getByText('Won by 10 wickets')).toBeInTheDocument();
     }
     const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -181,6 +289,7 @@ describe('route contracts: already correct (pinned)', () => {
     if (quick) {
       fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
       expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+      expectBoardDock(true);
       expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
       expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
     }
@@ -674,6 +783,7 @@ describe('navigation decisions (2026-10-21)', () => {
     }
     renderApp([mode === 'quick' ? `/tennis/quick/live/${TENNIS_ID}` : '/tennis/tournament/100/match/m1/score']);
     await settleRoute();
+    expectBoardDock(true);
     expect(nativeBack.install).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
@@ -689,6 +799,7 @@ describe('navigation decisions (2026-10-21)', () => {
     Object.entries(entries).forEach(([key, value]) => seed(key, value));
     renderApp([kind === 'test-quick' ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score']);
     await settleRoute();
+    expectBoardDock(true);
     expect(nativeBack.install).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: kind === 'guided' ? 'Dot' : kind === 'limited' ? '0' : '0 runs', exact: true }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
@@ -820,6 +931,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: action, exact: true }));
+    expectBoardDock(action === 'Rematch');
     const draft = JSON.parse(localStorage.getItem('se_quickmatch_draft_football'));
     if (action === 'Rematch') expect(draft.scoringStarted).toBe(false);
     else expect(draft).toBeNull();
@@ -852,6 +964,7 @@ describe('navigation decisions (2026-10-21)', () => {
     } else seed(`se_${sport}`, [tournament]);
     renderApp([mode === 'quick' ? `/${sport}/quick` : `/${sport}/tournament/100/match/m1/score`]);
     await settleRoute();
+    expectBoardDock(true);
     expect(nativeBack.install).not.toHaveBeenCalled();
     const score = goals
       ? (mode === 'quick' ? 'Add 1 to Red' : 'Add 1 point to Red')
@@ -863,7 +976,9 @@ describe('navigation decisions (2026-10-21)', () => {
     } else fireEvent.click(screen.getByRole('button', { name: score }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     const installs = nativeBack.install.mock.calls.length;
+    expectBoardDock(true);
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
+    expectBoardDock(true);
     expect(nativeBack.install.mock.calls.length).toBe(installs);
     fireEvent.click(document.querySelector('.global-nav-brand'));
     expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
@@ -893,9 +1008,11 @@ describe('navigation decisions (2026-10-21)', () => {
     renderApp(['/volleyball/tournament/100/match/m1/result']);
     await settleRoute();
     expect(screen.getByRole('region', { name: 'Match result' })).toBeInTheDocument();
+    expectBoardDock(true);
     expect(screen.queryByRole('button', { name: 'Rematch' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(currentRoute()).toBe('/volleyball/tournament/100'));
+    expectBoardDock(false);
   });
 
   it('quick results keep Rematch and its fresh scorer leaves without warning', async () => {
@@ -904,8 +1021,9 @@ describe('navigation decisions (2026-10-21)', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+    expectBoardDock(true);
     fireEvent.click(await screen.findByRole('button', { name: 'Rematch' }));
-    expect(document.querySelector('.global-bottom-nav')).toBeInTheDocument();
+    expectBoardDock(true);
     fireEvent.click(document.querySelector('.global-nav-brand'));
     await waitFor(() => expect(currentRoute()).toBe('/app'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

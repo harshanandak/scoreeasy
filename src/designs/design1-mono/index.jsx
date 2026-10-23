@@ -23,7 +23,7 @@ import {
   isProtectedScoringRoute,
   resolveProtectedScoringCompletion,
 } from '../../mobile/backButton';
-import { ScoringProgressContext } from './scoring/scoringProgressContext';
+import { ScoringBoardContext, ScoringProgressContext } from './scoring/scoringProgressContext';
 import { ScoringCompletionContext } from './scoring/scoringCompletionContext';
 import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
@@ -648,7 +648,7 @@ BottomNavAccountCell.propTypes = {
   onNavigate: PropTypes.func.isRequired,
 };
 
-function GlobalNavigation({ requestScoringExit, scoringStarted }) {
+function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
@@ -656,7 +656,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
   const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
-  const showBottomNav = isAppShellPath(pathname) && !scoringStarted;
+  const showBottomNav = isAppShellPath(pathname) && !boardVisible;
 
   useEffect(() => {
     setOpen(false);
@@ -1365,6 +1365,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
 }
 
 GlobalNavigation.propTypes = {
+  boardVisible: PropTypes.bool,
   scoringStarted: PropTypes.bool,
   requestScoringExit: PropTypes.func.isRequired,
 };
@@ -1412,6 +1413,12 @@ export default function Design1Mono() {
   const scoringRouteKey = `${location.key}:${location.pathname}`;
   const scoringStarted = isProtectedScoringPath(location.pathname, location.search) && startedRoute === scoringRouteKey;
   const markScoringStarted = useCallback(started => setStartedRoute(started ? scoringRouteKey : null), [scoringRouteKey]);
+  const [boardCount, setBoardCount] = useState(0);
+  const registerBoard = useCallback(() => {
+    // Guided scorers and Finish can nest inside a scorer that also owns a board.
+    setBoardCount(count => count + 1);
+    return () => setBoardCount(count => count - 1);
+  }, []);
   const [exitPrompt, setExitPrompt] = useState(null);
   const exitPromptRef = useRef(null);
   const allowNextProtectedPopRef = useRef(false);
@@ -1668,12 +1675,13 @@ export default function Design1Mono() {
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} />
+      <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
       <main id="main-content">
         <ScoringProgressContext.Provider value={markScoringStarted}>
+        <ScoringBoardContext.Provider value={registerBoard}>
         <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
@@ -1738,6 +1746,7 @@ export default function Design1Mono() {
           </ErrorBoundary>
         </Suspense>
         </ScoringCompletionContext.Provider>
+        </ScoringBoardContext.Provider>
         </ScoringProgressContext.Provider>
       </main>
       <AppConfirmDialog
