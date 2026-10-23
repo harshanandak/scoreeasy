@@ -22,6 +22,7 @@ vi.mock('../../utils/storage', () => ({
   clearData: vi.fn(), isStaleQuickMatchDraft: () => false,
 }));
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
+const { SPORT_REGISTRY } = await import('../../models/sportRegistry');
 const board = () => document.querySelector('[data-goals-board]');
 const team = (name) => screen.getByRole('group', { name: `Score for ${name}` });
 const score = (name) => within(team(name)).getByLabelText(`${name} score`);
@@ -154,11 +155,17 @@ describe('Kabaddi shared goals board', () => {
     expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
   });
 
-  it.each(['hockey'])('keeps %s on its classic scorer', (sport) => {
-    ctx.sport = sport; ctx.draft.sport = sport;
-    render(<MonoQuickMatch />);
-    expect(board()).toBeNull();
-    expect(document.querySelector('.mono-arena-grid')).toBeInTheDocument();
+  it('retains the classic goals scorer for an explicit registry opt-out', () => {
+    const original = SPORT_REGISTRY.hockey.teamColour;
+    SPORT_REGISTRY.hockey.teamColour = false;
+    ctx.sport = 'hockey'; ctx.draft.sport = 'hockey';
+    try {
+      render(<MonoQuickMatch />);
+      expect(board()).toBeNull();
+      expect(document.querySelector('.mono-arena-grid')).toBeInTheDocument();
+    } finally {
+      SPORT_REGISTRY.hockey.teamColour = original;
+    }
   });
 
   it.each([['#111111', '#facc15'], ['#e11d74', '#2563eb'], ['#ffffff', '#ffffff']])('gates every key label and the raider chip with the engine (%s / %s)', (a, b) => {

@@ -218,6 +218,7 @@ export const SPORT_REGISTRY = {
 
   hockey: {
     id: 'hockey',
+    teamColour: true,
     identityColour: '#38bdf8', // Turf sky
     name: 'Hockey',
     icon: '🏑',
