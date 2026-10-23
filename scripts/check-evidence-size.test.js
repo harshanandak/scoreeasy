@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, renameSync, unlinkSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -40,6 +40,9 @@ describe('changed evidence image selection', () => {
   });
 
   it('selects real Git additions, modifications and rename destinations, excluding deletions and untouched files', () => {
+    // Hooks export repository paths; the fixture must own its Git directory.
+    const localGitEnv = execFileSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' });
+    for (const name of localGitEnv.trim().split('\n')) vi.stubEnv(name.trim(), undefined);
     const cwd = mkdtempSync(join(process.cwd(), 'node_modules/evidence-git-'));
     const git = (...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
     const write = (name, bytes) => writeFileSync(join(cwd, 'docs', name), Buffer.alloc(bytes));
@@ -67,6 +70,7 @@ describe('changed evidence image selection', () => {
       expect(() => changedPathsSince('missing-ref', cwd)).toThrow();
     } finally {
       rmSync(cwd, { recursive: true, force: true });
+      vi.unstubAllEnvs();
     }
   });
 });
