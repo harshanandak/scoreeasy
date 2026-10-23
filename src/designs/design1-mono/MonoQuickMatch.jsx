@@ -257,7 +257,7 @@ EndMatchButton.propTypes = {
   onEnd: PropTypes.func.isRequired,
 };
 
-// Scoring-phase notice. The "resumed" info reads as a quiet ambient line; real
+// Scoring-phase notice. The "resumed" info reads as an in-flow status line; real
 // save errors and end-match validation keep a proper alert box. Tone is derived
 // from the message so the save/end logic sites stay untouched.
 function ScoringNotice({ message }) {
@@ -269,7 +269,7 @@ function ScoringNotice({ message }) {
       : 'danger';
   if (tone === 'info') {
     return (
-      <p className="mono-scorer-note" role="status">{message}</p>
+      <p className="mono-scorer-note" role="status" aria-live="polite" aria-atomic="true">{message}</p>
     );
   }
   return (
@@ -2236,11 +2236,11 @@ export default function MonoQuickMatch() {
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
             {discardDialog}
-            <ScoringNotice message={saveWarning} />
             <ScoringStatusStrip lastAction={lastAction} />
             <BoardHeader title={presetLabel || 'Cricket'} sportColour={sportIdentity('cricket')?.core}
               subtitle={`Innings ${innings} · Over ${ballsToOvers(currentScore.balls)}${target !== null ? ` · Chasing ${target + 1}` : ''}`}
               isLive={live.isLive} onFinish={requestEndMatch} />
+            <ScoringNotice message={saveWarning} />
             <BoardOptionsSheet id="cricket-quick-options" open={cricketOptionsOpen} onClose={() => setCricketOptionsOpen(false)} onDiscard={requestDiscardQuickMatch}>
               <p className="text-xs">{timer.formatted}{isRefereeing ? ' \u00b7 Referee' : ''}</p>
             {/* Live broadcast control, held in a fixed-height slot so the score
