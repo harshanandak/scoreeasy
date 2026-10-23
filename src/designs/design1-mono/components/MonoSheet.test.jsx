@@ -345,7 +345,7 @@ describe('MonoSheet bottom-sheet primitive', () => {
     expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*box-shadow:\s*0 -18px 40px -24px/);
     // Soft 24px top radii + safe-area padding + drag handle affordance.
     expect(monoCss).toMatch(/\.mono-sheet\s*\{[^}]*border-top-left-radius:\s*24px/);
-    expect(monoCss).toContain('env(safe-area-inset-bottom, 0px)');
+    expect(monoCss).toContain('var(--se-safe-bottom)');
     expect(monoCss).toContain('.mono-sheet-handle');
     // Reduced-motion neutralizes the slide-up animation.
     expect(monoCss).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.mono-sheet\s*\{[\s\S]*animation:\s*none/);

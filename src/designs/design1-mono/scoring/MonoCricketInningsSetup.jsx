@@ -135,7 +135,7 @@ export default function MonoCricketInningsSetup({
 
 // Mono tokens only (--se-*/--primary) — mirrors the guided scorer surface.
 const STYLES = `
-.mono-setup-screen { min-height: 100dvh; padding: 16px 14px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.mono-setup-screen { min-height: calc(100dvh - var(--se-safe-top)); padding: 16px 14px calc(16px + var(--se-safe-bottom)); }
 .mono-setup-shell { max-width: 390px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .mono-setup-head { display: flex; flex-direction: column; gap: 4px; }
 .mono-setup-eyebrow { font-family: var(--se-font-mono); font-size: 0.625rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--se-color-ink-faint); }

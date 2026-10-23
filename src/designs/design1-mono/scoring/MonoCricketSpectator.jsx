@@ -145,7 +145,7 @@ function partnershipBalls(innings) {
 }
 
 const STYLE = `
-.mcs{max-width:390px;margin:0 auto;padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));font-family:var(--se-font-sans,var(--font-sans))}
+.mcs{max-width:390px;margin:0 auto;padding:14px 14px calc(16px + var(--se-safe-bottom));font-family:var(--se-font-sans,var(--font-sans))}
 .mcs .mono{font-family:var(--se-font-mono,var(--font-mono));font-variant-numeric:tabular-nums}
 .mcs .eyebrow{font-family:var(--se-font-mono,var(--font-mono));font-size:.625rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--se-color-ink-faint,var(--muted-foreground))}
 .mcs .hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}

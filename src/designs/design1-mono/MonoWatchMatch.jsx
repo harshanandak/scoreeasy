@@ -733,7 +733,7 @@ export default function MonoWatchMatch() {
       {/* Scorebug + tab bar are ONE sticky unit. Previously each stuck to top:0
           independently, so on scroll the higher-z scorebug overlapped the tab bar
           and the tabs became unclickable. Wrapping pins them together as a block. */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ position: 'sticky', top: 'var(--se-safe-top)', zIndex: 50 }}>
       <ConnectionBanner status={connectionStatus} />
       <PinnedScorebug snapshot={snapshot} nameA={nameA} nameB={nameB} kiosk={kiosk} />
 

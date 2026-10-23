@@ -371,7 +371,7 @@ export default function MonoCricketGuidedScorerRoute() {
 }
 
 const BREAK_STYLES = `
-.mono-break-screen { min-height: 100dvh; padding: 16px 14px 0; }
+.mono-break-screen { min-height: calc(100dvh - var(--se-safe-top)); padding: 16px 14px 0; }
 .mono-break-shell { max-width: 390px; margin: 0 auto; }
 .mono-break-screen .mono-setup-screen { min-height: 0; }
 .mono-break-banner { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); color: var(--se-color-ink); padding: 16px 16px; }
