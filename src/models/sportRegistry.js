@@ -24,6 +24,7 @@ export const SPORT_REGISTRY = {
     icon: '🏐',
     engine: 'sets',
     teamColour: true, // Direction E team-colour board
+    teamColourTournament: true,
     desc: 'Sets, rally scoring, deuce',
     storageKey: 'se_volleyball',
     config: {
@@ -350,6 +351,10 @@ export const getSportById = (id) =>
 // `teamColour: true` on its own registry entry, and its boards switch to the team-colour arena.
 export const isTeamColourSport = (id, registry = SPORT_REGISTRY) =>
   Object.prototype.hasOwnProperty.call(registry, id) && registry[id].teamColour === true;
+
+// Tournament presentation rolls out independently of the quick-match board.
+export const isTeamColourTournamentSport = (id, registry = SPORT_REGISTRY) =>
+  Object.prototype.hasOwnProperty.call(registry, id) && registry[id].teamColourTournament === true;
 
 /** Pickers group by focus tier: Tier-0 ("Popular") first, then the kept-later sports. */
 export const getSportsByCategory = () => ({
