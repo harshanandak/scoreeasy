@@ -253,10 +253,17 @@ describe('MonoQuickMatch setup clarity', () => {
   });
 
   it('keeps the preview neutral for a sport without team colours', async () => {
-    renderQuickMatch('/cricket/quick');
+    renderQuickMatch('/tabletennis/quick');
     const preview = await screen.findByTestId('matchup-preview');
     expect(preview).not.toHaveClass('is-team');
     expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
+  });
+
+  it('offers cricket team colours and uses them in its matchup preview', async () => {
+    renderQuickMatch('/cricket/quick');
+    expect(await screen.findByTestId('matchup-preview')).toHaveClass('is-team');
+    expect(screen.getByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
   });
 
   it('switches format from the segmented control and states the new rules', async () => {

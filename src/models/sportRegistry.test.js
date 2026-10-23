@@ -8,7 +8,7 @@ import {
   isTeamColourSport,
 } from './sportRegistry';
 import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
-import { COURT_MOTIFS } from '../lib/courtMotifs';
+import { SPORT_MARKS } from '../lib/sportMarks';
 
 
 // ─── The ICP game focus: 9 registered sports ──────────────────────────────────
@@ -310,11 +310,10 @@ describe('isTeamColourSport', () => {
     expect(isTeamColourSport(undefined)).toBe(false);
   });
 
-  it('only flags sets or goals sports that have a court drawing (never tennis or cricket)', () => {
+  it('gives every opted-in board a sport identity and a sport mark', () => {
     for (const sport of getSportsList().filter((s) => isTeamColourSport(s.id))) {
-      expect(['sets', 'goals']).toContain(sport.engine);
-      expect(['tennis', 'cricket']).not.toContain(sport.id);
-      expect(COURT_MOTIFS[sport.id], sport.id).toBeTruthy();
+      expect(sport.identityColour, sport.id).toBeTruthy();
+      expect(SPORT_MARKS[sport.id], sport.id).toBeTruthy();
     }
   });
 });

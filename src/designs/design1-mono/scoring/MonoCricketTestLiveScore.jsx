@@ -1,3 +1,7 @@
+import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
+import { useTeamColours } from './useTeamColours';
+import { sportIdentity } from '../../../lib/sportIdentity';
+import './cricketBoard.css';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
@@ -26,23 +30,6 @@ const triggerHaptic = (pattern) => {
 };
 
 const ORDINALS = ['1st', '2nd', '3rd', '4th'];
-
-function UndoIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 14 4 9l5-5" />
-      <path d="M4 9h11a5 5 0 0 1 0 10h-2" />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-      <path d="M3 6h18M3 12h18M3 18h18" />
-    </svg>
-  );
-}
 
 export default function MonoCricketTestLiveScore({ storageMode }) {
   const navigate = useNavigate();
@@ -207,6 +194,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
   const team1Id = match?.team1Id;
   const team2Id = match?.team2Id;
+  const colourStyle = useTeamColours(match?.team1Color || tournament?.teams?.find(t => t.id === team1Id)?.color, match?.team2Color || tournament?.teams?.find(t => t.id === team2Id)?.color, 'cricket');
   const team1Name = getTeamName(team1Id);
   const team2Name = getTeamName(team2Id);
 
@@ -775,7 +763,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               onClick={saveCompleteMatch}
               disabled={Boolean(scoringPrompt.pendingPrompt)}
               className="mono-btn-primary"
-              style={{ padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
+              style={{ minHeight: 48, padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
             >
               Save &amp; Return
             </button>
@@ -790,8 +778,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const contextLine = getContextLine();
 
   return (
-    <div className="mono-scorer-screen mono-arena-screen">
-      <div className="mono-scorer-shell">
+    <div className="mono-scorer-screen cricket-board" data-cricket-board="" data-batting={currentInning.teamId === team2Id ? 'b' : 'a'} style={colourStyle}>
+      <div className="mono-scorer-shell sb crb">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
@@ -799,98 +787,23 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
-        {/* Live broadcast control (consent / LIVE indicator / share) */}
-        <LiveBroadcastBar
-          broadcast={live}
-          descriptor={{
-            clientMatchId: liveClientMatchId,
-            sport: sport || 'cricket',
-            scorecardKind: 'cricket',
-            teamA: { name: team1Name },
-            teamB: { name: team2Name },
-          }}
-          enabled={liveEnabled}
-          onEnableChange={setLiveEnabled}
-        />
-        {/* Top bar — match/ending options live in the hamburger menu so the
-            scoring keypad stays low and easy to reach by thumb. */}
-        <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
-            {sportConfig?.name || 'Match'}
-          </span>
-          <div className="mono-scorer-topbar-actions">
-            <span className="mono-badge">Test Match</span>
-            <span className="mono-badge mono-badge-live">{ORDINALS[currentInningsIndex]} Innings</span>
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setShowActions(v => !v)}
-                aria-label="Match options"
-                aria-expanded={showActions}
-                className="mono-btn"
-                style={{ padding: '4px 8px', minHeight: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--se-color-ink)' }}
-              >
-                <MenuIcon />
-              </button>
-              {showActions && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Close menu"
-                    onClick={() => setShowActions(false)}
-                    style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'transparent', border: 'none', cursor: 'default' }}
-                  />
-                  <div
-                    role="menu"
-                    style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50, minWidth: 190, display: 'flex', flexDirection: 'column', gap: 6, padding: 8, background: 'var(--card)', border: '1px solid var(--se-color-ink)', borderRadius: 'calc(var(--radius) + 4px)', boxShadow: 'var(--shadow-hard)' }}
-                  >
-                    {showDeclare && !isInningsOver && (
-                      <button
-                        role="menuitem"
-                        onClick={() => { setShowActions(false); handleDeclare(); }}
-                        disabled={scoringPrompt.isInteractionLocked}
-                        className="mono-btn"
-                        style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', borderColor: 'var(--primary)', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-                      >
-                        Declare innings
-                      </button>
-                    )}
-                    <button
-                      role="menuitem"
-                      onClick={() => { setShowActions(false); handleDraw(); }}
-                      disabled={scoringPrompt.isInteractionLocked}
-                      className="mono-btn"
-                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-                    >
-                      End as draw
-                    </button>
-                    <button
-                      role="menuitem"
-                      onClick={() => { setShowActions(false); handleDiscard(); }}
-                      disabled={scoringPrompt.isInteractionLocked}
-                      className="mono-btn"
-                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-                    >
-                      Discard match
-                    </button>
-                    <button
-                      role="menuitem"
-                      onClick={() => { setShowActions(false); handleFinish(); }}
-                      disabled={scoringPrompt.isInteractionLocked}
-                      className="mono-btn"
-                      style={{ padding: '10px 12px', fontSize: '0.8125rem', textAlign: 'left', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-                    >
-                      Finish &amp; save
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <BoardHeader title={`${ORDINALS[currentInningsIndex]} Innings`} sportColour={sportIdentity('cricket')?.core}
+          subtitle={`Test cricket · Over ${ballsToOvers(currentInning.balls)}`}
+          isLive={live.isLive} onFinish={handleFinish} />
+        <BoardOptionsSheet id="cricket-test-options" open={showActions} onClose={() => setShowActions(false)} onDiscard={handleDiscard}>
+          <LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport: sport || 'cricket', scorecardKind: 'cricket', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />
+          <BoardSheetGroup>
+            <div role="menu" aria-label="Test match actions">
+            {showDeclare && !isInningsOver && <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleDeclare(); }}>Declare innings</button>}
+            <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleDraw(); }}>End as draw</button>
+            <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleFinish(); }}>Finish &amp; save</button>
+                      </div>
+          </BoardSheetGroup>
+        </BoardOptionsSheet>
 
         {/* Batting team — hero */}
-        <div className="mono-scorer-main-score mono-quick-cricket-score">
+        <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
+          <span className="cricket-mark" aria-hidden="true" />
           <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
             {battingTeamName} batting
           </p>
@@ -944,7 +857,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
         {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
         {!isInningsOver && (
-          <div className="mono-cricket-keypad">
+          <div className="mono-cricket-keypad cricket-aggregate-pad">
             <div className="mono-cricket-keys">
               {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
                 <button
@@ -980,20 +893,13 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
                 OUT
               </button>
-              <button
-                type="button"
-                onClick={undo}
-                disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-                className="mono-cricket-undo-line"
-                aria-label="Undo last action"
-                title="Undo last action"
-                style={{ touchAction: 'manipulation' }}
-              >
-                <UndoIcon />
-              </button>
+
             </div>
           </div>
         )}
+        <BoardBar canUndo={history.length > 0 && !matchComplete && !scoringPrompt.isInteractionLocked}
+          undoHint={(() => { const previous = history.at(-1); const score = previous?.innings?.[previous.currentInningsIndex]; return score ? `Back to ${ORDINALS[previous.currentInningsIndex]} · ${ballsToOvers(score.balls)} · ${score.runs}/${score.wickets}` : ''; })()}
+          onUndo={undo} sheetId="cricket-test-options" sheetOpen={showActions} onMore={() => setShowActions(true)} />
       </div>
     </div>
   );
