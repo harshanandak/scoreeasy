@@ -879,7 +879,7 @@ const STYLES = `
 .sheet-title { font-size: 0.9375rem; font-weight: 700; }
 .sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
 .menu-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.menu-row .pill { min-height: 34px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); }
+.menu-row .pill { min-height: 48px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); }
 .menu-actions { display: flex; gap: 8px; margin-top: 2px; }
 .menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }

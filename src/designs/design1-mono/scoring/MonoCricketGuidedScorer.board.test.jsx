@@ -10,6 +10,13 @@ function board(props = {}) {
 }
 
 describe('cricket team-colour board', () => {
+  it('keeps every secondary action at the 48px touch minimum', () => {
+    board();
+    fireEvent.click(screen.getByRole('button', { name: 'More options' }));
+    for (const button of screen.getByTestId('more-sheet').querySelectorAll('.menu-row .pill')) {
+      expect(parseFloat(getComputedStyle(button).minHeight), button.textContent).toBeGreaterThanOrEqual(48);
+    }
+  });
   it.each([
     ['Dot', 0, 1], ['Single', 1, 1], ['Four', 4, 1], ['Six', 6, 1],
     ['Run 2', 2, 1], ['Run 3', 3, 1], ['Run 5', 5, 1], ['Run 7', 7, 1],

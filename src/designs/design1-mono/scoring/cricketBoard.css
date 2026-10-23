@@ -86,6 +86,7 @@
 .cricket-board :is(.mono-cricket-out-line,.mono-btn-danger) { min-height: 48px; border: 2px solid var(--se-color-ink); border-radius: 14px; color: var(--se-color-danger); background: var(--se-color-danger-soft); box-shadow: 3px 3px 0 var(--se-color-shadow); }
 .cricket-board .mono-scorer-extra-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
 .cricket-board .cricket-aggregate-pad { margin-top: auto; }
+.cricket-board .mono-cricket-keys:not(.mono-cricket-keys-sec) { grid-template-columns: repeat(6,minmax(0,1fr)); grid-auto-rows: auto; }
 .cricket-board .mono-cricket-keys-sec { grid-template-columns: repeat(5,minmax(0,1fr)); }
 .cricket-board .mono-cricket-out-line-row { display: block; margin-bottom: 8px; }
 .cricket-board .mono-cricket-out-line { width: 100%; }

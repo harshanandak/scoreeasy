@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { deriveTeamColours } from '../../lib/teamColour';
+import { readFileSync } from 'node:fs';
 
 const state = vi.hoisted(() => ({ draft: null, saved: null }));
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
@@ -20,6 +21,22 @@ vi.mock('../../utils/storage', () => ({
 }));
 
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
+
+it('fits the six primary run keys in one row without the legacy viewport-sized rows', async () => {
+  const style = document.createElement('style');
+  style.textContent = readFileSync(`${import.meta.dirname}/scoring/cricketBoard.css`, 'utf8');
+  document.head.append(style);
+  try {
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Four runs' });
+    const grid = document.querySelector('.mono-cricket-keys');
+    expect(grid.children).toHaveLength(6);
+    expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(6,minmax(0,1fr))');
+    expect(getComputedStyle(grid).gridAutoRows).toBe('auto');
+  } finally {
+    style.remove();
+  }
+});
 
 beforeEach(() => {
   state.saved = null;
