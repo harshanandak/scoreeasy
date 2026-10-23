@@ -266,8 +266,10 @@ function ExistingUserDashboard({
   // While a match is unfinished, starting the next one is the Go; the last result moves to Recent.
   const hero = !hasActive && !hasInProgress ? recentMatches[0] : null;
   const listed = hero ? recentMatches.slice(1, 1 + RECENT_ROWS) : recentMatches.slice(0, RECENT_ROWS);
-  const heroSport = hero ? getSportById(hero.sport) : null;
-  const heroColours = hero ? deriveTeamColours(hero.team1Color, hero.team2Color) : null;
+  // The underline and wash keep following the last match even while its card gives way to Start.
+  const lead = !hasActive ? recentMatches[0] : null;
+  const heroSport = lead ? getSportById(lead.sport) : null;
+  const heroColours = lead ? deriveTeamColours(lead.team1Color, lead.team2Color) : null;
 
   /* Featured tier: real favourites first; else sports they recently played (finished, then in
      progress); else no tier at all. */
@@ -345,6 +347,15 @@ function ExistingUserDashboard({
           />
           <div className="kit-list">
             {listed.map((qm) => <MatchRow key={qm.id} qm={qm} onOpen={() => navigate('/history')} />)}
+          </div>
+        </section>
+      )}
+
+      {listed.length === 0 && !hero && hasInProgress && (
+        <section aria-labelledby="recent-title">
+          <KitSection id="recent-title" title="Recent" />
+          <div className="kit-list">
+            <p className="kit-empty-note">Finished matches will appear here</p>
           </div>
         </section>
       )}

@@ -304,6 +304,7 @@ describe('DashboardLanding (Kit Home)', () => {
     it('keeps quick-start tiles for the sports in progress when nothing is finished yet', () => {
       seedTwoInProgress();
       renderDashboard();
+      expect(within(screen.getByRole('region', { name: 'Recent' })).getByText('Finished matches will appear here')).toBeInTheDocument();
       expect(within(screen.getByRole('region', { name: 'Quick start' })).getAllByRole('button').map((b) => b.dataset.sport))
         .toEqual(['volleyball', 'kabaddi']);
     });
@@ -311,8 +312,10 @@ describe('DashboardLanding (Kit Home)', () => {
     it('lists the last 3 finished matches, newest first, with History scores, and See all opens History', async () => {
       seedTwoInProgress();
       seed([football, volleyball, kabaddi, cricket]);
-      renderDashboard();
+      const { container } = renderDashboard();
       expect(screen.queryByRole('heading', { name: 'Last match' })).not.toBeInTheDocument();
+      // The underline still takes the last match's sport colour, as it does with the card.
+      expect(container.querySelector('[data-screen="home"]').style.getPropertyValue('--kit-underline')).not.toBe('');
       const recent = screen.getByRole('region', { name: 'Recent' });
       const rows = within(recent).getAllByRole('button', { name: /View details/ });
       expect(rows.map((row) => row.querySelector('.kit-row-title').textContent)).toEqual(['Royals v Strikers', 'Lions v Tigers', 'Bulls v Panthers']);
