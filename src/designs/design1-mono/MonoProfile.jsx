@@ -186,12 +186,22 @@ export default function MonoProfile() {
 
   if (!paramUsername && !displayUser && !isAuthenticated) {
     return (
-      <RecoveryActions
-        cloudAuthAvailable={cloudAuthAvailable}
-        message="You can sign in to sync your profile, or keep scoring locally as a guest."
-        onNavigate={navigate}
-        title="Save your profile when you're ready"
-      />
+      <KitPage title="Profile">
+        <section className="kit-card kit-recovery" aria-labelledby="guest-profile-title" style={{ marginTop: 6 }}>
+          <h1 id="guest-profile-title">Your profile, when you’re ready</h1>
+          <p>Sign in to sync your profile and find other players. You can keep scoring on this device without an account.</p>
+          <div className="kit-btnstack">
+            {cloudAuthAvailable && (
+              <button type="button" className="se-go" onClick={() => navigate("/login?returnTo=%2Fprofile")}>
+                Sign in <GoArrow />
+              </button>
+            )}
+            <button type="button" className="se-ctl" onClick={() => navigate(DEFAULT_GUEST_SCORING_PATH)}>
+              Keep scoring as a guest
+            </button>
+          </div>
+        </section>
+      </KitPage>
     );
   }
 

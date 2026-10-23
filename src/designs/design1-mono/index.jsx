@@ -742,9 +742,9 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   // the header Home used path "/" (which matched every route via startsWith)
   // while the bottom nav used APP_ENTRY_PATH, so the active tab disagreed across
   // surfaces. Keying off `tab` removes that drift.
-  const accountTab = isAuthenticated ? 'account' : 'signin';
-  const accountPath = isAuthenticated ? '/profile' : '/login';
-  const accountLabel = isAuthenticated ? 'Account' : 'Sign in';
+  const accountTab = 'account';
+  const accountPath = '/profile';
+  const accountLabel = 'Profile';
 
   const navItems = [
     { tab: 'home', label: 'Home', path: homePath },
@@ -787,10 +787,6 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
           pathname.startsWith('/history/') ||
           pathname === '/statistics' ||
           pathname === '/stats';
-      case 'signin':
-        return pathname.startsWith('/login') ||
-          pathname.startsWith('/signup') ||
-          pathname.startsWith('/onboarding');
       case 'account':
         return pathname.startsWith('/profile') ||
           pathname.startsWith('/users/search') ||
@@ -918,7 +914,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
             // double control confused screen readers and dead-mapped the tap.
             // If Clerk has not loaded yet, fall back to a single nav button to
             // /profile so the tab is never dead.
-            if (item.tab === 'account') {
+            if (item.tab === 'account' && isAuthenticated) {
               return (
                 <BottomNavAccountCell
                   key={item.path}
