@@ -4,7 +4,7 @@ Starting a second quick match used the first match's storage slot, and drafts ol
 
 The screenshots render real components with local fixtures and mocked auth/Convex. T3 `html_preview` was the only screenshot renderer. The app was built as an inline IIFE with inline CSS and fonts, inside exact phone frames. Entry motion was disabled in the fixture to capture its settled state. No live data or backend writes were used.
 
-The product source for the after captures is `8509bbabc95534e2dc1151c6229b373a8286362f`. The before source is tracked master `4a3ba4494f47fe8294a518abdc1c95e017f075b8`. The baseline fixture uses legacy per-sport slots: cricket B overwrites cricket A, and the older volleyball draft is hidden by expiry. Its Home therefore shows only cricket B; its History shows only the completed kabaddi result. The after fixture holds all three independent records.
+The product source for the refreshed after captures is `715c9e0290a7527f2a7b76e32455cc29fb019f32` (round 2, rebased onto dock-visibility PR #206). The before source is tracked master `4a3ba4494f47fe8294a518abdc1c95e017f075b8`. The baseline fixture uses legacy per-sport slots: cricket B overwrites cricket A, and the older volleyball draft is hidden by expiry. Its Home therefore shows only cricket B; its History shows only the completed kabaddi result. The after fixture holds all three independent records.
 
 | Capture | Evidence |
 | --- | --- |
@@ -59,21 +59,40 @@ Storage full at boot remains a separate existing bug (Forge `7a50f38f-f619-445d-
 
 The source and test file inventory follows.
 
+## Round 2: restore the started board after refresh
+
+The rebase onto PR #206 preserved both conflict assertions: Rematch is dock-free while New Match returns to setup, and the latch check reads the per-match catalog. The six new dock regressions failed before this fix. The snapshot was still stored: the bare quick route only consulted the removed legacy slot, while the new per-match record required a resume id. It now resolves the most recently saved started draft of that sport, including 0?0 and an Undo back to zero. Fresh creation actions pass explicit router state; Home/History rematches already pass the intended teams. Starting a second match still allocates a separate record. Phantom-shell cleanup was not changed.
+
+Cricket quick rows now pair each team with its own runs/wickets, show the unplayed side as yet to bat, and derive the chase target from the other innings. Names ellipsize; score/status values do not shrink. The seven after screenshots above were refreshed, including the changed delete-confirmation copy. A separate 360px long-name render verifies actual name truncation, no numeric clipping and no horizontal overflow. New Resume/Delete targets measure at least 88.39?48px. Round-2 metadata is retained separately in the measurements JSON; the prior capture metadata remains historical.
+
+Test adaptations are limited to helpers: the retention flow uses the real Play tile to start match B, and 11 existing scorer storage mocks expose an empty per-match key inventory through listDataKeys. Their seeded legacy snapshots and all timer, score, Undo and broadcast assertions are unchanged. The #206 dock tests and the conflict resolution are unchanged. New regressions cover the latest zero-score match alongside a peer, both Home/History cricket labels, reversed batting order and a zero-run chase target.
+
+Round-2 validation (evidence rung 4): the full suite passed 166 files, 2,164 tests passed and 7 existing expected failures (2,171 total), using bun run test --maxWorkers 2. The production build passed. Commit hooks passed lint (0 errors, 29 existing warnings), type-check and config synchronization. Screenshot evidence (rung 5 for these rendered components) passed all eight audits. All nine PNG dimensions were checked after compression; total committed image size is 194,997 bytes. Evidence compression and the size gate passed. The first full attempt exposed the missing mock inventory method and was stopped before completion; the completed run used the updated helpers.
+
 <!-- file inventory -->
 
 - [`src/designs/design1-mono/KeepEveryMatch.test.jsx`](../../../src/designs/design1-mono/KeepEveryMatch.test.jsx)
 - [`src/designs/design1-mono/MonoHistory.jsx`](../../../src/designs/design1-mono/MonoHistory.jsx)
+- [`src/designs/design1-mono/MonoPlayHub.jsx`](../../../src/designs/design1-mono/MonoPlayHub.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.badmintonBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.badmintonBoard.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.basketballBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.basketballBoard.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.broadcast.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.broadcast.test.jsx)
+- [`src/designs/design1-mono/MonoQuickMatch.clock.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.clock.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.cricketBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.cricketBoard.test.jsx)
+- [`src/designs/design1-mono/MonoQuickMatch.footballBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.footballBoard.test.jsx)
+- [`src/designs/design1-mono/MonoQuickMatch.goalsBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.goalsBoard.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.hardening.test.jsx)
+- [`src/designs/design1-mono/MonoQuickMatch.hockeyBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.hockeyBoard.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.lastLine.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.lastLine.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.pointCue.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.pointCue.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.restoreNotice.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.restoreNotice.test.jsx)
 - [`src/designs/design1-mono/MonoQuickMatch.tabletennisBoard.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.tabletennisBoard.test.jsx)
+- [`src/designs/design1-mono/MonoQuickMatch.teamColour.test.jsx`](../../../src/designs/design1-mono/MonoQuickMatch.teamColour.test.jsx)
+- [`src/designs/design1-mono/MonoSportHome_TABBED.jsx`](../../../src/designs/design1-mono/MonoSportHome_TABBED.jsx)
+- [`src/designs/design1-mono/MonoTournamentList.jsx`](../../../src/designs/design1-mono/MonoTournamentList.jsx)
 - [`src/designs/design1-mono/components/InProgressMatches.jsx`](../../../src/designs/design1-mono/components/InProgressMatches.jsx)
+- [`src/designs/design1-mono/components/RouteRecoveryActions.jsx`](../../../src/designs/design1-mono/components/RouteRecoveryActions.jsx)
 - [`src/designs/design1-mono/components/inProgressMatches.css`](../../../src/designs/design1-mono/components/inProgressMatches.css)
 - [`src/designs/design1-mono/index.jsx`](../../../src/designs/design1-mono/index.jsx)
 - [`src/designs/design1-mono/landing/DashboardLanding.jsx`](../../../src/designs/design1-mono/landing/DashboardLanding.jsx)
