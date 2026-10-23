@@ -46,7 +46,7 @@ export default function RouteRecoveryActions({
               type="button"
               className={action.primary ? 'mono-btn-primary' : 'mono-btn'}
               style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-              onClick={() => navigate(action.path, { replace: true })}
+              onClick={() => navigate(action.path, { replace: true, state: action.path === quickPath ? { newMatch: true } : null })}
             >
               {action.label}
             </button>

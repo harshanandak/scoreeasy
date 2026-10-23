@@ -129,7 +129,7 @@ export default function MonoSportHome() {
                         </div>
                       </button>
                       <button
-                        onClick={() => navigate(`/${sport.id}/quick`)}
+                        onClick={() => navigate(`/${sport.id}/quick`, { state: { newMatch: true } })}
                         className="mono-btn flex-1"
                         style={{ fontSize: '0.8125rem', padding: '10px 16px' }}
                       >

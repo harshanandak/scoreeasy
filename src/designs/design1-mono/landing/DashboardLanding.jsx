@@ -12,6 +12,7 @@ import LiveNowStrip from '../live/LiveNowStrip';
 import { relativeDay } from '../kit/dates';
 import ErrorBoundary from '../../../components/ErrorBoundary';
 import { loadInProgressMatches } from '../../../utils/appEntry';
+import InProgressMatches from '../components/InProgressMatches';
 import {
   Chevron, CoachArrow, GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge, SportTile,
 } from '../kit/KitParts';
@@ -231,7 +232,7 @@ function QuickStart({ sports, label, navigate }) {
       <KitSection id="home-quick-start" title="Quick start" aside={<span>{label}</span>} />
       <div className="kit-grid3">
         {sports.map((sport) => (
-          <SportTile key={sport.id} sport={sport} mini onSelect={(sp) => navigate(`/${sp.id}/quick`)} />
+          <SportTile key={sport.id} sport={sport} mini onSelect={(sp) => navigate(`/${sp.id}/quick`, { state: { newMatch: true } })} />
         ))}
       </div>
     </section>
@@ -285,31 +286,7 @@ function ExistingUserDashboard({
       <Greeting name={displayName} fallback="Welcome back." />
       <p className="kit-sub">{scored}</p>
 
-      {inProgressMatches.length > 0 && (
-        <section aria-labelledby="resume-matches-title">
-          <KitSection id="resume-matches-title" title="In progress" />
-          <div className="kit-list">
-            {inProgressMatches.map((match) => {
-              const sportName = getSportById(match.sport)?.name || match.sport;
-              const title = match.kind === 'tournament'
-                ? match.name || `${sportName} tournament`
-                : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
-              return (
-                <div key={match.entryPath} className="kit-row">
-                  <SportBadge sportId={match.sport} />
-                  <span className="kit-row-text">
-                    <span className="kit-row-title">{title}</span>
-                    <span className="kit-row-sub">{sportName} · {match.kind === 'tournament' ? 'Tournament' : 'Quick match'}</span>
-                  </span>
-                  <button type="button" className="se-ctl" aria-label={`Resume ${sportName}: ${title}`} onClick={() => navigate(match.entryPath)}>
-                    Resume
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <InProgressMatches />
 
       {hasActive && (
         <section aria-labelledby="active-sessions-title">

@@ -18,10 +18,10 @@ import {
   deleteQuickMatch,
   loadCompletedQuickMatches,
   loadQuickMatches,
+  loadQuickMatch,
   replaceCompletedQuickMatches,
   saveQuickMatch,
   saveQuickMatches,
-  isStaleQuickMatchDraft,
   saveStatistics,
   loadAllStatistics,
   createMemoryFallback,
@@ -368,7 +368,7 @@ describe('Quick match persistence normalization', () => {
     expect(completed.every((match) => match.status === 'completed')).toBe(true);
   });
 
-  it('cleans stale drafts, phantom 0-0 ties, and impossible durations while keeping valid drafts', () => {
+  it('keeps old drafts while cleaning phantom 0-0 ties and impossible durations', () => {
     saveQuickMatches([
       {
         id: 'stale-draft',
@@ -426,7 +426,7 @@ describe('Quick match persistence normalization', () => {
       },
     ]);
 
-    expect(loadQuickMatches().map((match) => match.id)).toEqual(['fresh-draft', 'real-result', 'scoreless-draw']);
+    expect(loadQuickMatches().map((match) => match.id)).toEqual(['stale-draft', 'fresh-draft', 'real-result', 'scoreless-draw']);
     expect(loadCompletedQuickMatches()).toEqual([
       expect.objectContaining({
         id: 'real-result',
@@ -486,29 +486,11 @@ describe('Quick match persistence normalization', () => {
     expect(loadQuickMatches().map((match) => match.id)).toEqual(['active-draft', 'restored-match']);
   });
 
-  it('detects stale per-sport quick match drafts by updated timestamp', () => {
-    expect(isStaleQuickMatchDraft({
-      phase: 'scoring',
-      sport: 'football',
-      updatedAt: staleDate,
-    })).toBe(true);
-
-    expect(isStaleQuickMatchDraft({
-      phase: 'scoring',
-      sport: 'football',
-      updatedAt: freshDate,
-    })).toBe(false);
-
-    expect(isStaleQuickMatchDraft({
-      phase: 'scoring',
-      sport: 'tennis',
-      createdAt: staleDate,
-      draftState: { savedAt: freshDate },
-    })).toBe(false);
-
-    expect(isStaleQuickMatchDraft({
-      status: 'completed',
-      completedAt: staleDate,
-    })).toBe(false);
+  it('can update a draft older than a day without deleting it', () => {
+    saveQuickMatch({ id: 'old', sport: 'cricket', status: 'in-progress', updatedAt: staleDate, draftState: { innings: 2, history: [1, 2] } });
+    expect(loadQuickMatch('old')).toMatchObject({ draftState: { innings: 2, history: [1, 2] } });
+    saveQuickMatch({ ...loadQuickMatch('old'), score1: 15 });
+    expect(loadQuickMatches()).toHaveLength(1);
+    expect(loadQuickMatch('old').score1).toBe(15);
   });
 });

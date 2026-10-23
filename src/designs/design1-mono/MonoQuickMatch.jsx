@@ -10,7 +10,10 @@ import { api } from '../../../convex/_generated/api';
 import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calculateRunRate, getPowerplayPhase, getCricketFormat } from '../../utils/cricketCalculations';
 import BackArrow from './components/BackArrow';
 import { validateSingleSetScore } from '../../utils/volleyballCalculations';
-import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch, isStaleQuickMatchDraft } from '../../utils/storage';
+import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch } from '../../utils/storage';
+import { createQuickMatchId, getQuickMatchDraftKey, migrateQuickMatchDraft } from '../../utils/quickMatchDrafts';
+import { loadQuickMatchDrafts } from '../../utils/appEntry';
+import { inProgressTimestamp } from '../../utils/inProgressMatch';
 import { getSportById, isTeamColourSport } from '../../models/sportRegistry';
 import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
@@ -326,6 +329,8 @@ export default function MonoQuickMatch() {
   const [searchParams] = useSearchParams();
   const preselectedFormat = searchParams.get('format');
   const resultMatchId = searchParams.get('result');
+  const resumeMatchId = searchParams.get('resume');
+  const startNewMatch = location.state?.newMatch === true || Array.isArray(location.state?.teams);
   const sportConfig = getSportById(sport);
   const engine = sportConfig?.engine || 'goals';
   const isCricket = engine === 'custom-cricket';
@@ -500,7 +505,9 @@ export default function MonoQuickMatch() {
   const draftHydratedSportRef = useRef(null);
   const restoredDraftRef = useRef(false);
   const scoringSportRef = useRef(null);
-  const quickMatchDraftKey = `se_quickmatch_draft_${sport}`;
+  const hydratedDraftKeyRef = useRef(null);
+  const [activeDraftKey, setActiveDraftKey] = useState(null);
+  const quickMatchDraftKey = activeDraftKey;
 
   // Live broadcast (dkt/b0z): mirror each point/undo to the public watch page with
   // the engine-derived snapshot. Additive — localStorage stays authoritative; a
@@ -512,8 +519,8 @@ export default function MonoQuickMatch() {
   // Records the latest scoring action; its broadcast snapshot is computed from the
   // COMMITTED state in the post-commit effect below (a point can end a set / chase).
   const broadcastIntentRef = useRef(null);
-  // Stable per-match id (R2): QuickMatch has no matchId during scoring, so we mint a
-  // numeric id when scoring STARTS and persist/restore it in the draft. Null until
+  // Stable per-match id (R2): mint it when scoring STARTS and persist/restore
+  // it in the draft. Null until
   // then so the bar doesn't fire goLive on the setup screen.
   const liveMatchIdRef = useRef(null);
 
@@ -540,7 +547,7 @@ export default function MonoQuickMatch() {
   }, [phase]);
 
   useEffect(() => {
-    const hydrationKey = `${sport}:${resultMatchId || ''}`;
+    const hydrationKey = startNewMatch ? `${sport}:new` : `${sport}:${resultMatchId || ''}:${resumeMatchId || ''}`;
     if (draftHydratedSportRef.current === hydrationKey) return;
     const previousSport = draftHydratedSportRef.current;
     draftHydratedSportRef.current = hydrationKey;
@@ -572,17 +579,22 @@ export default function MonoQuickMatch() {
       return;
     }
 
-    const draft = loadData(quickMatchDraftKey, null);
-    const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
+    const migrated = migrateQuickMatchDraft(sport);
+    // The old bare address still resumes after refresh. Creation links opt into
+    // setup explicitly so starting another match never replaces this snapshot.
+    const currentDraft = !resumeMatchId && !startNewMatch
+      ? loadQuickMatchDrafts([sportConfig]).sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0))[0]
+      : null;
+    const restoredKey = resumeMatchId ? getQuickMatchDraftKey(sport, resumeMatchId) : startNewMatch ? null : currentDraft?.draftKey || migrated?.key;
+    const draft = restoredKey ? (migrated?.key === restoredKey ? migrated.draft : loadData(restoredKey, null)) : null;
+    hydratedDraftKeyRef.current = restoredKey;
+    setActiveDraftKey(restoredKey || null);
+    const saved = draft?.quickMatchId !== undefined && draft?.quickMatchId !== null ? loadQuickMatch(draft.quickMatchId) : null;
     if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${draft?.quickMatchId || 'setup'}`, () => {
-      clearData(quickMatchDraftKey);
+      if (isCompletedMatch(saved)) clearData(restoredKey);
       navigate('/history', { replace: true });
     })) return;
-    if (isStaleQuickMatchDraft(draft)) {
-      clearData(quickMatchDraftKey);
-    }
-
-    if (!draft || isStaleQuickMatchDraft(draft) || draft.sport !== sport || draft.phase !== 'scoring') {
+    if (!draft || draft.sport !== sport || draft.phase !== 'scoring') {
       if (previousSport && phase !== 'setup') {
         setPhase('setup');
         setResult(null);
@@ -619,20 +631,26 @@ export default function MonoQuickMatch() {
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
-    liveMatchIdRef.current = draft.quickMatchId || Date.now();
+    liveMatchIdRef.current = draft.quickMatchId ?? createQuickMatchId();
     // A sport switch can restore another draft while phase is already 'scoring'.
     timer.restore(getRestoredTimerElapsed(draft), true);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
-  }, [quickMatchDraftKey, sport, resultMatchId]);
+    if (!resumeMatchId && draft.quickMatchId !== undefined && draft.quickMatchId !== null && restoredKey === getQuickMatchDraftKey(sport, draft.quickMatchId)) {
+      draftHydratedSportRef.current = `${sport}::${draft.quickMatchId}`;
+      navigate(`/${sport}/quick?resume=${encodeURIComponent(draft.quickMatchId)}`, { replace: true });
+    }
+  }, [sport, resultMatchId, resumeMatchId, startNewMatch]);
 
   useEffect(() => {
     // A staged winner is still a draft until its terminal save succeeds.
     if (completion.committed || phase !== 'scoring') return;
     if (scoringSportRef.current !== sport) return;
+    if (!quickMatchDraftKey) return;
+    if (hydratedDraftKeyRef.current !== quickMatchDraftKey) return;
 
-    saveData(quickMatchDraftKey, {
+    const saved = saveData(quickMatchDraftKey, {
       phase,
       sport,
       scoringStarted,
@@ -662,6 +680,7 @@ export default function MonoQuickMatch() {
       startedAt: startedAtRef.current,
       updatedAt: new Date().toISOString(),
     });
+    if (!saved) setSaveWarning('Save failed - storage may be full. Export your data.');
     // `timer.elapsed` is intentionally omitted: it ticks every second, which would
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
@@ -817,7 +836,7 @@ export default function MonoQuickMatch() {
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
   const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
   const liveDescriptor = {
-    clientMatchId: liveMatchIdRef.current ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
+    clientMatchId: liveMatchIdRef.current !== null ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
     sport,
     scorecardKind: liveScorecardKind,
     teamA: teamColourOn ? { name: team1Name, color: team1Color } : { name: team1Name },
@@ -922,7 +941,7 @@ export default function MonoQuickMatch() {
   const finalizeMatch = (entry) => completion.complete(() => {
     void endMatchImpact();
 
-    const matchId = liveMatchIdRef.current || entry.id;
+    const matchId = liveMatchIdRef.current ?? entry.id;
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
     const nextResult = {
       ...entry,
@@ -987,7 +1006,12 @@ export default function MonoQuickMatch() {
     // Tear down any in-flight live broadcast so a discarded match doesn't leave an
     // orphaned live session streaming to spectators.
     liveRef.current?.reset?.();
-    clearData(quickMatchDraftKey);
+    if (!clearData(quickMatchDraftKey)) {
+      setSaveWarning('Could not delete this match. Please try again.');
+      return;
+    }
+    scoringSportRef.current = null;
+    setActiveDraftKey(null);
     navigate('/app');
   };
 
@@ -1033,7 +1057,6 @@ export default function MonoQuickMatch() {
     if (!team1Name.trim() || !team2Name.trim()) return;
     setSaveWarning('');
     setShareStatus('');
-    clearData(quickMatchDraftKey);
     setVScore1(0);
     setVScore2(0);
     setGScore1(0);
@@ -1058,7 +1081,7 @@ export default function MonoQuickMatch() {
 
     // Test format (4 innings) → save to quick match storage and navigate to test scorer
     if (isCricket && format.totalInnings === 4) {
-      const matchId = Date.now();
+      const matchId = createQuickMatchId();
       const nowIso = new Date().toISOString();
       const match = {
         id: matchId, sport,
@@ -1082,7 +1105,7 @@ export default function MonoQuickMatch() {
     }
 
     if (isTennis) {
-      const matchId = Date.now();
+      const matchId = createQuickMatchId();
       const nowIso = new Date().toISOString();
       const draft = buildTennisQuickDraft({
         matchId,
@@ -1109,7 +1132,11 @@ export default function MonoQuickMatch() {
     // tennis/test-cricket branches above navigate away and never reach this line.
     setResult(null);
     resetSync();
-    liveMatchIdRef.current = Date.now();
+    liveMatchIdRef.current = createQuickMatchId();
+    setActiveDraftKey(getQuickMatchDraftKey(sport, liveMatchIdRef.current));
+    hydratedDraftKeyRef.current = getQuickMatchDraftKey(sport, liveMatchIdRef.current);
+    draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
+    navigate(`/${sport}/quick?resume=${liveMatchIdRef.current}`, { replace: true });
     setPhase('scoring');
   };
 
@@ -1656,8 +1683,8 @@ export default function MonoQuickMatch() {
     completion.reset();
     if (resultMatchId) {
       // Leave the saved-result address before creating any fresh scoring draft.
-      draftHydratedSportRef.current = `${sport}:`;
-      navigate(`/${sport}/quick`, { replace: true });
+      draftHydratedSportRef.current = `${sport}:new`;
+      navigate(`/${sport}/quick`, { replace: true, state: { newMatch: true } });
     }
     restoredDraftRef.current = false;
     setSaveWarning('');
@@ -1692,14 +1719,19 @@ export default function MonoQuickMatch() {
     setShareStatus('');
     resetSync();
     liveRef.current?.reset?.(); // drop the prior live session so the next match starts clean (R2)
-    clearData(quickMatchDraftKey);
     timer.reset();
     startedAtRef.current = null;
     // Mint a fresh live id when going STRAIGHT into scoring (e.g. "play again"),
     // matching the setup→start path — otherwise a rematch has no clientMatchId and
     // can't go live. null for setup; the start handler mints there.
-    liveMatchIdRef.current = nextPhase === 'scoring' ? Date.now() : null;
-    if (nextPhase === 'scoring') scoringSportRef.current = sport;
+    liveMatchIdRef.current = nextPhase === 'scoring' ? createQuickMatchId() : null;
+    setActiveDraftKey(nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null);
+    hydratedDraftKeyRef.current = nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null;
+    if (nextPhase === 'scoring') {
+      scoringSportRef.current = sport;
+      draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
+      navigate(`/${sport}/quick?resume=${liveMatchIdRef.current}`, { replace: true });
+    }
   };
 
   const shareResult = async () => {
@@ -2155,7 +2187,7 @@ export default function MonoQuickMatch() {
       idPrefix="discard-match"
       tone="danger"
       title="Discard match?"
-      message="This will delete this in-progress match. This can't be undone."
+      message={`Delete ${team1Name} v ${team2Name}, ${isCricket ? `${scores.team1.runs}/${scores.team1.wickets}–${scores.team2.runs}/${scores.team2.wickets}` : isGoals ? `${gScore1}–${gScore2}` : format.type === 'best-of' ? `${sets[currentSet]?.score1 || 0}–${sets[currentSet]?.score2 || 0}` : `${vScore1}–${vScore2}`}? This can't be undone.`}
       confirmLabel="Discard"
       cancelLabel="Keep scoring"
       onCancel={cancelDiscardQuickMatch}

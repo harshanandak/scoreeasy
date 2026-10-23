@@ -9,7 +9,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 
 const nav = vi.hoisted(() => vi.fn());
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, queryResult: undefined, cloudAuthAvailable: true }));
-const storageMock = vi.hoisted(() => ({ clearData: vi.fn(), saveQuickMatch: vi.fn(() => true) }));
+const storageMock = vi.hoisted(() => ({ clearData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
 const live = vi.hoisted(() => ({
   point: vi.fn(() => Promise.resolve()),
   undo: vi.fn(() => Promise.resolve()),
@@ -24,7 +24,7 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => nav,
   useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),
-  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  useSearchParams: () => [new URLSearchParams(`resume=${ctx.draft?.quickMatchId || 'fixture'}`), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: ctx.cloudAuthAvailable }),
@@ -39,7 +39,8 @@ vi.mock('../../lib/live/liveSession', () => ({
   saveSession: vi.fn(),
 }));
 vi.mock('../../utils/storage', () => ({
-  loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+  listDataKeys: () => [],
+  loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}_${ctx.draft?.quickMatchId || 'fixture'}` ? ctx.draft : def)),
   loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),
   clearData: storageMock.clearData,

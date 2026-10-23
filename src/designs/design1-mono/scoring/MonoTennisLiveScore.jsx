@@ -10,7 +10,6 @@ import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import {
   clearData,
-  isStaleQuickMatchDraft,
   loadData,
   loadQuickMatch,
   loadSportTournaments,
@@ -394,11 +393,6 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         clearData(draftKey);
         completeScoring(`/${sport}/quick?result=${encodeURIComponent(matchId)}`);
       })) return;
-      if (isStaleQuickMatchDraft(draft)) {
-        clearData(draftKey);
-        navigate(`/${sport}/quick`);
-        return;
-      }
       if (!draft) return;
       setSportConfig(config);
       setTournament(null);
@@ -746,7 +740,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     }
     navigateBack();
   };
-  const handleCancel = () => scoringPrompt.cancelOrNavigate(hasChanges, discardAndExit);
+  const handleCancel = () => scoringPrompt.requestPrompt({
+    cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard match?',
+    message: `Delete ${team1Name} v ${team2Name}, ${sets[currentSet]?.games1 || 0}–${sets[currentSet]?.games2 || 0} games? This can't be undone.`,
+  });
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if ((!isQuickMatch && !tournament) || !match) {

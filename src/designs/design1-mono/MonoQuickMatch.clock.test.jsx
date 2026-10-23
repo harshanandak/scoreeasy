@@ -17,6 +17,7 @@ vi.mock('../../hooks/useLiveBroadcast', () => ({
 }));
 vi.mock('../../lib/live/liveSession', () => ({ getConsent: () => 'unknown', loadSession: () => null, saveSession: vi.fn() }));
 vi.mock('../../utils/storage', () => ({
+  listDataKeys: () => [],
   loadData: (key, fallback) => key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : fallback,
   loadQuickMatch: () => null, saveData: storage.saveData, saveQuickMatch: storage.saveQuickMatch,
   clearData: vi.fn(), isStaleQuickMatchDraft: () => false,

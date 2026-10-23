@@ -8,12 +8,12 @@ vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => und
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: 'basketball' }),
   useLocation: () => ({ pathname: '/basketball/quick', search: '' }),
-  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  useSearchParams: () => [new URLSearchParams('resume=3101'), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, reset: vi.fn(), point: vi.fn(), undo: vi.fn(), finalize: vi.fn() }) }));
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
-const key = 'se_quickmatch_draft_basketball';
+const key = 'se_quickmatch_draft_basketball_3101';
 const board = () => document.querySelector('[data-goals-board]');
 const undo = () => screen.getByRole('button', { name: 'Undo last action' });
 const score = name => screen.getByLabelText(`${name} score`);
@@ -169,7 +169,9 @@ describe('Basketball on the shared goals board', () => {
     fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Hoops' } });
     fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Dunkers' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start basketball' }));
-    const saved = JSON.parse(localStorage.getItem(key));
+    const savedKey = Object.keys(localStorage).find(storedKey => storedKey.startsWith('se_quickmatch_draft_basketball_'));
+    const saved = JSON.parse(localStorage.getItem(savedKey));
+    expect(saved.quickMatchId).toBeDefined();
     const colours = deriveTeamColours(saved.team1Color, saved.team2Color);
     expect(board().style.getPropertyValue('--team-a-core')).toBe(colours.A.core);
     expect(board().style.getPropertyValue('--team-b-core')).toBe(colours.B.core);

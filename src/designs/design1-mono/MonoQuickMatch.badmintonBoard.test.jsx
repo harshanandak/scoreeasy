@@ -15,10 +15,11 @@ vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn(), isLive: false }) }));
 vi.mock('../../lib/live/liveSession', () => ({ getConsent: () => 'declined', loadSession: () => null, saveSession: vi.fn() }));
 vi.mock('../../utils/storage', () => ({
+  listDataKeys: () => [],
   loadData: (key, fallback) => key === 'se_quickmatch_draft_badminton' ? ctx.draft : fallback,
   loadQuickMatch: () => null, clearData: vi.fn(), saveQuickMatch: savedMatch,
   isStaleQuickMatchDraft: () => false,
-  saveData: (key, value) => { if (key === 'se_quickmatch_draft_badminton') ctx.saved = structuredClone(value); return true; },
+  saveData: (key, value) => { if (key.startsWith('se_quickmatch_draft_badminton_')) ctx.saved = structuredClone(value); return true; },
 }));
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
 const board = () => document.querySelector('[data-team-board]');

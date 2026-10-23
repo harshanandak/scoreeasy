@@ -181,7 +181,7 @@ export default function MonoTournamentList() {
               Create {sportLabel} Tournament
             </button>
             <button
-              onClick={() => navigate(`/${sport}/quick`)}
+              onClick={() => navigate(`/${sport}/quick`, { state: { newMatch: true } })}
               className="mono-btn w-full"
               style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
             >

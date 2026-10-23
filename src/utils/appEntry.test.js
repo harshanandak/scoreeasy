@@ -14,11 +14,11 @@ import { getSportsList } from '../models/sportRegistry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 describe('app entry contract', () => {
-  it('lists each resumable sport draft, tennis draft, Test match and unfinished tournament once without writing storage', () => {
+  it('lists and migrates each resumable sport draft alongside tennis, Test matches and tournaments', () => {
     const now = new Date().toISOString();
     const sports = getSportsList().filter((sport) => sport.id !== 'tennis');
     for (const sport of sports) {
-      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ sport: sport.id, phase: 'scoring', updatedAt: now }));
+      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ sport: sport.id, quickMatchId: 1, phase: 'scoring', updatedAt: now }));
     }
     localStorage.setItem(getTennisQuickDraftKey('tennis-1'), JSON.stringify({ id: 'tennis-1', status: 'in-progress', updatedAt: now }));
     localStorage.setItem('se_quickmatches', JSON.stringify([
@@ -30,24 +30,23 @@ describe('app entry contract', () => {
       { id: 2, matches: [{ status: 'completed' }] },
       { id: 3, matches: [{ status: 'completed' }], knockoutMatches: [{ status: 'pending' }] },
     ]));
-    const before = JSON.stringify(localStorage);
     const entries = loadInProgressMatches();
     expect(entries.map((entry) => entry.entryPath)).toEqual(expect.arrayContaining([
-      ...sports.map((sport) => `/${sport.id}/quick`),
+      ...sports.map((sport) => `/${sport.id}/quick?resume=1`),
       '/tennis/quick/live/tennis-1', '/cricket/quick/test-match/test-1',
       '/football/tournament/1', '/football/tournament/3',
     ]));
     expect(entries).toHaveLength(sports.length + 4);
     expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
-    expect(JSON.stringify(localStorage)).toBe(before);
+    for (const sport of sports) expect(JSON.parse(localStorage.getItem(`se_quickmatch_draft_${sport.id}_1`)).quickMatchId).toBe(1);
     expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
   });
 
-  it('excludes setup, expired and completed drafts from the resume catalog', () => {
+  it('excludes setup and completed drafts but retains old scoring drafts', () => {
     localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({ phase: 'setup' }));
     localStorage.setItem('se_quickmatch_draft_football', JSON.stringify({ phase: 'scoring', updatedAt: '2020-01-01' }));
     localStorage.setItem(getTennisQuickDraftKey('old'), JSON.stringify({ status: 'completed' }));
-    expect(loadInProgressMatches()).toEqual([]);
+    expect(loadInProgressMatches()).toEqual([expect.objectContaining({ sport: 'football' })]);
   });
   beforeEach(() => {
     globalThis.localStorage.clear();
@@ -87,6 +86,7 @@ describe('app entry contract', () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
+      quickMatchId: 1,
     }));
 
     expect(loadReturningPlayerState()).toBe(true);
@@ -96,30 +96,32 @@ describe('app entry contract', () => {
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
+      quickMatchId: 1,
     }));
 
     const state = loadAppEntryState();
 
     expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/volleyball/quick');
-    expect(getAppEntryTarget(state)).toBe('/volleyball/quick');
+    expect(state.draftEntryPath).toBe('/volleyball/quick?resume=1');
+    expect(getAppEntryTarget(state)).toBe('/volleyball/quick?resume=1');
   });
 
-  it('ignores expired generic quick-match drafts before choosing an app-entry route', () => {
+  it('resumes old generic quick-match drafts on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
     globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
       updatedAt: '2026-05-30T12:00:00.000Z',
+      quickMatchId: 1,
     }));
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     const state = loadAppEntryState();
 
     expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBeNull();
-    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+    expect(state.draftEntryPath).toBe('/volleyball/quick?resume=1');
+    expect(getAppEntryTarget(state)).toBe('/volleyball/quick?resume=1');
   });
 
   it('routes tennis quick-live drafts to the draft scorer path', () => {
@@ -188,7 +190,7 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
   });
 
-  it('ignores expired cricket Test quick matches before choosing an app-entry route', () => {
+  it('resumes old cricket Test quick matches on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
     globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
@@ -201,13 +203,13 @@ describe('app entry contract', () => {
 
     const state = loadAppEntryState();
 
-    expect(loadQuickMatchSummaries()).toHaveLength(0);
-    expect(state.returningPlayerState).toBe(false);
-    expect(state.draftEntryPath).toBeNull();
-    expect(getAppEntryTarget(state)).toBe(PUBLIC_MARKETING_PATH);
+    expect(loadQuickMatchSummaries()).toHaveLength(1);
+    expect(state.returningPlayerState).toBe(true);
+    expect(state.draftEntryPath).toBe('/cricket/quick/test-match/test-1');
+    expect(getAppEntryTarget(state)).toBe('/cricket/quick/test-match/test-1');
   });
 
-  it('ignores expired tennis quick-live drafts before choosing an app-entry route', () => {
+  it('resumes old tennis quick-live drafts on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
     globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
@@ -221,8 +223,8 @@ describe('app entry contract', () => {
     const state = loadAppEntryState();
 
     expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBeNull();
-    expect(getAppEntryTarget(state)).toBe(APP_ENTRY_PATH);
+    expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
+    expect(getAppEntryTarget(state)).toBe('/tennis/quick/live/match-1');
   });
 
   it('checks saved tournaments without rewriting storage during app entry', () => {

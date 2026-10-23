@@ -18,9 +18,8 @@ const live = vi.hoisted(() => ({
   reset: vi.fn(),
 }));
 
-// Mutable route+draft so one mocked module set can serve every sport. loadData
-// returns the seeded draft for the active sport's key; no timestamp field, so
-// isStaleQuickMatchDraft() stays false and the restore effect lands in 'scoring'.
+// Mutable route and draft fixtures let the same mocked dependencies serve each
+// sport. The resume query identifies the per-match snapshot being restored.
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
@@ -28,7 +27,7 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),
-  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  useSearchParams: () => [new URLSearchParams(`resume=${ctx.draft?.quickMatchId || 'fixture'}`), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: true }),
@@ -44,7 +43,8 @@ vi.mock('../../lib/live/liveSession', () => ({
   saveSession: vi.fn(),
 }));
 vi.mock('../../utils/storage', () => ({
-  loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}` ? ctx.draft : def)),
+  listDataKeys: () => [],
+  loadData: vi.fn((key, def) => (key === `se_quickmatch_draft_${ctx.sport}_${ctx.draft?.quickMatchId || 'fixture'}` ? ctx.draft : def)),
   loadQuickMatch: vi.fn(() => null),
   saveData: vi.fn(() => true),
   clearData: vi.fn(),
@@ -101,7 +101,7 @@ describe('MonoQuickMatch live broadcast wiring', () => {
       act(() => vi.advanceTimersByTime(200));
       view.rerender(<MonoQuickMatch />);
       fireEvent.click(screen.getByRole('button', { name: 'Add point for Reds' }));
-      const nextDraft = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_volleyball').at(-1)?.[1];
+      const nextDraft = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_volleyball_')).at(-1)?.[1];
       expect(nextDraft?.sets[0].score1).toBe(1);
       expect(live.point.mock.calls.at(-1)[0].snapshot.pointsA).toBe(1);
       expect(saveQuickMatch.mock.calls.at(-1)[0]).toEqual(finished);
@@ -120,14 +120,14 @@ describe('MonoQuickMatch live broadcast wiring', () => {
       const first = render(<MonoQuickMatch />);
       saveQuickMatch.mockReturnValue(false);
       fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
-      const settled = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_cricket').at(-1)[1];
+      const settled = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_cricket_')).at(-1)[1];
       expect(settled.scores.team2.runs).toBe(5);
       expect(settled.cricketHistory.at(-1)).toMatchObject({ value: 4 });
       expect(live.finalize).not.toHaveBeenCalled();
       first.unmount();
       ctx.draft = structuredClone(settled);
       render(<MonoQuickMatch />);
-      const restored = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_cricket').at(-1)[1];
+      const restored = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_cricket_')).at(-1)[1];
       expect(restored.scores.team2.runs).toBe(5);
       expect(saveQuickMatch.mock.calls.at(-1)[0].team2Score.runs).toBe(5);
       expect(live.finalize).not.toHaveBeenCalled();
@@ -144,7 +144,7 @@ describe('MonoQuickMatch live broadcast wiring', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
       fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
     });
-    const draft = saveData.mock.calls.filter(([key]) => key === 'se_quickmatch_draft_cricket').at(-1)[1];
+    const draft = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_cricket_')).at(-1)[1];
     expect(draft.scores.team1.runs).toBe(7);
     expect(live.finalize).not.toHaveBeenCalled();
   });
