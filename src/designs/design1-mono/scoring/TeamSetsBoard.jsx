@@ -24,6 +24,7 @@ export default function TeamSetsBoard({
   colourStyle,
   halves,
   meta,
+  pointCue,
   setHistory,
   lastLine,
   canUndo,
@@ -48,6 +49,7 @@ export default function TeamSetsBoard({
 
       <p className="tsb-meta">
         {meta.map((m) => <span key={m} className="tsb-meta-item">{m}</span>)}
+        {pointCue && <span className="tsb-point-cue" role="status">{pointCue}</span>}
       </p>
 
       <p className="tsb-last" aria-live="polite">{lastLine}</p>
@@ -135,6 +137,7 @@ TeamSetsBoard.propTypes = {
   colourStyle: PropTypes.object.isRequired,
   halves: PropTypes.arrayOf(half).isRequired,
   meta: PropTypes.arrayOf(PropTypes.string).isRequired,
+  pointCue: PropTypes.string,
   setHistory: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string.isRequired,
     left: PropTypes.number.isRequired,
