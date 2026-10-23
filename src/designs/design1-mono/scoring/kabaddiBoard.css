@@ -16,7 +16,7 @@
   .kb { height: calc(100dvh - 56px); }
 }
 
-.kb button {
+.kb :where(.kb-outcome, .kb-num, .kb-choice, .kb-toggle, .kb-back, .kb-link, .kb-raid) {
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -24,7 +24,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.kb button:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; }
+.kb :where(.kb-outcome, .kb-num, .kb-choice, .kb-toggle, .kb-back, .kb-link, .kb-raid):focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; }
 
 /* ---- sport chip + half clock (same chips as the goals board) ---- */
 .kb-meta {
@@ -120,7 +120,7 @@
 
 .kb-team-score {
   margin: 2px 0 6px;
-  font: 800 clamp(3.2rem, min(17vw, 10vh), 4.6rem)/0.95 var(--sb-num);
+  font: 800 clamp(3.2rem, min(22vw, 11vh), 5.6rem)/0.95 var(--sb-num);
   font-variant-numeric: tabular-nums;
 }
 
@@ -247,6 +247,9 @@
 }
 
 .kb-recent-list strong { font-size: 1rem; }
+
+/* a third recent raid only where the screen has room */
+@media (max-height: 760px) { .kb-recent-list li:nth-child(3) { display: none; } }
 
 /* ---- raid in progress ---- */
 .kb-raidline { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
@@ -391,6 +394,8 @@
 }
 
 .kb-preview b { font-size: 1.05rem; color: var(--sb-ink); }
+.kb-preview-lines { display: flex; flex-wrap: wrap; column-gap: 8px; }
+.kb-preview-lines span + span::before { content: '·'; margin-right: 8px; }
 
 /* ---- half time / full time / moments ---- */
 .kb-rows { display: flex; flex-direction: column; margin: 0; }
@@ -477,6 +482,8 @@
 
 /* short phones (360×640): keep the scoring zone on one screen without scrolling */
 @media (max-height: 700px) {
+  /* during a raid the raid clock leads; the half clock row steps aside */
+  .kb[data-raiding] .kb-meta { display: none; }
   .kb .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: 2px; }
   .kb-meta { padding-bottom: 6px; }
   .kb-team { padding: 7px 10px 8px; border-radius: 18px; }

@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
-import { applyRaid, cancelRaid, finish, preview, remainingTime, result } from '../../../utils/kabaddiEngine';
+import { applyRaid, cancelRaid, finish, isDoOrDie, isSuperTackleOn, preview, remainingTime, result } from '../../../utils/kabaddiEngine';
 import {
   boardPhase, callTimeUp, canUndoAction, clockNow, matchTotals, previewWords, raidLog, raidMoment, raidRow,
   startNextRaid, startSecondHalf, togglePause, undoAction, undoHint,
@@ -133,7 +133,8 @@ export default function KabaddiRaidBoard({
     return { ...base, type: 'empty' };
   };
   const confirmRaid = () => {
-    const next = applyRaid(state, { ...eventFor(step), id: newId('confirm') });
+    // One id per raid: a repeated Confirm of the same raid is a no-op in the engine.
+    const next = applyRaid(state, eventFor(step));
     const entry = next.events.at(-1);
     const found = raidMoment(entry);
     setMoment(found && { ...found, entryId: entry.id, raidingTeam: entry.raidingTeam, effects: entry.effects });
@@ -172,7 +173,7 @@ export default function KabaddiRaidBoard({
     const scorer = 1 - moment.team;
     const isAllOut = moment.kind === 'allOut';
     const heading = isAllOut ? 'All out!' : 'Super tackle!';
-    const gained = moment.effects.awards.filter((award) => award.team === scorer).reduce((n, award) => n + award.points, 0);
+    const sum = (keep) => moment.effects.awards.filter((award) => award.team === scorer && keep(award.category)).reduce((n, award) => n + award.points, 0);
     body = (
       <section className="kb-moment" role="region" aria-label={heading}>
         <i className="kb-moment-mark" aria-hidden="true" />
@@ -180,13 +181,13 @@ export default function KabaddiRaidBoard({
         <dl className="kb-rows">
           {isAllOut ? (
             <>
-              <div><dt>{names[scorer]} points in the raid</dt><dd>+{gained - 2}</dd></div>
-              <div><dt>All out bonus</dt><dd>+2</dd></div>
+              <div><dt>{names[scorer]} points in the raid</dt><dd>+{sum((c) => c !== 'allOut')}</dd></div>
+              <div><dt>All out bonus</dt><dd>+{sum((c) => c === 'allOut')}</dd></div>
               <div><dt>{names[moment.team]} back to 7</dt><dd>Mat {mat.join('–')}</dd></div>
             </>
           ) : (
             <>
-              <div><dt>Raider out against 3 or fewer defenders</dt><dd>{names[scorer]} +{gained}</dd></div>
+              <div><dt>Raider out against 3 or fewer defenders</dt><dd>{names[scorer]} +{sum(() => true)}</dd></div>
               <div><dt>Only one player comes back</dt><dd>Mat {mat.join('–')}</dd></div>
             </>
           )}
@@ -206,7 +207,7 @@ export default function KabaddiRaidBoard({
             </button>
           ))}
         </div>
-        <p className="kb-quiet">Start on the referee’s whistle · {state.rules.halfMs === 1200000 ? '2 × 20 min' : `2 × ${halfMinutes} min`} · 30 s raids</p>
+        <p className="kb-quiet">Start on the referee’s whistle · 2 × {halfMinutes} min · 30 s raids</p>
       </section>
     );
     primary = (
@@ -244,10 +245,10 @@ export default function KabaddiRaidBoard({
         <h2 id="kb-full" className="kb-h kb-h-big">Full time</h2>
         <p className="kb-verdict">{verdict}</p>
         <table className="kb-table" aria-label="Points by type">
-          <thead><tr><th scope="col"><span className="sr-only">Type</span></th><th scope="col">{names[0]}</th><th scope="col">{names[1]}</th></tr></thead>
+          <thead><tr><th scope="col"><span className="sr-only">Type</span></th>{order.map((team) => <th key={team} scope="col">{names[team]}</th>)}</tr></thead>
           <tbody>
-            {rows.map(([label, values]) => <tr key={label}><th scope="row">{label}</th><td>{values[0]}</td><td>{values[1]}</td></tr>)}
-            <tr className="kb-total"><th scope="row">Total</th><td>{totals[0]}</td><td>{totals[1]}</td></tr>
+            {rows.map(([label, values]) => <tr key={label}><th scope="row">{label}</th>{order.map((team) => <td key={team}>{values[team]}</td>)}</tr>)}
+            <tr className="kb-total"><th scope="row">Total</th>{order.map((team) => <td key={team}>{totals[team]}</td>)}</tr>
           </tbody>
         </table>
       </section>
@@ -324,7 +325,7 @@ export default function KabaddiRaidBoard({
         {words && (
           <div className="kb-preview" role="status" aria-label="Raid preview">
             <b>{words.title}</b>
-            {words.lines.map((line) => <span key={line}>{line}</span>)}
+            <span className="kb-preview-lines">{words.lines.map((line) => <span key={line}>{line}</span>)}</span>
           </div>
         )}
       </section>
@@ -332,8 +333,8 @@ export default function KabaddiRaidBoard({
     primary = <button type="button" className="se-go" onClick={confirmRaid} disabled={!outcome}>Confirm raid</button>;
   } else {
     // At rest, between raids.
-    const doOrDie = state.emptyStreak[raider] === 2;
-    const superOn = mat[defender] <= 3;
+    const doOrDie = isDoOrDie(state);
+    const superOn = isSuperTackleOn(state);
     const timeIsUp = halfLeft === 0 && phase === 'playing';
     body = (
       <section className="kb-panel" aria-label="Next raid">
@@ -347,10 +348,7 @@ export default function KabaddiRaidBoard({
         <p className="kb-cue">
           <span className="kb-eyebrow">Raid {state.raidNumber + 1} · next</span>
           <span>{names[raider]} attack · {names[defender]} defend with {mat[defender]}</span>
-          <span className="kb-cue-tags">
-            {superOn && <em className="kb-tag kb-tag-gold">Super tackle on</em>}
-            <em className="kb-tag">{mat[defender] >= 6 ? 'Bonus line live' : 'No bonus · under 6'}</em>
-          </span>
+          {superOn && <span className="kb-cue-tags"><em className="kb-tag kb-tag-gold">Super tackle on</em></span>}
         </p>
         <div className="kb-recent">
           <div className="kb-recent-head">
@@ -359,7 +357,7 @@ export default function KabaddiRaidBoard({
           </div>
           {log.length === 0 ? <p className="kb-quiet">No raids yet.</p> : (
             <ol className="kb-recent-list">
-              {log.slice(0, 2).map((entry) => {
+              {log.slice(0, 3).map((entry) => {
                 const row = raidRow(entry, names, carried);
                 return <li key={row.id}><span>{row.number} · {row.text}</span><strong>{row.score.join('–')}</strong></li>;
               })}
@@ -383,7 +381,7 @@ export default function KabaddiRaidBoard({
   const clockLabel = phase === 'ready' ? 'Ready' : phase === 'halfTime' ? 'Half time' : phase === 'finishReview' ? 'Full time' : `Half ${state.half}`;
 
   return (
-    <div className="sb kb" data-team-board="" data-kabaddi-board="" style={{ ...colourStyle, ...sportIdentityVars(sportConfig.id) }}>
+    <div className="sb kb" data-team-board="" data-kabaddi-board="" data-raiding={raid ? '' : undefined} style={{ ...colourStyle, ...sportIdentityVars(sportConfig.id) }}>
       <BoardHeader title={title} subtitle={subtitle} sportColour="var(--sport-core)" isLive={isLive} onFinish={onFinish} finishDisabled={Boolean(raid) || phase === 'finishReview'} />
       {notice}
       <div className="kb-meta">
