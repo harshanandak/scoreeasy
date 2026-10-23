@@ -145,7 +145,7 @@ describe('goals countdown using the same timer', () => {
     const mounted = render(scorer());
     tick(10);
     expect(vi.getTimerCount()).toBe(0);
-    seed('kabaddi', expired);
+    seed('hockey', expired);
     mounted.rerender(scorer());
     tick(10);
     expect(screen.getByLabelText('Time remaining')).toHaveTextContent("Time's up!");

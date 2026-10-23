@@ -45,7 +45,7 @@ export function formatChoices(sportConfig) {
   if (engine === 'sets') {
     return { kind: 'sets', choices: setFormatsOf(sportConfig).map((f) => ({ id: `sets-${f.sets}`, label: f.label })) };
   }
-  if (engine === 'goals') return { kind: 'goals', choices: GOALS_MODES };
+  if (engine === 'goals') return { kind: 'goals', choices: sportConfig.config?.formatModes || GOALS_MODES };
   return { kind: null, choices: [] };
 }
 
@@ -99,7 +99,7 @@ export function goalsDetail(sportConfig, format = {}) {
   const config = sportConfig.config || {};
   if (format.mode === 'timed') {
     const options = (config.timePresets || DEFAULT_TIME_PRESETS).map((p) => ({ id: `time-${p.value}`, label: p.label }));
-    return { label: 'Match length', options, selected: `time-${format.timeLimit}` };
+    return { label: config.timeLabel || 'Match length', options, selected: `time-${format.timeLimit}` };
   }
   if (format.mode === 'points') {
     const unit = config.scoringUnit || 'point';
@@ -163,7 +163,9 @@ function goalsLine(sportConfig, format) {
   const config = sportConfig?.config || {};
   if (format.mode === 'timed') {
     const minutes = Math.round((format.timeLimit || 0) / 60);
-    return `${minutes} min on the clock · ${config.drawAllowed === false ? 'no draws' : 'draws allowed'}`;
+    const draws = config.drawAllowed === false ? 'no draws' : 'draws allowed';
+    if (config.halves) return `${config.halves} × ${Math.round(minutes / config.halves)} min halves · ${config.maxPlayers || 7} a side · ${draws}`;
+    return `${minutes} min on the clock · ${draws}`;
   }
   if (format.mode === 'points') {
     return `First to ${plural(format.target || 5, config.scoringUnit || 'point')} wins`;

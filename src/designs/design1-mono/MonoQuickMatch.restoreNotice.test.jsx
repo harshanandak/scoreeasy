@@ -34,14 +34,23 @@ it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'ka
     expect(notice.previousElementSibling).toHaveClass('sb-top');
     const undo = screen.getByRole('button', { name: /Undo last/ });
     expect(undo).toBeDisabled();
-    const score = sport === 'cricket' ? screen.getByRole('button', { name: '1 run' })
-      : sport === 'football' || sport === 'hockey' ? screen.getByRole('button', { name: 'Add 1 to Royals' })
-        : sport === 'basketball' || sport === 'kabaddi' ? screen.getByRole('button', { name: 'Add +1 for Royals' })
-          : screen.getByRole('button', { name: 'Add point for Royals' });
-    fireEvent.click(score);
+    if (sport === 'kabaddi') {
+      // A raid is recorded once: start, outcome, confirm.
+      fireEvent.click(screen.getByRole('button', { name: 'Start · first raid by Royals' }));
+      fireEvent.click(screen.getByRole('button', { name: /^Touch/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm raid' }));
+    } else {
+      const score = sport === 'cricket' ? screen.getByRole('button', { name: '1 run' })
+        : sport === 'football' || sport === 'hockey' ? screen.getByRole('button', { name: 'Add 1 to Royals' })
+          : sport === 'basketball' ? screen.getByRole('button', { name: 'Add +1 for Royals' })
+            : screen.getByRole('button', { name: 'Add point for Royals' });
+      fireEvent.click(score);
+    }
     expect(undo).toBeEnabled();
     fireEvent.click(undo);
-    expect(undo).toBeDisabled();
+    // Kabaddi's first whistle (the half's clock start) is its own, earlier undo step.
+    if (sport === 'kabaddi') expect(undo).toHaveTextContent('Back to the start');
+    else expect(undo).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     expect(screen.getByRole('dialog', { name: 'End match?' })).toBeInTheDocument();
     expect(screen.getByText(copy)).toBeInTheDocument();

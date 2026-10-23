@@ -20,6 +20,8 @@ import TeamColourPicker from './TeamColourPicker';
 import { useTeamColours } from './scoring/useTeamColours';
 import TeamSetsBoard from './scoring/TeamSetsBoard';
 import TeamGoalsBoard from './scoring/TeamGoalsBoard';
+import KabaddiRaidBoard from './scoring/KabaddiRaidBoard';
+import { createKabaddiMatch, matchTotals, raidSummary, restoreKabaddiMatch, withOpeningRaidTeam } from '../../utils/kabaddiQuickMatch';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
@@ -336,6 +338,8 @@ export default function MonoQuickMatch() {
   const isCricket = engine === 'custom-cricket';
   const isTennis = sport === 'tennis';
   const isGoals = engine === 'goals';
+  // Kabaddi scores raids on its own engine (kabaddiEngine.js); opt-in is the registry's raidBoard.
+  const isRaidBoard = sportConfig?.raidBoard === true;
 
   const timer = useTimer();
   const startedAtRef = useRef(null);
@@ -487,6 +491,10 @@ export default function MonoQuickMatch() {
   const [gScore1, setGScore1] = useState(0);
   const [gScore2, setGScore2] = useState(0);
   const [gScoreHistory, setGScoreHistory] = useState([]);
+  // Raid board: the engine match ({ version, state, carried }). gScore1/gScore2 mirror its totals
+  // for the shared draft list, live snapshot and Finish paths; they are never scored directly.
+  const [kabaddiMatch, setKabaddiMatch] = useState(null);
+  const [kabaddiMigrated, setKabaddiMigrated] = useState(false);
 
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
@@ -629,6 +637,20 @@ export default function MonoQuickMatch() {
     if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
     if (typeof draft.servingTeam === 'number') setServingTeam(draft.servingTeam);
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
+    if (isRaidBoard) {
+      // Old kabaddi drafts (plain +1/+2 totals) keep their totals; the mat starts at 7–7.
+      const { match, migrated } = restoreKabaddiMatch(draft, {
+        format: draft.format,
+        names: [draft.team1Name, draft.team2Name],
+        colours: [normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a, normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b],
+      });
+      const totals = matchTotals(match);
+      setKabaddiMatch(match);
+      setKabaddiMigrated(migrated);
+      setGScore1(totals[0]);
+      setGScore2(totals[1]);
+      setGScoreHistory([]);
+    }
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
     liveMatchIdRef.current = draft.quickMatchId ?? createQuickMatchId();
@@ -675,6 +697,7 @@ export default function MonoQuickMatch() {
       trialBallUsed,
       servingTeam,
       lastAction,
+      ...(isRaidBoard && kabaddiMatch ? { kabaddi: kabaddiMatch } : {}),
       quickMatchId: liveMatchIdRef.current,
       timerElapsed: timer.elapsed,
       startedAt: startedAtRef.current,
@@ -685,7 +708,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, kabaddiMatch, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -801,8 +824,9 @@ export default function MonoQuickMatch() {
   }, [formatMode, isCricket, sport]);
 
   // Goals mode helpers
-  const isTimedMode = isGoals && format.mode === 'timed';
-  const isPointsMode = isGoals && format.mode === 'points';
+  // The raid board keeps its own half clocks, so the shared countdown and time-up prompt stay off.
+  const isTimedMode = isGoals && !isRaidBoard && format.mode === 'timed';
+  const isPointsMode = isGoals && !isRaidBoard && format.mode === 'points';
   const timeLimit = isTimedMode ? format.timeLimit : null;
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
@@ -1137,6 +1161,10 @@ export default function MonoQuickMatch() {
     hydratedDraftKeyRef.current = getQuickMatchDraftKey(sport, liveMatchIdRef.current);
     draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
     navigate(`/${sport}/quick?resume=${liveMatchIdRef.current}`, { replace: true });
+    if (isRaidBoard) {
+      setKabaddiMatch(newKabaddiMatch());
+      setKabaddiMigrated(false);
+    }
     setPhase('scoring');
   };
 
@@ -1628,6 +1656,37 @@ export default function MonoQuickMatch() {
     }
   };
 
+  // ---- Kabaddi raid board: the engine decides; this only stores, mirrors and broadcasts ----
+  const kabaddiSetup = () => ({ format, names: [team1Name.trim(), team2Name.trim()], colours: [team1Color, team2Color] });
+  function newKabaddiMatch() {
+    return createKabaddiMatch(kabaddiSetup());
+  }
+
+  const commitKabaddi = (nextState, meta) => {
+    if (completion.locked || !kabaddiMatch) return;
+    const nextMatch = { ...kabaddiMatch, state: nextState };
+    const before = matchTotals(kabaddiMatch);
+    const after = matchTotals(nextMatch);
+    setKabaddiMatch(nextMatch);
+    setGScore1(after[0]);
+    setGScore2(after[1]);
+    if (meta.kind === 'raid') {
+      void scoreImpact();
+      setLastAction(raidSummary(meta.entry, [team1Name, team2Name]));
+    } else if (meta.kind === 'undo') {
+      void correctionImpact();
+      setLastAction('Undid last raid');
+    }
+    // Live: today's score fields. The snapshot carries both totals; the intent names the bigger gain.
+    const gained = after.map((total, i) => total - before[i]);
+    if (gained.some((n) => n < 0)) broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
+    else if (gained.some((n) => n > 0)) {
+      const team = gained[0] >= gained[1] ? 0 : 1;
+      broadcastIntentRef.current = { kind: 'point', team: team === 0 ? 'A' : 'B', value: gained[team], at: Date.now() };
+    }
+    if (meta.kind === 'finish') finalizeGoalScore(after[0], after[1]);
+  };
+
   const endMatchGoals = () => {
     const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
     if (!drawAllowed && gScore1 === gScore2) {
@@ -1707,6 +1766,8 @@ export default function MonoQuickMatch() {
     setShowEndConfirm(false);
     setSidesSwapped(false);
     setGScoreHistory([]);
+    setKabaddiMatch(nextPhase === 'scoring' && isRaidBoard ? newKabaddiMatch() : null);
+    setKabaddiMigrated(false);
     setVScoreHistory([]);
     setSets([{ score1: 0, score2: 0, completed: false }]);
     setCurrentSet(0);
@@ -2419,6 +2480,34 @@ export default function MonoQuickMatch() {
     if (isGoals) {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
+
+      if (isRaidBoard && kabaddiMatch) {
+        const totals = matchTotals(kabaddiMatch);
+        const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}</span><strong>{totals.join('–')}</strong></div>;
+        const halfMinutes = Math.round(kabaddiMatch.state.rules.halfMs / 60000);
+        return <>
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+          {renderEndMatchDialog({ className: 'sb-confirm', summary })}
+          {renderDiscardDialog({ className: 'sb-confirm', summary })}
+          <KabaddiRaidBoard
+            sportConfig={sportConfig}
+            title={`${team1Name} v ${team2Name}`}
+            subtitle={`2 × ${halfMinutes} min halves · Draws allowed`}
+            colourStyle={teamColourStyle}
+            match={kabaddiMatch}
+            names={[team1Name, team2Name]}
+            swapped={sidesSwapped}
+            migrated={kabaddiMigrated}
+            isLive={Boolean(live?.isLive)}
+            onCommit={commitKabaddi}
+            onOpeningTeam={(team) => setKabaddiMatch((prev) => withOpeningRaidTeam(prev, team, kabaddiSetup()))}
+            onSwap={handleSideSwap}
+            onFinish={requestEndMatch} onDiscard={requestDiscardQuickMatch}
+            notice={<ScoringNotice message={saveWarning} />}
+            live={cloudAuthAvailable ? <LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} /> : null}
+          />
+        </>;
+      }
 
       if (teamColourOn) {
         const halves = [leftTeam, rightTeam].map((team) => ({
