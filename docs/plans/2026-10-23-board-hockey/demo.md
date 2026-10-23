@@ -53,7 +53,7 @@ Unchanged comparisons: [kabaddi before](https://github.com/harshanandak/scoreeas
 - TDD: the original 15 hockey tests ran against the unmodified registry: 11 failed and 4 passed. After opt-in all passed; one additional registry-completeness test asserts all four goals sports opt in.
 - Hockey coverage: 16 cases for registry completeness, whole-key +1 for both teams, exact hockey mark/colours/countdown, correction + Undo after side swap, saved draft/Undo, time-up win and draw/refresh, Finish cancellation, free/points modes, points completion, setup picks, repeated bump without focus loss, and three contrast pairs.
 - Classic fallback guarantee now uses an explicit registry opt-out, restored in finally. Classic rendering is retained. Existing hardening tests already exercise football/basketball team boards and needed no edits.
-- Full suite: 154 files passed, 1,974 passed and 7 expected failures before the final extra registry assertion. Final focused and normal pre-push results are recorded below after running.
+- Full suite: 154 files passed, 1,974 passed and 7 expected failures before the final extra registry assertion. Final focused run: 7 files and 218 tests passed, including the extra registry assertion and palette tests.
 - Lint: 0 errors, 29 warnings. Type-check: exit 0. Palette baseline unchanged.
 - No spectator files, tournament scorer, shared board/CSS, scoring rules, persistence or outbox code changed.
 
@@ -66,4 +66,5 @@ Unchanged comparisons: [kabaddi before](https://github.com/harshanandak/scoreeas
 - SA-10 tournament clock restore: 134b5fe0-df42-4fe2-af45-2e1fb5924145.
 - SA-08 delayed auto-finish/Undo: 8b0316bd-bcda-40b9-877a-f4188f5dd5dc.
 
-No additional visual bug found in the captured hockey board. Known restore notice overlap remains the linked follow-up.
+Three result captures initially raced the asynchronous Finish transition; all three were recaptured and visually checked to show the saved result. No additional visual bug found in the captured hockey board. Known restore notice overlap remains the linked follow-up.
+
