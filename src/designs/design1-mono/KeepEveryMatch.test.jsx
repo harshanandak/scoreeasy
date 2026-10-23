@@ -33,6 +33,19 @@ function seed(sport, id, overrides = {}) {
 }
 beforeEach(() => { cleanup(); localStorage.clear(); });
 
+it.each(['cricket', 'volleyball'])('keeps a scoreless %s match when Finish explicitly completes it', async sport => {
+  open(`/${sport}/quick`);
+  fireEvent.click(await screen.findByRole('button', { name: new RegExp(`Start ${sport}`, 'i') }));
+  await waitFor(() => expect(loadInProgressMatches()).toHaveLength(1));
+  fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+  expect(loadQuickMatches()).toEqual([expect.objectContaining({ sport, status: 'completed', score1: 0, score2: 0, winner: 'Tie', startedAt: expect.any(String) })]);
+  expect(loadInProgressMatches()).toEqual([]);
+  fireEvent.click(screen.getByRole('button', { name: 'Test History' }));
+  const row = sport === 'cricket' ? /Team A 0\/0–0\/0 Team B/ : /Team A 0–0 Team B/;
+  expect(await screen.findByRole('button', { name: row })).toBeVisible();
+});
+
 it('keeps cricket A when leaving and starting B, and Home and History offer both', async () => {
   open('/cricket/quick');
   fireEvent.click(await screen.findByRole('button', { name: /Start cricket/i }));

@@ -153,7 +153,8 @@ function normalizeQuickMatchForStorage(match) {
   }
 
   const completed = isCompletionSignal(match);
-  if (completed && !hasMeaningfulQuickScore(match) && normalizeWinnerToken(match.winner) === 'Tie') return null;
+  // A scorer-confirmed scoreless Finish has a start timestamp; phantom shells do not.
+  if (completed && !hasMeaningfulQuickScore(match) && normalizeWinnerToken(match.winner) === 'Tie' && parseTimestamp(match.startedAt) === null) return null;
 
   const timestamp = getQuickMatchTimestamp(match);
   const completedAt = completed
