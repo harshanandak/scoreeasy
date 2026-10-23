@@ -28,7 +28,7 @@ Before: origin/master's MonoQuickMatch and registry captured before football opt
 - Updated the existing goals-board opt-out list to basketball/hockey and opened Match options before the existing football broadcast correction assertion. Existing Kabaddi and volleyball behavior assertions pass.
 - Final rebased full suite: 152 files passed, 1946 tests passed, 7 expected failures (1953 total).
 - Lint: 0 errors, 29 existing warnings. Type-check and agent-config-sync pass in normal pre-commit hooks. Palette ratchet passes with BASELINE unchanged.
-- Normal pre-push results are recorded in the PR after push.
+- Normal pre-push hook: 61 test files passed, 871 passed and 6 expected failures (877 total). No bypass or retry.
 
 ## Follow-ups, deliberately deferred
 
