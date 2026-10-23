@@ -1,6 +1,6 @@
 import { useScoringProgress } from './scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
@@ -30,6 +30,11 @@ import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import { triggerConfetti } from '../utils/confetti';
 import { useScoringCompletion } from './scoringCompletionContext';
+import { BoardHeader, BoardBar, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
+import { useTeamColours } from './useTeamColours';
+import { sportIdentity } from '../../../lib/sportIdentity';
+import './teamBoard.css';
+import './tennisBoard.css';
 
 // Haptic feedback helper
 const triggerHaptic = (pattern) => {
@@ -327,6 +332,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const [history, setHistory] = useState([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const sheetId = useId();
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
   const [saveWarning, setSaveWarning] = useState('');
   // Milestone toast (game/set won) — rendered via React state into an aria-live
@@ -430,6 +437,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const team1Name = isQuickMatch ? (match?.team1Name || match?.team1 || 'Team 1') : (team1?.name || 'Team 1');
   const team2Name = isQuickMatch ? (match?.team2Name || match?.team2 || 'Team 2') : (team2?.name || 'Team 2');
 
+  const colourStyle = useTeamColours(isQuickMatch ? match?.team1Color : team1?.color, isQuickMatch ? match?.team2Color : team2?.color, sport);
+
   // Side swap helpers
   const leftName = sidesSwapped ? team2Name : team1Name;
   const rightName = sidesSwapped ? team1Name : team2Name;
@@ -495,6 +504,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const undo = () => {
     if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
 
+    setMilestone(null);
     broadcastIntentRef.current = { kind: 'undo', at: Date.now() };
     const lastState = history[history.length - 1];
     setSets(lastState.sets);
@@ -777,19 +787,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightGames = sidesSwapped ? currentSetData.games1 : currentSetData.games2;
   const leftTeam = sidesSwapped ? 2 : 1;
   const rightTeam = sidesSwapped ? 1 : 2;
-  // Score colour follows the current-game lead: ahead = green, level (0-0, deuce)
-  // = brown (both), trailing = ink. Compares the underlying point counts.
-  const teamAccent = (mine, other) =>
-    mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
-  const leftPoints = isTiebreakMode
-    ? (sidesSwapped ? currentSetData.tiebreakPoints2 : currentSetData.tiebreakPoints1)
-    : (sidesSwapped ? currentSetData.points2 : currentSetData.points1);
-  const rightPoints = isTiebreakMode
-    ? (sidesSwapped ? currentSetData.tiebreakPoints1 : currentSetData.tiebreakPoints2)
-    : (sidesSwapped ? currentSetData.points1 : currentSetData.points2);
-  // Require the REAL set (not the makeBlankSet fallback) — when sets[currentSet] is
-  // missing the controls must disable, or a tap reaches the missing set and crashes.
-  const canScoreCurrentSet = Boolean(sets[currentSet]) && !currentSetData.completed && !scoringPrompt.isInteractionLocked;
+  const canScoreCurrentSet = Boolean(sets[currentSet]) && !currentSetData.completed && !isMatchComplete && !scoringPrompt.isInteractionLocked;
   const scoreCardAssistiveHint = scoringPrompt.isInteractionLocked
     ? 'Scoring is temporarily locked'
     : 'Press Enter or click to add point';
@@ -797,181 +795,61 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     if (scoringPrompt.isInteractionLocked) return;
     setSidesSwapped(s => !s);
   };
+  const status = isMatchComplete ? 'Match Complete' : isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`;
+  const deuce = !isMatchComplete && !isTiebreakMode && score1Display === '40' && score2Display === '40';
+  const previous = history.at(-1);
+  const previousSet = previous?.sets[previous.currentSet];
+  const previousLabels = previousSet ? computeScoreDisplay(previousSet) : null;
+  const undoHint = previousLabels
+    ? `back to ${sidesSwapped ? previousLabels.score2 : previousLabels.score1}\u2013${sidesSwapped ? previousLabels.score1 : previousLabels.score2} \u00b7 Set ${previous.currentSet + 1}`
+    : '';
+  const halves = [
+    { team: leftTeam, name: leftName, score: leftScoreDisplay, games: leftGames, serving: leftServing },
+    { team: rightTeam, name: rightName, score: rightScoreDisplay, games: rightGames, serving: rightServing },
+  ];
 
   return (
-    <div className="mono-scorer-screen mono-arena-screen mono-transition mono-visible">
-      <div className="mono-scorer-shell">
+    <div className="sb tsb tennis-board" style={colourStyle} data-team-board="" data-tennis-board="">
       <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
-      {saveWarning && (
-        <div className="mono-alert mono-alert-danger mb-4">
-          {saveWarning}
-        </div>
-      )}
+      {saveWarning && <div className="mono-alert mono-alert-danger">{saveWarning}</div>}
       {scoringPrompt.renderPrompt(confirmPendingPrompt)}
-      {/* Top bar */}
-      <div className="mono-scorer-topbar">
-        <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
-          {sportConfig?.name || 'Match'}
-        </span>
-        <div className="mono-scorer-topbar-actions">
-          <span
-            className={`mono-badge ${isTiebreakMode ? 'mono-badge-paused' : 'mono-badge-live'}`}
-          >
-            {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}
-          </span>
-          {isMatchComplete && (
-            <span className="mono-badge mono-badge-final">Match Complete</span>
-          )}
-        </div>
+      <BoardHeader title={`${team1Name} v ${team2Name}`} subtitle="Tennis" sportColour={sportIdentity(sport)?.core} isLive={live.isLive} onFinish={saveMatch} />
+      <div className="tennis-state" aria-live="polite">
+        <b className={isTiebreakMode && !isMatchComplete ? 'tennis-tiebreak' : ''}>{status}</b>
+        <p>{leftSetsWon} &ndash; {rightSetsWon} sets &middot; best of {sets.length}</p>
+        <span className="tennis-moment">{deuce ? 'Deuce' : '\u00a0'}</span>
       </div>
-
-      {/* Live broadcast control (consent / LIVE indicator / share) */}
-      <LiveBroadcastBar
-        broadcast={live}
-        descriptor={{
-          clientMatchId: liveClientMatchId,
-          sport,
-          scorecardKind: 'tennis',
-          teamA: { name: team1Name },
-          teamB: { name: team2Name },
-        }}
-        enabled={liveEnabled}
-        onEnableChange={setLiveEnabled}
-      />
-
-      {/* ARIA live region — standardized polite/atomic <output> (S6819). Announces
-          the running score, set/serving context, and game/set milestones. */}
       <output aria-live="polite" aria-atomic="true" className="sr-only">
-        {leftName}: {leftScoreDisplay}. {rightName}: {rightScoreDisplay}.
-        {isTiebreakMode ? 'Tiebreak' : `Set ${currentSet + 1} of ${sets.length}`}.
+        {leftName}: {leftScoreDisplay}. {rightName}: {rightScoreDisplay}. {status}.
         {' '}Serving: {servingTeam === 1 ? team1Name : team2Name}.
         {milestone ? ` ${milestone.text}` : ''}
       </output>
-
-      {/* Seam: sets tally + format — matches the arena scorers */}
-      <div className="mono-arena-seam">
-        <span><b>{leftSetsWon}</b> &ndash; <b>{rightSetsWon}</b> sets</span>
-        <span className="mono-arena-seam-rule">{isTiebreakMode ? 'tiebreak' : `best of ${sets.length}`}</span>
-      </div>
-
-      {/* Score halves — identical structure to the arena scorer (football/volleyball):
-          big tabular number, accent-coloured team name, a 2px "leading" underline, and
-          a subtle pop on each point. Tennis games sit in the arena hint slot.
-          S6819: use <button> instead of role="button" div. */}
-      <div className="mono-arena-grid">
-        {/* Left team */}
-        <div className="mono-arena-col">
-          <button
-            type="button"
-            onClick={() => canScoreCurrentSet && addPoint(leftTeam)}
-            disabled={!canScoreCurrentSet}
-            data-leading={leftPoints > rightPoints ? 'true' : 'false'}
-            aria-label={`${leftName}: ${leftScoreDisplay}. ${scoreCardAssistiveHint}`}
-            className="mono-arena-half"
-            style={{ '--score-accent': teamAccent(leftPoints, rightPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
-          >
-            <span className="mono-arena-overline" style={{ color: teamAccent(leftPoints, rightPoints) }}>
-              {leftServing ? <span aria-hidden="true">● </span> : ''}{leftName}
-            </span>
-            <span
-              key={scoreAnimKey[sidesSwapped ? 'right' : 'left'] || 0}
-              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
-              style={{ color: teamAccent(leftPoints, rightPoints) }}
-            >
-              {leftScoreDisplay}
-            </span>
-            <span className="mono-arena-hint">{leftGames} {leftGames === 1 ? 'game' : 'games'}</span>
-          </button>
-        </div>
-
-        {/* Right team */}
-        <div className="mono-arena-col">
-          <button
-            type="button"
-            onClick={() => canScoreCurrentSet && addPoint(rightTeam)}
-            disabled={!canScoreCurrentSet}
-            data-leading={rightPoints > leftPoints ? 'true' : 'false'}
-            aria-label={`${rightName}: ${rightScoreDisplay}. ${scoreCardAssistiveHint}`}
-            className="mono-arena-half"
-            style={{ '--score-accent': teamAccent(rightPoints, leftPoints), touchAction: 'manipulation', opacity: canScoreCurrentSet ? 1 : 0.6 }}
-          >
-            <span className="mono-arena-overline" style={{ color: teamAccent(rightPoints, leftPoints) }}>
-              {rightServing ? <span aria-hidden="true">● </span> : ''}{rightName}
-            </span>
-            <span
-              key={scoreAnimKey[sidesSwapped ? 'left' : 'right'] || 0}
-              className="mono-arena-num mono-score mono-score-animate mono-scorer-score-value"
-              style={{ color: teamAccent(rightPoints, leftPoints) }}
-            >
-              {rightScoreDisplay}
-            </span>
-            <span className="mono-arena-hint">{rightGames} {rightGames === 1 ? 'game' : 'games'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Completed-set history strip — matches the sets scorer. Shows games per
-          set (tiebreak sets read 7-6 because the winner gets a deciding game). */}
       {sets.some(s => s.completed) && (
-        <div className="mono-score-history-strip py-4 text-center text-sm mb-6">
-          <div className="flex justify-center gap-3 flex-wrap">
-            {sets.filter(s => s.completed).map((s, i) => (
-              <span key={`completed-set-${i}-${s.games1}-${s.games2}`} className="font-mono">
-                Set {i + 1}: {s.games1}-{s.games2}
-              </span>
-            ))}
-          </div>
+        <div className="tennis-strip" aria-label="Completed sets">
+          {sets.map((s, i) => s.completed && <span key={i}>Set {i + 1}: {sidesSwapped ? s.games2 : s.games1}-{sidesSwapped ? s.games1 : s.games2}</span>)}
         </div>
       )}
-
-      {/* Bottom bar — thin line-divided action row to match the arena scorers.
-          Saving is automatic (see the autosave effect); these are manual controls.
-          "Save" keeps/finishes the match; "Discard" deletes this in-progress match. */}
-      <div className="mono-control-strip mono-scorer-control-strip pt-4">
-        <div className="mono-quick-action-row">
-          <button
-            onClick={undo}
-            disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-            className="mono-btn"
-            style={{ opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
-          >
-            Undo
-          </button>
-          <button
-            onClick={handleSwapSides}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn"
-            style={{ opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
-          >
-            Swap
-          </button>
-          <button
-            onClick={handleCancel}
-            className="mono-btn mono-btn-danger"
-            style={{ touchAction: 'manipulation' }}
-          >
-            Discard
-          </button>
-          <button
-            onClick={saveMatch}
-            disabled={scoringPrompt.isInteractionLocked}
-            className="mono-btn"
-            style={{ color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1, touchAction: 'manipulation' }}
-          >
-            Finish
-          </button>
-        </div>
+      <div className="tsb-keys">
+        {halves.map((h, i) => <button
+          key={h.team} type="button" className={`tsb-key tsb-key-${h.team === 1 ? 'a' : 'b'}`}
+          data-team={h.team === 1 ? 'a' : 'b'} data-side={i === 0 ? 'left' : 'right'}
+          onClick={() => canScoreCurrentSet && addPoint(h.team)} disabled={!canScoreCurrentSet}
+          aria-label={`${h.name}: ${h.score}. ${scoreCardAssistiveHint}`}
+        >
+          {h.serving && <><span className="tsb-mark" aria-hidden="true" /><span className="tsb-srv">Serving</span></>}
+          <span className="tsb-who">{h.serving && <span className="tennis-server" aria-hidden="true">{'\u25cf '}</span>}{h.name}</span>
+          <span key={scoreAnimKey[h.team === 1 ? 'left' : 'right']} className="tsb-big mono-score-animate">{h.score}</span>
+          <span className="tsb-word">{h.games} {h.games === 1 ? 'game' : 'games'}</span>
+        </button>)}
       </div>
-      </div>
-
-      {/* Milestone toast (game/set won) — React-rendered (was direct DOM). The
-          announcement itself lives in the polite <output> above; this is the
-          visual counterpart, hidden from AT to avoid a double read. */}
-      {milestone && (
-        <div className="mono-set-won mono-set-won-animate" aria-hidden="true">
-          {milestone.text}
-        </div>
-      )}
+      <BoardBar canUndo={history.length > 0 && !scoringPrompt.isInteractionLocked} undoHint={undoHint} onUndo={undo} sheetId={sheetId} sheetOpen={optionsOpen} onMore={() => setOptionsOpen(true)} />
+      <BoardOptionsSheet id={sheetId} open={optionsOpen} onClose={() => setOptionsOpen(false)} onDiscard={handleCancel}
+        live={<LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport, scorecardKind: 'tennis', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}>
+        <BoardSheetGroup>
+          <button type="button" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { handleSwapSides(); setOptionsOpen(false); }}>Swap sides</button>
+        </BoardSheetGroup>
+      </BoardOptionsSheet>
+      {milestone && <div className="mono-set-won mono-set-won-animate" aria-hidden="true">{milestone.text}</div>}
     </div>
   );
 }

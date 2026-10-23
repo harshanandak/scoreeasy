@@ -1,0 +1,62 @@
+/* Tennis adds its point ladder, moments and set strip to the shared two-key board. */
+.tennis-state {
+  padding: 8px 16px 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tennis-state p {
+  margin: 3px 0 0;
+  color: var(--sb-ink-2);
+}
+
+.tennis-moment {
+  display: block;
+  min-height: 22px;
+  font-weight: 750;
+}
+
+.tennis-tiebreak,
+.tennis-moment {
+  color: var(--se-color-warning);
+}
+
+.tennis-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px 10px;
+}
+
+.tennis-strip span {
+  padding: 5px 9px;
+  border: 1px solid var(--sb-hair);
+  border-radius: 10px;
+  background: var(--se-color-surface);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tennis-board .tsb-big {
+  font-size: clamp(5rem, min(29vw, 20vh), 9rem);
+}
+
+.tennis-board .sb-undo {
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 0;
+  align-content: center;
+}
+
+.tennis-board .sb-undo-w {
+  flex-basis: 100%;
+  margin-left: 28px;
+  text-align: left;
+  font-size: 0.76rem;
+}
+
+.tennis-board .tsb-key:disabled {
+  cursor: default;
+}
