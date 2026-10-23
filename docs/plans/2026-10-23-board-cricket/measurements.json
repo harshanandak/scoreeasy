@@ -11309,5 +11309,1217 @@
       "Quick setup picker path, Test declaration/draw confirmation and every secondary options action were not completed as browser walkthroughs in this evidence pass.",
       "Existing innings-break correction path remains unsupported; follow-up 43e7ddce-0740-41c8-986f-e794cb43a7c4."
     ]
+  },
+  "round3": {
+    "sourceHead": "c7c36b944ed3fac17d25c471e7f39c6c34f57db4",
+    "base": "167a74a",
+    "method": "T3 html_preview only. Retained inlined Vite IIFE harness; real components, local storage and seeded fixtures; auth/Convex/broadcast mocked. A 360x640 or 390x844 iframe fixes the viewport. Script clicks dispatch through actual React handlers; initial hydration and remount effects settle before probes. Console messages are forwarded from the iframe. Measurements are returned by html_preview; captures are dimension checked. No full browser-process restart or live-system write.",
+    "captures": [
+      {
+        "key": "r3-quick-picker",
+        "state": "quick-picker",
+        "file": "round3-quick-picker-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "SETUP_INPUTS [{\"id\":\"quick-team-1\",\"label\":null,\"placeholder\":\"Team A\"},{\"id\":\"quick-team-2\",\"label\":null,\"placeholder\":\"Team B\"}]"
+          },
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"quick-picker\",\"checks\":[\"A picked Yellow\",\"B picked Green\"]}"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"quick-picker\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,815],\"undo\":null}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Go back\",\"x\":16,\"y\":15,\"width\":48,\"height\":48,\"bottom\":63,\"disabled\":false},{\"label\":\"Switch to tournament setup\",\"x\":249.8,\"y\":15,\"width\":94.2,\"height\":48,\"bottom\":63,\"disabled\":false},{\"label\":\"Red\",\"x\":16,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Blue\",\"x\":72,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false},{\"label\":\"Yellow\",\"x\":128,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false},{\"label\":\"Green\",\"x\":184,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Black\",\"x\":240,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false},{\"label\":\"More colours for Team A colour\",\"x\":296,\"y\":270.31,\"width\":48,\"height\":48,\"bottom\":318.31,\"disabled\":false},{\"label\":\"Red\",\"x\":16,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Blue\",\"x\":72,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false},{\"label\":\"Yellow\",\"x\":128,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false},{\"label\":\"Green\",\"x\":184,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Black\",\"x\":240,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false},{\"label\":\"More colours for Team B colour\",\"x\":296,\"y\":420.63,\"width\":48,\"height\":48,\"bottom\":468.63,\"disabled\":false},{\"label\":\"T20\",\"x\":20,\"y\":512.94,\"width\":104,\"height\":48,\"bottom\":560.94,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"T10\",\"x\":128,\"y\":512.94,\"width\":104,\"height\":48,\"bottom\":560.94,\"disabled\":false},{\"label\":\"ODI\",\"x\":236,\"y\":512.94,\"width\":104,\"height\":48,\"bottom\":560.94,\"disabled\":false},{\"label\":\"Test\",\"x\":20,\"y\":564.94,\"width\":104,\"height\":48,\"bottom\":612.94,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Gully\",\"x\":128,\"y\":564.94,\"width\":104,\"height\":48,\"bottom\":612.94,\"disabled\":false},{\"label\":\"Custom\",\"x\":236,\"y\":564.94,\"width\":104,\"height\":48,\"bottom\":612.94,\"disabled\":false},{\"label\":\"Add players\",\"x\":16,\"y\":662.53,\"width\":92.25,\"height\":48,\"bottom\":710.53,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Start cricket\",\"x\":16,\"y\":568,\"width\":328,\"height\":56,\"bottom\":624,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-quick-board",
+        "state": "quick-board",
+        "file": "round3-quick-board-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "SETUP_INPUTS [{\"id\":\"quick-team-1\",\"label\":null,\"placeholder\":\"Team A\"},{\"id\":\"quick-team-2\",\"label\":null,\"placeholder\":\"Team B\"}]"
+          },
+          {
+            "level": "error",
+            "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+          },
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"quick-board\",\"checks\":[\"A picked Yellow\",\"B picked Green\",\"quick setup started board\",\"board owns both picked colours\",\"saved draft retains picked colours\"],\"colours\":{\"picked\":[\"#facc15\",\"#16a34a\"],\"cores\":[\"#facc15\",\"#00662a\"],\"heroCore\":\"#facc15\",\"keyBackground\":\"rgb(250, 204, 21)\"},\"saved\":{\"colours\":[\"#facc15\",\"#16a34a\"],\"scores\":{\"team1\":{\"runs\":4,\"balls\":1,\"wickets\":0,\"allOut\":false},\"team2\":{\"runs\":0,\"balls\":0,\"wickets\":0,\"allOut\":false}}}}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"quick-board\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 0.0 · Innings 1\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":269.73,\"y\":48,\"width\":76.27,\"height\":48,\"bottom\":96,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false},{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-over-label\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-cricket-key\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]},{\"selector\":\".mono-scorer-score-value\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-quick-restore",
+        "state": "quick-restore",
+        "file": "round3-quick-restore-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "SETUP_INPUTS [{\"id\":\"quick-team-1\",\"label\":null,\"placeholder\":\"Team A\"},{\"id\":\"quick-team-2\",\"label\":null,\"placeholder\":\"Team B\"}]"
+          },
+          {
+            "level": "error",
+            "text": "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet: https://www.chromestatus.com/feature/5644273861001216."
+          },
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"quick-restore\",\"checks\":[\"A picked Yellow\",\"B picked Green\",\"quick setup started board\",\"board owns both picked colours\",\"saved draft retains picked colours\",\"remount restores both colours\",\"remount score retained\"],\"colours\":{\"picked\":[\"#facc15\",\"#16a34a\"],\"cores\":[\"#facc15\",\"#00662a\"],\"heroCore\":\"#facc15\",\"keyBackground\":\"rgb(250, 204, 21)\"},\"saved\":{\"colours\":[\"#facc15\",\"#16a34a\"],\"scores\":{\"team1\":{\"runs\":4,\"balls\":1,\"wickets\":0,\"allOut\":false},\"team2\":{\"runs\":0,\"balls\":0,\"wi…"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"quick-restore\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 0.0 · Innings 1\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":48,\"width\":75.89,\"height\":48,\"bottom\":96,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false},{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-over-label\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-cricket-key\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]},{\"selector\":\".mono-scorer-score-value\",\"ratio\":12.84,\"colour\":\"rgb(11, 11, 13)\",\"background\":[250,204,21,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-options-full",
+        "state": "options-full",
+        "file": "round3-options-full-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Guided\",\"x\":21,\"y\":148.40625,\"width\":80,\"height\":48,\"bottom\":196.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Power\",\"x\":101,\"y\":148.40625,\"width\":80,\"height\":48,\"bottom\":196.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Dead ball\",\"x\":20,\"y\":209.40625,\"width\":77.40625,\"height\":48,\"bottom\":257.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Mankad\",\"x\":103.40625,\"y\":209.40625,\"width\":70.15625,\"height\":48,\"bottom\":257.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Penalty +5\",\"x\":179.5625,\"y\":209.40625,\"width\":84.125,\"height\":48,\"bottom\":257.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Change bowler\",\"x\":20,\"y\":263.40625,\"width\":108.03125,\"height\":48,\"bottom\":311.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Retire\",\"x\":134.03125,\"y\":263.40625,\"width\":57.71875,\"height\":48,\"bottom\":311.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Correct last ball\",\"x\":197.75,\"y\":263.40625,\"width\":110.890625,\"height\":48,\"bottom\":311.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Penalty runs\",\"x\":20,\"y\":349.40625,\"width\":209.21875,\"height\":48,\"bottom\":397.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Add penalty\",\"x\":236.21875,\"y\":349.40625,\"width\":103.78125,\"height\":48,\"bottom\":397.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"End innings\",\"x\":20,\"y\":399.40625,\"width\":156,\"height\":48,\"bottom\":447.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"End match\",\"x\":184,\"y\":399.40625,\"width\":156,\"height\":48,\"bottom\":447.40625,\"visible\":true}"
+          },
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"options-full\",\"checks\":[\"all options targets at least 48px\",\"all option entries visible\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"options-full\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":220,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 12.2 · 97/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":269.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Dot\",\"x\":12,\"y\":394,\"width\":61.59,\"height\":64,\"bottom\":458,\"disabled\":false},{\"label\":\"Single\",\"x\":80.59,\"y\":394,\"width\":61.59,\"height\":64,\"bottom\":458,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four\",\"x\":149.19,\"y\":394,\"width\":61.61,\"height\":64,\"bottom\":458,\"disabled\":false},{\"label\":\"Six\",\"x\":217.8,\"y\":394,\"width\":61.59,\"height\":64,\"bottom\":458,\"disabled\":false},{\"label\":\"Wicket\",\"x\":286.39,\"y\":394,\"width\":61.59,\"height\":64,\"bottom\":458,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Wide\",\"x\":12,\"y\":464,\"width\":78.75,\"height\":48,\"bottom\":512,\"disabled\":false},{\"label\":\"No-ball\",\"x\":97.75,\"y\":464,\"width\":78.75,\"height\":48,\"bottom\":512,\"disabled\":false},{\"label\":\"Bye\",\"x\":183.5,\"y\":464,\"width\":78.75,\"height\":48,\"bottom\":512,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Leg-bye\",\"x\":269.25,\"y\":464,\"width\":78.75,\"height\":48,\"bottom\":512,\"disabled\":false},{\"label\":\"Run 2\",\"x\":12,\"y\":518,\"width\":78.75,\"height\":48,\"bottom\":566,\"disabled\":false},{\"label\":\"Run 3\",\"x\":97.75,\"y\":518,\"width\":78.75,\"height\":48,\"bottom\":566,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Run 5\",\"x\":183.5,\"y\":518,\"width\":78.75,\"height\":48,\"bottom\":566,\"disabled\":false},{\"label\":\"Run 7\",\"x\":269.25,\"y\":518,\"width\":78.75,\"height\":48,\"bottom\":566,\"disabled\":false},{\"label\":\"Undo last ball\",\"x\":12,\"y\":574,\"width\":220,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "warning",
+            "text": "12 more console messages were omitted."
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-options-closed",
+        "state": "options-closed",
+        "file": "round3-options-closed-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"options-closed\",\"checks\":[\"dead ball undo\",\"penalty undo\",\"custom penalty undo\",\"Mankad undo\",\"Undo visible after closing full options\",\"Correct last ball restores prior delivery\",\"End innings uses existing completion callback\",\"End match uses existing completion callback\",\"board and Undo restored after terminal callback probes\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-options",
+        "state": "test-r3-options",
+        "file": "round3-test-r3-options-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Done\",\"x\":265.09375,\"y\":312,\"width\":76.90625,\"height\":48,\"bottom\":360}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Declare innings\",\"x\":17,\"y\":375,\"width\":326,\"height\":54,\"bottom\":429}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"End as draw\",\"x\":17,\"y\":429,\"width\":326,\"height\":54,\"bottom\":483}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Finish & save\",\"x\":17,\"y\":483,\"width\":326,\"height\":54,\"bottom\":537}"
+          },
+          {
+            "level": "log",
+            "text": "OPTION {\"label\":\"Discard match\",\"x\":17,\"y\":553,\"width\":326,\"height\":54,\"bottom\":607}"
+          },
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-options\",\"checks\":[\"all Test options visible and 48px\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-options\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Close match options\",\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640,\"disabled\":false},{\"label\":\"Done\",\"x\":265.09,\"y\":312,\"width\":76.91,\"height\":48,\"bottom\":360,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Declare innings\",\"x\":17,\"y\":375,\"width\":326,\"height\":54,\"bottom\":429,\"disabled\":false},{\"label\":\"End as draw\",\"x\":17,\"y\":429,\"width\":326,\"height\":54,\"bottom\":483,\"disabled\":false},{\"label\":\"Finish & save\",\"x\":17,\"y\":483,\"width\":326,\"height\":54,\"bottom\":537,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Discard match\",\"x\":17,\"y\":553,\"width\":326,\"height\":54,\"bottom\":607,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-declare-confirm",
+        "state": "test-r3-declare-confirm",
+        "file": "round3-test-r3-declare-confirm-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-declare-confirm\",\"checks\":[\"confirmation shown\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-declare-confirm\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoNothing to undo\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":true}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false},{\"label\":\"Cancel prompt\",\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640,\"disabled\":false},{\"label\":\"Keep batting\",\"x\":37,\"y\":551,\"width\":286,\"height\":52,\"bottom\":603,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Declare\",\"x\":37,\"y\":487,\"width\":286,\"height\":52,\"bottom\":539,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-declare-cancel",
+        "state": "test-r3-declare-cancel",
+        "file": "round3-test-r3-declare-cancel-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-declare-cancel\",\"checks\":[\"confirmation shown\",\"cancel retains third innings\",\"Undo visible after cancel\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-declare-cancel\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-declare-declared",
+        "state": "test-r3-declare-declared",
+        "file": "round3-test-r3-declare-declared-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-declare-declared\",\"checks\":[\"confirmation shown\",\"cancel retains third innings\",\"Undo visible after cancel\",\"declaration advances fourth innings\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-declare-declared\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.4 · 24/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":11.78,\"colour\":\"rgb(11, 11, 13)\",\"background\":[251,191,36,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":11.78,\"colour\":\"rgb(11, 11, 13)\",\"background\":[251,191,36,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-declare-undo",
+        "state": "test-r3-declare-undo",
+        "file": "round3-test-r3-declare-undo-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-declare-undo\",\"checks\":[\"confirmation shown\",\"cancel retains third innings\",\"Undo visible after cancel\",\"declaration advances fourth innings\",\"Undo restores third innings\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-declare-undo\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-draw-confirm",
+        "state": "test-r3-draw-confirm",
+        "file": "round3-test-r3-draw-confirm-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-draw-confirm\",\"checks\":[\"confirmation shown\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-draw-confirm\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoNothing to undo\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":true}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false},{\"label\":\"Cancel prompt\",\"x\":0,\"y\":0,\"width\":360,\"height\":640,\"bottom\":640,\"disabled\":false},{\"label\":\"Keep scoring\",\"x\":37,\"y\":551,\"width\":286,\"height\":52,\"bottom\":603,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"End as draw\",\"x\":37,\"y\":487,\"width\":286,\"height\":52,\"bottom\":539,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-draw-cancel",
+        "state": "test-r3-draw-cancel",
+        "file": "round3-test-r3-draw-cancel-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-draw-cancel\",\"checks\":[\"confirmation shown\",\"cancel retains third innings\",\"Undo visible after cancel\"]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-draw-cancel\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":270.11,\"y\":14,\"width\":75.89,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "r3-test-r3-draw-complete",
+        "state": "test-r3-draw-complete",
+        "file": "round3-test-r3-draw-complete-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-r3-draw-complete\",\"checks\":[\"confirmation shown\",\"cancel retains third innings\",\"Undo visible after cancel\",\"draw completion saved\"],\"completion\":{\"status\":\"completed\",\"winner\":\"draw\"}}"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-r3-draw-complete\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":null}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Save & Return\",\"x\":110.8,\"y\":304,\"width\":138.39,\"height\":48,\"bottom\":352,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "retake-test-lead-light-360",
+        "state": "test-lead",
+        "file": "after-test-lead-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-lead\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-lead\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":269.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "retake-test-trail-light-360",
+        "state": "test-trail",
+        "file": "after-test-trail-light-360x640.png",
+        "width": 360,
+        "contentHeight": 640,
+        "capturedHeight": 640,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-trail\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-trail\",\"theme\":\"light\",\"w\":360,\"h\":640,\"viewport\":[360,640],\"scroll\":[360,640],\"undo\":{\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":269.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":217.39,\"width\":336,\"height\":48,\"bottom\":265.39,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":69.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"2 runs\",\"x\":126.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"3 runs\",\"x\":183.98,\"y\":400,\"width\":49.34,\"height\":48,\"bottom\":448,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":241.33,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"Six runs\",\"x\":298.66,\"y\":400,\"width\":49.33,\"height\":48,\"bottom\":448,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":80.8,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"NB\",\"x\":149.59,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"BYE\",\"x\":218.39,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":287.19,\"y\":456,\"width\":60.8,\"height\":48,\"bottom\":504,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":512,\"width\":336,\"height\":48,\"bottom\":560,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":574,\"width\":278,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":298,\"y\":574,\"width\":50,\"height\":56,\"bottom\":630,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 360,
+          "height": 640
+        }
+      },
+      {
+        "key": "retake-test-lead-light-390",
+        "state": "test-lead",
+        "file": "after-test-lead-light-390x844.png",
+        "width": 390,
+        "contentHeight": 844,
+        "capturedHeight": 844,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-lead\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-lead\",\"theme\":\"light\",\"w\":390,\"h\":844,\"viewport\":[390,844],\"scroll\":[390,844],\"undo\":{\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":299.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":252.8,\"width\":366,\"height\":48,\"bottom\":300.8,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":74.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"2 runs\",\"x\":136.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"3 runs\",\"x\":198.98,\"y\":592,\"width\":54.34,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":261.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"Six runs\",\"x\":323.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":86.8,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"NB\",\"x\":161.59,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"BYE\",\"x\":236.39,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":311.19,\"y\":658,\"width\":66.81,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":714,\"width\":366,\"height\":48,\"bottom\":762,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":328,\"y\":778,\"width\":50,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "key": "retake-test-trail-light-390",
+        "state": "test-trail",
+        "file": "after-test-trail-light-390x844.png",
+        "width": 390,
+        "contentHeight": 844,
+        "capturedHeight": 844,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-trail\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-trail\",\"theme\":\"light\",\"w\":390,\"h\":844,\"viewport\":[390,844],\"scroll\":[390,844],\"undo\":{\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":299.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":252.8,\"width\":366,\"height\":48,\"bottom\":300.8,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":74.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"2 runs\",\"x\":136.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"3 runs\",\"x\":198.98,\"y\":592,\"width\":54.34,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":261.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"Six runs\",\"x\":323.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":86.8,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"NB\",\"x\":161.59,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"BYE\",\"x\":236.39,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":311.19,\"y\":658,\"width\":66.81,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":714,\"width\":366,\"height\":48,\"bottom\":762,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":328,\"y\":778,\"width\":50,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":6.78,\"colour\":\"oklab(0.473317 0.000742126 -0.00252373)\",\"background\":[255,255,255,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "key": "retake-test-lead-dark-390",
+        "state": "test-lead",
+        "file": "after-test-lead-dark-390x844.png",
+        "width": 390,
+        "contentHeight": 844,
+        "capturedHeight": 844,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-lead\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-lead\",\"theme\":\"dark\",\"w\":390,\"h\":844,\"viewport\":[390,844],\"scroll\":[390,844],\"undo\":{\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":299.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":252.8,\"width\":366,\"height\":48,\"bottom\":300.8,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":74.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"2 runs\",\"x\":136.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"3 runs\",\"x\":198.98,\"y\":592,\"width\":54.34,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":261.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"Six runs\",\"x\":323.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":86.8,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"NB\",\"x\":161.59,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"BYE\",\"x\":236.39,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":311.19,\"y\":658,\"width\":66.81,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":714,\"width\":366,\"height\":48,\"bottom\":762,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":328,\"y\":778,\"width\":50,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":5.59,\"colour\":\"oklab(0.684551 0.0002923 -0.00548257)\",\"background\":[32,34,40,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 390,
+          "height": 844
+        }
+      },
+      {
+        "key": "retake-test-trail-dark-390",
+        "state": "test-trail",
+        "file": "after-test-trail-dark-390x844.png",
+        "width": 390,
+        "contentHeight": 844,
+        "capturedHeight": 844,
+        "consoleMessages": [
+          {
+            "level": "log",
+            "text": "ROUND3 {\"step\":\"test-trail\",\"checks\":[]}"
+          },
+          {
+            "level": "warning",
+            "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently"
+          },
+          {
+            "level": "log",
+            "text": "AUDIT {\"state\":\"test-trail\",\"theme\":\"dark\",\"w\":390,\"h\":844,\"viewport\":[390,844],\"scroll\":[390,844],\"undo\":{\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"hint\":\"UndoBack to 3rd · 0.3 · 20/0\",\"visible\":true,\"thumbZone\":true}}"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Finish\",\"x\":299.73,\"y\":14,\"width\":76.27,\"height\":48,\"bottom\":62,\"disabled\":false},{\"label\":\"Scorecard\",\"x\":12,\"y\":252.8,\"width\":366,\"height\":48,\"bottom\":300.8,\"disabled\":false},{\"label\":\"0 runs\",\"x\":12,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"1 run\",\"x\":74.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"2 runs\",\"x\":136.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"3 runs\",\"x\":198.98,\"y\":592,\"width\":54.34,\"height\":58,\"bottom\":650,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Four runs\",\"x\":261.33,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"Six runs\",\"x\":323.66,\"y\":592,\"width\":54.33,\"height\":58,\"bottom\":650,\"disabled\":false},{\"label\":\"5 runs\",\"x\":12,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"WD\",\"x\":86.8,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"NB\",\"x\":161.59,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"BYE\",\"x\":236.39,\"y\":658,\"width\":66.8,\"height\":48,\"bottom\":706,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"LB\",\"x\":311.19,\"y\":658,\"width\":66.81,\"height\":48,\"bottom\":706,\"disabled\":false},{\"label\":\"OUT\",\"x\":12,\"y\":714,\"width\":366,\"height\":48,\"bottom\":762,\"disabled\":false},{\"label\":\"Undo last action\",\"x\":12,\"y\":778,\"width\":308,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTROLS [{\"label\":\"Match options\",\"x\":328,\"y\":778,\"width\":50,\"height\":56,\"bottom\":834,\"disabled\":false}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".sb-undo-w\",\"ratio\":5.59,\"colour\":\"oklab(0.684551 0.0002923 -0.00548257)\",\"background\":[32,34,40,1]},{\"selector\":\".mono-cricket-key\",\"ratio\":6.99,\"colour\":\"rgb(255, 255, 255)\",\"background\":[21,78,205,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "CONTRAST [{\"selector\":\".mono-scorer-score-value\",\"ratio\":10.87,\"colour\":\"rgb(255, 255, 255)\",\"background\":[14.494117647058824,53.83529411764706,141.49019607843138,1]}]"
+          },
+          {
+            "level": "log",
+            "text": "TEAM_CONTRAST {\"allPass\":true,\"minimumLabel\":4.630189671546443,\"minimumNumeral\":8.024973692679696}"
+          }
+        ],
+        "screenshot": {
+          "mimeType": "image/png",
+          "width": 390,
+          "height": 844
+        }
+      }
+    ]
   }
 }

@@ -253,7 +253,7 @@ describe('MonoQuickMatch setup clarity', () => {
   });
 
   it('keeps the preview neutral for a sport without team colours', async () => {
-    renderQuickMatch('/badminton/quick');
+    renderQuickMatch('/tabletennis/quick');
     const preview = await screen.findByTestId('matchup-preview');
     expect(preview).not.toHaveClass('is-team');
     expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
