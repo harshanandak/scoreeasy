@@ -287,6 +287,7 @@ export const SPORT_REGISTRY = {
   // === CUSTOM (1) ===
   cricket: {
     id: 'cricket',
+    teamColour: true,
     identityColour: '#2563eb', // Royal blue
     name: 'Cricket',
     icon: '🏏',

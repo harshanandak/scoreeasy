@@ -272,11 +272,13 @@ describe('app-owned scoring prompts', () => {
       }
       expect(source, componentFile).toContain('mono-scorer-screen');
       expect(source, componentFile).toContain('mono-scorer-score-value');
-      // The cricket Test scorer moves match/ending actions into a top-bar
-      // hamburger menu (no bottom control strip) so the keypad stays in the
-      // thumb zone; every other scorer keeps the bottom control strip.
-      if (componentFile === 'MonoCricketTestLiveScore.jsx') {
-        expect(source, componentFile).toContain('aria-label="Match options"');
+      // Cricket now uses the shared thumb bar, including its Undo action and
+      // labelled options trigger. Other scorers retain their existing strip.
+      if (componentFile === 'MonoCricketTestLiveScore.jsx' || componentFile === 'MonoCricketLiveScore.jsx') {
+        expect(source, componentFile).toContain('<BoardBar');
+        expect(source, componentFile).toContain('canUndo={history.length > 0');
+        expect(source, componentFile).toContain('onUndo={undo}');
+        expect(source, componentFile).toContain('onMore={() =>');
       } else {
         expect(source, componentFile).toContain('mono-scorer-control-strip');
       }
