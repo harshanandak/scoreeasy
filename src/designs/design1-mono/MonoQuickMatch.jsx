@@ -27,7 +27,7 @@ import { getConsent } from '../../lib/live/liveSession';
 import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
-import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { applySetPoint, getBestOfResultScore, getSetPointState, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
@@ -2546,6 +2546,18 @@ export default function MonoQuickMatch() {
       // Direction E board (team colour). Same state and handlers as the classic screen below;
       // the board only renders them. Keys and band follow the team, not the side.
       const setUnit = sportConfig?.config?.setLabel || 'Set';
+      const { setPoint, matchPoint } = getSetPointState({
+        format, sportConfig, currentSet,
+        score1: sidesSwapped ? rightSetScore : leftSetScore,
+        score2: sidesSwapped ? leftSetScore : rightSetScore,
+        setsWon1: sidesSwapped ? rightSetsWon : leftSetsWon,
+        setsWon2: sidesSwapped ? leftSetsWon : rightSetsWon,
+      });
+      const pointCue = setPoint.length === 2
+        ? `Next point wins the ${matchPoint.length === 2 ? 'match' : setUnit.toLowerCase()}`
+        : setPoint.length === 1
+          ? `${matchPoint.length ? 'Match' : setUnit} point · ${getTeamLabel(setPoint[0])}`
+          : '';
       const boardHalves = setHalves.map((h) => ({
         key: h.team === 1 ? 'a' : 'b',
         team: h.team,
@@ -2600,6 +2612,7 @@ export default function MonoQuickMatch() {
             colourStyle={teamColourStyle}
             halves={boardHalves}
             meta={[...boardStatus, timer.formatted]}
+            pointCue={pointCue}
             setHistory={setHistory}
             // One plain line, e.g. "Last: point Reds · 22–19" (serving shows once, on the key).
             lastLine={lastEntry && lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}`

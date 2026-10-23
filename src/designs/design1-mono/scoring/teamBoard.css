@@ -49,6 +49,15 @@
   font-weight: 750;
 }
 
+.tsb-point-cue {
+  padding: 2px 8px;
+  border-radius: 6px;
+  /* The unmixed warning pair is 5.998:1 in light mode; ink lifts it above 6:1. */
+  color: color-mix(in srgb, var(--se-color-warning) 99%, var(--se-color-ink));
+  background: var(--se-color-warning-soft);
+  font-weight: 750;
+}
+
 .tsb-last {
   min-height: 1.6em;
   margin: 0;
