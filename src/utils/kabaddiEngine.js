@@ -397,8 +397,8 @@ export function applyRaid(state, event) {
     id: event.id, type: technical ? 'technical' : 'raid', input: clone(event), inputKey,
     outcome, raidingTeam, half: state.half, raidNumber: current.raidNumber,
     effects, superRaid: raidPoints >= 3,
-    // Clock actions taken inside this raid are part of its complete undo unit.
-    absorbedAdminIds: raid ? state.events.slice(raid.startedAtRevision).filter((entry) => entry.type === 'admin').map((entry) => entry.id) : [],
+    // Only a completed raid restores raid.before; replay undo retains intervening clock actions.
+    absorbedAdminIds: raid && (!technical || event.turnEffect === 'forfeit') ? state.events.slice(raid.startedAtRevision).filter((entry) => entry.type === 'admin').map((entry) => entry.id) : [],
   }, technical && (!raid || event.turnEffect !== 'forfeit') ? snapshot(state) : raid.before);
 }
 

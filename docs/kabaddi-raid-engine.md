@@ -156,6 +156,8 @@ correction is explicit; a running anchor never winds back automatically.
 The latest administrative action is independently undoable. Clock actions inside
 a completed raid are absorbed into that raid's undo boundary, so stepping back
 cannot resurrect an already undone draft. Cancel the next draft before undo.
+Technical replay undo preserves the interrupted draft and its clock actions;
+those actions remain independently undoable after cancelling that draft.
 To cross halftime, undo `startHalf` first; a finished match must first `reopen` to
 `finishReview`. Audit records are retained even when their gameplay effect is undone.
 

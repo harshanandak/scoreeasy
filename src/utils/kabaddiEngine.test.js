@@ -317,6 +317,20 @@ describe('clocks, lifecycle and correction', () => {
     expect(gameplay(restored)).toEqual(gameplay(before));
   });
 
+  it('undoing a technical replay leaves its prior clock actions independently undoable', () => {
+    const draft = startRaid(fixture(), { id: 'replayed' });
+    const paused = pause(draft, { atMs: 100 });
+    const resumed = resume(paused, { atMs: 200 });
+    const replay = applyRaid(resumed, event('technical', { to: 0, reason: 'interruption', turnEffect: 'replay' }));
+    const restored = undo(replay);
+    expect(gameplay(restored)).toEqual(gameplay(resumed));
+    const previous = undo(cancelRaid(restored));
+    expect(previous.events.at(-1).targetId).toBe(resumed.events.at(-1).id);
+    expect(gameplay(previous)).toEqual(gameplay(paused));
+    expect(previous.activeRaid.id).toBe('replayed');
+    expect(previous.activeRaid.raidClock.remainingAtAnchorMs).toBe(29900);
+  });
+
   it('supplemental technical awards remain in one raid and do not create extra revivals', () => {
     const before = fixture();
     const after = applyRaid(before, event('touch', { count: 1, technicalAwards: [{ to: 0, reason: 'delay' }, { to: 1, reason: 'conduct' }] }));
