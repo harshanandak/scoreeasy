@@ -74,3 +74,16 @@ The task-specific brief makes screenshots optional because a frozen screenshot
 cannot prove ticking. No screenshots or live-system verification are claimed.
 Scoring rules, elapsed persistence fields and the per-second autosave policy are
 unchanged. No follow-up bug was identified within this scope.
+
+## Final validation
+
+- Rebased cleanly onto the restore-notice change on master (05b6ea6).
+- Frozen final full run: `bun run test --maxWorkers 4` — **160 files passed,
+  2044 tests passed and 7 expected failures**, in 373.71 seconds.
+- Rebased focused run: **242 tests passed across 9 files**, including the 14 new
+  clock regressions, restore-notice tests, team-colour tests, per-sport boards,
+  goals board and palette ratchet.
+- `bun run lint`: exit 0, no errors, 29 existing warnings in untouched files.
+- `bun run type-check`: exit 0. Normal commit hooks also passed.
+- Vite started on port 5204; its HTTP entry point returned 200. This verifies
+  startup only, not ticking in a live browser.
