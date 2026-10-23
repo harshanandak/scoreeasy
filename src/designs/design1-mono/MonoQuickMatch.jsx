@@ -516,8 +516,8 @@ export default function MonoQuickMatch() {
   // Records the latest scoring action; its broadcast snapshot is computed from the
   // COMMITTED state in the post-commit effect below (a point can end a set / chase).
   const broadcastIntentRef = useRef(null);
-  // Stable per-match id (R2): QuickMatch has no matchId during scoring, so we mint a
-  // id when scoring STARTS and persist/restore it in the draft. Null until
+  // Stable per-match id (R2): mint it when scoring STARTS and persist/restore
+  // it in the draft. Null until
   // then so the bar doesn't fire goLive on the setup screen.
   const liveMatchIdRef = useRef(null);
 

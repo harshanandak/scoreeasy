@@ -1,0 +1,161 @@
+{
+  "productCommit": "7f1320fb90092d5c14cec692511bba31c9ff9eba",
+  "baselineCommit": "4a3ba4494f47fe8294a518abdc1c95e017f075b8",
+  "renderer": "T3 html_preview",
+  "notes": "Real components, inline IIFE/CSS/fonts, local fixtures, auth/Convex mocked. Entry motion disabled only in the fixture for settled frames. Row/path/control counters select the new InProgressMatches component; baseline legacy rows use different markup, so its counters are not a measure of baseline legacy resume availability.",
+  "captures": [
+    {
+      "file": "before-history-390x844-light.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"history\",\"width\":390,\"height\":844,\"paths\":[],\"rows\":0,\"minTargetWidth\":null,\"minTargetHeight\":null,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "before-home-390x844-light.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"home\",\"width\":390,\"height\":844,\"paths\":[],\"rows\":0,\"minTargetWidth\":null,\"minTargetHeight\":null,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "history-390x844-light.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"history\",\"width\":390,\"height\":844,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "history-360x640-light.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"history\",\"width\":360,\"height\":640,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    {
+      "file": "history-360x640-dark.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"history\",\"width\":360,\"height\":640,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    {
+      "file": "home-390x844-light.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"home\",\"width\":390,\"height\":844,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "home-360x640-light.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"home\",\"width\":360,\"height\":640,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":false}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    },
+    {
+      "file": "delete-390x844-light.png",
+      "width": 390,
+      "contentHeight": 844,
+      "capturedHeight": 844,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"delete\",\"width\":390,\"height\":844,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":true}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "file": "delete-360x640-light.png",
+      "width": 360,
+      "contentHeight": 640,
+      "capturedHeight": 640,
+      "consoleMessages": [
+        {
+          "level": "log",
+          "text": "{\"type\":\"evidence\",\"screen\":\"delete\",\"width\":360,\"height\":640,\"paths\":[\"/cricket/quick?resume=101\",\"/cricket/quick?resume=102\",\"/volleyball/quick?resume=103\"],\"rows\":3,\"minTargetWidth\":88.390625,\"minTargetHeight\":48,\"overflow\":false,\"dialog\":true}"
+        }
+      ],
+      "screenshot": {
+        "mimeType": "image/png",
+        "width": 360,
+        "height": 640
+      }
+    }
+  ]
+}

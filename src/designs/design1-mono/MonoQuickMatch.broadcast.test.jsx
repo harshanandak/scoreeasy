@@ -18,9 +18,8 @@ const live = vi.hoisted(() => ({
   reset: vi.fn(),
 }));
 
-// Mutable route+draft so one mocked module set can serve every sport. loadData
-// returns the seeded draft for the active sport's key; no timestamp field, so
-// isStaleQuickMatchDraft() stays false and the restore effect lands in 'scoring'.
+// Mutable route and draft fixtures let the same mocked dependencies serve each
+// sport. The resume query identifies the per-match snapshot being restored.
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));

@@ -131,6 +131,14 @@ it('History confirms with teams and score, cancellation retains both, deletion r
   expect(screen.queryByRole('button', { name: /Resume Volleyball/ })).toBeNull();
 });
 
+it('keeps an orphan terminal snapshot when restore cannot find its completed History record', async () => {
+  const draft = seed('volleyball', 9, { status: 'completed', winner: 'Royals 9' });
+  open('/volleyball/quick?resume=9');
+  await screen.findByRole('button', { name: /Delete Volleyball: Royals 9/ });
+  expect(loadQuickMatches()).toEqual([]);
+  expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_9'))).toEqual(draft);
+});
+
 it('restores the same volleyball score and undo, then Finish moves only it to completed History', async () => {
   seed('volleyball', 1); seed('kabaddi', 2);
   open('/volleyball/quick?resume=1');
