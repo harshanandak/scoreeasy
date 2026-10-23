@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
 import { previewCandidates, runCleanup } from './convex-preview-cleanup.mjs';
-import { choosePreviewBackend } from './preview-backend.mjs';
+import { choosePreviewBackend, packageInstallChanged } from './preview-backend.mjs';
 
 const deployment = (overrides = {}) => ({
   kind: 'cloud', name: 'happy-otter-123', deploymentType: 'preview',
@@ -44,6 +44,38 @@ describe('preview backend selection', () => {
   it('handles an empty diff and unusual frontend filenames', () => {
     expect(choosePreviewBackend([], 'https://shared.convex.cloud')).toBe('shared');
     expect(choosePreviewBackend(['src/convex/a\nb.js'], 'https://shared.convex.cloud')).toBe('shared');
+  });
+  it('shares the backend when package.json changed outside its install fields', () => {
+    expect(choosePreviewBackend(['package.json', 'scripts/x.mjs'], 'https://shared.convex.cloud', false)).toBe('shared');
+    expect(choosePreviewBackend(['package.json', 'bun.lock'], 'https://shared.convex.cloud', false)).toBe('isolated');
+    expect(choosePreviewBackend(['package.json', 'convex/a.ts'], 'https://shared.convex.cloud', false)).toBe('isolated');
+    expect(choosePreviewBackend(['package.json'], '', false)).toBe('isolated');
+  });
+});
+
+describe('package.json install-field changes', () => {
+  const pkg = (overrides = {}) => JSON.stringify({
+    name: 'scoreeasy', scripts: { test: 'vitest run' },
+    dependencies: { convex: '^1.20.0', react: '^18.3.1' }, devDependencies: { vitest: '^3.0.0' },
+    ...overrides,
+  }, null, 2);
+  it('ignores scripts, metadata and formatting', () => {
+    expect(packageInstallChanged(pkg(), pkg({ scripts: { test: 'vitest run', 'evidence:check': 'node x.mjs' } }))).toBe(false);
+    expect(packageInstallChanged(pkg(), pkg({ version: '2.0.0', description: 'x' }))).toBe(false);
+    expect(packageInstallChanged(pkg(), JSON.stringify(JSON.parse(pkg())))).toBe(false);
+  });
+  it.each([
+    ['a dependency bump', { dependencies: { convex: '^1.21.0', react: '^18.3.1' } }],
+    ['a new devDependency', { devDependencies: { vitest: '^3.0.0', sharp: '^0.33.0' } }],
+    ['overrides', { overrides: { esbuild: '0.25.0' } }],
+    ['trustedDependencies', { trustedDependencies: ['sharp'] }],
+    ['workspaces', { workspaces: ['packages/*'] }],
+  ])('counts %s', (_label, overrides) => {
+    expect(packageInstallChanged(pkg(), pkg(overrides))).toBe(true);
+  });
+  it('counts an added or unreadable package.json as changed', () => {
+    expect(packageInstallChanged('', pkg())).toBe(true);
+    expect(packageInstallChanged(pkg(), '{ not json')).toBe(true);
   });
 });
 

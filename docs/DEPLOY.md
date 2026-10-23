@@ -21,9 +21,15 @@ changes. Drafts and forked PRs skip deployment. The workflow checks out the PR
 head with full history and compares the PR base and head using
 `git diff --name-only --no-renames -z <base>...<head>`.
 
-- Changes under `convex/`, or any change to `package.json` or `bun.lock`, select
-  an **isolated per-PR backend**. Either dependency file can change the Convex
-  CLI, helpers, or transitive backend dependencies, so all such changes count.
+- Changes under `convex/` or to `bun.lock`, or a `package.json` change to a field
+  that alters what gets installed (`dependencies`, `devDependencies`,
+  `optionalDependencies`, `peerDependencies`, `overrides`, `resolutions`,
+  `patchedDependencies`, `trustedDependencies`, `workspaces`), select an
+  **isolated per-PR backend**: those can change the Convex CLI, helpers, or
+  transitive backend dependencies. A `package.json` change confined to other
+  fields (such as `scripts`) does not count. The script compares `package.json`
+  at the merge base and the PR head, and treats a missing or unparsable file as
+  changed.
   `convex deploy --preview-create "pr-<N>" --cmd 'bun run build'` supplies its URL
   as `VITE_CONVEX_URL`. As documented by [Convex](https://docs.convex.dev/production/multiple-deployments#using-preview-deployments),
   `--preview-create` deletes and recreates an existing preview with the same
