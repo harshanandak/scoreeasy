@@ -1,0 +1,210 @@
+/* Scorer-side live controls. Consent stays inside the scorer's existing options sheet. */
+.kit-live-offer,
+.kit-live-bar,
+.mono-sheet.kit-share-sheet {
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+}
+
+.kit-live-offer,
+.kit-live-bar {
+  margin-bottom: 12px;
+}
+
+.kit-live-consent h2,
+.kit-share-sheet h2 {
+  margin: 4px 0 6px;
+  font: 800 1.6rem/1.05 var(--se-font-display);
+  letter-spacing: -0.03em;
+}
+
+.kit-live-consent p,
+.kit-share-sheet p {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.kit-live-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.kit-live-full,
+.kit-live-stack > button {
+  width: 100%;
+}
+
+.kit-live-offer .kit-live-note {
+  margin: 8px 2px 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.kit-live-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.kit-live-bar .se-ctl {
+  min-width: 48px;
+  padding: 0 14px;
+}
+
+.kit-live-share {
+  margin-left: auto;
+}
+
+.kit-live-pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: var(--se-color-live-soft);
+  color: var(--se-color-live);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.kit-live-pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: kit-live-breathe 1.6s ease-in-out infinite;
+}
+
+.kit-share-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--se-color-scrim);
+}
+
+.mono-sheet.kit-share-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px));
+  border-radius: 26px 26px 0 0;
+  background: var(--se-color-surface);
+  box-shadow: var(--se-modal-lift);
+  animation: none;
+}
+
+.kit-share-grab {
+  width: 44px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 9px;
+  background: var(--se-color-line-soft);
+}
+
+.kit-share-livebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 14px;
+  padding: 8px 8px 8px 12px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+}
+
+.kit-share-livebar .se-ctl {
+  padding: 0 14px;
+}
+
+.kit-share-qr {
+  box-sizing: border-box;
+  width: 172px;
+  height: 172px;
+  margin: 14px auto;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--se-color-inverse);
+}
+
+.kit-share-qr svg {
+  display: block;
+}
+
+.kit-share-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 4px 6px 4px 14px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.kit-share-link > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.kit-share-link .se-ctl {
+  flex: none;
+  padding: 0 12px;
+}
+
+.kit-share-sheet .kit-live-stack {
+  margin-top: 12px;
+}
+
+.kit-share-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--se-color-danger);
+  font: 750 1rem var(--se-font-sans);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.kit-live-offer .kit-live-error,
+.kit-share-sheet .kit-live-error {
+  margin: 8px 2px;
+  color: var(--se-color-danger);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+@keyframes kit-live-breathe {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-live-pill::before {
+    animation: none;
+  }
+}

@@ -1,0 +1,104 @@
+/* Flat team keys, hard controls, neutral shell. All colours come from the gated engine.
+   The sport mark belongs to the clock chip: a team mark would imply possession. */
+.tgb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+}
+.tgb-sport, .tgb-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.tgb-sport { background: var(--sport-core); color: var(--sport-on); }
+.tgb-sport-mark {
+  width: 28px;
+  height: 22px;
+  background: currentColor;
+  mask: var(--sport-mark) center / contain no-repeat;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+}
+.tgb-clock { background: var(--se-color-surface); color: var(--sb-ink); font-variant-numeric: tabular-nums; }
+.tgb-status { font-size: 0.85rem; font-weight: 750; }
+.tgb-last {
+  min-height: 2.6em;
+  margin: 0;
+  padding: 2px 14px 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--sb-ink-2);
+  overflow-wrap: anywhere;
+}
+.tgb-keys {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 17px 0 14px;
+}
+.tgb-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 14px 8px;
+  border: 2px solid var(--sb-ink);
+  border-radius: 24px;
+  box-shadow: 3px 3px 0 var(--se-color-shadow);
+  background: var(--tgb-core);
+  color: var(--tgb-on);
+}
+.tgb-team-a { --tgb-core: var(--team-a-core); --tgb-on: var(--team-a-on); }
+.tgb-team-b { --tgb-core: var(--team-b-core); --tgb-on: var(--team-b-on); }
+.tgb-name { font-size: 1rem; font-weight: 800; overflow-wrap: anywhere; text-align: center; max-width: 100%; }
+.tgb-score { font: 800 clamp(4.5rem, min(26vw, 17vh), 8.5rem)/1 var(--sb-num); font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
+.tgb-actions { display: grid; gap: 8px; width: 100%; }
+.tgb-actions button, .tgb-whole {
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tgb-actions button {
+  min-height: 48px;
+  width: 100%;
+  padding: 6px 4px;
+  border: 2px solid var(--tgb-on);
+  border-radius: 14px;
+  background: var(--tgb-on);
+  color: var(--tgb-core);
+  font-size: 0.85rem;
+  box-shadow: 0 3px 0 var(--se-color-shadow);
+}
+.tgb-actions button:active { transform: translateY(2px); box-shadow: none; }
+.tgb-actions button:disabled, .tgb-whole:disabled { cursor: default; border-style: dashed; box-shadow: none; }
+.tgb button:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 3px; }
+.tgb-whole { min-height: 260px; width: 100%; }
+.tgb-whole:active { transform: scale(0.985); }
+.tgb-moment { animation: tgb-bump 260ms ease-out; }
+.tgb-whole.tgb-moment { animation-name: tgb-key-bump; }
+/* Alternate names restart the moment on consecutive goals without remounting a focused key. */
+.tgb-whole.tgb-moment[data-action='0'] { animation-name: tgb-key-bump-repeat; }
+@keyframes tgb-bump { 0% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump-repeat { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@media (max-height: 680px) {
+  .tgb .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+  .tgb .sb-bar { padding-top: 12px; padding-bottom: 14px; }
+  .tgb-team { padding-top: 10px; padding-bottom: 10px; }
+  .tgb-score { margin: 4px 0 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tgb-moment, .tgb .tgb-whole.tgb-moment { animation: none; }
+  .tgb-actions button:active, .tgb-whole:active { transform: none; }
+}

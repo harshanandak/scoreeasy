@@ -413,7 +413,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/app', path]);
     await settleRoute();
     expect(await screen.findByRole('button', { name: /^Ana: 40/ })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
     await waitFor(() => expect(savedDraft().sets).toEqual(sets));
     expect(savedDraft().history).toEqual(history);
     expect(screen.getByRole('button', { name: /^Ana: 30/ })).toBeEnabled();
@@ -702,7 +702,8 @@ describe('navigation decisions (2026-10-21)', () => {
     seed(key, { sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', format: goals ? { mode: 'free' } : { sets: 3, pointsPerSet: 25 }, updatedAt: NOW_ISO });
     const view = renderApp([`/${sport}/quick`]);
     await settleRoute();
-    if (['basketball', 'kabaddi'].includes(sport)) fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+    if (sport === 'kabaddi') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+    else if (sport === 'basketball') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
@@ -765,7 +766,7 @@ describe('navigation decisions (2026-10-21)', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole('button', { name: 'Undo', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action', exact: true }));
     const saved = mode === 'quick' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)) : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
     expect(saved.draftState.sets[0].points1).toBe(0);
     expect(saved.draftState.history).toEqual([]);
@@ -855,8 +856,10 @@ describe('navigation decisions (2026-10-21)', () => {
     const score = goals
       ? (mode === 'quick' ? 'Add 1 to Red' : 'Add 1 point to Red')
       : (mode === 'quick' ? 'Add point for Red' : /^Red: /);
-    if (mode === 'quick' && ['basketball', 'kabaddi'].includes(sport)) {
-      fireEvent.click(screen.getAllByRole('button', { name: '+1', exact: true })[0]);
+    if (mode === 'quick' && sport === 'kabaddi') {
+      fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+    } else if (mode === 'quick' && sport === 'basketball') {
+      fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     } else fireEvent.click(screen.getByRole('button', { name: score }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     const installs = nativeBack.install.mock.calls.length;

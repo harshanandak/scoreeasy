@@ -55,6 +55,7 @@ export const SPORT_REGISTRY = {
     name: 'Badminton',
     icon: '🏸',
     engine: 'sets',
+    teamColour: true,
     desc: 'Rally points, best of 3',
     storageKey: 'se_badminton',
     config: {
@@ -68,6 +69,7 @@ export const SPORT_REGISTRY = {
       ],
       defaultSetFormat: 1, // Best of 3
       serviceRotation: 1, // Service changes every point
+      setLabel: 'Game',
     },
     standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],
     features: [
@@ -80,6 +82,7 @@ export const SPORT_REGISTRY = {
 
   tabletennis: {
     id: 'tabletennis',
+    teamColour: true,
     identityColour: '#0d9488', // Table teal
     name: 'Table Tennis',
     icon: '🏓',
@@ -109,6 +112,7 @@ export const SPORT_REGISTRY = {
 
   tennis: {
     id: 'tennis',
+    teamColour: true,
     identityColour: '#c6e83a', // Optic volt
     name: 'Tennis',
     icon: '🎾',
@@ -142,6 +146,7 @@ export const SPORT_REGISTRY = {
   // === GOALS-BASED SPORTS (4) ===
   football: {
     id: 'football',
+    teamColour: true,
     identityColour: '#16a34a', // Pitch green
     name: 'Football',
     icon: '⚽',
@@ -175,6 +180,7 @@ export const SPORT_REGISTRY = {
 
   basketball: {
     id: 'basketball',
+    teamColour: true,
     identityColour: '#f97316', // Court orange
     name: 'Basketball',
     icon: '🏀',
@@ -212,6 +218,7 @@ export const SPORT_REGISTRY = {
 
   hockey: {
     id: 'hockey',
+    teamColour: true,
     identityColour: '#38bdf8', // Turf sky
     name: 'Hockey',
     icon: '🏑',
@@ -245,6 +252,7 @@ export const SPORT_REGISTRY = {
 
   kabaddi: {
     id: 'kabaddi',
+    teamColour: true,
     identityColour: '#e11d74', // Rani pink
     name: 'Kabaddi',
     icon: '🤼',
@@ -283,6 +291,7 @@ export const SPORT_REGISTRY = {
   // === CUSTOM (1) ===
   cricket: {
     id: 'cricket',
+    teamColour: true,
     identityColour: '#2563eb', // Royal blue
     name: 'Cricket',
     icon: '🏏',

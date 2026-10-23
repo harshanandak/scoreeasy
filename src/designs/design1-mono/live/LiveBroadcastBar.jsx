@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ShareLiveMatch from './ShareLiveMatch';
 import { getConsent, setConsent } from '../../../lib/live/liveSession';
 import { useAuth } from '../../../hooks/useAuth';
+import '../kit/sharelive.css';
 
 // LiveBroadcastBar (issue b0z): the operator-facing live control.
 //
@@ -88,16 +89,15 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     if (!isUserReady) return null;
     const returnTo = `${location.pathname}${location.search}`;
     return (
-      <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
+      <div className="kit-live-offer" role="region" aria-label="Live sharing">
         <button
           type="button"
           onClick={() => navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`)}
-          className="mono-btn"
-          style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          className="se-ctl kit-live-full"
         >
-          <span aria-hidden="true" style={{ color: '#dc2626' }}>●</span> Sign in to go live
+          Sign in to go live
         </button>
-        <p style={{ margin: '6px 2px 0', fontSize: '0.75rem', color: 'var(--se-color-ink-muted)' }}>
+        <p className="kit-live-note">
           A free account lets you share the live scoreboard — your matches stay private until you go live.
         </p>
       </div>
@@ -108,19 +108,17 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   if (consent === null) {
     return (
       <div
-        className="mono-card"
-        style={{ padding: 12, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}
+        className="kit-live-offer kit-live-consent"
         role="region"
         aria-label="Live sharing"
       >
-        <p style={{ fontSize: '0.8125rem', color: 'var(--se-color-ink)' }}>
-          Share this match <strong>live</strong>? Scores and team names will be public to anyone with the link.
-        </p>
-        <div className="mono-quick-action-row">
-          <button type="button" onClick={accept} className="mono-btn" style={{ flex: 1, color: 'var(--primary)' }}>
-            Share live
+        <h2>Share this match live?</h2>
+        <p>Scores and team names will be public to anyone with the link.</p>
+        <div className="kit-live-stack">
+          <button type="button" onClick={accept} className="se-go">
+            Share live <span aria-hidden="true">→</span>
           </button>
-          <button type="button" onClick={decline} className="mono-btn" style={{ flex: 1 }}>
+          <button type="button" onClick={decline} className="se-ctl">
             Keep private
           </button>
         </div>
@@ -132,23 +130,25 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   if (enabled && broadcast.isLive) {
     return (
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}
+        className="kit-live-bar"
         role="region"
         aria-label="Live sharing"
       >
-        <span className="mono-badge mono-badge-live" aria-label="Broadcasting live" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span aria-hidden="true">●</span> LIVE · public
+        <span className="kit-live-pill">
+          Live · public
         </span>
         <button
           type="button"
-          onClick={() => setShareOpen(true)}
-          className="mono-btn"
+          onClick={(event) => {
+            event.currentTarget.focus();
+            setShareOpen(true);
+          }}
+          className="se-ctl kit-live-share"
           disabled={!broadcast.token}
-          style={{ marginLeft: 'auto' }}
         >
           Share
         </button>
-        <button type="button" onClick={stopSharing} className="mono-btn">
+        <button type="button" onClick={stopSharing} className="se-ctl">
           Stop
         </button>
         {shareOpen && broadcast.token && (
@@ -157,6 +157,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
             teamA={descriptor?.teamA?.name}
             teamB={descriptor?.teamB?.name}
             onClose={() => setShareOpen(false)}
+            onStopSharing={stopSharing}
           />
         )}
       </div>
@@ -177,11 +178,11 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // isLive=false && error uniquely identifies a genuine go-live failure.
   const goLiveFailed = Boolean(broadcast.error) && !broadcast.isLive;
   return (
-    <div style={{ marginBottom: 12 }} role="region" aria-label="Live sharing">
+    <div className="kit-live-offer" role="region" aria-label="Live sharing">
       {goLiveFailed && (
         <p
           role="alert"
-          style={{ margin: '0 2px 8px', fontSize: '0.75rem', color: 'var(--destructive)' }}
+          className="kit-live-error"
         >
           Couldn’t go live — check your connection and try again.
         </p>
@@ -189,10 +190,9 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
       <button
         type="button"
         onClick={goLiveNow}
-        className="mono-btn-primary"
-        style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        className="se-go"
       >
-        <span aria-hidden="true">●</span> Go live &amp; share
+        Go live &amp; share <span aria-hidden="true">→</span>
       </button>
     </div>
   );

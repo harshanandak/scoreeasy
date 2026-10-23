@@ -1,3 +1,5 @@
+import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
+import './scoring/cricketBoard.css';
 import { useScoringProgress } from './scoring/scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../hooks/useMatchCompletion';
 import { useState, useRef, useEffect } from 'react';
@@ -14,6 +16,7 @@ import { DEFAULT_TEAM_COLOURS, normaliseHex } from '../../lib/teamColour';
 import TeamColourPicker from './TeamColourPicker';
 import { useTeamColours } from './scoring/useTeamColours';
 import TeamSetsBoard from './scoring/TeamSetsBoard';
+import TeamGoalsBoard from './scoring/TeamGoalsBoard';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
@@ -24,7 +27,7 @@ import { getConsent } from '../../lib/live/liveSession';
 import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
-import { applySetPoint, getBestOfResultScore, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { applySetPoint, getBestOfResultScore, getSetPointState, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
@@ -254,7 +257,7 @@ EndMatchButton.propTypes = {
   onEnd: PropTypes.func.isRequired,
 };
 
-// Scoring-phase notice. The "resumed" info reads as a quiet ambient line; real
+// Scoring-phase notice. The "resumed" info reads as an in-flow status line; real
 // save errors and end-match validation keep a proper alert box. Tone is derived
 // from the message so the save/end logic sites stay untouched.
 function ScoringNotice({ message }) {
@@ -266,7 +269,7 @@ function ScoringNotice({ message }) {
       : 'danger';
   if (tone === 'info') {
     return (
-      <p className="mono-scorer-note" role="status">{message}</p>
+      <p className="mono-scorer-note" role="status" aria-live="polite" aria-atomic="true">{message}</p>
     );
   }
   return (
@@ -482,6 +485,7 @@ export default function MonoQuickMatch() {
 
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
+  const [cricketOptionsOpen, setCricketOptionsOpen] = useState(false);
 
   const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
     sets.some(set => set.score1 > 0 || set.score2 > 0) ||
@@ -1525,7 +1529,7 @@ export default function MonoQuickMatch() {
   };
 
   // Goals: Add score for a team
-  const addGoal = (team, value = 1) => {
+  const addGoal = (team, value = 1, actionLabel) => {
     if (completion.locked) return;
     // Timed mode: once the clock hits zero scoring is locked — EXCEPT the one
     // deciding score a no-draw tie still needs (scoringLocked encodes that). This
@@ -1544,7 +1548,11 @@ export default function MonoQuickMatch() {
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
-    setLastAction(`${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
+    setLastAction(sport === 'basketball' && teamColourOn
+      ? `${getTeamLabel(team)} +${value}`
+      : teamColourOn && actionLabel
+      ? `${getTeamLabel(team)} · ${actionLabel}`
+      : `${getTeamLabel(team)} +${value} ${scoringUnit}${value === 1 ? '' : 's'}`);
 
     // Auto-end in points mode
     if (isPointsMode && format.target) {
@@ -2223,26 +2231,18 @@ export default function MonoQuickMatch() {
         : `${otherScore.balls} balls`;
 
       return (
-        <div className="mono-scorer-screen mono-arena-screen">
-          <div className="mono-scorer-shell mono-cricket-shell">
+        <div className="mono-scorer-screen cricket-board" data-cricket-board="" style={teamColourStyle} data-batting={battingTeam === 2 ? 'b' : 'a'}>
+          <div className="mono-scorer-shell sb crb">
             <h1 className="sr-only">{quickMatchScoringHeading}</h1>
             {endMatchDialog}
-            {/* Cricket ends via EndMatchButton + keypad (no ThumbActionBar), so it
-                has no Discard trigger — no discardDialog rendered here. */}
-            <ScoringNotice message={saveWarning} />
+            {discardDialog}
             <ScoringStatusStrip lastAction={lastAction} />
-            {/* Top bar */}
-            <div className="mono-scorer-topbar">
-              <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>{sportConfig?.name || 'Cricket'}</span>
-              <div className="mono-scorer-topbar-actions">
-                {presetLabel && <span className="mono-badge">{presetLabel}</span>}
-                <span className="text-xs font-mono" style={{ color: 'var(--se-color-ink-muted)' }}>{timer.formatted}</span>
-                {isRefereeing && <span className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Referee&nbsp;&middot;</span>}
-                <span className="mono-badge mono-badge-live">Innings {innings}</span>
-                <EndMatchButton onEnd={requestEndMatch} />
-              </div>
-            </div>
-
+            <BoardHeader title={presetLabel || 'Cricket'} sportColour={sportIdentity('cricket')?.core}
+              subtitle={`Innings ${innings} · Over ${ballsToOvers(currentScore.balls)}${target !== null ? ` · Chasing ${target + 1}` : ''}`}
+              isLive={live.isLive} onFinish={requestEndMatch} />
+            <ScoringNotice message={saveWarning} />
+            <BoardOptionsSheet id="cricket-quick-options" open={cricketOptionsOpen} onClose={() => setCricketOptionsOpen(false)} onDiscard={requestDiscardQuickMatch}>
+              <p className="text-xs">{timer.formatted}{isRefereeing ? ' \u00b7 Referee' : ''}</p>
             {/* Live broadcast control, held in a fixed-height slot so the score
                 doesn't jump when the bar hydrates from null -> control. Gated on
                 cloudAuthAvailable so offline builds (bar always null) don't reserve
@@ -2258,6 +2258,7 @@ export default function MonoQuickMatch() {
               </div>
             )}
 
+            </BoardOptionsSheet>
             {/* Gully rule indicators */}
             {format.oneTipOneHand && (
               <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
@@ -2278,7 +2279,8 @@ export default function MonoQuickMatch() {
             )}
 
             {/* Batting team — hero */}
-            <div className="mono-scorer-main-score mono-quick-cricket-score">
+            <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
+              <span className="cricket-mark" aria-hidden="true" />
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
@@ -2292,6 +2294,8 @@ export default function MonoQuickMatch() {
                 {projectedScore !== null ? ` · Proj ${projectedScore}` : ''}
                 {target !== null ? ` · Need ${Math.max(0, target + 1 - currentScore.runs)}${totalBalls !== Infinity ? ` (${totalBalls - currentScore.balls} b)` : ''}` : ''}
               </p>
+
+              {target !== null && <p className="text-sm" style={{ marginTop: 4 }}>Target {target + 1} {totalBalls !== Infinity && totalBalls > currentScore.balls ? `\u00b7 RRR ${calculateRunRate(Math.max(0, target + 1 - currentScore.runs), totalBalls - currentScore.balls).toFixed(2)}` : ''}</p>}
 
               {/* This over */}
               {overPips.length > 0 && (
@@ -2320,8 +2324,8 @@ export default function MonoQuickMatch() {
               </p>
             </div>
 
-            {/* Line-divided keypad — flat cells separated by hairlines, common runs largest. */}
-            <div className="mono-cricket-keypad">
+            {/* Existing run and extra actions, in the cricket board dialect. */}
+            <div className="mono-cricket-keypad cricket-aggregate-pad">
               <div className="mono-cricket-keys">
                 {CRICKET_RUN_VALUES.filter((v) => v !== 5).map((r) => (
                   <button
@@ -2357,19 +2361,12 @@ export default function MonoQuickMatch() {
                 <button onClick={addWicket} className="mono-cricket-out-line" style={{ touchAction: 'manipulation' }}>
                   {freeHit ? 'Run Out Only' : 'OUT'}
                 </button>
-                <button
-                  type="button"
-                  onClick={undoCricketAction}
-                  disabled={cricketHistory.length === 0}
-                  className="mono-cricket-undo-line"
-                  aria-label="Undo last action"
-                  title="Undo last action"
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <UndoIcon />
-                </button>
+
               </div>
             </div>
+            <BoardBar canUndo={cricketHistory.length > 0 && !scoringLocked}
+              undoHint={(() => { const last = cricketHistory.at(-1); if (!last || !scores[last.key] || typeof last.innings !== 'number') return 'Previous delivery'; const balls = scores[last.key].balls; const legal = last.type !== 'extra' || last.extraType === 'bye' || last.extraType === 'legBye'; const overs = ballsToOvers(Math.max(0, balls - (legal ? 1 : 0))); return `Back to ${overs.includes('.') ? overs : `${overs}.0`} · Innings ${last.innings}`; })()}
+              onUndo={undoCricketAction} sheetId="cricket-quick-options" sheetOpen={cricketOptionsOpen} onMore={() => setCricketOptionsOpen(true)} />
           </div>
         </div>
       );
@@ -2389,6 +2386,38 @@ export default function MonoQuickMatch() {
     if (isGoals) {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
+
+      if (teamColourOn) {
+        const halves = [leftTeam, rightTeam].map((team) => ({
+          key: team === 1 ? 'a' : 'b', team, name: getTeamLabel(team), score: team === 1 ? gScore1 : gScore2,
+        }));
+        const last = gScoreHistory.at(-1);
+        const undoHint = last ? `back to ${halves.map(h => Math.max(0, h.score - (last.team === h.team ? last.value : 0))).join('–')}` : '';
+        const boardScore = halves.map(h => h.score).join('–');
+        const status = isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? `First to ${format.target}` : '';
+        const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}{status ? ` · ${status}` : ''}</span><strong>{boardScore}</strong></div>;
+        return <>
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+          {renderEndMatchDialog({ className: 'sb-confirm', summary })}
+          {renderDiscardDialog({ className: 'sb-confirm', summary })}
+          <TeamGoalsBoard
+            sportConfig={sportConfig}
+            title={`${team1Name} v ${team2Name}`}
+            subtitle={`${isTimedMode ? `${timeLimit / 60} min match · ` : ''}${goalsDrawAllowed ? 'Draws allowed' : 'No draws'}`}
+            colourStyle={teamColourStyle} halves={halves}
+            clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
+            status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}
+            lastLine={lastAction ? `${lastAction} · ${boardScore}` : 'Choose a scoring action for either team'}
+            momentTeam={last && (lastAction === `${getTeamLabel(last.team)} · All Out (+2)` || (sport === 'basketball' && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value}`) || (!sportConfig.config.quickButtons?.length && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value} ${scoringUnit}${last.value === 1 ? '' : 's'}`)) ? last.team : undefined}
+            actionCount={gScoreHistory.length} canUndo={gScoreHistory.length > 0} undoHint={undoHint}
+            isLive={Boolean(live?.isLive)} onScore={addGoal} onUndo={undoGoal}
+            onSwap={handleSideSwap} onCorrect={(team) => adjustGoalScore(team, -1)}
+            onFinish={requestEndMatch} onDiscard={requestDiscardQuickMatch}
+            notice={<ScoringNotice message={saveWarning} />}
+            live={cloudAuthAvailable ? <LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} /> : null}
+          />
+        </>;
+      }
 
       const goalHalves = [
         { side: 'left', name: leftName, score: leftScore, team: leftTeam, accent: teamAccent(leftScore, rightScore), leading: leftScore > rightScore },
@@ -2516,6 +2545,19 @@ export default function MonoQuickMatch() {
     if (teamColourOn) {
       // Direction E board (team colour). Same state and handlers as the classic screen below;
       // the board only renders them. Keys and band follow the team, not the side.
+      const setUnit = sportConfig?.config?.setLabel || 'Set';
+      const { setPoint, matchPoint } = getSetPointState({
+        format, sportConfig, currentSet,
+        score1: sidesSwapped ? rightSetScore : leftSetScore,
+        score2: sidesSwapped ? leftSetScore : rightSetScore,
+        setsWon1: sidesSwapped ? rightSetsWon : leftSetsWon,
+        setsWon2: sidesSwapped ? leftSetsWon : rightSetsWon,
+      });
+      const pointCue = setPoint.length === 2
+        ? `Next point wins the ${matchPoint.length === 2 ? 'match' : setUnit.toLowerCase()}`
+        : setPoint.length === 1
+          ? `${matchPoint.length ? 'Match' : setUnit} point · ${getTeamLabel(setPoint[0])}`
+          : '';
       const boardHalves = setHalves.map((h) => ({
         key: h.team === 1 ? 'a' : 'b',
         team: h.team,
@@ -2537,7 +2579,7 @@ export default function MonoQuickMatch() {
           const winnerTeam = s.score1 > s.score2 ? 1 : 2;
           const scoreOf = (team) => (team === 1 ? s.score1 : s.score2);
           return {
-            label: `Set ${i + 1}`,
+            label: `${setUnit} ${i + 1}`,
             left: scoreOf(boardHalves[0].team),
             right: scoreOf(boardHalves[1].team),
             winnerKey: winnerTeam === 1 ? 'a' : 'b',
@@ -2546,9 +2588,23 @@ export default function MonoQuickMatch() {
         })
         : [];
       const boardStatus = format.type === 'best-of'
-        ? [`Set ${currentSet + 1}`, `Sets ${leftSetsWon}–${rightSetsWon}`]
+        ? [`${setUnit} ${currentSet + 1}`, `${setUnit}s ${leftSetsWon}–${rightSetsWon}`]
         : [`First to ${format.target}`];
       const boardScore = boardHalves.map((h) => h.score).join('–');
+      const lastPointScore = format.type === 'best-of'
+        ? sets[lastEntry?.currentSet || 0]
+        : { score1: vScore1, score2: vScore2 };
+      // Undo keeps the preceding action's pre-score snapshot, even across a set boundary.
+      const restoredPoint = lastAction === 'Undid last point' && lastEntry && undoScores && lastPointScore
+        && lastPointScore.score1 === undoScores.score1 + (lastEntry.team === 1 ? 1 : 0)
+        && lastPointScore.score2 === undoScores.score2 + (lastEntry.team === 2 ? 1 : 0);
+      const lastWasPoint = lastEntry
+        && (lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}` || restoredPoint);
+      const lastWonSet = lastWasPoint && format.type === 'best-of' && lastEntry.currentSet < currentSet
+        ? setHistory.at(-1) : null;
+      const lastPointLine = lastWonSet
+        ? `${lastWonSet.label} to ${lastWonSet.winnerName} · ${lastWonSet.left}–${lastWonSet.right}`
+        : `Last: point ${getTeamLabel(lastEntry?.team)} · ${boardScore}`;
       // The dialogs say exactly which score they act on, in the board's order.
       const dialogSummary = (
         <div className="sb-confirm-summary">
@@ -2564,14 +2620,16 @@ export default function MonoQuickMatch() {
           <TeamSetsBoard
             title={`${team1Name} v ${team2Name}`}
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
+            setUnit={setUnit}
+            sportColour={sportConfig?.config?.setLabel ? sportIdentity(sport)?.core : undefined}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}
             meta={[...boardStatus, timer.formatted]}
+            pointCue={pointCue}
             setHistory={setHistory}
-            // One plain line, e.g. "Last: point Reds · 22–19" (serving shows once, on the key).
-            lastLine={lastEntry && lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}`
-              ? `Last: point ${getTeamLabel(lastEntry.team)} \u00b7 ${boardScore}`
+            lastLine={lastWasPoint
+              ? lastPointLine
               : lastAction || 'Tap a team to score a point'}
             canUndo={vScoreHistory.length > 0}
             undoHint={undoHint}

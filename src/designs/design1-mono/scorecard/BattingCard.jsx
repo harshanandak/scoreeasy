@@ -79,8 +79,8 @@ NumCell.defaultProps = {
   emphasis: false,
 };
 
-export default function BattingCard({ deliveries, players, strikerId }) {
-  const rows = buildBattingCard(deliveries);
+export default function BattingCard({ deliveries, players, strikerId, scorerRows }) {
+  const rows = scorerRows ?? buildBattingCard(deliveries);
   const headStyle = { ...eyebrowStyle, padding: '0 8px 8px', textAlign: 'right' };
 
   return (
@@ -160,6 +160,7 @@ export default function BattingCard({ deliveries, players, strikerId }) {
 }
 
 BattingCard.propTypes = {
+  scorerRows: PropTypes.arrayOf(PropTypes.object),
   deliveries: PropTypes.arrayOf(PropTypes.object).isRequired,
   players: PropTypes.object,
   strikerId: PropTypes.string,

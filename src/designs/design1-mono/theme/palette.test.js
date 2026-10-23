@@ -220,7 +220,10 @@ describe('documented contrast pairs', () => {
 // Kit S4 (History + Profile), 638 -> 601: Profile drops its #888 x18, #bbb x3, #111 x8, #666 and
 // #eee greys (-31) and History its six #111 inks (-6). The month bar, legend, chips, ring and row
 // badges paint sportIdentity engine output; the empty-history scorebook is ink (+0).
-const BASELINE = 601;
+// Kit S5 (go live + share), 601 -> 598: the sign-in live dot, share scrim and QR well use tokens (-3).
+// Kit S6 (Live destination), 598 -> 597: the Home strip dot uses the Live token (-1).
+// Cricket warning labels use the warning tokens (-4); combined baseline 593.
+const BASELINE = 593;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

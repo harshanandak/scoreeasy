@@ -1,3 +1,7 @@
+import { BoardBar, BoardHeader, BoardOptionsSheet } from './BoardShell';
+import { useTeamColours } from './useTeamColours';
+import { sportIdentity } from '../../../lib/sportIdentity';
+import './cricketBoard.css';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
@@ -50,6 +54,8 @@ export default function MonoCricketLiveScore() {
     team2: { runs: 0, balls: 0, wickets: 0, allOut: false },
   });
   const [history, setHistory] = useState([]);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const colourStyle = useTeamColours(match?.team1Color || tournament?.teams?.find(t => t.id === match?.team1Id)?.color, match?.team2Color || tournament?.teams?.find(t => t.id === match?.team2Id)?.color, 'cricket');
   const [hasChanges, setHasChanges] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState(0);
 
@@ -895,8 +901,8 @@ export default function MonoCricketLiveScore() {
     : `${currentScore.balls} balls${format.maxBalls ? ' / ' + format.maxBalls : ''}`;
 
   return (
-    <div className="mono-scorer-screen">
-      <div className="mono-scorer-shell">
+    <div className="mono-scorer-screen cricket-board" data-cricket-board="" data-batting={battingTeam === 2 ? 'b' : 'a'} style={colourStyle}>
+      <div className="mono-scorer-shell sb crb">
         <h1 className="sr-only">{sportConfig?.name || 'Sport'} match scorer</h1>
         {saveWarning && (
           <div className="mono-alert mono-alert-danger mb-4">
@@ -904,21 +910,10 @@ export default function MonoCricketLiveScore() {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
-        {/* Top bar */}
-        <div className="mono-scorer-topbar">
-          <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
-            {sportConfig?.name || 'Match'}
-          </span>
-          <div className="mono-scorer-topbar-actions">
-            {presetLabel && (
-              <span className="mono-badge">{presetLabel}</span>
-            )}
-            <span className={`mono-badge ${isMatchComplete ? 'mono-badge-final' : 'mono-badge-live'}`}>
-              {isMatchComplete ? 'Completed' : `Innings ${innings}`}
-            </span>
-          </div>
-        </div>
-
+        <BoardHeader title={presetLabel || 'Cricket'} sportColour={sportIdentity('cricket')?.core}
+          subtitle={`Innings ${innings} · Over ${ballsToOvers(currentScore.balls)}${target !== null ? ` · Chasing ${target + 1}` : ''}`}
+          isLive={live.isLive} onFinish={() => saveMatch()} />
+        <BoardOptionsSheet id="cricket-tournament-options" open={optionsOpen} onClose={() => setOptionsOpen(false)} onDiscard={handleDiscard}>
         {/* Live broadcast control (consent / LIVE indicator / share) */}
         <LiveBroadcastBar
           broadcast={live}
@@ -933,6 +928,12 @@ export default function MonoCricketLiveScore() {
           onEnableChange={setLiveEnabled}
         />
 
+          {!isTouchDevice && (
+            <p className="text-xs mt-3" style={{ color: 'var(--se-color-ink-faint)' }}>
+              Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
+            </p>
+          )}
+        </BoardOptionsSheet>
         {/* Gully rule indicators */}
         {format.oneTipOneHand && (
           <p className="text-xs text-center mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>One tip one hand active</p>
@@ -953,7 +954,8 @@ export default function MonoCricketLiveScore() {
         )}
 
         {/* Batting team score */}
-        <div className="mono-scorer-main-score">
+        <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
+          <span className="cricket-mark" aria-hidden="true" />
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {currentName} batting
           </p>
@@ -974,13 +976,13 @@ export default function MonoCricketLiveScore() {
 
           {/* Last Man Stands */}
           {isLastMan && (
-            <p className="text-xs mt-1 font-medium" style={{ color: '#ff6b00' }}>Last Man Batting</p>
+            <p className="text-xs mt-1 font-medium" style={{ color: 'var(--se-color-warning)' }}>Last Man Batting</p>
           )}
 
           {/* Free Hit banner */}
           {freeHit && (
-            <div className="mono-row-panel mt-3 mb-1" style={{ padding: '8px 16px', borderColor: '#ff6b00', backgroundColor: '#fff8f0' }}>
-              <p className="text-sm font-bold" style={{ color: '#ff6b00' }}>FREE HIT</p>
+            <div className="mono-row-panel cricket-warning mt-3 mb-1" style={{ padding: '8px 16px', borderColor: 'var(--se-color-warning)', backgroundColor: 'var(--se-color-warning-soft)' }}>
+              <p className="text-sm font-bold" style={{ color: 'var(--se-color-warning)' }}>FREE HIT</p>
               <p className="text-xs" style={{ color: 'var(--se-color-ink-muted)' }}>Run Out Only</p>
             </div>
           )}
@@ -990,14 +992,11 @@ export default function MonoCricketLiveScore() {
             <p className="text-sm mt-2" style={{ color: 'var(--primary)' }}>
               Target: {target + 1} &middot; Need {Math.max(0, target + 1 - currentScore.runs)}
               {totalBalls !== Infinity ? ` from ${totalBalls - currentScore.balls} balls` : ''}
+              {totalBalls !== Infinity && totalBalls > currentScore.balls ? ` \u00b7 RRR ${calculateRunRate(Math.max(0, target + 1 - currentScore.runs), totalBalls - currentScore.balls).toFixed(2)}` : ''}
             </p>
           )}
 
-          {!isTouchDevice && (
-            <p className="text-xs mt-3" style={{ color: 'var(--se-color-ink-faint)' }}>
-              Keyboard: 0-6 = Runs &middot; W = Wicket &middot; E = Extra &middot; U = Undo
-            </p>
-          )}
+
         </div>
 
         {/* Other team score */}
@@ -1008,6 +1007,7 @@ export default function MonoCricketLiveScore() {
           </p>
         </div>
 
+        <div className="cricket-aggregate-pad">
         {/* Scoring controls */}
         {!isMatchComplete && (
           pendingExtra ? (
@@ -1073,7 +1073,7 @@ export default function MonoCricketLiveScore() {
 
         {/* Innings complete message */}
         {isInningsComplete && !isMatchComplete && (
-          <div className="text-center mb-6 py-4" style={{ borderTop: '1px solid var(--se-color-line)', borderBottom: '1px solid var(--se-color-line)' }}>
+          <div className="cricket-inning-handoff text-center mb-6 py-4" style={{ borderTop: '1px solid var(--se-color-line)', borderBottom: '1px solid var(--se-color-line)' }}>
             <p className="text-sm font-medium" style={{ color: 'var(--primary)' }}>End of Innings</p>
             <p className="text-xs mt-1" style={{ color: 'var(--se-color-ink-muted)' }}>
               {currentName}: {currentScore.runs}/{currentScore.wickets}
@@ -1082,35 +1082,10 @@ export default function MonoCricketLiveScore() {
           </div>
         )}
 
-        {/* Bottom bar */}
-        <div className="mono-scorer-control-strip pt-4">
-          <div className="flex gap-2">
-            <button
-              onClick={undo}
-              disabled={history.length === 0 || scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: history.length === 0 || scoringPrompt.isInteractionLocked ? 0.4 : 1, touchAction: 'manipulation' }}
-            >
-              Undo
-            </button>
-            <button
-              onClick={handleDiscard}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Discard
-            </button>
-            <button
-              onClick={() => saveMatch()}
-              disabled={scoringPrompt.isInteractionLocked}
-              className="mono-btn flex-1"
-              style={{ padding: '8px', fontSize: '0.8125rem', color: 'var(--primary)', opacity: scoringPrompt.isInteractionLocked ? 0.45 : 1 }}
-            >
-              Finish
-            </button>
-          </div>
         </div>
+        <BoardBar undoLabel="Undo" canUndo={history.length > 0 && !scoringPrompt.isInteractionLocked}
+          undoHint={(() => { const previous = history.at(-1); const score = previous?.scores?.[`team${previous.battingTeam}`]; return score ? `Back to ${ballsToOvers(score.balls)} · ${score.runs}/${score.wickets}` : ''; })()}
+          onUndo={undo} sheetId="cricket-tournament-options" sheetOpen={optionsOpen} onMore={() => setOptionsOpen(true)} />
       </div>
     </div>
   );

@@ -15,7 +15,11 @@ const live = vi.hoisted(() => ({
   reset: vi.fn(),
 }));
 
-const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null }));
+const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, classic: false }));
+vi.mock('../../models/sportRegistry', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, isTeamColourSport: (id) => !ctx.classic && actual.isTeamColourSport(id) };
+});
 const storage = vi.hoisted(() => ({ saveData: null, saveQuickMatch: null }));
 
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
@@ -67,6 +71,7 @@ const keys = () => [...document.querySelectorAll('.tsb-key')];
 
 beforeEach(() => {
   ctx.draft = null;
+  ctx.classic = false;
   live.goLive.mockClear();
   live.point.mockClear();
   storage.saveData.mockClear();
@@ -110,7 +115,8 @@ describe('quick match team colour: the finished record', () => {
   });
 
   it('adds no colours for a sport that has not opted in', async () => {
-    seedSets('badminton', { team1Color: '#facc15' });
+    ctx.classic = true;
+    seedSets('tabletennis', { team1Color: '#facc15' });
     render(<MonoQuickMatch />);
     const saved = await finishAfterOnePoint();
     expect(saved.status).toBe('completed');
@@ -226,9 +232,10 @@ describe('quick match team colour: volleyball board', () => {
   });
 });
 
-describe('quick match team colour: sports not yet opted in', () => {
-  it('leaves the badminton board and live meta as they were', async () => {
-    seedSets('badminton', { team1Color: '#facc15' });
+describe('quick match team colour: registry opt-out compatibility', () => {
+  it('preserves the classic board and live meta when a registry entry does not opt in', async () => {
+    ctx.classic = true;
+    seedSets('tabletennis', { team1Color: '#facc15' });
     render(<MonoQuickMatch />);
     await screen.findByRole('button', { name: 'Add point for Reds' });
     expect(board()).toBeNull();
@@ -249,7 +256,8 @@ describe('quick match team colour: setup', () => {
   });
 
   it('offers no picker for a sport that has not opted in', async () => {
-    ctx.sport = 'badminton';
+    ctx.classic = true;
+    ctx.sport = 'tabletennis';
     render(<MonoQuickMatch />);
     await screen.findByLabelText('Team A name');
     expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();

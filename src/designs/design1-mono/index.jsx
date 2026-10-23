@@ -29,6 +29,7 @@ import { installNativeDeepLinkHandler } from '../../mobile/deepLinks';
 import CloudAuthOnly from './components/CloudAuthOnly';
 import { handleAppConfirmKeyDown } from './components/appConfirmUtils';
 import RouteRecoveryActions from './components/RouteRecoveryActions';
+import LiveNavButton from './live/LiveNavButton';
 import './mono.css';
 
 // Lazy-loaded primary app routes (not needed for the initial landing view)
@@ -48,7 +49,8 @@ const MonoQuickMatch = lazy(() => import('./MonoQuickMatch'));
 const MonoCricketTestLiveScore = lazy(() => import('./scoring/MonoCricketTestLiveScore'));
 const MonoTennisLiveScore = lazy(() => import('./scoring/MonoTennisLiveScore'));
 
-// Public, no-sign-in spectator page (/live/:token). Renders no app dock.
+// Public discovery and spectator routes. Only /live/:token renders without the app dock.
+const MonoLiveNow = lazy(() => import('./live/MonoLiveNow'));
 const MonoWatchMatch = lazy(() => import('./MonoWatchMatch'));
 
 // Lazy-loaded showcase components (rarely visited)
@@ -333,6 +335,8 @@ function isAppShellPath(pathname = '') {
     return false;
   }
 
+  if (normalizedPathname === '/live') return true;
+
   return APP_SHELL_PREFIXES.some((prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(`${prefix}/`)) ||
     isSportAppPath(normalizedPathname);
 }
@@ -535,6 +539,11 @@ const NAV_ICON_PATHS = {
     'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
     'M10 8.75v6.5L15.25 12z',
   ],
+  live: [
+    'M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0z',
+    'M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4',
+    'M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2',
+  ],
   matches: [
     'M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8',
     'M3 3v5h5',
@@ -565,7 +574,7 @@ function NavIcon({ name }) {
 }
 
 NavIcon.propTypes = {
-  name: PropTypes.oneOf(['home', 'play', 'matches', 'account']).isRequired,
+  name: PropTypes.oneOf(['home', 'play', 'live', 'matches', 'account']).isRequired,
 };
 
 // Single account control for the mobile bottom nav. The bottom nav is the ONLY
@@ -740,6 +749,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const navItems = [
     { tab: 'home', label: 'Home', path: homePath },
     { tab: 'play', label: 'Play', path: '/play' },
+    { tab: 'live', label: 'Live', path: '/live' },
     { tab: 'history', label: 'History', path: '/history' },
   ];
 
@@ -750,6 +760,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
   const bottomNavItems = [
     { tab: 'home', label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
     { tab: 'play', label: 'Play', path: '/play', icon: 'play' },
+    { tab: 'live', label: 'Live', path: '/live', icon: 'live' },
     { tab: 'history', label: 'History', path: '/history', icon: 'matches' },
     cloudAuthAvailable
       ? {
@@ -767,6 +778,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
         return pathname === '/' || pathname === APP_ENTRY_PATH || pathname === '/dashboard';
       case 'play':
         return pathname === '/play' || /^\/[^/]+\/(quick|tournament)(\/|$)/.test(pathname);
+      case 'live':
+        return pathname === '/live' || pathname === '/live/';
       case 'history':
         // History now hosts the merged stats view; keep the tab active for the
         // legacy /statistics and /stats paths while their redirects resolve.
@@ -804,17 +817,20 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
         </button>
 
         <nav className="global-nav-links" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <button
-              key={item.path}
-              type="button"
-              onClick={() => go(item.path)}
-              className="global-nav-link"
-              aria-current={isActive(item) ? 'page' : undefined}
-            >
-              {item.label}
-            </button>
-          ))}
+          {navItems.map((item) => {
+            const Button = item.tab === 'live' ? LiveNavButton : 'button';
+            return (
+              <Button
+                key={item.path}
+                type="button"
+                onClick={() => go(item.path)}
+                className="global-nav-link"
+                aria-current={isActive(item) ? 'page' : undefined}
+              >
+                {item.label}
+              </Button>
+            );
+          })}
         </nav>
 
         {cloudAuthAvailable && isAuthenticated && (
@@ -864,17 +880,20 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
               </button>
             </div>
             <nav className="global-mobile-menu-panel" aria-label="Navigation menu">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => go(item.path)}
-                  className="global-mobile-menu-item"
-                  aria-current={isActive(item) ? 'page' : undefined}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {navItems.map((item) => {
+                const Button = item.tab === 'live' ? LiveNavButton : 'button';
+                return (
+                  <Button
+                    key={item.path}
+                    type="button"
+                    onClick={() => go(item.path)}
+                    className="global-mobile-menu-item"
+                    aria-current={isActive(item) ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </Button>
+                );
+              })}
               {cloudAuthAvailable && isAuthenticated && (
                 <div className="global-mobile-menu-account">
                   <AuthUserButton aria-label="Account menu" />
@@ -910,8 +929,9 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
               );
             }
 
+            const Button = item.tab === 'live' ? LiveNavButton : 'button';
             return (
-              <button
+              <Button
                 key={item.path}
                 type="button"
                 onClick={() => go(item.path)}
@@ -922,7 +942,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted }) {
                   <NavIcon name={item.icon} />
                 </span>
                 <span className="global-bottom-nav-label">{item.label}</span>
-              </button>
+              </Button>
             );
           })}
         </nav>
@@ -1690,6 +1710,7 @@ export default function Design1Mono() {
 
                 {/* Public spectator page — MUST sit above the :sport/* routes so
                     "live" is never captured as a sport slug. Renders no app dock. */}
+                <Route path="live" element={<MonoLiveNow />} />
                 <Route path="live/:token" element={<MonoWatchMatch />} />
 
                 <Route path=":sport/tournament" element={<SportRouteGuard><MonoTournamentList /></SportRouteGuard>} />

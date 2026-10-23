@@ -1,0 +1,3640 @@
+[
+  {
+    "name": "before-volleyball-won-360-light",
+    "sport": "volleyball",
+    "state": "won",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 0–0",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 136.546875,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "before-volleyball-won-360-light.png"
+  },
+  {
+    "name": "after-volleyball-won-360-light",
+    "sport": "volleyball",
+    "state": "won",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-won-360-light.png"
+  },
+  {
+    "name": "before-volleyball-undo-win-360-light",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Undid last point",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 92.84375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Undid last point",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "before-volleyball-undo-win-360-light.png"
+  },
+  {
+    "name": "after-volleyball-undo-win-360-light",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 24–23",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "after-volleyball-undo-win-360-light.png"
+  },
+  {
+    "name": "before-badminton-won-360-light",
+    "sport": "badminton",
+    "state": "won",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 0–0",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 136.546875,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "before-badminton-won-360-light.png"
+  },
+  {
+    "name": "after-badminton-won-360-light",
+    "sport": "badminton",
+    "state": "won",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-won-360-light.png"
+  },
+  {
+    "name": "before-badminton-undo-win-360-light",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Undid last point",
+      "rect": {
+        "x": 0,
+        "y": 127.21875,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 158.90625
+      },
+      "textWidth": 92.84375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Undid last point",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "before-badminton-undo-win-360-light.png"
+  },
+  {
+    "name": "after-badminton-undo-win-360-light",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 20–19",
+      "rect": {
+        "x": 0,
+        "y": 127.21875,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 158.90625
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "after-badminton-undo-win-360-light.png"
+  },
+  {
+    "name": "after-volleyball-restore-win-360-light",
+    "sport": "volleyball",
+    "state": "restore-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "remount saved draft",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-restore-win-360-light.png"
+  },
+  {
+    "name": "after-badminton-restore-win-360-light",
+    "sport": "badminton",
+    "state": "restore-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "remount saved draft",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-restore-win-360-light.png"
+  },
+  {
+    "name": "after-volleyball-finish-win-360-light",
+    "sport": "volleyball",
+    "state": "finish-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nSet 2 · Sets 1–0\n0–0\nKeep scoring\nEnd match",
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Finish",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-finish-win-360-light.png"
+  },
+  {
+    "name": "after-badminton-finish-win-360-light",
+    "sport": "badminton",
+    "state": "finish-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nGame 2 · Games 1–0\n0–0\nKeep scoring\nEnd match",
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Finish",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-finish-win-360-light.png"
+  },
+  {
+    "name": "after-volleyball-won-360-dark",
+    "sport": "volleyball",
+    "state": "won",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-won-360-dark.png"
+  },
+  {
+    "name": "after-badminton-won-360-dark",
+    "sport": "badminton",
+    "state": "won",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-won-360-dark.png"
+  },
+  {
+    "name": "after-volleyball-undo-win-360-dark",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Last: point Royals · 24–23",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "after-volleyball-undo-win-360-dark.png"
+  },
+  {
+    "name": "after-badminton-undo-win-360-dark",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Last: point Royals · 20–19",
+      "rect": {
+        "x": 0,
+        "y": 127.21875,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 158.90625
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 389.09375,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "after-badminton-undo-win-360-dark.png"
+  },
+  {
+    "name": "after-volleyball-result-win-360-light",
+    "sport": "volleyball",
+    "state": "result-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": null,
+    "body": [
+      360,
+      640
+    ],
+    "board": null,
+    "keys": [],
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": null,
+    "result": true,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "match-winning point",
+        "scores": []
+      }
+    ],
+    "file": "after-volleyball-result-win-360-light.png"
+  },
+  {
+    "name": "after-badminton-result-win-360-light",
+    "sport": "badminton",
+    "state": "result-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": null,
+    "body": [
+      360,
+      640
+    ],
+    "board": null,
+    "keys": [],
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": null,
+    "result": true,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "match-winning point",
+        "scores": []
+      }
+    ],
+    "file": "after-badminton-result-win-360-light.png"
+  },
+  {
+    "name": "after-tabletennis-won-360-light",
+    "sport": "tabletennis",
+    "state": "won",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 11–9",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 130.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 10–9",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "9",
+          "9"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 10–9",
+        "scores": [
+          "10",
+          "9"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 11–9",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-tabletennis-won-360-light.png"
+  },
+  {
+    "name": "after-tabletennis-undo-win-360-light",
+    "sport": "tabletennis",
+    "state": "undo-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 10–9",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 144.71875,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": false
+      },
+      {
+        "width": 161,
+        "height": 412.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 9–9",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "9",
+          "9"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 10–9",
+        "scores": [
+          "10",
+          "9"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 11–9",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 10–9",
+        "scores": [
+          "10",
+          "9"
+        ]
+      }
+    ],
+    "file": "after-tabletennis-undo-win-360-light.png"
+  },
+  {
+    "name": "after-tabletennis-restore-win-360-light",
+    "sport": "tabletennis",
+    "state": "restore-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 11–9",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 130.25,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 10–9",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "9",
+          "9"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 10–9",
+        "scores": [
+          "10",
+          "9"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 11–9",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "remount saved draft",
+        "line": "Set 1 to Royals · 11–9",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-tabletennis-restore-win-360-light.png"
+  },
+  {
+    "name": "after-tabletennis-result-win-360-light",
+    "sport": "tabletennis",
+    "state": "result-win",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": null,
+    "body": [
+      360,
+      640
+    ],
+    "board": null,
+    "keys": [],
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": null,
+    "result": true,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "9",
+          "9"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 10–9",
+        "scores": [
+          "10",
+          "9"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 11–9",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "match-winning point",
+        "scores": []
+      }
+    ],
+    "file": "after-tabletennis-result-win-360-light.png"
+  },
+  {
+    "name": "after-volleyball-setupwalk-360-light",
+    "sport": "volleyball",
+    "state": "setupwalk",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Tap a team to score a point",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 159.296875,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nNothing to undo",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6838c6",
+      "b": "#facc15"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "scores": []
+      },
+      {
+        "action": "setup colours to board",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-setupwalk-360-light.png"
+  },
+  {
+    "name": "after-badminton-setupwalk-360-light",
+    "sport": "badminton",
+    "state": "setupwalk",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "lastLine": {
+      "text": "Tap a team to score a point",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 360,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 159.296875,
+      "lines": 1,
+      "clientWidth": 360,
+      "scrollWidth": 360
+    },
+    "body": [
+      360,
+      640
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 640,
+      "bottom": 640
+    },
+    "keys": [
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": true
+      },
+      {
+        "width": 161,
+        "height": 416.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nNothing to undo",
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6838c6",
+      "b": "#facc15"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "scores": []
+      },
+      {
+        "action": "setup colours to board",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-setupwalk-360-light.png"
+  },
+  {
+    "name": "before-volleyball-won-390-light",
+    "sport": "volleyball",
+    "state": "won",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 0–0",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 136.546875,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "before-volleyball-won-390-light.png"
+  },
+  {
+    "name": "after-volleyball-won-390-light",
+    "sport": "volleyball",
+    "state": "won",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-won-390-light.png"
+  },
+  {
+    "name": "before-volleyball-undo-win-390-light",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Undid last point",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 92.84375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Undid last point",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "before-volleyball-undo-win-390-light.png"
+  },
+  {
+    "name": "after-volleyball-undo-win-390-light",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 24–23",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "after-volleyball-undo-win-390-light.png"
+  },
+  {
+    "name": "before-badminton-won-390-light",
+    "sport": "badminton",
+    "state": "won",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 0–0",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 136.546875,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "before-badminton-won-390-light.png"
+  },
+  {
+    "name": "after-badminton-won-390-light",
+    "sport": "badminton",
+    "state": "won",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-won-390-light.png"
+  },
+  {
+    "name": "before-badminton-undo-win-390-light",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Undid last point",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 92.84375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Last: point Royals · 0–0",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Undid last point",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "before-badminton-undo-win-390-light.png"
+  },
+  {
+    "name": "after-badminton-undo-win-390-light",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Last: point Royals · 20–19",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "after-badminton-undo-win-390-light.png"
+  },
+  {
+    "name": "after-volleyball-restore-win-390-light",
+    "sport": "volleyball",
+    "state": "restore-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "remount saved draft",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-restore-win-390-light.png"
+  },
+  {
+    "name": "after-badminton-restore-win-390-light",
+    "sport": "badminton",
+    "state": "restore-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "remount saved draft",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-restore-win-390-light.png"
+  },
+  {
+    "name": "after-volleyball-finish-win-390-light",
+    "sport": "volleyball",
+    "state": "finish-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nSet 2 · Sets 1–0\n0–0\nKeep scoring\nEnd match",
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Finish",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-finish-win-390-light.png"
+  },
+  {
+    "name": "after-badminton-finish-win-390-light",
+    "sport": "badminton",
+    "state": "finish-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": "End match?\n\nThis will finish the current match and save the result.\n\nGame 2 · Games 1–0\n0–0\nKeep scoring\nEnd match",
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Finish",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-finish-win-390-light.png"
+  },
+  {
+    "name": "after-volleyball-won-390-dark",
+    "sport": "volleyball",
+    "state": "won",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Set 1 to Royals · 25–23",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 138.4375,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 24–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 2\nSets 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-volleyball-won-390-dark.png"
+  },
+  {
+    "name": "after-badminton-won-390-dark",
+    "sport": "badminton",
+    "state": "won",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Game 1 to Royals · 21–19",
+      "rect": {
+        "x": 0,
+        "y": 99.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 131.296875
+      },
+      "textWidth": 153.25,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 620.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 20–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 2\nGames 1–0\n0:00",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "file": "after-badminton-won-390-dark.png"
+  },
+  {
+    "name": "after-volleyball-undo-win-390-dark",
+    "sport": "volleyball",
+    "state": "undo-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Last: point Royals · 24–23",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 23–23",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Set 1\nSets 0–0\n0:00\nSet point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "23",
+          "23"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Set 1 to Royals · 25–23",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 24–23",
+        "scores": [
+          "24",
+          "23"
+        ]
+      }
+    ],
+    "file": "after-volleyball-undo-win-390-dark.png"
+  },
+  {
+    "name": "after-badminton-undo-win-390-dark",
+    "sport": "badminton",
+    "state": "undo-win",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "dark",
+    "lastLine": {
+      "text": "Last: point Royals · 20–19",
+      "rect": {
+        "x": 0,
+        "y": 103.609375,
+        "width": 390,
+        "height": 31.6875,
+        "bottom": 135.296875
+      },
+      "textWidth": 152.890625,
+      "lines": 1,
+      "clientWidth": 390,
+      "scrollWidth": 390
+    },
+    "body": [
+      390,
+      844
+    ],
+    "board": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "bottom": 844
+    },
+    "keys": [
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": true
+      },
+      {
+        "width": 176,
+        "height": 616.703125,
+        "mark": false
+      }
+    ],
+    "undo": {
+      "text": "Undo\nback to 19–19",
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826
+    },
+    "undersized": [],
+    "contrastFailures": [],
+    "colours": {
+      "a": "#6938c6",
+      "b": "#fbbf24"
+    },
+    "meta": "Game 1\nGames 0–0\n0:00\nGame point · Royals",
+    "result": false,
+    "dialog": null,
+    "steps": [
+      {
+        "action": "mounted",
+        "line": "Tap a team to score a point",
+        "scores": [
+          "19",
+          "19"
+        ]
+      },
+      {
+        "action": "previous point",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      },
+      {
+        "action": "winning point",
+        "line": "Game 1 to Royals · 21–19",
+        "scores": [
+          "0",
+          "0"
+        ]
+      },
+      {
+        "action": "Undo game win",
+        "line": "Last: point Royals · 20–19",
+        "scores": [
+          "20",
+          "19"
+        ]
+      }
+    ],
+    "file": "after-badminton-undo-win-390-dark.png"
+  }
+]

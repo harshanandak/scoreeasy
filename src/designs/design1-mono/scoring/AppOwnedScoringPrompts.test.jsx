@@ -260,13 +260,25 @@ describe('app-owned scoring prompts', () => {
     expect(monoCss).toContain('@media (max-width: 640px) and (max-height: 740px)');
 
     for (const [componentFile, source] of Object.entries(sourceByComponent)) {
+      if (componentFile === 'MonoTennisLiveScore.jsx') {
+        expect(source).toContain('sb tsb tennis-board');
+        expect(source).toContain('<BoardBar');
+        expect(source).toContain('className="tsb-big mono-score-animate"');
+        const shellCss = readFileSync(`${import.meta.dirname}/boardShell.css`, 'utf8');
+        expect(shellCss).toContain('min-height: 100dvh');
+        expect(shellCss).toContain('min-height: 60px');
+        expect(shellCss).toContain('env(safe-area-inset-bottom, 0px)');
+        continue;
+      }
       expect(source, componentFile).toContain('mono-scorer-screen');
       expect(source, componentFile).toContain('mono-scorer-score-value');
-      // The cricket Test scorer moves match/ending actions into a top-bar
-      // hamburger menu (no bottom control strip) so the keypad stays in the
-      // thumb zone; every other scorer keeps the bottom control strip.
-      if (componentFile === 'MonoCricketTestLiveScore.jsx') {
-        expect(source, componentFile).toContain('aria-label="Match options"');
+      // Cricket now uses the shared thumb bar, including its Undo action and
+      // labelled options trigger. Other scorers retain their existing strip.
+      if (componentFile === 'MonoCricketTestLiveScore.jsx' || componentFile === 'MonoCricketLiveScore.jsx') {
+        expect(source, componentFile).toContain('<BoardBar');
+        expect(source, componentFile).toContain('canUndo={history.length > 0');
+        expect(source, componentFile).toContain('onUndo={undo}');
+        expect(source, componentFile).toContain('onMore={() =>');
       } else {
         expect(source, componentFile).toContain('mono-scorer-control-strip');
       }

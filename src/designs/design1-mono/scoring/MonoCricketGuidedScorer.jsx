@@ -19,8 +19,15 @@ import {
   isLegalDelivery,
 } from '../../../utils/cricketEngine.js';
 import WicketSheet from './WicketSheet.jsx';
+import BattingCard from '../scorecard/BattingCard';
+import BowlingCard from '../scorecard/BowlingCard';
 import PlayerPickerSheet from './PlayerPickerSheet.jsx';
 import MonoSheet from '../components/MonoSheet.jsx';
+import { BoardBar, BoardHeader } from './BoardShell';
+import { useTeamColours } from './useTeamColours';
+import { sportIdentity } from '../../../lib/sportIdentity';
+import { getPowerplayPhase } from '../../../utils/cricketCalculations';
+import './cricketBoard.css';
 
 // C3/C4 Guided cricket scorer. Pure component: the live innings is engine state
 // held in React; EVERY stat is derived from deriveInnings/deriveChase — nothing is
@@ -61,6 +68,10 @@ function pipFor(d) {
 
 export default function MonoCricketGuidedScorer({
   format,
+  battingTeamName = 'Batting team',
+  battingTeam = 1,
+  team1Color,
+  team2Color,
   striker,
   nonStriker,
   bowler,
@@ -72,6 +83,7 @@ export default function MonoCricketGuidedScorer({
 }) {
   const fmt = useMemo(() => makeFormat(format || {}), [format]);
   const bpo = fmt.ballsPerOver || 6;
+  const colourStyle = useTeamColours(team1Color, team2Color, 'cricket');
 
   const s0 = useMemo(() => normPlayer(striker), [striker]);
   const ns0 = useMemo(() => normPlayer(nonStriker), [nonStriker]);
@@ -416,53 +428,25 @@ export default function MonoCricketGuidedScorer({
     ? Math.min(100, (der.runs / Math.max(1, innings.target)) * 100)
     : Math.min(100, ((fmt.oversPerInnings || 0) * bpo ? der.legalBalls / ((fmt.oversPerInnings || 0) * bpo) : 0) * 100);
 
+  const restore = deriveInnings(undoInnings(innings), fmt);
+
   return (
-    <div className="mono-scorer-screen" inert={completion.isCompleting ? '' : undefined}>
+    <div className="mono-scorer-screen cricket-board" data-cricket-board="" data-batting={battingTeam === 2 ? 'b' : 'a'} style={colourStyle} inert={completion.isCompleting ? '' : undefined}>
       <style>{STYLES}</style>
-      <div className="mono-scorer-shell">
+      <div className="mono-scorer-shell sb crb">
         <h1 className="sr-only">Cricket match scorer</h1>
 
-        {/* Top bar: back · title/sub · Guided⇄Power toggle · live */}
-        <div className="mono-scorer-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <span className="ck-icon" aria-hidden="true">{'‹'}</span>
-            <div style={{ minWidth: 0 }}>
-              <div className="ck-topbar-title">{fmt.name ? fmt.name.toUpperCase() : 'Match'}</div>
-              <div className="ck-topbar-sub">
-                Over {oversString(der.legalBalls, bpo)}
-                {hasTarget
-                  ? ` · Chasing ${innings.target}`
-                  : oversLeft != null
-                  ? ` · ${oversLeft} ov left`
-                  : ''}
-              </div>
-            </div>
-          </div>
-          <div className="mono-scorer-topbar-actions">
-            <div className="ck-mode" role="group" aria-label="Scorer mode">
-              <button
-                type="button"
-                className={`ck-mode-btn${mode === 'guided' ? ' on' : ''}`}
-                aria-pressed={mode === 'guided'}
-                onClick={() => setMode('guided')}
-              >
-                Guided
-              </button>
-              <button
-                type="button"
-                className={`ck-mode-btn${mode === 'power' ? ' on' : ''}`}
-                aria-pressed={mode === 'power'}
-                onClick={() => setMode('power')}
-              >
-                Power
-              </button>
-            </div>
-            <span className="mono-badge mono-badge-live">Live</span>
-          </div>
-        </div>
+        <BoardHeader title={fmt.name || 'Cricket'} sportColour={sportIdentity('cricket')?.core}
+          subtitle={`Over ${der.overs.includes('.') ? der.overs : `${der.overs}.0`}${hasTarget ? ` · Chasing ${innings.target}` : oversLeft != null ? ` · ${oversLeft} ov left` : ''}`}
+          onFinish={endMatch} />
 
-        {/* HERO — flat black, score + overs/CRR, chase bar, NEED/RRR */}
-        <div className="ck-hero">
+        {/* Batting identity, score and engine-derived chase figures. */}
+        <div className="ck-hero cricket-hero">
+          <span className="cricket-mark" aria-hidden="true" />
+          <p className="cricket-who">
+            <span>{battingTeamName} batting</span>
+            {getPowerplayPhase(format || {}, currentOverNo) && <span className="cricket-moment">{getPowerplayPhase(format || {}, currentOverNo).label}</span>}
+          </p>
           <div className="ck-hero-top">
             <div style={{ display: 'flex', alignItems: 'baseline' }}>
               <span className="ck-hero-score mono-score" data-testid="hero-score">
@@ -499,13 +483,13 @@ export default function MonoCricketGuidedScorer({
             <div className={`ck-players${loneBatter ? ' ck-players-lone' : ''}`}>
               <div className="ck-player">
                 <div className="ck-player-name" data-testid="striker-name">
-                  <span className="dot">{'●'}</span>{nameOf(innings.striker)}
+                  <span className="dot">*</span>{nameOf(innings.striker)}
                   {loneBatter ? (
-                    <span className="ck-lastman" data-testid="lastman">Last man</span>
+                    <span className="ck-lastman" data-testid="lastman">Last Man Batting</span>
                   ) : null}
                 </div>
                 <div className="ck-player-fig" data-testid="striker-fig">
-                  {sBat.R} ({sBat.B}){sBat.B ? ` · SR ${Math.round(sBat.SR)}` : ''}
+                  {sBat.R} ({sBat.B}) · SR {Math.round(sBat.SR)}
                 </div>
               </div>
               {loneBatter ? null : (
@@ -514,7 +498,7 @@ export default function MonoCricketGuidedScorer({
                     {nameOf(innings.nonStriker)}
                   </div>
                   <div className="ck-player-fig">
-                    {nsBat.R} ({nsBat.B}){nsBat.B ? ` · SR ${Math.round(nsBat.SR)}` : ''}
+                    {nsBat.R} ({nsBat.B}) · SR {Math.round(nsBat.SR)}
                   </div>
                 </div>
               )}
@@ -522,7 +506,7 @@ export default function MonoCricketGuidedScorer({
                 <div className="ck-player-name sub">{nameOf(innings.bowler)} {'◢'}</div>
                 <div className="ck-player-fig" data-testid="bowler-fig">
                   {bowlFig.O}-{bowlFig.M}-{bowlFig.R}-{bowlFig.W}
-                  {bowlerBalls ? ` · ${bowlFig.Econ.toFixed(1)}` : ''}
+                  {` · Econ ${bowlFig.Econ.toFixed(1)}`}
                 </div>
                 {overCap != null ? (
                   <div
@@ -617,27 +601,15 @@ export default function MonoCricketGuidedScorer({
               </div>
             </div>
 
-            {/* Controls: Undo · Swap strike · ⋯ More */}
-            <div className="ctrls">
-              <button type="button" className="mono-btn ck-undo" aria-label="Undo last ball" onClick={doUndo}>
-                {'↩'}
-              </button>
-              <button type="button" className="mono-btn ck-strike" aria-label="Swap strike" onClick={swapStrike}>
-                {'⇆'} Swap strike
-              </button>
-              <div className="more-menu">
-                <button type="button" className="mono-btn ck-more" aria-label="More options" onClick={() => setSheetOpen(true)}>
-                  {'⋯'} More
-                </button>
-              </div>
-            </div>
-
-            <div className="ck-footer">
-              <span className="left">Full scorecard {'›'}</span>
-              <span className="right">Share live <span className="go">{'↗'}</span></span>
-            </div>
           </>
         )}
+        <div className="cricket-thumb">
+          <BoardBar canUndo={innings.deliveries.length > 0 && !completion.locked}
+            undoLabel="Undo last ball" moreLabel="More options"
+            undoHint={`Back to ${restore.overs.includes('.') ? restore.overs : `${restore.overs}.0`} · ${restore.runs}/${restore.wkts}`}
+            onUndo={doUndo} sheetId="cricket-options" sheetOpen={sheetOpen} onMore={() => setSheetOpen(true)} />
+          <button type="button" className="se-ctl cricket-swap" aria-label="Swap strike" onClick={swapStrike} disabled={completion.locked || loneBatter}>⇄</button>
+        </div>
       </div>
 
       {/* ⋯More bottom-sheet — reuses MonoSheet for dialog role, Escape + focus trap */}
@@ -646,7 +618,26 @@ export default function MonoCricketGuidedScorer({
         onClose={() => { setRetireCfg(null); setSheetOpen(false); }}
         title="Match options"
       >
-        <div className="menu-panel-body" data-testid="more-sheet">
+        <div id="cricket-options" className="menu-panel-body" data-testid="more-sheet">
+            <div className="ck-mode" role="group" aria-label="Scorer mode">
+              <button
+                type="button"
+                className={`ck-mode-btn${mode === 'guided' ? ' on' : ''}`}
+                aria-pressed={mode === 'guided'}
+                onClick={() => setMode('guided')}
+              >
+                Guided
+              </button>
+              <button
+                type="button"
+                className={`ck-mode-btn${mode === 'power' ? ' on' : ''}`}
+                aria-pressed={mode === 'power'}
+                onClick={() => setMode('power')}
+              >
+                Power
+              </button>
+            </div>
+
             {retireCfg ? (
               <div className="menu-retire" data-testid="retire-config">
                 <span className="sec-lbl">Retire — who?</span>
@@ -730,6 +721,12 @@ export default function MonoCricketGuidedScorer({
                 </div>
               </>
             )}
+          <div className="cricket-scorecard">
+            <BattingCard deliveries={[]} players={{ ...nameMap, ...extraNames }} strikerId={innings.striker}
+              scorerRows={Object.entries(der.batters).map(([batterId, b]) => ({ batterId, runs: b.R, balls: b.B, fours: b['4s'], sixes: b['6s'], strikeRate: b.B ? b.SR : null, out: b.out, dismissal: b.out ? { kind: 'out' } : null }))} />
+            <BowlingCard deliveries={[]} players={{ ...nameMap, ...extraNames }}
+              scorerRows={Object.entries(der.bowlers).map(([bowlerId, b]) => ({ bowlerId, overs: b.O, maidens: b.M, runs: b.R, wickets: b.W, economy: b.Econ }))} />
+          </div>
         </div>
       </MonoSheet>
 
@@ -772,7 +769,7 @@ export default function MonoCricketGuidedScorer({
 }
 
 // Ported from the approved Big-5 mockup (composed blocks + thumb-zone keypad).
-// Real --se-*/--primary tokens only — no raw hex, green as the sole accent.
+// Token-only primitives; cricketBoard.css supplies the team identity and compact board layout.
 const STYLES = `
 .mono-scorer-screen { min-height: 100dvh; padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)); }
 .mono-scorer-shell { max-width: 390px; margin: 0 auto; display: flex; flex-direction: column; }
@@ -882,7 +879,7 @@ const STYLES = `
 .sheet-title { font-size: 0.9375rem; font-weight: 700; }
 .sheet-x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: 8px; color: var(--se-color-ink-muted); cursor: pointer; }
 .menu-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.menu-row .pill { min-height: 34px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); }
+.menu-row .pill { min-height: 48px; padding: 6px 12px; font-size: 0.75rem; color: var(--se-color-ink-soft); }
 .menu-actions { display: flex; gap: 8px; margin-top: 2px; }
 .menu-end { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--se-color-action); background: var(--se-color-action); color: var(--se-color-inverse); font-family: var(--se-font-sans); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .menu-end.danger { border-color: var(--se-color-danger); background: transparent; color: var(--se-color-danger); }
