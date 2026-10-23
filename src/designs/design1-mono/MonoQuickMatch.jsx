@@ -620,7 +620,8 @@ export default function MonoQuickMatch() {
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
     liveMatchIdRef.current = draft.quickMatchId || Date.now();
-    timer.restore(getRestoredTimerElapsed(draft), false);
+    // A sport switch can restore another draft while phase is already 'scoring'.
+    timer.restore(getRestoredTimerElapsed(draft), true);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
@@ -810,7 +811,7 @@ export default function MonoQuickMatch() {
       timeUpPromptedRef.current = true;
       setShowEndConfirm(true);
     }
-  }, [isTimeUp, needsDecidingScore]);
+  }, [isTimeUp, needsDecidingScore, timer.isRunning]);
 
   // Live broadcast descriptor (shared across all three sport branches). clientMatchId
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
