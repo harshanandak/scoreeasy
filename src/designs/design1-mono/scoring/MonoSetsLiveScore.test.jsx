@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ScoringCompletionContext } from './scoringCompletionContext';
 
+// Keep this historical presentation suite on the classic path; tournament
+// opt-ins and the shared board are exercised in MonoSetsLiveScore.teamColour.
+vi.mock('../../../models/sportRegistry', async (importOriginal) => ({
+  ...await importOriginal(), isTeamColourTournamentSport: () => false,
+}));
+
 // Issue #108 — MonoSetsLiveScore UX fixes. There is no existing render harness
 // for this scorer, so these tests drive the real component to verify:
 //   1. set-won notification shows the COMPLETED set number,

@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
-import { getSportById } from '../../../models/sportRegistry';
+import { getSportById, isTeamColourTournamentSport } from '../../../models/sportRegistry';
+import TeamSetsBoard from './TeamSetsBoard';
+import { BoardSheetGroup } from './BoardShell';
+import { useTeamColours } from './useTeamColours';
+import { sportIdentity } from '../../../lib/sportIdentity';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
@@ -38,6 +42,11 @@ export default function MonoSetsLiveScore() {
   const [sportConfig, setSportConfig] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [match, setMatch] = useState(null);
+  const teamColourStyle = useTeamColours(
+    tournament?.teams.find(t => t.id === match?.team1Id)?.color,
+    tournament?.teams.find(t => t.id === match?.team2Id)?.color,
+    sport,
+  );
   // Load lifecycle: 'loading' until the effect resolves, then 'ready' (match
   // found) or 'notfound' (bad sport/tournament/match) so we can show a real
   // recovery surface instead of a permanent "Loading…" (issue #108).
@@ -657,6 +666,72 @@ export default function MonoSetsLiveScore() {
     setScoringMode(next);
     setServingTeam(1);
   };
+
+  if (isTeamColourTournamentSport(sport)) {
+    const halves = [leftTeam, rightTeam].map(team => ({
+      key: team === 1 ? 'a' : 'b', team,
+      name: team === 1 ? team1Name : team2Name,
+      score: sets[currentSet]?.[team === 1 ? 'score1' : 'score2'] || 0,
+      serving: showServeIndicator && servingTeam === team,
+      correctionDisabled: (sets[currentSet]?.[team === 1 ? 'score1' : 'score2'] || 0) <= 0,
+    }));
+    const completedSets = sets.filter(s => s.completed);
+    const wins = team => completedSets.filter(s => team === 1 ? s.score1 > s.score2 : s.score2 > s.score1).length;
+    // Ask the existing tournament completion predicate about the next point;
+    // quick-match rules differ and must not decide tournament cues.
+    const nextWinners = canScoreCurrentSet ? [1, 2].filter(team => {
+      const next = { ...sets[currentSet] };
+      next[team === 1 ? 'score1' : 'score2']++;
+      return (scoringMode !== 'side-out' || servingTeam === team) && checkSetComplete(next);
+    }) : [];
+    const isMatchPoint = team => formatType === 'single' || wins(team) + 1 >= Math.ceil(effectiveFormat.sets / 2);
+    const pointCue = nextWinners.length === 1
+      ? `${isMatchPoint(nextWinners[0]) ? 'Match' : 'Set'} point · ${nextWinners[0] === 1 ? team1Name : team2Name}`
+      : '';
+    const last = history.at(-1);
+    const undoSet = last?.sets[last.currentSet];
+    const undoHint = undoSet
+      ? `back to ${halves.map(h => undoSet[h.team === 1 ? 'score1' : 'score2']).join('–')} · Set ${last.currentSet + 1}`
+      : '';
+    return (
+      <>
+        <h1 className="sr-only">{sportConfig.name} match scorer</h1>
+        {scoringPrompt.renderPrompt(confirmPendingPrompt)}
+        <TeamSetsBoard
+          title={`${team1Name} v ${team2Name}`}
+          subtitle={`${sportConfig.name} · ${targetPoints} points to win · Win by ${winBy}`}
+          sportColour={sportIdentity(sport)?.core}
+          colourStyle={teamColourStyle}
+          halves={halves}
+          isLive={Boolean(live.isLive)}
+          meta={[formatType === 'single' ? 'Single Set' : `Set ${currentSet + 1} of ${effectiveFormat.sets}`, `Sets ${wins(leftTeam)}–${wins(rightTeam)}`]}
+          pointCue={pointCue}
+          lastLine={isCurrentSetComplete ? 'Match complete · Finish to save result' : `Score ${leftScore}–${rightScore} · ${scoringMode === 'side-out' ? 'Side-out' : 'Rally'}`}
+          setHistory={completedSets.map((s, i) => ({
+            label: `Set ${i + 1}`,
+            left: s[leftTeam === 1 ? 'score1' : 'score2'], right: s[rightTeam === 1 ? 'score1' : 'score2'],
+            winnerKey: s.score1 > s.score2 ? 'a' : 'b', winnerName: s.score1 > s.score2 ? team1Name : team2Name,
+          }))}
+          canUndo={history.length > 0 && !isInteractionLocked}
+          undoHint={undoHint}
+          onUndo={undo} onPoint={addPoint} onSwap={handleSwapSides} onCorrect={correctPoint}
+          onDiscard={handleDiscard} onFinish={saveMatch}
+          scoringDisabled={!canScoreCurrentSet} controlsDisabled={isInteractionLocked}
+          notice={saveWarning && <div className="mono-alert mono-alert-danger" role="alert">{saveWarning}</div>}
+          live={<LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport, scorecardKind: liveScorecardKind, teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}
+          options={(
+            <BoardSheetGroup>
+              <p className="sb-sheet-note"><b>{tournament.name}</b> · {targetPoints} points to win · Win by {winBy}</p>
+              <button type="button" className="sb-row" onClick={navigateToTournament}>Back to tournament</button>
+              {canToggleScoringMode && <button type="button" className="sb-row" title="Toggle scoring model" disabled={isInteractionLocked} onClick={handleToggleScoringMode}>{scoringMode === 'side-out' ? 'Side-out' : 'Rally'}</button>}
+              {!isTouchDevice && <p className="sb-sheet-note">Keyboard: Q = {leftName} · P = {rightName} · U = Undo</p>}
+            </BoardSheetGroup>
+          )}
+        />
+        {showSetWon && <div className="mono-set-won mono-set-won-animate">{setWonTeam} wins Set {setWonNumber}!</div>}
+      </>
+    );
+  }
 
   return (
     <div className="mono-scorer-screen mono-arena-screen">

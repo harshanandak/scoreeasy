@@ -743,7 +743,7 @@ describe('navigation decisions (2026-10-21)', () => {
     const path = `/${sport}/tournament/100/match/m1/score`;
     const view = renderApp([path]);
     await settleRoute();
-    fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 point to Red' : /^Red: / }));
+    fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 point to Red' : sport === 'volleyball' ? 'Add point for Red' : /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
     const saved = JSON.parse(localStorage.getItem(`se_${sport}`))[0].matches[0].draftState;
@@ -855,7 +855,7 @@ describe('navigation decisions (2026-10-21)', () => {
     expect(nativeBack.install).not.toHaveBeenCalled();
     const score = goals
       ? (mode === 'quick' ? 'Add 1 to Red' : 'Add 1 point to Red')
-      : (mode === 'quick' ? 'Add point for Red' : /^Red: /);
+      : (mode === 'quick' || sport === 'volleyball' ? 'Add point for Red' : /^Red: /);
     if (mode === 'quick' && sport === 'kabaddi') {
       fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     } else if (mode === 'quick' && sport === 'basketball') {
