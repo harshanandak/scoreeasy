@@ -8,6 +8,8 @@
     "bun": ">=1.2.15"
   },
   "scripts": {
+    "evidence:compress": "bun scripts/compress-evidence.mjs",
+    "evidence:check": "bun scripts/check-evidence-size.mjs",
     "icons:generate": "bun scripts/generate-app-icons.mjs",
     "icons:verify": "bun scripts/verify-app-icons.mjs",
     "dev": "vite",
