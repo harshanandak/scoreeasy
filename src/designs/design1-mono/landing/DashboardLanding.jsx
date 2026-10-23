@@ -92,7 +92,7 @@ function getDisplayName(user) {
   return user?.username || user?.name || user?.displayName || null;
 }
 
-/* Header right: the account avatar when signed in, a Sign in control for a cloud guest. */
+/* Guests enter their account through the Profile tab; signed-in scorers keep their avatar. */
 function AccountControl({ cloudAuthAvailable, isAuthenticated, user, navigate }) {
   if (!cloudAuthAvailable) return null;
   if (isAuthenticated) {
@@ -103,11 +103,7 @@ function AccountControl({ cloudAuthAvailable, isAuthenticated, user, navigate })
       </button>
     );
   }
-  return (
-    <button type="button" className="se-ctl" onClick={() => navigate('/login?returnTo=%2Fapp')}>
-      Sign in
-    </button>
-  );
+  return null;
 }
 AccountControl.propTypes = {
   cloudAuthAvailable: PropTypes.bool.isRequired,

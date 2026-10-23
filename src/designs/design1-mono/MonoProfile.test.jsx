@@ -58,14 +58,17 @@ describe('MonoProfile recovery actions', () => {
   it('lets unauthenticated users sign in or keep scoring as a guest', () => {
     renderProfile('/profile');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Start guest match' }));
+    expect(screen.getByRole('heading', { name: 'Your profile, when you’re ready' })).toBeInTheDocument();
+    expect(screen.getByText('Sign in to sync your profile and find other players. You can keep scoring on this device without an account.')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^Sign in$/ })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Keep scoring as a guest' }));
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
   });
 
   it('preserves the profile return target when sending users to sign in', () => {
     renderProfile('/profile');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in to sync profile' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fprofile');
   });
 

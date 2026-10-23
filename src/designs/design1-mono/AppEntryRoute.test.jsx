@@ -15,6 +15,7 @@ let authState;
 let renderAuthUserButton;
 let simulatedScoringStarted;
 let liveFeed = [];
+let realAccountFlow = false;
 
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
@@ -38,9 +39,10 @@ vi.mock('./MonoLanding', () => ({
   default: () => <p>Public marketing</p>,
 }));
 
-vi.mock('./landing/DashboardLanding', () => ({
-  default: () => <p>App dashboard</p>,
-}));
+vi.mock('./landing/DashboardLanding', async (importOriginal) => {
+  const { default: Dashboard } = await importOriginal();
+  return { default: () => realAccountFlow ? <Dashboard /> : <p>App dashboard</p> };
+});
 
 vi.mock('./MonoQuickMatch', () => ({
   default: () => <p>Quick match setup</p>,
@@ -50,9 +52,10 @@ vi.mock('./MonoLogin', () => ({
   default: () => <p>Login screen</p>,
 }));
 
-vi.mock('./MonoProfile', () => ({
-  default: () => <p>Profile screen</p>,
-}));
+vi.mock('./MonoProfile', async (importOriginal) => {
+  const { default: Profile } = await importOriginal();
+  return { default: () => realAccountFlow ? <Profile /> : <p>Profile screen</p> };
+});
 
 vi.mock('./scoring/MonoTennisLiveScore', () => ({
   default: function TennisQuickScorerStub() {
@@ -81,6 +84,7 @@ function renderApp(initialEntry) {
 
 describe('app entry route contract', () => {
   beforeEach(() => {
+    realAccountFlow = false;
     liveFeed = [];
     authState = {
       authMode: 'local',
@@ -109,6 +113,23 @@ describe('app entry route contract', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     globalThis.localStorage.clear();
+  });
+
+  it('has one guest account entry on real Home, through Profile, with the login return target', async () => {
+    realAccountFlow = true;
+    authState = { ...authState, cloudAuthAvailable: true, isUserReady: true };
+    const { container } = renderApp('/app');
+    await screen.findByRole('heading', { name: 'Welcome.' });
+    const dock = container.querySelector('.global-bottom-nav');
+    expect(within(dock).getAllByRole('button', { name: 'Profile', hidden: true })).toHaveLength(1);
+    expect(container.querySelector('.kit-top')).not.toHaveTextContent('Sign in');
+    fireEvent.click(within(dock).getByRole('button', { name: 'Profile', hidden: true }));
+    await screen.findByRole('heading', { name: 'Your profile, when you’re ready' });
+    expect(within(dock).getByRole('button', { name: 'Profile', hidden: true })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getAllByRole('button', { name: /^Sign in$/, hidden: true })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in', hidden: true }));
+    await screen.findByText('Login screen');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fprofile');
   });
 
   it('sends anonymous first-time root visits to the public marketing route', async () => {
@@ -285,7 +306,7 @@ describe('app entry route contract', () => {
     expect(within(appNav).getByRole('button', { name: 'Account menu', hidden: true })).toBeInTheDocument();
     expect(within(appNav).queryByRole('button', { name: 'Account', hidden: true })).not.toBeInTheDocument();
     // Visible label is non-interactive chrome, hidden from assistive tech.
-    const label = within(appNav).getByText('Account');
+    const label = within(appNav).getByText('Profile');
     expect(label).toHaveAttribute('aria-hidden', 'true');
 
     // The signed-in trigger (Clerk's avatar button) and its loading fallback are thumb-sized:
@@ -330,21 +351,22 @@ describe('app entry route contract', () => {
     expect(screen.getByText('Profile screen')).toBeInTheDocument();
   });
 
-  it('labels the last tab Sign in for a cloud guest on History and sends it to sign-in', async () => {
+  it('labels the last tab Profile for a cloud guest and highlights it on arrival', async () => {
     authState = { ...authState, authMode: 'cloud', cloudAuthAvailable: true, isAuthenticated: false };
     const { container } = renderApp('/history');
 
     expect(await screen.findByRole('heading', { name: 'No match history yet' })).toBeInTheDocument();
     const appNav = container.querySelector('.global-bottom-nav');
     const tabs = within(appNav).getAllByRole('button', { hidden: true });
-    expect(tabs.map((tab) => tab.textContent.trim())).toEqual(['Home', 'Play', 'Live', 'History', 'Sign in']);
+    expect(tabs.map((tab) => tab.textContent.trim())).toEqual(['Home', 'Play', 'Live', 'History', 'Profile']);
     expect(within(appNav).getByRole('button', { name: 'History', hidden: true })).toHaveAttribute('aria-current', 'page');
 
-    fireEvent.click(within(appNav).getByRole('button', { name: 'Sign in', hidden: true }));
+    fireEvent.click(within(appNav).getByRole('button', { name: 'Profile', hidden: true }));
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/login');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile');
     });
-    expect(await screen.findByText('Login screen')).toBeInTheDocument();
+    expect(await screen.findByText('Profile screen')).toBeInTheDocument();
+    expect(within(appNav).getByRole('button', { name: 'Profile', hidden: true })).toHaveAttribute('aria-current', 'page');
   });
 
   it('gives the brand button an accessible label without leaking the line break', async () => {
@@ -365,7 +387,7 @@ describe('app entry route contract', () => {
     const { container, rerender } = renderApp('/app');
     await screen.findByText('App dashboard');
     const dock = () => container.querySelector('.global-bottom-nav');
-    expect(within(dock()).getAllByRole('button', { hidden: true }).map(b => b.textContent)).toEqual(['Home', 'Play', 'Live', 'History', 'Sign in']);
+    expect(within(dock()).getAllByRole('button', { hidden: true }).map(b => b.textContent)).toEqual(['Home', 'Play', 'Live', 'History', 'Profile']);
     fireEvent.click(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true }));
     await screen.findByRole('heading', { name: 'Live now' });
     expect(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');

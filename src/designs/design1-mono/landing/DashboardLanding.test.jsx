@@ -213,11 +213,10 @@ describe('DashboardLanding (Kit Home)', () => {
       await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/profile'));
     });
 
-    it('offers a cloud guest Sign in that returns to Home', async () => {
+    it('leaves guest account entry to the Profile dock tab', () => {
       seed([volleyball]);
       renderDashboard();
-      fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-      await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fapp'));
+      expect(screen.queryByRole('button', { name: /sign in/i })).not.toBeInTheDocument();
     });
 
     it('falls back to recently played sports when stored favourite ids are stale', () => {
