@@ -64,12 +64,12 @@ function seedVolleyball(extra = {}) {
   };
 }
 
-// The classic sets screen (sports not yet on the Direction E team-colour board). Volleyball has
-// moved to the board, so the classic-screen guarantees are pinned on badminton until it moves too.
+// Classic sets-screen guarantees stay pinned on table tennis while volleyball and badminton
+// use the team-colour board.
 function seedClassicSets(extra = {}) {
   seedVolleyball(extra);
-  ctx.sport = 'badminton';
-  ctx.draft.sport = 'badminton';
+  ctx.sport = 'tabletennis';
+  ctx.draft.sport = 'tabletennis';
 }
 
 beforeEach(() => {
