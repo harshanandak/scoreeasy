@@ -721,11 +721,10 @@ export default function MonoSetsLiveScore() {
           live={<LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport, scorecardKind: liveScorecardKind, teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}
           options={(
             <BoardSheetGroup>
-              <p>{tournament.name}</p>
-              <p>{targetPoints} points to win · Win by {winBy}</p>
+              <p className="sb-sheet-note"><b>{tournament.name}</b> · {targetPoints} points to win · Win by {winBy}</p>
               <button type="button" className="sb-row" onClick={navigateToTournament}>Back to tournament</button>
               {canToggleScoringMode && <button type="button" className="sb-row" title="Toggle scoring model" disabled={isInteractionLocked} onClick={handleToggleScoringMode}>{scoringMode === 'side-out' ? 'Side-out' : 'Rally'}</button>}
-              {!isTouchDevice && <p>Keyboard: Q = {leftName} · P = {rightName} · U = Undo</p>}
+              {!isTouchDevice && <p className="sb-sheet-note">Keyboard: Q = {leftName} · P = {rightName} · U = Undo</p>}
             </BoardSheetGroup>
           )}
         />
