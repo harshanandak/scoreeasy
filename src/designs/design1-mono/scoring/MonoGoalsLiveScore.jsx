@@ -383,8 +383,10 @@ export default function MonoGoalsLiveScore() {
     }
     navigateToTournament();
   };
-  const hasDraftToDiscard = hasChanges || Boolean(match?.draftState) || history.length > 0;
-  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
+  const handleDiscard = () => scoringPrompt.requestPrompt({
+    cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard changes?',
+    message: `Delete ${team1Name} v ${team2Name}, ${score1}–${score2}? This can't be undone.`,
+  });
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if (!sportConfig || !tournament || !match) {

@@ -566,7 +566,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     scoringPrompt.requestPrompt({
       cancelLabel: 'Keep scoring',
       confirmLabel: 'Discard',
-      message: 'Your progress will be lost.',
+      message: `Delete ${team1Name} v ${team2Name}, ${currentInning?.runs || 0}/${currentInning?.wickets || 0} in innings ${currentInningsIndex + 1}? This can't be undone.`,
+      tone: 'danger',
       title: 'Discard match?',
       type: 'discard',
     });

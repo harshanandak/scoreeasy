@@ -1,5 +1,6 @@
 import { getSportsList } from '../models/sportRegistry';
-import { isStaleQuickMatchDraft, listDataKeys, loadData } from './storage';
+import { listDataKeys, loadData } from './storage';
+import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
 
@@ -7,7 +8,7 @@ export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
 export const PUBLIC_MARKETING_PATH = '/marketing';
 export const QUICK_MATCHES_KEY = 'se_quickmatches';
-export const QUICK_MATCH_DRAFT_PREFIX = 'se_quickmatch_draft_';
+export { QUICK_MATCH_DRAFT_PREFIX } from './quickMatchDrafts';
 export const SESSIONS_KEY = 'gs_sessions';
 
 function hasItems(value) {
@@ -29,13 +30,14 @@ export function hasReturningPlayerState({
 }
 
 export function loadQuickMatchDrafts(sports = getSportsList()) {
-  return sports
-    .map((sport) => ({
-      ...loadData(`${QUICK_MATCH_DRAFT_PREFIX}${sport.id}`, null),
-      sport: sport.id,
-      entryPath: `/${sport.id}/quick`,
-    }))
-    .filter((draft) => draft?.phase === 'scoring' && !isStaleQuickMatchDraft(draft));
+  sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
+  return listDataKeys().filter(key => key.startsWith(QUICK_MATCH_DRAFT_PREFIX)).flatMap((key) => {
+    const draft = loadData(key, null);
+    const sport = draft?.sport || sports.find(sp => key === `${QUICK_MATCH_DRAFT_PREFIX}${sp.id}`)?.id;
+    if (!sport || draft?.phase !== 'scoring' || !sports.some(sp => sp.id === sport)) return [];
+    const legacy = key === `${QUICK_MATCH_DRAFT_PREFIX}${sport}`;
+    return [{ ...draft, sport, draftKey: key, entryPath: legacy ? `/${sport}/quick` : `/${sport}/quick?resume=${encodeURIComponent(draft.quickMatchId)}` }];
+  });
 }
 
 export function loadTennisQuickDrafts() {
@@ -47,10 +49,11 @@ export function loadTennisQuickDrafts() {
       return {
         ...draft,
         sport: 'tennis',
+        draftKey: key,
         entryPath: `/tennis/quick/live/${matchId}`,
       };
     })
-    .filter((draft) => draft?.status === 'in-progress' && draft?.entryPath && !isStaleQuickMatchDraft(draft));
+    .filter((draft) => draft?.status === 'in-progress' && draft?.entryPath);
 }
 
 export function loadTournamentSummaries(sports = getSportsList()) {
@@ -75,7 +78,7 @@ export function loadQuickMatchSummaries() {
       ...match,
       entryPath: isCricketTest ? `/cricket/quick/test-match/${match.id}` : null,
     };
-  }).filter((match) => match?.status !== 'in-progress' || !isStaleQuickMatchDraft(match));
+  });
 }
 
 export function loadActiveSessionSummaries() {
@@ -84,7 +87,7 @@ export function loadActiveSessionSummaries() {
   return sessions.filter((session) => session?.status === 'active' || session?.status === 'paused');
 }
 
-// Read-only catalog shared by cold entry and Home. Paths identify resumable
+// Catalog shared by cold entry, Home and History. Paths identify resumable
 // surfaces: a quick scorer or a tournament's fixture picker.
 export function loadInProgressMatches(sports = getSportsList()) {
   const quickMatches = [
@@ -99,14 +102,22 @@ export function loadInProgressMatches(sports = getSportsList()) {
       if (tournament?.id === undefined || tournament?.id === null) return false;
       const matches = getTournamentMatches(tournament);
       return matches.some((match) => !isTournamentMatchCompleted(match, sport.engine, match.format || tournament.format));
-    }).map((tournament) => ({
-      ...tournament,
-      sport: sport.id,
-      kind: 'tournament',
-      entryPath: `/${sport.id}/tournament/${tournament.id}`,
-    }));
+    }).flatMap((tournament) => {
+      const started = getTournamentMatches(tournament).filter(match =>
+        !isTournamentMatchCompleted(match, sport.engine, match.format || tournament.format)
+        && (match.draftState || match.status === 'in-progress'));
+      const nameOf = (ref) => tournament.teams?.find(team => team.id === ref)?.name || tournament.teams?.[ref]?.name || String(ref || 'Team');
+      if (started.length) return started.map(match => ({
+        ...match, sport: sport.id, kind: 'tournament-match', tournamentId: tournament.id,
+        storageKey: sport.storageKey, tournamentName: tournament.name,
+        team1Name: nameOf(match.team1Id ?? match.team1), team2Name: nameOf(match.team2Id ?? match.team2),
+        entryPath: `/${sport.id}/tournament/${tournament.id}/match/${match.id}/score`,
+      }));
+      return [{ ...tournament, sport: sport.id, kind: 'tournament', entryPath: `/${sport.id}/tournament/${tournament.id}` }];
+    });
   });
-  return [...new Map([...quickMatches, ...tournaments].map((match) => [match.entryPath, match])).values()];
+  return [...new Map([...quickMatches, ...tournaments].map((match) => [match.entryPath, match])).values()]
+    .sort((a, b) => new Date(b.updatedAt || b.draftState?.savedAt || b.createdAt || 0) - new Date(a.updatedAt || a.draftState?.savedAt || a.createdAt || 0));
 }
 
 export function loadAppEntryState() {

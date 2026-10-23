@@ -27,6 +27,7 @@ import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, KitTop, KitW
 import { displayScore, groupByMonth, latestMonthSummary, sportCounts, winnerSide } from './kit/historyModel';
 import { relativeDay } from './kit/dates';
 import './kit/history.css';
+import InProgressMatches from './components/InProgressMatches';
 
 const ANY_SPORT = 'all';
 const RESULT_ALL = 'all';
@@ -546,6 +547,7 @@ export default function MonoHistory() {
         </div>
       ) : (
         <div id="tabpanel-history-matches" role="tabpanel" aria-labelledby="tab-history-matches" ref={matchesPanelRef}>
+          <InProgressMatches />
           {totalCount === 0 ? (
             <section className="kit-card kit-empty" aria-labelledby="history-empty-title">
               <EmptyHistoryArt />

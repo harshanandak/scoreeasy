@@ -69,7 +69,6 @@ const STORAGE_KEYS = {
   QUICK_MATCHES: 'se_quickmatches',
 };
 
-const QUICK_MATCH_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_MATCH_DURATION_SECONDS = 24 * 60 * 60;
 
 function parseTimestamp(value) {
@@ -142,24 +141,6 @@ function getQuickMatchTimestamp(match) {
   return timestamps.length > 0 ? Math.max(...timestamps) : null;
 }
 
-function isStaleQuickDraft(match) {
-  const status = String(match?.status || '').toLowerCase();
-  if (status !== 'in-progress' && status !== 'active' && status !== 'paused') return false;
-
-  const timestamp = getQuickMatchTimestamp(match);
-  if (timestamp === null) return false;
-
-  return Date.now() - timestamp > QUICK_MATCH_DRAFT_TTL_MS;
-}
-
-export function isStaleQuickMatchDraft(draft) {
-  if (!draft || typeof draft !== 'object') return false;
-  if (draft.status === 'completed') return false;
-  const timestamp = getQuickMatchTimestamp(draft);
-  if (timestamp === null) return false;
-  return Date.now() - timestamp > QUICK_MATCH_DRAFT_TTL_MS;
-}
-
 function isCompletionSignal(match) {
   if (match?.status === 'completed') return true;
   if (match?.completedAt || match?.endedAt) return true;
@@ -172,7 +153,6 @@ function normalizeQuickMatchForStorage(match) {
   }
 
   const completed = isCompletionSignal(match);
-  if (!completed && isStaleQuickDraft(match)) return null;
   if (completed && !hasMeaningfulQuickScore(match) && normalizeWinnerToken(match.winner) === 'Tie') return null;
 
   const timestamp = getQuickMatchTimestamp(match);

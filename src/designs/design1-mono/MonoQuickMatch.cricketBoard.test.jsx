@@ -8,16 +8,16 @@ vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => und
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: 'cricket' }),
   useLocation: () => ({ pathname: '/cricket/quick', search: '' }),
-  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  useSearchParams: () => [new URLSearchParams('resume=3003'), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn(), isLive: false }) }));
 vi.mock('../../lib/live/liveSession', () => ({ getConsent: () => 'declined', setConsent: vi.fn(), loadSession: () => null, saveSession: vi.fn() }));
 vi.mock('../../utils/storage', () => ({
-  loadData: (key, fallback) => key === 'se_quickmatch_draft_cricket' ? state.draft : fallback,
+  loadData: (key, fallback) => key === 'se_quickmatch_draft_cricket_3003' ? state.draft : fallback,
   loadQuickMatch: () => null, saveQuickMatch: () => true, clearData: vi.fn(),
   isStaleQuickMatchDraft: () => false,
-  saveData: (key, value) => { if (key === 'se_quickmatch_draft_cricket') state.saved = structuredClone(value); return true; },
+  saveData: (key, value) => { if (key === 'se_quickmatch_draft_cricket_3003') state.saved = structuredClone(value); return true; },
 }));
 
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');

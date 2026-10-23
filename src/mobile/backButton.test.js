@@ -204,7 +204,7 @@ describe('installNativeBackButtonGuard', () => {
 
     await backButtonHandler({ canGoBack: true });
 
-    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your match is saved. Resume it from Home or History.');
     expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });
@@ -217,7 +217,7 @@ describe('installNativeBackButtonGuard', () => {
 
     await backButtonHandler({ canGoBack: true });
 
-    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your match is saved. Resume it from Home or History.');
     expect(navigateFallback).toHaveBeenCalledWith('/play?sport=cricket', {
       replace: true,
       unwindProtectedEntry: true,
@@ -259,7 +259,7 @@ describe('installNativeBackButtonGuard', () => {
 
     await backButtonHandler({ canGoBack: false });
 
-    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your unsaved scoring progress may be lost.');
+    expect(confirmLeave).toHaveBeenCalledWith('Leave this page? Your match is saved. Resume it from Home or History.');
     expect(goBack).not.toHaveBeenCalled();
     expect(exitApp).not.toHaveBeenCalled();
   });

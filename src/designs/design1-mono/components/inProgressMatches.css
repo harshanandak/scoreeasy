@@ -1,0 +1,13 @@
+.kept-match {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px 10px;
+}
+.kept-match .kit-row-title { overflow-wrap: anywhere; }
+.kept-match-actions {
+  grid-column: 2 / -1;
+  display: flex;
+  gap: 10px;
+}
+.kept-match-actions .se-ctl { min-width: 80px; min-height: 48px; }
+.kept-match-delete { color: var(--se-color-danger); }

@@ -7,7 +7,7 @@ vi.mock('convex/react', () => ({ useQuery: () => undefined, useMutation: () => v
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),
-  useSearchParams: () => [new URLSearchParams(''), vi.fn()],
+  useSearchParams: () => [new URLSearchParams('resume=3003'), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn(), isLive: false }) }));
@@ -16,7 +16,7 @@ vi.mock('../../lib/live/liveSession', () => ({ getConsent: () => 'declined', loa
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
 const line = () => document.querySelector('.tsb-last');
 const scores = () => [...document.querySelectorAll('.tsb-big')].map(el => el.textContent);
-const draftKey = () => `se_quickmatch_draft_${ctx.sport}`;
+const draftKey = () => `se_quickmatch_draft_${ctx.sport}_3003`;
 const savedDraft = () => JSON.parse(localStorage.getItem(draftKey()));
 let now;
 const point = (team = 'Royals') => {

@@ -90,7 +90,7 @@ export function installNativeBackButtonGuard({
     const protectedRoute = isProtectedScoringRoute(pathname);
 
     if (protectedRoute) {
-      const leaveConfirmed = await confirmLeave('Leave this page? Your unsaved scoring progress may be lost.');
+      const leaveConfirmed = await confirmLeave('Leave this page? Your match is saved. Resume it from Home or History.');
       if (!leaveConfirmed) {
         return;
       }

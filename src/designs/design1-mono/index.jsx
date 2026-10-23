@@ -292,7 +292,7 @@ const ONBOARDING_DEFER_PATHS = new Set([
   '/tournament',
 ]);
 const SCORING_EXIT_TITLE = 'Leave this page?';
-const SCORING_EXIT_MESSAGE = 'Your unsaved scoring progress may be lost.';
+const SCORING_EXIT_MESSAGE = 'Your match is saved. Resume it from Home or History.';
 const NO_PRIOR_ROUTE_INDEX = -1;
 const APP_SHELL_PREFIXES = [
   APP_ENTRY_PATH,

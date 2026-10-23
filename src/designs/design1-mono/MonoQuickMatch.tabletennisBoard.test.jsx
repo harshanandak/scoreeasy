@@ -18,7 +18,7 @@ vi.mock('../../utils/storage', () => ({
   loadData: (key, fallback) => key === 'se_quickmatch_draft_tabletennis' ? ctx.draft : fallback,
   loadQuickMatch: () => null, clearData: vi.fn(), saveQuickMatch: savedMatch,
   isStaleQuickMatchDraft: () => false,
-  saveData: (key, value) => { if (key === 'se_quickmatch_draft_tabletennis') ctx.saved = structuredClone(value); return true; },
+  saveData: (key, value) => { if (key.startsWith('se_quickmatch_draft_tabletennis_')) ctx.saved = structuredClone(value); return true; },
 }));
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
 const board = () => document.querySelector('[data-team-board]');

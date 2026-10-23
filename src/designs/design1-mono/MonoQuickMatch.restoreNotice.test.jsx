@@ -7,7 +7,7 @@ vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => und
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),
-  useSearchParams: () => [new URLSearchParams('local=1'), vi.fn()],
+  useSearchParams: () => [new URLSearchParams('local=1&resume=3003'), vi.fn()],
 }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, reset: vi.fn(), point: vi.fn(), undo: vi.fn(), finalize: vi.fn() }) }));

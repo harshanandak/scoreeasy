@@ -582,8 +582,10 @@ export default function MonoSetsLiveScore() {
     }
     navigateToTournament();
   };
-  const hasDraftToDiscard = hasChanges || Boolean(match?.draftState) || history.length > 0;
-  const handleDiscard = () => scoringPrompt.cancelOrNavigate(hasDraftToDiscard, discardAndExit);
+  const handleDiscard = () => scoringPrompt.requestPrompt({
+    cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard changes?',
+    message: `Delete ${team1Name} v ${team2Name}, ${sets[currentSet]?.score1 || 0}–${sets[currentSet]?.score2 || 0}? This can't be undone.`,
+  });
   const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
 
   if (loadStatus === 'notfound') {
