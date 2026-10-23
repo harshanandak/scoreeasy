@@ -98,9 +98,12 @@ function copyState(state) {
   return { ...snapshot(state), events: state.events, revision: state.revision };
 }
 
+// Code-unit order, not locale order: the canonical form must be identical on every device.
+const byCodeUnit = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort(byCodeUnit).map((key) => [key, canonical(value[key])]));
   check(value === null || typeof value === 'string' || typeof value === 'boolean' || Number.isFinite(value), 'event must contain JSON values only');
   return value;
 }
