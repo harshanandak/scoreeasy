@@ -6,8 +6,9 @@ name: Cloudflare Worker Preview
 # Previews run the DEVELOPMENT tier end-to-end so Clerk + Convex actually work on
 # the preview origin: Clerk PRODUCTION keys cannot be used on *.workers.dev
 # preview URLs (Clerk constraint), so previews use the Clerk DEV publishable key
-# (pk_test_). Changes under convex/ or to either dependency file get an isolated
-# backend via `convex deploy --preview-create pr-<N>`. Other PRs build against
+# (pk_test_). Changes under convex/, to bun.lock, or to package.json install
+# fields (dependencies etc., not scripts) get an isolated backend via
+# `convex deploy --preview-create pr-<N>`. Other PRs build against
 # vars.PREVIEW_VITE_CONVEX_URL; if unset, they use the isolated fallback with a
 # notice. Convex Preview Cleanup releases closed PR previews and offers a manual
 # dry-run-first backlog sweep. See docs/DEPLOY.md for setup and limits.
