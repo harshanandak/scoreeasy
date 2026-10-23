@@ -1,0 +1,1270 @@
+[
+  {
+    "name": "before-volleyball-360-light",
+    "sport": "volleyball",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [
+      "Finish"
+    ],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-volleyball-360-light",
+    "sport": "volleyball",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-badminton-360-light",
+    "sport": "badminton",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [
+      "Finish"
+    ],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-badminton-360-light",
+    "sport": "badminton",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-volleyball-390-light",
+    "sport": "volleyball",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 97.5,
+        "y": 10,
+        "width": 195,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 292.5
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-volleyball-390-light",
+    "sport": "volleyball",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-badminton-390-light",
+    "sport": "badminton",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 97.5,
+        "y": 10,
+        "width": 195,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 292.5
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-badminton-390-light",
+    "sport": "badminton",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-football-360-light",
+    "sport": "football",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 64,
+      "bottom": 64,
+      "right": 360
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [
+      "Finish"
+    ],
+    "undo": {
+      "x": 14,
+      "y": 566,
+      "width": 253,
+      "height": 60,
+      "bottom": 626,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-football-360-light",
+    "sport": "football",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 92.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 64,
+      "bottom": 64,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 566,
+      "width": 253,
+      "height": 60,
+      "bottom": 626,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-cricket-360-light",
+    "sport": "cricket",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 12,
+      "y": 6,
+      "width": 336,
+      "height": 66,
+      "bottom": 72,
+      "right": 348
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 574,
+      "width": 278,
+      "height": 56,
+      "bottom": 630,
+      "right": 290
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-cricket-360-light",
+    "sport": "cricket",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 12,
+        "y": 78,
+        "width": 336,
+        "height": 45.78125,
+        "bottom": 123.78125,
+        "right": 348
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 12,
+      "y": 6,
+      "width": 336,
+      "height": 66,
+      "bottom": 72,
+      "right": 348
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 574,
+      "width": 278,
+      "height": 56,
+      "bottom": 630,
+      "right": 290
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-football-390-light",
+    "sport": "football",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 97.5,
+        "y": 10,
+        "width": 195,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 292.5
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-football-390-light",
+    "sport": "football",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-cricket-390-light",
+    "sport": "cricket",
+    "before": true,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 97.5,
+        "y": 10,
+        "width": 195,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 292.5
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 12,
+      "y": 8,
+      "width": 366,
+      "height": 66,
+      "bottom": 74,
+      "right": 378
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 778,
+      "width": 308,
+      "height": 56,
+      "bottom": 834,
+      "right": 320
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-cricket-390-light",
+    "sport": "cricket",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 12,
+        "y": 82,
+        "width": 366,
+        "height": 28.890625,
+        "bottom": 110.890625,
+        "right": 378
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 12,
+      "y": 8,
+      "width": 366,
+      "height": 66,
+      "bottom": 74,
+      "right": 378
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 778,
+      "width": 308,
+      "height": 56,
+      "bottom": 834,
+      "right": 320
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-tabletennis-360-light",
+    "sport": "tabletennis",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-basketball-360-light",
+    "sport": "basketball",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 92.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 64,
+      "bottom": 64,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 566,
+      "width": 253,
+      "height": 60,
+      "bottom": 626,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-kabaddi-360-light",
+    "sport": "kabaddi",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 92.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 64,
+      "bottom": 64,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 566,
+      "width": 253,
+      "height": 60,
+      "bottom": 626,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-hockey-360-light",
+    "sport": "hockey",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "light",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 92.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 64,
+      "bottom": 64,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 566,
+      "width": 253,
+      "height": 60,
+      "bottom": 626,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-tabletennis-390-light",
+    "sport": "tabletennis",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-basketball-390-light",
+    "sport": "basketball",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-kabaddi-390-light",
+    "sport": "kabaddi",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-hockey-390-light",
+    "sport": "hockey",
+    "before": false,
+    "width": 390,
+    "height": 844,
+    "theme": "light",
+    "bodyHeight": 844,
+    "bodyWidth": 390,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 390,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 390
+      },
+      "role": "status",
+      "contrast": 18.026483829017945
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 68,
+      "bottom": 68,
+      "right": 390
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 766,
+      "width": 283,
+      "height": 60,
+      "bottom": 826,
+      "right": 297
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-volleyball-360-dark",
+    "sport": "volleyball",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 17.568697449257485
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [
+      "Finish"
+    ],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-volleyball-360-dark",
+    "sport": "volleyball",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 0,
+        "y": 68,
+        "width": 360,
+        "height": 28.890625,
+        "bottom": 96.890625,
+        "right": 360
+      },
+      "role": "status",
+      "contrast": 17.568697449257485
+    },
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 360,
+      "height": 68,
+      "bottom": 68,
+      "right": 360
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 14,
+      "y": 562,
+      "width": 253,
+      "height": 60,
+      "bottom": 622,
+      "right": 267
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "before-cricket-360-dark",
+    "sport": "cricket",
+    "before": true,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "fixed",
+      "rect": {
+        "x": 90,
+        "y": 10,
+        "width": 180,
+        "height": 70.671875,
+        "bottom": 80.671875,
+        "right": 270
+      },
+      "role": "status",
+      "contrast": 17.568697449257485
+    },
+    "header": {
+      "x": 12,
+      "y": 6,
+      "width": 336,
+      "height": 66,
+      "bottom": 72,
+      "right": 348
+    },
+    "overlapsHeader": true,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 574,
+      "width": 278,
+      "height": 56,
+      "bottom": 630,
+      "right": 290
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  },
+  {
+    "name": "after-cricket-360-dark",
+    "sport": "cricket",
+    "before": false,
+    "width": 360,
+    "height": 640,
+    "theme": "dark",
+    "bodyHeight": 640,
+    "bodyWidth": 360,
+    "notice": {
+      "text": "Resumed your in-progress quick match on this device.",
+      "position": "static",
+      "rect": {
+        "x": 12,
+        "y": 78,
+        "width": 336,
+        "height": 45.78125,
+        "bottom": 123.78125,
+        "right": 348
+      },
+      "role": "status",
+      "contrast": 17.568697449257485
+    },
+    "header": {
+      "x": 12,
+      "y": 6,
+      "width": 336,
+      "height": 66,
+      "bottom": 72,
+      "right": 348
+    },
+    "overlapsHeader": false,
+    "overlappingButtons": [],
+    "undo": {
+      "x": 12,
+      "y": 574,
+      "width": 278,
+      "height": 56,
+      "bottom": 630,
+      "right": 290
+    },
+    "undersized": [],
+    "offscreenButtons": [],
+    "contrastFailures": []
+  }
+]

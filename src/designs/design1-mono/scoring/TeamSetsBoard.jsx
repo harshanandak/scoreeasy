@@ -44,8 +44,8 @@ export default function TeamSetsBoard({
 
   return (
     <div className="sb tsb" style={colourStyle} data-team-board="">
-      {notice}
       <BoardHeader title={title} subtitle={subtitle} sportColour={sportColour} isLive={isLive} onFinish={onFinish} />
+      {notice}
 
       <p className="tsb-meta">
         {meta.map((m) => <span key={m} className="tsb-meta-item">{m}</span>)}

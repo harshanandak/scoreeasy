@@ -23,8 +23,8 @@ export default function TeamGoalsBoard({
 
   return (
     <div className="sb tgb" data-team-board="" data-goals-board="" style={{ ...colourStyle, ...sportIdentityVars(sportConfig.id) }}>
-      {notice}
       <BoardHeader title={title} subtitle={subtitle} sportColour="var(--sport-core)" isLive={isLive} onFinish={onFinish} />
+      {notice}
       <div className="tgb-meta">
         <span className="tgb-sport"><i className="tgb-sport-mark" aria-hidden="true" />{sportConfig.name}</span>
         <span className="tgb-clock" aria-label={clockLabel}>{isTimeUp ? "Time's up!" : clock}</span>
