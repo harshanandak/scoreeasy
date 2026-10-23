@@ -82,6 +82,7 @@ export const SPORT_REGISTRY = {
 
   tabletennis: {
     id: 'tabletennis',
+    teamColour: true,
     identityColour: '#0d9488', // Table teal
     name: 'Table Tennis',
     icon: '🏓',
