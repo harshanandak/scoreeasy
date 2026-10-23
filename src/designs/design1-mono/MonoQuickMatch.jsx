@@ -2591,6 +2591,20 @@ export default function MonoQuickMatch() {
         ? [`${setUnit} ${currentSet + 1}`, `${setUnit}s ${leftSetsWon}–${rightSetsWon}`]
         : [`First to ${format.target}`];
       const boardScore = boardHalves.map((h) => h.score).join('–');
+      const lastPointScore = format.type === 'best-of'
+        ? sets[lastEntry?.currentSet || 0]
+        : { score1: vScore1, score2: vScore2 };
+      // Undo keeps the preceding action's pre-score snapshot, even across a set boundary.
+      const restoredPoint = lastAction === 'Undid last point' && lastEntry && undoScores && lastPointScore
+        && lastPointScore.score1 === undoScores.score1 + (lastEntry.team === 1 ? 1 : 0)
+        && lastPointScore.score2 === undoScores.score2 + (lastEntry.team === 2 ? 1 : 0);
+      const lastWasPoint = lastEntry
+        && (lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}` || restoredPoint);
+      const lastWonSet = lastWasPoint && format.type === 'best-of' && lastEntry.currentSet < currentSet
+        ? setHistory.at(-1) : null;
+      const lastPointLine = lastWonSet
+        ? `${lastWonSet.label} to ${lastWonSet.winnerName} · ${lastWonSet.left}–${lastWonSet.right}`
+        : `Last: point ${getTeamLabel(lastEntry?.team)} · ${boardScore}`;
       // The dialogs say exactly which score they act on, in the board's order.
       const dialogSummary = (
         <div className="sb-confirm-summary">
@@ -2614,9 +2628,8 @@ export default function MonoQuickMatch() {
             meta={[...boardStatus, timer.formatted]}
             pointCue={pointCue}
             setHistory={setHistory}
-            // One plain line, e.g. "Last: point Reds · 22–19" (serving shows once, on the key).
-            lastLine={lastEntry && lastAction === `${getTeamLabel(lastEntry.team)} +1 ${scoringUnit}`
-              ? `Last: point ${getTeamLabel(lastEntry.team)} \u00b7 ${boardScore}`
+            lastLine={lastWasPoint
+              ? lastPointLine
               : lastAction || 'Tap a team to score a point'}
             canUndo={vScoreHistory.length > 0}
             undoHint={undoHint}
