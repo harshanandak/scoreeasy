@@ -1,5 +1,5 @@
 {
-  "productCommit": "7f1320fb90092d5c14cec692511bba31c9ff9eba",
+  "productCommit": "8509bbabc95534e2dc1151c6229b373a8286362f",
   "baselineCommit": "4a3ba4494f47fe8294a518abdc1c95e017f075b8",
   "renderer": "T3 html_preview",
   "notes": "Real components, inline IIFE/CSS/fonts, local fixtures, auth/Convex mocked. Entry motion disabled only in the fixture for settled frames. Row/path/control counters select the new InProgressMatches component; baseline legacy rows use different markup, so its counters are not a measure of baseline legacy resume availability.",

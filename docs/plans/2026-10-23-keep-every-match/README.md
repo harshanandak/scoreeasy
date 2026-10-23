@@ -4,7 +4,7 @@ Starting a second quick match used the first match's storage slot, and drafts ol
 
 The screenshots render real components with local fixtures and mocked auth/Convex. T3 `html_preview` was the only screenshot renderer. The app was built as an inline IIFE with inline CSS and fonts, inside exact phone frames. Entry motion was disabled in the fixture to capture its settled state. No live data or backend writes were used.
 
-The product source for the after captures is `7f1320fb90092d5c14cec692511bba31c9ff9eba`. The before source is tracked master `4a3ba4494f47fe8294a518abdc1c95e017f075b8`. The baseline fixture uses legacy per-sport slots: cricket B overwrites cricket A, and the older volleyball draft is hidden by expiry. Its Home therefore shows only cricket B; its History shows only the completed kabaddi result. The after fixture holds all three independent records.
+The product source for the after captures is `8509bbabc95534e2dc1151c6229b373a8286362f`. The before source is tracked master `4a3ba4494f47fe8294a518abdc1c95e017f075b8`. The baseline fixture uses legacy per-sport slots: cricket B overwrites cricket A, and the older volleyball draft is hidden by expiry. Its Home therefore shows only cricket B; its History shows only the completed kabaddi result. The after fixture holds all three independent records.
 
 | Capture | Evidence |
 | --- | --- |
