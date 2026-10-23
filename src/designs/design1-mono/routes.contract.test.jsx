@@ -139,6 +139,18 @@ function expectBoardDock(hidden) {
 }
 
 describe('board dock visibility', () => {
+  it('keeps guided cricket lineup setup in the app shell', async () => {
+    const entries = cricketFinishSeed('guided');
+    const match = entries.se_cricket[0].matches[0];
+    match.team1Score = { runs: 0, balls: 0, wickets: 0, allOut: false };
+    match.draftState = { phase: 'setup1' };
+    Object.entries(entries).forEach(([key, value]) => seed(key, value));
+    renderApp(['/cricket/tournament/100/match/m1/score']);
+    await settleRoute();
+    expectBoardDock(false);
+    expect(nativeBack.install).not.toHaveBeenCalled();
+  });
+
   it.each(['volleyball', 'cricket', 'kabaddi'])('%s hides the dock from Start through an unscored refresh and Back', async sport => {
     const path = `/${sport}/quick`;
     let view = renderApp(['/history', path]);
@@ -212,7 +224,7 @@ describe('board dock visibility', () => {
     const path = '/volleyball/tournament/100/match/m1/score';
     const view = renderApp([path]);
     await settleRoute();
-    fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add point for Red' }));
     expectBoardDock(true);
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
     expectBoardDock(true);
@@ -266,6 +278,7 @@ describe('route contracts: already correct (pinned)', () => {
     await waitFor(() => expect(currentRoute()).toBe(quick ? '/cricket/quick?result=300' : '/cricket/tournament/100'));
     if (quick) {
       expect(await screen.findByRole('region', { name: 'Match result' })).toHaveAttribute('data-screen', 'finish');
+      expectBoardDock(true);
       expect(screen.getByText('Won by 10 wickets')).toBeInTheDocument();
     }
     const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -276,6 +289,7 @@ describe('route contracts: already correct (pinned)', () => {
     if (quick) {
       fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
       expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
+      expectBoardDock(true);
       expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
       expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
     }
@@ -917,6 +931,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: action, exact: true }));
+    expectBoardDock(action === 'Rematch');
     const draft = JSON.parse(localStorage.getItem('se_quickmatch_draft_football'));
     if (action === 'Rematch') expect(draft.scoringStarted).toBe(false);
     else expect(draft).toBeNull();
