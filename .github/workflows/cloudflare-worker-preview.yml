@@ -6,12 +6,14 @@ name: Cloudflare Worker Preview
 # Previews run the DEVELOPMENT tier end-to-end so Clerk + Convex actually work on
 # the preview origin: Clerk PRODUCTION keys cannot be used on *.workers.dev
 # preview URLs (Clerk constraint), so previews use the Clerk DEV publishable key
-# (pk_test_). Each PR gets its OWN isolated Convex backend via
-# `convex deploy --preview-create pr-<N>` (CONVEX_PREVIEW_DEPLOY_KEY) — so a PR's
-# new functions + schema are always present on its preview. See docs/DEPLOY.md.
+# (pk_test_). Changes under convex/ or to either dependency file get an isolated
+# backend via `convex deploy --preview-create pr-<N>`. Other PRs build against
+# vars.PREVIEW_VITE_CONVEX_URL; if unset, they use the isolated fallback with a
+# notice. Convex Preview Cleanup releases closed PR previews and offers a manual
+# dry-run-first backlog sweep. See docs/DEPLOY.md for setup and limits.
 #
 # A single sticky PR comment (marker below) is EDITED IN PLACE through
-# Queued → Building → Ready/Failed, so each push updates one comment rather than
+# Building → Ready/Failed, so each push updates one comment rather than
 # spamming new ones. Drafts and forked PRs are skipped (no secrets available).
 
 on:
@@ -24,9 +26,8 @@ permissions:
 env:
   CLOUDFLARE_WORKER_NAME: scoreeasy
   CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
-  # Preview tier: Clerk DEV instance (pk_test_). VITE_CONVEX_URL is injected per-PR
-  # by `convex deploy --preview-create` below — each PR's frontend points at its own
-  # isolated Convex backend, not a shared dev one.
+  # Preview tier: Clerk DEV instance (pk_test_). The build step selects either
+  # the shared dev URL or an isolated per-PR Convex preview URL.
   VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || secrets.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
   VITE_SENTRY_DSN: ${{ vars.PREVIEW_VITE_SENTRY_DSN || secrets.PREVIEW_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
 
@@ -59,6 +60,23 @@ jobs:
           if [ "$IS_DRAFT" = "true" ]; then deployable=false; fi          # draft: skip
           echo "deployable=$deployable" >> "$GITHUB_OUTPUT"
 
+      - name: Checkout
+        if: steps.mode.outputs.deployable == 'true'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select preview backend against PR base
+        id: backend
+        if: steps.mode.outputs.deployable == 'true'
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PREVIEW_VITE_CONVEX_URL: ${{ vars.PREVIEW_VITE_CONVEX_URL }}
+        run: node scripts/preview-backend.mjs
+
       - name: Check credentials
         id: guard
         if: steps.mode.outputs.deployable == 'true'
@@ -66,12 +84,13 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CONVEX_PREVIEW_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
+          BACKEND_MODE: ${{ steps.backend.outputs.mode }}
         run: |
-          if [ -n "$CF_API_TOKEN" ] && [ -n "$CONVEX_PREVIEW_DEPLOY_KEY" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+          if [ -n "$CF_API_TOKEN" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ] && { [ "$BACKEND_MODE" = "shared" ] || [ -n "$CONVEX_PREVIEW_DEPLOY_KEY" ]; }; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Preview secrets (CLOUDFLARE_API_TOKEN, CONVEX_PREVIEW_DEPLOY_KEY, PREVIEW_VITE_CLERK_PUBLISHABLE_KEY) not set — skipping preview."
+            echo "::notice::Required preview credentials are missing: CLOUDFLARE_API_TOKEN, PREVIEW_VITE_CLERK_PUBLISHABLE_KEY, and CONVEX_PREVIEW_DEPLOY_KEY for an isolated backend — skipping preview."
           fi
 
       - name: Skipped status (draft / fork)
@@ -88,12 +107,6 @@ jobs:
               context: 'Cloudflare Preview - scoreeasy',
             });
 
-      - name: Checkout
-        if: steps.guard.outputs.ready == 'true'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          persist-credentials: false
-
       - name: Comment — building
         if: steps.guard.outputs.ready == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
@@ -108,6 +121,7 @@ jobs:
               '| | |',
               '| --- | --- |',
               '| **Status** | 🔧 Building… |',
+              '| **Backend** | ${{ steps.backend.outputs.label }} |',
               `| **Logs** | [Workflow run](${runUrl}) |`,
               '',
               '_Cloudflare Worker preview — refreshed on every push to this PR._',
@@ -139,12 +153,16 @@ jobs:
         if: steps.guard.outputs.ready == 'true'
         run: bun run type-check
 
-      # Create/update an ISOLATED Convex preview deployment for this PR (its own
-      # backend with this branch's functions + schema), then build the frontend
-      # against it (convex injects its URL as VITE_CONVEX_URL). Eliminates
-      # "function not found" from a shared dev backend lagging the branch.
+      - name: Build frontend against shared preview backend
+        if: steps.guard.outputs.ready == 'true' && steps.backend.outputs.mode == 'shared'
+        env:
+          VITE_CONVEX_URL: ${{ vars.PREVIEW_VITE_CONVEX_URL }}
+        run: bun run build
+
+      # --preview-create recreates an existing named preview, including its data.
+      # Convex supplies the isolated deployment URL to the frontend build.
       - name: Deploy Convex preview + build frontend against it
-        if: steps.guard.outputs.ready == 'true'
+        if: steps.guard.outputs.ready == 'true' && steps.backend.outputs.mode == 'isolated'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
         run: |
@@ -200,10 +218,11 @@ jobs:
               '| | |',
               '| --- | --- |',
               '| **Status** | ✅ Ready |',
+              '| **Backend** | ${{ steps.backend.outputs.label }} |',
               `| **Preview** | ${url} |`,
               `| **Commit** | \`${sha.slice(0, 7)}\` |`,
               '',
-              '_Cloudflare Worker preview (dev Clerk + isolated per-PR Convex) — refreshed on every push to this PR._',
+              '_Cloudflare Worker preview with dev Clerk — refreshed on every push to this PR._',
             ].join('\n');
             const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: n, per_page: 100 });
             const existing = comments.find((c) => c.body && c.body.includes(marker));
@@ -211,7 +230,7 @@ jobs:
             else await github.rest.issues.createComment({ owner, repo, issue_number: n, body });
 
       - name: Comment — failed
-        if: failure() && steps.guard.outputs.ready == 'true'
+        if: failure() && steps.mode.outputs.deployable == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
@@ -228,6 +247,7 @@ jobs:
               '| | |',
               '| --- | --- |',
               '| **Status** | ❌ Failed |',
+              '| **Backend** | ${{ steps.backend.outputs.label || 'not selected' }} |',
               `| **Logs** | [Workflow run](${runUrl}) |`,
               `| **Commit** | \`${sha.slice(0, 7)}\` |`,
               '',
