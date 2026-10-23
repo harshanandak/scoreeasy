@@ -139,6 +139,22 @@ it('keeps an orphan terminal snapshot when restore cannot find its completed His
   expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_9'))).toEqual(draft);
 });
 
+it('keeps a legacy numeric zero identity through migration, Resume and Finish', async () => {
+  const draft = seed('volleyball', 0);
+  localStorage.removeItem('se_quickmatch_draft_volleyball_0');
+  localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify(draft));
+  open('/volleyball/quick');
+  expect(await screen.findByRole('button', { name: 'Add point for Royals 0' })).toHaveTextContent('12');
+  expect(loadInProgressMatches()[0].quickMatchId).toBe(0);
+  fireEvent.click(screen.getByRole('button', { name: 'Test Home' }));
+  fireEvent.click(screen.getByRole('button', { name: /Resume Volleyball: Royals 0/ }));
+  expect(await screen.findByRole('button', { name: 'Add point for Royals 0' })).toHaveTextContent('12');
+  fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
+  expect(loadQuickMatches()[0]).toMatchObject({ id: 0, status: 'completed', score1: 12 });
+  expect(loadInProgressMatches()).toEqual([]);
+});
+
 it('restores the same volleyball score and undo, then Finish moves only it to completed History', async () => {
   seed('volleyball', 1); seed('kabaddi', 2);
   open('/volleyball/quick?resume=1');

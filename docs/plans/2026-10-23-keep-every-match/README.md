@@ -51,6 +51,7 @@ The acceptance walk is backed by real storage and scorer tests, with cloud servi
 - Preserve an orphan terminal snapshot when its completed History record cannot be found.
 - Delete one started tournament fixture: its peer's saved history is unchanged.
 - Reload with an unchanged device clock: newly minted match identities remain distinct.
+- Migrate a legacy numeric id of `0`, resume it from Home, and Finish: the same id and score remain in completed History.
 
 Validation results are recorded in the PR. The full suite preserves the existing expected failures, including the storage-full-at-boot audit. No colour literals, palette exemptions, scoring rules, live outbox changes, Convex changes, or gate bypasses were introduced.
 

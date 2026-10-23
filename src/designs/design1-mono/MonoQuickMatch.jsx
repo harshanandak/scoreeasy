@@ -581,7 +581,7 @@ export default function MonoQuickMatch() {
     const draft = restoredKey ? (migrated?.key === restoredKey ? migrated.draft : loadData(restoredKey, null)) : null;
     hydratedDraftKeyRef.current = restoredKey;
     setActiveDraftKey(restoredKey || null);
-    const saved = draft?.quickMatchId ? loadQuickMatch(draft.quickMatchId) : null;
+    const saved = draft?.quickMatchId !== undefined && draft?.quickMatchId !== null ? loadQuickMatch(draft.quickMatchId) : null;
     if (completion.hydrate(isCompletedMatch(saved) ? saved : draft, `${sport}:quick:${draft?.quickMatchId || 'setup'}`, () => {
       if (isCompletedMatch(saved)) clearData(restoredKey);
       navigate('/history', { replace: true });
@@ -623,13 +623,13 @@ export default function MonoQuickMatch() {
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
-    liveMatchIdRef.current = draft.quickMatchId || createQuickMatchId();
+    liveMatchIdRef.current = draft.quickMatchId ?? createQuickMatchId();
     // A sport switch can restore another draft while phase is already 'scoring'.
     timer.restore(getRestoredTimerElapsed(draft), true);
     startedAtRef.current = draft.startedAt || new Date().toISOString();
     setSaveWarning('Resumed your in-progress quick match on this device.');
     setPhase('scoring');
-    if (!resumeMatchId && draft.quickMatchId && restoredKey === getQuickMatchDraftKey(sport, draft.quickMatchId)) {
+    if (!resumeMatchId && draft.quickMatchId !== undefined && draft.quickMatchId !== null && restoredKey === getQuickMatchDraftKey(sport, draft.quickMatchId)) {
       draftHydratedSportRef.current = `${sport}::${draft.quickMatchId}`;
       navigate(`/${sport}/quick?resume=${encodeURIComponent(draft.quickMatchId)}`, { replace: true });
     }
@@ -828,7 +828,7 @@ export default function MonoQuickMatch() {
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
   const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
   const liveDescriptor = {
-    clientMatchId: liveMatchIdRef.current ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
+    clientMatchId: liveMatchIdRef.current !== null ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
     sport,
     scorecardKind: liveScorecardKind,
     teamA: teamColourOn ? { name: team1Name, color: team1Color } : { name: team1Name },
@@ -933,7 +933,7 @@ export default function MonoQuickMatch() {
   const finalizeMatch = (entry) => completion.complete(() => {
     void endMatchImpact();
 
-    const matchId = liveMatchIdRef.current || entry.id;
+    const matchId = liveMatchIdRef.current ?? entry.id;
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
     const nextResult = {
       ...entry,
