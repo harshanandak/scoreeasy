@@ -33,6 +33,8 @@ vi.mock('./platform', () => ({
 import { setupNativeChrome } from './nativeChrome';
 
 beforeEach(() => {
+  document.documentElement.classList.remove('dark');
+  document.documentElement.style.removeProperty('--se-color-canvas');
   vi.clearAllMocks();
   mocks.hasNativePlugin.mockReturnValue(true);
   mocks.hide.mockResolvedValue(undefined);
@@ -42,6 +44,13 @@ beforeEach(() => {
 });
 
 describe('setupNativeChrome', () => {
+  it('uses light status bar icons when the app uses dark chrome', async () => {
+    document.documentElement.classList.add('dark');
+    document.documentElement.style.setProperty('--se-color-canvas', '#0e0f12');
+    await setupNativeChrome();
+    expect(mocks.setStyle).toHaveBeenCalledWith({ style: 'DARK' });
+    expect(mocks.setBackgroundColor).toHaveBeenCalledWith({ color: '#0e0f12' });
+  });
   it('uses dark status bar text on the light native app chrome', async () => {
     await expect(setupNativeChrome()).resolves.toEqual({
       splashScreen: 'hidden',

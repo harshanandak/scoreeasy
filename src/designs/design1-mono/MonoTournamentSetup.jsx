@@ -19,7 +19,7 @@ const mobileBackButtonStyle = {
 
 const stickyActionStyle = {
   position: 'sticky',
-  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)',
+  bottom: 'calc(var(--se-safe-bottom) + 76px)',
   zIndex: 20,
   minHeight: 52,
   padding: '12px',
