@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
+import * as sportRegistry from '../../models/sportRegistry';
 
 vi.mock('convex/react', () => ({
   useMutation: () => vi.fn(),
@@ -253,10 +254,15 @@ describe('MonoQuickMatch setup clarity', () => {
   });
 
   it('keeps the preview neutral for a sport without team colours', async () => {
-    renderQuickMatch('/tabletennis/quick');
-    const preview = await screen.findByTestId('matchup-preview');
-    expect(preview).not.toHaveClass('is-team');
-    expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
+    const flag = vi.spyOn(sportRegistry, 'isTeamColourSport').mockReturnValue(false);
+    try {
+      renderQuickMatch('/tabletennis/quick');
+      const preview = await screen.findByTestId('matchup-preview');
+      expect(preview).not.toHaveClass('is-team');
+      expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
+    } finally {
+      flag.mockRestore();
+    }
   });
 
   it('offers cricket team colours and uses them in its matchup preview', async () => {
