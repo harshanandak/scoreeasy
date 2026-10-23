@@ -7,6 +7,8 @@ export function useTimer() {
   const isMounted = useRef(true);
 
   useEffect(() => {
+    // StrictMode replays setup after cleanup on the same mounted hook.
+    isMounted.current = true;
     return () => {
       isMounted.current = false;
       clearInterval(intervalRef.current);
