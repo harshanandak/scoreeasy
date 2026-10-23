@@ -28,7 +28,7 @@ Before modules came from `origin/master` (`4145887c87a42088a0b6a590a1f7e4cc72dfb
 
 ## Tests
 
-Tests were written and run red before implementation: missing helper/cue assertions failed. Final focused run: **7 files, 217 tests passed**, including **37 new tests** (26 pure derivation and 11 real-board tests), the three existing board suites, the existing sets engine suite and the palette ratchet. Full suite: **155 files, 1,996 passed, 7 expected fail (2,003 total)**. No test or hook was skipped. Lint: 0 errors, 29 pre-existing warnings. Type check passed. The palette baseline was not raised.
+Tests were written and run red before implementation: missing helper/cue assertions failed. Final focused run: **7 files, 217 tests passed**, including **37 new tests** (26 pure derivation and 11 real-board tests), the three existing board suites, the existing sets engine suite and the palette ratchet. Full suite: **156 files, 2,012 passed, 7 expected fail (2,019 total), after rebasing onto current master**. No test or hook was skipped. Lint: 0 errors, 29 pre-existing warnings. Type check passed. The palette baseline was not raised.
 
 ## Rendered transition traces
 
@@ -104,4 +104,3 @@ Undo coordinates are relative to each phone frame. All 36 views had matching doc
 - Volleyball clock stays at 0:00: `match-clock-stays-at-49c8111d`.
 
 Resolves the scope of Forge tasks `3a0dd547-a369-4924-9858-10dada6623f2` and `fb577c99-d82c-45c3-8899-d9de082fec87`. Live/spectator files are outside this diff.
-
