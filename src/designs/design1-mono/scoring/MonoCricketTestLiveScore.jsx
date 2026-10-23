@@ -763,7 +763,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
               onClick={saveCompleteMatch}
               disabled={Boolean(scoringPrompt.pendingPrompt)}
               className="mono-btn-primary"
-              style={{ padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
+              style={{ minHeight: 48, padding: '12px 24px', opacity: Boolean(scoringPrompt.pendingPrompt) ? 0.45 : 1 }}
             >
               Save &amp; Return
             </button>

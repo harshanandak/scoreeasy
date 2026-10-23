@@ -67,6 +67,7 @@ describe('cricket finish navigation', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'End as draw' }));
     fireEvent.click(screen.getByRole('button', { name: 'End as draw' }));
     expect(await screen.findByText('Match Drawn')).toBeInTheDocument();
+    expect(parseFloat(getComputedStyle(screen.getByRole('button', { name: 'Save & Return' })).minHeight)).toBeGreaterThanOrEqual(48);
     const key = kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
     const finished = JSON.parse(localStorage.getItem(key));
     const match = kind === 'test-quick' ? finished[0] : finished[0].matches[0];
