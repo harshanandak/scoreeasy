@@ -154,7 +154,7 @@ describe('Kabaddi shared goals board', () => {
     expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
   });
 
-  it.each(['football', 'basketball', 'hockey'])('keeps %s on its classic scorer', (sport) => {
+  it.each(['basketball', 'hockey'])('keeps %s on its classic scorer', (sport) => {
     ctx.sport = sport; ctx.draft.sport = sport;
     render(<MonoQuickMatch />);
     expect(board()).toBeNull();

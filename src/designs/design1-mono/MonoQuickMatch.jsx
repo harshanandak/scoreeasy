@@ -2406,7 +2406,7 @@ export default function MonoQuickMatch() {
             clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
             status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}
             lastLine={lastAction ? `${lastAction} · ${boardScore}` : 'Choose a scoring action for either team'}
-            momentTeam={last && lastAction === `${getTeamLabel(last.team)} · All Out (+2)` ? last.team : undefined}
+            momentTeam={last && (lastAction === `${getTeamLabel(last.team)} · All Out (+2)` || (!sportConfig.config.quickButtons?.length && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value} ${scoringUnit}${last.value === 1 ? '' : 's'}`)) ? last.team : undefined}
             actionCount={gScoreHistory.length} canUndo={gScoreHistory.length > 0} undoHint={undoHint}
             isLive={Boolean(live?.isLive)} onScore={addGoal} onUndo={undoGoal}
             onSwap={handleSideSwap} onCorrect={(team) => adjustGoalScore(team, -1)}
