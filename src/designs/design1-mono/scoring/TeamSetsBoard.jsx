@@ -37,6 +37,9 @@ export default function TeamSetsBoard({
   onFinish,
   live,
   notice,
+  scoringDisabled = false,
+  controlsDisabled = false,
+  options,
 }) {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const sheetId = useId();
@@ -44,7 +47,7 @@ export default function TeamSetsBoard({
 
   return (
     <div className="sb tsb" style={colourStyle} data-team-board="">
-      <BoardHeader title={title} subtitle={subtitle} sportColour={sportColour} isLive={isLive} onFinish={onFinish} />
+      <BoardHeader title={title} subtitle={subtitle} sportColour={sportColour} isLive={isLive} onFinish={onFinish} finishDisabled={controlsDisabled} />
       {notice}
 
       <p className="tsb-meta">
@@ -63,13 +66,14 @@ export default function TeamSetsBoard({
             data-team={h.key}
             data-side={i === 0 ? 'left' : 'right'}
             onClick={() => onPoint(h.team)}
+            disabled={scoringDisabled}
             aria-label={`Add point for ${h.name}`}
           >
             {hasMark && h.serving && <span className="tsb-mark" aria-hidden="true" />}
             {h.serving && <span className="tsb-srv">Serving</span>}
             <span className="tsb-who">{h.name}</span>
             <span className="tsb-big">{h.score}</span>
-            <span className="tsb-word">Tap +1</span>
+            <span className="tsb-word">{scoringDisabled ? 'Scoring paused' : 'Tap +1'}</span>
           </button>
         ))}
       </div>
@@ -101,7 +105,7 @@ export default function TeamSetsBoard({
           </div>
         )}
         <BoardSheetGroup>
-          <button type="button" className="sb-row" onClick={() => { onSwap(); setOptionsOpen(false); }}>Swap sides</button>
+          <button type="button" className="sb-row" disabled={controlsDisabled} onClick={() => { onSwap(); setOptionsOpen(false); }}>Swap sides</button>
           {halves.map((h) => (
             <button
               key={h.team}
@@ -109,12 +113,14 @@ export default function TeamSetsBoard({
               className="sb-row"
               aria-label={`Subtract one from ${h.name}`}
               onClick={() => onCorrect(h.team)}
+              disabled={scoringDisabled || controlsDisabled || h.correctionDisabled}
             >
               <span>Correct {h.name}</span>
               <span className="sb-row-aside">&minus;1</span>
             </button>
           ))}
         </BoardSheetGroup>
+        {options}
       </BoardOptionsSheet>
     </div>
   );
@@ -126,9 +132,13 @@ const half = PropTypes.shape({
   name: PropTypes.string.isRequired,
   score: PropTypes.number.isRequired,
   serving: PropTypes.bool,
+  correctionDisabled: PropTypes.bool,
 });
 
 TeamSetsBoard.propTypes = {
+  scoringDisabled: PropTypes.bool,
+  controlsDisabled: PropTypes.bool,
+  options: PropTypes.node,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
   sportColour: PropTypes.string,

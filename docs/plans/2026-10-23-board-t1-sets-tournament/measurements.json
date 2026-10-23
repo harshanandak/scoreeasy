@@ -1,0 +1,1248 @@
+[
+  {
+    "name": "after-early-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "before-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "volleyball",
+        "before": true,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "truncated": true,
+        "text": "{\"smallTargets\":[{\"label\":\"Rally\",\"x\":330.765625,\"y\":16,\"width\":47.234375,\"height\":44,\"bottom\":60},{\"label\":\"Correct Royals: remove one point\",\"x\":12,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Correct Strikers: remove one point\",\"x\":195,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Undo\",\"x\":12,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Swap\",\"x\":103.5,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Discard\",\"x\":195,\"y\":776,\"width\":91.5,\"h…"
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "before-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "volleyball",
+        "before": true,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "truncated": true,
+        "text": "{\"smallTargets\":[{\"label\":\"Rally\",\"x\":300.765625,\"y\":8,\"width\":47.234375,\"height\":44,\"bottom\":52},{\"label\":\"Correct Royals: remove one point\",\"x\":12,\"y\":439,\"width\":168,\"height\":44,\"bottom\":483},{\"label\":\"Correct Strikers: remove one point\",\"x\":180,\"y\":439,\"width\":168,\"height\":44,\"bottom\":483},{\"label\":\"Undo\",\"x\":12,\"y\":572,\"width\":84,\"height\":44,\"bottom\":616},{\"label\":\"Swap\",\"x\":96,\"y\":572,\"width\":84,\"height\":44,\"bottom\":616},{\"label\":\"Discard\",\"x\":180,\"y\":572,\"width\":84,\"height\":44,…"
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-early-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-setpoint-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "setpoint",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "setpoint",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-setpoint-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "setpoint",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "setpoint",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-set2-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "set2",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "set2",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 20,
+            "completed": true
+          },
+          {
+            "score1": 0,
+            "score2": 0,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-set2-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "set2",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "set2",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 20,
+            "completed": true
+          },
+          {
+            "score1": 0,
+            "score2": 0,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-matchpoint-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "matchpoint",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "matchpoint",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 18,
+            "completed": true
+          },
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "after-matchpoint-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "matchpoint",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "matchpoint",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 18,
+            "completed": true
+          },
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "verified-undo-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "undo",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "undo",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point",
+          "undo"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "verified-undo-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "undo",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 135.296875,
+            "width": 176,
+            "height": 616.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "undo",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point",
+          "undo"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "verified-completion-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "completion",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "completion",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 18,
+            "completed": true
+          },
+          {
+            "score1": 25,
+            "score2": 20,
+            "completed": true
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "verified-completion-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "completion",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "completion",
+        "currentSet": 1,
+        "sets": [
+          {
+            "score1": 25,
+            "score2": 18,
+            "completed": true
+          },
+          {
+            "score1": 25,
+            "score2": 20,
+            "completed": true
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive",
+          "point"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "verified-result-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "result",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "result",
+        "status": "completed",
+        "winner": 1,
+        "events": [
+          "goLive",
+          "point",
+          "finalize"
+        ],
+        "sync": 1
+      }
+    ]
+  },
+  {
+    "name": "dark-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 766,
+          "width": 283,
+          "height": 60,
+          "bottom": 826
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          },
+          {
+            "x": 200,
+            "y": 131.296875,
+            "width": 176,
+            "height": 620.703125,
+            "bottom": 752
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "dark-serve-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "serve",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 135.296875,
+            "width": 161,
+            "height": 412.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "serve",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 24,
+            "score2": 20,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "options-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "options",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": {
+          "x": 14,
+          "y": 562,
+          "width": 253,
+          "height": 60,
+          "bottom": 622
+        },
+        "keys": [
+          {
+            "x": 14,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          },
+          {
+            "x": 185,
+            "y": 131.296875,
+            "width": 161,
+            "height": 416.703125,
+            "bottom": 548
+          }
+        ]
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "options",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "badminton-before-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "badminton",
+        "before": true,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "truncated": true,
+        "text": "{\"smallTargets\":[{\"label\":\"Rally\",\"x\":330.765625,\"y\":16,\"width\":47.234375,\"height\":44,\"bottom\":60},{\"label\":\"Correct Royals: remove one point\",\"x\":12,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Correct Strikers: remove one point\",\"x\":195,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Undo\",\"x\":12,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Swap\",\"x\":103.5,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Discard\",\"x\":195,\"y\":776,\"width\":91.5,\"h…"
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "badminton-after-390",
+    "width": 390,
+    "height": 844,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "early",
+        "sport": "badminton",
+        "before": false,
+        "viewport": [
+          390,
+          844
+        ],
+        "bodyHeight": 844,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "truncated": true,
+        "text": "{\"smallTargets\":[{\"label\":\"Rally\",\"x\":330.765625,\"y\":16,\"width\":47.234375,\"height\":44,\"bottom\":60},{\"label\":\"Correct Royals: remove one point\",\"x\":12,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Correct Strikers: remove one point\",\"x\":195,\"y\":643,\"width\":183,\"height\":44,\"bottom\":687},{\"label\":\"Undo\",\"x\":12,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Swap\",\"x\":103.5,\"y\":776,\"width\":91.5,\"height\":44,\"bottom\":820},{\"label\":\"Discard\",\"x\":195,\"y\":776,\"width\":91.5,\"h…"
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "early",
+        "currentSet": 0,
+        "sets": [
+          {
+            "score1": 8,
+            "score2": 6,
+            "completed": false
+          }
+        ],
+        "status": "in-progress",
+        "events": [
+          "goLive"
+        ],
+        "sync": 0
+      }
+    ]
+  },
+  {
+    "name": "result-360",
+    "width": 360,
+    "height": 640,
+    "checks": [
+      {
+        "kind": "T1_LAYOUT",
+        "state": "result",
+        "sport": "volleyball",
+        "before": false,
+        "viewport": [
+          360,
+          640
+        ],
+        "bodyHeight": 640,
+        "horizontalOverflow": false,
+        "undo": null,
+        "keys": []
+      },
+      {
+        "kind": "T1_TARGETS",
+        "smallTargets": [],
+        "contrastMin": 4.686161095754999
+      },
+      {
+        "kind": "T1_STATE",
+        "state": "result",
+        "status": "completed",
+        "winner": 1,
+        "events": [
+          "goLive",
+          "point",
+          "finalize"
+        ],
+        "sync": 1
+      }
+    ]
+  }
+]

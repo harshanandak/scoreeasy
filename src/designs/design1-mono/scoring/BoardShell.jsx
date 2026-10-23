@@ -10,7 +10,7 @@ import './boardShell.css';
 // owns the rules, so the chrome can't disagree with the match state.
 
 /** Header: title + subtitle, an optional sport dot, Live (only while shared live) and Finish. */
-export function BoardHeader({ title, subtitle, sportColour, isLive, onFinish }) {
+export function BoardHeader({ title, subtitle, sportColour, isLive, onFinish, finishDisabled = false }) {
   return (
     <header className="sb-top">
       <div className="sb-title">
@@ -23,12 +23,13 @@ export function BoardHeader({ title, subtitle, sportColour, isLive, onFinish }) 
         )}
       </div>
       {isLive && <span className="sb-live">Live</span>}
-      <button type="button" className="se-ctl sb-finish" onClick={onFinish}>Finish</button>
+      <button type="button" className="se-ctl sb-finish" onClick={onFinish} disabled={finishDisabled}>Finish</button>
     </header>
   );
 }
 
 BoardHeader.propTypes = {
+  finishDisabled: PropTypes.bool,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
   // The sport's identity colour (a CSS colour or var()); the dot is never the only cue.

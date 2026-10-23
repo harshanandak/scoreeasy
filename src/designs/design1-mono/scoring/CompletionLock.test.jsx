@@ -112,7 +112,7 @@ describe.each(cases)('$name completion transaction', ({ sport, Component, format
     expect(finished.draftState).toBeUndefined();
     const saves = h.save.mock.calls.length;
     act(() => { vi.advanceTimersByTime(160); });
-    fireEvent.click(screen.getByRole('button', { name: sport === 'tennis' ? 'Undo last action' : 'Undo' }));
+    fireEvent.click(screen.getByRole('button', { name: /Undo(?: last action)?$/ }));
     for (const button of screen.getAllByRole('button')) {
       if (/Add.*point|Correct|^\+?[1246]$/.test(button.getAttribute('aria-label') || button.textContent)) fireEvent.click(button);
     }
