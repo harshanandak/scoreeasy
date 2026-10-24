@@ -54,6 +54,6 @@ The clock is frozen in the harness. The brief's targets were hit exactly; no adj
 - **Cancel raid is buried in ⋯.** It takes two taps where the court board took one.
 - **No spectator value.** This is a scorer direction only; the live viewer still needs its own design.
 - **The Confirm detail line truncates.** On complex raids (all out plus revivals) it ellipsises at 360px, though the headline stays whole.
-- **Harness only.** This is a harness-level prototype. `KabaddiSplitBoard` replaces `KabaddiRaidBoard` in `MonoQuickMatch` on this branch only. I did not run the full test suite, and the existing kabaddi board tests target the court board.
+- **Harness only.** This is a harness-level prototype. The app still renders the court board (`KabaddiRaidBoard`); only the harness build aliases it to `KabaddiSplitBoard` (`.s3/build.vite.mjs`), and the screens are the real `MonoQuickMatch` running on that alias. No tests cover `KabaddiSplitBoard` yet.
 
 Screens: `s3-1-rest-390.png`, `s3-1-rest-360.png`, `s3-1-rest-390-dark.png`, `s3-2-raid-390.png`, `s3-3-moment-390.png`, `s3-4-end-390.png`. Extras: `s3-3a-tackled-preconfirm-390.png` (Tackled picked, before Confirm) and `s3-5-undo-390.png` (super tackle undone). Every capture's in-page audit reported 0 enabled buttons under 48px and no page scroll.
