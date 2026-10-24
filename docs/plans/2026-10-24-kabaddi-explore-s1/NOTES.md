@@ -45,7 +45,7 @@ The wall clock is frozen per scene, so 12:40 and the 18 s raid clock are exact. 
 - **The banner covers the flags and score strip for 4.5 s.** It repeats the score, but a scorer starting the next raid at once sees the flags only after it clears.
 - **Raider out silently defaults its reason to "Stepped out".** Points are unaffected; only the log wording is.
 - **Little game sense: no court and no momentum.** That is right for the scorer, but this screen is no help to the live viewer.
-- **This is a harness prototype.** It swaps the court board out in MonoQuickMatch, so `MonoQuickMatch.kabaddiBoard.test.jsx` (written for the court board) is expected to fail on this branch. I ran lint and the 74 engine and glue tests only. Nothing was checked on a real phone, in sunlight or with haptics.
+- **This is a harness prototype.** MonoQuickMatch mounts the pad only when localStorage `se_kabaddi_board=pad` is set (the harness sets it); the court board stays the default, so #210's board tests still pass (229 passed, 4 expected-fail, plus the 74 engine and glue tests). The pad has no tests of its own, and nothing was checked on a real phone, in sunlight or with haptics.
 
 Screens: `s1-1-rest-390.png`, `s1-1-rest-360.png`, `s1-1-rest-390-dark.png`, `s1-2-raid-390.png` (2 touches staged; bonus and 4+ disabled with only 3 defenders), `s1-3-moment-390.png` (super tackle banner), `s1-4-end-390.png` (full time).
 

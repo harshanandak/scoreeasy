@@ -13,6 +13,7 @@ const params = new URLSearchParams(window.__params ?? location.search);
 const s = params.get('s') || 'rest';
 document.documentElement.classList.toggle('dark', params.get('theme') === 'dark');
 localStorage.clear();
+localStorage.setItem('se_kabaddi_board', 'pad');
 
 const REST = 1_800_000_000_000;
 const sceneOf = { rest: 'rest', raid: 'raid', moment: 'raid', end: 'end', half: 'half', staged: 'rest' };

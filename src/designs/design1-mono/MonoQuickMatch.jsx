@@ -20,7 +20,17 @@ import TeamColourPicker from './TeamColourPicker';
 import { useTeamColours } from './scoring/useTeamColours';
 import TeamSetsBoard from './scoring/TeamSetsBoard';
 import TeamGoalsBoard from './scoring/TeamGoalsBoard';
-import KabaddiRaidBoard from './scoring/KabaddiRaidPad'; // exploration s1: the raid pad replaces the court board
+import KabaddiCourtBoard from './scoring/KabaddiRaidBoard';
+import KabaddiRaidPad from './scoring/KabaddiRaidPad';
+
+// Exploration s1: the raid pad is opt-in (localStorage se_kabaddi_board=pad); the court board stays the default.
+const kabaddiBoardChoice = () => {
+  try {
+    return globalThis.localStorage?.getItem('se_kabaddi_board');
+  } catch {
+    return null;
+  }
+};
 import { createKabaddiMatch, matchTotals, raidSummary, restoreKabaddiMatch, withOpeningRaidTeam } from '../../utils/kabaddiQuickMatch';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
@@ -2482,6 +2492,7 @@ export default function MonoQuickMatch() {
       const rightScore = sidesSwapped ? gScore1 : gScore2;
 
       if (isRaidBoard && kabaddiMatch) {
+        const KabaddiBoard = kabaddiBoardChoice() === 'pad' ? KabaddiRaidPad : KabaddiCourtBoard;
         const totals = matchTotals(kabaddiMatch);
         const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}</span><strong>{totals.join('–')}</strong></div>;
         const halfMinutes = Math.round(kabaddiMatch.state.rules.halfMs / 60000);
@@ -2489,7 +2500,7 @@ export default function MonoQuickMatch() {
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {renderEndMatchDialog({ className: 'sb-confirm', summary })}
           {renderDiscardDialog({ className: 'sb-confirm', summary })}
-          <KabaddiRaidBoard
+          <KabaddiBoard
             sportConfig={sportConfig}
             title={`${team1Name} v ${team2Name}`}
             subtitle={`2 × ${halfMinutes} min halves · Draws allowed`}
