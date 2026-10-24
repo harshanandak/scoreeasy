@@ -65,7 +65,10 @@ function seed(kabaddi = createKabaddiMatch(SETUP), extra = {}) {
 }
 
 function raid() { tap('Raid by Royals'); }
-function confirm() { act(() => { tap('Confirm raid'); }); }
+function confirm() { act(() => { tap(/^Confirm raid/); }); }
+/** Mark defenders as touched on the court, by their place in the mat row (1-based). */
+function touch(team, ...places) { for (const n of places) tap(`${team} defender ${n}`); }
+const defenders = (team) => screen.queryAllByRole('button', { name: new RegExp(`^${team} defender [1-7]$`) });
 
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(NOW); vi.clearAllMocks(); seed(); });
 afterEach(() => { vi.useRealTimers(); });
@@ -96,9 +99,8 @@ describe('Kabaddi raid board', () => {
     seed(inPlay());
     render(<MonoQuickMatch />);
     raid();
-    tap('Touch Defenders put out');
-    tap('2');
-    tap('Bonus before contact');
+    touch('Strikers', 1, 2);
+    tap(/^Bonus/);
     const preview = screen.getByRole('status', { name: 'Raid preview' });
     expect(preview).toHaveTextContent('Royals +3');
     expect(preview).toHaveTextContent('Score 3–0');
@@ -126,25 +128,24 @@ describe('Kabaddi raid board', () => {
     raid();
     expect(button(/^Tackled/)).toHaveTextContent('Strikers +2');
     tap(/^Tackled/);
-    expect(screen.getByRole('heading', { name: 'Super tackle' })).toBeInTheDocument();
-    expect(button('Bonus before contact')).toBeDisabled();
+    expect(button(/^Bonus/)).toBeDisabled();
     const preview = screen.getByRole('status', { name: 'Raid preview' });
-    expect(preview).toHaveTextContent('Strikers +2');
+    expect(preview).toHaveTextContent('Super tackle · Strikers +2');
     expect(preview).toHaveTextContent('Mat 4–4');
     confirm();
     expect([scoreOf('Royals'), scoreOf('Strikers')]).toEqual(['18', '20']);
     expect(screen.getByRole('heading', { name: 'Super tackle!' })).toBeInTheDocument();
-    tap('Continue');
-    expect(button('Raid by Strikers')).toBeInTheDocument();
+    // The moment sits on the court; the next raid is one tap away and clears it.
+    tap('Raid by Strikers');
+    expect(screen.queryByRole('heading', { name: 'Super tackle!' })).toBeNull();
   });
 
   it('touching the last three defenders is an all out: +2, the side comes back, announced', () => {
     seed(inPlay({ score: [16, 18], mat: [5, 3] }));
     render(<MonoQuickMatch />);
     raid();
-    tap('Touch Defenders put out');
-    expect(button('4')).toBeDisabled();
-    tap('3');
+    expect(defenders('Strikers')).toHaveLength(3);
+    touch('Strikers', 1, 2, 3);
     expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('All out! Royals +2 · Strikers back to 7');
     confirm();
     expect([scoreOf('Royals'), scoreOf('Strikers')]).toEqual(['21', '18']);
@@ -155,13 +156,93 @@ describe('Kabaddi raid board', () => {
     expect(undo()).toHaveTextContent('Restore 16–18 · mat 5–3');
   });
 
+  it('the defenders tapped on the court are the ones who go to the sitting block; a second tap clears one', () => {
+    seed(inPlay());
+    render(<MonoQuickMatch />);
+    raid();
+    expect(defenders('Strikers')).toHaveLength(7);
+    expect(defenders('Royals')).toHaveLength(0);
+    touch('Strikers', 3);
+    expect(button('Strikers defender 3')).toHaveAttribute('aria-pressed', 'true');
+    expect(button(/^Back safe/)).toHaveAttribute('aria-pressed', 'true');
+    touch('Strikers', 3);
+    expect(button('Strikers defender 3')).toHaveAttribute('aria-pressed', 'false');
+    touch('Strikers', 5, 3);
+    expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('Royals +2');
+    confirm();
+    expect(saved().kabaddi.state.outQueue[1].map((q) => q.slotId)).toEqual(['B5', 'B3']);
+    expect(matOf('Strikers')).toBe('Strikers: 5 of 7 on mat, 2 out');
+  });
+
+  it('a swipe across the defenders marks each one it crosses', () => {
+    seed(inPlay());
+    render(<MonoQuickMatch />);
+    raid();
+    const row = defenders('Strikers');
+    const original = document.elementFromPoint;
+    document.elementFromPoint = (x) => row[x] ?? null;
+    try {
+      fireEvent.pointerDown(row[0], { pointerId: 1 });
+      fireEvent.pointerMove(row[0].parentElement, { pointerId: 1, clientX: 1, clientY: 0 });
+      fireEvent.pointerMove(row[0].parentElement, { pointerId: 1, clientX: 2, clientY: 0 });
+      fireEvent.pointerMove(row[0].parentElement, { pointerId: 1, clientX: 2, clientY: 0 });
+      fireEvent.pointerUp(row[0].parentElement, { pointerId: 1 });
+    } finally {
+      document.elementFromPoint = original;
+    }
+    expect(defenders('Strikers').filter((b) => b.getAttribute('aria-pressed') === 'true')).toHaveLength(3);
+    expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('Royals +3');
+  });
+
+  it('the bonus line on its own is a bonus raid: +1, nobody out', () => {
+    seed(inPlay());
+    render(<MonoQuickMatch />);
+    raid();
+    tap(/^Bonus/);
+    expect(button(/^✓ Bonus/)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('Royals +1');
+    confirm();
+    expect([scoreOf('Royals'), scoreOf('Strikers')]).toEqual(['1', '0']);
+    expect(matOf('Strikers')).toBe('Strikers: 7 of 7 on mat');
+  });
+
+  it('tackled after touching: the touches do not score, an earned bonus does, and a new touch switches back', () => {
+    seed(inPlay());
+    render(<MonoQuickMatch />);
+    raid();
+    touch('Strikers', 1);
+    tap(/^Bonus/);
+    tap(/^Tackled/);
+    const preview = () => screen.getByRole('status', { name: 'Raid preview' });
+    expect(preview()).toHaveTextContent('Royals +1 · Strikers +1');
+    expect(preview()).toHaveTextContent('Mat 6–7');
+    touch('Strikers', 2);
+    expect(button(/^Back safe/)).toHaveAttribute('aria-pressed', 'true');
+    expect(preview()).toHaveTextContent('Royals +3');
+  });
+
+  it('raider out asks why (stepped out by default) and records the referee’s reason', () => {
+    seed(inPlay());
+    render(<MonoQuickMatch />);
+    raid();
+    tap(/^Raider out/);
+    expect(screen.getByRole('group', { name: 'Why the raider is out' })).toBeInTheDocument();
+    expect(button('Stepped out')).toHaveAttribute('aria-pressed', 'true');
+    tap('Lost cant');
+    expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('Strikers +1');
+    confirm();
+    expect(saved().kabaddi.state.events.at(-1).input.reason).toBe('Lost cant');
+    // the last few raids stay readable under the court, without opening the log
+    expect(button(/^Recent raids/)).toHaveTextContent('1 · Royals · Raider out, lost cant');
+  });
+
   it('two empty raids put the next raid in do or die; the third empty is a raider out', () => {
     seed(inPlay({ score: [21, 18], mat: [7, 4], next: 1, streak: [0, 2] }));
     render(<MonoQuickMatch />);
-    expect(screen.getByRole('note', { name: 'Do or die' })).toHaveTextContent('Do or die for Strikers');
+    expect(screen.getByRole('note', { name: 'Do or die' })).toHaveTextContent('Do or die · Strikers');
     tap('Raid by Strikers');
-    expect(button(/^Empty/)).toHaveTextContent('Raider out · Royals +1');
-    tap(/^Empty/);
+    expect(button(/^Back safe/)).toHaveTextContent('Do or die · Royals +1');
+    tap(/^Back safe/);
     expect(screen.getByRole('status', { name: 'Raid preview' })).toHaveTextContent('Raider out · Royals +1');
     confirm();
     expect([scoreOf('Royals'), scoreOf('Strikers')]).toEqual(['22', '18']);
@@ -215,7 +296,7 @@ describe('Kabaddi raid board', () => {
     seed(inPlay({ score: [32, 28], mat: [6, 5], half: 2, elapsedMs: 1190000 }));
     render(<MonoQuickMatch />);
     raid();
-    tap(/^Empty/);
+    tap(/^Back safe/);
     confirm();
     act(() => vi.advanceTimersByTime(10000));
     act(() => { tap('Call full time'); });
@@ -234,10 +315,10 @@ describe('Kabaddi raid board', () => {
     seed(inPlay());
     render(<MonoQuickMatch />);
     raid();
-    tap(/^Empty/);
+    tap(/^Back safe/);
     confirm();
     tap('Raid by Strikers');
-    tap('Touch Defenders put out');
+    touch('Royals', 1);
     confirm();
     tap('Match options');
     const log = screen.getByRole('list', { name: 'Raid log' });

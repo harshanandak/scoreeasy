@@ -140,12 +140,12 @@ function expectBoardDock(hidden) {
 }
 
 
-// Kabaddi records a whole raid: first whistle (or next raid), outcome, confirm.
+// Kabaddi records a whole raid: first whistle (or next raid), a defender touched on the court, confirm.
 function scoreKabaddiRaid(team = 'Red') {
   const start = screen.queryByRole('button', { name: `Start · first raid by ${team}` }) || screen.getByRole('button', { name: `Raid by ${team}` });
   fireEvent.click(start);
-  fireEvent.click(screen.getByRole('button', { name: /^Touch/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Confirm raid' }));
+  fireEvent.click(screen.getByRole('button', { name: / defender 1$/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Confirm raid/ }));
 }
 
 describe('board dock visibility', () => {

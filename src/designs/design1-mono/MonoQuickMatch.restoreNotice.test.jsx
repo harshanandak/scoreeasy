@@ -35,10 +35,10 @@ it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'ka
     const undo = screen.getByRole('button', { name: /Undo last/ });
     expect(undo).toBeDisabled();
     if (sport === 'kabaddi') {
-      // A raid is recorded once: start, outcome, confirm.
+      // A raid is recorded once: start, touch a defender on the court, confirm.
       fireEvent.click(screen.getByRole('button', { name: 'Start · first raid by Royals' }));
-      fireEvent.click(screen.getByRole('button', { name: /^Touch/ }));
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm raid' }));
+      fireEvent.click(screen.getByRole('button', { name: / defender 1$/ }));
+      fireEvent.click(screen.getByRole('button', { name: /^Confirm raid/ }));
     } else {
       const score = sport === 'cricket' ? screen.getByRole('button', { name: '1 run' })
         : sport === 'football' || sport === 'hockey' ? screen.getByRole('button', { name: 'Add 1 to Royals' })
