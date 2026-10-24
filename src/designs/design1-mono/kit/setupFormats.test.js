@@ -23,9 +23,14 @@ describe('quick setup format choices, per sport', () => {
     expect(labels('tabletennis')).toEqual(['Single game', 'Best of 5', 'Best of 7']);
     expect(labels('tennis')).toEqual(['Single set', 'Best of 3', 'Best of 5']);
     expect(labels('cricket')).toEqual(['T20', 'T10', 'ODI', 'Test', 'Gully', 'Custom']);
-    for (const id of ['football', 'basketball', 'hockey', 'kabaddi']) {
+    for (const id of ['football', 'basketball', 'hockey']) {
       expect(labels(id)).toEqual(['Timed', 'First to', 'Free play']);
     }
+    // Kabaddi plays the club raid engine: halves only, picked under one club format.
+    expect(labels('kabaddi')).toEqual(['Club standard']);
+    expect(goalsDetail(sport('kabaddi'), { mode: 'timed', timeLimit: 2400 })).toMatchObject({ label: 'Halves', selected: 'time-2400' });
+    expect(goalsDetail(sport('kabaddi'), { mode: 'timed' }).options.map((o) => o.label)).toEqual(['2 × 10 min', '2 × 15 min', '2 × 20 min']);
+    expect(setupRulesLine(sport('kabaddi'), { mode: 'timed', timeLimit: 2400 })).toBe('2 × 20 min halves · 7 a side · draws allowed');
   });
 
   it('starts every sport on its standard format', () => {

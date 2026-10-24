@@ -139,6 +139,15 @@ function expectBoardDock(hidden) {
   expect(document.body.classList.contains('has-mobile-bottom-nav')).toBe(!hidden);
 }
 
+
+// Kabaddi records a whole raid: first whistle (or next raid), a defender touched on the court, confirm.
+function scoreKabaddiRaid(team = 'Red') {
+  const start = screen.queryByRole('button', { name: `Start · first raid by ${team}` }) || screen.getByRole('button', { name: `Raid by ${team}` });
+  fireEvent.click(start);
+  fireEvent.click(screen.getByRole('button', { name: / defender 1$/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Confirm raid/ }));
+}
+
 describe('board dock visibility', () => {
   it('keeps guided cricket lineup setup in the app shell', async () => {
     const entries = cricketFinishSeed('guided');
@@ -183,8 +192,8 @@ describe('board dock visibility', () => {
     });
     const view = renderApp(['/history', path]);
     await settleRoute();
-    const score = sport === 'cricket' ? '0 runs' : sport === 'kabaddi' ? 'Add +1 for Red' : 'Add point for Red';
-    fireEvent.click(screen.getByRole('button', { name: score, exact: true }));
+    if (sport === 'kabaddi') scoreKabaddiRaid();
+    else fireEvent.click(screen.getByRole('button', { name: sport === 'cricket' ? '0 runs' : 'Add point for Red', exact: true }));
     expectBoardDock(true);
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
@@ -426,7 +435,8 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
     const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
-    expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: 'Red' })]);
+    // Kabaddi migrates an old +1/+2 draft: its totals are kept, its old +1 history is not replayable.
+    expect(saved).toEqual([expect.objectContaining({ sport, score1: sport === 'kabaddi' ? 3 : 2, score2: 1, winner: 'Red' })]);
     expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
     await pressProbeBack();
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
@@ -839,7 +849,7 @@ describe('navigation decisions (2026-10-21)', () => {
     const view = renderApp([`/${sport}/quick`]);
     await settleRoute();
     const { draftKey: key, entryPath } = loadInProgressMatches()[0];
-    if (sport === 'kabaddi') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+    if (sport === 'kabaddi') scoreKabaddiRaid();
     else if (sport === 'basketball') fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
@@ -997,7 +1007,7 @@ describe('navigation decisions (2026-10-21)', () => {
       ? (mode === 'quick' ? 'Add 1 to Red' : 'Add 1 point to Red')
       : (mode === 'quick' || sport === 'volleyball' ? 'Add point for Red' : /^Red: /);
     if (mode === 'quick' && sport === 'kabaddi') {
-      fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
+      scoreKabaddiRaid();
     } else if (mode === 'quick' && sport === 'basketball') {
       fireEvent.click(screen.getByRole('button', { name: 'Add +1 for Red' }));
     } else fireEvent.click(screen.getByRole('button', { name: score }));
