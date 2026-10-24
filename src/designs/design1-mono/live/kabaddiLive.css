@@ -1,0 +1,338 @@
+/* Kabaddi live viewer (KabaddiLiveView.jsx). Kit look: canvas + soft surfaces, hairline edges, little
+   shadow, numbers first. Team colour only from the colour engine (--team-*), sport identity from
+   --sport-*. The hand-drawn layer (HandUnderline, the burst) appears only on a big moment and the
+   result line. Read-only: there is no control on this page except the chart's scrub. */
+
+.kl {
+  --kl-edge: color-mix(in oklab, var(--se-color-ink) 12%, transparent);
+  --kl-ink-2: color-mix(in oklab, var(--se-color-ink) 64%, var(--se-color-surface));
+  --kl-soft: 0 1px 2px color-mix(in oklab, var(--se-color-shadow) 9%, transparent);
+  --kl-num: var(--se-font-num);
+  padding-bottom: 40px;
+  max-width: 560px;
+}
+
+.kl h2 { margin: 0; }
+.kl .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- header ---- */
+.kl-top { display: flex; align-items: center; gap: 12px; padding: 14px 0 10px; }
+.kl-top .kit-badge { width: 44px; height: 44px; border-radius: 14px; flex: none; }
+.kl-top-t { flex: 1; min-width: 0; display: grid; }
+.kl-top-t b { font: 800 1.12rem/1.15 var(--se-font-display); letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kl-top-t small { color: var(--se-color-ink-soft); font-size: 0.8rem; font-weight: 600; }
+.kl-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--se-color-surface-warm); color: var(--se-color-ink); font-size: 0.78rem; font-weight: 800; white-space: nowrap; }
+.kl-pill-live { background: var(--se-color-live-soft); color: var(--se-color-live); }
+.kl-pill-live i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+@media (prefers-reduced-motion: no-preference) { .kl-pill-live i { animation: kl-pulse 1.6s ease-in-out infinite; } }
+@keyframes kl-pulse { 50% { opacity: 0.35; } }
+
+.kl-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--team-a-core); box-shadow: inset 0 0 0 1px var(--kl-edge); }
+.kl-dot-b { background: var(--team-b-core); }
+
+/* ---- cues: do or die / super tackle on / bonus ---- */
+.kl-cues { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+.kl-cue { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 8px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge); font-size: 0.74rem; font-style: normal; font-weight: 800; white-space: nowrap; }
+.kl-cues-big .kl-cue { min-height: 28px; padding: 0 11px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.kl-cue-gold { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); box-shadow: none; }
+.kl-cue-danger { background: var(--se-color-danger-soft); color: var(--se-color-danger); box-shadow: none; }
+
+/* ---- cards ---- */
+.kl-card { margin-top: 12px; padding: 12px 14px; border-radius: 20px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge), var(--kl-soft); }
+.kl-eyebrow { display: flex; justify-content: space-between; gap: 8px; color: var(--kl-ink-2); font-size: 0.74rem; font-weight: 750; letter-spacing: 0.02em; }
+.kl-chart-hd { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; margin-bottom: 6px; }
+.kl-chart-hd h2 { font: 750 1rem/1.15 var(--se-font-display); letter-spacing: -0.01em; }
+.kl-muted { color: var(--kl-ink-2); font-size: 0.78rem; font-weight: 650; }
+.kl-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 16px 2px 8px; }
+.kl-sec h2 { font: 750 1rem/1.15 var(--se-font-display); }
+.kl-sec span { color: var(--kl-ink-2); font-size: 0.78rem; font-weight: 650; }
+
+/* =================================================================== BROADCAST */
+
+/* scorebug: both totals in team tiles, the half clock between them */
+.kl-bug-row { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kl-bug-team {
+  --kl-core: var(--team-a-core); --kl-on: var(--team-a-on);
+  position: relative; display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 104px;
+  padding: 9px 12px 9px; border-radius: 18px; background: var(--kl-core); color: var(--kl-on);
+  box-shadow: inset 0 0 0 1px var(--kl-edge), var(--kl-soft);
+}
+.kl-bug-b { --kl-core: var(--team-b-core); --kl-on: var(--team-b-on); text-align: right; }
+.kl-bug-name { font-size: 0.95rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kl-bug-score { font: 800 3.6rem/0.95 var(--kl-num); font-variant-numeric: tabular-nums; }
+.kl-bug-a .kl-bug-score { padding-right: 34px; }
+.kl-bug-b .kl-bug-score { padding-left: 34px; }
+.kl-bug-flag { justify-self: start; padding: 1px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px currentColor; font-size: 0.72rem; font-weight: 800; }
+.kl-bug-b .kl-bug-flag { justify-self: end; }
+.kl-bug-team[data-raiding] { box-shadow: inset 0 0 0 1px var(--kl-edge), 0 0 0 3px color-mix(in oklab, var(--kl-core) 30%, transparent); }
+.kl-bug-mid {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1;
+  display: grid; justify-items: center; min-width: 74px; padding: 6px 10px; border-radius: 16px;
+  background: var(--se-color-surface); color: var(--se-color-ink); box-shadow: inset 0 0 0 1px var(--kl-edge), var(--kl-soft);
+}
+.kl-bug-mid small { color: var(--kl-ink-2); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; }
+.kl-bug-mid b { font: 800 1.45rem/1 var(--kl-num); font-variant-numeric: tabular-nums; }
+
+/* the raid clock, only while a raid runs */
+.kl-raidbar { --kl-core: var(--team-a-core); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 8px; padding: 6px 10px 6px 8px; border-radius: 14px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge); }
+.kl-raidbar-b { --kl-core: var(--team-b-core); }
+.kl-raidbar-t { display: inline-flex; align-items: center; gap: 6px; font-size: 0.84rem; font-weight: 800; }
+.kl-raidbar-t .kl-raider-mark { width: 26px; height: 20px; color: var(--kl-core); }
+.kl-raidbar-track { height: 8px; border-radius: 999px; background: color-mix(in oklab, var(--kl-core) 14%, var(--se-color-surface)); overflow: hidden; }
+.kl-raidbar-track i { display: block; height: 100%; border-radius: 999px; background: var(--kl-core); }
+.kl-raidbar-s { font: 800 1.5rem/1 var(--kl-num); font-variant-numeric: tabular-nums; }
+.kl-raidbar-s small { font-size: 0.8rem; margin-left: 1px; }
+
+.kl-raider-mark { display: inline-block; width: 28px; height: 22px; background: currentColor; mask: var(--sport-mark) center / contain no-repeat; -webkit-mask: var(--sport-mark) center / contain no-repeat; }
+
+/* the court, side on: Royals' half left, Strikers' right — the same sides as the scorebug */
+.kl-court-wrap { margin-top: 12px; }
+.kl-court { position: relative; display: grid; grid-template-columns: 20px 1fr 20px; gap: 4px; }
+.kl-sit { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; grid-row: 1; }
+.kl-sit-a { grid-column: 1; }
+.kl-sit-b { grid-column: 3; }
+.kl-seat { --kl-core: var(--team-a-core); width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--kl-core); }
+.kl-seat-b { --kl-core: var(--team-b-core); }
+.kl-seat[data-next] { background: color-mix(in oklab, var(--kl-core) 40%, transparent); }
+.kl-sit small { color: var(--kl-ink-2); font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.kl-sofar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.kl-sofar span { display: grid; padding: 8px 10px; border-radius: 14px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge); }
+.kl-sofar small { color: var(--kl-ink-2); font-size: 0.7rem; font-weight: 750; }
+.kl-sofar b { font: 800 1.3rem/1.1 var(--kl-num); font-variant-numeric: tabular-nums; }
+.kl-mat {
+  --kl-line: color-mix(in oklab, var(--se-color-ink) 24%, transparent);
+  position: relative; grid-column: 2; grid-row: 1; height: 224px; border-radius: 16px; overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--kl-edge);
+}
+.kl-half { position: absolute; top: 0; bottom: 0; width: 50%; }
+.kl-half-a { left: 0; background: color-mix(in oklab, var(--team-a-tint) 78%, var(--se-color-surface)); }
+.kl-half-b { right: 0; background: color-mix(in oklab, var(--team-b-tint) 78%, var(--se-color-surface)); }
+.dark .kl-half-a { background: color-mix(in oklab, var(--team-a-core) 22%, var(--se-color-surface)); }
+.dark .kl-half-b { background: color-mix(in oklab, var(--team-b-core) 22%, var(--se-color-surface)); }
+.kl-half[data-super] { box-shadow: inset 0 0 0 2.5px var(--se-color-gold); }
+.kl-ln { position: absolute; display: block; background: var(--kl-line); }
+.kl-ln-lobby { left: 0; right: 0; height: 1px; background: color-mix(in oklab, var(--se-color-ink) 13%, transparent); }
+.kl-ln-top { top: 10%; }
+.kl-ln-bot { top: 90%; }
+.kl-ln-v { top: 10%; bottom: 10%; width: 1.5px; }
+.kl-ln-mid { top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; background: color-mix(in oklab, var(--se-color-ink) 40%, transparent); }
+/* baulk 3.75 m and bonus 4.75 m from the midline in a 6.5 m half */
+.kl-baulk-a { left: calc(50% - 50% * 0.577); }
+.kl-baulk-b { left: calc(50% + 50% * 0.577); }
+.kl-bonus-a { left: calc(50% - 50% * 0.73); }
+.kl-bonus-b { left: calc(50% + 50% * 0.73); }
+.kl-ln-bonus { width: 0; background: none; border-left: 1.5px dashed color-mix(in oklab, var(--se-color-ink) 22%, transparent); }
+.kl-ln-bonus[data-live] { border-left: 2px dashed color-mix(in oklab, var(--se-color-ink) 55%, transparent); }
+
+.kl-tok { --kl-core: var(--team-a-core); --kl-on: var(--team-a-on); position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: var(--kl-core); box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--kl-on) 65%, var(--kl-core)), 0 1px 2px color-mix(in oklab, var(--se-color-shadow) 18%, transparent); }
+.kl-tok-b { --kl-core: var(--team-b-core); --kl-on: var(--team-b-on); }
+.kl-raider { position: absolute; z-index: 2; display: grid; place-items: center; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; background: var(--kl-core); color: var(--kl-on); box-shadow: 0 0 0 2px var(--se-color-surface), 0 1px 3px color-mix(in oklab, var(--se-color-shadow) 25%, transparent); }
+.kl-raider .kl-raider-mark { width: 26px; height: 19px; }
+.kl-raider[data-raiding] { box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 6px color-mix(in oklab, var(--kl-core) 40%, transparent); }
+.kl-raider[data-dod] { box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 5px var(--se-color-danger); }
+.kl-trail { position: absolute; top: calc(50% - 1px); height: 0; border-top: 2px dashed color-mix(in oklab, var(--se-color-ink) 45%, transparent); }
+.kl-trail-a { left: 50%; width: 19%; }
+.kl-trail-b { right: 50%; width: 19%; }
+
+.kl-lbl { position: absolute; z-index: 3; padding: 2px 7px; border-radius: 7px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge); font-size: 0.68rem; font-weight: 800; white-space: nowrap; }
+.kl-lbl-bonus.kl-lbl-a { top: 2%; left: calc(50% - 50% * 0.73); transform: translateX(-50%); }
+.kl-lbl-bonus.kl-lbl-b { top: 2%; left: calc(50% + 50% * 0.73); transform: translateX(-50%); }
+.kl-lbl-super { bottom: 3%; background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); box-shadow: none; }
+.kl-lbl-super.kl-lbl-a { left: 4%; }
+.kl-lbl-super.kl-lbl-b { right: 4%; }
+.kl-lbl-raider { top: calc(50% + 24px); }
+.kl-lbl-raider.kl-lbl-a { left: 69%; transform: translateX(-50%); }
+.kl-lbl-raider.kl-lbl-b { left: 31%; transform: translateX(-50%); }
+.kl-raider[data-dod] ~ .kl-lbl-raider { background: var(--se-color-danger-soft); color: var(--se-color-danger); box-shadow: none; }
+.kl-lbl-next { top: calc(50% + 22px); }
+.kl-lbl-next.kl-lbl-a { left: 45%; transform: translateX(-50%); }
+.kl-lbl-next.kl-lbl-b { left: 55%; transform: translateX(-50%); }
+
+.kl-court-legend { display: flex; justify-content: space-between; gap: 8px; margin: 6px 24px 0; }
+.kl-cl { display: grid; grid-template-columns: auto 1fr; column-gap: 5px; align-items: baseline; font-size: 0.82rem; font-weight: 700; }
+.kl-cl b { grid-row: span 2; font: 800 1.6rem/1 var(--kl-num); }
+.kl-cl small { grid-column: 2; color: var(--kl-ink-2); font-size: 0.72rem; font-weight: 650; }
+.kl-cl-b { text-align: right; grid-template-columns: 1fr auto; }
+.kl-cl-b b { grid-column: 2; grid-row: 1 / span 2; }
+.kl-cl-b small { grid-column: 1; }
+
+/* big moment over the court */
+.kl-moment {
+  --kit-underline: var(--team-a-line);
+  position: absolute; inset: 22px 34px; z-index: 5; display: grid; place-content: center; justify-items: center; gap: 4px;
+  padding: 10px 14px; border-radius: 18px; text-align: center;
+  background: color-mix(in oklab, var(--se-color-surface) 95%, transparent); box-shadow: inset 0 0 0 1px var(--kl-edge), 0 4px 18px color-mix(in oklab, var(--se-color-shadow) 14%, transparent);
+}
+.kl-moment-b { --kit-underline: var(--team-b-line); }
+.kl-moment h2 { font: 850 2.1rem/1.05 var(--se-font-display); letter-spacing: -0.03em; margin-bottom: 6px; }
+.kl-moment p { margin: 0; font-size: 0.84rem; font-weight: 650; line-height: 1.3; max-width: 260px; }
+.kl-moment-who { display: inline-flex; align-items: center; gap: 6px; font-size: 1rem !important; font-weight: 800 !important; }
+.kl-moment-who b { font: 800 1.5rem/1 var(--kl-num); }
+.kl-moment .kl-moment-lead { margin-top: 4px; padding: 3px 10px; border-radius: 999px; background: var(--se-color-surface-warm); font-weight: 800; }
+.kl-burst { width: 120px; height: 26px; margin-bottom: -6px; fill: none; stroke: var(--kit-underline); stroke-width: 2.4; stroke-linecap: round; }
+.kl-court-wrap[data-moment] .kl-tok, .kl-court-wrap[data-moment] .kl-raider, .kl-court-wrap[data-moment] .kl-lbl { opacity: 0.35; }
+@media (prefers-reduced-motion: no-preference) { .kl-moment { animation: kl-pop 380ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; } }
+@keyframes kl-pop { from { opacity: 0; transform: scale(0.92); } }
+
+/* last raid in words */
+.kl-last-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; margin-top: 8px; }
+.kl-raid-chip { --kl-core: var(--team-a-core); --kl-on: var(--team-a-on); display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--kl-core); color: var(--kl-on); }
+.kl-raid-chip.kl-tok-b { --kl-core: var(--team-b-core); --kl-on: var(--team-b-on); }
+.kl-raid-chip .kl-raider-mark { width: 24px; height: 18px; }
+.kl-last-text b { display: block; font-size: 1.05rem; font-weight: 850; letter-spacing: -0.01em; }
+.kl-last-text p { margin: 2px 0 0; color: var(--se-color-ink); font-size: 0.86rem; line-height: 1.35; }
+.kl-last-text .kl-last-extra { color: var(--kl-ink-2); font-weight: 650; }
+.kl-last-score { display: grid; justify-items: end; font: 800 1.4rem/1 var(--kl-num); font-variant-numeric: tabular-nums; }
+.kl-last-score small { font: 700 0.68rem var(--se-font-sans); color: var(--kl-ink-2); margin-bottom: 2px; }
+
+/* recent raids strip */
+.kl-recent { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; margin: 0; padding: 0; list-style: none; }
+.kl-rr { position: relative; display: grid; place-items: center; height: 40px; border-radius: 11px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge); }
+.kl-rr b { font: 800 0.95rem/1 var(--kl-num); }
+.kl-rr .kl-dot { position: absolute; top: 4px; left: 4px; width: 7px; height: 7px; }
+.kl-rr[data-scorer='a'] { box-shadow: inset 0 0 0 1px var(--kl-edge), inset 0 -3px 0 var(--team-a-core); }
+.kl-rr[data-scorer='b'] { box-shadow: inset 0 0 0 1px var(--kl-edge), inset 0 -3px 0 var(--team-b-core); }
+.kl-rr[data-big] { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
+
+/* result */
+.kl-result h2 { --kit-underline: var(--sport-line); font: 850 1.7rem/1.1 var(--se-font-display); letter-spacing: -0.02em; margin: 4px 0 14px; }
+.kl-result-halves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.kl-result-halves span { display: grid; padding: 8px 10px; border-radius: 14px; background: var(--se-color-surface-warm); }
+.kl-result-halves small { color: var(--kl-ink-2); font-size: 0.72rem; font-weight: 750; }
+.kl-result-halves b { font: 800 1.35rem/1.1 var(--kl-num); }
+.kl-mini-break { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.kl-mini-break th, .kl-mini-break td { padding: 7px 4px; text-align: right; border-top: 1px solid var(--kl-edge); }
+.kl-mini-break thead th { border-top: 0; color: var(--kl-ink-2); font-size: 0.74rem; font-weight: 750; }
+.kl-mini-break th[scope='row'], .kl-mini-break thead th:first-child { text-align: left; font-weight: 700; }
+.kl-mini-break td { font: 800 1.1rem/1 var(--kl-num); }
+.kl-turns ul { margin: 6px 0 0; padding: 0; list-style: none; }
+.kl-turns li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--kl-edge); font-size: 0.88rem; }
+.kl-turns li:first-child { border-top: 0; }
+.kl-turns small { color: var(--kl-ink-2); font-weight: 650; }
+.kl-turns strong { font: 800 1.05rem/1 var(--kl-num); }
+
+/* =================================================================== STORY */
+
+.kl-stakes { padding: 8px 12px 10px; }
+.kl-stakes .kl-raidbar { margin: 0; padding: 0; box-shadow: none; background: none; }
+.kl-stakes ul { margin: 6px 0 0; padding: 0 0 0 16px; font-size: 0.84rem; font-weight: 650; line-height: 1.35; }
+.kl-stakes li + li { margin-top: 2px; }
+
+.kl-line { padding: 10px 14px 12px; border-radius: 20px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kl-edge), var(--kl-soft); }
+.kl-line-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.kl-line-team { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 1rem; font-weight: 800; }
+.kl-line-b { justify-content: flex-end; }
+.kl-line-score { font: 800 2.7rem/1 var(--kl-num); font-variant-numeric: tabular-nums; }
+.kl-line-score i { font-style: normal; margin: 0 6px; color: var(--kl-ink-2); }
+.kl-line-meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; color: var(--kl-ink-2); font-size: 0.82rem; font-weight: 700; }
+.kl-line-status b, .kl-line-status span { color: var(--se-color-ink); }
+.kl-now { display: inline-flex; align-items: center; gap: 6px; }
+.kl-now::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--team-a-core); }
+.kl-now-b::before { background: var(--team-b-core); }
+
+.kl-banner { --kit-underline: var(--team-a-line); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; margin-top: 10px; padding: 12px 14px; border-radius: 18px; background: var(--se-color-gold-soft); color: var(--se-color-ink); }
+.kl-banner-b { --kit-underline: var(--team-b-line); }
+.kl .kl-banner-t { font-family: var(--se-font-display); font-size: 1.6rem; font-weight: 850; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 4px; }
+.kl-banner-pts { display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 800; }
+.kl-banner-pts b { font-family: var(--kl-num); font-size: 1.5rem; font-weight: 800; }
+.kl-banner-lead { grid-column: 1 / -1; margin: 2px 0 0; color: var(--se-color-gold-ink); font-size: 0.84rem; font-weight: 700; line-height: 1.3; }
+
+.kl-legend { display: inline-flex; gap: 10px; color: var(--kl-ink-2); font-size: 0.72rem; font-weight: 700; }
+.kl-legend span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.kl-sw { width: 10px; height: 10px; border-radius: 3px; background: var(--team-a-core); }
+.kl-sw-b { background: var(--team-b-core); }
+.kl-chart-svg { display: block; width: 100%; height: auto; touch-action: pan-y; font-family: var(--se-font-sans); }
+.kl-grid line { stroke: color-mix(in oklab, var(--se-color-ink) 8%, transparent); stroke-width: 1; }
+.kl-grid text, .kl-axis { fill: var(--kl-ink-2); font-size: 8.5px; font-weight: 650; text-anchor: end; }
+.kl-axis { text-anchor: start; }
+.kl-axis-end { text-anchor: end; }
+.kl-zero { stroke: color-mix(in oklab, var(--se-color-ink) 45%, transparent); stroke-width: 1; }
+.kl-ht line { stroke: color-mix(in oklab, var(--se-color-ink) 30%, transparent); stroke-dasharray: 3 3; }
+.kl-ht text { fill: var(--kl-ink-2); font-size: 8.5px; font-weight: 800; text-anchor: middle; }
+.kl-area-a { fill: color-mix(in oklab, var(--team-a-core) 18%, transparent); }
+.kl-area-b { fill: color-mix(in oklab, var(--team-b-core) 18%, transparent); }
+.kl-lead { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.kl-lead-a { stroke: var(--team-a-core); }
+.kl-lead-b { stroke: var(--team-b-core); }
+.kl-fill-a { fill: var(--team-a-core); }
+.kl-fill-b { fill: var(--team-b-core); }
+.kl-mark circle { stroke: var(--se-color-surface); stroke-width: 2; }
+.kl-tagbg { fill: var(--se-color-surface); stroke: var(--kl-edge); }
+.kl-tagbg-superTackle { fill: var(--se-color-gold-soft); stroke: none; }
+.kl-mark text { fill: var(--se-color-ink); font-size: 8px; font-weight: 850; text-anchor: middle; }
+.kl-mark-superTackle text { fill: var(--se-color-gold-ink); }
+.kl-cross { stroke: color-mix(in oklab, var(--se-color-ink) 35%, transparent); stroke-width: 1; }
+.kl-seldot { stroke: var(--se-color-surface); stroke-width: 2; }
+.kl-livedot { opacity: 0.85; }
+@media (prefers-reduced-motion: no-preference) { .kl-livedot { animation: kl-pulse 1.4s ease-in-out infinite; } }
+.kl-readout { display: grid; grid-template-columns: auto auto 1fr auto; align-items: baseline; gap: 8px; margin: 4px 0 0; padding-top: 7px; border-top: 1px solid var(--kl-edge); font-size: 0.82rem; }
+.kl-readout span { color: var(--kl-ink-2); font-weight: 650; }
+.kl-readout .kl-readout-t { color: var(--se-color-ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kl-readout strong { font: 800 1rem/1 var(--kl-num); }
+
+.kl-feed ol { margin: 0; padding: 0; list-style: none; }
+.kl-feed li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--kl-edge); }
+.kl-feed li:first-child { border-top: 0; }
+.kl-feed li[data-fresh] { --kit-underline: var(--se-color-gold); }
+.kl-mt { --kl-core: var(--se-color-ink); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--se-color-surface-warm); font: 850 0.72rem/1 var(--se-font-sans); }
+.kl-mt-a { box-shadow: inset 0 -3px 0 var(--team-a-core); }
+.kl-mt-b { box-shadow: inset 0 -3px 0 var(--team-b-core); }
+.kl-mt-superTackle, .kl-mt-allOut { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
+.kl-mt-doOrDieLost { background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+.kl-feed-t { display: grid; min-width: 0; }
+.kl-feed-t b { font-size: 0.9rem; font-weight: 800; }
+.kl-feed-t small, .kl-feed-r small { color: var(--kl-ink-2); font-size: 0.74rem; font-weight: 650; }
+.kl-feed-r { display: grid; justify-items: end; }
+.kl-feed-r strong { font: 800 1.05rem/1.1 var(--kl-num); font-variant-numeric: tabular-nums; }
+
+.kl-break-head { display: flex; justify-content: space-between; color: var(--kl-ink-2); font-size: 0.78rem; font-weight: 750; }
+.kl-break-head span { display: inline-flex; align-items: center; gap: 6px; }
+.kl-break table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.kl-break th { width: 30%; padding: 0 4px; color: var(--se-color-ink); font-size: 0.78rem; font-weight: 750; text-align: center; }
+.kl-bv { position: relative; padding: 9px 0 11px; }
+.kl-bv b { font: 800 1.3rem/1 var(--kl-num); }
+.kl-bv small { display: block; min-height: 0.9em; color: var(--kl-ink-2); font-size: 0.68rem; font-weight: 650; }
+.kl-bv-b { text-align: right; }
+.kl-bar { position: absolute; bottom: 4px; height: 5px; border-radius: 999px; background: var(--team-a-core); }
+.kl-bv-a .kl-bar { right: 0; }
+.kl-bv-b .kl-bar { left: 0; background: var(--team-b-core); }
+.kl-break tr + tr td, .kl-break tr + tr th { border-top: 1px solid var(--kl-edge); }
+
+.kl-matrow { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 10px; padding: 4px 0; }
+.kl-matname { font-size: 0.86rem; font-weight: 750; }
+.kl-pips { display: flex; gap: 6px; }
+.kl-pipd { --kl-core: var(--team-a-core); width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--kl-core); opacity: 0.5; }
+.kl-pipd-b { --kl-core: var(--team-b-core); }
+.kl-pipd[data-on] { background: var(--kl-core); opacity: 1; }
+.kl-matn { font: 800 1.3rem/1 var(--kl-num); }
+
+.kl-halves-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kl-halfcol { display: grid; align-content: start; gap: 2px; padding: 10px; border-radius: 14px; background: var(--se-color-surface-warm); }
+.kl-halfcol small { color: var(--kl-ink-2); font-size: 0.72rem; font-weight: 750; }
+.kl-halfcol b { font: 800 1.5rem/1.05 var(--kl-num); }
+.kl-halfcol > span { font-size: 0.8rem; font-weight: 700; }
+.kl-halfcol ul { margin: 4px 0 0; padding: 0 0 0 14px; color: var(--kl-ink-2); font-size: 0.74rem; font-weight: 600; line-height: 1.4; }
+
+/* short phones (360×640): the scorebug and court give up height so the last raid stays in view */
+@media (max-height: 700px) {
+  .kl-top { padding: 8px 0 6px; }
+  .kl-bug-team { min-height: 86px; padding: 7px 11px; }
+  .kl-bug-score { font-size: 2.9rem; }
+  .kl-cues { margin-top: 6px; }
+  .kl-court-wrap { margin-top: 8px; }
+  .kl-mat { height: 176px; }
+  .kl-tok { width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+  .kl-court-legend { margin-top: 2px; }
+  .kl-cl b { font-size: 1.35rem; }
+  .kl-last-text p { font-size: 0.82rem; }
+  .kl-card { margin-top: 8px; padding: 10px 12px; }
+}
+
+/* dark: chart marks step to the engine's lighter `hi` team colours (validated ≥3:1 on the dark
+   surface with the dataviz palette check); fills stay translucent cores */
+.dark .kl-lead-a { stroke: var(--team-a-hi); }
+.dark .kl-lead-b { stroke: var(--team-b-hi); }
+.dark .kl-fill-a, .dark .kl-sw-a { fill: var(--team-a-hi); background: var(--team-a-hi); }
+.dark .kl-fill-b, .dark .kl-sw-b { fill: var(--team-b-hi); background: var(--team-b-hi); }
+.dark .kl-area-a { fill: color-mix(in oklab, var(--team-a-hi) 22%, transparent); }
+.dark .kl-area-b { fill: color-mix(in oklab, var(--team-b-hi) 22%, transparent); }
