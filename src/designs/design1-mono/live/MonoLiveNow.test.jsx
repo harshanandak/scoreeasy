@@ -18,6 +18,16 @@ function mount() { return render(<MemoryRouter><Routes><Route path="/" element={
 beforeEach(() => { mock.feed = []; mock.cloud = true; mock.error = false; mock.query.mockClear(); vi.useFakeTimers(); vi.setSystemTime(112000); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 describe('Live now', () => {
+  it.each([undefined, 'First to 21', '40 min match'])('handles a goals match format of %s without sets', (periodLabel) => {
+    mock.feed = [{ ...item('one', 'football'), scorecardKind: 'goals', periodLabel }];
+    mount();
+    const row = screen.getByRole('link', { name: /Reds versus Blues/ });
+    expect(row.textContent).not.toMatch(/sets/i);
+    expect(within(row).queryByLabelText(/sets/i)).not.toBeInTheDocument();
+    if (periodLabel) expect(within(row).getByText(periodLabel)).toBeInTheDocument();
+    else expect(within(row).queryByText(/First to|\d+ min match/i)).not.toBeInTheDocument();
+  });
+
   it('reads only the public feed and renders its scores, period, identity and team colours', () => {
     mock.feed = [item('one')];
     const { container } = mount();

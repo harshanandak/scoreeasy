@@ -692,6 +692,13 @@ export default function MonoQuickMatch() {
   // effect's dependency array doesn't hit a temporal-dead-zone ReferenceError.
   const tracksPointWinnerServe = sport === 'volleyball' || sport === 'badminton';
 
+  // Quick goals boards track the whole match, not individual halves or quarters.
+  const goalsPeriodLabel = format.mode === 'points'
+    ? `First to ${format.target}`
+    : format.mode === 'timed'
+      ? `${format.timeLimit / 60} min match`
+      : sportConfig?.name;
+
   // Live broadcast: build the latest point/undo snapshot from the COMMITTED state
   // (a single tap can end a set / chase / open the next unit, which React applies
   // asynchronously). No-op until the bar has run goLive — point/undo return null
@@ -723,6 +730,7 @@ export default function MonoQuickMatch() {
         setsB: 0,
         setScores: [],
         currentUnit: 1,
+        periodLabel: goalsPeriodLabel,
       };
     } else if (format.type === 'best-of') {
       const completed = sets.filter((s) => s.completed);
@@ -753,7 +761,7 @@ export default function MonoQuickMatch() {
     } else {
       liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
     }
-  }, [scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name]);
+  }, [scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name, goalsPeriodLabel]);
 
   // Finalize ordering (R1): finalizeMatch runs SYNCHRONOUSLY inside the scoring
   // handlers at auto-completion, so the winning point's broadcast effect runs AFTER
@@ -2427,7 +2435,7 @@ export default function MonoQuickMatch() {
         const last = gScoreHistory.at(-1);
         const undoHint = last ? `back to ${halves.map(h => Math.max(0, h.score - (last.team === h.team ? last.value : 0))).join('–')}` : '';
         const boardScore = halves.map(h => h.score).join('–');
-        const status = isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? `First to ${format.target}` : '';
+        const status = isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? goalsPeriodLabel : '';
         const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}{status ? ` · ${status}` : ''}</span><strong>{boardScore}</strong></div>;
         return <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
@@ -2436,7 +2444,7 @@ export default function MonoQuickMatch() {
           <TeamGoalsBoard
             sportConfig={sportConfig}
             title={`${team1Name} v ${team2Name}`}
-            subtitle={`${isTimedMode ? `${timeLimit / 60} min match · ` : ''}${goalsDrawAllowed ? 'Draws allowed' : 'No draws'}`}
+            subtitle={`${isTimedMode ? `${goalsPeriodLabel} · ` : ''}${goalsDrawAllowed ? 'Draws allowed' : 'No draws'}`}
             colourStyle={teamColourStyle} halves={halves}
             clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
             status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}

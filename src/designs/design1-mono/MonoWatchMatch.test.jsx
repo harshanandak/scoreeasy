@@ -135,6 +135,45 @@ afterEach(() => {
 });
 
 describe('MonoWatchMatch', () => {
+  it.each(['football', 'kabaddi', 'basketball', 'hockey', 'cricket'])('never invents sets or a numbered period for an unlabelled %s snapshot', (sport) => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, sport, scorecardKind: sport === 'cricket' ? 'cricket' : 'goals' };
+    mocks.meta = { ...META, sport };
+    const { container } = renderAt();
+    expect(container.textContent).not.toMatch(/sets/i);
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    expect(container.textContent).not.toMatch(/sets/i);
+    const period = within(screen.getByRole('region', { name: 'Match stats' })).getByText(sport === 'cricket' ? 'Period' : 'Match format').parentElement;
+    expect(period).toHaveTextContent('—');
+    expect(period).not.toHaveTextContent('#1');
+  });
+
+  it.each(['First to 21', '40 min match'])('shows the goals match format %s in the scorebug and stats without sets', (periodLabel) => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, periodLabel };
+    mocks.meta = { ...META, sport: 'football' };
+    const { container } = renderAt();
+    const bug = screen.getByRole('banner', { name: 'Match scorebug' });
+    expect(within(bug).getByText(periodLabel)).toBeInTheDocument();
+    expect(bug.querySelector('[aria-live]')).toHaveTextContent(periodLabel);
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    const stats = screen.getByRole('region', { name: 'Match stats' });
+    expect(within(stats).getByText('Match format').parentElement).toHaveTextContent(periodLabel);
+    expect(within(stats).queryByText('Period')).not.toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/sets/i);
+  });
+
+  it('keeps the sets fallback and numbered period for a sets sport', () => {
+    mocks.snapshot = { ...VOLLEY_SNAPSHOT, periodLabel: undefined };
+    mocks.meta = META;
+    renderAt();
+    expect(within(screen.getByRole('banner', { name: 'Match scorebug' })).getByText('1–0 sets')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    const stats = screen.getByRole('region', { name: 'Match stats' });
+    expect(within(stats).getByText('Sets')).toBeInTheDocument();
+    expect(within(stats).getByText('Period')).toBeInTheDocument();
+    expect(within(stats).queryByText('Match format')).not.toBeInTheDocument();
+    expect(within(stats).getByText('#2')).toBeInTheDocument();
+  });
+
   it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('shows the missing-snapshot unavailable state for a direct %s live link', (sport) => {
     mocks.snapshot = null;
     const missing = renderAt();
@@ -211,7 +250,8 @@ describe('MonoWatchMatch', () => {
     mocks.snapshot = GOALS_SNAPSHOT; // status 'live'
     mocks.meta = { ...META, sport: 'football' };
     mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
-    renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
+    const { container } = renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
+    expect(container.textContent).not.toMatch(/sets/i);
 
     const card = screen.getByRole('region', { name: 'Line score' });
     expect(within(card).getByText('3')).toBeInTheDocument();
