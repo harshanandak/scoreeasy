@@ -3,7 +3,7 @@
 // only stores it in the quick-match draft, migrates the old +1/+2 draft, groups engine undo
 // records into the one action the scorer sees, and words engine output for the board.
 import {
-  assertState, createKabaddiState, pause, resume, startHalf, startRaid, teamTotal, timeUp, undo,
+  applyRaid, assertState, createKabaddiState, pause, preview, resume, startHalf, startRaid, teamTotal, timeUp, undo,
 } from './kabaddiEngine.js';
 
 export const KABADDI_MATCH_VERSION = 1;
@@ -82,6 +82,38 @@ export function startNextRaid(state, { id, atMs }) {
   let next = resumeIfPaused(state, atMs);
   if (next.phase === 'ready') next = startHalf(next, { atMs });
   return startRaid(next, { id, atMs });
+}
+
+/**
+ * The state a raid ruling applies to. A running raid (started on the whistle) is used as it is.
+ * With no raid running the ruling is one implicit raid at `atMs` (the engine starts and resolves it
+ * atomically, without a raid clock), after leaving any undo pause and starting the half if needed.
+ */
+function rulingBase(state, atMs) {
+  if (state.activeRaid) return state;
+  let next = resumeIfPaused(state, atMs);
+  if (next.phase === 'ready') next = startHalf(next, { atMs });
+  return next;
+}
+
+const rulingFor = (base, event, atMs) => ({
+  ...event, expectedRevision: base.revision, ...(base.activeRaid ? { raidId: base.activeRaid.id } : { atMs }),
+});
+
+/** Apply one raid ruling, on the running raid or as an implicit raid from rest. */
+export function applyQuickRaid(state, event, atMs) {
+  const base = rulingBase(state, atMs);
+  return applyRaid(base, rulingFor(base, event, atMs));
+}
+
+/** Engine preview of the same ruling, or null when the engine rejects it (a disabled key). */
+export function previewQuickRaid(state, event, atMs) {
+  try {
+    const base = rulingBase(state, atMs);
+    return preview(base, rulingFor(base, event, atMs));
+  } catch {
+    return null;
+  }
 }
 
 export function startSecondHalf(state, atMs) {

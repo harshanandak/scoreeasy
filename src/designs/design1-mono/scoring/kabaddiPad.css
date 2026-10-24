@@ -1,0 +1,505 @@
+/* Kabaddi raid pad (KabaddiRaidPad.jsx, exploration s1). The shell (header, Undo bar, options
+   sheet) is the shared BoardShell. Top: a dense status strip (score, clocks, mat as number + pips,
+   do-or-die / super-tackle flags). Bottom ~60%: the tape (what is entered) and a keypad whose keys
+   never move between raids, then the one bar that starts and confirms a raid.
+   Round-3 weight: hairline edges, little shadow, numbers first. Colours come only from the
+   team-colour engine (--team-*), the sport identity (--sport-*) and the kit tokens; text on a
+   team colour always uses that colour's own -on ink. The hand-drawn layer appears only on the
+   big-moment banner. */
+
+.rp {
+  --rp-edge: color-mix(in oklab, var(--se-color-ink) 16%, transparent);
+  --rp-soft: 0 1px 2px color-mix(in oklab, var(--se-color-shadow) 10%, transparent);
+  --rp-ink-2: var(--sb-ink-2);
+  --rp-raid-core: var(--team-a-core);
+  --rp-raid-on: var(--team-a-on);
+  --rp-def-core: var(--team-b-core);
+  --rp-def-on: var(--team-b-on);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.rp[data-raider='b'] {
+  --rp-raid-core: var(--team-b-core);
+  --rp-raid-on: var(--team-b-on);
+  --rp-def-core: var(--team-a-core);
+  --rp-def-on: var(--team-a-on);
+}
+
+@media (min-width: 768px) {
+  .rp { height: calc(100dvh - 56px); }
+}
+
+.rp :where(.rp-key, .rp-mini, .rp-clear, .rp-start, .rp-cancel, .rp-banner, .rp-tape-last) {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rp :where(.rp-key, .rp-mini, .rp-clear, .rp-start, .rp-cancel, .rp-banner, .rp-tape-last):focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.rp-mark {
+  display: inline-block;
+  width: 30px;
+  height: 24px;
+  background: currentColor;
+  mask: var(--sport-mark) center / contain no-repeat;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.rp-mark-small { width: 20px; height: 16px; flex: none; }
+
+.rp-dot {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--team-a-core);
+  box-shadow: inset 0 0 0 1px var(--rp-edge);
+}
+
+.rp-dot-b { background: var(--team-b-core); }
+
+/* ---- status strip ---- */
+.rp-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 2px 14px 8px;
+}
+
+.rp-scores {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: 'l c r';
+  align-items: stretch;
+  gap: 8px;
+}
+
+.rp-team {
+  --rp-core: var(--team-a-core);
+  --rp-on: var(--team-a-on);
+  grid-area: l;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 12px 9px;
+  border: 1px solid var(--rp-edge);
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: var(--rp-soft), inset 4px 0 0 var(--rp-core);
+}
+
+.rp-team-b { --rp-core: var(--team-b-core); --rp-on: var(--team-b-on); }
+.rp-team-right { grid-area: r; align-items: flex-end; box-shadow: var(--rp-soft), inset -4px 0 0 var(--rp-core); }
+
+.rp-team-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: inset 0 0 0 1.5px var(--rp-core);
+}
+
+/* the raiding side: its name chip fills with the team colour, with the raider mark */
+.rp-team[data-raiding] .rp-team-name {
+  background: var(--rp-core);
+  color: var(--rp-on);
+  box-shadow: none;
+}
+
+.rp-score {
+  font: 800 clamp(2.6rem, min(15vw, 8.2vh), 4.4rem)/0.95 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.rp-mat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-team-right .rp-mat { flex-direction: row-reverse; }
+
+.rp-mat b { font: 800 1.15rem/1 var(--sb-num); }
+
+.rp-pips { display: inline-flex; gap: 3px; }
+.rp-team-right .rp-pips { flex-direction: row-reverse; }
+
+.rp-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--team-a-core);
+  box-shadow: inset 0 0 0 1px var(--rp-edge);
+}
+
+.rp-pip-b { background: var(--team-b-core); }
+
+.rp-pip-out {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--se-color-ink) 40%, transparent);
+}
+
+.rp-centre {
+  grid-area: c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  gap: 2px;
+}
+
+.rp-halfclock {
+  font: 800 1.45rem/1 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-centre-label, .rp-halfclock-small {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--rp-ink-2);
+}
+
+.rp-halfclock-small { font-family: var(--se-font-sans); }
+
+/* while a raid runs the raid clock is the biggest thing in the strip */
+.rp-raidclock {
+  display: grid;
+  place-items: center;
+  grid-auto-flow: column;
+  align-items: baseline;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 4px solid var(--rp-raid-core);
+  background: var(--se-color-surface);
+  font: 800 2.7rem/1 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  padding-top: 18px;
+}
+
+.rp-raidclock small { font-size: 1rem; margin-left: 1px; }
+.rp-raidclock-zero { border-color: var(--se-color-danger); color: var(--se-color-danger); }
+
+/* ---- flags: loud, the words carry them (never colour alone) ---- */
+.rp-flags {
+  grid-column: 1 / -1;
+  justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 34px;
+  align-items: center;
+}
+
+.rp-flag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rp-flag-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+.rp-flag-dod::before { content: '!'; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 7px; border-radius: 50%; background: var(--se-color-surface); color: var(--se-color-danger); font-size: 0.8rem; }
+.rp-flag-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+.rp-flag-quiet { background: var(--se-color-surface); color: var(--sb-ink); box-shadow: inset 0 0 0 1px var(--rp-edge); text-transform: none; letter-spacing: 0; font-weight: 750; }
+
+.rp-tape-raid { padding-left: 4px; }
+.rp .rp-cancel {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--rp-edge);
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+/* ---- the big-moment banner: over the strip only, never over the keys; tap or wait to dismiss ---- */
+.rp .rp-banner {
+  --rp-core: var(--team-a-core);
+  --rp-on: var(--team-a-on);
+  position: absolute;
+  inset: 0 10px 4px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 2px solid var(--se-color-ink);
+  border-radius: 20px;
+  background: var(--rp-core);
+  color: var(--rp-on);
+  box-shadow: var(--se-ctl-shadow);
+  text-align: center;
+  animation: rp-pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+  --kit-underline: var(--rp-on);
+}
+
+.rp .rp-banner-b { --rp-core: var(--team-b-core); --rp-on: var(--team-b-on); }
+.rp-banner-h { font-size: clamp(1.7rem, 5.6vh, 2.5rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.05; }
+.rp-banner-l { font-size: 1.05rem; font-weight: 700; }
+.rp-banner-s { font: 800 1.15rem/1.2 var(--sb-num); font-variant-numeric: tabular-nums; }
+.rp-banner-m { font-size: 0.86rem; font-weight: 700; }
+
+@keyframes rp-pop {
+  from { transform: translateY(-8px) scale(0.96); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ---- the tape: the pad's display. Fixed height so the keys under it never move ---- */
+.rp-tape {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  flex: none;
+  margin: 0 14px;
+  padding: 0 4px 0 14px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  box-shadow: inset 0 0 0 1px var(--rp-edge);
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.rp-tape-entry {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rp .rp-tape-last { width: calc(100% - 28px); border: 0; text-align: left; padding-right: 14px; }
+.rp-tape-score { font: 800 1.1rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+.rp-tape-hint, .rp-tape-note { margin-top: 0; margin-bottom: 0; color: var(--rp-ink-2); font-weight: 650; padding-right: 14px; }
+.rp-tape-note { color: var(--sb-ink); }
+.rp-tape-keys { padding: 4px; gap: 4px; background: var(--se-color-surface); }
+
+.rp .rp-mini {
+  flex: 1;
+  height: 48px;
+  min-width: 48px;
+  border: 1.5px solid var(--rp-edge);
+  border-radius: 11px;
+  background: var(--se-color-surface);
+  font: 800 1.35rem/1 var(--sb-num);
+  white-space: nowrap;
+}
+
+.rp .rp-mini small { font: 650 0.7rem/1 var(--se-font-sans); }
+.rp .rp-mini-text { font: 750 0.88rem/1.1 var(--se-font-sans); padding: 0 6px; }
+.rp .rp-mini[aria-pressed='true'] { border: 2px solid var(--se-color-ink); background: var(--rp-raid-core); color: var(--rp-raid-on); }
+.rp .rp-mini:disabled { border-style: dashed; color: var(--rp-ink-2); background: transparent; }
+
+.rp .rp-clear {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid var(--rp-edge);
+  border-radius: 11px;
+  background: var(--se-color-surface);
+  font: 800 1.2rem/1 var(--sb-num);
+}
+
+/* ---- the pad: three rows that never move. Up = the raider scores, down = the defence scores ---- */
+.rp-pad {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 14px 0;
+}
+
+.rp-row {
+  flex: 1;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rp-row-touch { flex: 1.3; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.rp .rp-key {
+  --rp-core: var(--rp-raid-core);
+  --rp-on: var(--rp-raid-on);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 6px;
+  border: 1.5px solid var(--rp-edge);
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: var(--rp-soft), inset 0 4px 0 var(--rp-core);
+  transition: transform 60ms ease;
+}
+
+.rp .rp-key-def { --rp-core: var(--rp-def-core); --rp-on: var(--rp-def-on); box-shadow: var(--rp-soft), inset 0 -4px 0 var(--rp-core); }
+.rp .rp-key-flat { box-shadow: var(--rp-soft); }
+
+.rp-key-label { font: 800 clamp(1.7rem, 4.6vh, 2.3rem)/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+.rp-key-wide .rp-key-label { font: 800 1.2rem/1.1 var(--se-font-sans); }
+.rp-key-sub { max-width: 100%; overflow: hidden; font-size: 0.78rem; font-weight: 650; color: var(--rp-ink-2); white-space: nowrap; text-overflow: ellipsis; }
+
+.rp .rp-key:active:not(:disabled) { transform: scale(0.97); }
+
+.rp .rp-key[aria-pressed='true'] {
+  border: 2.5px solid var(--se-color-ink);
+  background: var(--rp-core);
+  color: var(--rp-on);
+  box-shadow: none;
+}
+
+.rp .rp-key[aria-pressed='true'] .rp-key-sub { color: inherit; }
+.rp .rp-key-flat[aria-pressed='true'] { background: var(--se-color-ink); color: var(--se-color-inverse); }
+
+/* a key the engine rules out stays in place, dashed and quiet, and says why */
+.rp .rp-key:disabled {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--se-color-ink) 32%, transparent);
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+.rp .rp-key:disabled .rp-key-label { color: color-mix(in oklab, var(--se-color-ink) 38%, var(--se-color-canvas)); }
+
+/* ---- the one bar: Start raid (team colour) -> Confirm with the read-back (Go) ---- */
+.rp-bar { flex: none; padding: 10px 14px 0; }
+
+.rp .rp-go,
+.rp .rp-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 68px;
+  padding: 6px 16px;
+  text-align: center;
+}
+
+.rp .rp-start {
+  position: relative;
+  border: var(--se-ctl-border) solid var(--se-color-ink);
+  border-radius: var(--se-ctl-radius);
+  background: var(--rp-raid-core);
+  color: var(--rp-raid-on);
+  box-shadow: var(--se-ctl-shadow);
+  font-weight: 800;
+}
+
+.rp .rp-start:active { transform: translate(2px, 2px); box-shadow: var(--se-ctl-shadow-press); }
+.rp-start .rp-mark { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); }
+
+.rp-go-head { font-size: 1.08rem; font-weight: 850; line-height: 1.2; }
+.rp-go-tail { font-size: 0.84rem; font-weight: 650; line-height: 1.25; }
+
+.rp .rp-confirm:disabled { background: var(--se-color-surface); color: var(--rp-ink-2); border-style: dashed; border-color: color-mix(in oklab, var(--se-color-ink) 45%, transparent); box-shadow: none; }
+
+.rp .sb-bar { padding-top: 10px; }
+
+/* ---- half time / full time: the summary takes the pad's place ---- */
+.rp-summary {
+  flex: 1;
+  min-height: 0;
+  margin: 8px 14px 0;
+  padding: 14px 14px 10px;
+  border: 1px solid var(--rp-edge);
+  border-radius: 18px;
+  background: var(--se-color-surface);
+  overflow: auto;
+}
+
+.rp-summary-h { margin: 0 0 8px; font-size: clamp(1.3rem, 3.6vh, 1.6rem); font-weight: 850; letter-spacing: -0.015em; }
+.rp-summary-note { margin: 8px 0 0; font-size: 0.86rem; font-weight: 650; color: var(--rp-ink-2); }
+
+.rp-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.rp-table th, .rp-table td { padding: 7px 4px; border-top: 1px solid var(--sb-hair); text-align: right; font-size: 0.92rem; }
+.rp-table thead th { border-top: 0; font-weight: 800; white-space: nowrap; }
+.rp-table tbody th { text-align: left; font-weight: 650; color: var(--rp-ink-2); }
+.rp-table td { font: 800 1.05rem/1.2 var(--sb-num); }
+.rp-total th, .rp-total td { font-weight: 850; color: var(--sb-ink) !important; font-size: 1.25rem !important; }
+.rp-half-row th, .rp-half-row td { border-top-style: dashed; }
+.rp-half-row + .rp-half-row th, .rp-half-row + .rp-half-row td { border-top: 0; }
+.rp-quiet-row th { font-size: 0.78rem !important; }
+.rp-quiet-row td { font: 700 0.86rem/1.2 var(--se-font-sans) !important; color: var(--rp-ink-2); white-space: nowrap; }
+
+/* ---- raid log (⋯ sheet) ---- */
+.rp-log-title { padding: 12px 16px 4px; margin: 0; font-weight: 750; }
+.rp-log { list-style: none; margin: 0; padding: 0 0 6px; }
+.rp-log li { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--sb-hair); }
+.rp-log-main { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 0.88rem; }
+.rp-log-main small { color: var(--rp-ink-2); }
+.rp-log strong { font: 800 1.1rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+
+/* short phones (360×640): the strip compacts, the keys keep ≥48px */
+@media (max-height: 700px) {
+  .rp .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: 2px; }
+  .rp-strip { padding-bottom: 6px; gap: 5px 8px; }
+  .rp-team { padding: 5px 10px 6px; border-radius: 14px; }
+  .rp-score { font-size: 2.5rem; }
+  .rp-raidclock { width: 66px; height: 66px; font-size: 2.1rem; padding-top: 12px; border-width: 3px; }
+  .rp-flags, .rp-flag { min-height: 30px; }
+  .rp-flag { font-size: 0.76rem; padding: 0 9px; }
+  .rp-tape { height: 52px; }
+  .rp-pad { gap: 6px; padding-top: 6px; }
+  .rp-row { gap: 6px; }
+  .rp-key-sub { font-size: 0.72rem; }
+  .rp-bar { padding-top: 8px; }
+  .rp .rp-go, .rp .rp-start { min-height: 60px; }
+  .rp .sb-bar { padding-top: 8px; padding-bottom: 12px; }
+  .rp .sb-undo, .rp .sb-more { min-height: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp .rp-banner { animation: none; }
+  .rp .rp-key:active, .rp .rp-start:active { transform: none; }
+}
