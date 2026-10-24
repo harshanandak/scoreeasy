@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { loadInProgressMatches } from '../../../utils/appEntry';
 import { deleteInProgressMatch, inProgressSummary } from '../../../utils/inProgressMatch';
@@ -8,17 +9,18 @@ import { KitSection, SportBadge } from '../kit/KitParts';
 import { relativeDay } from '../kit/dates';
 import './inProgressMatches.css';
 
-export default function InProgressMatches() {
+/* `onChange` lets a host screen (Home) recount after the list re-reads or a row is deleted. */
+export default function InProgressMatches({ onChange = undefined }) {
   const navigate = useNavigate();
   const [matches, setMatches] = useState(loadInProgressMatches);
   const [pending, setPending] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
-    const refresh = () => setMatches(loadInProgressMatches());
+    const refresh = () => { setMatches(loadInProgressMatches()); onChange?.(); };
     window.addEventListener('storage', refresh);
     window.addEventListener('focus', refresh);
     return () => { window.removeEventListener('storage', refresh); window.removeEventListener('focus', refresh); };
-  }, []);
+  }, [onChange]);
   if (!matches.length) return null;
   const confirmDelete = () => {
     if (!deleteInProgressMatch(pending.match)) {
@@ -28,6 +30,7 @@ export default function InProgressMatches() {
     setPending(null);
     setError('');
     setMatches(loadInProgressMatches());
+    onChange?.();
   };
   return <section aria-labelledby="in-progress-matches-title">
     <KitSection id="in-progress-matches-title" title="In progress" />
@@ -60,3 +63,4 @@ export default function InProgressMatches() {
     {pending && <AppScoringConfirmDialog title="Delete match?" message={`Delete ${pending.summary.title}${pending.summary.score ? `, ${pending.summary.score}` : ''}? This can't be undone.`} confirmLabel="Delete" cancelLabel="Keep match" tone="danger" onCancel={() => setPending(null)} onConfirm={confirmDelete} />}
   </section>;
 }
+InProgressMatches.propTypes = { onChange: PropTypes.func };

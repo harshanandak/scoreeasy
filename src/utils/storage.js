@@ -416,6 +416,11 @@ export const loadCompletedQuickMatches = () => {
   return loadQuickMatches().filter(m => m.status === 'completed');
 };
 
+/** The records loadCompletedQuickMatches would return, from a raw store, without writing back. */
+export const selectCompletedQuickMatches = (stored) => {
+  return normalizedQuickMatches(stored).filter(m => m.status === 'completed');
+};
+
 export const replaceCompletedQuickMatches = (completedMatches) => {
   const activeMatches = loadQuickMatches().filter(m => m.status !== 'completed');
   return saveQuickMatches([...activeMatches, ...completedMatches]);

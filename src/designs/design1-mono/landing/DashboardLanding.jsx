@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
 import { getActiveSessions } from '../../../utils/universalStorage';
@@ -13,6 +13,8 @@ import { relativeDay } from '../kit/dates';
 import ErrorBoundary from '../../../components/ErrorBoundary';
 import { loadInProgressMatches } from '../../../utils/appEntry';
 import InProgressMatches from '../components/InProgressMatches';
+import { displayScore, quickMatchScore } from '../kit/historyModel';
+import { finishedNewestFirst, homeCountLine, matchTime, quickStartSports } from './homeModel';
 import {
   Chevron, CoachArrow, GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge, SportTile,
 } from '../kit/KitParts';
@@ -20,12 +22,14 @@ import {
 /* Home (Kit, plan 2026-10-22 §9 S1). One hero per screen and one Go: for a returning scorer the
    hero is the last match in its team colours with Rematch as the Go; on first run it is the
    "play your first match" prompt, with a hand-drawn arrow at its Go. Nothing here truncates:
-   long names wrap. */
+   long names wrap. Home v2 (2026-10-24): while matches are in progress there is no last-match hero;
+   the one Go is "Start a match", sticky above the dock, and Recent lists the last 3 finished. */
 
 const QM_KEY = 'se_quickmatches';
 const DAY_MS = 864e5;
 const WEEK_MS = 7 * DAY_MS;
 const RECENT_LIMIT = 4;
+const RECENT_ROWS = 3;
 // Empty-state featured tier: the first few sports in focus order (src/models/sportFocus.js).
 const DEFAULT_FEATURED_SPORT_COUNT = 3;
 
@@ -80,11 +84,6 @@ export function scorePair(qm) {
     return [`${qm.team1Score.runs}/${qm.team1Score.wickets}`, `${qm.team2Score?.runs ?? 0}/${qm.team2Score?.wickets ?? 0}`];
   }
   return ['0', '0'];
-}
-
-function matchTime(qm) {
-  const time = new Date(qm.completedAt || qm.date || qm.createdAt).getTime();
-  return Number.isFinite(time) ? time : null;
 }
 
 export { relativeDay };
@@ -195,14 +194,17 @@ LastMatchHero.propTypes = {
   navigate: PropTypes.func.isRequired,
 };
 
+/* The History row: the score as History lists it (cricket runs/wickets), the winner bold, and the
+   same spoken label ("Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details"). */
 function MatchRow({ qm, onOpen }) {
   const sportName = getSportById(qm.sport)?.name || 'Custom';
-  const [score1, score2] = scorePair(qm);
+  const score = displayScore(quickMatchScore(qm));
   const team1Won = !isDrawToken(qm.winner) && qm.winner === qm.team1;
   const team2Won = !isDrawToken(qm.winner) && qm.winner === qm.team2;
   const when = relativeDay(matchTime(qm));
+  const label = [`${qm.team1} ${score} ${qm.team2}`, qm.winner ? getWinnerLabel(qm.winner) : null, sportName, when].filter(Boolean).join(', ');
   return (
-    <button type="button" className="kit-row" onClick={onOpen}>
+    <button type="button" className="kit-row" onClick={onOpen} aria-label={`${label}. View details`}>
       <SportBadge sportId={qm.sport} />
       <span className="kit-row-text">
         <span className="kit-row-title">
@@ -210,7 +212,7 @@ function MatchRow({ qm, onOpen }) {
         </span>
         <span className="kit-row-sub">{[sportName, when].filter(Boolean).join(' · ')}</span>
       </span>
-      <span className="kit-row-score">{`${score1}–${score2}`}</span>
+      <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>
       <Chevron />
     </button>
   );
@@ -256,26 +258,32 @@ function ExistingUserDashboard({
   recentMatches,
   weekCount,
   playedCount,
+  onInProgressChange,
 }) {
   const hasActive = sessions.length > 0;
+  const hasInProgress = inProgressMatches.length > 0;
   const displayName = getDisplayName(user);
-  const hero = !hasActive ? recentMatches[0] : null;
-  const listed = hero ? recentMatches.slice(1) : recentMatches;
-  const heroSport = hero ? getSportById(hero.sport) : null;
-  const heroColours = hero ? deriveTeamColours(hero.team1Color, hero.team2Color) : null;
+  // While a match is unfinished, starting the next one is the Go; the last result moves to Recent.
+  const hero = !hasActive && !hasInProgress ? recentMatches[0] : null;
+  const listed = hero ? recentMatches.slice(1, 1 + RECENT_ROWS) : recentMatches.slice(0, RECENT_ROWS);
+  // The underline and wash keep following the last match even while its card gives way to Start.
+  const lead = !hasActive ? recentMatches[0] : null;
+  const heroSport = lead ? getSportById(lead.sport) : null;
+  const heroColours = lead ? deriveTeamColours(lead.team1Color, lead.team2Color) : null;
 
-  /* Featured tier: real favourites first; else sports they recently played; else no tier at all. */
-  const favoriteIds = user?.favoriteGames || [];
-  const favoriteSports = allSportsList.filter((sp) => favoriteIds.includes(sp.id));
-  const recentSports = [...new Set(recentMatches.map((qm) => qm.sport).filter(Boolean))]
-    .map((id) => getSportById(id))
-    .filter(Boolean);
-  const featuredSports = (favoriteSports.length > 0 ? favoriteSports : recentSports).slice(0, 6);
-  const featuredLabel = favoriteSports.length > 0 ? 'Your favourites' : 'Recently played';
+  /* Featured tier: real favourites first; else sports they recently played (finished, then in
+     progress); else no tier at all. */
+  const { sports: featuredSports, label: featuredLabel } = quickStartSports({
+    favoriteIds: user?.favoriteGames || [],
+    finished: recentMatches,
+    inProgress: inProgressMatches,
+  });
 
-  const scored = weekCount > 0
-    ? `${weekCount} ${weekCount === 1 ? 'match' : 'matches'} scored this week`
-    : `${playedCount} ${playedCount === 1 ? 'match' : 'matches'} scored so far`;
+  const scored = homeCountLine({
+    finishedCount: playedCount,
+    weekCount,
+    inProgressCount: inProgressMatches.filter((match) => match.kind !== 'tournament').length,
+  });
 
   return (
     <div className="kit-screen" data-screen="home" style={heroSport ? { '--kit-underline': sportIdentity(heroSport.id)?.line } : undefined}>
@@ -284,9 +292,17 @@ function ExistingUserDashboard({
         <AccountControl cloudAuthAvailable={cloudAuthAvailable} isAuthenticated={isAuthenticated} user={user} navigate={navigate} />
       </KitTop>
       <Greeting name={displayName} fallback="Welcome back." />
-      <p className="kit-sub">{scored}</p>
+      {scored && <p className="kit-sub">{scored}</p>}
 
-      <InProgressMatches />
+      <InProgressMatches onChange={onInProgressChange} />
+
+      {hasInProgress && (
+        <div className="kit-home-cta">
+          <button type="button" className="se-go" onClick={() => navigate('/play')}>
+            Start a match <GoArrow />
+          </button>
+        </div>
+      )}
 
       {hasActive && (
         <section aria-labelledby="active-sessions-title">
@@ -331,6 +347,15 @@ function ExistingUserDashboard({
           />
           <div className="kit-list">
             {listed.map((qm) => <MatchRow key={qm.id} qm={qm} onOpen={() => navigate('/history')} />)}
+          </div>
+        </section>
+      )}
+
+      {listed.length === 0 && !hero && hasInProgress && (
+        <section aria-labelledby="recent-title">
+          <KitSection id="recent-title" title="Recent" />
+          <div className="kit-list">
+            <p className="kit-empty-note">Finished matches will appear here</p>
           </div>
         </section>
       )}
@@ -397,6 +422,7 @@ ExistingUserDashboard.propTypes = {
   })).isRequired,
   weekCount: PropTypes.number.isRequired,
   playedCount: PropTypes.number.isRequired,
+  onInProgressChange: PropTypes.func.isRequired,
 };
 
 /* ─── First run (zero saved data) ───
@@ -489,9 +515,8 @@ function readDashboardState() {
   const sessions = getActiveSessions();
   const allTournaments = collectTournamentsBySport(getSportsList());
 
-  const savedMatches = loadData(QM_KEY, []);
-  const qm = Array.isArray(savedMatches) ? savedMatches.filter((match) => match?.status !== 'in-progress') : [];
-  qm.sort((a, b) => (matchTime(b) ?? 0) - (matchTime(a) ?? 0));
+  // Finished only, by History's rule: the count and Recent never include an unfinished record.
+  const qm = finishedNewestFirst(loadData(QM_KEY, []));
   const now = Date.now();
 
   return {
@@ -513,7 +538,9 @@ export default function DashboardLanding() {
   const [visible, setVisible] = useState(false);
   /* Lazy initializer: read every localStorage slice once, synchronously, before
      first paint — so the dashboard never flashes empty then re-renders populated. */
-  const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount, weekCount }] = useState(readDashboardState);
+  const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount, weekCount }, setDashboard] = useState(readDashboardState);
+  /* The In progress list re-reads on focus/storage and after a delete; Home recounts with it. */
+  const refreshDashboard = useCallback(() => setDashboard(readDashboardState()), []);
 
   useEffect(() => {
     /* Mount-only fade-in trigger; data is already loaded via lazy init above. */
@@ -554,6 +581,7 @@ export default function DashboardLanding() {
           recentMatches={recentMatches}
           weekCount={weekCount}
           playedCount={playedCount}
+          onInProgressChange={refreshDashboard}
         />
       )}
     </div>
