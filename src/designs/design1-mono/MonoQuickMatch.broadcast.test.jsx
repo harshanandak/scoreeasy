@@ -87,6 +87,29 @@ beforeEach(() => {
 });
 
 describe('MonoQuickMatch live broadcast wiring', () => {
+  it.each(['football', 'kabaddi', 'basketball', 'hockey'])('broadcasts the known %s match label on scoring and undo', (sport) => {
+    seedGoals();
+    ctx.sport = sport;
+    ctx.draft.sport = sport;
+    ctx.draft.format = { mode: 'points', target: 10 };
+    render(<MonoQuickMatch />);
+    const name = sport === 'football' || sport === 'hockey' ? 'Add 1 to Reds' : 'Add +1 for Reds';
+    expect(screen.getByText('First to 10')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, periodLabel: 'First to 10' });
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(live.undo.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 0, periodLabel: 'First to 10' });
+  });
+
+  it('broadcasts the timed goals board match label without inventing a half', () => {
+    seedGoals();
+    ctx.draft.format = { mode: 'timed', timeLimit: 600 };
+    render(<MonoQuickMatch />);
+    expect(screen.getByText('10 min match · Draws allowed')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot.periodLabel).toBe('10 min match');
+  });
+
   it('scopes a completed lock to its match when another sport draft hydrates in the same mount', () => {
     vi.useFakeTimers();
     try {

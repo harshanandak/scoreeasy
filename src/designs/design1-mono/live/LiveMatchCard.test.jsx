@@ -20,6 +20,14 @@ const setsItem = {
 };
 
 describe('LiveMatchCard', () => {
+  it.each([undefined, '2nd Half'])('handles a goals period label of %s without a sets fallback', (periodLabel) => {
+    const goals = { ...setsItem, sport: 'football', scorecardKind: 'goals', setsA: 0, setsB: 0, periodLabel };
+    const { container } = render(<MemoryRouter><LiveMatchCard item={goals} /></MemoryRouter>);
+    expect(container.textContent).not.toMatch(/sets/i);
+    expect(container.querySelector('.live-card-period')?.textContent).toBe(periodLabel);
+    expect(container.querySelectorAll('.live-card-sets')).toHaveLength(0);
+  });
+
   it('links to the token watch page and shows teams, score, period + LIVE badge', () => {
     render(<MemoryRouter><LiveMatchCard item={setsItem} /></MemoryRouter>);
     const link = screen.getByRole('link', { name: /Reds versus Blues/i });

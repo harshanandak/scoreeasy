@@ -135,6 +135,41 @@ afterEach(() => {
 });
 
 describe('MonoWatchMatch', () => {
+  it.each(['football', 'kabaddi', 'basketball', 'hockey', 'cricket'])('never invents sets or a numbered period for an unlabelled %s snapshot', (sport) => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, sport, scorecardKind: sport === 'cricket' ? 'cricket' : 'goals' };
+    mocks.meta = { ...META, sport };
+    const { container } = renderAt();
+    expect(container.textContent).not.toMatch(/sets/i);
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    expect(container.textContent).not.toMatch(/sets/i);
+    const period = within(screen.getByRole('region', { name: 'Match stats' })).getByText('Period').parentElement;
+    expect(period).toHaveTextContent('—');
+    expect(period).not.toHaveTextContent('#1');
+  });
+
+  it('shows a supplied goals period in the scorebug and stats without sets', () => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, currentUnit: 2, periodLabel: '2nd Half' };
+    mocks.meta = { ...META, sport: 'football' };
+    const { container } = renderAt();
+    const bug = screen.getByRole('banner', { name: 'Match scorebug' });
+    expect(within(bug).getByText('2nd Half')).toBeInTheDocument();
+    expect(bug.querySelector('[aria-live]')).toHaveTextContent('2nd Half');
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    expect(within(screen.getByRole('region', { name: 'Match stats' })).getByText('2nd Half')).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/sets/i);
+  });
+
+  it('keeps the sets fallback and numbered period for a sets sport', () => {
+    mocks.snapshot = { ...VOLLEY_SNAPSHOT, periodLabel: undefined };
+    mocks.meta = META;
+    renderAt();
+    expect(within(screen.getByRole('banner', { name: 'Match scorebug' })).getByText('1–0 sets')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    const stats = screen.getByRole('region', { name: 'Match stats' });
+    expect(within(stats).getByText('Sets')).toBeInTheDocument();
+    expect(within(stats).getByText('#2')).toBeInTheDocument();
+  });
+
   it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('shows the missing-snapshot unavailable state for a direct %s live link', (sport) => {
     mocks.snapshot = null;
     const missing = renderAt();

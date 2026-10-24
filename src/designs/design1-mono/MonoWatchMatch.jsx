@@ -175,7 +175,9 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   const winner = isFinal ? winnerName(snapshot, nameA, nameB) : null;
   const periodLine = snapshot.periodLabel
     ? snapshot.periodLabel
-    : `${snapshot.setsA}–${snapshot.setsB} sets`;
+    : getSportById(snapshot.sport)?.engine === 'sets'
+      ? `${snapshot.setsA}–${snapshot.setsB} sets`
+      : getSportById(snapshot.sport)?.name;
 
   const scoreSize = kiosk ? '3.25rem' : '2rem';
 
@@ -544,14 +546,15 @@ SnapshotSummary.propTypes = {
  * changes, biggest run, scoring rate) are tracked in scoreeasy-rvc.
  */
 function StatsPanel({ snapshot, nameA, nameB }) {
+  const hasSets = getSportById(snapshot.sport)?.engine === 'sets';
   const serving =
     snapshot.servingTeam === 'A' ? nameA : snapshot.servingTeam === 'B' ? nameB : '—';
   // Stable `id` keys — the labels embed team names, which can collide.
   const cells = [
     { id: 'a-points', label: `${nameA} points`, value: snapshot.pointsA },
     { id: 'b-points', label: `${nameB} points`, value: snapshot.pointsB },
-    { id: 'sets', label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` },
-    { id: 'period', label: 'Period', value: snapshot.periodLabel || `#${snapshot.currentUnit}` },
+    ...(hasSets ? [{ id: 'sets', label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` }] : []),
+    { id: 'period', label: 'Period', value: snapshot.periodLabel || (hasSets ? `#${snapshot.currentUnit}` : '—') },
     { id: 'serving', label: 'Serving', value: serving },
   ];
 
