@@ -20,7 +20,7 @@ import TeamColourPicker from './TeamColourPicker';
 import { useTeamColours } from './scoring/useTeamColours';
 import TeamSetsBoard from './scoring/TeamSetsBoard';
 import TeamGoalsBoard from './scoring/TeamGoalsBoard';
-import KabaddiSplitBoard from './scoring/KabaddiSplitBoard';
+import KabaddiRaidBoard from './scoring/KabaddiRaidBoard';
 import { createKabaddiMatch, matchTotals, raidSummary, restoreKabaddiMatch, withOpeningRaidTeam } from '../../utils/kabaddiQuickMatch';
 import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
@@ -2489,7 +2489,7 @@ export default function MonoQuickMatch() {
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {renderEndMatchDialog({ className: 'sb-confirm', summary })}
           {renderDiscardDialog({ className: 'sb-confirm', summary })}
-          <KabaddiSplitBoard
+          <KabaddiRaidBoard
             sportConfig={sportConfig}
             title={`${team1Name} v ${team2Name}`}
             subtitle={`2 × ${halfMinutes} min halves · Draws allowed`}
