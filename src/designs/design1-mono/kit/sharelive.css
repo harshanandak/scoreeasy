@@ -99,10 +99,10 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 440px;
-  max-height: 100%;
+  max-height: calc(100dvh - var(--se-safe-top));
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 10px 18px calc(22px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 18px calc(22px + var(--se-safe-bottom));
   border-radius: 26px 26px 0 0;
   background: var(--se-color-surface);
   box-shadow: var(--se-modal-lift);

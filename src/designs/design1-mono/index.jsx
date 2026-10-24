@@ -947,7 +947,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
         .global-nav {
           box-sizing: border-box;
           position: sticky;
-          top: 0;
+          top: var(--se-safe-top);
           z-index: 200;
           display: flex;
           align-items: center;
@@ -1074,7 +1074,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
 
         @media (max-width: 767px) {
           body.has-mobile-bottom-nav {
-            padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(82px + var(--se-safe-bottom));
           }
 
           body.has-mobile-input-focus {
@@ -1121,7 +1121,8 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
             z-index: 240;
             display: block;
             width: 100vw;
-            height: 100vh;
+            top: var(--se-safe-top);
+            height: calc(100dvh - var(--se-safe-top));
             max-width: none;
             max-height: none;
             margin: 0;
@@ -1141,16 +1142,17 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
 
           .global-mobile-menu-content {
             position: absolute;
-            right: 12px;
-            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-            left: 12px;
+            right: max(12px, var(--se-safe-right));
+            bottom: calc(12px + var(--se-safe-bottom));
+            left: max(12px, var(--se-safe-left));
             display: block;
             border: var(--se-border-standard) solid var(--se-color-line-strong);
             border-radius: var(--se-radius-card);
             background: var(--se-color-surface);
             color: var(--se-color-ink-strong);
             box-shadow: var(--se-shadow-hard);
-            overflow: hidden;
+            max-height: calc(100dvh - var(--se-safe-top) - var(--se-safe-bottom) - 24px);
+            overflow-y: auto;
           }
 
           .global-mobile-menu-sheet::backdrop {
@@ -1226,9 +1228,9 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
             right: 10px;
             bottom: 8px;
             left: 10px;
-            right: max(10px, env(safe-area-inset-right, 0px));
-            bottom: max(8px, env(safe-area-inset-bottom, 0px));
-            left: max(10px, env(safe-area-inset-left, 0px));
+            right: max(10px, var(--se-safe-right));
+            bottom: max(8px, var(--se-safe-bottom));
+            left: max(10px, var(--se-safe-left));
             z-index: 210;
             display: grid;
             grid-template-columns: repeat(var(--bottom-nav-count), minmax(0, 1fr));
@@ -1673,7 +1675,7 @@ export default function Design1Mono() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
+    <div className="se-app-shell min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />

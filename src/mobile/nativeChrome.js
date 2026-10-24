@@ -9,8 +9,8 @@ export async function setupNativeChrome() {
 
   if (hasNativePlugin('StatusBar')) {
     try {
-      await StatusBar.setStyle({ style: Style.Light });
-      await StatusBar.setBackgroundColor({ color: '#fafafa' });
+      await StatusBar.setStyle({ style: document.documentElement.classList.contains('dark') ? Style.Dark : Style.Light });
+      await StatusBar.setBackgroundColor({ color: getComputedStyle(document.documentElement).getPropertyValue('--se-color-canvas').trim() || '#fafafa' });
       result.statusBar = 'configured';
     } catch {
       result.statusBar = 'failed';

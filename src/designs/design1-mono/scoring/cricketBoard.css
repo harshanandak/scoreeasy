@@ -18,7 +18,7 @@
   --cricket-motif: var(--team-b-motif);
   --cricket-scrim: var(--team-b-scrim);
 }
-.cricket-board .crb { max-width: 520px; min-height: 100dvh; gap: 8px; padding: 0 0 calc(10px + env(safe-area-inset-bottom, 0px)); }
+.cricket-board .crb { max-width: 520px; min-height: calc(100dvh - var(--se-safe-top)); gap: 8px; padding: 0 0 calc(10px + var(--se-safe-bottom)); }
 .cricket-board button { min-width: 48px; min-height: 48px; }
 .cricket-board .sb-top { padding-inline: 2px; padding-bottom: 4px; min-height: 66px; }
 .cricket-board .sb-title small { white-space: normal; }
