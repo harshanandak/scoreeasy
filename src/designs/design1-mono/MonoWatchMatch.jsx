@@ -546,7 +546,8 @@ SnapshotSummary.propTypes = {
  * changes, biggest run, scoring rate) are tracked in scoreeasy-rvc.
  */
 function StatsPanel({ snapshot, nameA, nameB }) {
-  const hasSets = getSportById(snapshot.sport)?.engine === 'sets';
+  const engine = getSportById(snapshot.sport)?.engine;
+  const hasSets = engine === 'sets';
   const serving =
     snapshot.servingTeam === 'A' ? nameA : snapshot.servingTeam === 'B' ? nameB : '—';
   // Stable `id` keys — the labels embed team names, which can collide.
@@ -554,7 +555,7 @@ function StatsPanel({ snapshot, nameA, nameB }) {
     { id: 'a-points', label: `${nameA} points`, value: snapshot.pointsA },
     { id: 'b-points', label: `${nameB} points`, value: snapshot.pointsB },
     ...(hasSets ? [{ id: 'sets', label: 'Sets', value: `${snapshot.setsA}–${snapshot.setsB}` }] : []),
-    { id: 'period', label: 'Period', value: snapshot.periodLabel || (hasSets ? `#${snapshot.currentUnit}` : '—') },
+    { id: 'period', label: engine === 'goals' ? 'Match format' : 'Period', value: snapshot.periodLabel || (hasSets ? `#${snapshot.currentUnit}` : '—') },
     { id: 'serving', label: 'Serving', value: serving },
   ];
 

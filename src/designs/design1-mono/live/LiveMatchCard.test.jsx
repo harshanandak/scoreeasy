@@ -20,7 +20,7 @@ const setsItem = {
 };
 
 describe('LiveMatchCard', () => {
-  it.each([undefined, '2nd Half'])('handles a goals period label of %s without a sets fallback', (periodLabel) => {
+  it.each([undefined, 'First to 21', '40 min match'])('handles a goals match format of %s without a sets fallback', (periodLabel) => {
     const goals = { ...setsItem, sport: 'football', scorecardKind: 'goals', setsA: 0, setsB: 0, periodLabel };
     const { container } = render(<MemoryRouter><LiveMatchCard item={goals} /></MemoryRouter>);
     expect(container.textContent).not.toMatch(/sets/i);

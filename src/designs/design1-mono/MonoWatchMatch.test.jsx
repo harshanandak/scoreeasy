@@ -142,20 +142,22 @@ describe('MonoWatchMatch', () => {
     expect(container.textContent).not.toMatch(/sets/i);
     fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
     expect(container.textContent).not.toMatch(/sets/i);
-    const period = within(screen.getByRole('region', { name: 'Match stats' })).getByText('Period').parentElement;
+    const period = within(screen.getByRole('region', { name: 'Match stats' })).getByText(sport === 'cricket' ? 'Period' : 'Match format').parentElement;
     expect(period).toHaveTextContent('—');
     expect(period).not.toHaveTextContent('#1');
   });
 
-  it('shows a supplied goals period in the scorebug and stats without sets', () => {
-    mocks.snapshot = { ...GOALS_SNAPSHOT, currentUnit: 2, periodLabel: '2nd Half' };
+  it.each(['First to 21', '40 min match'])('shows the goals match format %s in the scorebug and stats without sets', (periodLabel) => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, periodLabel };
     mocks.meta = { ...META, sport: 'football' };
     const { container } = renderAt();
     const bug = screen.getByRole('banner', { name: 'Match scorebug' });
-    expect(within(bug).getByText('2nd Half')).toBeInTheDocument();
-    expect(bug.querySelector('[aria-live]')).toHaveTextContent('2nd Half');
+    expect(within(bug).getByText(periodLabel)).toBeInTheDocument();
+    expect(bug.querySelector('[aria-live]')).toHaveTextContent(periodLabel);
     fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
-    expect(within(screen.getByRole('region', { name: 'Match stats' })).getByText('2nd Half')).toBeInTheDocument();
+    const stats = screen.getByRole('region', { name: 'Match stats' });
+    expect(within(stats).getByText('Match format').parentElement).toHaveTextContent(periodLabel);
+    expect(within(stats).queryByText('Period')).not.toBeInTheDocument();
     expect(container.textContent).not.toMatch(/sets/i);
   });
 
@@ -167,6 +169,8 @@ describe('MonoWatchMatch', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
     const stats = screen.getByRole('region', { name: 'Match stats' });
     expect(within(stats).getByText('Sets')).toBeInTheDocument();
+    expect(within(stats).getByText('Period')).toBeInTheDocument();
+    expect(within(stats).queryByText('Match format')).not.toBeInTheDocument();
     expect(within(stats).getByText('#2')).toBeInTheDocument();
   });
 
@@ -246,7 +250,8 @@ describe('MonoWatchMatch', () => {
     mocks.snapshot = GOALS_SNAPSHOT; // status 'live'
     mocks.meta = { ...META, sport: 'football' };
     mocks.paginated = { results: [], status: 'Exhausted', loadMore: vi.fn(), isLoading: false };
-    renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
+    const { container } = renderAt('ABC123', '?kiosk=1'); // kiosk renders the scorecard directly
+    expect(container.textContent).not.toMatch(/sets/i);
 
     const card = screen.getByRole('region', { name: 'Line score' });
     expect(within(card).getByText('3')).toBeInTheDocument();
