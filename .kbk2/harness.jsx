@@ -4,8 +4,9 @@
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
 import KabaddiScorer from '../src/designs/design1-mono/scoring/KabaddiScorerBoard';
+import KabaddiOneTap from '../src/designs/design1-mono/scoring/KabaddiOneTapBoard';
 import { useTeamColours } from '../src/designs/design1-mono/scoring/useTeamColours';
-import { buildEnd, buildRest } from './fixture';
+import { buildEnd, buildOpen, buildRest } from './fixture';
 import '../src/index.css';
 import '../src/designs/design1-mono/mono.css';
 
@@ -17,8 +18,10 @@ Date.now = () => NOW;
 // Time is frozen, so the board's 1 s clock tick has nothing to redraw; skip it to keep the page still.
 window.setInterval = () => 0;
 
+const r3 = params.get('v') === 'r3';
 const named = s.startsWith('names');
-const match = s === 'end' ? buildEnd(NOW, { named }) : buildRest(NOW, { named });
+const open = s.startsWith('open');
+const match = s === 'end' ? buildEnd(NOW, { named }) : open ? buildOpen(NOW, { named }) : buildRest(NOW, { named });
 const walks = {
   touched: ['Touched'],
   readback: ['Touched', '2'],
@@ -26,14 +29,24 @@ const walks = {
   undo: ['Tackled', 'Confirm', 'Undo last action'],
   'names-touched': ['Touched', '#11', '#21'],
   'names-tackled': ['Tackled'],
+  // round 3 (v=r3): one tap scores
+  tap1: ['+1'],
+  'open-bonus': ['Bonus'],
+  'open-picker': ['3+'],
+  'names-tap1': ['+1'],
+  menu: ['Match options'],
+  'super-r3': ['Tackled'],
 };
 
 function App() {
   const colourStyle = useTeamColours(undefined, undefined, 'kabaddi');
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
-      <KabaddiScorer initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
-        onFinish={() => {}} onDiscard={() => {}} />
+      {r3
+        ? <KabaddiOneTap initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
+          nameWindowMs={null} onFinish={() => {}} onDiscard={() => {}} />
+        : <KabaddiScorer initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
+          onFinish={() => {}} onDiscard={() => {}} />}
     </div>
   );
 }
@@ -84,5 +97,5 @@ window.__audit = () => {
   }
   return { s, w: innerWidth, h: innerHeight, scrolls: document.documentElement.scrollHeight > innerHeight + 1, docH: document.documentElement.scrollHeight,
     barBottom: Math.round(document.querySelector('.sb-bar').getBoundingClientRect().bottom), small, minContrast: +min.toFixed(2), fails, gradientText,
-    line: document.querySelector('.kb-line').textContent, last: document.querySelector('.kb-last').textContent };
+    line: document.querySelector('.kb-line, .ko-slot')?.textContent ?? '', last: document.querySelector('.kb-last, .ko-last')?.textContent ?? '' };
 };

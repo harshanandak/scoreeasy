@@ -44,3 +44,11 @@ export function buildEnd(now, { named = false } = {}) {
   m = play(m, [EV.K, ...AFTER], h2Start + 15000 + HALF2.length * 27000, 34000);
   return { ...m, state: timeUp(m.state) };
 }
+
+/** Open: early in half 1, two raids played, every mat full, so Bonus and 3+ are both legal. */
+export function buildOpen(now, { named = false } = {}) {
+  let m = createBoardMatch({ halfMs: HALF_MS, names: ['Royals', 'Strikers'], colours: [undefined, undefined], rosters: named ? ROSTERS : [[], []] });
+  const start = now - 150000;
+  m = { ...m, state: startHalf(m.state, { atMs: start }) };
+  return play(m, HALF1.slice(0, 2), start + 20000, 45000);
+}

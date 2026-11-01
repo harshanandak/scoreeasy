@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
 import { HandUnderline } from '../kit/KitParts';
-import SportIcon from '../landing/sportIcons';
+import KabaddiHeader from './KabaddiHeader';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import {
   boardView, canUndo, confirmRuling, hasRoster, lastRaidLine, liveRaids, momentOf, raiderLost, readback, rulingFor,
@@ -10,13 +10,13 @@ import {
 } from '../../../utils/kabaddiBoardModel';
 import './kabaddiScorer.css';
 
-// Kabaddi scorer, a sibling of the goals and sets boards (exploration k2, round 2, 2026-11-01). The
-// shared shell (header, Undo + More bar, options sheet) is BoardShell. On top: two compact team cards
-// with the half clock between them, then one quiet row each for who raids, the mat, the rule cues and
-// the last raid. Anchored at the bottom like the cricket scorer: the check line, one detail row that
-// fills only when the engine needs an answer, four outcome keys that never move, and Confirm. Every
-// number and every enabled key comes from the raid engine through kabaddiBoardModel; this view
-// decides nothing about the rules.
+// Kabaddi scorer, round 2 path (exploration k2, 2026-11-01): pick an outcome, answer at most one
+// detail question, read the check line, Confirm. The shared shell (header, Undo + More bar, options
+// sheet) is BoardShell; the score header, mat row and rule cues are KabaddiHeader (shared with the
+// one-tap variant). Anchored at the bottom like the cricket scorer: the check line, one detail row
+// that fills only when the engine needs an answer, four outcome keys that never move, and Confirm.
+// Every number and every enabled key comes from the raid engine through kabaddiBoardModel; this
+// view decides nothing about the rules.
 
 const EMPTY_PICK = { kind: null, bonus: false, count: null, outs: [], raider: null, more: false };
 const mmss = (ms) => {
@@ -145,62 +145,14 @@ export function KabaddiScorerBoard({
   const [optionsOpen, setOptionsOpen] = useState(false);
   const sheetId = useId();
   const style = useMemo(() => ({ ...colourStyle, ...sportIdentityVars('kabaddi') }), [colourStyle]);
-  const sides = [0, 1].map((team) => ({ team, key: team === 0 ? 'a' : 'b' }));
-  const raider = view.raidingTeam;
   const halfWord = view.phase === 'finishReview' ? 'Full time' : view.phase === 'halfTime' ? 'Half time' : view.paused ? 'Paused' : view.half === 1 ? '1st half' : '2nd half';
 
   return (
     <div className="sb kb" style={style} data-team-board="">
       <BoardHeader title={title} subtitle={subtitle} sportColour="var(--sport-core)" onFinish={onFinish} />
 
-      {/* 1. the scores: two compact team cards, the half clock between them */}
-      <div className="kb-score">
-        {sides.map(({ team, key }, i) => (
-          <div key={key} className={`kb-team kb-team-${key}${moment?.team === team ? ' kb-moment' : ''}`} style={{ order: i * 2 }}
-            aria-label={`${names[team]} ${view.totals[team]}`}>
-            <span className="kb-who">{names[team]}</span>
-            <span className="kb-big">{view.totals[team]}</span>
-          </div>
-        ))}
-        <button type="button" className="kb-clock" style={{ order: 1 }} onClick={onClock} disabled={!scoring}
-          aria-label={view.paused ? `Clock paused at ${clock}. Resume` : `${clock} left in the ${halfWord}. Pause`}>
-          <b>{clock}</b>
-          <small>{halfWord}</small>
-        </button>
-      </div>
-
-      {/* 2. who raids now and who raids next, each under its own card */}
-      {scoring && (
-        <div className="kb-row kb-raid">
-          {sides.map(({ team, key }) => (team === raider
-            ? <span key={key} className={`kb-raiding kb-raiding-${key} kb-col-${key}`}><SportIcon name="Kabaddi" size={16} strokeWidth={2} />Raiding now</span>
-            : <span key={key} className={`kb-nextraid kb-col-${key}`}>Raids next</span>))}
-          <span className="kb-raidno kb-col-mid">Raid {view.raidNumber}</span>
-        </div>
-      )}
-
-      {/* 3. players on the mat and who comes back first */}
-      <div className="kb-row kb-mat" aria-label="On the mat">
-        {sides.map(({ team, key }) => (
-          <div key={key} className={`kb-side kb-side-${key} kb-col-${key}`}>
-            <span className="kb-dots" aria-label={`${names[team]} ${view.mat[team].on} on the mat`}>
-              {Array.from({ length: 7 }, (_, i) => <i key={i} className={i < view.mat[team].on ? 'on' : ''} />)}
-              <b>{view.mat[team].on}</b>
-            </span>
-            <span className="kb-next">{view.mat[team].out.length ? <>Next in: <b>{view.mat[team].out[0].name}</b></> : 'All on the mat'}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* 4. the rule cues, in their own row */}
-      {scoring && (view.doOrDie || view.superTackleOn) && (
-        <div className="kb-cues">
-          {view.doOrDie && <em className="kb-cue kb-cue-dod" role="note">Do or die · {names[raider]}</em>}
-          {view.superTackleOn && (
-            <em className="kb-cue kb-cue-super" role="note" aria-label={`Super tackle on: ${names[1 - raider]} ${view.mat[1 - raider].on} on the mat`}>Super tackle on</em>
-          )}
-        </div>
-      )}
+      <KabaddiHeader view={view} names={names} clock={clock} halfWord={halfWord} scoring={scoring}
+        momentTeam={moment?.team} onClock={onClock} />
 
       {/* 5. the last raid, or the big moment it made */}
       <p className={`kb-last${moment ? ' kb-last-moment' : ''}`} aria-live="polite"

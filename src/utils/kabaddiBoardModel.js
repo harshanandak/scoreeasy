@@ -91,26 +91,33 @@ export const raiderLost = (entry) => Boolean(entry && entry.effects.lost[entry.r
 
 const nameList = (match, team, slots) => slots.map((slot) => playerName(match, team, slot)).join(', ');
 
+const RAIDER_OUT = { doOrDieFailure: 'Do or die lost', selfOut: 'Raider out', mixed: 'Touched, then tackled' };
+
 /** The one plain line read back before Confirm, from the engine's own record of the ruling. */
-export function readback(match, entry) {
+/** `guessed`: the players out were not picked by the scorer (one-tap, not yet named), so say how
+ *  many went out rather than echo the engine's placeholder names. */
+export function readback(match, entry, { guessed = false } = {}) {
   const names = match.state.teams.map((t) => t.name);
+  if (entry.type === 'technical') return `Technical point · ${names[entry.input.to]} +${pts(entry, entry.input.to)}`;
   const raider = entry.raidingTeam;
   const defender = 1 - raider;
   const named = (team) => hasRoster(match, team);
   const parts = [];
   if (entry.outcome === 'touch' || entry.outcome === 'bonus') {
-    parts.push(`${names[raider]} +${pts(entry, raider)}`);
+    if (entry.outcome === 'bonus') parts.push('Bonus only');
+    parts.push(`${names[raider]} +${pts(entry, raider)}${entry.outcome === 'touch' && pts(entry, raider, ['bonus']) ? ' with bonus' : ''}`);
     const lost = entry.effects.lost[defender];
     if (entry.effects.allOut.includes(defender)) parts.push(`${names[defender]} all out`);
-    else if (lost.length) parts.push(named(defender) ? `${nameList(match, defender, lost)} out` : `${names[defender]} ${lost.length} out`);
+    else if (lost.length) parts.push(named(defender) && !guessed ? `${nameList(match, defender, lost)} out` : `${names[defender]} ${lost.length} out`);
     const back = entry.effects.revived[raider];
     if (back.length) parts.push(named(raider) ? `${nameList(match, raider, back)} back` : `${names[raider]} ${back.length} back`);
   } else if (entry.outcome === 'empty') {
     parts.push('Empty raid', 'no points');
   } else {
-    const head = isSuper(entry) ? 'Super tackle' : entry.outcome === 'doOrDieFailure' ? 'Do or die lost' : 'Tackled';
+    const how = entry.outcome === 'doOrDieFailure' ? null : RAIDER_OUT[entry.outcome];
+    const head = isSuper(entry) ? (how ? `${how} · super tackle` : 'Super tackle') : RAIDER_OUT[entry.outcome] ?? 'Tackled';
     parts.push(head, `${names[defender]} +${pts(entry, defender)}`);
-    if (named(raider)) parts.push(`${nameList(match, raider, entry.effects.lost[raider])} out`);
+    if (named(raider) && !guessed) parts.push(`${nameList(match, raider, entry.effects.lost[raider])} out`);
     if (entry.effects.allOut.includes(raider)) parts.push(`${names[raider]} all out`);
     if (pts(entry, raider, ['bonus'])) parts.push(`${names[raider]} +1 bonus`);
   }
@@ -210,6 +217,71 @@ export function togglePause(match, atMs) {
 
 export function undoMatch(match) {
   return { ...match, state: undoAction(match.state) };
+}
+
+// ---- one-tap variant (round 3) ----
+
+/** The latest action still in force that scored or could have: a raid or a technical point. */
+export function lastAction(state) {
+  const undone = new Set(state.events.filter((e) => e.type === 'undo').map((e) => e.targetId));
+  return [...state.events].reverse().find((e) => ['raid', 'technical'].includes(e.type) && !undone.has(e.id)) ?? null;
+}
+
+/** A technical point between raids: the engine's own ruling, turn and raid count unchanged. */
+const technicalRuling = (team) => ({ type: 'technical', to: team, reason: 'Technical point', turnEffect: 'none' });
+
+function runTechnical(state, team, { atMs, id }) {
+  const base = baseFor(state, atMs);
+  return applyRaid(base, { ...technicalRuling(team), id, expectedRevision: base.revision });
+}
+
+export function tryTechnical(state, team, { atMs }) {
+  try {
+    return runTechnical(state, team, { atMs, id: 'preview-technical' }).events.at(-1);
+  } catch {
+    return null;
+  }
+}
+
+export function confirmTechnical(match, team, { atMs }) {
+  return { ...match, state: runTechnical(match.state, team, { atMs, id: freshId('technical') }) };
+}
+
+/** The raider-out-in-a-struggle ruling ("touched, then tackled"): the engine's mixed outcome. */
+export function touchedThenTackled(state, raider) {
+  const team = state.nextRaidTeam;
+  return { type: 'mixed', reason: 'Touched, then tackled', dismissals: [{ team, slotId: raider ?? state.mat[team][0], category: 'tackleBase' }] };
+}
+
+/**
+ * Name the players in the raid just scored, without changing a single point: undo that raid and
+ * apply the same ruling again at its original tap time (so the half clock reads exactly as before),
+ * this time with the defenders out in order (`outs`) or the raider who went out (`raider`).
+ * Only the latest action can be named; anything else returns null.
+ */
+export function renameLast(match, commit, { outs, raider }) {
+  const target = nextUndoTarget(match.state);
+  if (!target || target.id !== commit.id) return null;
+  let ruling = commit.ruling;
+  if (outs?.length) ruling = { ...ruling, count: outs.length, outsInOrder: outs };
+  if (raider && ruling.type === 'mixed') ruling = { ...ruling, dismissals: ruling.dismissals.map((d) => ({ ...d, slotId: raider })) };
+  try {
+    const state = run(undoAction(match.state), ruling, { atMs: commit.atMs, raider: raider ?? commit.raider });
+    const same = totalsOf(state).every((n, i) => n === totalsOf(match.state)[i]);
+    return same ? { ...match, state } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Undo bar label for the one-tap board: what the tap undoes and the score it goes back to. */
+export function undoLabel(state) {
+  const target = canUndo(state) ? nextUndoTarget(state) : null;
+  if (!target) return '';
+  const back = totalsOf(undoAction(state)).join('–');
+  if (target.type === 'raid') return `Raid ${target.raidNumber} · back to ${back}`;
+  if (target.type === 'technical') return `Technical · back to ${back}`;
+  return undoHint(state);
 }
 
 export { timeUp, startHalf };
