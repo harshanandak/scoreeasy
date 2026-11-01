@@ -1,4 +1,4 @@
-// Exploration harness (k2 viewer). ?view=k2|ref &s=rest|raid|moment|end &layout=tabs|scroll
+// Exploration harness (k2 viewer). ?view=k2|ref &s=rest|raid|moment|end 
 //   &tab=live|raids|stats &names=1|0 &theme=light|dark
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -51,7 +51,6 @@ if (params.get('view') === 'ref') {
       match={match}
       now={now}
       roster={params.get('names') === '0' ? null : ROSTER}
-      layout={params.get('layout') || 'tabs'}
       initialTab={params.get('tab') || 'live'}
       showMoment={stage === 'moment'}
     />
