@@ -1,20 +1,22 @@
-/* Kabaddi live viewer, k2 round 2 (KabaddiWatch.jsx). Kit look: the Live tab's canvas and wash,
-   white rounded cards on a hairline, sans labels in sentence case, team dots. The score cards and
-   the mat row are the K2 scorer's, so both screens read alike. Colour only from --se-color-* tokens
-   and the engine's --team-{a,b}-* / --sport-* vars. Hand-drawn only on the super tackle / all out card. */
+/* Kabaddi live viewer, k2 round 3 (KabaddiWatch.jsx). Kit look: the Live tab's canvas and wash, white
+   rounded cards on a hairline, sans labels in sentence case, team dots. The score strip is the K2
+   scorer's round 3 header (flat solid team cards, raider mark, centre column) with PKL's seven player
+   icons. Colour only from --se-color-* tokens and the engine's --team-{a,b}-* / --sport-* vars.
+   Hand-drawn only on the super tackle / all out titles. */
 
 .kv {
   --kv-hair: var(--se-color-line-soft);
   --kv-ink-2: var(--se-color-ink-soft);
   --kv-num: var(--se-font-num);
-  --kv-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 45%);
-  --kv-cols: minmax(0, 1fr) 84px minmax(0, 1fr);
+  --kv-cols: minmax(0, 1fr) 70px minmax(0, 1fr);
+  --kv-court-h: 156px;
+  --kv-tok: 18px;
   min-height: 100vh;
   padding-bottom: 32px;
   background: var(--se-color-canvas);
 }
 
-.kv h1, .kv h2, .kv p { margin: 0; }
+.kv h1, .kv h2, .kv h3, .kv p { margin: 0; }
 .kv .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .kv-soft { color: var(--kv-ink-2); font-weight: 600; }
 .kv-dot-a { background: var(--team-a-core); }
@@ -28,68 +30,91 @@
 .kv-status { display: inline-flex; flex: none; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 750; white-space: nowrap; }
 .kv-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
-/* ---- score bar: the scorer's two cards, clock between ---- */
-.kv-score { display: grid; grid-template-columns: var(--kv-cols); gap: 8px; }
+/* ---- score strip: the scorer's header. Two wide solid cards, a narrow centre column ---- */
+.kv-strip { display: grid; grid-template-columns: var(--kv-cols); gap: 6px; }
 .kv-team {
-  display: flex; flex-direction: column; justify-content: space-between; gap: 2px;
-  min-width: 0; min-height: 96px; padding: 10px 14px 9px; border-radius: 18px;
+  grid-row: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 10px 13px 11px; border-radius: 18px;
   box-shadow: inset 0 0 0 1px var(--kv-hair), var(--se-lift);
 }
-.kv-team-a { grid-column: 1; grid-row: 1; align-items: flex-start; background-color: var(--team-a-core); background-image: var(--kv-sheen), linear-gradient(168deg, var(--team-a-hi) 0%, var(--team-a-core) 52%, var(--team-a-lo) 100%); color: var(--team-a-on); }
-.kv-team-b { grid-column: 3; grid-row: 1; align-items: flex-end; background-color: var(--team-b-core); background-image: var(--kv-sheen), linear-gradient(168deg, var(--team-b-hi) 0%, var(--team-b-core) 52%, var(--team-b-lo) 100%); color: var(--team-b-on); }
-.kv-team-name { max-width: 100%; font-size: 0.95rem; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kv-team-score { font: 800 clamp(2.9rem, 13vw, 3.5rem)/0.9 var(--kv-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.kv-flag { padding: 2px 9px; border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 0.74rem; font-weight: 750; white-space: nowrap; }
-.kv-flag-gap { height: 22px; }
-.kv-clock { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.kv-clock b { font: 800 1.75rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
-.kv-clock small { color: var(--kv-ink-2); font-size: 0.76rem; font-weight: 650; white-space: nowrap; }
+.kv-team-a { grid-column: 1; align-items: flex-start; background: var(--team-a-core); color: var(--team-a-on); --kv-out: color-mix(in oklab, var(--team-a-core) 42%, var(--se-color-on-gold)); }
+.kv-team-b { grid-column: 3; align-items: flex-end; background: var(--team-b-core); color: var(--team-b-on); --kv-out: color-mix(in oklab, var(--team-b-core) 42%, var(--se-color-on-gold)); }
 
-/* ---- mat row: dots, count, who comes back first (the scorer's row) ---- */
-.kv-mat { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 2px 0; }
-.kv-side { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.kv-side-a { align-items: flex-start; --kv-core: var(--team-a-core); --kv-line: var(--team-a-line); }
-.kv-side-b { align-items: flex-end; text-align: right; --kv-core: var(--team-b-core); --kv-line: var(--team-b-line); }
-.kv-dots { display: inline-flex; align-items: center; gap: 4px; }
-.kv-dots i { width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--kv-line); }
-.kv-dots i.on { background: var(--kv-core); box-shadow: inset 0 0 0 1px var(--kv-hair); }
-.kv-dots b { margin-left: 4px; font: 800 1.05rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
-.kv-next { color: var(--kv-ink-2); font-size: 0.8rem; font-weight: 600; line-height: 1.3; }
+/* name bar: raider mark + name, or the Do or die pill in its place */
+.kv-name { display: flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; min-height: 24px; font-size: 0.95rem; font-weight: 800; }
+.kv-team-b .kv-name { flex-direction: row-reverse; }
+.kv-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kv-mark {
+  display: inline-block; flex: none; width: 22px; height: 18px; background: currentColor;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+}
+.kv-dod {
+  min-width: 0; padding: 2px 9px; border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-danger);
+  font-size: 0.78rem; font-style: normal; font-weight: 850; white-space: nowrap;
+}
+
+/* PKL's seven icons: bright on the mat, dark out */
+.kv-pips { display: inline-flex; gap: 2px; }
+.kv-team-b .kv-pips { flex-direction: row-reverse; }
+.kv-pips svg { width: 10px; height: 14px; fill: var(--kv-out); }
+.kv-pips svg.on { fill: currentColor; }
+.kv-pips-gap { height: 14px; }
+.kv-won { padding: 0 9px; border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 0.74rem; font-weight: 800; line-height: 16px; }
+
+.kv-score { font: 800 clamp(3.3rem, 17vw, 4.4rem)/0.88 var(--kv-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* centre: half, match clock, raid clock */
+.kv-mid { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+.kv-mid small { min-height: 1em; color: var(--kv-ink-2); font-size: 0.74rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.kv-mid b { font: 800 1.45rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
+.kv-mid .kv-raidno { margin-top: 1px; font-weight: 650; }
+.kv-rpill { padding: 3px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 850; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.kv-rpill-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kv-rpill-b { background: var(--team-b-core); color: var(--team-b-on); }
+
+/* under each card: who comes back first, or the named "off the court" moment */
+.kv-next-row { display: grid; grid-template-columns: var(--kv-cols); gap: 6px; padding-top: 8px; }
+.kv-side { min-width: 0; min-height: 20px; }
+.kv-side-a { grid-column: 1; padding-left: 4px; }
+.kv-side-b { grid-column: 3; padding-right: 4px; text-align: right; }
+.kv-next { display: block; color: var(--kv-ink-2); font-size: 0.8rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kv-next b { color: var(--se-color-ink); font-weight: 750; }
+.kv-out { display: block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 650; line-height: 1.25; }
+.kv-out b { display: block; font-size: 0.86rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kv-out-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kv-out-b { background: var(--team-b-core); color: var(--team-b-on); }
+@media (prefers-reduced-motion: no-preference) { .kv-out { animation: kv-pop 360ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; } }
+@keyframes kv-pop { from { opacity: 0; transform: scale(0.94); } }
 
-/* ---- rule cues: Kit chips, sentence case ---- */
-.kv-cues { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-top: 10px; }
-.kv-cue { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 0.82rem; font-style: normal; font-weight: 750; white-space: nowrap; }
-.kv-cue-dod { background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+/* ---- rule cue: Super tackle on, only when true ---- */
+.kv-cues { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-top: 8px; }
+.kv-cue { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; font-size: 0.8rem; font-style: normal; font-weight: 750; white-space: nowrap; }
 .kv-cue-super { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
 
 /* ---- cards ---- */
 .kv-card { box-sizing: border-box; border: 1px solid var(--kv-hair); border-radius: 22px; background: var(--se-color-surface); }
-.kv-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.kv-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .kv-card-head h2 { font: 750 1rem/1.15 var(--se-font-display); }
-.kv-card-head span { color: var(--kv-ink-2); font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 
-/* ---- raid clock ---- */
-.kv-raid { --kv-core: var(--team-a-core); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 10px 14px 12px; }
+/* ---- raid clock: who is raiding, with a track (the seconds sit in the strip) ---- */
+.kv-raid { --kv-core: var(--team-a-core); display: grid; gap: 6px; margin-top: 8px; padding: 9px 14px 11px; }
 .kv-raid-b { --kv-core: var(--team-b-core); }
 .kv-raid-t { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.92rem; font-weight: 600; }
 .kv-raid-t b { font-weight: 800; }
-.kv-raid-s { font: 800 1.5rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
-.kv-raid-s small { margin-left: 1px; font-size: 0.85rem; }
-.kv-raid-track { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: color-mix(in oklab, var(--kv-core) 14%, var(--se-color-surface)); overflow: hidden; }
+.kv-raid-track { height: 6px; border-radius: 999px; background: color-mix(in oklab, var(--kv-core) 14%, var(--se-color-surface)); overflow: hidden; }
 .kv-raid-track i { display: block; height: 100%; border-radius: 999px; background: var(--kv-core); }
 
 /* ---- tabs: the Kit segmented control ---- */
-.kv-tabs { margin-top: 14px; }
+.kv-tabs { margin-top: 12px; }
 
-.kv-body > * + * { margin-top: 12px; }
-.kv-body { padding-top: 12px; }
+.kv-body > * + * { margin-top: 10px; }
+.kv-body { padding-top: 10px; }
 .kv-body .kit-sec { margin: 4px 2px 8px; }
 .kv-body > section + section .kit-sec { margin-top: 20px; }
 
 /* ---- court: calm. Two tinted halves, the midline and baulk lines, tokens, one raider ---- */
 .kv-court-card { position: relative; padding: 8px; }
-.kv-court { position: relative; height: 156px; border-radius: 15px; overflow: hidden; }
+.kv-court { position: relative; height: var(--kv-court-h); border-radius: 15px; overflow: hidden; }
 .kv-half { position: absolute; top: 0; bottom: 0; width: 50%; }
 .kv-half-a { left: 0; background: color-mix(in oklab, var(--team-a-tint) 70%, var(--se-color-surface)); }
 .kv-half-b { right: 0; background: color-mix(in oklab, var(--team-b-tint) 70%, var(--se-color-surface)); }
@@ -102,58 +127,47 @@
 .kv-ln-mid { left: calc(50% - 1px); width: 2px; background: color-mix(in oklab, var(--se-color-ink) 32%, transparent); }
 .kv-baulk-a { left: calc(50% - 50% * 0.577); }
 .kv-baulk-b { left: calc(50% + 50% * 0.577); }
-.kv-tok { --kv-core: var(--team-a-core); position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--kv-core); box-shadow: 0 0 0 2px var(--se-color-surface); }
+.kv-tok { --kv-core: var(--team-a-core); position: absolute; width: var(--kv-tok); height: var(--kv-tok); margin: calc(var(--kv-tok) / -2) 0 0 calc(var(--kv-tok) / -2); border-radius: 50%; background: var(--kv-core); box-shadow: 0 0 0 2px var(--se-color-surface); }
 .kv-tok-b { --kv-core: var(--team-b-core); }
-.kv-raider { z-index: 1; width: 24px; height: 24px; margin: -12px 0 0 -12px; box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 5px color-mix(in oklab, var(--kv-core) 45%, transparent); }
-.kv-court[data-moment] > .kv-tok { opacity: 0.3; }
+.kv-raider { z-index: 1; width: calc(var(--kv-tok) + 6px); height: calc(var(--kv-tok) + 6px); margin: calc((var(--kv-tok) + 6px) / -2) 0 0 calc((var(--kv-tok) + 6px) / -2); box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 5px color-mix(in oklab, var(--kv-core) 45%, transparent); }
 
-/* ---- the moment card (super tackle / all out): the only hand-drawn layer ---- */
-.kv-moment {
-  --kit-underline: var(--team-a-line);
-  position: absolute; inset: 8px; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 3px;
-  padding: 8px 14px; border-radius: 15px; text-align: center;
-  background: var(--se-color-surface);
-}
-.kv-moment-b { --kit-underline: var(--team-b-line); }
-.kv-moment h2 { margin-bottom: 4px; font: 800 1.8rem/1.05 var(--se-font-display); letter-spacing: -0.03em; }
-.kv-moment p { max-width: 280px; font-size: 0.86rem; font-weight: 600; line-height: 1.3; }
-.kv-moment .kv-moment-who { display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 750; }
-.kv-moment-who b { font: 800 1.35rem/1 var(--kv-num); }
-.kv-moment .kv-moment-lead { margin-top: 3px; padding: 2px 10px; border-radius: 999px; background: var(--se-color-surface-warm); font-weight: 750; }
-@media (prefers-reduced-motion: no-preference) { .kv-moment { animation: kv-pop 360ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; } }
-@keyframes kv-pop { from { opacity: 0; transform: scale(0.94); } }
-
-/* ---- last raid ---- */
-.kv-last { padding: 12px 14px 4px; }
-.kv-last-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; margin-top: 8px; }
-.kv-last-text b { display: block; font-size: 1.05rem; font-weight: 800; }
-.kv-last-text p { margin-top: 2px; font-size: 0.88rem; line-height: 1.35; }
-.kv-last-score { font: 800 1.45rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
-.kv-all {
-  display: block; width: calc(100% + 28px); min-height: 48px; margin: 8px -14px 0; padding: 0 14px;
-  border: 0; border-top: 1px solid var(--kv-hair); background: transparent; color: var(--se-color-ink);
-  font: 700 0.9rem var(--se-font-sans); text-align: left; cursor: pointer;
-}
-.kv-all::after { content: '›'; float: right; font-size: 1.2rem; line-height: 1; color: var(--kv-ink-2); }
-
-/* ---- raids list: one Kit list card, hairline rows ---- */
-.kv-rows { margin: 0; padding: 0; list-style: none; overflow: hidden; }
-.kv-rrow { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 60px; padding: 8px 14px; }
-.kv-rows > li + li { border-top: 1px solid var(--kv-hair); }
-.kv-rrow-body { display: grid; min-width: 0; }
-.kv-rrow-body b { font-size: 0.95rem; font-weight: 750; }
-.kv-rrow-body small { color: var(--kv-ink-2); font-size: 0.8rem; font-weight: 600; }
-.kv-tag { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.72rem; font-style: normal; font-weight: 750; white-space: nowrap; }
-.kv-tag-dod { background: var(--se-color-danger-soft); color: var(--se-color-danger); }
-.kv-tag-super { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
-.kv-rrow-r { display: grid; justify-items: end; gap: 2px; }
-.kv-rrow-r b { font: 800 1.2rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
-.kv-rrow-r small { font-size: 0.8rem; font-weight: 750; }
-.kv-pts { padding: 0 7px; border-radius: 999px; }
+/* ---- raid cards: PKL's match-centre shape, Kit-quiet. Title, Raider, Tackled by / Players out, score, chips ---- */
+.kv-feed { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.kv-rc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+.kv-feed > .kv-rc { box-sizing: border-box; padding: 11px 14px 10px; border: 1px solid var(--kv-hair); border-radius: 16px; background: var(--se-color-surface); }
+.kv-rc-main { display: grid; gap: 1px; min-width: 0; }
+.kv-rc-title { display: flex; align-items: center; gap: 8px; font: 750 0.98rem/1.25 var(--se-font-display); }
+.kv-rc-title .kit-live-team-dot { flex: none; }
+.kv-rc-main p { margin: 0; padding-left: 18px; color: var(--kv-ink-2); font-size: 0.84rem; font-weight: 600; line-height: 1.35; }
+.kv-rc-main p b { color: var(--se-color-ink); font-weight: 750; }
+.kv-rc-main .kv-rc-lead { margin-top: 3px; color: var(--se-color-ink); font-weight: 700; }
+.kv-rc-r { display: grid; justify-items: end; gap: 3px; }
+.kv-rc-r b { font: 800 1.2rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
+.kv-rc-r small { font-size: 0.78rem; font-weight: 800; }
+.kv-pts { padding: 0 8px; border-radius: 999px; line-height: 18px; }
 .kv-pts-a { background: var(--team-a-core); color: var(--team-a-on); }
 .kv-pts-b { background: var(--team-b-core); color: var(--team-b-on); }
-.kv-band { padding: 8px 14px; background: var(--se-color-surface-warm); color: var(--se-color-ink); font-size: 0.82rem; font-weight: 700; text-align: center; }
-.kv-band-big { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
+.kv-rc-tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; padding-left: 18px; }
+.kv-chip, .kv-tag { padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-style: normal; font-weight: 750; line-height: 1.5; white-space: nowrap; }
+.kv-chip { background: var(--se-color-surface-warm); color: var(--se-color-ink); }
+.kv-tag-dod { background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+.kv-tag-gold { background: var(--se-color-gold-soft); color: var(--se-color-gold-ink); }
+.kv-feed > .kv-band { padding: 2px 14px; background: none; color: var(--kv-ink-2); font-size: 0.8rem; font-weight: 700; text-align: center; }
+.kv-feed > .kv-band::before, .kv-feed > .kv-band::after { content: none; }
+
+/* the hand-drawn underline sits on the title of a super tackle or an all out */
+.kv-ul-a { --kit-underline: var(--team-a-line); }
+.kv-ul-b { --kit-underline: var(--team-b-line); }
+.kv-last-moment .kit-underlined, .kv-feed .kit-underlined { font-size: 1.15rem; font-weight: 800; }
+
+/* ---- last raid (Live tab): one card; the moment title sits inside it ---- */
+.kv-last { padding: 8px 14px 12px; }
+.kv-last .kv-rc-last { margin-top: 4px; }
+.kv-all {
+  min-height: 44px; margin: 0 -8px 0 0; padding: 0 8px; border: 0; background: transparent; color: var(--se-color-ink);
+  font: 700 0.86rem var(--se-font-sans); cursor: pointer; white-space: nowrap;
+}
+.kv-all::after { content: ' ›'; color: var(--kv-ink-2); font-size: 1.05rem; }
 
 /* ---- where the points came from ---- */
 .kv-points { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; table-layout: fixed; }
@@ -184,15 +198,26 @@
 .kv-halves td b { font-weight: 800; }
 .kv-foot { padding-top: 8px; border-top: 1px solid var(--kv-hair); color: var(--kv-ink-2); font-size: 0.82rem; font-weight: 600; }
 
-/* ---- result ---- */
-.kv-result { padding: 14px 16px; }
-.kv-result h2 { font: 800 1.45rem/1.1 var(--se-font-display); letter-spacing: -0.02em; }
-.kv-result p { margin-top: 2px; color: var(--kv-ink-2); font-size: 0.88rem; font-weight: 600; }
+/* ---- result (full time): winner, final score, half by half ---- */
+.kv-result { padding: 14px 16px 14px; }
+.kv-result h2 { display: flex; align-items: center; gap: 9px; font: 800 1.45rem/1.1 var(--se-font-display); letter-spacing: -0.02em; }
+.kv-result h2 .kit-live-team-dot { width: 12px; height: 12px; flex: none; }
+.kv-result > p { margin-top: 3px; color: var(--kv-ink-2); font-size: 0.88rem; font-weight: 600; }
+.kv-result-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.kv-result-halves span { display: grid; gap: 2px; padding: 8px 12px; border-radius: 14px; background: var(--se-color-surface-warm); }
+.kv-result-halves small { color: var(--kv-ink-2); font-size: 0.76rem; font-weight: 650; }
+.kv-result-halves b { font: 800 1.25rem/1 var(--kv-num); font-variant-numeric: tabular-nums; }
 
-/* ---- short phones (360×640): the top gives up height so the court stays in view ---- */
+/* ---- short phones (360×640): the strip and court give up height so the Live tab fits ---- */
 @media (max-height: 700px) {
-  .kv-top { min-height: 56px; padding: 8px 0 6px; }
-  .kv-team { min-height: 84px; padding: 8px 12px 7px; }
-  .kv-team-score { font-size: 2.6rem; }
-  .kv-tabs { margin-top: 10px; }
+  .kv { --kv-court-h: 128px; --kv-tok: 15px; }
+  .kv-top { min-height: 52px; padding: 8px 0 6px; }
+  .kv-team { gap: 4px; padding: 8px 11px 8px; }
+  .kv-score { font-size: 3.1rem; }
+  .kv-next-row { padding-top: 6px; }
+  .kv-tabs { margin-top: 8px; }
+  .kv-body { padding-top: 8px; }
+  .kv-body > * + * { margin-top: 8px; }
+  .kv-court-card { padding: 6px; }
+  .kv-last { padding-bottom: 10px; }
 }

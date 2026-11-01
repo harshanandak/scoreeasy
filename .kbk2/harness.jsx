@@ -1,5 +1,5 @@
 // Exploration harness (k2 viewer). ?view=k2|ref &s=rest|raid|moment|end 
-//   &tab=live|raids|stats &names=1|0 &theme=light|dark
+//   &tab=live|raids|stats &names=1|0 &theme=light|dark &out=1 (off-the-court moment)
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import KabaddiWatch from '../src/designs/design1-mono/live/KabaddiWatch';
@@ -52,7 +52,7 @@ if (params.get('view') === 'ref') {
       now={now}
       roster={params.get('names') === '0' ? null : ROSTER}
       initialTab={params.get('tab') || 'live'}
-      showMoment={stage === 'moment'}
+      showOut={params.get('out') === '1'}
     />
   );
 }
