@@ -2,9 +2,10 @@
 // exactly. /.kbk2/index.html?s=<scene>&theme=light|dark. Scenes start from engine fixtures
 // (fixture.js) and reach the captured screen by tapping the real buttons.
 import { createRoot } from 'react-dom/client';
-import { act } from 'react';
+import { act, useState } from 'react';
 import KabaddiScorer from '../src/designs/design1-mono/scoring/KabaddiScorerBoard';
 import KabaddiOneTap from '../src/designs/design1-mono/scoring/KabaddiOneTapBoard';
+import KabaddiRaid from '../src/designs/design1-mono/scoring/KabaddiRaidBoard';
 import { useTeamColours } from '../src/designs/design1-mono/scoring/useTeamColours';
 import { buildEnd, buildOpen, buildRest } from './fixture';
 import '../src/index.css';
@@ -19,8 +20,11 @@ Date.now = () => NOW;
 window.setInterval = () => 0;
 
 const r3 = params.get('v') === 'r3';
+const r4 = params.get('v') === 'r4';
+let OFF = 0; // r4: ms added to the frozen wall clock, so the raid clock ring can show a running raid
+let bump = () => {};
 const named = s.startsWith('names');
-const open = s.startsWith('open');
+const open = /^(names-)?open/.test(s);
 const match = s === 'end' ? buildEnd(NOW, { named }) : open ? buildOpen(NOW, { named }) : buildRest(NOW, { named });
 const walks = {
   touched: ['Touched'],
@@ -36,13 +40,30 @@ const walks = {
   'names-tap1': ['+1'],
   menu: ['Match options'],
   'super-r3': ['Tackled'],
+  // round 4 (v=r4): Raid by, then one outcome. '@ms' moves the clock on.
+  'open-running': ['Raid by Royals', '@9000'],
+  dod: ['Raid by Royals', '@16000'],
+  'open-touch': ['Raid by Royals', '+2'],
+  'names-open-touch': ['Raid by Royals', '+2', '#9'],
+  'open-tackled': ['Raid by Royals', 'Tackled'],
+  'names-open-tackled': ['Raid by Royals', 'Tackled'],
+  'super-r4': ['Raid by Royals', 'Tackled'],
+  allout: ['Raid by Royals', '3+', '3'],
+  'names-allout': ['Raid by Royals', '3+', '3'],
+  'open-bonus-r4': ['Raid by Royals', 'Bonus'],
+  'raid-undo': ['Raid by Royals', '@4000', 'Undo last action'],
 };
 
 function App() {
   const colourStyle = useTeamColours(undefined, undefined, 'kabaddi');
+  const [, setN] = useState(0);
+  bump = () => setN((n) => n + 1);
   return (
     <div className="min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
-      {r3
+      {r4
+        ? <KabaddiRaid initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
+          now={() => NOW + OFF} onFinish={() => {}} onDiscard={() => {}} />
+        : r3
         ? <KabaddiOneTap initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
           nameWindowMs={null} onFinish={() => {}} onDiscard={() => {}} />
         : <KabaddiScorer initialMatch={match} colourStyle={colourStyle} title="Royals v Strikers" subtitle="Kabaddi · 2 × 20 min halves"
@@ -55,12 +76,18 @@ const root = createRoot(document.getElementById('root'));
 act(() => root.render(<App />));
 const find = (name) => [...document.querySelectorAll('button')].find((b) => (b.getAttribute('aria-label') || '').trim() === name || b.textContent.trim() === name);
 for (const step of walks[s] || []) {
+  if (step.startsWith('@')) { OFF += Number(step.slice(1)); act(() => bump()); continue; }
   const b = find(step);
   if (!b) { console.log('MISSING', step); break; }
   act(() => b.click());
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = false;
-setTimeout(() => { for (const a of document.getAnimations()) a.finish(); }, 50);
+// ?flash=1 holds the "off the court" caption on screen (it fades after 4 s); everything else settles.
+setTimeout(() => {
+  for (const a of document.getAnimations()) {
+    if (a.animationName === 'ks-flash' && params.get('flash') === '1') { a.pause(); a.currentTime = 1500; } else a.finish();
+  }
+}, 50);
 
 // Audit: enabled targets >= 48px, text contrast on its real background, page fits without scrolling.
 window.__audit = () => {

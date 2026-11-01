@@ -1,0 +1,99 @@
+/* Kabaddi scorer, round 4: the "Raid by" key and the player chips. The strip is kabaddiStrip.css;
+   the status card, outcome keys and sheet rows are round 3's (kabaddiOneTap.css). */
+
+/* Raid by: one big key in the raiding team's colour, in the keys' own place. Same .se-ctl look
+   (2px ink border, hard shadow); only the fill is the team's. */
+.kb .kr-raidby {
+  flex: 100 1 auto;
+  min-height: 150px;
+  max-height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  font: inherit;
+  text-align: center;
+}
+
+.kb .kr-raidby-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kb .kr-raidby-b { background: var(--team-b-core); color: var(--team-b-on); }
+
+.kr-raidby-mark {
+  display: block;
+  width: 46px;
+  height: 38px;
+  background: currentColor;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.kr-raidby b {
+  max-width: 100%;
+  font-size: clamp(1.7rem, 8.5vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.kr-raidby small {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* player chips: big, 4 across, two rows for seven defenders; order badge shows who left first */
+.kr-chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 3px 3px 0;
+}
+
+.kb .kr-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0 4px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.kr-chip b {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 800;
+}
+
+.kb .kr-chip .ko-order { flex: none; margin-right: 0; }
+
+.kb .kr-chip[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb .kr-chip[aria-pressed='true'] .ko-order { background: var(--se-color-on-ink); color: var(--se-color-ink); }
+
+.kr-hint {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--sb-ink-2);
+}
+
+@media (max-height: 680px) {
+  .kb .kr-raidby { min-height: 128px; gap: 6px; }
+  .kr-raidby-mark { width: 36px; height: 30px; }
+  .kb .kr-chip { min-height: 48px; }
+  .kr-chips { gap: 6px; }
+}

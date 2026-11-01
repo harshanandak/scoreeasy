@@ -1,0 +1,256 @@
+/* Kabaddi score strip, round 4. Wide flat team cards (name, 7 player icons, score) and a centre
+   column (raid clock ring, match clock, half). Team colour is the engine's --team-{a,b}-* tokens;
+   card text is the gated on-colour. Pills sit under the team they concern, outside the strip. */
+
+.ks-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr);
+  gap: 6px;
+  padding: 6px 12px 0;
+}
+
+.ks-team {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 12px 9px;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
+}
+
+.ks-team-a { grid-column: 1; --ks-bg: var(--team-a-core); --ks-on: var(--team-a-on); background: var(--ks-bg); color: var(--ks-on); }
+.ks-team-b { grid-column: 3; --ks-bg: var(--team-b-core); --ks-on: var(--team-b-on); align-items: flex-end; background: var(--ks-bg); color: var(--ks-on); }
+
+.ks-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.ks-team-b .ks-name { flex-direction: row-reverse; }
+
+.ks-name-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ks-mark {
+  display: inline-block;
+  flex: none;
+  width: 22px;
+  height: 18px;
+  background: currentColor;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+/* seven seats, bright = on the mat, dark = out; the row never changes width */
+.ks-seats {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  height: 24px;
+}
+
+.ks-team-b .ks-seats { flex-direction: row-reverse; }
+
+.ks-seat {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 16px;
+  display: block;
+}
+
+.ks-seat svg { display: block; width: 100%; height: auto; fill: currentColor; }
+.ks-seat.out svg,
+.ks-seat.out-now svg { opacity: 0.3; }
+
+/* what changed on the last raid: a small mark above the icon, down = went out, up = came back */
+.ks-seat.out-now::before,
+.ks-seat.back::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 7px;
+  height: 5px;
+  margin-left: -3.5px;
+  background: currentColor;
+}
+
+.ks-seat.out-now::before { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.ks-seat.back::before { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+/* the named moment: for a few seconds the icon row is replaced by what just happened */
+.ks-flash-wrap {
+  position: absolute;
+  inset: -3px -4px -2px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--ks-bg);
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: ks-flash 4200ms ease-out forwards;
+  pointer-events: none;
+}
+
+.ks-team-b .ks-flash-wrap { justify-content: flex-end; }
+.ks-flash { overflow: hidden; text-overflow: ellipsis; --kit-underline: currentColor; }
+
+@keyframes ks-flash {
+  0% { opacity: 0; transform: translateY(4px); }
+  8%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+.ks-score {
+  font: 800 clamp(3.5rem, 19vw, 4.75rem)/0.88 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* centre column: raid clock ring, match clock, half; the whole column is the pause button */
+.ks-mid {
+  grid-row: 1;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ks-mid:disabled { cursor: default; }
+.ks-mid:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; border-radius: 12px; }
+
+.ks-ring { position: relative; display: block; width: 56px; height: 56px; }
+.ks-ring-a { --ks-line: var(--team-a-line); }
+.ks-ring-b { --ks-line: var(--team-b-line); }
+.ks-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ks-track { fill: none; stroke: var(--sb-hair); stroke-width: 5; }
+.ks-arc { fill: none; stroke: var(--ks-line); stroke-width: 5; stroke-linecap: round; }
+.ks-ring-low .ks-arc { stroke: var(--se-color-danger); }
+.ks-ring-idle .ks-track { stroke: var(--ks-line); opacity: 0.35; }
+
+.ks-ring-in {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--sb-ink);
+}
+
+.ks-ring-in b { font: 800 1.45rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+.ks-ring-idle .ks-mark { color: var(--ks-line); }
+
+.ks-clock { font: 800 1.2rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+
+.ks-mid small {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+}
+
+/* rule pills: outside the strip, each one as wide as the card of the team it concerns and hanging
+   straight under it (do or die: the raiding team; super tackle: the defending team) */
+.ks-cues {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr);
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+
+/* each pill starts at the edge of its team's card; do or die runs under the centre column too */
+.ks-at-a { grid-row: 1; grid-column: 1; }
+.ks-at-b { grid-row: 1; grid-column: 3; }
+.ks-at-a-wide { grid-row: 1; grid-column: 1 / span 2; }
+.ks-at-b-wide { grid-row: 1; grid-column: 2 / span 2; }
+
+.ks-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ks-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+
+.ks-cue-dod::before {
+  content: '!';
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  color: var(--se-color-danger);
+  font-size: 0.8rem;
+}
+
+.ks-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+
+.ks-moment { animation: ks-bump 320ms ease-out; }
+@keyframes ks-bump { 0% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+@media (max-width: 380px) {
+  .ks-strip { padding-inline: 10px; }
+  .ks-team { padding: 8px 10px 8px; }
+  .ks-cues { padding-inline: 10px; }
+  .ks-cue { padding: 0 8px; font-size: 0.74rem; letter-spacing: 0; }
+  .ks-cue-dod::before { margin-right: 5px; }
+}
+
+@media (max-height: 680px) {
+  .ks-strip { padding-top: 2px; }
+  .ks-team { padding-top: 6px; padding-bottom: 6px; gap: 1px; }
+  .ks-score { font-size: 3.1rem; }
+  .ks-ring { width: 48px; height: 48px; }
+  .ks-ring-in b { font-size: 1.25rem; }
+  .ks-cues { padding-top: 6px; }
+  .ks-cue { min-height: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-moment { animation: none; }
+  .ks-flash-wrap { animation-duration: 1ms; }
+}

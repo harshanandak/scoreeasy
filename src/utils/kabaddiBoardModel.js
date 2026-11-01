@@ -4,7 +4,7 @@
 // the real applyRaid on the current state and reads the record back), and words the engine's
 // output for the board. It never computes a score, a mat count or an eligibility itself.
 import {
-  applyRaid, createKabaddiState, isDoOrDie, isSuperTackleOn, pause, remainingTime, resume, startHalf, startRaid,
+  applyRaid, cancelRaid, createKabaddiState, isDoOrDie, isSuperTackleOn, pause, remainingTime, resume, startHalf, startRaid,
   teamTotal, timeUp, undo,
 } from './kabaddiEngine.js';
 
@@ -56,6 +56,10 @@ const freshId = (prefix) => `${prefix}-${Date.now().toString(36)}-${(seq += 1)}`
 /** Start the raid (with the named raider when the scorer picked one) and apply the ruling. */
 function run(state, ruling, { atMs, raider, ids }) {
   const base = baseFor(state, atMs);
+  if (base.activeRaid) {
+    // Round 4: the scorer already started this raid ("Raid by"); the ruling finishes it.
+    return applyRaid(base, { ...ruling, id: ids?.confirm ?? freshId('confirm'), raidId: base.activeRaid.id, expectedRevision: base.revision });
+  }
   const raidId = ids?.raid ?? freshId('raid');
   const started = startRaid(base, { id: raidId, atMs, ...(raider ? { raiderSlotId: raider } : {}) });
   const id = ids?.confirm ?? freshId('confirm');
@@ -96,12 +100,21 @@ const RAIDER_OUT = { doOrDieFailure: 'Do or die lost', selfOut: 'Raider out', mi
 /** The one plain line read back before Confirm, from the engine's own record of the ruling. */
 /** `guessed`: the players out were not picked by the scorer (one-tap, not yet named), so say how
  *  many went out rather than echo the engine's placeholder names. */
-export function readback(match, entry, { guessed = false } = {}) {
+export function readback(match, entry, { guessed = false, known = null } = {}) {
   const names = match.state.teams.map((t) => t.name);
   if (entry.type === 'technical') return `Technical point · ${names[entry.input.to]} +${pts(entry, entry.input.to)}`;
   const raider = entry.raidingTeam;
   const defender = 1 - raider;
   const named = (team) => hasRoster(match, team);
+  // `known.back(team, slots)` (round 4) returns the names only when the scorer named those players
+  // when they went out, else null: a returning player the board never named stays a count.
+  const backPart = (team, slots) => {
+    if (known) {
+      const who = known.back(team, slots);
+      return who ? `${who.join(', ')} back` : `${names[team]} ${slots.length} back`;
+    }
+    return named(team) ? `${nameList(match, team, slots)} back` : `${names[team]} ${slots.length} back`;
+  };
   const parts = [];
   if (entry.outcome === 'touch' || entry.outcome === 'bonus') {
     if (entry.outcome === 'bonus') parts.push('Bonus only');
@@ -110,7 +123,7 @@ export function readback(match, entry, { guessed = false } = {}) {
     if (entry.effects.allOut.includes(defender)) parts.push(`${names[defender]} all out`);
     else if (lost.length) parts.push(named(defender) && !guessed ? `${nameList(match, defender, lost)} out` : `${names[defender]} ${lost.length} out`);
     const back = entry.effects.revived[raider];
-    if (back.length) parts.push(named(raider) ? `${nameList(match, raider, back)} back` : `${names[raider]} ${back.length} back`);
+    if (back.length) parts.push(backPart(raider, back));
   } else if (entry.outcome === 'empty') {
     parts.push('Empty raid', 'no points');
   } else {
@@ -120,6 +133,7 @@ export function readback(match, entry, { guessed = false } = {}) {
     if (named(raider) && !guessed) parts.push(`${nameList(match, raider, entry.effects.lost[raider])} out`);
     if (entry.effects.allOut.includes(raider)) parts.push(`${names[raider]} all out`);
     if (pts(entry, raider, ['bonus'])) parts.push(`${names[raider]} +1 bonus`);
+    if (known && entry.effects.revived[defender].length) parts.push(backPart(defender, entry.effects.revived[defender]));
   }
   return parts.join(' · ');
 }
@@ -199,6 +213,9 @@ export function boardView(match, now) {
     remainingMs: remainingTime(state, now) ?? state.rules.halfMs,
     raidingTeam: state.nextRaidTeam,
     raidNumber: state.raidNumber + 1,
+    raidActive: Boolean(state.activeRaid),
+    raidMs: raidClockMs(state, now),
+    raidTotalMs: raidClockTotalMs(state),
     doOrDie: playing && isDoOrDie(state),
     superTackleOn: playing && isSuperTackleOn(state),
     mat: [0, 1].map((team) => ({
@@ -282,6 +299,58 @@ export function undoLabel(state) {
   if (target.type === 'raid') return `Raid ${target.raidNumber} · back to ${back}`;
   if (target.type === 'technical') return `Technical · back to ${back}`;
   return undoHint(state);
+}
+
+// ---- round 4: Raid by (a started raid with the 30 s raid clock), flags on the mat icons ----
+
+/** Raid by: start the raid now. The raid clock runs from this tap; the outcome key finishes it. */
+export function beginRaid(match, { atMs }) {
+  const base = baseFor(match.state, atMs);
+  return { ...match, state: startRaid(base, { id: freshId('raid'), atMs }) };
+}
+
+/** Engine answers for the step-back control: a started raid can be cancelled, otherwise Undo. */
+export function cancelActiveRaid(match) {
+  try {
+    return { ...match, state: cancelRaid(match.state) };
+  } catch {
+    return null;
+  }
+}
+
+export const canCancelRaid = (state) => Boolean(state.activeRaid) && cancelActiveRaid({ state }) !== null;
+
+export function stepBackLabel(state) {
+  if (state.activeRaid) return canCancelRaid(state) ? `Cancel raid ${state.raidNumber + 1}` : '';
+  return undoLabel(state);
+}
+
+/** Raid clock for the ring: ms left of the 30 s, or null when no raid has been started. */
+export const raidClockMs = (state, atMs) => (state.activeRaid ? remainingTime(state, atMs, 'raid') : null);
+export const raidClockTotalMs = (state) => state.activeRaid?.raidClock.durationMs ?? state.rules.raidLimitMs;
+
+const noFlag = { out: 0, back: 0, allOut: false, outText: null, backText: null };
+
+/**
+ * What the last raid did to each team's mat icons, from the engine's record: how many went out,
+ * how many came back, an all out. Names only where the scorer named the players:
+ * `outsNamed` (the players out were picked) and `namedOut[team][slot] = outEventId` (a returning
+ * player was named when they left). Otherwise the text is a count; the board never guesses a name.
+ */
+export function raidFlags(match, entry, { outsNamed = false, namedOut = [{}, {}] } = {}) {
+  if (!entry || entry.type !== 'raid') return [noFlag, noFlag];
+  return [0, 1].map((team) => {
+    const { lost, revived, allOut } = entry.effects;
+    const isAllOut = allOut.includes(team);
+    const restored = entry.effects.ordered.find((e) => e.kind === 'allOut' && e.team === team)?.restored ?? [];
+    const out = isAllOut ? 0 : lost[team].length;
+    const back = isAllOut ? restored.length : revived[team].length;
+    const roster = hasRoster(match, team);
+    const outText = out ? `${roster && outsNamed ? nameList(match, team, lost[team]) : out} out` : null;
+    const wasNamed = (slot) => entry.before.outQueue[team].find((o) => o.slotId === slot)?.outEventId === namedOut[team]?.[slot];
+    const backText = back && !isAllOut ? `${roster && revived[team].every(wasNamed) ? nameList(match, team, revived[team]) : back} back` : null;
+    return { out, back, allOut: isAllOut, outText, backText };
+  });
 }
 
 export { timeUp, startHalf };
