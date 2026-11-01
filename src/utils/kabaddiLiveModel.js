@@ -253,3 +253,44 @@ export function halfStory(match) {
   }
   return halves;
 }
+
+/**
+ * Game progression for the Stats tab, folded from raidStory() only (no rule is re-derived):
+ *  - series: the score after every raid (raid 0 is 0-0), with the lead (A minus B)
+ *  - blocks: net raid points per 5-minute block of each half, from the half clock when each raid started
+ *  - raids: raids per team, how many scored raid points, and the empty ones
+ *  - biggest: the largest lead either side held, and at which raid
+ */
+export const BLOCK_MS = 5 * 60 * 1000;
+
+export function progression(match, halfMs = match.state.rules.halfMs) {
+  const story = raidStory(match);
+  const carried = [...match.carried];
+  const series = [{ number: 0, half: 1, score: carried, lead: carried[0] - carried[1] }];
+  for (const e of story) series.push({ number: e.number, half: e.half, score: e.score, lead: e.score[0] - e.score[1] });
+  const perHalf = Math.max(1, Math.ceil(halfMs / BLOCK_MS));
+  const blocks = [];
+  for (const half of [1, 2]) {
+    for (let i = 0; i < perHalf; i += 1) blocks.push({ half, index: i, from: i * 5, to: Math.min((i + 1) * 5, Math.round(halfMs / 60000)), points: [0, 0], net: 0, raids: 0 });
+  }
+  for (const e of story) {
+    const elapsed = Math.max(0, halfMs - e.halfLeftMs);
+    const index = Math.min(perHalf - 1, Math.floor(elapsed / BLOCK_MS));
+    const block = blocks[(e.half - 1) * perHalf + index];
+    block.raids += 1;
+    block.points[0] += e.points[0];
+    block.points[1] += e.points[1];
+  }
+  blocks.forEach((b) => { b.net = b.points[0] - b.points[1]; });
+  const raids = [0, 1].map((t) => {
+    const mine = story.filter((e) => e.team === t);
+    const scored = mine.filter((e) => e.raidPoints > 0).length;
+    const empty = mine.filter((e) => e.outcome === 'empty').length;
+    return { raids: mine.length, scored, empty, pct: mine.length ? Math.round((scored / mine.length) * 100) : 0 };
+  });
+  let biggest = { margin: 0, team: null, raid: null };
+  for (const s of series) {
+    if (Math.abs(s.lead) > biggest.margin) biggest = { margin: Math.abs(s.lead), team: s.lead > 0 ? 0 : 1, raid: s.number };
+  }
+  return { series, blocks, raids, biggest, perHalf };
+}

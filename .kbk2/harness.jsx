@@ -1,8 +1,10 @@
-// Exploration harness (k2 viewer). ?view=k2|ref &s=rest|raid|moment|end 
+// Exploration harness (k2 viewer). ?view=k2|ref &v=r4|r3 (r4 default) &s=allout|rest|raid|moment|half|end
+//   &court=idle|raid|result (pin the round 4 court to a moment; omit to follow the raids)
 //   &tab=live|raids|stats &names=1|0 &theme=light|dark &out=1 (off-the-court moment)
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import KabaddiWatch from '../src/designs/design1-mono/live/KabaddiWatch';
+import KabaddiWatchR3 from '../src/designs/design1-mono/live/KabaddiWatchR3';
 import MonoWatchMatch from '../src/designs/design1-mono/MonoWatchMatch';
 import { liveNow, raidStory } from '../src/utils/kabaddiLiveModel';
 import { buildFixture, ROSTER } from './fixture.js';
@@ -46,13 +48,15 @@ if (params.get('view') === 'ref') {
     </MemoryRouter>
   );
 } else {
+  const Page = params.get('v') === 'r3' ? KabaddiWatchR3 : KabaddiWatch;
   app = (
-    <KabaddiWatch
+    <Page
       match={match}
       now={now}
       roster={params.get('names') === '0' ? null : ROSTER}
       initialTab={params.get('tab') || 'live'}
       showOut={params.get('out') === '1'}
+      courtStage={params.get('court') || undefined}
     />
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyRaid, finish } from './kabaddiEngine.js';
 import { callTimeUp, createKabaddiMatch, startNextRaid, startSecondHalf } from './kabaddiQuickMatch.js';
-import { engineBreakdown, halfStory, halfTimeScore, keyMoments, liveNow, playerLabel, pointsBreakdown, raidStory, raidWords } from './kabaddiLiveModel.js';
+import { engineBreakdown, halfStory, halfTimeScore, keyMoments, liveNow, playerLabel, pointsBreakdown, progression, raidStory, raidWords } from './kabaddiLiveModel.js';
 
 const SETUP = { format: { mode: 'timed', timeLimit: 2400 }, names: ['Royals', 'Strikers'], colours: ['#d62828', '#1d4ed8'] };
 const T0 = 1_000_000;
@@ -104,5 +104,23 @@ describe('playerLabel', () => {
   });
   it('returns null with no slot', () => {
     expect(playerLabel(roster, null)).toBeNull();
+  });
+
+  it('folds game progression from the raid story: series, 5-minute blocks, success rate, biggest lead', () => {
+    const match = play(createKabaddiMatch(SETUP), H1, T0);
+    const story = raidStory(match);
+    const p = progression(match);
+    expect(p.series).toHaveLength(story.length + 1);
+    expect(p.series[0].score).toEqual([0, 0]);
+    expect(p.series.at(-1).score).toEqual(story.at(-1).score);
+    p.series.forEach((s) => expect(s.lead).toBe(s.score[0] - s.score[1]));
+    // every raid lands in exactly one block and the blocks add back up to the raid points
+    expect(p.blocks.reduce((n, b) => n + b.raids, 0)).toBe(story.length);
+    for (const t of [0, 1]) {
+      expect(p.blocks.reduce((n, b) => n + b.points[t], 0)).toBe(story.reduce((n, e) => n + e.points[t], 0));
+    }
+    expect(p.raids[0].raids + p.raids[1].raids).toBe(story.length);
+    expect(p.raids[0].scored).toBe(story.filter((e) => e.team === 0 && e.raidPoints > 0).length);
+    expect(Math.max(...p.series.map((s) => Math.abs(s.lead)))).toBe(p.biggest.margin);
   });
 });
