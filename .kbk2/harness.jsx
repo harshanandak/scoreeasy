@@ -84,5 +84,5 @@ window.__audit = () => {
   }
   return { s, w: innerWidth, h: innerHeight, scrolls: document.documentElement.scrollHeight > innerHeight + 1, docH: document.documentElement.scrollHeight,
     barBottom: Math.round(document.querySelector('.sb-bar').getBoundingClientRect().bottom), small, minContrast: +min.toFixed(2), fails, gradientText,
-    line: document.querySelector('.kb-line').textContent };
+    line: document.querySelector('.kb-line').textContent, last: document.querySelector('.kb-last').textContent };
 };

@@ -1,68 +1,50 @@
-/* Kabaddi scorer (exploration k2). The chrome is the board shell (boardShell.css); the controls
-   are the app's own: .se-ctl keys, .kit-seg for the one detail question, .se-go for Confirm.
-   What is new is only what kabaddi needs: the score panels (the volleyball keys' gradient, at
-   display size, because they are not buttons here), the clock between them and the mat dots.
-   Team colour is the engine's --team-{a,b}-* tokens; card text is the engine's gated on-colour. */
+/* Kabaddi scorer (exploration k2, round 2). The chrome is the board shell (boardShell.css); the
+   controls are the app's own: .se-ctl keys, .kit-seg for the one detail question, .se-go for Confirm.
+   Top: two compact team cards (the volleyball keys' gradient) with the clock between them, then one
+   quiet row each for who raids, the mat, the rule cues and the last raid. Bottom: the scorer's pad,
+   pushed down to the thumb like the cricket scorer. Team colour is the engine's --team-{a,b}-* tokens;
+   card text is the engine's gated on-colour. */
 
 .kb {
-  --kb-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
-  --kb-clock-w: 78px;
+  --kb-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 45%);
+  --kb-cols: minmax(0, 1fr) 84px minmax(0, 1fr);
+  --kb-key-h: 68px;
 }
 
-/* ---- score panels + clock ---- */
+/* ---- 1. scores: two compact cards, clock in the middle ---- */
 .kb-score {
-  flex: 1 1 0;
-  min-height: 112px;
-  max-height: 290px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--kb-clock-w) minmax(0, 1fr);
-  align-items: stretch;
+  grid-template-columns: var(--kb-cols);
   gap: 8px;
-  padding: 8px 14px 0;
+  padding: 6px 14px 0;
 }
 
 .kb-team {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   min-width: 0;
-  padding: 12px 8px 14px;
-  border-radius: 22px;
+  min-height: 112px;
+  padding: 10px 14px 8px;
+  border-radius: 18px;
   box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
-  text-align: center;
 }
 
 .kb-team-a {
+  align-items: flex-start;
   background: var(--kb-sheen), linear-gradient(168deg, var(--team-a-hi) 0%, var(--team-a-core) 52%, var(--team-a-lo) 100%);
   color: var(--team-a-on);
 }
 
 .kb-team-b {
+  align-items: flex-end;
   background: var(--kb-sheen), linear-gradient(168deg, var(--team-b-hi) 0%, var(--team-b-core) 52%, var(--team-b-lo) 100%);
   color: var(--team-b-on);
 }
 
-/* the volleyball board's Serving tag: on-colour fill, team-colour text (the same gated pair) */
-.kb-tag {
-  display: inline-flex;
-  align-items: center;
-  height: 24px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: 0.74rem;
-  font-weight: 750;
-  white-space: nowrap;
-}
-
-.kb-team-a .kb-tag { background: var(--team-a-on); color: var(--team-a-core); }
-.kb-team-b .kb-tag { background: var(--team-b-on); color: var(--team-b-core); }
-.kb-team .kb-tag-none { background: none; }
-
 .kb-who {
   max-width: 100%;
-  margin-top: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 750;
   white-space: nowrap;
   overflow: hidden;
@@ -70,10 +52,9 @@
 }
 
 .kb-big {
-  font: 800 clamp(3.75rem, min(18vw, 9.5vh), 5.25rem)/0.92 var(--sb-num);
+  font: 800 clamp(3.25rem, 15vw, 4.25rem)/0.9 var(--sb-num);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  margin-top: 4px;
 }
 
 .kb-clock {
@@ -108,23 +89,59 @@
 .kb-clock:disabled { cursor: default; }
 .kb-clock:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 3px; border-radius: 12px; }
 
-/* ---- mat row: its own slim row under the scores, each side under its own panel ---- */
-.kb-mat {
+/* ---- rows under the cards share the cards' columns, so each side sits under its own team ---- */
+.kb-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--kb-clock-w) minmax(0, 1fr);
+  grid-template-columns: var(--kb-cols);
   gap: 8px;
-  padding: 10px 14px 0;
+  align-items: center;
+  padding: 8px 14px 0;
 }
 
+.kb-col-a { grid-column: 1; justify-self: start; }
+.kb-col-mid { grid-column: 2; justify-self: center; }
+.kb-col-b { grid-column: 3; justify-self: end; }
+.kb-row > * { grid-row: 1; }
+
+/* ---- 2. who raids now (solid, team colour) and who raids next (quiet) ---- */
+.kb-raid { min-height: 36px; }
+
+.kb-raiding {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.kb-raiding-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kb-raiding-b { background: var(--team-b-core); color: var(--team-b-on); }
+
+.kb-nextraid,
+.kb-raidno {
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+}
+
+.kb-raidno { font-variant-numeric: tabular-nums; }
+
+/* ---- 3. mat: dots and count, then who comes back first ---- */
 .kb-side {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
+  max-width: 100%;
 }
 
-.kb-side-b { grid-column: 3; }
+.kb-side-a { align-items: flex-start; --kb-core: var(--team-a-core); --kb-line: var(--team-a-line); }
+.kb-side-b { align-items: flex-end; --kb-core: var(--team-b-core); --kb-line: var(--team-b-line); }
 
 .kb-dots {
   display: inline-flex;
@@ -143,9 +160,6 @@
   background: var(--kb-core);
   box-shadow: inset 0 0 0 1px var(--sb-hair);
 }
-
-.kb-side-a { --kb-core: var(--team-a-core); --kb-line: var(--team-a-line); }
-.kb-side-b { --kb-core: var(--team-b-core); --kb-line: var(--team-b-line); }
 
 .kb-dots b {
   margin-left: 4px;
@@ -167,41 +181,98 @@
   color: var(--sb-ink);
 }
 
-/* ---- outcome keys: four .se-ctl keys that never move ---- */
-.kb-keys {
-  flex: 1 1 0;
-  max-height: 190px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: minmax(52px, 1fr);
-  gap: 10px;
-  padding: 16px 17px 0 14px;
+/* ---- 4. rule cues: the S1 pills, solid, in their own row ---- */
+.kb-cues {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px 0;
 }
 
-.kb .kb-key {
-  min-height: 52px;
-  font-size: 1.06rem;
+.kb-cue {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.kb-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+
+.kb-cue-dod::before {
+  content: '!';
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  color: var(--se-color-danger);
+  font-size: 0.8rem;
+}
+
+.kb-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+
+/* ---- 5. last raid (or the moment it made) ---- */
+.kb-last {
+  margin: 0;
+  padding: 12px 16px 0;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--sb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb .kb-last-moment {
+  overflow: visible;
+  font-size: 1rem;
   font-weight: 800;
+  color: var(--sb-ink);
 }
 
-/* chosen: the same key, inked in (the app's pressed filter look) */
-.kb .kb-key[aria-pressed='true'] {
-  background: var(--se-color-ink);
-  color: var(--se-color-on-ink);
-  transform: translate(2px, 2px);
-  box-shadow: var(--se-ctl-shadow-press);
+/* ---- the scorer's pad, anchored at the bottom ---- */
+.kb-pad {
+  margin-top: auto;
+  padding-top: 12px;
 }
 
-/* ---- the one detail question (touch count, or who) ---- */
+.kb-line {
+  min-height: 1.4em;
+  margin: 0;
+  padding: 0 16px 8px;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--sb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb .kb-line-read {
+  font-weight: 750;
+  color: var(--sb-ink);
+}
+
+/* the one detail question (touch count, or who): its row is always there, so the keys never move */
 .kb-detail {
   height: 56px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   padding: 0 17px 0 14px;
 }
 
-.kb .kb-seg {
-  --kit-seg-cols: 4;
-}
+.kb .kb-seg { --kit-seg-cols: 4; }
 
 .kb .kb-seg button:disabled {
   color: var(--sb-ink-2);
@@ -235,35 +306,30 @@
   font-weight: 800;
 }
 
-/* ---- read-back / last raid line, Confirm ---- */
-.kb-line {
-  min-height: 1.5em;
-  margin: 0;
-  padding: 12px 16px 10px;
-  text-align: center;
-  font-size: 0.86rem;
-  color: var(--sb-ink-2);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.kb .kb-line-read {
-  font-weight: 750;
-  color: var(--sb-ink);
-}
-
-.kb .kb-line-moment {
-  overflow: visible;
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--sb-ink);
-}
-
-.kb-go {
+/* four outcome keys that never move */
+.kb-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: var(--kb-key-h);
+  gap: 10px;
   padding: 0 17px 0 14px;
 }
+
+.kb .kb-key {
+  min-height: 52px;
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+/* chosen: the same key, inked in (the app's pressed filter look) */
+.kb .kb-key[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb-go { padding: 12px 17px 0 14px; }
 
 /* a Confirm with nothing to confirm reads like every other disabled control: dashed, no lift */
 .kb .se-go:disabled {
@@ -281,14 +347,20 @@
 @keyframes kb-bump { 0% { transform: scale(1.04); } 100% { transform: scale(1); } }
 
 @media (max-height: 680px) {
+  .kb { --kb-key-h: 52px; }
   .kb .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); }
-  .kb-team { padding: 8px 6px 10px; border-radius: 18px; }
-  .kb-who { margin-top: 4px; }
-  .kb-mat { padding-top: 8px; }
-  .kb-keys { padding-top: 10px; gap: 8px; }
-  .kb .kb-key { min-height: 52px; }
-  .kb-detail { margin-bottom: 8px; }
-  .kb-line { padding: 8px 16px 6px; }
+  .kb-team { min-height: 80px; padding: 8px 12px 6px; border-radius: 16px; }
+  .kb-big { font-size: 2.75rem; }
+  .kb-row { padding-top: 6px; }
+  .kb-raid { min-height: 30px; }
+  .kb-cues { padding-top: 6px; }
+  .kb-cue { min-height: 30px; font-size: 0.76rem; padding: 0 9px; }
+  .kb-last { padding-top: 6px; }
+  .kb-pad { padding-top: 6px; }
+  .kb-line { padding-bottom: 4px; }
+  .kb-detail { height: 52px; margin-bottom: 6px; }
+  .kb-keys { gap: 8px; }
+  .kb-go { padding-top: 8px; }
   .kb .sb-bar { padding-top: 10px; padding-bottom: 12px; }
 }
 
