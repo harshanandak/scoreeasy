@@ -96,11 +96,15 @@ export const raiderLost = (entry) => Boolean(entry && entry.effects.lost[entry.r
 const nameList = (match, team, slots) => slots.map((slot) => playerName(match, team, slot)).join(', ');
 
 const RAIDER_OUT = { doOrDieFailure: 'Do or die lost', selfOut: 'Raider out', mixed: 'Touched, then tackled' };
+// Round 5 sends a raid with a defender out of court through the engine's `mixed` outcome; its
+// `reason` says how the raid ended, so the words stay true to what the scorer picked.
+const mixedHow = (entry) => (entry.input.reason === 'Tackled' ? null : entry.input.reason === 'Raider stepped out' ? 'Raider out' : RAIDER_OUT.mixed);
+const successful = (entry) => entry.outcome === 'touch' || entry.outcome === 'bonus' || (entry.outcome === 'mixed' && !raiderLost(entry));
 
 /** The one plain line read back before Confirm, from the engine's own record of the ruling. */
 /** `guessed`: the players out were not picked by the scorer (one-tap, not yet named), so say how
  *  many went out rather than echo the engine's placeholder names. */
-export function readback(match, entry, { guessed = false, known = null } = {}) {
+export function readback(match, entry, { guessed = false, known = null, raiderNamed = true } = {}) {
   const names = match.state.teams.map((t) => t.name);
   if (entry.type === 'technical') return `Technical point · ${names[entry.input.to]} +${pts(entry, entry.input.to)}`;
   const raider = entry.raidingTeam;
@@ -116,9 +120,9 @@ export function readback(match, entry, { guessed = false, known = null } = {}) {
     return named(team) ? `${nameList(match, team, slots)} back` : `${names[team]} ${slots.length} back`;
   };
   const parts = [];
-  if (entry.outcome === 'touch' || entry.outcome === 'bonus') {
+  if (successful(entry)) {
     if (entry.outcome === 'bonus') parts.push('Bonus only');
-    parts.push(`${names[raider]} +${pts(entry, raider)}${entry.outcome === 'touch' && pts(entry, raider, ['bonus']) ? ' with bonus' : ''}`);
+    parts.push(`${names[raider]} +${pts(entry, raider)}${entry.outcome !== 'bonus' && pts(entry, raider, ['bonus']) ? ' with bonus' : ''}`);
     const lost = entry.effects.lost[defender];
     if (entry.effects.allOut.includes(defender)) parts.push(`${names[defender]} all out`);
     else if (lost.length) parts.push(named(defender) && !guessed ? `${nameList(match, defender, lost)} out` : `${names[defender]} ${lost.length} out`);
@@ -127,10 +131,13 @@ export function readback(match, entry, { guessed = false, known = null } = {}) {
   } else if (entry.outcome === 'empty') {
     parts.push('Empty raid', 'no points');
   } else {
-    const how = entry.outcome === 'doOrDieFailure' ? null : RAIDER_OUT[entry.outcome];
-    const head = isSuper(entry) ? (how ? `${how} · super tackle` : 'Super tackle') : RAIDER_OUT[entry.outcome] ?? 'Tackled';
+    const label = entry.outcome === 'mixed' ? mixedHow(entry) : RAIDER_OUT[entry.outcome];
+    const how = entry.outcome === 'doOrDieFailure' ? null : label;
+    const head = isSuper(entry) ? (how ? `${how} · super tackle` : 'Super tackle') : label ?? 'Tackled';
     parts.push(head, `${names[defender]} +${pts(entry, defender)}`);
-    if (named(raider) && !guessed) parts.push(`${nameList(match, raider, entry.effects.lost[raider])} out`);
+    const outOfCourt = entry.effects.lost[defender];
+    if (outOfCourt.length) parts.push(`${names[raider]} +${pts(entry, raider, ['defenderOut'])} · ${names[defender]} ${outOfCourt.length} out of court`);
+    if (named(raider) && !guessed && raiderNamed) parts.push(`${nameList(match, raider, entry.effects.lost[raider])} out`);
     if (entry.effects.allOut.includes(raider)) parts.push(`${names[raider]} all out`);
     if (pts(entry, raider, ['bonus'])) parts.push(`${names[raider]} +1 bonus`);
     if (known && entry.effects.revived[defender].length) parts.push(backPart(defender, entry.effects.revived[defender]));
@@ -148,6 +155,7 @@ export function lastRaidLine(match) {
   const raider = entry.raidingTeam;
   const defender = 1 - raider;
   const head = `Raid ${entry.raidNumber}`;
+  if (entry.outcome === 'mixed' && !raiderLost(entry)) return `${head} · ${names[raider]} ${entry.effects.lost[defender].length} out · +${pts(entry, raider)}`;
   if (entry.outcome === 'touch') return `${head} · ${names[raider]} ${entry.input.count} ${entry.input.count === 1 ? 'touch' : 'touches'}${pts(entry, raider, ['bonus']) ? ' + bonus' : ''} · +${pts(entry, raider)}`;
   if (WHAT[entry.outcome]) return `${head} · ${names[raider]} ${WHAT[entry.outcome]} · ${pts(entry, raider) ? `+${pts(entry, raider)}` : 'no points'}`;
   const tackle = `${names[defender]} ${isSuper(entry) ? 'super tackle' : 'tackle'} · +${pts(entry, defender)}`;
@@ -216,11 +224,15 @@ export function boardView(match, now) {
     raidActive: Boolean(state.activeRaid),
     raidMs: raidClockMs(state, now),
     raidTotalMs: raidClockTotalMs(state),
+    seats: state.rules.initialSlots,
     doOrDie: playing && isDoOrDie(state),
     superTackleOn: playing && isSuperTackleOn(state),
     mat: [0, 1].map((team) => ({
       on: state.mat[team].length,
       onMat: state.mat[team].map((slot) => ({ slot, name: playerName(match, team, slot) })),
+      // All seven seats in shirt order, on the mat or not: the live raid's tokens keep their place.
+      players: [...state.mat[team], ...state.outQueue[team].map((o) => o.slotId)].sort((x, y) => slotIndex(x) - slotIndex(y))
+        .map((slot) => ({ slot, name: playerName(match, team, slot), on: state.mat[team].includes(slot) })),
       // Out players in revival order: the first one listed is the next back on the mat.
       out: state.outQueue[team].map((o) => ({ slot: o.slotId, name: playerName(match, team, o.slotId) })),
     })),
@@ -337,7 +349,7 @@ const noFlag = { out: 0, back: 0, allOut: false, outText: null, backText: null }
  * `outsNamed` (the players out were picked) and `namedOut[team][slot] = outEventId` (a returning
  * player was named when they left). Otherwise the text is a count; the board never guesses a name.
  */
-export function raidFlags(match, entry, { outsNamed = false, namedOut = [{}, {}] } = {}) {
+export function raidFlags(match, entry, { outsNamed = false, namedOut = [{}, {}], raiderNamed = true } = {}) {
   if (!entry || entry.type !== 'raid') return [noFlag, noFlag];
   return [0, 1].map((team) => {
     const { lost, revived, allOut } = entry.effects;
@@ -346,11 +358,150 @@ export function raidFlags(match, entry, { outsNamed = false, namedOut = [{}, {}]
     const out = isAllOut ? 0 : lost[team].length;
     const back = isAllOut ? restored.length : revived[team].length;
     const roster = hasRoster(match, team);
-    const outText = out ? `${roster && outsNamed ? nameList(match, team, lost[team]) : out} out` : null;
+    const named = roster && outsNamed && (team !== entry.raidingTeam || raiderNamed);
+    const outText = out ? `${named ? nameList(match, team, lost[team]) : out} out` : null;
     const wasNamed = (slot) => entry.before.outQueue[team].find((o) => o.slotId === slot)?.outEventId === namedOut[team]?.[slot];
     const backText = back && !isAllOut ? `${roster && revived[team].every(wasNamed) ? nameList(match, team, revived[team]) : back} back` : null;
     return { out, back, allOut: isAllOut, outText, backText };
   });
+}
+
+// ---- round 5: the raid happens live, points land when it ends ----
+//
+// While a raid runs the scorer marks what happens on a draft kept on the match (`match.draft`), next
+// to `rosters`, so the host persists it with every save and a refresh mid-raid loses nothing. The
+// engine sees one atomic ruling when the raid ends. The engine's `activeRaid.draft` slot is left
+// alone: it is reserved and unvalidated, and this lane does not touch the engine.
+
+const BONUS = { bonusAwarded: true, bonusBeforeContact: true };
+
+/** The live draft for the active raid, or null (no raid, or a draft left over from another raid). */
+export const draftOf = (match) => (match.state.activeRaid && match.draft?.raidId === match.state.activeRaid.id ? match.draft : null);
+
+const withoutDraft = ({ draft: _draft, ...rest }) => rest;
+
+/** Start the raid and open an empty draft for it. */
+export function beginLiveRaid(match, { atMs }) {
+  const next = beginRaid(withoutDraft(match), { atMs });
+  return { ...next, draft: { raidId: next.state.activeRaid.id, marks: [], bonus: false } };
+}
+
+/**
+ * Mark a defender: 'touched' (the raider touched him) or 'out' (he stepped out of the court). Same
+ * mark again removes it; the other mark replaces it in place. Marks keep tap order: that is the
+ * order they leave the mat, so first out is first back.
+ */
+export function markDefender(match, slotId, kind) {
+  const draft = draftOf(match);
+  if (!draft || !['touched', 'out'].includes(kind) || !match.state.mat[1 - match.state.activeRaid.raidingTeam].includes(slotId)) return match;
+  const at = draft.marks.findIndex((m) => m.slot === slotId);
+  let marks;
+  if (at === -1) marks = [...draft.marks, { slot: slotId, kind }];
+  else if (draft.marks[at].kind === kind) marks = draft.marks.filter((m) => m.slot !== slotId);
+  else marks = draft.marks.map((m) => (m.slot === slotId ? { slot: slotId, kind } : m));
+  return { ...match, draft: { ...draft, marks } };
+}
+
+/** Bonus line crossed: toggled on the draft (the engine still decides whether it is legal). */
+export function toggleBonus(match) {
+  const draft = draftOf(match);
+  if (!draft) return match;
+  // bonusAt remembers how many marks came before the bonus, so Undo takes marks back in tap order
+  return { ...match, draft: draft.bonus ? { ...draft, bonus: false, bonusAt: undefined } : { ...draft, bonus: true, bonusAt: draft.marks.length } };
+}
+
+/** Take back the last live mark, in the order they were tapped. */
+export function undoMark(match) {
+  const draft = draftOf(match);
+  if (!draft) return match;
+  if (draft.bonus && (draft.bonusAt ?? 0) >= draft.marks.length) return { ...match, draft: { ...draft, bonus: false, bonusAt: undefined } };
+  if (!draft.marks.length) return match;
+  return { ...match, draft: { ...draft, marks: draft.marks.slice(0, -1) } };
+}
+
+/** The mark Undo would take back: { bonus: true } or { slot, kind }, or null when the draft is empty. */
+export function lastMark(match) {
+  const draft = draftOf(match);
+  if (!draft) return null;
+  if (draft.bonus && (draft.bonusAt ?? 0) >= draft.marks.length) return { bonus: true };
+  return draft.marks.at(-1) ?? null;
+}
+
+/**
+ * Which players went out by the scorer's own tap? `namedOutMap(state)[team][slot] = outEventId` for
+ * every slot now waiting to come back that left as a defender picked on the board. A raider who
+ * went out is the engine's default slot, never a chosen player, so it is not in the map and the
+ * board words it as a count.
+ */
+export function namedOutMap(state) {
+  return state.outQueue.map((queue, team) => Object.fromEntries(queue.filter((o) => {
+    const ev = state.events.find((e) => e.id === o.outEventId);
+    return ev?.type === 'raid' && ev.raidingTeam !== team && (ev.input.outsInOrder || ev.input.dismissals);
+  }).map((o) => [o.slotId, o.outEventId])));
+}
+
+/**
+ * The one engine ruling for a draft and a result, or null when the draft cannot become one.
+ *  safe       touched defenders out (+1 each), bonus counts; nothing marked is an empty raid
+ *  tackled    raider out; touches do not score (engine rule), defenders out of court still do
+ *  raiderOut  the raider stepped out of the court; scored like tackled
+ */
+export function rulingForDraft(state, draft, result) {
+  const raid = state.activeRaid;
+  if (!raid || !draft) return null;
+  const defender = 1 - raid.raidingTeam;
+  const bonus = draft.bonus ? BONUS : {};
+  const marks = draft.marks.filter((m) => state.mat[defender].includes(m.slot));
+  const stepped = marks.filter((m) => m.kind === 'out');
+  const dismissal = (m) => ({ team: defender, slotId: m.slot, category: m.kind === 'touched' ? 'touch' : 'defenderOut' });
+  const raiderDismissal = { team: raid.raidingTeam, slotId: raid.raiderSlotId, category: 'tackleBase' };
+  if (result === 'safe') {
+    if (!marks.length) return draft.bonus ? { type: 'bonus', bonusBeforeContact: true } : { type: 'empty' };
+    if (!stepped.length) return { type: 'touch', count: marks.length, outsInOrder: marks.map((m) => m.slot), ...bonus };
+    return { type: 'mixed', reason: 'Defender stepped out', dismissals: marks.map(dismissal), ...bonus };
+  }
+  if (result === 'tackled' || result === 'raiderOut') {
+    const reason = result === 'tackled' ? 'Tackled' : 'Raider stepped out';
+    if (!stepped.length) return result === 'tackled' ? { type: 'tackled', ...bonus } : { type: 'selfOut', reason, ...bonus };
+    return { type: 'mixed', reason, dismissals: [...stepped.map(dismissal), raiderDismissal], ...bonus };
+  }
+  return null;
+}
+
+/** What the engine says the draft would do for a result: a preview, nothing is saved. */
+export const previewDraft = (state, draft, result, { atMs }) => tryRuling(state, rulingForDraft(state, draft, result), { atMs });
+
+/** End the raid: apply the one ruling and drop the draft. Null when the engine rejects it. */
+export function landRaid(match, result, { atMs }) {
+  const ruling = rulingForDraft(match.state, draftOf(match), result);
+  if (!ruling) return null;
+  try {
+    return withoutDraft(confirmRuling(match, ruling, { atMs }));
+  } catch {
+    return null;
+  }
+}
+
+/** Cancel a started raid (no score change) and drop its draft. */
+export function cancelLiveRaid(match) {
+  const cancelled = cancelActiveRaid(match);
+  return cancelled && withoutDraft(cancelled);
+}
+
+/**
+ * Undo the raid that just landed and reopen it live with the same marks, started again at its
+ * original tap time, so the scorer can fix a mark and land it again. Null when the latest action
+ * is not that raid.
+ */
+export function reopenRaid(match, { raidId, startedAtMs, draft }) {
+  const target = nextUndoTarget(match.state);
+  if (!target || target.id !== raidId) return null;
+  try {
+    const begun = beginLiveRaid({ ...match, state: undoAction(match.state) }, { atMs: startedAtMs });
+    return { ...begun, draft: { ...draft, raidId: begun.state.activeRaid.id } };
+  } catch {
+    return null;
+  }
 }
 
 export { timeUp, startHalf };
