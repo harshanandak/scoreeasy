@@ -1,0 +1,297 @@
+/* Kabaddi scorer (exploration k2). The chrome is the board shell (boardShell.css); the controls
+   are the app's own: .se-ctl keys, .kit-seg for the one detail question, .se-go for Confirm.
+   What is new is only what kabaddi needs: the score panels (the volleyball keys' gradient, at
+   display size, because they are not buttons here), the clock between them and the mat dots.
+   Team colour is the engine's --team-{a,b}-* tokens; card text is the engine's gated on-colour. */
+
+.kb {
+  --kb-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
+  --kb-clock-w: 78px;
+}
+
+/* ---- score panels + clock ---- */
+.kb-score {
+  flex: 1 1 0;
+  min-height: 112px;
+  max-height: 290px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--kb-clock-w) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 14px 0;
+}
+
+.kb-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 12px 8px 14px;
+  border-radius: 22px;
+  box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
+  text-align: center;
+}
+
+.kb-team-a {
+  background: var(--kb-sheen), linear-gradient(168deg, var(--team-a-hi) 0%, var(--team-a-core) 52%, var(--team-a-lo) 100%);
+  color: var(--team-a-on);
+}
+
+.kb-team-b {
+  background: var(--kb-sheen), linear-gradient(168deg, var(--team-b-hi) 0%, var(--team-b-core) 52%, var(--team-b-lo) 100%);
+  color: var(--team-b-on);
+}
+
+/* the volleyball board's Serving tag: on-colour fill, team-colour text (the same gated pair) */
+.kb-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.kb-team-a .kb-tag { background: var(--team-a-on); color: var(--team-a-core); }
+.kb-team-b .kb-tag { background: var(--team-b-on); color: var(--team-b-core); }
+.kb-team .kb-tag-none { background: none; }
+
+.kb-who {
+  max-width: 100%;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 750;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb-big {
+  font: 800 clamp(3.75rem, min(18vw, 9.5vh), 5.25rem)/0.92 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+.kb-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kb-clock b {
+  font: 800 1.75rem/1 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-clock small {
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+}
+
+.kb-clock:disabled { cursor: default; }
+.kb-clock:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 3px; border-radius: 12px; }
+
+/* ---- mat row: its own slim row under the scores, each side under its own panel ---- */
+.kb-mat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--kb-clock-w) minmax(0, 1fr);
+  gap: 8px;
+  padding: 10px 14px 0;
+}
+
+.kb-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kb-side-b { grid-column: 3; }
+
+.kb-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kb-dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--kb-line);
+}
+
+.kb-dots i.on {
+  background: var(--kb-core);
+  box-shadow: inset 0 0 0 1px var(--sb-hair);
+}
+
+.kb-side-a { --kb-core: var(--team-a-core); --kb-line: var(--team-a-line); }
+.kb-side-b { --kb-core: var(--team-b-core); --kb-line: var(--team-b-line); }
+
+.kb-dots b {
+  margin-left: 4px;
+  font: 800 1.05rem/1 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-next {
+  max-width: 100%;
+  font-size: 0.78rem;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb-next b {
+  font-weight: 750;
+  color: var(--sb-ink);
+}
+
+/* ---- outcome keys: four .se-ctl keys that never move ---- */
+.kb-keys {
+  flex: 1 1 0;
+  max-height: 190px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: minmax(52px, 1fr);
+  gap: 10px;
+  padding: 16px 17px 0 14px;
+}
+
+.kb .kb-key {
+  min-height: 52px;
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+/* chosen: the same key, inked in (the app's pressed filter look) */
+.kb .kb-key[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+/* ---- the one detail question (touch count, or who) ---- */
+.kb-detail {
+  height: 56px;
+  margin-bottom: 12px;
+  padding: 0 17px 0 14px;
+}
+
+.kb .kb-seg {
+  --kit-seg-cols: 4;
+}
+
+.kb .kb-seg button:disabled {
+  color: var(--sb-ink-2);
+  cursor: default;
+  text-decoration: line-through;
+}
+
+.kb .kb-names {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kb .kb-names button {
+  flex: 1 0 auto;
+  min-width: 64px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.kb-order {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* ---- read-back / last raid line, Confirm ---- */
+.kb-line {
+  min-height: 1.5em;
+  margin: 0;
+  padding: 12px 16px 10px;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--sb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb .kb-line-read {
+  font-weight: 750;
+  color: var(--sb-ink);
+}
+
+.kb .kb-line-moment {
+  overflow: visible;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--sb-ink);
+}
+
+.kb-go {
+  padding: 0 17px 0 14px;
+}
+
+/* a Confirm with nothing to confirm reads like every other disabled control: dashed, no lift */
+.kb .se-go:disabled {
+  cursor: default;
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  background: var(--se-ctl-bg);
+  box-shadow: none;
+  color: color-mix(in oklab, var(--se-color-ink) 62%, var(--se-color-surface));
+}
+
+.kb .sb-bar { padding-top: 12px; }
+
+.kb-moment { animation: kb-bump 320ms ease-out; }
+@keyframes kb-bump { 0% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+@media (max-height: 680px) {
+  .kb .sb-top { padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+  .kb-team { padding: 8px 6px 10px; border-radius: 18px; }
+  .kb-who { margin-top: 4px; }
+  .kb-mat { padding-top: 8px; }
+  .kb-keys { padding-top: 10px; gap: 8px; }
+  .kb .kb-key { min-height: 52px; }
+  .kb-detail { margin-bottom: 8px; }
+  .kb-line { padding: 8px 16px 6px; }
+  .kb .sb-bar { padding-top: 10px; padding-bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-moment { animation: none; }
+}
