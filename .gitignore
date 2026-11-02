@@ -29,3 +29,7 @@ npm-debug.log*
 .parcel-cache/
 
 .vercel
+
+# Forge: shared config is committed; project state and generated skills are local.
+.forge/state.sqlite*
+.agents/skills/
