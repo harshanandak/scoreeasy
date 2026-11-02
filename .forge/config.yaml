@@ -1,0 +1,8 @@
+schemaVersion: forge.config/1
+blocks:
+  work:
+    source:
+      builtin: forge/work
+  memory:
+    source:
+      builtin: forge/memory
