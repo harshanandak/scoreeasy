@@ -24,7 +24,7 @@ import MonoSheet from './components/MonoSheet';
 import { deriveTeamColours, normaliseHex, teamColourVars } from '../../lib/teamColour';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
 import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, KitTop, KitWash, SportBadge } from './kit/KitParts';
-import { displayScore, groupByMonth, latestMonthSummary, sportCounts, winnerSide } from './kit/historyModel';
+import { displayScore, groupByMonth, latestMonthSummary, quickMatchScore, sportCounts, winnerSide } from './kit/historyModel';
 import { relativeDay } from './kit/dates';
 import './kit/history.css';
 import InProgressMatches from './components/InProgressMatches';
@@ -291,13 +291,7 @@ export default function MonoHistory() {
 
   const quickEntries = useMemo(() => {
     return quickMatches.map((qm) => {
-      const inningsScore = Array.isArray(qm.innings) && qm.innings.length > 0
-        ? `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`
-        : null;
-      const score = inningsScore
-        || (qm.team1Score && qm.team2Score
-          ? `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score.runs}/${qm.team2Score.wickets}`
-          : `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`);
+      const score = quickMatchScore(qm);
 
       return {
         id: `quick-${qm.id}`,
