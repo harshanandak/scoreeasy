@@ -254,6 +254,9 @@ export const SPORT_REGISTRY = {
   kabaddi: {
     id: 'kabaddi',
     teamColour: true,
+    // Quick matches score raids on the club raid engine (utils/kabaddiEngine.js): touches, bonus,
+    // tackles, mat strength, all out. Tournament kabaddi stays on the goals scorer.
+    raidBoard: true,
     identityColour: '#e11d74', // Rani pink
     name: 'Kabaddi',
     icon: '🤼',
@@ -272,12 +275,16 @@ export const SPORT_REGISTRY = {
         { label: 'All Out (+2)', value: 2 },
       ],
       maxPlayers: 7,
-      // Real: 2×20 min = 40 min (Pro Kabaddi League)
+      // Values are the whole match; the raid board plays them as two equal halves (club: 2×20).
       timePresets: [
-        { label: '10 min', value: 600 },
-        { label: '20 min (Half)', value: 1200 },
-        { label: '40 min (Full)', value: 2400 },
+        { label: '2 × 10 min', value: 1200 },
+        { label: '2 × 15 min', value: 1800 },
+        { label: '2 × 20 min', value: 2400 },
       ],
+      // Quick setup: one club format, its half length below it.
+      formatModes: [{ id: 'timed', label: 'Club standard' }],
+      timeLabel: 'Halves',
+      halves: 2,
       pointPresets: [20, 30, 40, 50],
     },
     standingsColumns: ['P', 'W', 'D', 'L', 'SF', 'SA', 'SD', 'Pts'],

@@ -90,16 +90,16 @@ it.each(['/app', '/history'])('%s shows named cricket innings, unplayed opponent
   expect(second).toHaveTextContent('Chasing 65');
 });
 
-it('resumes an old kabaddi match with its own score and undo after leaving', async () => {
+it('resumes an old +1/+2 kabaddi match on the raid board with its score kept after leaving', async () => {
   seed('kabaddi', 4, { format: { mode: 'free' }, gScoreHistory: [{ team: 1, value: 1 }] });
   open('/kabaddi/quick?resume=4');
-  await screen.findByRole('button', { name: 'Add +1 for Royals 4' });
-  fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
-  expect(loadInProgressMatches()[0].gScore1).toBe(11);
+  expect(await screen.findByLabelText('Royals 4 score')).toHaveTextContent('12');
+  await waitFor(() => expect(loadInProgressMatches()[0].kabaddi?.carried).toEqual([12, 9]));
+  expect(loadInProgressMatches()[0].gScore1).toBe(12);
   fireEvent.click(screen.getByRole('button', { name: 'Test History' }));
-  expect(screen.getByText('11–9')).toBeVisible();
+  expect(screen.getByText('12–9')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: /Resume Kabaddi/ }));
-  await waitFor(() => expect(document.querySelector('[data-goals-board]')).toHaveTextContent('11'));
+  await waitFor(() => expect(document.querySelector('[data-kabaddi-board]')).toHaveTextContent('12'));
 });
 
 it('restores old cricket innings and undo independently of another cricket match', async () => {

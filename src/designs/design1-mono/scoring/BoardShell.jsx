@@ -39,7 +39,7 @@ BoardHeader.propTypes = {
 };
 
 /** Bottom thumb bar: Undo is always visible (disabled, dashed, when there is nothing to undo). */
-export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore, undoLabel = 'Undo last action', moreLabel = 'Match options' }) {
+export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore, undoLabel = 'Undo last action', moreLabel = 'Match options', disabledHint = 'Nothing to undo' }) {
   return (
     <div className="sb-bar">
       <button type="button" className="se-ctl sb-undo" onClick={onUndo} disabled={!canUndo} aria-label={undoLabel}>
@@ -47,7 +47,7 @@ export function BoardBar({ canUndo, undoHint, onUndo, sheetId, sheetOpen, onMore
           <path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-2" />
         </svg>
         <span className="sb-undo-t">Undo</span>
-        <span className="sb-undo-w">{canUndo ? undoHint : 'Nothing to undo'}</span>
+        <span className="sb-undo-w">{canUndo ? undoHint : disabledHint}</span>
       </button>
       <button
         type="button"
@@ -69,6 +69,8 @@ BoardBar.propTypes = {
   moreLabel: PropTypes.string,
   canUndo: PropTypes.bool.isRequired,
   undoHint: PropTypes.string,
+  // Why Undo is off right now (default: nothing to undo), e.g. a raid that must be cancelled first.
+  disabledHint: PropTypes.string,
   onUndo: PropTypes.func.isRequired,
   sheetId: PropTypes.string.isRequired,
   sheetOpen: PropTypes.bool.isRequired,
