@@ -1,5 +1,3 @@
-import KabaddiSetup from './kit/KabaddiSetup';
-import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
 import { useScoringProgress } from './scoring/scoringProgressContext';
@@ -459,7 +457,6 @@ export default function MonoQuickMatch() {
     isRefereeing,
   });
   const [format, setFormat] = useState(() => {
-    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('quick') };
     if (isCricket) return buildCricketFormat(initialPreset);
     if (initialFormatMode === 'standard') return applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
@@ -797,7 +794,6 @@ export default function MonoQuickMatch() {
   useEffect(() => {
     if (restoredDraftRef.current) return;
     if (isCricket || !sport) return;
-    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('quick') }); return; }
 
     setFormatMode('standard');
     setRulesOpen(false);
@@ -810,7 +806,7 @@ export default function MonoQuickMatch() {
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
     if (restoredDraftRef.current) return;
-    if (isCricket || formatMode !== 'standard' || !sport || sport === 'kabaddi') return;
+    if (isCricket || formatMode !== 'standard' || !sport) return;
 
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
@@ -2159,7 +2155,6 @@ export default function MonoQuickMatch() {
           </div>
         ))}
 
-        {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
         <section className="kit-setup-field" aria-labelledby="setup-format-label">
           <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
           <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />
@@ -2183,7 +2178,6 @@ export default function MonoQuickMatch() {
             )}
           </div>
         </section>
-        )}
 
         <div className="kit-setup-field">
           <button type="button" onClick={toggleRosterSetup} className="kit-setup-link" aria-expanded={showRosterSetup}>
