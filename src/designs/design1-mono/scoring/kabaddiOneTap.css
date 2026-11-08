@@ -1,0 +1,196 @@
+/* Kabaddi scorer, one-tap variant (exploration k2, round 3). Chrome: board shell; score header:
+   kabaddiHeader.css; controls: the app's .se-ctl keys and .kit-seg. Here: the prominent last-raid
+   line, one fixed slot for the only follow-up (bonus, 3+ count, who was out) and six keys, the
+   three most used biggest and at the bottom, nearest the thumb. The pad fills the height below the
+   header, so there is no dead gap: the keys take what is spare, up to a cap. */
+
+.ko-pad {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: 12px 17px 0 14px;
+}
+
+/* the status card: a quiet surface; the last raid line big and in ink. It grows into whatever the
+   cue row leaves free, so the keys below never move when a cue comes or goes. */
+.ko-status {
+  flex: 1 0 112px;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--sb-hair);
+}
+
+.kb .ko-last {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kb .ko-last:disabled { cursor: default; }
+.kb .ko-last:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; border-radius: 8px; }
+
+.ko-last small {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--sb-ink-2);
+}
+
+.ko-last span {
+  max-width: 100%;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.ko-status-ask .ko-last { min-height: 0; }
+.ko-status-ask .ko-last span { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ko-ask {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--sb-ink);
+}
+
+/* a 48px square hit area; the negative margin keeps the prompt line 24px tall */
+.kb .ko-skip {
+  min-width: 48px;
+  min-height: 48px;
+  margin: -12px -6px -12px 0;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--sb-ink-2);
+  font: inherit;
+  font-weight: 750;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kb .ko-seg { --kit-seg-cols: 5; }
+
+.kb .ko-seg button:disabled {
+  color: var(--sb-ink-2);
+  cursor: default;
+  text-decoration: line-through;
+}
+
+.kb .ko-names {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kb .ko-names button {
+  flex: 1 0 auto;
+  min-width: 64px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.ko-order {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ko-bonusonly { display: flex; }
+
+.kb .ko-chip {
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.ko-go { padding-bottom: 10px; }
+
+/* six keys: Bonus · +2 · 3+ on top, Empty · +1 · Tackled biggest at the bottom; +1 keeps Empty
+   and Tackled apart */
+/* keys grow first (to their cap); only what is left goes to the status card */
+.ko-keys {
+  flex: 100 1 auto;
+  min-height: 150px;
+  max-height: 330px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(52px, 1fr) minmax(76px, 1.45fr);
+  gap: 10px;
+}
+
+.kb .ko-key {
+  min-height: 52px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.kb .ko-key-big { font-size: 1.3rem; }
+.kb .ko-key-big:nth-child(5) { font: 800 1.9rem/1 var(--sb-num); }
+.kb .ko-key:nth-child(2),
+.kb .ko-key:nth-child(3) { font: 800 1.5rem/1 var(--sb-num); }
+
+/* armed: the same key, inked in (the app's pressed filter look) */
+.kb .ko-key[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb .ko-row small {
+  margin-left: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--se-color-ink-muted);
+  text-align: right;
+}
+
+.kb .ko-row:disabled { cursor: default; color: var(--se-color-ink-muted); }
+
+.ko .sb-bar { padding-top: 12px; }
+
+/* the Undo hint names the score it restores; on a 360px phone it must not clip */
+@media (max-width: 380px) {
+  .ko .sb-undo { gap: 8px; padding: 0 12px; }
+}
+
+@media (max-height: 680px) {
+  .ko-pad { padding-top: 6px; }
+  .ko-status { flex-basis: 100px; padding: 6px 10px; gap: 4px; margin-bottom: 8px; }
+  .ko-last span { font-size: 1rem; }
+  .ko-keys { min-height: 128px; gap: 8px; grid-template-rows: 52px minmax(60px, 1fr); }
+  .ko .sb-bar { padding-top: 10px; padding-bottom: 12px; }
+}

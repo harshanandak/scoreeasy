@@ -1441,6 +1441,38 @@ export default function Design1Mono() {
   const protectedRouteHistoryIndexRef = useRef(null);
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
+  // The pending fallback navigation (timer + one-shot popstate listener) lives at
+  // component level, not in one effect run: the exit callbacks handed to the native
+  // back guard and the exit dialog outlive that run, so a late call must still be
+  // cleared when the scorer unmounts.
+  const pendingFallbackTimeoutRef = useRef(null);
+  const pendingFallbackPopListenerRef = useRef(null);
+  const protectedGuardUnmountedRef = useRef(false);
+  const clearPendingFallbackNavigation = useCallback(() => {
+    if (pendingFallbackTimeoutRef.current !== null) {
+      globalThis.clearTimeout?.(pendingFallbackTimeoutRef.current);
+      pendingFallbackTimeoutRef.current = null;
+    }
+
+    if (pendingFallbackPopListenerRef.current) {
+      // Second layer: a test environment can be torn down before this runs.
+      if (typeof globalThis.removeEventListener === 'function') {
+        globalThis.removeEventListener('popstate', pendingFallbackPopListenerRef.current);
+      }
+      pendingFallbackPopListenerRef.current = null;
+    }
+  }, []);
+  // Same for a finishing scorer's unwind (history.go + 300 ms fallback): one entry per call.
+  const pendingCompletionsRef = useRef(new Set());
+  useEffect(() => {
+    protectedGuardUnmountedRef.current = false;
+    const pendingCompletions = pendingCompletionsRef.current;
+    return () => {
+      protectedGuardUnmountedRef.current = true;
+      clearPendingFallbackNavigation();
+      for (const pending of [...pendingCompletions]) pending.cancel();
+    };
+  }, [clearPendingFallbackNavigation]);
   const nativeDeepLinkContextRef = useRef({
     hash: '',
     pathname: '/',
@@ -1546,20 +1578,6 @@ export default function Design1Mono() {
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
     }
 
-    let fallbackTimeoutId = null;
-    let replaceScoringEntryOnPop = null;
-    const clearPendingFallbackNavigation = () => {
-      if (fallbackTimeoutId !== null) {
-        globalThis.clearTimeout(fallbackTimeoutId);
-        fallbackTimeoutId = null;
-      }
-
-      if (replaceScoringEntryOnPop) {
-        globalThis.removeEventListener('popstate', replaceScoringEntryOnPop);
-        replaceScoringEntryOnPop = null;
-      }
-    };
-
     const leaveProtectedRouteAfterConfirm = (fallbackPath) => {
       const protectedBackFallback = fallbackPath || getProtectedScoringBackFallback(location.pathname) || '/play';
       const currentRouteHistoryIndex = globalThis.history.state?.idx;
@@ -1577,16 +1595,21 @@ export default function Design1Mono() {
         return;
       }
 
+      // A stale exit callback can run after the scorer is gone; there is no
+      // navigator left to finish the fallback, and nothing would clear it.
+      if (protectedGuardUnmountedRef.current) return;
+
       clearPendingFallbackNavigation();
       allowNextProtectedPopRef.current = true;
-      replaceScoringEntryOnPop = () => {
+      const replaceScoringEntryOnPop = () => {
         clearPendingFallbackNavigation();
         navigate(protectedBackFallback, { replace: true });
       };
+      pendingFallbackPopListenerRef.current = replaceScoringEntryOnPop;
 
       globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
       globalThis.history.back();
-      fallbackTimeoutId = globalThis.setTimeout(() => {
+      pendingFallbackTimeoutRef.current = globalThis.setTimeout(() => {
         clearPendingFallbackNavigation();
         if (isProtectedScoringPath(globalThis.location.pathname, globalThis.location.search)) {
           navigate(protectedBackFallback, { replace: true });
@@ -1641,7 +1664,7 @@ export default function Design1Mono() {
       clearPendingFallbackNavigation();
       cleanupNativeBackButton();
     };
-  }, [location.pathname, location.search, scoringStarted, navigate, requestScoringExit]);
+  }, [location.pathname, location.search, scoringStarted, navigate, requestScoringExit, clearPendingFallbackNavigation]);
 
   // Finish a protected scorer: land on its destination while unwinding
   // the scorer entry AND its protection guard entries, so Back from Result returns
@@ -1669,23 +1692,36 @@ export default function Design1Mono() {
       return;
     }
 
+    // A stale call after the shell unmounted has no navigator left to finish it,
+    // and nothing would clear its timer or listener.
+    if (protectedGuardUnmountedRef.current) return;
+
     allowNextProtectedPopRef.current = true;
     let settled = false;
-    let fallbackTimeoutId = null;
+    const pending = { timeoutId: null, onUnwound: null, cancel: null };
+    pending.cancel = () => {
+      if (pending.timeoutId !== null) globalThis.clearTimeout?.(pending.timeoutId);
+      pending.timeoutId = null;
+      // Second layer: a test environment can be torn down before this runs.
+      if (typeof globalThis.removeEventListener === 'function') {
+        globalThis.removeEventListener('popstate', pending.onUnwound);
+      }
+      pendingCompletionsRef.current.delete(pending);
+    };
     const finish = (popLanded) => {
       if (settled) return;
       settled = true;
-      if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
-      globalThis.removeEventListener('popstate', onUnwound);
+      pending.cancel();
       // Tournament completion can land on its destination while unwinding.
       // Reuse that entry; pushing it again makes the first Back a no-op.
       const landedOnResult = `${globalThis.location.pathname}${globalThis.location.search}${globalThis.location.hash}` === resultPath;
       navigate(resultPath, (replaceAtEnd || !popLanded || landedOnResult) ? { replace: true } : undefined);
     };
-    const onUnwound = () => finish(true);
-    globalThis.addEventListener('popstate', onUnwound, { once: true });
+    pending.onUnwound = () => finish(true);
+    pendingCompletionsRef.current.add(pending);
+    globalThis.addEventListener('popstate', pending.onUnwound, { once: true });
     globalThis.history.go(-backDelta);
-    fallbackTimeoutId = globalThis.setTimeout(() => finish(false), 300);
+    pending.timeoutId = globalThis.setTimeout(() => finish(false), 300);
   }, [navigate]);
 
   return (
