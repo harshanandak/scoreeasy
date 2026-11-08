@@ -1,6 +1,5 @@
 <!--
 
-> Visibility policy superseded on 2026-11-08: matches are private until the scorer explicitly shares each match. Public-by-default decisions below are historical; use the [current privacy audit](../security/match-visibility-audit.md) for the implemented policy.
 Provenance: synthesized 2026-06-22 from an 8-dimension multi-agent research fan-out
 (architecture/competitors, moderation/safety, set-sport scorecards, tennis, cricket,
 goals/generic scorecards, Convex real-time, feed/commentary UX). Feeds the design doc
@@ -8,15 +7,18 @@ docs/plans/2026-06-22-live-matches-and-scorecard-design.md. The feed/commentary 
 section is expanded in docs/research/2026-06-22-feed-and-commentary-ux.md.
 -->
 
+> Visibility policy superseded on 2026-11-08: matches are private until the scorer explicitly shares each match. Public-by-default decisions below are historical; use the [current privacy audit](../security/match-visibility-audit.md) for the implemented policy.
+
 # Live Match Streaming & Realistic Point-by-Point Scorecards — Research Report
 
 > **⚠️ SHIPPED-DELTA NOTE (read first).** This is the original *exploration*; where
 > it differs from the shipped implementation, the design doc
 > (`docs/plans/2026-06-22-live-matches-and-scorecard-design.md`) + code are
 > authoritative. Known deltas:
-> - **Visibility is public-by-default with one-time consent opt-out** (not
->   default-private). Only **scores + team/player names** are exposed publicly —
->   there are **no public notes/title UGC** fields.
+> - **Visibility is private until the scorer explicitly shares each match.**
+>   Creation never publishes, including legacy public/unlisted inputs. Sharing
+>   atomically syncs the current score; reopening restores status and Stop without
+>   publishing again. Only scores and team/player names are public.
 > - **`undo` is append-compensating** (it appends an `undo`/`correction` event and
 >   recomputes from the log); it does **not** destructively pop the last event, so
 >   spectators + replay stay consistent.
