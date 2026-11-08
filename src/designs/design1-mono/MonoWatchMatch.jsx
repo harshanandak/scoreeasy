@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 // PUBLIC spectator page for /live/:token — no sign-in required.
 //
 // ── EGRESS / CACHING-EFFICIENT SPLIT-QUERY CONTRACT ────────────────────────
@@ -28,6 +29,7 @@ import GenericTimeline from './scorecard/GenericTimeline';
 import { tabularNums, eyebrowStyle } from './scorecard/scorecardStyles';
 import ReportMatch from './live/ReportMatch';
 import { getSportById } from '../../models/sportRegistry';
+import './kit/history.css';
 
 // A live match with no event in this window reads as PAUSED / DELAY (research
 // §2 "Stale / paused"). 90s mirrors the spec.
@@ -41,6 +43,11 @@ const STALE_MS = 90000;
 const STALE_TICK_MS = 15000;
 
 const TABS = ['Feed', 'Scorecard', 'Stats'];
+
+// How long a spectator waits on the skeleton before we offer a retry. A healthy
+// link answers in well under a second; 10s is long enough for a slow court
+// connection and short enough that nobody stares at grey bars wondering.
+const SNAPSHOT_WAIT_MS = 10000;
 
 /**
  * Forces a re-render on a fixed interval so time-derived UI (the PAUSED / stale
@@ -169,10 +176,10 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   const stale = !isFinal && Date.now() - snapshot.lastEventAt > STALE_MS;
 
   let eyebrow = 'LIVE';
-  if (isFinal) eyebrow = 'FINAL';
+  if (isFinal) eyebrow = isAbandoned(snapshot) ? ABANDONED_LABEL : 'FINAL';
   else if (snapshot.status === 'paused') eyebrow = 'PAUSED';
 
-  const winner = isFinal ? winnerName(snapshot, nameA, nameB) : null;
+  const winner = isFinal && !isAbandoned(snapshot) ? winnerName(snapshot, nameA, nameB) : null;
   const periodLine = snapshot.periodLabel
     ? snapshot.periodLabel
     : getSportById(snapshot.sport)?.engine === 'sets'
@@ -471,7 +478,7 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return (
       <LineScore
         totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
-        isFinalResult={snapshot.status === 'final'}
+        isFinalResult={snapshot.status === 'final' && !isAbandoned(snapshot)}
         teamA={nameA}
         teamB={nameB}
       />
@@ -616,33 +623,89 @@ function WatchSkeleton() {
   );
 }
 
-/** Clean unavailable screen for null (not-found / private / removed). */
-function UnavailableScreen() {
+/**
+ * Kit-style dead-end card for the spectator page: a title, one plain sentence and the way out.
+ * Both states below reuse it so a spectator is never left without a button.
+ */
+function WatchDeadEnd({ titleId, title, message, onRetry }) {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'var(--background)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
-    >
-      <div style={{ maxWidth: 420, textAlign: 'center' }}>
+    <div className="kit-screen" data-screen="watch-dead-end" style={{ minHeight: '100vh', paddingTop: 72 }}>
+      <section className="kit-card kit-empty" aria-labelledby={titleId}>
         <p style={{ ...eyebrowStyle, marginBottom: 8 }}>Live match</p>
-        <h1 style={{ margin: '0 0 8px', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--foreground)' }}>
-          This match isn&apos;t available
+        <h1 id={titleId} style={{ margin: 0, font: '800 1.3rem/1.15 var(--se-font-display)', letterSpacing: '-0.02em' }}>
+          {title}
         </h1>
-        <p style={{ margin: 0, fontSize: '0.9375rem', color: 'var(--muted-foreground)' }}>
-          The link may be old, private, or the match was removed.
-        </p>
-      </div>
+        <p>{message}</p>
+        <div className="kit-btnstack">
+          {onRetry ? (
+            <button type="button" className="se-go" onClick={onRetry}>
+              Try again
+            </button>
+          ) : null}
+          <Link to="/app" className={onRetry ? 'se-ctl' : 'se-go'} style={{ textDecoration: 'none' }}>
+            Go to Score Easy
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
 
+WatchDeadEnd.propTypes = {
+  titleId: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
+  onRetry: PropTypes.func,
+};
+
+/**
+ * getByToken resolved to null: an unknown token, a private match, a stopped share and a removed
+ * match all read the same on purpose, so the page never confirms that a match exists.
+ */
+function UnavailableScreen() {
+  return (
+    <WatchDeadEnd
+      titleId="watch-unavailable-title"
+      title="This match is not being shared"
+      message="The link may be old, or the scorer stopped sharing it."
+    />
+  );
+}
+
+/** The snapshot has not arrived within SNAPSHOT_WAIT_MS: slow or lost connection, not a missing match. */
+function LoadFailedScreen({ onRetry }) {
+  return (
+    <WatchDeadEnd
+      titleId="watch-load-failed-title"
+      title="Can't load this match"
+      message="Check your connection, then try again."
+      onRetry={onRetry}
+    />
+  );
+}
+
+LoadFailedScreen.propTypes = { onRetry: PropTypes.func.isRequired };
+
+/** A shared match in a sport this client cannot render (retired, or newer than this app). Never claims it is unshared. */
+function UnsupportedSportScreen() {
+  return (
+    <WatchDeadEnd
+      titleId="watch-unsupported-title"
+      title="This match can't be displayed"
+      message="This app can't show this sport yet. Update Score Easy, or open the link on another device."
+    />
+  );
+}
+
+/** Re-mounts the page on Try again so every query re-subscribes and the wait starts over. */
 export default function MonoWatchMatch() {
+  const { token } = useParams();
+  const [attempt, setAttempt] = useState(0);
+  // Keyed by token too, so each share link gets its own load budget on client-side navigation.
+  return <WatchMatchPage key={`${token}:${attempt}`} onRetry={() => setAttempt((n) => n + 1)} />;
+}
+
+function WatchMatchPage({ onRetry }) {
   const { token } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -666,10 +729,22 @@ export default function MonoWatchMatch() {
   const [tab, setTab] = useState('Feed');
   const [ctaDismissed, setCtaDismissed] = useState(false);
 
+  // Give the snapshot SNAPSHOT_WAIT_MS to arrive; after that the skeleton becomes a retry screen.
+  // The timer only matters while the snapshot is undefined and is cleared the moment it lands.
+  const [waitedOut, setWaitedOut] = useState(false);
+  const waiting = snapshot === undefined;
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const id = setTimeout(() => setWaitedOut(true), SNAPSHOT_WAIT_MS);
+    return () => clearTimeout(id);
+  }, [waiting]);
+
   // useQuery returns undefined while loading, null when getByToken resolves to
-  // not-found/private/removed. Skeleton on undefined; unavailable on null.
-  if (snapshot === undefined) return <WatchSkeleton />;
-  if (snapshot === null || !getSportById(snapshot.sport)) return <UnavailableScreen />;
+  // not-found/private/removed. Skeleton on undefined (retry screen once the wait runs out);
+  // unavailable on null.
+  if (snapshot === undefined) return waitedOut ? <LoadFailedScreen onRetry={onRetry} /> : <WatchSkeleton />;
+  if (snapshot === null) return <UnavailableScreen />;
+  if (!getSportById(snapshot.sport)) return <UnsupportedSportScreen />;
 
   const nameA = meta?.teamA?.name ?? 'Team A';
   const nameB = meta?.teamB?.name ?? 'Team B';
@@ -885,3 +960,5 @@ export default function MonoWatchMatch() {
     </div>
   );
 }
+
+WatchMatchPage.propTypes = { onRetry: PropTypes.func.isRequired };

@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -39,7 +40,7 @@ export default function GenericSetsTournament() {
         const isComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
         if (isComplete && m.status !== 'completed') {
           needsRepair = true;
-          return { ...m, status: 'completed', winner: t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id };
+          return { ...m, status: 'completed', resultType: 'decided', winner: t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id };
         }
         return m;
       });
@@ -134,7 +135,7 @@ export default function GenericSetsTournament() {
   const deleteKnockoutScore = (matchId) => {
     const updatedKO = tournament.knockoutMatches.map(m => {
       if (m.id === matchId) {
-        return { ...m, sets: [], status: 'pending', winner: null };
+        return { ...resetMatchOutcome(m), sets: [], score1: null, score2: null };
       }
       return m;
     });
@@ -147,7 +148,7 @@ export default function GenericSetsTournament() {
         {/* Back */}
         <button
           onClick={() => navigate(`/${sport}/tournament`)}
-          className="flex items-center gap-1 text-sm mb-6"
+          className="flex items-center gap-1 text-sm mono-hit-back"
           style={{ color: '#888' }}
         >
           <span>←</span>
@@ -229,21 +230,22 @@ export default function GenericSetsTournament() {
         {tab === 'matches' && (
           <div className="space-y-4">
             {tournament.matches.map((match, idx) => {
-              const hasScore = match.sets && match.sets.length > 0;
+              const hasScore = isAbandoned(match) || (match.sets && match.sets.length > 0);
               let t1SetsWon = 0;
               let t2SetsWon = 0;
               if (hasScore) {
                 match.sets.forEach(set => {
+                  if (!set.completed) return;
                   if (set.score1 > set.score2) t1SetsWon++;
                   else if (set.score2 > set.score1) t2SetsWon++;
                 });
               }
 
               // Determine winner and colors
-              const isTeam1Winner = hasScore && t1SetsWon > t2SetsWon;
-              const isTeam2Winner = hasScore && t2SetsWon > t1SetsWon;
-              const team1Color = isTeam1Winner || !hasScore ? '#111' : '#888';
-              const team2Color = isTeam2Winner || !hasScore ? '#111' : '#888';
+              const isTeam1Winner = !isAbandoned(match) && hasScore && t1SetsWon > t2SetsWon;
+              const isTeam2Winner = !isAbandoned(match) && hasScore && t2SetsWon > t1SetsWon;
+              const team1Color = isAbandoned(match) || isTeam1Winner || !hasScore ? '#111' : '#888';
+              const team2Color = isAbandoned(match) || isTeam2Winner || !hasScore ? '#111' : '#888';
 
               return (
                 <div key={match.id} className="mono-card p-5">
@@ -255,7 +257,7 @@ export default function GenericSetsTournament() {
                     <div className="flex items-center gap-2">
                       {hasScore && match.status === 'completed' && (
                         <span className="mono-badge mono-badge-final">
-                          Completed
+                          {isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}
                         </span>
                       )}
                       {hasScore && match.status !== 'completed' && (
@@ -309,21 +311,21 @@ export default function GenericSetsTournament() {
                     <div className="flex justify-center gap-2 flex-wrap mb-5 py-3" style={{ borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
                       {match.sets.map((set, i) => {
                         const setWinner = set.score1 > set.score2 ? 'team1' : 'team2';
-                        const matchWinner = t1SetsWon > t2SetsWon ? 'team1' : 'team2';
+                        const matchWinner = isAbandoned(match) ? null : t1SetsWon > t2SetsWon ? 'team1' : 'team2';
                         const isMatchWinnerSet = setWinner === matchWinner;
                         return (
                           <span
                             key={`set-${set.score1}-${set.score2}-${i}`}
                             className="px-3 py-1.5 rounded font-mono"
                             style={{
-                              background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
+                              background: isAbandoned(match) ? 'var(--se-color-surface-warm)' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
                               color: '#111',
                               fontSize: '0.875rem'
                             }}
                           >
-                            <span style={{ fontWeight: set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
+                            <span style={{ fontWeight: !isAbandoned(match) && set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
                             <span style={{ color: '#ccc', margin: '0 4px', fontWeight: '300' }}>-</span>
-                            <span style={{ fontWeight: set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
+                            <span style={{ fontWeight: !isAbandoned(match) && set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
                           </span>
                         );
                       })}

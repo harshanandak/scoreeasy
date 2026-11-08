@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
@@ -123,11 +124,11 @@ describe('cricket finish navigation', () => {
     const complete = vi.fn();
     renderScorer(kind, complete);
     fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' })); confirmEarlyFinish();
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath);
     const data = JSON.parse(localStorage.getItem(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket'));
     const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
-    expect(saved).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw', completedAt: expect.any(String) });
+    expect(saved).toMatchObject({ status: 'completed', winner: null, resultType: 'abandoned', completedAt: expect.any(String) });
     expect(saved.innings).toHaveLength(4);
     expect(saved.draftState).toBeUndefined();
   });

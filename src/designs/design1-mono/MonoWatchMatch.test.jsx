@@ -174,15 +174,12 @@ describe('MonoWatchMatch', () => {
     expect(within(stats).getByText('#2')).toBeInTheDocument();
   });
 
-  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('shows the missing-snapshot unavailable state for a direct %s live link', (sport) => {
-    mocks.snapshot = null;
-    const missing = renderAt();
-    const unavailable = missing.container.textContent;
-    missing.unmount();
+  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('a shared %s match this client cannot render says it cannot be displayed, never that it is not shared', (sport) => {
     mocks.snapshot = { ...GOALS_SNAPSHOT, sport };
     mocks.meta = { ...META, sport };
-    const retired = renderAt();
-    expect(retired.container.textContent).toBe(unavailable);
+    renderAt();
+    expect(screen.getByRole('heading', { name: "This match can't be displayed" })).toBeInTheDocument();
+    expect(screen.queryByText('This match is not being shared')).not.toBeInTheDocument();
     expect(screen.queryByRole('banner', { name: 'Match scorebug' })).not.toBeInTheDocument();
   });
 
@@ -262,6 +259,18 @@ describe('MonoWatchMatch', () => {
     expect(within(card).queryByText('Final')).not.toBeInTheDocument();
   });
 
+  it('an abandoned final snapshot keeps the score without a winner highlight', () => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final', resultType: 'abandoned' };
+    mocks.meta = { ...META, sport: 'football' };
+    renderAt('ABC123', '?kiosk=1');
+    expect(screen.getByText('Abandoned · no result')).toBeInTheDocument();
+    const card = screen.getByRole('region', { name: 'Line score' });
+    expect(within(card).getByText('3')).toBeInTheDocument();
+    expect(within(card).getByText('2')).toBeInTheDocument();
+    expect(card.querySelector('[data-winner]')).toBeNull();
+    expect(screen.queryByText('▸ Reds')).not.toBeInTheDocument();
+  });
+
   it('scorecard (goals) DOES highlight the winner once the match is final', () => {
     mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final' };
     mocks.meta = { ...META, sport: 'football' };
@@ -311,13 +320,80 @@ describe('MonoWatchMatch', () => {
     expect(within(stats).getByText('Reds')).toBeInTheDocument(); // serving team
   });
 
-  it('shows the not-available screen when getByToken returns null', () => {
-    mocks.snapshot = null; // resolved not-found / private / removed
+  it('says the match is not being shared when getByToken returns null, with a way home', () => {
+    mocks.snapshot = null; // resolved not-found / private / stopped: the server never says which
     mocks.meta = null;
     renderAt();
 
-    expect(screen.getByText(/isn't available/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'This match is not being shared' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/app');
     expect(screen.queryByRole('banner', { name: 'Match scorebug' })).not.toBeInTheDocument();
+  });
+
+  describe('a snapshot that never arrives', () => {
+    beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }));
+    afterEach(() => vi.useRealTimers());
+
+    const waitOut = () => act(() => { vi.advanceTimersByTime(12000); });
+
+    it('keeps the skeleton while the snapshot is still within the wait', () => {
+      mocks.snapshot = undefined;
+      renderAt();
+      act(() => { vi.advanceTimersByTime(5000); });
+      expect(screen.getByLabelText('Loading match')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+    });
+
+    it('replaces the skeleton with a retry and a way home after the wait', () => {
+      mocks.snapshot = undefined;
+      renderAt();
+      waitOut();
+
+      expect(screen.queryByLabelText('Loading match')).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: "Can't load this match" })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/app');
+    });
+
+    it('Try again goes back to loading, then shows the match when the snapshot arrives', () => {
+      mocks.snapshot = undefined;
+      const view = renderAt();
+      waitOut();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      expect(screen.getByLabelText('Loading match')).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: "Can't load this match" })).not.toBeInTheDocument();
+
+      mocks.snapshot = VOLLEY_SNAPSHOT;
+      mocks.meta = META;
+      view.rerender(
+        <MemoryRouter initialEntries={['/live/ABC123']}>
+          <Routes>
+            <Route path="/live/:token" element={<MonoWatchMatch />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      expect(screen.getByRole('banner', { name: 'Match scorebug' })).toBeInTheDocument();
+    });
+
+    it('shows the match, not the error, when the snapshot lands after the wait', () => {
+      mocks.snapshot = undefined;
+      const view = renderAt();
+      waitOut();
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+
+      mocks.snapshot = VOLLEY_SNAPSHOT;
+      mocks.meta = META;
+      view.rerender(
+        <MemoryRouter initialEntries={['/live/ABC123']}>
+          <Routes>
+            <Route path="/live/:token" element={<MonoWatchMatch />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+      expect(screen.getByRole('banner', { name: 'Match scorebug' })).toBeInTheDocument();
+    });
   });
 
   it('shows the PAUSED badge when the last event is stale (> 90s)', () => {

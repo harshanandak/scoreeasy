@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from './matchOutcome';
 /**
  * matchVerdict — pure, engine-agnostic result summariser.
  *
@@ -171,7 +172,7 @@ export function matchVerdict(match) {
   const m = match || {};
   const team1 = m.team1 || 'Team 1';
   const team2 = m.team2 || 'Team 2';
-  const status = m.status === 'abandoned' ? 'abandoned' : 'completed';
+  const status = isAbandoned(m) ? 'abandoned' : 'completed';
   const kind = m.kind;
   // Cricket and sets derive their primary tallies from the shape the engine
   // actually persisted (innings runs / sets won); every other engine uses the
@@ -191,13 +192,13 @@ export function matchVerdict(match) {
       isDraw: false,
       winnerSide: 'none',
       winnerName: null,
-      headline: 'Match abandoned',
+      headline: ABANDONED_LABEL,
       scoreLine: `${s1} ${EN_DASH} ${s2}`,
       detailLabel,
       lineScore: kind === 'cricket'
         ? cricketLineScore(m, team1, team2, s1, s2)
         : completedSetsLineScore(m.sets),
-      ariaSummary: 'Match abandoned.',
+      ariaSummary: `${ABANDONED_LABEL}. ${team1} ${s1}, ${team2} ${s2}.`,
     };
   }
 

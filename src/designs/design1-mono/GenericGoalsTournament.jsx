@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -117,7 +118,7 @@ export default function GenericGoalsTournament() {
         {/* Back */}
         <button
           onClick={() => navigate(`/${sport}/tournament`)}
-          className="flex items-center gap-1 text-sm mb-6"
+          className="flex items-center gap-1 text-sm mono-hit-back"
           style={{ color: '#888' }}
         >
           <span>←</span>
@@ -202,8 +203,8 @@ export default function GenericGoalsTournament() {
               const hasScore = match.score1 !== null && match.score1 !== undefined;
 
               // Determine winner and colors
-              const isTeam1Winner = hasScore && match.winner === match.team1Id;
-              const isTeam2Winner = hasScore && match.winner === match.team2Id;
+              const isTeam1Winner = !isAbandoned(match) && hasScore && match.winner === match.team1Id;
+              const isTeam2Winner = !isAbandoned(match) && hasScore && match.winner === match.team2Id;
               const team1Color = isTeam1Winner || !hasScore ? '#111' : '#888';
               const team2Color = isTeam2Winner || !hasScore ? '#111' : '#888';
 
@@ -217,7 +218,7 @@ export default function GenericGoalsTournament() {
                     <div className="flex items-center gap-2">
                       {hasScore && match.status === 'completed' && (
                         <span className="mono-badge mono-badge-final">
-                          Completed
+                          {isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}
                         </span>
                       )}
                       {hasScore && match.status !== 'completed' && (

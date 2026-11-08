@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../../utils/matchOutcome';
 import PropTypes from 'prop-types';
 import { cricketScorePair, cricketScoreLine } from '../../../utils/cricketScoreFormat';
 import { useState, useEffect } from 'react';
@@ -132,10 +133,10 @@ function LastMatchHero({ match, navigate }) {
   const sport = getSportById(match.sport);
   const colours = teamColourVars(deriveTeamColours(match.team1Color, match.team2Color));
   const [score1, score2] = scorePair(match);
-  const winnerSide = isDrawToken(match.winner) ? null : match.winner === match.team1 ? 'a' : match.winner === match.team2 ? 'b' : null;
+  const winnerSide = isAbandoned(match) || isDrawToken(match.winner) ? null : match.winner === match.team1 ? 'a' : match.winner === match.team2 ? 'b' : null;
   const completedSets = Array.isArray(match.sets) ? match.sets.filter((set) => set?.completed) : [];
   const when = relativeDay(matchTime(match));
-  const result = match.winner ? getWinnerLabel(match.winner) : 'Completed';
+  const result = isAbandoned(match) ? ABANDONED_LABEL : match.winner ? getWinnerLabel(match.winner) : 'Completed';
   const team = (side, name, score) => (
     <div className={`kit-last-team${winnerSide === side ? ' is-winner' : ''}`}>
       <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
@@ -200,9 +201,9 @@ LastMatchHero.propTypes = {
 function MatchRow({ qm, onOpen }) {
   const sportName = getSportById(qm.sport)?.name || 'Custom';
   const [score1, score2] = scorePair(qm);
-  const team1Won = !isDrawToken(qm.winner) && qm.winner === qm.team1;
-  const team2Won = !isDrawToken(qm.winner) && qm.winner === qm.team2;
-  const when = relativeDay(matchTime(qm));
+  const team1Won = !isAbandoned(qm) && !isDrawToken(qm.winner) && qm.winner === qm.team1;
+  const team2Won = !isAbandoned(qm) && !isDrawToken(qm.winner) && qm.winner === qm.team2;
+  const when = [relativeDay(matchTime(qm)), isAbandoned(qm) ? ABANDONED_LABEL : null].filter(Boolean).join(' · ');
   return (
     <button type="button" className="kit-row" onClick={onOpen}>
       <SportBadge sportId={qm.sport} />
