@@ -273,7 +273,7 @@ export function KabaddiLiveBoard({
               <button type="button" aria-pressed={mode === 'touched'} onClick={() => onMode('touched')}>Touched</button>
               <button type="button" disabled={view.rules.boundary === 'none'} aria-pressed={mode === 'out'} onClick={() => onMode('out')}>Stepped out</button>
             </div>
-            {!named && <div className="kit-seg kl-counts" role="group" aria-label="Quick touch count">
+            {!named && <div className={`kit-seg kl-counts${moreCounts ? ' kl-counts-more' : ''}`} role="group" aria-label="Quick touch count">
               {(moreCounts ? tokens.filter(p => p.on).map((_, i) => i + 1).filter(n => n >= 3) : [1, 2]).map(n => <button key={n} type="button" disabled={n > tokens.filter(p => p.on).length} onClick={() => { onCount(n); setMoreCounts(false); }}>+{n}</button>)}
               <button type="button" disabled={tokens.filter(p => p.on).length < 3} onClick={() => setMoreCounts(v => !v)}>{moreCounts ? '1 / 2' : '3+'}</button>
             </div>}

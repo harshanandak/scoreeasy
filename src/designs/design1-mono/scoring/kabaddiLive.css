@@ -242,3 +242,6 @@
 .kl-tools .kl-mode { flex: 1 1 auto; min-width: 0; margin: 0; }
 .kl-tools .kl-counts { flex: 0 0 160px; }
 .kl-tools button { min-height: 48px; min-width: 0; font-size: 0.85rem; }
+
+.kl-tools .kl-counts-more { display: flex; overflow-x: auto; }
+.kl-counts-more button { flex: 0 0 48px; }

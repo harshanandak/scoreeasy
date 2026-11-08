@@ -441,7 +441,7 @@ export function rulingForDraft(state, draft, result) {
   if (result === 'tackled' || result === 'raiderOut') {
     const reason = result === 'tackled' ? 'Tackled' : 'Raider stepped out';
     if (!stepped.length) return result === 'tackled' ? { type: 'tackled', ...bonus } : { type: 'selfOut', reason, ...bonus };
-    return { type: 'mixed', reason, dismissals: [...stepped.map(dismissal), raiderDismissal], ...bonus };
+    return { type: 'mixed', reason, ...(result === 'tackled' ? { physicalTackle: true } : {}), dismissals: [...stepped.map(dismissal), raiderDismissal], ...bonus };
   }
   return null;
 }
