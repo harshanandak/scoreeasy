@@ -38,8 +38,11 @@ vi.mock('convex/react', () => ({
   useMutation: (ref) => h.get(ref),
   useConvex: () => h,
 }));
+vi.mock('./useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, user: { _id: 'owner' } }) }));
+vi.mock('../mobile/lifecycle', () => ({ addAppStateChangeListener: async () => () => {} }));
 
 import { useLiveBroadcast } from './useLiveBroadcast';
+import { usePendingLiveFinalizations } from './usePendingLiveFinalizations';
 import { load, enqueue } from '../lib/live/outbox';
 import { loadSession } from '../lib/live/liveSession';
 
@@ -61,7 +64,10 @@ beforeEach(() => {
 });
 
 function setup(opts) {
-  return renderHook(() => useLiveBroadcast(opts));
+  return renderHook(() => {
+    usePendingLiveFinalizations();
+    return useLiveBroadcast(opts);
+  });
 }
 
 describe('durable live finalization', () => {
@@ -169,6 +175,27 @@ describe('durable live finalization', () => {
     expect(h.get('live:scorePoint').mock.invocationCallOrder.at(-1)).toBeLessThan(h.get('live:finalize').mock.invocationCallOrder[0]);
     expect(load()).toEqual([]);
     expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
+  });
+
+  it('keeps a pending finish on the old session after Rematch and never republishes after Stop', async () => {
+    const first = await shared();
+    await finishOffline(first);
+    await act(async () => {
+      await first.result.current.setVisibility('private');
+      first.result.current.reset();
+    });
+    h.get('live:create').mockResolvedValue({ matchId: 'new-live', token: 'NEW' });
+    const next = { ...GO, clientMatchId: 'rematch' };
+    await act(async () => { await first.result.current.goLive(next); });
+    h.get('live:scorePoint').mockResolvedValue({});
+    await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+    await waitFor(() => expect(h.get('live:finalize')).toHaveBeenCalledTimes(1));
+    expect(h.get('live:finalize')).toHaveBeenCalledWith({ matchId: 'mid1', resultType: 'abandoned' });
+    expect(h.get('live:setVisibility').mock.calls.map(([args]) => [args.matchId, args.visibility])).toEqual([
+      ['mid1', 'public'], ['mid1', 'private'], ['new-live', 'public'],
+    ]);
+    await act(async () => { await first.result.current.point({ team: 'B', at: 10 }); });
+    expect(h.get('live:scorePoint')).toHaveBeenLastCalledWith(expect.objectContaining({ matchId: 'new-live' }));
   });
 });
 
@@ -524,7 +551,7 @@ describe('useLiveBroadcast', () => {
     );
   });
 
-  it('drops a queued event that belongs to a DIFFERENT match (no cross-match contamination)', async () => {
+  it('preserves another match\'s queued event without sending it to the current match', async () => {
     h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
     h.get('live:scorePoint').mockResolvedValue({});
     // A stale event from a previous match left in the shared outbox.
@@ -538,13 +565,11 @@ describe('useLiveBroadcast', () => {
       await result.current.point({ team: 'A', value: 1, at: 1 });
     });
 
-    // The foreign event was DROPPED, never sent to cm1's matchId — assert the
-    // EXACT send set (one call, only cm1:1), so a future rehydrate that re-keys
-    // the stale item with a fresh clientEventId can't slip through unnoticed.
+    // Another session's recovery owns its event; this scorer must neither send nor discard it.
     expect(h.spies['live:scorePoint']).toHaveBeenCalledTimes(1);
     const sentEventIds = h.spies['live:scorePoint'].mock.calls.map((c) => c[0].clientEventId);
     expect(sentEventIds).toEqual(['cm1:1']);
-    expect(load()).toEqual([]); // queue fully drained (foreign dropped, cm1 sent)
+    expect(load().map(item => item.clientEventId)).toEqual(['OTHER:1']);
   });
 
   it('drops a finalized-match rejection even when prod REDACTS the error message', async () => {

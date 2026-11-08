@@ -37,8 +37,13 @@ export function load() {
 }
 
 /** Number of items currently queued. */
-export function size() {
-  return load().length;
+export function size(clientMatchId) {
+  return load().filter(item => clientMatchId === undefined || item.clientMatchId === clientMatchId).length;
+}
+
+/** Cancel only this broadcast generation, preserving other matches' queued scores. */
+export function removeSessionItems(clientMatchId) {
+  return saveData(OUTBOX_KEY, load().filter(item => item.clientMatchId !== clientMatchId));
 }
 
 /** Next item to drain (front of FIFO) without removing it, or null. */
@@ -80,7 +85,7 @@ export function enqueue(item) {
 }
 
 /**
- * Replay queued items IN ORDER through `sendFn`, removing each from the
+ * Replay queued items IN ORDER (optionally for one clientMatchId) through `sendFn`, removing each from the
  * persisted queue on success and STOPPING at the first failure (the failed
  * item and the entire tail are kept, in order, for the next attempt).
  *
@@ -92,24 +97,25 @@ export function enqueue(item) {
  *   because Convex dedups — this function does not need to track seen keys.
  *
  * @param {(item: object) => Promise<unknown>} sendFn
+ * @param {{ clientMatchId?: string }} [options]
  * @returns {Promise<{ sent: number, remaining: number, error: Error|null }>}
  */
-export async function reconcile(sendFn) {
+export async function reconcile(sendFn, { clientMatchId } = {}) {
   let sent = 0;
 
   // Re-load fresh each iteration so a point enqueued DURING a network drain
   // (the scorer never stops, §3.1) is not clobbered by a stale slice. enqueue
-  // is append-only, so the head we just acked is always index 0.
+  // is append-only; acknowledgement identifies the session/event rather than its index.
    
   while (true) {
     const queue = load();
 
-    // Empty queue is a no-op — never even call sendFn.
-    if (queue.length === 0) {
+    // No queued work for this session is a no-op.
+    const item = queue.find(entry => clientMatchId === undefined || entry.clientMatchId === clientMatchId);
+    if (!item) {
       return { sent, remaining: 0, error: null };
     }
 
-    const item = queue[0];
     try {
        
       await sendFn(item);
@@ -117,16 +123,16 @@ export async function reconcile(sendFn) {
       // STOP on the first failure: keep this item + the tail, in order.
       return {
         sent,
-        remaining: queue.length,
+        remaining: size(clientMatchId),
         error: error instanceof Error ? error : new Error(String(error)),
       };
     }
 
-    // Ack: re-load (picks up anything enqueued during the await), drop the
-    // head we just sent, and persist immediately so a crash here cannot
-    // replay an already-acked event.
+    // Match the acked event after reloading: another session may drain, or an
+    // intentional reset may cancel this generation, while the send is in flight.
     const after = load();
-    after.shift();
+    const index = after.findIndex(entry => entry.clientMatchId === item.clientMatchId && entry.clientEventId === item.clientEventId);
+    if (index !== -1) after.splice(index, 1);
     saveData(OUTBOX_KEY, after);
     sent += 1;
   }

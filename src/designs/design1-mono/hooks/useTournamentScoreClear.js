@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { resetMatchOutcome } from '../../../utils/matchOutcome';
+import { resetLiveGeneration } from '../../../lib/live/liveSession';
 
 export function useTournamentScoreClear({
   scoreKind,
@@ -28,6 +29,7 @@ export function useTournamentScoreClear({
 
   const confirmScoreClear = () => {
     if (!pendingScoreClear || pendingScoreClear.tournamentScopeKey !== tournamentScopeKey) return;
+    resetLiveGeneration(`${tournamentScopeKey}:${pendingScoreClear.matchId}`);
     const updatedMatches = tournament.matches.map((match) =>
       match.id === pendingScoreClear.matchId ? clearMatchScore(match, scoreKind) : match
     );

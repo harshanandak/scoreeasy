@@ -11,9 +11,40 @@
 
 
 import { loadData, saveData } from '../../utils/storage';
+import { removeSessionItems } from './outbox';
 
 // Per-clientMatchId session record key (se_ prefix per project convention).
 const SESSION_PREFIX = 'se_live_session:';
+const GENERATION_PREFIX = 'se_live_generation:';
+export const LIVE_SESSIONS_CHANGED = 'se-live-sessions-changed';
+const notify = () => globalThis.dispatchEvent?.(new Event(LIVE_SESSIONS_CHANGED));
+
+export function liveClientMatchId(baseId) {
+  const generation = loadData(`${GENERATION_PREFIX}${baseId}`, 0);
+  return generation ? `${baseId}:generation:${generation}` : baseId;
+}
+
+export function liveSessions() {
+  const sessions = [];
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key?.startsWith(SESSION_PREFIX)) continue;
+      const clientMatchId = key.slice(SESSION_PREFIX.length);
+      const session = loadSession(clientMatchId);
+      if (session) sessions.push({ ...session, clientMatchId });
+    }
+  } catch { /* Retry on the next lifecycle event if storage is unavailable. */ }
+  return sessions;
+}
+
+/** Intentional fixture clear retires the old server identity, including pending work. */
+export function resetLiveGeneration(baseId) {
+  const previous = liveClientMatchId(baseId);
+  saveData(`${GENERATION_PREFIX}${baseId}`, loadData(`${GENERATION_PREFIX}${baseId}`, 0) + 1);
+  removeSessionItems(previous);
+  clearSession(previous);
+}
 
 /** Storage key for one match's broadcast session. */
 export function sessionKey(clientMatchId) {
@@ -39,13 +70,17 @@ export function loadSession(clientMatchId) {
  */
 export function saveSession(clientMatchId, session) {
   if (!clientMatchId) return false;
-  return saveData(sessionKey(clientMatchId), session);
+  const saved = saveData(sessionKey(clientMatchId), session);
+  notify();
+  return saved;
 }
 
 /** Forget a match's broadcast session (e.g. after discard). */
 export function clearSession(clientMatchId) {
   if (!clientMatchId) return false;
-  return saveData(sessionKey(clientMatchId), null);
+  const saved = saveData(sessionKey(clientMatchId), null);
+  notify();
+  return saved;
 }
 
 // ---------------------------------------------------------------------------

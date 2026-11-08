@@ -123,6 +123,20 @@ it('recovers after reload directly onto the result route without calling board r
   expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
 });
 
+it('still recovers an unfinished live match\'s queued points on reconnect', async () => {
+  mount();
+  await screen.findByRole('button', { name: 'Share' });
+  await act(async () => { fireEvent.click(screen.getByText('Share')); });
+  h.scorePoint.mockRejectedValue(new Error('offline'));
+  await act(async () => { fireEvent.click(screen.getByText('Point')); });
+  expect(load()).toHaveLength(1);
+  h.scorePoint.mockClear().mockResolvedValue({});
+  await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+  await waitFor(() => expect(load()).toEqual([]));
+  expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ matchId: 'old-live' }));
+  expect(h.finalize).not.toHaveBeenCalled();
+});
+
 it.each(['match_not_found', 'not_authorized'])('cancels a rejected session with queued scores and stops reconnect/foreground retries: %s', async (code) => {
   mount();
   await offlineFinish();
