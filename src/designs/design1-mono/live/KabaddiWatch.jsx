@@ -21,8 +21,7 @@ import './kabaddiWatch.css';
 // Game progression first. Live: the score strip (team gradients, small player pips, a raid-clock ring
 // with the kabaddi mark between the cards; the score is the only big number) over a broadcast-style
 // court that plays a single raid animation. Raids: a two-sided timeline, one line per raid. Stats:
-// how the game is going. Read-only. Rounds 3 and 4 are still in the tree (KabaddiWatchR3.jsx,
-// KabaddiWatchR4.jsx) for comparison. Every number comes from kabaddiLiveModel.js,
+// how the game is going. Read-only. Every number comes from kabaddiLiveModel.js,
 // which folds the raid engine's state and journal.
 
 function resultOf(live) {
