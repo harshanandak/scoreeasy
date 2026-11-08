@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { applyRaid, startHalf, timeUp } from '../../utils/kabaddiEngine';
+import { applyRaid, startHalf, startRaid, timeUp } from '../../utils/kabaddiEngine';
 import { createKabaddiMatch } from '../../utils/kabaddiQuickMatch';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { clearData, listDataKeys, loadData, loadQuickMatch, saveData, saveQuickMatch } from '../../utils/storage';
@@ -46,6 +46,36 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('kabaddi scorer review regressions with durable storage', () => {
+  it.each([false, true])('records Finish directly at zero as decided, refresh=%s', (refresh) => {
+    store(secondHalf());
+    let mounted = render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(HALF_MS));
+    if (refresh) {
+      mounted.unmount();
+      mounted = render(<MonoQuickMatch />);
+    }
+    finish();
+    expect(loadQuickMatch(ID)).toMatchObject({ resultType: 'decided', winner: 'Royals', score1: 1, score2: 0, kabaddi: { state: { phase: 'finished' } } });
+  });
+
+  it('keeps direct Finish with time left abandoned', () => {
+    store(secondHalf());
+    render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(HALF_MS - 1000));
+    finish();
+    expect(loadQuickMatch(ID)).toMatchObject({ resultType: 'abandoned', winner: null, score1: 1, score2: 0 });
+  });
+
+  it('keeps an unresolved active raid at zero on the existing abandoned path', () => {
+    const match = secondHalf();
+    match.state = startRaid(match.state, { id: 'pending-raid', atMs: Date.now() });
+    store(match);
+    render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(HALF_MS));
+    finish();
+    expect(loadQuickMatch(ID)).toMatchObject({ resultType: 'abandoned', winner: null, kabaddi: { state: { activeRaid: { id: 'pending-raid' } } } });
+  });
+
   it('records early Call full time as abandoned with no winner, even after refresh', () => {
     store(secondHalf());
     let mounted = render(<MonoQuickMatch />);
