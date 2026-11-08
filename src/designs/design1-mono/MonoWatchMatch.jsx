@@ -1,4 +1,6 @@
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
+import KabaddiWatch from './live/KabaddiWatch';
+import { kabaddiWatchMatch } from '../../utils/kabaddiBroadcast';
 // PUBLIC spectator page for /live/:token — no sign-in required.
 //
 // ── EGRESS / CACHING-EFFICIENT SPLIT-QUERY CONTRACT ────────────────────────
@@ -726,6 +728,8 @@ function WatchMatchPage({ onRetry }) {
   // Hooks; this page is always mounted under a ConvexProvider.
   const connectionStatus = deriveConnectionStatus(useConvexConnectionState());
 
+  const [viewerNow, setViewerNow] = useState(Date.now);
+  useEffect(() => { const id = setInterval(() => setViewerNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   const [tab, setTab] = useState('Feed');
   const [ctaDismissed, setCtaDismissed] = useState(false);
 
@@ -750,6 +754,17 @@ function WatchMatchPage({ onRetry }) {
   const nameB = meta?.teamB?.name ?? 'Team B';
   const eventRows = events ?? [];
   const canLoadMore = status === 'CanLoadMore';
+  if (snapshot.sport === 'kabaddi' && snapshot.kabaddi) {
+    const match = kabaddiWatchMatch(snapshot, meta, eventRows);
+    const roster = ['A', 'B'].map(team => (meta?.players ?? []).filter(p => p.team === team).map(p => p.name));
+    return <>
+      <ConnectionBanner status={connectionStatus} />
+      <KabaddiWatch match={match} now={viewerNow} roster={roster} />
+      {canLoadMore && <div className="kw-load"><p>Showing loaded raids. Score and point totals include the whole match.</p><button type="button" className="se-ctl" onClick={() => loadMore(50)}>Load earlier raids</button></div>}
+      <ReportMatch token={token} />
+    </>;
+  }
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--background)', color: 'var(--foreground)' }}>

@@ -1,4 +1,5 @@
-import { v, ConvexError } from "convex/values";
+import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot } from './lib/kabaddiValidators';
+import { v, ConvexError, Infer } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -61,19 +62,14 @@ const snapshotArgValidator = v.object({
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
+  kabaddi: v.optional(kabaddiSnapshotValidator),
 });
 
 // The match-doc fields a snapshot patches (kept in one place so scorePoint and
 // undo stay in lockstep). servingTeam/periodLabel may be undefined → Convex
 // patch clears them, which is correct for sports without serving/periods.
-function snapshotPatch(snap: {
-  setsA: number;
-  setsB: number;
-  setScores: { a: number; b: number }[];
-  servingTeam?: "A" | "B";
-  currentUnit: number;
-  periodLabel?: string;
-}) {
+function snapshotPatch(snap: Infer<typeof snapshotArgValidator>) {
+  if (snap.kabaddi) validateKabaddiSnapshot(snap.kabaddi, [snap.pointsA, snap.pointsB]);
   return {
     setsA: snap.setsA,
     setsB: snap.setsB,
@@ -81,6 +77,7 @@ function snapshotPatch(snap: {
     servingTeam: snap.servingTeam,
     currentUnit: snap.currentUnit,
     periodLabel: snap.periodLabel,
+    ...(snap.kabaddi ? { kabaddi: snap.kabaddi } : {}),
   };
 }
 
@@ -119,6 +116,8 @@ export const create = authedMutation({
     ),
     isYouthMatch: v.optional(v.boolean()),
     clientMatchId: v.string(),
+    players: v.optional(v.array(v.object({ team: v.union(v.literal("A"), v.literal("B")), name: v.string(), jersey: v.optional(v.string()) }))),
+    kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
     // Idempotent create: reuse an existing live match for this owner+clientMatchId
@@ -150,8 +149,9 @@ export const create = authedMutation({
     // client-only). A hit HOLDS the match: the row persists so the operator keeps
     // scoring locally (and the idempotent outbox does not loop on a throw), while
     // resolveReadableMatch hides held matches from every public reader.
+    if ((args.players?.length ?? 0) > 24 || (args.kabaddiHistory?.length ?? 0) > 1000) throw new Error("Match metadata exceeds supported capacity");
     const flagged =
-      containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name);
+      containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name) || (args.players ?? []).some(p => containsProfanity(p.name));
 
     const now = Date.now();
     const token = generateToken();
@@ -173,7 +173,7 @@ export const create = authedMutation({
       setsB: 0,
       setScores: [],
       currentUnit: 1,
-      lastSeq: 0,
+      lastSeq: args.kabaddiHistory?.length ?? 0,
       feedRank: feedBucket(now),
       startedAt: now,
       lastEventAt: now,
@@ -183,9 +183,13 @@ export const create = authedMutation({
       matchId,
       teamA: sanitizeTeamMeta(args.teamA),
       teamB: sanitizeTeamMeta(args.teamB),
+      ...(args.players ? { players: args.players } : {}),
       sport: args.sport,
     });
 
+    for (const [index, raid] of (args.kabaddiHistory ?? []).entries()) {
+      await ctx.db.insert("matchEvents", { matchId, seq: index + 1, clientEventId: `kabaddi-history:${raid.id}`, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: now, kabaddi: { kind: "raid", raid } });
+    }
     return { token, matchId };
   },
 });
@@ -214,10 +218,11 @@ export const scorePoint = authedMutation({
     // intentionally NOT accepted here. Defaults to "point" for older clients and
     // queued outbox items that predate this field.
     type: v.optional(
-      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction")),
+      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction"), v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state")),
     ),
     at: v.number(),
     playerId: v.optional(v.string()),
+    kabaddi: v.optional(kabaddiUpdateValidator),
     snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
@@ -263,6 +268,7 @@ export const scorePoint = authedMutation({
       team: args.team,
       value: delta,
       playerId: args.playerId,
+      ...(args.kabaddi ? { kabaddi: args.kabaddi } : {}),
       runningA,
       runningB,
       setsA: snap ? snap.setsA : match.setsA,
@@ -614,6 +620,7 @@ const publicSnapshotValidator = v.object({
   startedAt: v.number(),
   lastEventAt: v.number(),
   isYouthMatch: v.boolean(),
+  kabaddi: v.optional(kabaddiSnapshotValidator),
 });
 
 // Shared token gate (§4.4 / §7.1). Token possession authorizes reads of
@@ -661,6 +668,7 @@ export const getByToken = query({
       startedAt: match.startedAt,
       lastEventAt: match.lastEventAt,
       isYouthMatch: match.isYouthMatch,
+      ...(match.kabaddi ? { kabaddi: match.kabaddi } : {}),
     };
   },
 });
@@ -806,6 +814,7 @@ const publicEventValidator = v.object({
     v.literal("undo"),
     v.literal("correction"),
     v.literal("note"),
+    v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state"),
   ),
   team: v.optional(v.union(v.literal("A"), v.literal("B"))),
   value: v.number(),
@@ -816,6 +825,7 @@ const publicEventValidator = v.object({
   servingAfter: v.optional(v.union(v.literal("A"), v.literal("B"))),
   at: v.number(),
   commentary: v.optional(v.string()),
+  kabaddi: v.optional(kabaddiUpdateValidator),
 });
 
 function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
@@ -831,6 +841,7 @@ function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
     servingAfter?: "A" | "B";
     at: number;
     commentary?: string;
+    kabaddi?: Infer<typeof kabaddiUpdateValidator>;
   } = {
     seq: e.seq,
     type: e.type,
@@ -842,6 +853,7 @@ function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
     setsB: e.setsB,
     servingAfter: e.servingAfter,
     at: e.at,
+    ...(e.kabaddi ? { kabaddi: e.kabaddi } : {}),
   };
   // Commentary is free-text; suppress it entirely for youth matches.
   if (!isYouthMatch && e.commentary !== undefined) {

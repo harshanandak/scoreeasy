@@ -1,0 +1,228 @@
+/* Live tab court, round 5 (KabaddiCourt.jsx). A perspective mat in SVG, one hero raider, plain defender
+   tokens, callouts on the court, a raid clock ring, a last-raids form strip. Colour only from
+   --se-color-* tokens and the engine's --team-{a,b}-* vars.
+   prefers-reduced-motion: every animation is off and the static pose below is what shows
+   (raid in progress: raider inside the defending half; outcome: final state with its chips). */
+
+.kc-card {
+  --kc-t: 3s;
+  --kc-hair: var(--se-color-line-soft);
+  box-sizing: border-box; padding: 10px 8px 12px;
+  border: 1px solid var(--kc-hair); border-radius: 22px; background: var(--se-color-surface);
+}
+
+/* ---- header: who raids (or raided) and how many are on the mat ---- */
+.kc-head { display: flex; align-items: center; gap: 8px; padding: 0 6px 4px; min-height: 30px; }
+.kc-who { --kc-core: var(--team-a-core); display: inline-flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; font-size: 0.95rem; font-weight: 600; line-height: 1.2; }
+.kc-who-b { --kc-core: var(--team-b-core); }
+.kc-who b { font-weight: 800; }
+.kc-mark {
+  display: inline-block; flex: none; width: 26px; height: 20px; background: var(--kc-core, var(--team-a-core));
+  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+}
+.kc-mat { display: inline-flex; flex: none; align-items: center; gap: 4px; color: var(--se-color-ink-soft); font: 800 0.8rem/1 var(--se-font-num); font-variant-numeric: tabular-nums; }
+.kc-mat em { margin: 0 2px; font: 700 0.7rem/1 var(--se-font-sans); font-style: normal; }
+.kc-mat i { width: 9px; height: 9px; border-radius: 50%; }
+.kc-dot-a { background: var(--team-a-core); }
+.kc-dot-b { background: var(--team-b-core); }
+
+/* ---- the mat ---- */
+.kc-stage { position: relative; }
+.kc-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.kc-ground { fill: color-mix(in oklab, var(--se-color-ink) 8%, transparent); }
+.kc-front { fill: color-mix(in oklab, var(--se-color-ink) 34%, var(--se-color-surface-warm)); }
+.kc-apron { fill: color-mix(in oklab, var(--se-color-ink) 7%, var(--se-color-surface-warm)); }
+.kc-floor-a { fill: color-mix(in oklab, var(--team-a-core) 34%, var(--se-color-surface)); }
+.kc-floor-b { fill: color-mix(in oklab, var(--team-b-core) 34%, var(--se-color-surface)); }
+.dark .kc-front { fill: color-mix(in oklab, var(--se-color-ink) 14%, var(--se-color-surface)); }
+.dark .kc-apron { fill: color-mix(in oklab, var(--se-color-ink) 9%, var(--se-color-surface)); }
+.dark .kc-floor-a { fill: color-mix(in oklab, var(--team-a-core) 42%, var(--se-color-surface)); }
+.dark .kc-floor-b { fill: color-mix(in oklab, var(--team-b-core) 42%, var(--se-color-surface)); }
+.kc-seam { fill: none; stroke: color-mix(in oklab, var(--se-color-ink) 9%, transparent); stroke-width: 0.7; }
+.kc-lobby { fill: color-mix(in oklab, var(--se-color-ink) 9%, transparent); }
+.kc-light { pointer-events: none; }
+.dark .kc-light { opacity: 0.32; }
+.kc-edge { fill: none; stroke: var(--se-color-surface); stroke-width: 2.2; stroke-linejoin: round; }
+.kc-line { fill: none; stroke: color-mix(in oklab, var(--se-color-surface) 92%, transparent); stroke-width: 1.5; }
+.kc-line-bonus { stroke-dasharray: 4 4; stroke-width: 1.3; stroke: color-mix(in oklab, var(--se-color-surface) 70%, transparent); }
+.kc-line-bonus.is-live { stroke: var(--se-color-gold); stroke-width: 2.2; stroke-dasharray: 5 3.5; }
+.kc-line-lobby { stroke-width: 1; stroke: color-mix(in oklab, var(--se-color-surface) 60%, transparent); }
+.kc-line-mid { stroke-width: 3.2; stroke: var(--se-color-surface); }
+.kc-super { fill: none; stroke: var(--se-color-gold); stroke-width: 2.6; stroke-linejoin: round; }
+.kc-sweep { fill: color-mix(in oklab, white 42%, transparent); stroke: var(--se-color-gold); stroke-width: 2.6; stroke-linejoin: round; }
+
+/* floor lettering */
+.kc-legend { fill: color-mix(in oklab, var(--se-color-ink) 56%, transparent); font: 800 6.4px var(--se-font-sans); letter-spacing: 0.08em; }
+.kc-zone { font: 800 11px var(--se-font-display); letter-spacing: 0.16em; fill: color-mix(in oklab, var(--se-color-surface) 78%, transparent); pointer-events: none; }
+.dark .kc-zone { fill: color-mix(in oklab, var(--se-color-ink) 40%, transparent); }
+
+/* ---- callouts over the mat ---- */
+.kc-over { position: absolute; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.kc-over-tl { left: 4px; top: 0; max-width: 66%; flex-direction: row; align-items: flex-start; gap: 4px; }
+.kc-over-tr { right: 4px; top: 0; }
+.kc-cue { display: inline-flex; align-items: center; min-height: 24px; padding: 0 9px; border-radius: 999px; font-size: 0.72rem; font-style: normal; font-weight: 850; letter-spacing: 0.01em; white-space: nowrap; box-shadow: 0 2px 6px color-mix(in oklab, var(--se-color-ink) 16%, transparent); }
+.kc-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+.kc-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+.kc-cue-bonus { background: var(--se-color-surface); color: var(--se-color-ink); box-shadow: inset 0 0 0 1.5px var(--se-color-gold), 0 2px 6px color-mix(in oklab, var(--se-color-ink) 12%, transparent); }
+
+/* raid clock ring */
+.kc-clock { --kc-core: var(--team-a-core); position: relative; display: grid; place-items: center; align-content: center; width: 54px; height: 54px; border-radius: 50%; background: var(--se-color-surface); box-shadow: 0 3px 10px color-mix(in oklab, var(--se-color-ink) 18%, transparent), inset 0 0 0 1px var(--kc-hair); }
+.kc-clock-b { --kc-core: var(--team-b-core); }
+.kc-clock svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.kc-clock-track { fill: none; stroke: color-mix(in oklab, var(--kc-core) 16%, transparent); stroke-width: 4.2; }
+.kc-clock-arc { fill: none; stroke: var(--kc-core); stroke-width: 4.2; stroke-linecap: round; transition: stroke-dasharray 1s linear; }
+.kc-clock b { position: relative; font: 800 1.3rem/1 var(--se-font-num); font-variant-numeric: tabular-nums; color: var(--se-color-ink); }
+.kc-clock small { position: relative; margin-top: -2px; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--se-color-ink-soft); }
+
+/* all out banner */
+.kc-allout {
+  position: absolute; left: 50%; top: 64%; display: grid; justify-items: center; gap: 1px; padding: 5px 20px 6px;
+  border-radius: 12px; background: var(--se-color-gold); color: var(--se-color-on-gold); text-align: center;
+  box-shadow: 0 6px 16px color-mix(in oklab, var(--se-color-ink) 24%, transparent); transform: translate(-50%, -50%) rotate(-3deg); pointer-events: none;
+}
+.kc-allout span { font: 800 1.7rem/1 var(--se-font-display); letter-spacing: 0.04em; text-transform: uppercase; }
+.kc-allout small { font-size: 0.74rem; font-weight: 800; white-space: nowrap; }
+
+/* ---- the raider: a shaded pawn, name flag, spotlight ---- */
+.kc-pawn { transform-origin: 0 0; }
+.kc-shadow { fill: color-mix(in oklab, var(--se-color-ink) 28%, transparent); }
+.kc-body { stroke: var(--se-color-surface); stroke-width: 1.3; stroke-linejoin: round; }
+.kc-pawn-a .kc-body { fill: url(#kc-g-a); }
+.kc-pawn-b .kc-body { fill: url(#kc-g-b); }
+.kc-pawn-a .kc-head { fill: url(#kc-h-a); }
+.kc-pawn-b .kc-head { fill: url(#kc-h-b); }
+.kc-head { stroke: var(--se-color-surface); stroke-width: 1.3; }
+.kc-sash { fill: color-mix(in oklab, white 78%, transparent); }
+.kc-gloss { fill: color-mix(in oklab, white 55%, transparent); }
+.kc-ring { fill: none; stroke-width: 1.6; }
+.kc-ring-a { stroke: var(--team-a-core); }
+.kc-ring-b { stroke: var(--team-b-core); }
+.kc-ring-dash { stroke-dasharray: 3 2.4; opacity: 0.75; }
+.kc-speed { fill: none; stroke: var(--se-color-surface); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.kc-ghost { opacity: 0.55; }
+
+.kc-tag rect { fill: var(--kc-tag, var(--team-a-core)); stroke: var(--se-color-surface); stroke-width: 1.2; }
+.kc-tag path { fill: var(--kc-tag, var(--team-a-core)); }
+.kc-tag text { fill: var(--kc-on, var(--team-a-on)); font: 800 7px var(--se-font-sans); }
+.kc-tag-a { --kc-tag: var(--team-a-core); --kc-on: var(--team-a-on); }
+.kc-tag-b { --kc-tag: var(--team-b-core); --kc-on: var(--team-b-on); }
+.kc-tag-dod { --kc-tag: var(--se-color-danger); --kc-on: var(--se-color-surface); }
+
+.kc-raider { transform: var(--tE); }
+.kc-raider.kc-r-touch, .kc-raider.kc-r-bonus, .kc-raider.kc-r-empty { transform: var(--tH); }
+.kc-raider.kc-raider-out { transform: var(--tT); opacity: 0.6; }
+.kc-raider-out .kc-pawn { transform: rotate(74deg) translateY(2px); }
+
+.kc-chev { fill: none; stroke: var(--se-color-surface); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+.kc-bonus-flash { fill: none; stroke: var(--se-color-gold); stroke-width: 4; stroke-linecap: round; }
+
+/* ---- defenders: plain tokens (a head count, not people) ---- */
+.kc-def { transform-box: fill-box; transform-origin: center bottom; }
+.kc-def-shadow { fill: color-mix(in oklab, var(--se-color-ink) 24%, transparent); }
+.kc-def-ring { fill: none; stroke-width: 1.8; }
+.kc-def-a .kc-def-ring { stroke: var(--team-a-lo); }
+.kc-def-b .kc-def-ring { stroke: var(--team-b-lo); }
+.kc-def-dome { stroke: var(--se-color-surface); stroke-width: 1.2; stroke-linejoin: round; }
+.kc-def.is-out { opacity: 0.28; }
+.kc-def.is-out .kc-def-dome { stroke-dasharray: 2.6 2.6; fill-opacity: 0.4; }
+
+/* ---- the outcome chips ---- */
+.kc-chips { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 0 6px; pointer-events: none; }
+.kc-chip { padding: 5px 13px; border-radius: 999px; font-size: 0.88rem; font-style: normal; font-weight: 800; line-height: 1.25; white-space: nowrap; box-shadow: inset 0 0 0 1px var(--kc-hair), 0 3px 8px color-mix(in oklab, var(--se-color-ink) 16%, transparent); }
+.kc-chip-plain { background: var(--se-color-surface); color: var(--se-color-ink); }
+.kc-chip-gold { background: var(--se-color-gold); color: var(--se-color-on-gold); box-shadow: none; }
+.kc-chip-danger { background: var(--se-color-danger); color: var(--se-color-surface); box-shadow: none; }
+.kc-chip-pts { box-shadow: none; }
+.kc-chip-pts-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kc-chip-pts-b { background: var(--team-b-core); color: var(--team-b-on); }
+
+/* ---- last raids: a dot each, coloured by who scored ---- */
+.kc-form { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 6px 0; padding-top: 10px; border-top: 1px solid var(--kc-hair); }
+.kc-form-t { flex: none; color: var(--se-color-ink-soft); font-size: 0.76rem; font-weight: 700; line-height: 1.2; }
+.kc-form-dots { display: inline-flex; gap: 4px; min-width: 0; }
+.kc-fd {
+  display: inline-grid; place-items: center; box-sizing: border-box; width: 20px; height: 20px; border-radius: 50%; color: var(--se-color-surface);
+  font: 800 0.66rem/1 var(--se-font-num); font-style: normal; font-variant-numeric: tabular-nums;
+}
+.kc-fd.kc-fd-a { background: var(--team-a-core); color: var(--team-a-on); }
+.kc-fd.kc-fd-b { background: var(--team-b-core); color: var(--team-b-on); }
+.kc-fd.is-none { box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--se-color-ink) 24%, transparent); }
+.kc-fd.is-big { box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 3.6px var(--se-color-gold); }
+.kc-fd.is-last:not(.is-big) { box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 3.4px var(--se-color-ink); }
+
+/* ---- motion ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* raid starts: the raider hops across the midline, then waits (bobs) while the raid clock runs */
+  .kc-enter { animation: kc-enter 1.1s cubic-bezier(0.25, 0.8, 0.3, 1) both; }
+  .kc-enter .kc-hop { animation: kc-hop-in 1.1s ease-out both, kc-bob 1.5s ease-in-out 1.1s infinite; }
+  .kc-enter .kc-ring { animation: kc-ring 1.4s ease-out 1.1s infinite; transform-box: fill-box; transform-origin: center; }
+  .kc-speed { animation: kc-speed 0.9s ease-in-out infinite; animation-delay: calc(var(--c) * 0.12s); }
+  .kc-chev { animation: kc-chev 1.6s ease-in-out infinite; animation-delay: calc(var(--c) * 0.2s); }
+  .kc-def.is-ready { animation: kc-sway 1.7s ease-in-out infinite; animation-delay: calc(var(--i) * -0.22s); }
+  .kc-ghost .kc-hop { animation: kc-bob 2.2s ease-in-out infinite; }
+
+  /* the outcome: one 3 s sequence per kind, then the court settles */
+  .kc-r-touch { animation: kc-r-touch var(--kc-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .kc-r-bonus { animation: kc-r-bonus var(--kc-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .kc-r-empty { animation: kc-r-empty var(--kc-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .kc-r-tackle, .kc-r-out { animation: kc-r-stop var(--kc-t) cubic-bezier(0.3, 0.7, 0.3, 1) both, kc-fade-late var(--kc-t) linear both; }
+  .kc-r-touch .kc-hop, .kc-r-bonus .kc-hop, .kc-r-empty .kc-hop, .kc-r-tackle .kc-hop, .kc-r-out .kc-hop { animation: kc-hop-go var(--kc-t) ease-out both; }
+  .kc-raider-out .kc-pawn { animation: kc-fall var(--kc-t) ease-in both; }
+  .kc-def.is-out { animation: kc-def-out 0.55s ease-out calc(var(--kc-t) * 0.27) both; }
+  .kc-def.is-tackle { animation: kc-pulse 0.8s ease-out calc(var(--kc-t) * 0.27) both; }
+  .kc-bonus-flash { animation: kc-flash 0.9s ease-out calc(var(--kc-t) * 0.2) both; }
+  .kc-sweep { animation: kc-sweep 1.4s ease-out calc(var(--kc-t) * 0.3) both; }
+  .kc-allout { animation: kc-allout 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(var(--kc-t) * 0.35) both; }
+  .kc-chip { animation: kc-chip-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(var(--kc-t) * 0.25) both; }
+  .kc-chip + .kc-chip { animation-delay: calc(var(--kc-t) * 0.25 + 0.14s); }
+  .kc-fd { animation: kc-dot-in 0.3s ease-out both; animation-delay: calc(var(--i) * 28ms); }
+  .kc-cue-dod { animation: kc-beat 1.4s ease-in-out infinite; }
+}
+.kc-def.is-out { opacity: 0.28; }
+
+@keyframes kc-enter { from { transform: var(--tH); } to { transform: var(--tE); } }
+@keyframes kc-hop-in { 0% { transform: translateY(0); } 40% { transform: translateY(-11px); } 100% { transform: translateY(0); } }
+@keyframes kc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes kc-ring { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+@keyframes kc-speed { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.95; } }
+@keyframes kc-chev { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.95; } }
+@keyframes kc-sway { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes kc-r-touch {
+  0% { transform: var(--tE); } 24% { transform: var(--tT); } 36% { transform: var(--tT); }
+  62% { transform: var(--tE); } 78%, 100% { transform: var(--tH); }
+}
+@keyframes kc-r-bonus {
+  0% { transform: var(--tE); } 26% { transform: var(--tT); } 36% { transform: var(--tT); }
+  64% { transform: var(--tE); } 80%, 100% { transform: var(--tH); }
+}
+@keyframes kc-r-empty {
+  0% { transform: var(--tE); } 22% { transform: var(--tT); } 34% { transform: var(--tT); }
+  56% { transform: var(--tE); } 74%, 100% { transform: var(--tH); }
+}
+@keyframes kc-r-stop { 0% { transform: var(--tE); } 27%, 100% { transform: var(--tT); } }
+@keyframes kc-fade-late { 0%, 84% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes kc-hop-go {
+  0%, 100% { transform: translateY(0); }
+  12% { transform: translateY(-9px); } 24% { transform: translateY(0); }
+  50% { transform: translateY(-7px); } 62% { transform: translateY(0); }
+  68% { transform: translateY(-8px); } 78% { transform: translateY(0); }
+}
+@keyframes kc-fall { 0%, 29% { transform: none; opacity: 1; } 50% { transform: rotate(74deg) translateY(2px); opacity: 0.7; } 100% { transform: rotate(74deg) translateY(2px); opacity: 0.45; } }
+@keyframes kc-def-out { from { opacity: 1; transform: scale(1); } to { opacity: 0.28; transform: scale(0.75); } }
+@keyframes kc-pulse { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes kc-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0.25; } }
+@keyframes kc-sweep { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0.6; } }
+@keyframes kc-allout { from { opacity: 0; transform: translate(-50%, -50%) rotate(-3deg) scale(0.6); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-3deg) scale(1); } }
+@keyframes kc-chip-in { from { opacity: 0; transform: translateY(8px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes kc-dot-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+@keyframes kc-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+/* ---- short phones (360x640): the court gives up some height ---- */
+@media (max-height: 700px) {
+  .kc-card { padding: 8px 6px 8px; }
+  .kc-form { margin-top: 6px; padding-top: 6px; }
+  .kc-cue { min-height: 22px; }
+}
+
+/* Keep outcome text below the painted legends. */
+.kc-chips { position: relative; margin-top: 8px; padding-bottom: 6px; }

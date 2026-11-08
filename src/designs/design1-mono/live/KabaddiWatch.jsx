@@ -1,0 +1,295 @@
+import { kabaddiRulesLine } from '../../../utils/kabaddiRules';
+import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
+import { teamColourVars, deriveTeamColours } from '../../../lib/teamColour';
+import { sportIdentityVars } from '../../../lib/sportIdentity';
+import {
+  clockText, halfStory, liveNow, playerLabel, raidStory,
+} from '../../../utils/kabaddiLiveModel';
+import { HandUnderline, SportBadge } from '../kit/KitParts';
+import KabaddiCourt, { useCourtStage } from './KabaddiCourt';
+import KabaddiProgress from './KabaddiProgress';
+import KabaddiRaids from './KabaddiRaids';
+import {
+  atMinute, halfName, isEnded, isMoment, joinNames, outcomeWords, playersOut, scorerOf, sideKey, turningPoints,
+} from './kabaddiView';
+import '../kit/kit.css';
+import '../kit/live.css';
+import './kabaddiWatch.css';
+
+// Kabaddi live viewer, exploration k2 round 5 (notes: E:/tmp/kabaddi-k2/viewer-r5/NOTES.md).
+// Game progression first. Live: the score strip (team gradients, small player pips, a raid-clock ring
+// with the kabaddi mark between the cards; the score is the only big number) over a broadcast-style
+// court that plays a single raid animation. Raids: a two-sided timeline, one line per raid. Stats:
+// how the game is going. Read-only. Rounds 3 and 4 are still in the tree (KabaddiWatchR3.jsx,
+// KabaddiWatchR4.jsx) for comparison. Every number comes from kabaddiLiveModel.js,
+// which folds the raid engine's state and journal.
+
+function resultOf(live) {
+  if (live.resultType === 'abandoned') return { winner: null, line: 'Abandoned \u00b7 no result', margin: 0 };
+  if (!isEnded(live.phase)) return null;
+  const [a, b] = live.totals;
+  if (a === b) return { winner: null, line: 'Draw', margin: 0 };
+  const winner = a > b ? 0 : 1;
+  return { winner, line: `${live.names[winner]} win by ${Math.abs(a - b)}`, margin: Math.abs(a - b) };
+}
+
+/* ------------------------------------------------------------------ top: header, score strip */
+
+function Header({ live, halfMins }) {
+  const status = isEnded(live.phase) ? 'Full time' : live.phase === 'halfTime' ? 'Half time' : 'Live';
+  return (
+    <header className="kw-top">
+      <SportBadge sportId="kabaddi" />
+      <div className="kw-top-t">
+        <h1>{live.names[0]} v {live.names[1]}</h1>
+        <p>{kabaddiRulesLine(live.rules)}</p>
+      </div>
+      <span className={status === 'Live' ? 'kit-live-status kw-status' : 'kit-live-paused kw-status'}>
+        {status === 'Live' && <i aria-hidden="true" />}{status}
+      </span>
+    </header>
+  );
+}
+Header.propTypes = { live: PropTypes.object.isRequired, halfMins: PropTypes.number.isRequired };
+
+/**
+ * Seven players as small pips: a head and shoulders each, filled while on the mat, a dashed outline
+ * when out. Deliberately small and quiet; the score is the only big number on the card.
+ */
+function Squad({ on, seats }) {
+  return (
+    <span className="kw-squad" aria-hidden="true">
+      {Array.from({ length: seats }, (_, i) => (
+        <svg key={i} viewBox="0 0 10 14" className={i < on ? 'on' : 'off'}>
+          <circle cx="5" cy="3.3" r="2.7" />
+          <path d="M0.9 13.2v-2.6a4.1 4.1 0 0 1 8.2 0v2.6z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+Squad.propTypes = { on: PropTypes.number.isRequired };
+
+/**
+ * The centre mark: the kabaddi mark in a ring. The ring is the raid clock (it drains over 30 s in the
+ * raiding team's colour); between raids it rests in the next raiding team's colour.
+ */
+function RaidRing({ live }) {
+  const team = live.raider;
+  const fill = live.raid ? (live.raid.leftMs === null ? 1 : live.raid.leftMs / live.raid.durationMs) : 1;
+  return (
+    <span className={`kw-ring kw-ring-${sideKey(team)}${live.raid ? ' is-raid' : ''}`} aria-hidden="true">
+      <svg viewBox="0 0 48 48">
+        <circle className="kw-ring-track" cx="24" cy="24" r="21" />
+        <circle className="kw-ring-arc" cx="24" cy="24" r="21" pathLength="100" strokeDasharray={`${Math.max(0, Math.min(1, fill)) * 100} 100`} />
+      </svg>
+      <i className="kw-mark" />
+    </span>
+  );
+}
+RaidRing.propTypes = { live: PropTypes.object.isRequired };
+
+function ScoreStrip({ live, result, roster, outs }) {
+  const mid = result ? [result.line === 'Abandoned \u00b7 no result' ? 'No result' : 'Full time', 'FT'] : live.phase === 'halfTime' ? ['Half time', 'HT'] : [live.rules.end.kind === 'target' ? `First to ${live.rules.end.points}` : live.rules.end.kind === 'raids' ? `${live.rules.end.raidsPerTeam} raids each` : halfName(live.half), live.halfLeftMs === null ? `Raid ${live.nextRaidNumber}` : clockText(live.halfLeftMs)];
+  const spoken = `${live.names[0]} ${live.totals[0]}, ${live.names[1]} ${live.totals[1]}. ${result ? result.line : `${mid[0]}, ${mid[1]} left.`}`;
+  return (
+    <>
+      <section className="kw-strip" aria-label="Score">
+        <p className="sr-only" aria-live="polite" aria-atomic="true">{spoken}</p>
+        {[0, 1].map((team) => (
+          <div key={team} className={`kw-team kw-team-${sideKey(team)}${live.raider === team && live.inPlay ? ' is-raiding' : ''}`} aria-hidden="true">
+            <span className="kw-name">{live.names[team]}</span>
+            {result
+              ? (result.winner === team ? <span className="kw-won">Won</span> : <span className="kw-squad-gap" />)
+              : live.rules.strategy === 'rectangularOuts' && <Squad on={live.mat[team]} seats={live.rules.initialPlayers} />}
+            <span className="kw-score">{live.totals[team]}</span>
+          </div>
+        ))}
+        <div className="kw-mid" aria-hidden="true">
+          {!result && <RaidRing live={live} />}
+          <b>{mid[1]}</b>
+          <small>{result || live.phase === 'halfTime' ? mid[0] : live.raid ? `Raid ${live.raid.number}` : mid[0]}</small>
+        </div>
+      </section>
+      {!result && live.rules.strategy === 'rectangularOuts' && (
+        <div className="kw-next-row" aria-label="On the mat">
+          {[0, 1].map((team) => {
+            const order = live.sittingOrder[team].map((slot) => playerLabel(roster, slot));
+            return (
+              <div key={team} className={`kw-side kw-side-${sideKey(team)}`} aria-label={`${live.names[team]}: ${live.mat[team]} of ${live.rules.initialPlayers} on the mat`}>
+                {outs[team].length ? (
+                  <span className={`kw-out kw-out-${sideKey(team)}`} role="status"><b>{joinNames(outs[team])}</b> off the court</span>
+                ) : (
+                  <span className="kw-next">
+                    {order.length ? <>Next in: <b>{order[0]}</b>{order.length > 1 && <> +{order.length - 1}</>}</> : `All ${live.rules.initialPlayers} on the mat`}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+ScoreStrip.propTypes = {
+  live: PropTypes.object.isRequired, result: PropTypes.object, roster: PropTypes.array, outs: PropTypes.array.isRequired,
+};
+
+/* ------------------------------------------------------------------ live tab: last raid */
+
+function leadLine(e, teamNames) {
+  const after = e.score[0] - e.score[1];
+  const before = e.scoreBefore[0] - e.scoreBefore[1];
+  if (after === 0) return 'All square';
+  const leader = after > 0 ? 0 : 1;
+  if (Math.sign(before) !== Math.sign(after)) return `${teamNames[leader]} take the lead`;
+  return `${teamNames[leader]} lead ${Math.abs(after) < Math.abs(before) ? 'cut' : 'up'} to ${Math.abs(after)}`;
+}
+
+/** One compact card: the raid in words, who, what it did to the score. A moment gets the hand-drawn title. */
+function RaidSummary({ e, names, roster, halfMs, hand }) {
+  const out = playersOut(e, roster);
+  const raiderOut = ['tackled', 'selfOut', 'doOrDieFailure'].includes(e.outcome);
+  const scorer = scorerOf(e);
+  const title = hand && e.allOut !== null && !e.superTackle ? 'All out' : outcomeWords(e, names);
+  return (
+    <div className="kw-sum">
+      <div className="kw-sum-main">
+        <h3 className={`kw-sum-title kw-ul-${sideKey(e.allOut !== null ? 1 - e.allOut : e.superTackle ? 1 - e.team : e.team)}`}>
+          <i className={`kit-live-team-dot kw-dot-${sideKey(e.team)}`} aria-hidden="true" />
+          {hand ? <HandUnderline>{title}</HandUnderline> : title}
+        </h3>
+        <p>Raider: <b>{playerLabel(roster, e.raiderSlot)}</b>{raiderOut ? <> · <b>out</b></> : out.length > 0 && <> · Out: <b>{joinNames(out)}</b></>}</p>
+        <p className="kw-sum-lead">{leadLine(e, names)}</p>
+      </div>
+      <div className="kw-sum-r">
+        <b>{e.score[0]}–{e.score[1]}</b>
+        {scorer !== null && <small className={`kw-pill kw-pill-${sideKey(scorer)}`}>+{e.points[scorer]}</small>}
+      </div>
+      <span className="kw-chip">{atMinute(e, halfMs)}</span>
+    </div>
+  );
+}
+RaidSummary.propTypes = {
+  e: PropTypes.object.isRequired, names: PropTypes.array.isRequired, roster: PropTypes.array, halfMs: PropTypes.number.isRequired, hand: PropTypes.bool,
+};
+
+function LastRaid({ entry, names, roster, halfMs, total, onAll }) {
+  if (!entry) return null;
+  return (
+    <section className="kw-card kw-last" aria-label="Last raid">
+      <div className="kw-card-head">
+        <h2>Last raid</h2>
+        <button type="button" className="kw-all" onClick={onAll}>All {total} raids</button>
+      </div>
+      <RaidSummary e={entry} names={names} roster={roster} halfMs={halfMs} hand={isMoment(entry)} />
+    </section>
+  );
+}
+LastRaid.propTypes = {
+  entry: PropTypes.object, names: PropTypes.array.isRequired, roster: PropTypes.array, halfMs: PropTypes.number.isRequired,
+  total: PropTypes.number.isRequired, onAll: PropTypes.func.isRequired,
+};
+
+/* ------------------------------------------------------------------ full time */
+
+function Result({ result, live, match, story, names, roster, halfMs }) {
+  const halves = halfStory(match);
+  const turns = turningPoints(story);
+  return (
+    <>
+      <section className="kw-card kw-result" aria-label="Result">
+        <h2>
+          {result.winner !== null && <i className={`kit-live-team-dot kw-dot-${sideKey(result.winner)}`} aria-hidden="true" />}
+          {result.line}
+        </h2>
+        <p>Final {live.totals[0]}–{live.totals[1]} · {story.length} raids</p>
+        <div className="kw-result-halves">
+          {halves.map((h) => (
+            <span key={h.half}><small>{halfName(h.half)}</small><b>{h.points[0]}–{h.points[1]}</b></span>
+          ))}
+        </div>
+      </section>
+      {turns.length > 0 && (
+        <section aria-label="Turning points">
+          <div className="kit-sec"><h2>Turning points</h2></div>
+          <ol className="kw-turns">
+            {turns.map((e) => (
+              <li key={e.id} className="kw-card"><RaidSummary e={e} names={names} roster={roster} halfMs={halfMs} hand /></li>
+            ))}
+          </ol>
+        </section>
+      )}
+    </>
+  );
+}
+Result.propTypes = {
+  result: PropTypes.object.isRequired, live: PropTypes.object.isRequired, match: PropTypes.object.isRequired,
+  story: PropTypes.array.isRequired, names: PropTypes.array.isRequired, roster: PropTypes.array, halfMs: PropTypes.number.isRequired,
+};
+
+/* ------------------------------------------------------------------ page */
+
+/**
+ * `showOut` puts the "off the court" moment under the card of whoever just lost players. `courtStage`
+ * pins the court to a moment ('idle' | 'raid' | 'result'); a real page leaves it unset and the court
+ * follows the raids as they arrive.
+ */
+export default function KabaddiWatch({ match, now, roster, initialTab = 'live', showOut = false, courtStage }) {
+  const [tab, setTab] = useState(initialTab);
+  const vars = useMemo(() => {
+    const [A, B] = match.state.teams.map((t) => t.colours);
+    return { ...teamColourVars(A?.core ? { A, B } : deriveTeamColours()), ...sportIdentityVars('kabaddi') };
+  }, [match]);
+  const live = liveNow(match, now);
+  const story = raidStory(match);
+  const result = resultOf(live);
+  const names = live.names;
+  const last = story.at(-1);
+  const halfMs = match.state.rules.end.kind === 'timed' ? match.state.rules.end.halfMs : 0;
+  const stage = useCourtStage(live, last, courtStage);
+  const tabs = [['live', result ? 'Result' : 'Live'], ['raids', 'Raids'], ['stats', 'Stats']];
+  const current = tabs.some(([id]) => id === tab) ? tab : 'live';
+  const outs = [0, 1].map((t) => (showOut && last && !result && !live.raid && last.allOut !== t
+    ? last.lostSlots[t].map((slot) => playerLabel(roster, slot)) : []));
+
+  let body;
+  if (current === 'raids') {
+    body = <KabaddiRaids match={match} story={story} names={names} roster={roster} halfMs={halfMs} />;
+  } else if (current === 'stats') {
+    body = <KabaddiProgress match={match} story={story} live={live} halfMs={halfMs} />;
+  } else if (result) {
+    body = <Result result={result} live={live} match={match} story={story} names={names} roster={roster} halfMs={halfMs} />;
+  } else {
+    body = (
+      <>
+        <KabaddiCourt live={live} last={last} roster={roster} stage={stage} story={story} />
+        <LastRaid entry={last} names={names} roster={roster} halfMs={halfMs} total={story.length} onAll={() => setTab('raids')} />
+      </>
+    );
+  }
+
+  return (
+    <div className="kit-screen kw" style={vars}>
+      <Header live={live} halfMins={Math.round(halfMs / 60000)} />
+      <ScoreStrip live={live} result={result} roster={roster} outs={outs} />
+      <div className="kit-seg kw-tabs" role="tablist" aria-label="Match views" style={{ '--kit-seg-cols': tabs.length }}>
+        {tabs.map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={current === id} onClick={() => setTab(id)}>{label}</button>
+        ))}
+      </div>
+      <main className="kw-body">{body}</main>
+    </div>
+  );
+}
+
+KabaddiWatch.propTypes = {
+  match: PropTypes.object.isRequired,
+  now: PropTypes.number.isRequired,
+  roster: PropTypes.array,
+  initialTab: PropTypes.oneOf(['live', 'raids', 'stats']),
+  showOut: PropTypes.bool,
+  courtStage: PropTypes.oneOf(['idle', 'raid', 'result']),
+};

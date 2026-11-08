@@ -1,3 +1,4 @@
+import { kabaddiSnapshotValidator, kabaddiUpdateValidator } from './lib/kabaddiValidators';
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -77,6 +78,7 @@ export default defineSchema({
     }),
 
   liveMatches: defineTable({
+    kabaddi: v.optional(kabaddiSnapshotValidator),
     token: v.string(),
     ownerId: v.id("users"),
     clientMatchId: v.string(),
@@ -139,6 +141,7 @@ export default defineSchema({
   }).index("by_match", ["matchId"]),
 
   matchEvents: defineTable({
+    kabaddi: v.optional(kabaddiUpdateValidator),
     matchId: v.id("liveMatches"),
     seq: v.number(),
     clientEventId: v.string(),
@@ -150,6 +153,7 @@ export default defineSchema({
       v.literal("undo"),
       v.literal("correction"),
       v.literal("note"),
+      v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state"),
     ),
     team: v.optional(v.union(v.literal("A"), v.literal("B"))),
     value: v.number(),

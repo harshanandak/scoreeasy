@@ -3,6 +3,8 @@ import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutco
 import { isSetsMatchDecided } from '../../utils/quickMatchSets';
 import { isGoalsMatchDecided } from '../../utils/goalsScoring';
 import { isLimitedOversMatchDecided } from '../../utils/cricketCalculations';
+import { kabaddiSnapshot, kabaddiUpdates } from '../../utils/kabaddiBroadcast';
+import { raidStory } from '../../utils/kabaddiLiveModel';
 import KabaddiLive from './scoring/KabaddiLiveBoard';
 import { createKabaddiMatch, matchTotals, persistKabaddiDraft, restoreKabaddiMatch } from '../../utils/kabaddiQuickMatch';
 import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabaddiBackups } from '../../utils/kabaddiMigrationBackups';
@@ -795,6 +797,8 @@ export default function MonoQuickMatch() {
   }
 
 
+  if (isKabaddi && kabaddiMatch) liveSnapshot = { ...liveSnapshot, kabaddi: kabaddiSnapshot(kabaddiMatch) };
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
@@ -896,6 +900,10 @@ export default function MonoQuickMatch() {
     scorecardKind: liveScorecardKind,
     teamA: teamColourOn ? { name: team1Name, color: team1Color } : { name: team1Name },
     teamB: teamColourOn ? { name: team2Name, color: team2Color } : { name: team2Name },
+    ...(isKabaddi && kabaddiMatch ? {
+      players: kabaddiMatch.rosters.flatMap((list, i) => list.filter(Boolean).map(name => ({ team: i ? 'B' : 'A', name }))),
+      kabaddiHistory: raidStory(kabaddiMatch),
+    } : {}),
   };
 
   const formatCountdown = (seconds) => {
@@ -1745,8 +1753,14 @@ export default function MonoQuickMatch() {
       setSaveWarning('Save failed. The last tap was not accepted. Free storage and try again.');
       return false;
     }
+    const before = kabaddiRef.current;
     kabaddiRef.current = next;
     setKabaddiMatch(next);
+    const totalsAfter = matchTotals(next);
+    const snapshot = { pointsA: totalsAfter[0], pointsB: totalsAfter[1], setsA: 0, setsB: 0, setScores: [], currentUnit: next.state.half, kabaddi: kabaddiSnapshot(next) };
+    for (const update of kabaddiUpdates(before, next)) {
+      void liveRef.current.point({ team: next.state.nextRaidTeam ? 'B' : 'A', value: 0, at: Date.now(), snapshot, type: update.type, kabaddi: update.data });
+    }
     const totals = matchTotals(next);
     setGScore1(totals[0]); setGScore2(totals[1]);
     return true;
@@ -1756,7 +1770,9 @@ export default function MonoQuickMatch() {
     const current = kabaddiRef.current;
     if (!current || completion.locked) return;
     const natural = current.state.phase === 'finishReview';
-    const finalMatch = natural ? { ...current, state: finishKabaddi(current.state) } : current;
+    const finalMatch = { ...current, ...(natural ? { state: finishKabaddi(current.state) } : {}), resultType: natural ? 'decided' : 'abandoned' };
+    const finalTotals = matchTotals(finalMatch);
+    void liveRef.current.point({ team: 'A', value: 0, at: Date.now(), type: 'kabaddi_state', kabaddi: { kind: 'state' }, snapshot: { pointsA: finalTotals[0], pointsB: finalTotals[1], setsA: 0, setsB: 0, setScores: [], currentUnit: finalMatch.state.half, kabaddi: kabaddiSnapshot(finalMatch) } });
     const [score1, score2] = matchTotals(finalMatch);
     finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name, score1, score2,
       winner: natural ? (score1 === score2 ? 'Draw' : score1 > score2 ? team1Name : team2Name) : null,

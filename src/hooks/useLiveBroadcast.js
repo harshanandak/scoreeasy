@@ -85,6 +85,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           value: item.value,
           // Older queued items have no `type`; the mutation defaults it to "point".
           type: item.type,
+          ...(item.kabaddi ? { kabaddi: item.kabaddi } : {}),
           at: item.at,
           snapshot: item.snapshot,
         });
@@ -173,6 +174,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           scorecardKind: opts.scorecardKind,
           teamA: opts.teamA,
           teamB: opts.teamB,
+          ...(opts.players ? { players: opts.players } : {}),
+          ...(opts.kabaddiHistory ? { kabaddiHistory: opts.kabaddiHistory } : {}),
           visibility: 'private',
           isYouthMatch: opts.isYouthMatch ?? false,
         });
@@ -206,7 +209,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const point = useCallback(
-    ({ team, value = 1, at, snapshot, type = 'point' }) => {
+    ({ team, value = 1, at, snapshot, type = 'point', kabaddi }) => {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
@@ -216,7 +219,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       // `kind` stays 'point' (the outbox routing discriminator vs 'undo'); `type` is
       // the public EVENT type (point | serve_change | correction) the spectator feed
       // labels by. Both ride along so a queued event keeps its label while offline.
-      enqueue({ kind: 'point', type, team, value, at, snapshot, clientMatchId, clientEventId });
+      enqueue({ kind: 'point', type, team, value, at, snapshot, ...(kabaddi ? { kabaddi } : {}), clientMatchId, clientEventId });
       persistSeq(seqRef.current);
       return publishingRef.current ? Promise.resolve(null) : flush();
     },
