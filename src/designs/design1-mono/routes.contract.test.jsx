@@ -680,11 +680,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(screen.getByText(/Resumed/)).toBeInTheDocument();
   });
 
-  // RA-4 (P1). The cricket Test scorer renders "Loading..." forever when the
-  // match id is unknown (stale resume link, deleted match). Guard activation
-  // is covered separately by the first-score contracts.
-  // Fix PR: "Validate :id / :matchId routes: recovery instead of Loading".
-  it.fails('RA-4: an unknown cricket Test match id shows a recovery screen, not endless Loading', async () => {
+  // RA-4 fixed (PR #230): an unknown cricket Test match id shows the scorer recovery page.
+  it('RA-4: an unknown cricket Test match id shows a recovery screen, not endless Loading', async () => {
     renderApp(['/cricket/quick/test-match/999']);
     await settleRoute();
 
