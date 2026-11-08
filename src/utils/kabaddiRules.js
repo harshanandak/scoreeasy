@@ -2,6 +2,7 @@
 const copy = value => JSON.parse(JSON.stringify(value));
 const check = (ok, text) => { if (!ok) throw new Error(`Kabaddi: ${text}`); };
 const int = (n, min = 0, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(n) && n >= min && n <= max;
+const ordered = value => Array.isArray(value) ? value.map(ordered) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, ordered(value[key])])) : value;
 const keys = (value, names) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(k => names.includes(k)) && names.every(k => Object.hasOwn(value, k));
 export const KABADDI_PRESETS = [
   { id: 'quick', label: 'Quick casual' },
@@ -64,7 +65,7 @@ export function validateKabaddiRules(r) {
     : r.outs.mode === 'fifo' && r.outs.revival === 'onePerOpponentOut' && int(r.outs.allOutPoints, 0, 10) && r.outs.restore === 'allOrdinary', 'incompatible player-state rules');
   check(['none', 'refereeManaged'].includes(r.lobby) && ['none', 'refereeManaged'].includes(r.boundary) && ['draw', 'refereeDecision'].includes(r.tie) && ['off', 'refereeManaged'].includes(r.technical) && r.management === 'refereeManaged', 'unsupported adjudication policy');
   check(r.court === null || keys(r.court, ['shape', 'lengthM', 'widthM']) && r.court.shape === 'rectangle' && Number.isFinite(r.court.lengthM) && r.court.lengthM > 0 && Number.isFinite(r.court.widthM) && r.court.widthM > 0, 'invalid court metadata');
-  if (!['custom', 'legacy-club'].includes(r.presetId)) check(JSON.stringify(r) === JSON.stringify(resolvePreset(r.presetId)), 'preset was edited without choosing Custom');
+  if (!['custom', 'legacy-club'].includes(r.presetId)) check(JSON.stringify(ordered(r)) === JSON.stringify(ordered(resolvePreset(r.presetId))), 'preset was edited without choosing Custom');
 }
 
 function resolvePreset(id) {

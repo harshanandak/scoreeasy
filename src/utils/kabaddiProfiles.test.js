@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyRaid, assertState, createKabaddiState, finish, migrateKabaddiState, pause, remainingTime, resume, startHalf, startRaid, teamTotal, timeUp, undo } from './kabaddiEngine';
-import { resolveKabaddiRules } from './kabaddiRules';
+import { resolveKabaddiRules, validateKabaddiRules } from './kabaddiRules';
 
 const begin = (presetId, rules) => startHalf(createKabaddiState({ presetId, rules }));
 const raid = (s, type = 'empty', extra = {}) => applyRaid(s, { id: `r-${s.revision}`, type, ...extra });
@@ -12,6 +12,8 @@ describe('versioned kabaddi formats', () => {
     a.end.points = 3;
     expect(resolveKabaddiRules('quick').end.points).toBe(21);
     expect(resolveKabaddiRules('women').end.halfMs).toBe(900000);
+    const reordered = Object.fromEntries(Object.entries(resolveKabaddiRules('standard')).reverse());
+    expect(() => validateKabaddiRules(reordered)).not.toThrow();
     expect(() => resolveKabaddiRules('beach')).toThrow();
     expect(() => resolveKabaddiRules('circle')).toThrow();
     expect(() => resolveKabaddiRules('custom', { ...resolveKabaddiRules('quick'), outs: { mode: 'fifo', revival: 'onePerOpponentOut', allOutPoints: 2, restore: 'allOrdinary' } })).toThrow();
