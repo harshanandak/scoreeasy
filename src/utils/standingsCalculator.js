@@ -26,7 +26,7 @@ export function calculateSetsStandings(teams, matches, config) {
 
   matches.forEach(match => {
     // Skip pending matches
-    if (!match.sets || match.sets.length === 0) return;
+    if ((!match.sets || match.sets.length === 0) && !isAbandoned(match)) return;
     if (match.status === 'pending') return;
 
     const t1 = stats.find(s => s.teamId === match.team1Id);

@@ -51,3 +51,15 @@ it('excludes abandoned leaders from form, streaks and biggest wins', async () =>
   expect(screen.getByText('No active streak')).toBeVisible();
   expect(screen.getByText('No big wins yet')).toBeVisible();
 });
+
+it('keeps old stored wins and excludes abandoned matches from the win-rate denominator and streak', async () => {
+  localStorage.setItem('se_quickmatches', JSON.stringify([
+    { id: 42, sport: 'football', status: 'completed', resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', score1: 99, score2: 0, date: '2026-11-09' },
+    { id: 41, sport: 'football', status: 'completed', winner: 'Royals', team1: 'Royals', team2: 'Strikers', score1: 2, score2: 1, date: '2026-11-08' },
+  ]));
+  render(<MemoryRouter><MonoStatisticsPanel /></MemoryRouter>);
+  expect(await screen.findByText('Royals 1W / 100%')).toBeVisible();
+  expect(screen.getByText('Royals W1')).toBeVisible();
+  expect(screen.getByText('Royals over Strikers by 1')).toBeVisible();
+  expect(loadQuickMatches().find(match => match.id === 41).winner).toBe('Royals');
+});

@@ -132,6 +132,8 @@ export function buildTournamentConvexPayload({ sportId, tournament, match }) {
   let resultShape = {
     team1: team1Name,
     team2: team2Name,
+    team1Id: match.team1Id,
+    team2Id: match.team2Id,
     winner,
     resultType: match.resultType,
     format: match.format || tournament?.format,

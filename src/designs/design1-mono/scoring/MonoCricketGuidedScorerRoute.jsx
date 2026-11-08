@@ -287,7 +287,9 @@ export default function MonoCricketGuidedScorerRoute() {
       const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
       const agg = mirrorAggregate(finalInnings, fmt);
       const updated = updateMatchInTournament(tournament, matchId, m => ({ ...m,
-        [battingSlot]: agg, battingOrder, status: 'completed', resultType: 'abandoned', winner: null, winDesc: '',
+        team1Score: battingSlot === 'team1Score' ? agg : m.team1Score || { runs: 0, wickets: 0, balls: 0 },
+        team2Score: battingSlot === 'team2Score' ? agg : m.team2Score || { runs: 0, wickets: 0, balls: 0 },
+        battingOrder, status: 'completed', resultType: 'abandoned', winner: null, winDesc: '',
         guidedInnings: secondInnings ? [m.draftState?.innings1 ?? null, finalInnings] : [finalInnings],
         draftState: undefined, completedAt: now(),
       }));

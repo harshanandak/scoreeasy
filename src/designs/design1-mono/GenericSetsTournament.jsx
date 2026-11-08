@@ -230,7 +230,7 @@ export default function GenericSetsTournament() {
         {tab === 'matches' && (
           <div className="space-y-4">
             {tournament.matches.map((match, idx) => {
-              const hasScore = match.sets && match.sets.length > 0;
+              const hasScore = isAbandoned(match) || (match.sets && match.sets.length > 0);
               let t1SetsWon = 0;
               let t2SetsWon = 0;
               if (hasScore) {

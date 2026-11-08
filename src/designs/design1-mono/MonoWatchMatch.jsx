@@ -472,7 +472,7 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return (
       <LineScore
         totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
-        isFinalResult={snapshot.status === 'final'}
+        isFinalResult={snapshot.status === 'final' && !isAbandoned(snapshot)}
         teamA={nameA}
         teamB={nameB}
       />
