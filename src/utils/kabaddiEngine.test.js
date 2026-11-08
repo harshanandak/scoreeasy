@@ -125,6 +125,7 @@ describe('worked examples from kabaddi-spec', () => {
   it('time up during raid 61 awaits its ruling, then enters finishReview', () => {
     let state = startHalf(timeUp(fixture({ score: [32, 28], mat: [7, 7] })));
     state.raidNumber = 60;
+    state.raidsByTeam = [30, 30];
     state = startRaid(state, { id: 'active-61', atMs: 10 });
     state = timeUp(state);
     expect(state.phase).toBe('fullPending');
