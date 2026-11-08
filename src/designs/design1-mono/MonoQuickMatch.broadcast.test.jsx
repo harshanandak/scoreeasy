@@ -334,3 +334,47 @@ describe('MonoQuickMatch live broadcast wiring', () => {
       .toBeLessThan(live.finalize.mock.invocationCallOrder[0]);
   });
 });
+
+
+describe('goals period board integration', () => {
+  function seedPeriodBoard() {
+    seedGoals();
+    ctx.draft.format = { mode: 'timed', timeLimit: 120, periods: { version: 1, sport: 'football', durations: [60, 60], regulationCount: 2, overtimeSeconds: 0 } };
+  }
+  it('pauses on the board, persists through refresh and resumes the stored clock', () => {
+    vi.useFakeTimers();
+    try {
+      seedPeriodBoard();
+      const view = render(<MonoQuickMatch />);
+      expect(screen.queryByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Pause clock' }));
+      const draft = structuredClone(saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1]);
+      expect(draft.periodState).toMatchObject({ elapsed: 10, startedAt: null });
+      view.unmount();
+      act(() => vi.advanceTimersByTime(90000));
+      ctx.draft = draft;
+      render(<MonoQuickMatch />);
+      expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:50');
+      fireEvent.click(screen.getByRole('button', { name: 'Resume clock' }));
+      act(() => vi.advanceTimersByTime(5000));
+      expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:45');
+    } finally { vi.useRealTimers(); }
+  });
+  it('advances a period and undoes the boundary with its score intact', () => {
+    seedPeriodBoard();
+    render(<MonoQuickMatch />);
+    expect(screen.queryByRole('button', { name: 'End half' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End half' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+    expect(screen.getByText('Half-time')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
+    expect(screen.getByText('2nd half')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(screen.getByText('Half-time')).toBeInTheDocument();
+    const draft = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1];
+    expect(draft.periodState).toMatchObject({ periodIndex: 0, phase: 'interval', scores: [{ A: 1, B: 0 }, { A: 0, B: 0 }] });
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 2, periodClock: { phase: 'playing' } });
+  });
+});
