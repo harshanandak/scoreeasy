@@ -174,15 +174,12 @@ describe('MonoWatchMatch', () => {
     expect(within(stats).getByText('#2')).toBeInTheDocument();
   });
 
-  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('shows the missing-snapshot unavailable state for a direct %s live link', (sport) => {
-    mocks.snapshot = null;
-    const missing = renderAt();
-    const unavailable = missing.container.textContent;
-    missing.unmount();
+  it.each(['pickleball', 'squash', 'rugby', 'futsal', 'handball'])('a shared %s match this client cannot render says it cannot be displayed, never that it is not shared', (sport) => {
     mocks.snapshot = { ...GOALS_SNAPSHOT, sport };
     mocks.meta = { ...META, sport };
-    const retired = renderAt();
-    expect(retired.container.textContent).toBe(unavailable);
+    renderAt();
+    expect(screen.getByRole('heading', { name: "This match can't be displayed" })).toBeInTheDocument();
+    expect(screen.queryByText('This match is not being shared')).not.toBeInTheDocument();
     expect(screen.queryByRole('banner', { name: 'Match scorebug' })).not.toBeInTheDocument();
   });
 

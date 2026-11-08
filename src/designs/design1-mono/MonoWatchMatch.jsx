@@ -685,10 +685,23 @@ function LoadFailedScreen({ onRetry }) {
 
 LoadFailedScreen.propTypes = { onRetry: PropTypes.func.isRequired };
 
+/** A shared match in a sport this client cannot render (retired, or newer than this app). Never claims it is unshared. */
+function UnsupportedSportScreen() {
+  return (
+    <WatchDeadEnd
+      titleId="watch-unsupported-title"
+      title="This match can't be displayed"
+      message="This app can't show this sport yet. Update Score Easy, or open the link on another device."
+    />
+  );
+}
+
 /** Re-mounts the page on Try again so every query re-subscribes and the wait starts over. */
 export default function MonoWatchMatch() {
+  const { token } = useParams();
   const [attempt, setAttempt] = useState(0);
-  return <WatchMatchPage key={attempt} onRetry={() => setAttempt((n) => n + 1)} />;
+  // Keyed by token too, so each share link gets its own load budget on client-side navigation.
+  return <WatchMatchPage key={`${token}:${attempt}`} onRetry={() => setAttempt((n) => n + 1)} />;
 }
 
 function WatchMatchPage({ onRetry }) {
@@ -729,7 +742,8 @@ function WatchMatchPage({ onRetry }) {
   // not-found/private/removed. Skeleton on undefined (retry screen once the wait runs out);
   // unavailable on null.
   if (snapshot === undefined) return waitedOut ? <LoadFailedScreen onRetry={onRetry} /> : <WatchSkeleton />;
-  if (snapshot === null || !getSportById(snapshot.sport)) return <UnavailableScreen />;
+  if (snapshot === null) return <UnavailableScreen />;
+  if (!getSportById(snapshot.sport)) return <UnsupportedSportScreen />;
 
   const nameA = meta?.teamA?.name ?? 'Team A';
   const nameB = meta?.teamB?.name ?? 'Team B';
