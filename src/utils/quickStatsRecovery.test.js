@@ -106,6 +106,29 @@ describe('durable quick stats recovery', () => {
     expect(ids()).toEqual(['first', 'middle', 'last']);
   });
 
+  it('keeps all five original operations restorable when a sixth removal fails', () => {
+    const matches = Array.from({ length: 5 }, (_, index) => completed(`capacity-${index}`));
+    const operations = matches.map(match => {
+      saveQuickMatch(match);
+      return removeQuickStats([match], 'delete');
+    });
+    const snapshot = loadQuickStatsRecoveries();
+    saveQuickMatch(completed('sixth'));
+    const setItem = Storage.prototype.setItem;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'se_quickmatches') throw new Error('sixth match write failed');
+      return setItem.call(this, key, value);
+    });
+    expect(removeQuickStats([completed('sixth')], 'delete')).toBeNull();
+    failure.mockRestore();
+    expect(loadQuickStatsRecoveries(), 'failed sixth removal must preserve all five recovery operations').toHaveLength(5);
+    expect(loadQuickStatsRecoveries()).toEqual(snapshot);
+    expect(operations.map(operation => restoreQuickStats(operation.id))).toEqual([true, true, true, true, true]);
+    const expectedIds = ['first', 'middle', 'last', ...matches.map(match => match.id), 'sixth'];
+    expect(new Set(ids())).toEqual(new Set(expectedIds));
+    expect(ids()).toHaveLength(expectedIds.length);
+  });
+
   it('prunes operations at 24 hours on reads and before appending another operation', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
