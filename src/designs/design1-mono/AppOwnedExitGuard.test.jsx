@@ -29,6 +29,20 @@ vi.mock('convex/react', () => ({
   }),
 }));
 
+// Capture the completion callback the app shell hands to the scorers, so a test can
+// call it the way a finishing scorer does (and again after the shell is gone).
+const completionCapture = vi.hoisted(() => ({ complete: null }));
+vi.mock('./scoring/scoringCompletionContext', async (importOriginal) => {
+  const actual = await importOriginal();
+  const { createElement } = await import('react');
+  const RealContext = actual.ScoringCompletionContext;
+  const CapturingProvider = ({ value, children }) => {
+    completionCapture.complete = value;
+    return createElement(RealContext.Provider, { value }, children);
+  };
+  return { ...actual, ScoringCompletionContext: { ...RealContext, Provider: CapturingProvider } };
+});
+
 vi.mock('../../mobile/backButton', async (importOriginal) => ({
   ...(await importOriginal()),
   installNativeBackButtonGuard: nativeBackButtonMock.installNativeBackButtonGuard,
@@ -170,6 +184,57 @@ describe('app-owned scoring exit guard', () => {
       vi.useFakeTimers();
       const addEventListener = vi.spyOn(globalThis, 'addEventListener');
       goBack();
+
+      expect(vi.getTimerCount()).toBe(0);
+      expect(addEventListener).not.toHaveBeenCalledWith('popstate', expect.any(Function), expect.anything());
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+    });
+  });
+
+  describe('pending completion unwind after the app shell is gone', () => {
+    const mountWithIndexedHistory = async () => {
+      // A numeric history index makes the completion unwind (history.go + fallback).
+      Object.defineProperty(globalThis.history, 'state', { configurable: true, get: () => ({ idx: 1 }) });
+      vi.spyOn(globalThis.history, 'go').mockImplementation(() => {});
+      completionCapture.complete = null;
+      const view = render(
+        <MemoryRouter initialEntries={['/volleyball/quick']}>
+          <Design1Mono />
+        </MemoryRouter>,
+      );
+      await waitFor(() => {
+        expect(completionCapture.complete).toBeTypeOf('function');
+      });
+      return { ...view, complete: completionCapture.complete };
+    };
+
+    afterEach(() => {
+      delete globalThis.history.state;
+      vi.useRealTimers();
+    });
+
+    it('clears a pending completion timer and popstate listener when the shell unmounts', async () => {
+      const { complete, unmount } = await mountWithIndexedHistory();
+
+      vi.useFakeTimers();
+      complete('/volleyball/result');
+      expect(vi.getTimerCount()).toBe(1);
+
+      const removeEventListener = vi.spyOn(globalThis, 'removeEventListener');
+      unmount();
+
+      expect(vi.getTimerCount()).toBe(0);
+      expect(removeEventListener).toHaveBeenCalledWith('popstate', expect.any(Function));
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+    });
+
+    it('starts no completion timer or popstate listener when it is called after unmount', async () => {
+      const { complete, unmount } = await mountWithIndexedHistory();
+      unmount();
+
+      vi.useFakeTimers();
+      const addEventListener = vi.spyOn(globalThis, 'addEventListener');
+      complete('/volleyball/result');
 
       expect(vi.getTimerCount()).toBe(0);
       expect(addEventListener).not.toHaveBeenCalledWith('popstate', expect.any(Function), expect.anything());
