@@ -21,6 +21,7 @@ export default function MonoLogin() {
   return (
     <CloudAuthOnly>
       <MonoAuthPageFrame
+        title="Sign in"
         subtitle="Sign in or create account"
         helperText="Use one secure account path for sign in and new accounts. You can keep scoring locally as a guest anytime."
       >
