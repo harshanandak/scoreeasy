@@ -1,5 +1,6 @@
 import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
+import { resetLiveGeneration } from '../../lib/live/liveSession';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -242,6 +243,7 @@ export default function MonoCricketTournament() {
   const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
 
   const clearScore = (matchId) => {
+    resetLiveGeneration(`${sport || 'cricket'}:${id}:${matchId}`);
     setTournament(prev => ({
       ...prev,
       matches: prev.matches.map((m) => {

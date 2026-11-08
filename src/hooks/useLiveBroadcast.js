@@ -13,12 +13,12 @@
 // owner+clientMatchId (§3.5), so a reload re-attaches to the SAME live match and
 // the sequence simply continues — no fork, no double-count.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { enqueue, size } from '../lib/live/outbox';
-import { useLiveOutbox } from './useLiveOutbox';
-import { loadSession, saveSession } from '../lib/live/liveSession';
+import { flushLiveSession } from '../lib/live/recovery';
+import { loadSession, saveSession, liveClientMatchId } from '../lib/live/liveSession';
 
 /**
  * @param {object} [options]
@@ -55,71 +55,31 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const [token, setToken] = useState(null);
   const [isLive, setIsLive] = useState(false);
   const [isShared, setIsShared] = useState(false);
-  const [error, setError] = useState(null);
+  const [failure, setFailure] = useState(null);
+  const error = failure?.error ?? null;
+  const setError = useCallback((value) => {
+    setFailure(value ? { error: value, source: 'operation' } : null);
+  }, []);
 
-  // Replays ONE queued item through the matching mutation. Throws on failure so
-  // the outbox keeps it (and the tail) queued for the next reconnect attempt.
-  const sendFn = useCallback(
-    async (item) => {
-      const matchId = matchIdRef.current;
-      if (!matchId) throw new Error('live match not created yet');
-      // Drop events belonging to a DIFFERENT match — the outbox is a single shared
-      // queue, so a stale tail from a prior match must not be mis-delivered to the
-      // current one. Resolving (not throwing) lets reconcile remove it.
-      if (item.clientMatchId && item.clientMatchId !== clientMatchIdRef.current) {
-        return undefined;
-      }
-      try {
-        if (item.kind === 'undo') {
-          return await undoM({
-            matchId,
-            clientEventId: item.clientEventId,
-            at: item.at,
-            snapshot: item.snapshot,
-          });
-        }
-        return await scorePointM({
-          matchId,
-          clientEventId: item.clientEventId,
-          team: item.team,
-          value: item.value,
-          // Older queued items have no `type`; the mutation defaults it to "point".
-          type: item.type,
-          ...(item.kabaddi ? { kabaddi: item.kabaddi } : {}),
-          at: item.at,
-          snapshot: item.snapshot,
-        });
-      } catch (e) {
-        // A finalized match permanently rejects new events; drop the item so it
-        // can't poison-loop the outbox (the match is over; local score stands).
-        // Convex REDACTS Error messages in production, so we key off the
-        // ConvexError structured `data.code` (which IS delivered to clients);
-        // the message check is only a dev/edge-runtime fallback. Other
-        // (transient/offline) errors propagate so the item stays queued.
-        const code = e && typeof e === 'object' ? e.data?.code : undefined;
-        const msg = e instanceof Error ? e.message : String(e);
-        if (code === 'match_final' || /final/i.test(msg)) {
-          return undefined;
-        }
-        throw e;
-      }
-    },
-    [scorePointM, undoM],
-  );
-
-  // useLiveOutbox owns the in-flight guard + online/visible reconnect replay.
-  const { flush } = useLiveOutbox(sendFn, { enabled });
-  useEffect(() => {
-    if (enabled && isShared) void flush();
-  }, [enabled, isShared, flush]);
+  const flush = useCallback(async () => {
+    const clientMatchId = clientMatchIdRef.current;
+    const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM });
+    if (clientMatchId === clientMatchIdRef.current) {
+      setFailure(current => result?.error
+        ? { error: result.error, source: 'drain' }
+        : current?.source === 'drain' ? null : current);
+    }
+    return result;
+  }, [scorePointM, undoM, finalizeM]);
 
   const persistSeq = useCallback((seq) => {
     const cmid = clientMatchIdRef.current;
     if (!cmid) return;
-    saveSession(cmid, { matchId: matchIdRef.current, token: tokenRef.current, seq });
+    saveSession(cmid, { ...loadSession(cmid), matchId: matchIdRef.current, token: tokenRef.current, seq });
   }, []);
 
-  const restore = useCallback(async ({ clientMatchId }) => {
+  const restore = useCallback(async ({ clientMatchId: baseId }) => {
+    const clientMatchId = liveClientMatchId(baseId);
     const generation = ++generationRef.current;
     clientMatchIdRef.current = clientMatchId;
     matchIdRef.current = null;
@@ -127,13 +87,25 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setToken(null);
     setIsLive(false);
     setIsShared(false);
+    const pending = loadSession(clientMatchId);
+    if (pending?.broadcastError) {
+      setError(new Error(pending.broadcastError.message));
+      return null;
+    }
+    // Restore pending work before the network query, which can wait while offline.
+    if (pending?.finalizeIntent) {
+      matchIdRef.current = pending.matchId;
+      tokenRef.current = pending.token;
+      seqRef.current = pending.seq ?? 0;
+      setToken(pending.token ?? null);
+    }
     try {
       const session = await convex.query(api.live.getOwnedSession, { clientMatchId });
       if (generation !== generationRef.current) return null;
       const prior = loadSession(clientMatchId);
       clientMatchIdRef.current = clientMatchId;
-      matchIdRef.current = session?.matchId ?? null;
-      tokenRef.current = session?.token ?? null;
+      matchIdRef.current = session?.matchId ?? (prior?.finalizeIntent ? prior.matchId : null);
+      tokenRef.current = session?.token ?? (prior?.finalizeIntent ? prior.token : null);
       seqRef.current = Math.max(session?.lastSeq ?? 0, prior?.seq ?? 0);
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
@@ -149,13 +121,19 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const goLive = useCallback(
     async (opts) => {
       if (!enabled || !opts?.clientMatchId || publishingRef.current) return null;
+      const clientMatchId = liveClientMatchId(opts.clientMatchId);
       const generation = ++generationRef.current;
       publishingRef.current = true;
-      clientMatchIdRef.current = opts.clientMatchId;
+      clientMatchIdRef.current = clientMatchId;
 
       // Re-attach to a prior session (reload mid-match) so the seq continues and
       // we never fork a second live match.
-      const prior = loadSession(opts.clientMatchId);
+      const prior = loadSession(clientMatchId);
+      if (prior?.broadcastError) {
+        setError(new Error(prior.broadcastError.message));
+        publishingRef.current = false;
+        return null;
+      }
       if (prior) {
         if (prior.matchId) matchIdRef.current = prior.matchId;
         if (prior.token) {
@@ -169,7 +147,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
       try {
         const res = await createM({
-          clientMatchId: opts.clientMatchId,
+          clientMatchId,
           sport: opts.sport,
           scorecardKind: opts.scorecardKind,
           teamA: opts.teamA,
@@ -182,9 +160,10 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         matchIdRef.current = res.matchId;
         tokenRef.current = res.token;
         setToken(res.token);
+        persistSeq(seqRef.current);
         // Drain older deltas first; they must never overwrite the publication snapshot.
         const drained = await flush();
-        if (drained?.error || size() > 0) throw new Error('Waiting for queued scores to sync');
+        if (drained?.error || size(clientMatchId) > 0) throw new Error('Waiting for queued scores to sync');
         const snapshot = opts.getSnapshot ? opts.getSnapshot() : opts.snapshot;
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
@@ -209,7 +188,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const point = useCallback(
     ({ team, value = 1, at, snapshot, type = 'point', kabaddi }) => {
-      if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
+      if (!enabled || !clientMatchIdRef.current || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
       const clientEventId = type === 'kabaddi_raid' && kabaddi?.kind === 'raid' ? `kabaddi-raid:${kabaddi.raid.id}` : `${clientMatchId}:${seqRef.current}`;
@@ -227,7 +206,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const undo = useCallback(
     ({ at, snapshot }) => {
-      if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
+      if (!enabled || !clientMatchIdRef.current || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
       const clientEventId = `${clientMatchId}:${seqRef.current}`;
@@ -239,31 +218,19 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
-    if (!enabled) return null;
+    const clientMatchId = clientMatchIdRef.current;
+    if (!enabled || !clientMatchId || !matchIdRef.current || loadSession(clientMatchId)?.broadcastError) return null;
     if (snapshot) void point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot });
-    // Drain DETERMINISTICALLY before archiving. flush() now AWAITS any in-flight
-    // point() drain (instead of no-op'ing), so finalize cannot race ahead of the
-    // last tap and make the backend archive a final score missing that point.
-    // Stop early on a network error: queued points replay on reconnect.
-    for (let i = 0; i < 10 && size() > 0; i += 1) {
-      const result = await flush();
-      if (result?.error) break;
-    }
-    // If the outbox STILL has undrained events (offline / network error broke the
-    // loop above), do NOT archive — finalizing now would persist a final score
-    // missing the queued tail. Leave the match live: the tail replays on
-    // reconnect and the match stales/auto-expires server-side until then. The
-    // local scorer's score stays authoritative regardless.
-    if (size() > 0) return null;
-    const matchId = matchIdRef.current;
-    if (!matchId) return null;
-    try {
-      return await finalizeM({ matchId, ...(resultType ? { resultType } : {}) });
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)));
-      return null;
-    }
-  }, [enabled, point, flush, finalizeM]);
+    saveSession(clientMatchId, {
+      ...loadSession(clientMatchId),
+      matchId: matchIdRef.current,
+      token: tokenRef.current,
+      seq: seqRef.current,
+      finalizeIntent: { ...(resultType ? { resultType } : {}) },
+    });
+    const result = await flush();
+    return result?.finalized ?? null;
+  }, [enabled, point, flush]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {

@@ -1,5 +1,5 @@
 // @vitest-environment edge-runtime
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { convexTest } from "convex-test";
 import schema from "./schema";
 import { api } from "./_generated/api";
@@ -40,6 +40,33 @@ const TEAMS = {
 function newClient() {
   return convexTest(schema, modules);
 }
+
+test("finalize retries preserve expiry and archive after authenticating and checking ownership", async () => {
+  const t = newClient();
+  await seedUser(t, "finalize-owner");
+  await seedUser(t, "finalize-stranger");
+  const owner = t.withIdentity(identityFor("finalize-owner", "owner"));
+  const stranger = t.withIdentity(identityFor("finalize-stranger", "stranger"));
+  const { matchId } = await owner.mutation(api.live.create, {
+    sport: "football", scorecardKind: "goals", ...TEAMS, clientMatchId: "durable-finalize",
+  });
+  const clock = vi.spyOn(Date, "now").mockReturnValue(100000);
+  try {
+    const first = await owner.mutation(api.live.finalize, { matchId, resultType: "abandoned" });
+    const before = await t.run(ctx => ctx.db.get("liveMatches", matchId));
+    clock.mockReturnValue(200000);
+    await expect(t.mutation(api.live.finalize, { matchId })).rejects.toThrow(/authenticated/i);
+    await expect(stranger.mutation(api.live.finalize, { matchId })).rejects.toThrow(/authorized/i);
+    const repeated = await owner.mutation(api.live.finalize, { matchId, resultType: "decided" });
+    expect(repeated).toEqual({ matchId: first.matchId, archived: false });
+    expect(await t.run(ctx => ctx.db.get("liveMatches", matchId))).toEqual(before);
+    const archives = await t.run(ctx => ctx.db.query("matches").collect());
+    expect(archives).toHaveLength(1);
+    expect(archives[0]).toMatchObject({ resultType: "abandoned" });
+  } finally {
+    clock.mockRestore();
+  }
+});
 
 async function createShared(client: Pick<ReturnType<typeof newClient>, "mutation">, args: Parameters<typeof client.mutation<typeof api.live.create>>[1]) {
   const result = await client.mutation(api.live.create, args);
