@@ -4,7 +4,8 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: 'basketball' }),
   useLocation: () => ({ pathname: '/basketball/quick', search: '' }),

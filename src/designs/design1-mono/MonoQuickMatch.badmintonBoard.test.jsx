@@ -5,7 +5,8 @@ import { sportMarkMaskUrl } from '../../lib/sportMarks';
 
 const ctx = vi.hoisted(() => ({ draft: null, saved: null }));
 const savedMatch = vi.hoisted(() => vi.fn(() => true));
-vi.mock('convex/react', () => ({ useQuery: () => undefined, useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useQuery: () => undefined, useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: 'badminton' }),
   useLocation: () => ({ pathname: '/badminton/quick', search: '' }),

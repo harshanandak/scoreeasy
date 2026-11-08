@@ -22,7 +22,8 @@ vi.mock('../../models/sportRegistry', async (importOriginal) => {
 });
 const storage = vi.hoisted(() => ({ saveData: null, saveQuickMatch: null }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: ctx.sport }),
@@ -65,6 +66,15 @@ function seedSets(sport, colours = {}) {
     sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0,
     ...colours,
   };
+}
+
+async function shareThisMatch() {
+  expect(live.goLive).not.toHaveBeenCalled();
+  if (!screen.queryByRole('button', { name: /Go live/ })) {
+    fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
+  }
+  fireEvent.click(await screen.findByRole('button', { name: /Go live/ }));
+  await waitFor(() => expect(live.goLive).toHaveBeenCalled());
 }
 
 const board = () => document.querySelector('[data-team-board]');
@@ -141,7 +151,7 @@ describe('quick match team colour: volleyball board', () => {
   it('shares the colours to the live meta', async () => {
     seedSets('volleyball', { team1Color: '#facc15', team2Color: '#16a34a' });
     render(<MonoQuickMatch />);
-    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    await shareThisMatch();
     const descriptor = live.goLive.mock.calls[0][0];
     expect(descriptor.teamA).toEqual({ name: 'Reds', color: '#facc15' });
     expect(descriptor.teamB).toEqual({ name: 'Blues', color: '#16a34a' });
@@ -164,7 +174,7 @@ describe('quick match team colour: volleyball board', () => {
     const expected = deriveTeamColours(DEFAULT_TEAM_COLOURS.a, DEFAULT_TEAM_COLOURS.b);
     expect(board().style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
     expect(board().style.getPropertyValue('--team-b-core')).toBe(expected.B.core);
-    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    await shareThisMatch();
     expect(live.goLive.mock.calls[0][0].teamB.color).toBe(DEFAULT_TEAM_COLOURS.b);
   });
 
@@ -224,12 +234,12 @@ describe('quick match team colour: volleyball board', () => {
     expect(screen.getByText('Volleyball · 15 pts · win by 2')).toBeInTheDocument();
   });
 
-  it('keeps the live-sharing bar mounted while the options sheet is closed', async () => {
+  it('keeps the match private until sharing is requested from the options sheet', async () => {
     seedSets('volleyball');
     render(<MonoQuickMatch />);
     await screen.findByRole('button', { name: 'Add point for Reds' });
     expect(screen.queryByRole('dialog', { name: 'Match options' })).toBeNull();
-    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    await shareThisMatch();
   });
 });
 
@@ -240,7 +250,7 @@ describe('quick match team colour: registry opt-out compatibility', () => {
     render(<MonoQuickMatch />);
     await screen.findByRole('button', { name: 'Add point for Reds' });
     expect(board()).toBeNull();
-    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    await shareThisMatch();
     expect(live.goLive.mock.calls[0][0].teamA).toEqual({ name: 'Reds' });
   });
 });

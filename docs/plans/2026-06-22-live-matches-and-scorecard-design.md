@@ -1,5 +1,7 @@
 # Live Match Streaming + Mature Point-by-Point Scorecards — Design
 
+> Visibility policy superseded on 2026-11-08: matches are private until the scorer explicitly shares each match. Public-by-default decisions below are historical; use the [current privacy audit](../security/match-visibility-audit.md) for the implemented policy.
+
 - **Date:** 2026-06-22
 - **Branch / worktree:** `feat/live-matches` → `.worktrees/live-matches` (off `origin/master` 0e65c15)
 - **Research:** [research report](../research/2026-06-22-live-matches-and-scorecard-research.md) · [feed/commentary UX](../research/2026-06-22-feed-and-commentary-ux.md)

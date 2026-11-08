@@ -9,7 +9,8 @@ import MonoPlayHub from './MonoPlayHub';
 import { loadInProgressMatches } from '../../utils/appEntry';
 import { loadQuickMatches } from '../../utils/storage';
 
-vi.mock('convex/react', () => ({ useQuery: () => undefined, useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useQuery: () => undefined, useMutation: () => vi.fn() }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
 vi.mock('./live/LiveNowStrip', () => ({ default: () => null }));
