@@ -12,7 +12,7 @@ No PR was merged. Close the superseded scorer draft (#210) only after the scorer
 
 ## What was exercised
 
-- **Source component preview (rung 5 within this preview):** 14 scenes in each of the three requested viewport/theme variants, 42 screenshots in total. The browser used CSS viewports of 390×844 and 360×640 at device pixel ratio 2. The PNG dimensions are therefore twice those CSS dimensions.
+- **Source component preview (rung 4: ran it):** 14 scenes in each of the three requested viewport/theme variants, 42 screenshots in total. The browser used CSS viewports of 390×844 and 360×640 at device pixel ratio 2. The PNG dimensions are therefore twice those CSS dimensions.
 - **Actual control walk in the source preview:** Raid by → +1 produced 1–0 in two taps. Refresh retained 1–0. Undo reopened the raid at 0–0 with its touch mark; the next Undo removed that mark; the next cancelled the raid.
 - **Other control walks:** starting from the Standard fixture's 1–1, an empty raid used two taps, kept 1–1 and handed the raid to Strikers; tackled used two taps and produced 1–2; Raid by → Bonus → +2 used three taps and produced 4–1.
 - **Compact layout:** the 360×640 live-raid capture keeps Undo within the viewport. The count shortcuts sit alongside mark mode and retain 48-pixel targets.
