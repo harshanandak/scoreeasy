@@ -89,6 +89,18 @@ export function assertState(state) {
     check(raid.bonusEligibleAtStart === bonusEligible(state, raid.startMat[1 - raid.raidingTeam]) && raid.superEligibleAtStart === superEligible(state, raid.startMat[1 - raid.raidingTeam]), 'corrupt raid-start eligibility');
     check(raid.doOrDieAtStart === dodEligible(state, raid.raidingTeam), 'corrupt do-or-die snapshot');
     check(raid.startedBeforeHalfEnd === true && (state.rules.raidLimitMs === null ? raid.raidClock === null : raid.raidClock?.durationMs === state.rules.raidLimitMs && integer(raid.raidClock.remainingAtAnchorMs) && raid.raidClock.remainingAtAnchorMs <= state.rules.raidLimitMs && Number.isFinite(raid.raidClock.anchorMonotonicMs) && typeof raid.raidClock.running === 'boolean'), 'invalid active raid clock');
+    if (raid.draft) {
+      const validateDraft = draft => {
+        check(draft && Object.keys(draft).every(k => ['raidId', 'marks', 'bonus', 'bonusAt', 'history'].includes(k)), 'unknown draft field');
+        check((draft.raidId === undefined || draft.raidId === raid.id) && typeof draft.bonus === 'boolean', 'invalid draft identity or bonus');
+        check(!draft.bonus || raid.bonusEligibleAtStart, 'draft bonus is unavailable');
+        check(Array.isArray(draft.marks) && new Set(draft.marks.map(m => m.slot)).size === draft.marks.length && draft.marks.every(m => Object.keys(m).every(k => ['slot', 'kind'].includes(k)) && ['touched', 'out'].includes(m.kind) && state.mat[1 - raid.raidingTeam].includes(m.slot)), 'invalid draft marks');
+        check(draft.bonusAt === undefined || integer(draft.bonusAt) && draft.bonusAt <= state.rules.initialPlayers, 'invalid draft order');
+      };
+      validateDraft(raid.draft);
+      check(raid.draft.history === undefined || Array.isArray(raid.draft.history), 'invalid draft history');
+      for (const prior of raid.draft.history ?? []) validateDraft(prior);
+    }
   }
 }
 
@@ -168,7 +180,7 @@ export function startHalf(state, { atMs = 0 } = {}) {
 }
 
 /** Start a draft. Anonymous raider selection has no player-performance meaning. */
-export function startRaid(state, { id, team = state.nextRaidTeam, raiderSlotId = state.mat[team]?.[0], atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {
+export function startRaid(state, { id, team = state.nextRaidTeam, raiderSlotId = state.mat[team]?.[0], raiderNamed = false, atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {
   assertState(state);
   check(state.phase === 'playing' && !state.activeRaid, 'startRaid requires playing with no active raid');
   check(team === state.nextRaidTeam, 'raid team must be the next raiding team');
@@ -179,12 +191,12 @@ export function startRaid(state, { id, team = state.nextRaidTeam, raiderSlotId =
   const before = snapshot(state);
   before.clock = frozenClock(state, atMs);
   after.activeRaid = {
-    id, raidingTeam: team, raiderSlotId, startedAtRevision: state.revision, startedInHalf: state.half, startedBeforeHalfEnd: true,
+    id, raidingTeam: team, raiderSlotId, raiderNamed, startedAtRevision: state.revision, startedInHalf: state.half, startedBeforeHalfEnd: true,
     startMat: state.mat.map((slots) => slots.length), bonusEligibleAtStart: bonusEligible(state, state.mat[1 - team].length),
     superEligibleAtStart: superEligible(state, state.mat[1 - team].length), doOrDieAtStart: dodEligible(state, team),
     raidClock: state.rules.raidLimitMs === null ? null : { ...makeClock(state.rules.raidLimitMs, atMs, true), startedAtMs: atMs, durationMs: state.rules.raidLimitMs },
     startedAtMs: atMs,
-    draft: null, before,
+    draft: { raidId: id, marks: [], bonus: false, history: [] }, before,
   };
   return after;
 }
@@ -194,6 +206,53 @@ export function cancelRaid(state) {
   check(state.activeRaid && (state.phase === 'playing' || (state.phase === 'paused' && state.resumePhase === 'playing')), 'only an ordinary active draft can be cancelled; pending time-up needs a ruling');
   // Cancelling a picker does not rewind the match clock or discard intervening admin records.
   return { ...copyState(state), activeRaid: null };
+}
+
+/** Live marks change no score or journal revision. The caller persists each returned state. */
+export function editRaidDraft(state, command) {
+  assertState(state);
+  check(state.activeRaid && (PLAYING.includes(state.phase) || state.phase === 'paused' && PLAYING.includes(state.resumePhase)), 'live marks require an active raid');
+  const raid = state.activeRaid;
+  const previous = raid.draft ?? { raidId: raid.id, marks: [], bonus: false, history: [] };
+  const { history = [], ...before } = previous;
+  let next = clone(before);
+  if (command.kind === 'mark') {
+    check(['touched', 'out'].includes(command.mark) && state.mat[1 - raid.raidingTeam].includes(command.slotId), 'invalid defender mark');
+    check(command.mark !== 'out' || state.rules.boundary !== 'none', 'boundary rulings are disabled');
+    const index = next.marks.findIndex(m => m.slot === command.slotId);
+    if (index < 0) next.marks.push({ slot: command.slotId, kind: command.mark });
+    else if (next.marks[index].kind === command.mark) next.marks.splice(index, 1);
+    else next.marks[index] = { slot: command.slotId, kind: command.mark };
+  } else if (command.kind === 'bonus') {
+    check(raid.bonusEligibleAtStart, 'bonus is disabled or unavailable');
+    next.bonus = !next.bonus;
+    if (next.bonus) next.bonusAt = next.marks.length;
+    else delete next.bonusAt;
+  } else if (command.kind === 'count') {
+    const slots = state.mat[1 - raid.raidingTeam];
+    check(integer(command.count, 1) && command.count <= slots.length, 'invalid touch count');
+    next.marks = slots.slice(0, command.count).map(slot => ({ slot, kind: 'touched' }));
+  } else throw new Error('Kabaddi: unsupported draft command');
+  next = { ...next, raidId: raid.id, history: [...history, before] };
+  return { ...state, activeRaid: { ...raid, draft: next } };
+}
+
+export function undoRaidDraft(state) {
+  assertState(state);
+  const draft = state.activeRaid?.draft;
+  check(draft?.history?.length, 'no live mark to undo');
+  const history = draft.history.slice(0, -1);
+  return { ...state, activeRaid: { ...state.activeRaid, draft: { ...clone(draft.history.at(-1)), history } } };
+}
+
+/** Reopen a landed raid even after refresh, using its engine-owned marks and undo boundary. */
+export function reopenLastRaid(state, { id, atMs }) {
+  const target = latestUndoTarget(state);
+  check(target?.type === 'raid' && target.raidDraft, 'no landed raid to reopen');
+  let restored = undo(state);
+  restored = resume(restored, { atMs });
+  restored = startRaid(restored, { id, atMs, raiderSlotId: target.raiderSlotId, raiderNamed: target.raiderNamed === true });
+  return { ...restored, activeRaid: { ...restored.activeRaid, draft: { ...clone(target.raidDraft), raidId: id, history: (target.raidDraft.history ?? []).map(prior => ({ ...clone(prior), raidId: id })) } } };
 }
 
 /** Explicit half deadline: an active raid still requires a referee outcome. */
@@ -417,6 +476,7 @@ export function applyRaid(state, event) {
   return append(state, current, {
     id: event.id, type: technical ? 'technical' : 'raid', input: clone(event), inputKey,
     outcome, raidingTeam, half: state.half, raidNumber: current.raidNumber,
+    ...(raid ? { raidDraft: clone(raid.draft), raidStartedAtMs: raid.startedAtMs, raiderSlotId: raid.raiderSlotId, raiderNamed: raid.raiderNamed === true } : {}),
     effects, superRaid: raidPoints >= 3,
     // Only a completed raid restores raid.before; replay undo retains intervening clock actions.
     absorbedAdminIds: raid && (!technical || event.turnEffect === 'forfeit') ? state.events.slice(raid.startedAtRevision).filter((entry) => entry.type === 'admin').map((entry) => entry.id) : [],
@@ -460,6 +520,12 @@ export function undo(state) {
     after.activeRaid.raidClock.persistedWallAnchor = null;
   }
   return append(state, after, { id: `undo-${state.revision + 1}`, type: 'undo', targetId: target.id });
+}
+
+function latestUndoTarget(state) {
+  const undone = new Set(state.events.filter(entry => entry.type === 'undo').map(entry => entry.targetId));
+  const absorbed = new Set(state.events.flatMap(entry => entry.absorbedAdminIds ?? []));
+  return [...state.events].reverse().find(entry => !['undo', 'reopen'].includes(entry.type) && !undone.has(entry.id) && !absorbed.has(entry.id));
 }
 
 /** A reviewable result is derived at any time; final is true only after finish. */
