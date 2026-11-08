@@ -1,5 +1,5 @@
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
@@ -31,6 +31,8 @@ import { relativeDay } from './kit/dates';
 import { cricketScoreLine } from '../../utils/cricketScoreFormat';
 import './kit/history.css';
 import InProgressMatches from './components/InProgressMatches';
+import MatchSyncStatus from './components/MatchSyncStatus';
+import { buildQuickMatchClientId } from '../../hooks/useMatchSync';
 
 const ANY_SPORT = 'all';
 const RESULT_ALL = 'all';
@@ -302,6 +304,7 @@ export default function MonoHistory() {
       return {
         id: `quick-${qm.id}`,
         rawId: qm.id,
+        clientMatchId: qm.clientMatchId || buildQuickMatchClientId(qm.sport, qm.id),
         source: 'quick',
         sport: qm.sport,
         sportName: getSportById(qm.sport)?.name || 'Custom',
@@ -637,8 +640,8 @@ export default function MonoHistory() {
                     />
                     <div className="kit-list">
                       {group.entries.map((entry) => (
+                        <Fragment key={entry.id}>
                         <HistoryRow
-                          key={entry.id}
                           entry={entry}
                           onOpen={() => setSelectedEntry(entry)}
                           buttonRef={(node) => {
@@ -646,6 +649,8 @@ export default function MonoHistory() {
                             else rowRefs.current.delete(entry.id);
                           }}
                         />
+                        {entry.source === 'quick' && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} quickMatchId={entry.rawId} />}
+                        </Fragment>
                       ))}
                     </div>
                   </section>

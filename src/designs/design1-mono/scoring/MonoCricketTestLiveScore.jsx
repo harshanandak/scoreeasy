@@ -9,6 +9,8 @@ import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
+import { useMatchSync } from '../../../hooks/useMatchSync';
+import MatchSyncStatus from '../components/MatchSyncStatus';
 import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
 import { ballsToOvers, calculateRunRate, getMaxWickets, canEnforceFollowOn, getTestMatchCompletion, isTestInningsComplete } from '../../../utils/cricketCalculations';
@@ -37,7 +39,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const { sport, id, matchId } = useParams();
   const sportConfig = getSportById(sport || 'cricket');
   const isQuickMatch = storageMode === 'quick';
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, clerkUser } = useAuth();
+  const { syncMatch: syncQuickMatch } = useMatchSync({ sport: sport || 'cricket', isAuthenticated, user, clerkUser });
   const saveMatchMutation = useMutation(api.matches.save);
 
   // Core state
@@ -475,8 +478,9 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         : normalizeNonTeamWinner(winner);
 
     if (isQuickMatch) {
-      const ok = saveQuickMatch({
+      const entry = {
         ...match,
+        clientMatchId: match.clientMatchId || liveClientMatchId,
         team1: team1Name,
         team2: team2Name,
         innings,
@@ -491,11 +495,13 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         draftState: undefined,
         date: completedAt,
         completedAt,
-      });
+      };
+      const ok = saveQuickMatch(entry);
       if (!ok) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
         return false;
       }
+      void syncQuickMatch(entry);
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
@@ -726,6 +732,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
             </div>
           )}
           <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>Match Complete</p>
+          {isQuickMatch && <MatchSyncStatus clientMatchId={match?.clientMatchId || liveClientMatchId} quickMatchId={match?.id} />}
 
           {winnerName ? (
             <>
