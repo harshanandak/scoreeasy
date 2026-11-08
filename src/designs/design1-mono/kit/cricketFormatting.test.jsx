@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scorePair } from '../landing/DashboardLanding';
 import { finishFromQuickResult } from './finishModel';
+import { cricketScoreLine } from '../../../utils/cricketScoreFormat';
 
 const result = {
   sport: 'cricket', team1: 'Royals', team2: 'Strikers', score1: 13, score2: 0,
@@ -10,6 +11,12 @@ const result = {
 describe('cricket scorecard formatting across surfaces', () => {
   it('prefers wickets over generic numeric scores on Home', () => {
     expect(scorePair(result)).toEqual(['13/1', '0/0']);
+    const finish = finishFromQuickResult(result, { kind: 'cricket' });
+    expect([finish.team1.score, finish.team2.score]).toEqual(scorePair(result));
+    expect(cricketScoreLine(result)).toBe('Royals 13/1 · Strikers 0/0');
+  });
+  it('retains historical runs when wickets were never recorded', () => {
+    expect(scorePair({ sport: 'cricket', score1: 151, score2: 140 })).toEqual(['151/?', '140/?']);
   });
   it('keeps a missing innings distinct from a recorded 0/0', () => {
     expect(scorePair({ sport: 'cricket', team1Score: result.team1Score })).toEqual(['13/1', 'Yet to bat']);

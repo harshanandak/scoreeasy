@@ -733,7 +733,7 @@ export function deriveInnings(innings, format) {
 export function deriveChase(innings, format) {
   const bpo = format.ballsPerOver || 6;
   const { runs, legalBalls } = deriveInnings(innings, format);
-  const totalBalls = (format.oversPerInnings || 0) * bpo;
+  const totalBalls = format.maxLegalBalls ?? (format.oversPerInnings || 0) * bpo;
   const target = innings.target || 0;
 
   const runsNeeded = Math.max(0, target - runs);
@@ -741,7 +741,7 @@ export function deriveChase(innings, format) {
 
   const CRR = legalBalls > 0 ? +((runs * bpo) / legalBalls).toFixed(2) : 0;
   const RRR = ballsLeft > 0 ? +((runsNeeded * bpo) / ballsLeft).toFixed(2) : 0;
-  const projection = Math.round(CRR * (format.oversPerInnings || 0));
+  const projection = Math.round(CRR * totalBalls / bpo);
 
   // Provisional heuristic — will be replaced. Chasing-team perspective.
   let value;

@@ -2,7 +2,6 @@ import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  makeFormat,
   createInnings,
   makeDelivery,
   applyDelivery,
@@ -27,6 +26,7 @@ import { BoardBar, BoardHeader } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
 import { getPowerplayPhase } from '../../../utils/cricketCalculations';
+import { resolveGuidedRules, guidedCompletionReason } from '../../../utils/cricketRules';
 import './cricketBoard.css';
 
 // C3/C4 Guided cricket scorer. Pure component: the live innings is engine state
@@ -81,7 +81,7 @@ export default function MonoCricketGuidedScorer({
   onStateChange,
   onComplete,
 }) {
-  const fmt = useMemo(() => makeFormat(format || {}), [format]);
+  const fmt = useMemo(() => resolveGuidedRules(format || {}), [format]);
   const bpo = fmt.ballsPerOver || 6;
   const colourStyle = useTeamColours(team1Color, team2Color, 'cricket');
 
@@ -131,12 +131,7 @@ export default function MonoCricketGuidedScorer({
   const chase = useMemo(() => deriveChase(innings, fmt), [innings, fmt]);
   const completion = useMatchCompletion();
 
-  const completionReason = (next, derived) => {
-    if (next.target != null && derived.runs >= next.target) return 'chased';
-    if (derived.wkts >= (next.playersPerSide || 11) - 1) return 'allout';
-    if (fmt.oversPerInnings > 0 && derived.legalBalls >= fmt.oversPerInnings * bpo) return 'overs';
-    return null;
-  };
+  const completionReason = (next, derived) => guidedCompletionReason(next, derived, fmt);
 
   const commitInnings = (next) => {
     if (completionReason(next, deriveInnings(next, fmt))) completion.lock();
@@ -262,7 +257,7 @@ export default function MonoCricketGuidedScorer({
     commitInnings(next);
     const idx = next.deliveries.length - 1;
     const wkts = deriveInnings(next, fmt).wkts;
-    if (wkts < playersPerSide - 1) {
+    if (wkts < playersPerSide - 1 && !completionReason(next, deriveInnings(next, fmt))) {
       setBatterPicker({ ctx: 'wicket', index: idx });
     } else {
       maybePromptBowler(next); // last wkt could still close an over
@@ -283,7 +278,7 @@ export default function MonoCricketGuidedScorer({
     }
     commitInnings(next);
     const idx = next.deliveries.length - 1;
-    if (deriveInnings(next, fmt).wkts < playersPerSide - 1) {
+    if (deriveInnings(next, fmt).wkts < playersPerSide - 1 && !completionReason(next, deriveInnings(next, fmt))) {
       setBatterPicker({ ctx: 'mankad', index: idx });
     }
   };
@@ -420,13 +415,13 @@ export default function MonoCricketGuidedScorer({
   const hasTarget = innings.target != null;
   // Overs remaining in the innings (only meaningful when NOT chasing — the hero
   // already shows OFF <ballsLeft> for a chase).
-  const totalBalls = (fmt.oversPerInnings || 0) * bpo;
+  const totalBalls = fmt.maxLegalBalls || 0;
   const oversLeft = totalBalls > 0
     ? oversString(Math.max(0, totalBalls - der.legalBalls), bpo)
     : null;
   const progressPct = hasTarget
     ? Math.min(100, (der.runs / Math.max(1, innings.target)) * 100)
-    : Math.min(100, ((fmt.oversPerInnings || 0) * bpo ? der.legalBalls / ((fmt.oversPerInnings || 0) * bpo) : 0) * 100);
+    : Math.min(100, (totalBalls ? der.legalBalls / totalBalls : 0) * 100);
 
   const restore = deriveInnings(undoInnings(innings), fmt);
 
@@ -445,7 +440,7 @@ export default function MonoCricketGuidedScorer({
           <span className="cricket-mark" aria-hidden="true" />
           <p className="cricket-who">
             <span>{battingTeamName} batting</span>
-            {getPowerplayPhase(format || {}, currentOverNo) && <span className="cricket-moment">{getPowerplayPhase(format || {}, currentOverNo).label}</span>}
+            {getPowerplayPhase({ powerplay: fmt.powerplays }, currentOverNo) && <span className="cricket-moment">{getPowerplayPhase({ powerplay: fmt.powerplays }, currentOverNo).label}</span>}
           </p>
           <div className="ck-hero-top">
             <div style={{ display: 'flex', alignItems: 'baseline' }}>

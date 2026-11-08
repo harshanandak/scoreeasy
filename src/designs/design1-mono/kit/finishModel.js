@@ -3,6 +3,7 @@
 // decides a sport rule itself: winners come from the persisted scores, cricket margins from
 // cricketCalculations, set winners from the sets as stored.
 import { ballsToOvers, getLimitedOversResult, getTestMatchCompletion } from '../../../utils/cricketCalculations';
+import { cricketScorePair } from '../../../utils/cricketScoreFormat';
 
 const DASH = '–';
 
@@ -93,11 +94,10 @@ export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets
   const name2 = r.team2 || r.team2Name || 'Team 2';
 
   if (kind === 'cricket' && r.format?.totalInnings === 4 && Array.isArray(r.innings)) {
+    const scores = cricketScorePair(r);
     const teamScore = (teamId, name) => ({
       name,
-      score: r.innings.filter(i => i.teamId === teamId && (num(i.balls) > 0 || num(i.runs) > 0 || num(i.wickets) > 0 || i.allOut || i.declared))
-        // Same marks as the Test scorer and board: "243/all" for all out, "187/6d" for a declaration.
-        .map(i => `${num(i.runs)}/${i.allOut ? 'all' : num(i.wickets)}${i.declared ? 'd' : ''}`).join(' & ') || '0/0',
+      score: scores[teamId === r.team1Id ? 0 : 1],
       unit: 'innings',
     });
     const team1 = teamScore(r.team1Id, name1);
@@ -120,8 +120,9 @@ export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets
   if (kind === 'cricket' && r.team1Score && r.team2Score) {
     const t1 = r.team1Score;
     const t2 = r.team2Score;
-    const team1 = { name: name1, score: `${num(t1.runs)}/${num(t1.wickets)}`, unit: `${ballsToOvers(num(t1.balls))} ov` };
-    const team2 = { name: name2, score: `${num(t2.runs)}/${num(t2.wickets)}`, unit: `${ballsToOvers(num(t2.balls))} ov` };
+    const scores = cricketScorePair(r);
+    const team1 = { name: name1, score: scores[0], unit: `${ballsToOvers(num(t1.balls))} ov` };
+    const team2 = { name: name2, score: scores[1], unit: `${ballsToOvers(num(t2.balls))} ov` };
     if (num(t1.runs) === num(t2.runs)) {
       return finish({ outcome: 'draw', winnerSide: null, headline: 'Match tied', detail: null, team1, team2, chips: [] });
     }
