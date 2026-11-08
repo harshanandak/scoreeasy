@@ -222,8 +222,9 @@ const BUILDERS = {
     totals: [3, 2],
     values: [[1], [1]],
     spacing: [900, 1100],
-    periods: ['P1', 'P2', 'P3'].map((label) => ({ label, durationSec: 1200 })),
-    status: ({ last, period }) => `${period?.label ?? 'P1'} of 3 · ${last?.minute ?? 0}'`,
+    // Field hockey (registry): four 15-minute quarters.
+    periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 900 })),
+    status: ({ last, period }) => `${period?.label ?? 'Q1'} of 4 · ${last?.minute ?? 0}'`,
     colours: colourPair('Red v Maroon'),
   }),
 };

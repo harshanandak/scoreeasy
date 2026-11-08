@@ -50,6 +50,12 @@ describe('landing demo', () => {
     expect(demo.status).toBe('Q3 of 4');
   });
 
+  it("plays hockey in the registry's four field-hockey quarters", () => {
+    const demo = buildDemo('hockey');
+    expect(demo.teams.map((team) => team.score)).toEqual(['3', '2']);
+    expect(demo.status).toMatch(/^Q[1-4] of 4 · \d+'$/);
+  });
+
   it('reads cricket runs, wickets and overs from the innings engine', () => {
     const demo = buildDemo('cricket');
     expect(demo.teams[0].score).toMatch(/^\d+\/2$/);
