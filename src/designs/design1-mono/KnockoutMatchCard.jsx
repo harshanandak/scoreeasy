@@ -10,6 +10,7 @@ function getScoreInfo(match, engine) {
     hasScore = match.sets && match.sets.length > 0;
     if (hasScore) {
       match.sets.forEach(set => {
+        if (!set.completed) return;
         if (set.score1 > set.score2) t1SetsWon++;
         else if (set.score2 > set.score1) t2SetsWon++;
       });
@@ -56,7 +57,7 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
         </span>
         <div className="flex items-center gap-2">
           {match.status === 'completed' && (
-            <span className="mono-badge mono-badge-final">Completed</span>
+            <span className="mono-badge mono-badge-final">{isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}</span>
           )}
           {match.status === 'in-progress' && (
             <span className="mono-badge mono-badge-live">In Progress</span>
@@ -106,21 +107,21 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
         <div className="flex justify-center gap-2 flex-wrap mb-5 py-3" style={{ borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
           {match.sets.map((set, i) => {
             const setWinner = set.score1 > set.score2 ? 'team1' : 'team2';
-            const matchWinner = t1SetsWon > t2SetsWon ? 'team1' : 'team2';
+            const matchWinner = isAbandoned(match) ? null : t1SetsWon > t2SetsWon ? 'team1' : 'team2';
             const isMatchWinnerSet = setWinner === matchWinner;
             return (
               <span
                 key={`set-${set.score1}-${set.score2}-${i}`}
                 className="px-3 py-1.5 rounded font-mono"
                 style={{
-                  background: isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
+                  background: isAbandoned(match) ? '#f5f5f5' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
                   color: '#111',
                   fontSize: '0.875rem'
                 }}
               >
-                <span style={{ fontWeight: set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
+                <span style={{ fontWeight: !isAbandoned(match) && set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
                 <span style={{ color: '#ccc', margin: '0 4px', fontWeight: '300' }}>-</span>
-                <span style={{ fontWeight: set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
+                <span style={{ fontWeight: !isAbandoned(match) && set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
               </span>
             );
           })}
