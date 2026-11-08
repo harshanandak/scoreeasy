@@ -861,7 +861,7 @@ describe('navigation decisions (2026-10-21)', () => {
     seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', gScore1: 1, updatedAt: NOW_ISO });
     renderApp([`/${page}`]);
     await settleRoute();
-    fireEvent.click(screen.getByRole('link', { name: 'SCORE EASY' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Score Easy' }));
     await waitFor(() => expect(currentRoute()).toBe('/app'));
   });
 

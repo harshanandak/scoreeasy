@@ -1,0 +1,74 @@
+/* Privacy, Terms and Contact (Kit). The page is a reading column of Kit cards: one card per
+   heading, plain paragraphs and bullets inside. Colour comes only from --se-color-* tokens, so a
+   dark theme is a token swap. Every link and button is at least 48px tall. */
+
+.kit-legal {
+  padding-bottom: 40px;
+}
+
+.kit-legal-brand {
+  align-self: stretch;
+  min-height: 48px;
+  color: var(--se-color-ink);
+  text-decoration: none;
+}
+
+.kit-legal-head {
+  padding-bottom: 4px;
+}
+
+.kit-legal-head .kit-title {
+  margin-top: 10px;
+}
+
+.kit-legal-date {
+  margin: 8px 0 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kit-legal-card {
+  color: var(--se-color-ink);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.kit-legal-card p,
+.kit-legal-card ul {
+  margin: 0;
+}
+
+.kit-legal-card p + p,
+.kit-legal-card p + ul,
+.kit-legal-card ul + p {
+  margin-top: 10px;
+}
+
+.kit-legal-card ul {
+  padding-left: 20px;
+}
+
+.kit-legal-card li + li {
+  margin-top: 6px;
+}
+
+/* The address inside a sentence: underlined, with a tap area taller than the line. */
+.kit-legal-mail {
+  display: inline-block;
+  padding: 12px 0;
+  margin: -12px 0;
+  color: var(--se-color-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.kit-legal-actions {
+  margin-top: 22px;
+}
+
+.kit-legal-actions .se-go {
+  box-sizing: border-box;
+  text-decoration: none;
+}
