@@ -1,0 +1,154 @@
+/* Live tab court, round 4 (KabaddiCourt.jsx). One isometric SVG slab, one raid animation, a calm
+   state in between. Colour only from --se-color-* tokens and the engine's --team-{a,b}-* vars.
+   prefers-reduced-motion: every animation is off and the static pose below is what shows
+   (raid in progress: raider inside the defending half; outcome: final state with its chips). */
+
+.k4c-card {
+  --k4c-t: 3s;
+  --k4c-hair: var(--se-color-line-soft);
+  box-sizing: border-box; padding: 10px 10px 6px;
+  border: 1px solid var(--k4c-hair); border-radius: 22px; background: var(--se-color-surface);
+}
+
+/* ---- header: who raids (or raided), the raid clock, rule cues ---- */
+.k4c-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 0 4px 6px; min-height: 30px; }
+.k4c-who { --k4c-core: var(--team-a-core); display: inline-flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; font-size: 0.92rem; font-weight: 600; line-height: 1.2; }
+.k4c-who-b { --k4c-core: var(--team-b-core); }
+.k4c-who b { font-weight: 800; }
+.k4c-mark {
+  display: inline-block; flex: none; width: 26px; height: 20px; background: var(--k4c-core, var(--team-a-core));
+  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+}
+.k4c-clock { flex: none; padding: 2px 9px; border-radius: 999px; font: 800 0.8rem/1.4 var(--se-font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.k4c-clock-a { background: var(--team-a-core); color: var(--team-a-on); }
+.k4c-clock-b { background: var(--team-b-core); color: var(--team-b-on); }
+.k4c-cues { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.k4c-cue { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 999px; font-size: 0.76rem; font-style: normal; font-weight: 850; letter-spacing: 0.01em; white-space: nowrap; }
+.k4c-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+.k4c-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+.k4c-track { display: block; height: 5px; margin: 0 4px 4px; border-radius: 999px; background: color-mix(in oklab, var(--k4c-core) 14%, var(--se-color-surface)); overflow: hidden; }
+.k4c-track-a { --k4c-core: var(--team-a-core); }
+.k4c-track-b { --k4c-core: var(--team-b-core); }
+.k4c-track i { display: block; height: 100%; border-radius: 999px; background: var(--k4c-core); transition: width 1s linear; }
+
+/* ---- the slab ---- */
+.k4c-stage { position: relative; }
+.k4c-svg { display: block; width: 100%; height: auto; max-height: var(--k4c-max-h, 224px); margin: 0 auto; overflow: visible; }
+.k4c-ground { fill: color-mix(in oklab, var(--se-color-ink) 9%, transparent); }
+.k4c-side { stroke: none; }
+.k4c-side-y { fill: color-mix(in oklab, var(--se-color-ink) 26%, var(--se-color-surface-warm)); }
+.k4c-side-x { fill: color-mix(in oklab, var(--se-color-ink) 40%, var(--se-color-surface-warm)); }
+.k4c-floor-a { fill: color-mix(in oklab, var(--team-a-core) 20%, var(--se-color-surface)); }
+.k4c-floor-b { fill: color-mix(in oklab, var(--team-b-core) 20%, var(--se-color-surface)); }
+.dark .k4c-floor-a { fill: color-mix(in oklab, var(--team-a-core) 30%, var(--se-color-surface)); }
+.dark .k4c-floor-b { fill: color-mix(in oklab, var(--team-b-core) 30%, var(--se-color-surface)); }
+.dark .k4c-light { opacity: 0.3; }
+.k4c-light { pointer-events: none; }
+.k4c-edge { fill: none; stroke: color-mix(in oklab, var(--se-color-ink) 34%, transparent); stroke-width: 1.4; stroke-linejoin: round; }
+.k4c-line { fill: none; stroke: color-mix(in oklab, var(--se-color-ink) 20%, transparent); stroke-width: 1.1; }
+.k4c-line-bonus { stroke-dasharray: 3 4; stroke: color-mix(in oklab, var(--se-color-ink) 16%, transparent); }
+.k4c-line-mid { stroke: color-mix(in oklab, var(--se-color-ink) 52%, transparent); stroke-width: 2.2; }
+.k4c-super { fill: none; stroke: var(--se-color-gold); stroke-width: 2.4; stroke-linejoin: round; }
+
+/* ---- calm: the next raiding team's mark, breathing on its half ---- */
+.k4c-next {
+  position: absolute; width: 30px; height: 23px; margin: -11px 0 0 -15px; opacity: 0.5;
+  background: var(--team-a-core); pointer-events: none;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+}
+.k4c-next-b { background: var(--team-b-core); }
+
+/* ---- defenders: flat discs on the floor (a head count, not people) ---- */
+.k4c-disc { stroke: var(--se-color-surface); stroke-width: 1.6; transform-box: fill-box; transform-origin: center; }
+
+/* ---- the raider: a shaded pawn ---- */
+.k4c-pawn { transform-origin: 0 0; }
+.k4c-shadow { fill: color-mix(in oklab, var(--se-color-ink) 24%, transparent); }
+.k4c-body { stroke: var(--se-color-surface); stroke-width: 1.4; stroke-linejoin: round; }
+.k4c-pawn-a .k4c-body { fill: url(#k4c-g-a); }
+.k4c-pawn-b .k4c-body { fill: url(#k4c-g-b); }
+.k4c-pawn-a .k4c-head { fill: url(#k4c-h-a); }
+.k4c-pawn-b .k4c-head { fill: url(#k4c-h-b); }
+.k4c-head { stroke: var(--se-color-surface); stroke-width: 1.4; }
+.k4c-belt { fill: color-mix(in oklab, white 70%, transparent); }
+.k4c-gloss { fill: color-mix(in oklab, white 55%, transparent); }
+
+.k4c-raider { transform: var(--tE); }
+.k4c-raider.k4c-r-touch, .k4c-raider.k4c-r-bonus, .k4c-raider.k4c-r-empty { transform: var(--tH); }
+.k4c-raider.k4c-raider-out { transform: var(--tT); opacity: 0.55; }
+.k4c-raider-out .k4c-pawn { transform: rotate(74deg) translateY(2px); }
+
+.k4c-bonus-flash { fill: none; stroke: var(--se-color-gold); stroke-width: 3; stroke-linecap: round; }
+
+/* ---- outcome chips ---- */
+.k4c-chips { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 0 6px; pointer-events: none; }
+.k4c-chip { padding: 4px 11px; border-radius: 999px; font-size: 0.82rem; font-style: normal; font-weight: 800; line-height: 1.25; white-space: nowrap; box-shadow: inset 0 0 0 1px var(--k4c-hair), 0 2px 6px color-mix(in oklab, var(--se-color-ink) 14%, transparent); }
+.k4c-chip-plain { background: var(--se-color-surface); color: var(--se-color-ink); }
+.k4c-chip-gold { background: var(--se-color-gold); color: var(--se-color-on-gold); box-shadow: none; }
+.k4c-chip-danger { background: var(--se-color-danger); color: var(--se-color-surface); box-shadow: none; }
+.k4c-chip-pts { box-shadow: none; }
+.k4c-chip-pts-a { background: var(--team-a-core); color: var(--team-a-on); }
+.k4c-chip-pts-b { background: var(--team-b-core); color: var(--team-b-on); }
+
+/* ---- motion ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* raid starts: the raider hops across the midline, then waits (bobs) while the raid clock runs */
+  .k4c-enter { animation: k4c-enter 1.1s cubic-bezier(0.25, 0.8, 0.3, 1) both; }
+  .k4c-enter .k4c-hop { animation: k4c-hop-in 1.1s ease-out both, k4c-bob 1.5s ease-in-out 1.1s infinite; }
+  .k4c-disc.is-ready { animation: k4c-sway 1.7s ease-in-out infinite; animation-delay: calc(var(--i) * -0.22s); }
+
+  /* the outcome: one 3 s sequence per kind, then the court settles */
+  .k4c-r-touch { animation: k4c-r-touch var(--k4c-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .k4c-r-bonus { animation: k4c-r-bonus var(--k4c-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .k4c-r-empty { animation: k4c-r-empty var(--k4c-t) cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+  .k4c-r-tackle, .k4c-r-out { animation: k4c-r-stop var(--k4c-t) cubic-bezier(0.3, 0.7, 0.3, 1) both, k4c-fade-late var(--k4c-t) linear both; }
+  .k4c-r-touch .k4c-hop, .k4c-r-bonus .k4c-hop, .k4c-r-empty .k4c-hop, .k4c-r-tackle .k4c-hop, .k4c-r-out .k4c-hop { animation: k4c-hop-go var(--k4c-t) ease-out both; }
+  .k4c-raider-out .k4c-pawn { animation: k4c-fall var(--k4c-t) ease-in both; }
+  .k4c-disc.is-out { animation: k4c-disc-out 0.55s ease-out calc(var(--k4c-t) * 0.27) both; }
+  .k4c-disc.is-tackle { animation: k4c-pulse 0.8s ease-out calc(var(--k4c-t) * 0.27) both; }
+  .k4c-bonus-flash { animation: k4c-flash 0.9s ease-out calc(var(--k4c-t) * 0.2) both; }
+  .k4c-chip { animation: k4c-chip-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(var(--k4c-t) * 0.25) both; }
+  .k4c-chip + .k4c-chip { animation-delay: calc(var(--k4c-t) * 0.25 + 0.14s); }
+  .k4c-chip + .k4c-chip + .k4c-chip { animation-delay: calc(var(--k4c-t) * 0.25 + 0.28s); }
+  .k4c-next { animation: k4c-breathe 2.2s ease-in-out infinite; }
+}
+.k4c-disc.is-out { opacity: 0.2; }
+.k4c-disc.is-out { stroke-dasharray: 3 3; }
+
+@keyframes k4c-enter { from { transform: var(--tH); } to { transform: var(--tE); } }
+@keyframes k4c-hop-in { 0% { transform: translateY(0); } 40% { transform: translateY(-11px); } 100% { transform: translateY(0); } }
+@keyframes k4c-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes k4c-sway { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.09); } }
+@keyframes k4c-r-touch {
+  0% { transform: var(--tE); } 24% { transform: var(--tT); } 36% { transform: var(--tT); }
+  62% { transform: var(--tE); } 78%, 100% { transform: var(--tH); }
+}
+@keyframes k4c-r-bonus {
+  0% { transform: var(--tE); } 26% { transform: var(--tT); } 36% { transform: var(--tT); }
+  64% { transform: var(--tE); } 80%, 100% { transform: var(--tH); }
+}
+@keyframes k4c-r-empty {
+  0% { transform: var(--tE); } 22% { transform: var(--tT); } 34% { transform: var(--tT); }
+  56% { transform: var(--tE); } 74%, 100% { transform: var(--tH); }
+}
+@keyframes k4c-r-stop { 0% { transform: var(--tE); } 27%, 100% { transform: var(--tT); } }
+@keyframes k4c-fade-late { 0%, 84% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes k4c-hop-go {
+  0%, 100% { transform: translateY(0); }
+  12% { transform: translateY(-9px); } 24% { transform: translateY(0); }
+  50% { transform: translateY(-7px); } 62% { transform: translateY(0); }
+  68% { transform: translateY(-8px); } 78% { transform: translateY(0); }
+}
+@keyframes k4c-fall { 0%, 29% { transform: none; opacity: 1; } 50% { transform: rotate(74deg) translateY(2px); opacity: 0.7; } 100% { transform: rotate(74deg) translateY(2px); opacity: 0.45; } }
+@keyframes k4c-disc-out { from { opacity: 1; transform: scale(1); } to { opacity: 0.2; transform: scale(0.72); } }
+@keyframes k4c-pulse { 0% { transform: scale(1); } 40% { transform: scale(1.38); } 100% { transform: scale(1); } }
+@keyframes k4c-flash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0.2; } }
+@keyframes k4c-chip-in { from { opacity: 0; transform: translateY(8px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes k4c-breathe { 0%, 100% { opacity: 0.34; transform: scale(0.94); } 50% { opacity: 0.6; transform: scale(1.04); } }
+
+/* ---- short phones (360x640): the court gives up height ---- */
+@media (max-height: 700px) {
+  .k4c-card { --k4c-max-h: 140px; padding: 8px 8px 4px; }
+  .k4c-cue { min-height: 22px; }
+  .k4c-head { padding-bottom: 4px; min-height: 26px; }
+}

@@ -40,7 +40,7 @@ function event(code, id, raidId) {
 // Optional team lists the scorer would type at setup: a name or a shirt number per engine slot
 // (slot A1 = list entry 1). The engine keeps slots anonymous; the view maps slot -> label.
 export const ROSTER = [
-  ['Rahul', 'Pawan', 'Deepak', 'Sunil', 'Manjeet', 'Arjun', '7'],
+  ['Rahul', 'Pawan', 'Deepak', 'Sunil', 'Manjeet', 'Arjun', 'Karthik'],
   ['Naveen', 'Ravi', 'Kiran', 'Ajay', 'Vikas', 'Sandeep', 'Mohit'],
 ];
 

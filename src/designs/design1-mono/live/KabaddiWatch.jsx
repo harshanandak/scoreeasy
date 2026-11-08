@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { teamColourVars, deriveTeamColours } from '../../../lib/teamColour';
-import { sportIdentity, sportIdentityVars } from '../../../lib/sportIdentity';
+import { sportIdentityVars } from '../../../lib/sportIdentity';
 import {
   clockText, halfStory, liveNow, playerLabel, raidStory,
 } from '../../../utils/kabaddiLiveModel';
-import { HandUnderline, KitWash, SportBadge } from '../kit/KitParts';
+import { HandUnderline, SportBadge } from '../kit/KitParts';
 import KabaddiCourt, { useCourtStage } from './KabaddiCourt';
 import KabaddiProgress from './KabaddiProgress';
 import KabaddiRaids from './KabaddiRaids';
@@ -16,11 +16,12 @@ import '../kit/kit.css';
 import '../kit/live.css';
 import './kabaddiWatch.css';
 
-// Kabaddi live viewer, exploration k2 round 4 (notes: E:/tmp/kabaddi-k2/viewer-r4/NOTES.md).
-// Game progression first. Live: the score strip (team gradients, player icons, a raid-clock ring
-// with the kabaddi mark between the cards) over one isometric court that plays a single raid
-// animation. Raids: a two-sided timeline. Stats: how the game is going. Read-only. Round 3 is still
-// in the tree (KabaddiWatchR3.jsx) for comparison. Every number comes from kabaddiLiveModel.js,
+// Kabaddi live viewer, exploration k2 round 5 (notes: E:/tmp/kabaddi-k2/viewer-r5/NOTES.md).
+// Game progression first. Live: the score strip (team gradients, small player pips, a raid-clock ring
+// with the kabaddi mark between the cards; the score is the only big number) over a broadcast-style
+// court that plays a single raid animation. Raids: a two-sided timeline, one line per raid. Stats:
+// how the game is going. Read-only. Rounds 3 and 4 are still in the tree (KabaddiWatchR3.jsx,
+// KabaddiWatchR4.jsx) for comparison. Every number comes from kabaddiLiveModel.js,
 // which folds the raid engine's state and journal.
 
 function resultOf(live) {
@@ -50,14 +51,17 @@ function Header({ live, halfMins }) {
 }
 Header.propTypes = { live: PropTypes.object.isRequired, halfMins: PropTypes.number.isRequired };
 
-/** Seven players: a shaded figure each, solid on the mat, a dashed ghost when out. */
+/**
+ * Seven players as small pips: a head and shoulders each, filled while on the mat, a dashed outline
+ * when out. Deliberately small and quiet; the score is the only big number on the card.
+ */
 function Squad({ on }) {
   return (
     <span className="kw-squad" aria-hidden="true">
       {Array.from({ length: 7 }, (_, i) => (
-        <svg key={i} viewBox="0 0 12 17" className={i < on ? 'on' : 'off'}>
-          <circle cx="6" cy="3.6" r="3" />
-          <path d="M0.8 16.4v-3.5a5.2 5.2 0 0 1 10.4 0v3.5z" />
+        <svg key={i} viewBox="0 0 10 14" className={i < on ? 'on' : 'off'}>
+          <circle cx="5" cy="3.3" r="2.7" />
+          <path d="M0.9 13.2v-2.6a4.1 4.1 0 0 1 8.2 0v2.6z" />
         </svg>
       ))}
     </span>
@@ -259,7 +263,7 @@ export default function KabaddiWatch({ match, now, roster, initialTab = 'live', 
   } else {
     body = (
       <>
-        <KabaddiCourt live={live} last={last} roster={roster} stage={stage} />
+        <KabaddiCourt live={live} last={last} roster={roster} stage={stage} story={story} />
         <LastRaid entry={last} names={names} roster={roster} halfMs={halfMs} total={story.length} onAll={() => setTab('raids')} />
       </>
     );
@@ -267,7 +271,6 @@ export default function KabaddiWatch({ match, now, roster, initialTab = 'live', 
 
   return (
     <div className="kit-screen kw" style={vars}>
-      <KitWash from={sportIdentity('kabaddi')?.tint} to={sportIdentity('kabaddi')?.tint} />
       <Header live={live} halfMins={Math.round(halfMs / 60000)} />
       <ScoreStrip live={live} result={result} roster={roster} outs={outs} />
       <div className="kit-seg kw-tabs" role="tablist" aria-label="Match views" style={{ '--kit-seg-cols': tabs.length }}>

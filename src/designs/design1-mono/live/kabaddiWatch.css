@@ -50,13 +50,13 @@
 .kw-team.is-raiding { box-shadow: inset 0 0 0 1px var(--kw-hair), var(--se-lift), 0 0 0 3px var(--se-color-canvas), 0 0 0 5px color-mix(in oklab, currentColor 38%, transparent); }
 .kw-name { max-width: 100%; min-width: 0; font-size: 0.95rem; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* player icons: a shaded figure each; out players are dashed ghosts */
-.kw-squad { display: inline-flex; gap: 2px; }
+/* player pips: small and quiet; on the mat = filled, out = dashed outline */
+.kw-squad { display: inline-flex; gap: 3px; }
 .kw-team-b .kw-squad { flex-direction: row-reverse; }
-.kw-squad svg { width: 11.5px; height: 16px; overflow: visible; }
-.kw-squad svg.on { fill: currentColor; filter: drop-shadow(0 1px 0 color-mix(in srgb, black 22%, transparent)); }
-.kw-squad svg.off { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-dasharray: 1.8 1.8; opacity: 0.5; }
-.kw-squad-gap { height: 16px; }
+.kw-squad svg { width: 9px; height: 12.5px; overflow: visible; }
+.kw-squad svg.on { fill: currentColor; opacity: 0.92; }
+.kw-squad svg.off { fill: none; stroke: currentColor; stroke-width: 1; stroke-dasharray: 1.6 1.6; opacity: 0.42; }
+.kw-squad-gap { height: 12.5px; }
 .kw-won { padding: 0 9px; border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 0.74rem; font-weight: 800; line-height: 16px; }
 .kw-score { font: 800 clamp(3.3rem, 17vw, 4.3rem)/0.88 var(--kw-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 
@@ -130,30 +130,44 @@
 .kw-tl-team { display: inline-flex; align-items: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kw-tl-team-b { justify-content: flex-end; }
 .kw-tl-new { color: var(--kw-ink-2); font-size: 0.74rem; font-weight: 650; }
-.kw-tl { position: relative; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.kw-tl { position: relative; display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
 .kw-tl::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: color-mix(in oklab, var(--se-color-ink) 14%, transparent); }
-.kw-tl-raid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr); align-items: start; }
-.kw-tl-raid-a .kw-rc { grid-column: 1; grid-row: 1; margin-right: 4px; }
-.kw-tl-raid-b .kw-rc { grid-column: 3; grid-row: 1; margin-left: 4px; }
+.kw-tl-raid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr); align-items: center; }
+.kw-rl {
+  --kw-core: var(--team-a-core); box-sizing: border-box; display: grid; gap: 1px; min-width: 0; padding: 6px 10px 6px;
+  border-radius: 12px; background: color-mix(in oklab, var(--kw-core) 8%, var(--se-color-surface)); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--kw-core) 22%, var(--kw-hair));
+}
+.kw-rl-b { --kw-core: var(--team-b-core); }
+.kw-tl-raid-a .kw-rl { grid-column: 1; grid-row: 1; margin-right: 4px; }
+.kw-tl-raid-b .kw-rl { grid-column: 3; grid-row: 1; margin-left: 4px; }
+.kw-rl-who { font: 800 0.95rem/1.2 var(--se-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kw-rl-what { color: var(--se-color-ink); font-size: 0.8rem; font-weight: 650; line-height: 1.25; }
+.kw-rl-when { color: var(--kw-ink-2); font-size: 0.68rem; font-weight: 650; line-height: 1.3; }
+.kw-rl.has-pill { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; }
+.kw-rl.has-pill > b.kw-rl-who, .kw-rl.has-pill > .kw-rl-what, .kw-rl.has-pill > .kw-rl-when { grid-column: 1 / -1; }
+.kw-rl.has-pill > b.kw-rl-who { grid-column: 1; }
+.kw-rl.has-pill > .kw-tl-pill { grid-column: 2; grid-row: 1; margin: 0; justify-self: end; }
+.kw-rl.is-muted { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; padding: 2px 10px; background: transparent; box-shadow: none; }
+.kw-rl.is-muted .kw-rl-when { display: none; }
+.kw-rl.is-muted .kw-rl-who { color: var(--kw-ink-2); font: 700 0.84rem/1.2 var(--se-font-sans); }
+.kw-rl.is-muted .kw-rl-what { color: var(--kw-ink-2); font-size: 0.76rem; font-weight: 600; }
+.kw-tl-raid-b .kw-rl.is-muted { justify-content: flex-end; }
+/* the points pill sits in the scoring team's column, in that team's colour */
+.kw-tl-pill { grid-row: 1; align-self: center; font-size: 0.86rem; line-height: 24px; padding: 0 11px; }
+.kw-tl-pill-a { grid-column: 1; justify-self: end; margin-right: 12px; }
+.kw-tl-pill-b { grid-column: 3; justify-self: start; margin-left: 12px; }
 .kw-node {
-  position: relative; z-index: 1; grid-column: 2; grid-row: 1; justify-self: center; margin-top: 9px; padding: 2px 7px;
+  position: relative; z-index: 1; grid-column: 2; grid-row: 1; justify-self: center; padding: 2px 7px;
   display: inline-flex; align-items: baseline; gap: 1px; border-radius: 999px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--kw-hair);
   font: 800 0.8rem/1.35 var(--kw-num); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .kw-node i { color: var(--kw-ink-2); font-style: normal; }
-.kw-rc { --kw-core: var(--team-a-core); box-sizing: border-box; display: grid; gap: 2px; min-width: 0; padding: 8px 10px 8px; border: 1px solid var(--kw-hair); border-top: 3px solid var(--kw-core); border-radius: 14px; background: var(--se-color-surface); }
-.kw-rc-b { --kw-core: var(--team-b-core); }
-.kw-rc header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.kw-rc-no { color: var(--kw-ink-2); font-size: 0.72rem; font-weight: 700; }
-.kw-rc h3 { font: 800 0.95rem/1.2 var(--se-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kw-rc p { color: var(--se-color-ink); font-size: 0.8rem; font-weight: 650; line-height: 1.3; }
-.kw-rc .kw-rc-out { color: var(--kw-ink-2); font-weight: 600; }
-.kw-rc-when { color: var(--kw-ink-2); font-size: 0.7rem; font-weight: 650; }
 .kw-tl-marker, .kw-tl-band { position: relative; z-index: 1; display: flex; justify-content: center; }
-.kw-mk { padding: 3px 12px; border-radius: 999px; font-size: 0.76rem; font-style: normal; font-weight: 850; line-height: 1.3; white-space: nowrap; box-shadow: 0 0 0 3px var(--se-color-canvas); }
+.kw-mk { padding: 2px 11px; border-radius: 999px; font-size: 0.72rem; font-style: normal; font-weight: 850; line-height: 1.35; white-space: nowrap; box-shadow: 0 0 0 3px var(--se-color-canvas); }
 .kw-mk-gold { background: var(--se-color-gold); color: var(--se-color-on-gold); }
 .kw-mk-danger { background: var(--se-color-danger); color: var(--se-color-surface); }
-.kw-tl-band span { padding: 4px 16px; border-radius: 999px; background: var(--se-color-ink); color: var(--se-color-surface); font-size: 0.8rem; font-weight: 800; box-shadow: 0 0 0 3px var(--se-color-canvas); }
+.kw-mk-quiet { background: var(--se-color-surface-warm); color: var(--kw-ink-2); font-weight: 700; }
+.kw-tl-band span { padding: 3px 14px; border-radius: 999px; background: var(--se-color-ink); color: var(--se-color-surface); font-size: 0.76rem; font-weight: 800; box-shadow: 0 0 0 3px var(--se-color-canvas); }
 @media (prefers-reduced-motion: no-preference) {
   .kw-tl > li { animation: kw-rise 380ms cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 0ms) both; }
 }
@@ -282,6 +296,6 @@
 }
 @media (max-width: 370px) {
   .kw { --kw-cols: minmax(0, 1fr) 66px minmax(0, 1fr); }
-  .kw-squad svg { width: 10.5px; }
+  .kw-squad svg { width: 8.5px; }
   .kw-team { padding-left: 11px; padding-right: 11px; }
 }

@@ -1,0 +1,287 @@
+/* Kabaddi live viewer, k2 round 4 (KabaddiWatch.jsx, KabaddiRaids.jsx, KabaddiProgress.jsx; the court
+   has its own kabaddiCourt.css). Kit look: canvas and wash, white rounded cards on a hairline, team
+   cards in the app's own hi/core/lo gradient with the 7% sheen (setup.css .kit-mu-a), team dots.
+   Colour only from --se-color-* tokens and the engine's --team-{a,b}-* / --sport-* vars.
+   prefers-reduced-motion: no animation anywhere; every chart and bar renders in its final state.
+   Round 3 lives on in kabaddiWatchR3.css (.kv-*), so the two never share a class. */
+
+.k4w {
+  --k4w-hair: var(--se-color-line-soft);
+  --k4w-ink-2: var(--se-color-ink-soft);
+  --k4w-num: var(--se-font-num);
+  --k4w-cols: minmax(0, 1fr) 74px minmax(0, 1fr);
+  min-height: 100vh;
+  padding-bottom: 32px;
+  background: var(--se-color-canvas);
+}
+
+.k4w h1, .k4w h2, .k4w h3, .k4w p { margin: 0; }
+.k4w .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.k4w-dot-a { background: var(--team-a-core); }
+.k4w-dot-b { background: var(--team-b-core); }
+
+/* ---- header: sport tile, fixture, status ---- */
+.k4w-top { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 0 10px; }
+.k4w-top-t { flex: 1; min-width: 0; }
+.k4w-top h1 { font: 800 1.15rem/1.15 var(--se-font-display); letter-spacing: -0.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k4w-top p { color: var(--k4w-ink-2); font-size: 0.82rem; font-weight: 600; }
+.k4w-status { display: inline-flex; flex: none; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 750; white-space: nowrap; }
+.k4w-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+/* ---- score strip: two gradient team cards, a ring between them ---- */
+.k4w-strip { display: grid; grid-template-columns: var(--k4w-cols); gap: 4px; align-items: stretch; }
+.k4w-team {
+  grid-row: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0;
+  padding: 11px 13px 12px; border-radius: 20px;
+  box-shadow: inset 0 0 0 1px var(--k4w-hair), var(--se-lift);
+}
+.k4w-team-a {
+  grid-column: 1; align-items: flex-start; color: var(--team-a-on);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo));
+}
+.k4w-team-b {
+  grid-column: 3; align-items: flex-end; color: var(--team-b-on);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo));
+}
+.k4w-team.is-raiding { box-shadow: inset 0 0 0 1px var(--k4w-hair), var(--se-lift), 0 0 0 3px var(--se-color-canvas), 0 0 0 5px color-mix(in oklab, currentColor 38%, transparent); }
+.k4w-name { max-width: 100%; min-width: 0; font-size: 0.95rem; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* player icons: a shaded figure each; out players are dashed ghosts */
+.k4w-squad { display: inline-flex; gap: 2px; }
+.k4w-team-b .k4w-squad { flex-direction: row-reverse; }
+.k4w-squad svg { width: 11.5px; height: 16px; overflow: visible; }
+.k4w-squad svg.on { fill: currentColor; filter: drop-shadow(0 1px 0 color-mix(in srgb, black 22%, transparent)); }
+.k4w-squad svg.off { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-dasharray: 1.8 1.8; opacity: 0.5; }
+.k4w-squad-gap { height: 16px; }
+.k4w-won { padding: 0 9px; border-radius: 999px; background: var(--se-color-surface); color: var(--se-color-ink); font-size: 0.74rem; font-weight: 800; line-height: 16px; }
+.k4w-score { font: 800 clamp(3.3rem, 17vw, 4.3rem)/0.88 var(--k4w-num); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* centre: the ring (raid clock around the kabaddi mark), the match clock, the half */
+.k4w-mid { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; }
+.k4w-mid b { font: 800 1.45rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-mid small { min-height: 1em; color: var(--k4w-ink-2); font-size: 0.74rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.k4w-ring { --k4w-core: var(--team-a-core); position: relative; display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 2px; border-radius: 50%; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--k4w-hair), var(--se-lift); }
+.k4w-ring-b { --k4w-core: var(--team-b-core); }
+.k4w-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.k4w-ring-track { fill: none; stroke: color-mix(in oklab, var(--k4w-core) 16%, transparent); stroke-width: 3.2; }
+.k4w-ring-arc { fill: none; stroke: var(--k4w-core); stroke-width: 3.2; stroke-linecap: round; opacity: 0.4; transition: stroke-dasharray 1s linear; }
+.k4w-ring.is-raid .k4w-ring-arc { opacity: 1; }
+.k4w-mark {
+  display: block; width: 24px; height: 19px; background: var(--k4w-core);
+  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+}
+
+/* under each card: who comes back first, or the named "off the court" moment */
+.k4w-next-row { display: grid; grid-template-columns: var(--k4w-cols); gap: 4px; padding-top: 8px; }
+.k4w-side { min-width: 0; min-height: 20px; }
+.k4w-side-a { grid-column: 1; padding-left: 4px; }
+.k4w-side-b { grid-column: 3; padding-right: 4px; text-align: right; }
+.k4w-next { display: block; color: var(--k4w-ink-2); font-size: 0.8rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k4w-next b { color: var(--se-color-ink); font-weight: 750; }
+.k4w-out { display: block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 650; line-height: 1.25; }
+.k4w-out b { display: block; font-size: 0.86rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k4w-out-a { background: var(--team-a-core); color: var(--team-a-on); }
+.k4w-out-b { background: var(--team-b-core); color: var(--team-b-on); }
+@media (prefers-reduced-motion: no-preference) { .k4w-out { animation: k4w-pop 360ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; } }
+@keyframes k4w-pop { from { opacity: 0; transform: scale(0.94); } }
+
+/* ---- cards, tabs ---- */
+.k4w-card { box-sizing: border-box; border: 1px solid var(--k4w-hair); border-radius: 22px; background: var(--se-color-surface); }
+.k4w-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.k4w-card-head h2 { font: 750 1rem/1.15 var(--se-font-display); }
+.k4w-tabs { margin-top: 12px; }
+.k4w-body { padding-top: 10px; }
+.k4w-body > * + * { margin-top: 10px; }
+.k4w-body .kit-sec { margin: 4px 2px 8px; }
+
+/* ---- last raid (Live tab) and turning points ---- */
+.k4w-last { padding: 8px 14px 12px; }
+.k4w-all {
+  min-height: 44px; margin: 0 -8px 0 0; padding: 0 8px; border: 0; background: transparent; color: var(--se-color-ink);
+  font: 700 0.86rem var(--se-font-sans); cursor: pointer; white-space: nowrap;
+}
+.k4w-all::after { content: ' ›'; color: var(--k4w-ink-2); font-size: 1.05rem; }
+.k4w-sum { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+.k4w-turns .k4w-sum { padding: 12px 14px; }
+.k4w-sum-main { display: grid; gap: 1px; min-width: 0; }
+.k4w-sum-title { display: flex; align-items: center; gap: 8px; font: 750 0.98rem/1.25 var(--se-font-display); }
+.k4w-sum-title .kit-live-team-dot { flex: none; }
+.k4w-sum-main p { padding-left: 18px; color: var(--k4w-ink-2); font-size: 0.84rem; font-weight: 600; line-height: 1.35; }
+.k4w-sum-main p b { color: var(--se-color-ink); font-weight: 750; }
+.k4w-sum-main .k4w-sum-lead { color: var(--se-color-ink); font-weight: 700; }
+.k4w-sum-r { display: grid; justify-items: end; gap: 3px; }
+.k4w-sum-r b { font: 800 1.2rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-pill { padding: 0 8px; border-radius: 999px; font-size: 0.78rem; font-style: normal; font-weight: 800; line-height: 18px; font-variant-numeric: tabular-nums; }
+.k4w-pill-a { background: var(--team-a-core); color: var(--team-a-on); }
+.k4w-pill-b { background: var(--team-b-core); color: var(--team-b-on); }
+.k4w-pill-none { background: var(--se-color-surface-warm); color: var(--k4w-ink-2); }
+.k4w-chip { grid-column: 1 / -1; justify-self: start; margin-left: 18px; padding: 1px 8px; border-radius: 999px; background: var(--se-color-surface-warm); color: var(--se-color-ink); font-size: 0.72rem; font-weight: 750; line-height: 1.5; white-space: nowrap; }
+.k4w-ul-a { --kit-underline: var(--team-a-line); }
+.k4w-ul-b { --kit-underline: var(--team-b-line); }
+.k4w-sum .kit-underlined { font-size: 1.15rem; font-weight: 800; }
+.k4w-turns { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* ---- Raids tab: two-sided timeline on a centre spine ---- */
+.k4w-tl-head { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; margin: 2px 2px 10px; font-size: 0.9rem; font-weight: 800; }
+.k4w-tl-team { display: inline-flex; align-items: center; gap: 7px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k4w-tl-team-b { justify-content: flex-end; }
+.k4w-tl-new { color: var(--k4w-ink-2); font-size: 0.74rem; font-weight: 650; }
+.k4w-tl { position: relative; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.k4w-tl::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: color-mix(in oklab, var(--se-color-ink) 14%, transparent); }
+.k4w-tl-raid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr); align-items: start; }
+.k4w-tl-raid-a .k4w-rc { grid-column: 1; grid-row: 1; margin-right: 4px; }
+.k4w-tl-raid-b .k4w-rc { grid-column: 3; grid-row: 1; margin-left: 4px; }
+.k4w-node {
+  position: relative; z-index: 1; grid-column: 2; grid-row: 1; justify-self: center; margin-top: 9px; padding: 2px 7px;
+  display: inline-flex; align-items: baseline; gap: 1px; border-radius: 999px; background: var(--se-color-surface); box-shadow: inset 0 0 0 1px var(--k4w-hair);
+  font: 800 0.8rem/1.35 var(--k4w-num); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.k4w-node i { color: var(--k4w-ink-2); font-style: normal; }
+.k4w-rc { --k4w-core: var(--team-a-core); box-sizing: border-box; display: grid; gap: 2px; min-width: 0; padding: 8px 10px 8px; border: 1px solid var(--k4w-hair); border-top: 3px solid var(--k4w-core); border-radius: 14px; background: var(--se-color-surface); }
+.k4w-rc-b { --k4w-core: var(--team-b-core); }
+.k4w-rc header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.k4w-rc-no { color: var(--k4w-ink-2); font-size: 0.72rem; font-weight: 700; }
+.k4w-rc h3 { font: 800 0.95rem/1.2 var(--se-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.k4w-rc p { color: var(--se-color-ink); font-size: 0.8rem; font-weight: 650; line-height: 1.3; }
+.k4w-rc .k4w-rc-out { color: var(--k4w-ink-2); font-weight: 600; }
+.k4w-rc-when { color: var(--k4w-ink-2); font-size: 0.7rem; font-weight: 650; }
+.k4w-tl-marker, .k4w-tl-band { position: relative; z-index: 1; display: flex; justify-content: center; }
+.k4w-mk { padding: 3px 12px; border-radius: 999px; font-size: 0.76rem; font-style: normal; font-weight: 850; line-height: 1.3; white-space: nowrap; box-shadow: 0 0 0 3px var(--se-color-canvas); }
+.k4w-mk-gold { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+.k4w-mk-danger { background: var(--se-color-danger); color: var(--se-color-surface); }
+.k4w-tl-band span { padding: 4px 16px; border-radius: 999px; background: var(--se-color-ink); color: var(--se-color-surface); font-size: 0.8rem; font-weight: 800; box-shadow: 0 0 0 3px var(--se-color-canvas); }
+@media (prefers-reduced-motion: no-preference) {
+  .k4w-tl > li { animation: k4w-rise 380ms cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 0ms) both; }
+}
+@keyframes k4w-rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---- Stats tab ---- */
+.k4w-stat { padding: 12px 14px 12px; }
+.k4w-stat-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.k4w-stat-head h2 { font: 750 1rem/1.15 var(--se-font-display); }
+.k4w-stat-head span { display: inline-flex; align-items: center; gap: 6px; color: var(--k4w-ink-2); font-size: 0.8rem; font-weight: 700; }
+.k4w-stat-foot { margin-top: 6px; color: var(--k4w-ink-2); font-size: 0.82rem; font-weight: 600; }
+.k4w-stat-foot b { color: var(--se-color-ink); font-weight: 750; }
+.k4w-empty { color: var(--k4w-ink-2); font-size: 0.86rem; font-weight: 600; }
+
+/* score and lead by raid */
+.k4w-race { display: block; width: 100%; height: auto; overflow: visible; }
+.k4w-grid { stroke: color-mix(in oklab, var(--se-color-ink) 14%, transparent); stroke-width: 1; }
+.k4w-grid-dash { stroke-dasharray: 2 4; }
+.k4w-ht { stroke: color-mix(in oklab, var(--se-color-ink) 30%, transparent); stroke-width: 1; stroke-dasharray: 3 3; }
+.k4w-ax { fill: var(--k4w-ink-2); font: 650 9px var(--se-font-sans); }
+.k4w-ax-mid { text-anchor: middle; }
+.k4w-ax-end { text-anchor: end; }
+.k4w-ln { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.k4w-ln-a { stroke: var(--team-a-core); }
+.k4w-ln-b { stroke: var(--team-b-core); }
+.k4w-ln-dot-a { fill: var(--team-a-core); stroke: var(--se-color-surface); stroke-width: 1.6; }
+.k4w-ln-dot-b { fill: var(--team-b-core); stroke: var(--se-color-surface); stroke-width: 1.6; }
+.k4w-end-n { font: 800 12px var(--k4w-num); fill: var(--se-color-ink); }
+.k4w-lb-a { fill: var(--team-a-core); }
+.k4w-lb-b { fill: var(--team-b-core); }
+
+/* momentum */
+.k4w-mo-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.k4w-mo-group { min-width: 0; padding: 0 4px; }
+.k4w-mo-group + .k4w-mo-group { border-left: 1px dashed color-mix(in oklab, var(--se-color-ink) 22%, transparent); }
+.k4w-mo-group h3 { margin-bottom: 4px; color: var(--k4w-ink-2); font-size: 0.72rem; font-weight: 750; text-align: center; }
+.k4w-mo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+.k4w-mo-col { display: grid; grid-template-rows: 46px 2px 46px auto auto; justify-items: center; min-width: 0; }
+.k4w-mo-up { align-self: end; display: flex; align-items: flex-end; }
+.k4w-mo-down { align-self: start; display: flex; align-items: flex-start; }
+.k4w-mo-axis { width: 100%; background: color-mix(in oklab, var(--se-color-ink) 22%, transparent); border-radius: 2px; }
+.k4w-mo-bar { display: block; width: 17px; }
+.k4w-mo-bar-a { border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--team-a-hi), var(--team-a-core)); transform-origin: bottom; }
+.k4w-mo-bar-b { border-radius: 0 0 6px 6px; background: linear-gradient(0deg, var(--team-b-hi), var(--team-b-core)); transform-origin: top; }
+.k4w-mo-col b { margin-top: 4px; min-height: 1.1em; font: 800 0.84rem/1.1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-mo-n-a { border-bottom: 3px solid var(--team-a-core); }
+.k4w-mo-n-b { border-bottom: 3px solid var(--team-b-core); }
+.k4w-mo-col small { color: var(--k4w-ink-2); font-size: 0.66rem; font-weight: 650; white-space: nowrap; }
+.k4w-mo-col.is-future small { opacity: 0.45; }
+.k4w-mo-key { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; color: var(--k4w-ink-2); font-size: 0.74rem; font-weight: 650; }
+.k4w-mo-key span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* points by type */
+.k4w-pt-head { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.86rem; font-weight: 750; }
+.k4w-pt-head span { display: inline-flex; align-items: center; gap: 7px; }
+.k4w-pt { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.k4w-pt li { display: grid; grid-template-columns: 30px minmax(0, 1fr) 30px; align-items: center; gap: 8px; }
+.k4w-pt-n { font: 800 1.25rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-pt-n-r { text-align: right; }
+.k4w-pt-mid { display: grid; gap: 3px; }
+.k4w-pt-mid small { color: var(--k4w-ink-2); font-size: 0.74rem; font-weight: 700; text-align: center; }
+.k4w-pt-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.k4w-pt-l { display: flex; justify-content: flex-end; }
+.k4w-pt-bar { display: block; height: 9px; min-width: 0; }
+.k4w-pt-bar-a { border-radius: 999px 0 0 999px; background: linear-gradient(90deg, var(--team-a-core), var(--team-a-hi)); transform-origin: right; }
+.k4w-pt-bar-b { border-radius: 0 999px 999px 0; background: linear-gradient(90deg, var(--team-b-hi), var(--team-b-core)); transform-origin: left; }
+
+/* raid success, tiles */
+.k4w-rate { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.k4w-rate-top { display: flex; align-items: baseline; justify-content: space-between; font-size: 0.9rem; font-weight: 750; }
+.k4w-rate-top span { display: inline-flex; align-items: center; gap: 7px; }
+.k4w-rate-top b { font: 800 1.3rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-rate-track { display: block; height: 10px; margin: 5px 0 3px; border-radius: 999px; background: var(--se-color-surface-warm); overflow: hidden; }
+.k4w-rate-fill { display: block; height: 100%; border-radius: 999px; transform-origin: left; }
+.k4w-rate-fill-a { background: linear-gradient(90deg, var(--team-a-core), var(--team-a-hi)); }
+.k4w-rate-fill-b { background: linear-gradient(90deg, var(--team-b-core), var(--team-b-hi)); }
+.k4w-rate small { color: var(--k4w-ink-2); font-size: 0.78rem; font-weight: 600; }
+.k4w-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; }
+.k4w-tiles > div { display: grid; gap: 4px; padding: 9px 6px 8px; border-radius: 14px; background: var(--se-color-surface-warm); text-align: center; }
+.k4w-tiles dt { color: var(--k4w-ink-2); font-size: 0.72rem; font-weight: 700; }
+.k4w-tiles dd { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 0; font: 800 1.35rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+.k4w-tiles dd i { color: var(--k4w-ink-2); font-style: normal; font-weight: 600; }
+.k4w-tiles dd b { padding-bottom: 2px; border-bottom: 3px solid var(--team-a-core); }
+.k4w-tiles dd b.k4w-tile-b { border-bottom-color: var(--team-b-core); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .k4w-ln { stroke-dasharray: 1; animation: k4w-draw 1.3s cubic-bezier(0.3, 0.7, 0.2, 1) both; }
+  .k4w-ln-b { animation-delay: 0.12s; }
+  .k4w-end { animation: k4w-fade 0.4s ease-out 1.2s both; }
+  .k4w-lb { transform-box: fill-box; animation: k4w-growY 0.5s ease-out both; animation-delay: calc(0.3s + var(--i) * 16ms); }
+  .k4w-lb-a { transform-origin: bottom; }
+  .k4w-lb-b { transform-origin: top; }
+  .k4w-mo-bar { animation: k4w-growY 0.6s cubic-bezier(0.3, 0.8, 0.3, 1) both; animation-delay: calc(0.15s + var(--i) * 55ms); }
+  .k4w-pt-bar { animation: k4w-growX 0.7s cubic-bezier(0.3, 0.8, 0.3, 1) both; animation-delay: calc(0.1s + var(--i) * 90ms); }
+  .k4w-rate-fill { animation: k4w-growX 0.9s cubic-bezier(0.3, 0.8, 0.3, 1) both; animation-delay: calc(0.1s + var(--i) * 140ms); }
+  .k4w-tiles > div { animation: k4w-rise 380ms cubic-bezier(0.2, 0.8, 0.3, 1) both; animation-delay: calc(0.2s + var(--i) * 90ms); }
+}
+@keyframes k4w-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes k4w-fade { from { opacity: 0; } }
+@keyframes k4w-growY { from { transform: scaleY(0); } }
+@keyframes k4w-growX { from { transform: scaleX(0); } }
+
+/* ---- result (full time): winner, final score, half by half ---- */
+.k4w-result { padding: 14px 16px 14px; }
+.k4w-result h2 { display: flex; align-items: center; gap: 9px; font: 800 1.45rem/1.1 var(--se-font-display); letter-spacing: -0.02em; }
+.k4w-result h2 .kit-live-team-dot { width: 12px; height: 12px; flex: none; }
+.k4w-result > p { margin-top: 3px; color: var(--k4w-ink-2); font-size: 0.88rem; font-weight: 600; }
+.k4w-result-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.k4w-result-halves span { display: grid; gap: 2px; padding: 8px 12px; border-radius: 14px; background: var(--se-color-surface-warm); }
+.k4w-result-halves small { color: var(--k4w-ink-2); font-size: 0.76rem; font-weight: 650; }
+.k4w-result-halves b { font: 800 1.25rem/1 var(--k4w-num); font-variant-numeric: tabular-nums; }
+
+/* ---- short phones (360x640): the strip gives up height so the Live tab fits ---- */
+@media (max-height: 700px) {
+  .k4w-top { min-height: 52px; padding: 8px 0 6px; }
+  .k4w-team { gap: 5px; padding: 8px 11px 9px; }
+  .k4w-score { font-size: 3.1rem; }
+  .k4w-ring { width: 40px; height: 40px; }
+  .k4w-mark { width: 20px; height: 16px; }
+  .k4w-next-row { padding-top: 6px; }
+  .k4w-tabs { margin-top: 8px; }
+  .k4w-body { padding-top: 8px; }
+  .k4w-body > * + * { margin-top: 8px; }
+  .k4w-last { padding-bottom: 8px; }
+  .k4w-last .k4w-sum-lead { display: none; }
+}
+@media (max-width: 370px) {
+  .k4w { --k4w-cols: minmax(0, 1fr) 66px minmax(0, 1fr); }
+  .k4w-squad svg { width: 10.5px; }
+  .k4w-team { padding-left: 11px; padding-right: 11px; }
+}
