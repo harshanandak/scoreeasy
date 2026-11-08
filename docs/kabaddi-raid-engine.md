@@ -1,6 +1,9 @@
 # Kabaddi raid engine
 
-`src/utils/kabaddiEngine.js` is a pure, plain-JS Club standard rectangular engine.
+`src/utils/kabaddiEngine.js` is a pure, plain-JS versioned rectangular engine.
+See [Kabaddi formats](kabaddi-formats.md) for the v2 profiles and migration API.
+The remainder of this document describes the original v1 club semantics, retained
+in `kabaddiLegacyEngine.js` for compatibility; it is not the v2 setup contract.
 It is deliberately not connected to the sport registry, setup, or current board.
 It does not read clocks, write storage, sync events, or enforce competition quotas.
 The caller must save the returned state before acknowledging a confirmed award.
