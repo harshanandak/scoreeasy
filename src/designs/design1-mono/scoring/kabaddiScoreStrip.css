@@ -1,0 +1,302 @@
+/* Kabaddi score strip, round 5. Two team cards and a centre disc. The cards use the app's shipped
+   team treatment exactly (the setup keys and the sets board): the engine's hi -> core -> lo
+   gradient with its 7% white sheen, and its gated on-colour for the text. Players on the mat are a
+   count plus slim pips. Pills sit under the team they concern, outside the strip. */
+
+.k5-strip {
+  --k5-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  gap: 4px;
+  padding: 6px 12px 0;
+}
+
+.k5-team {
+  position: relative;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px 10px;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
+}
+
+.k5-team-a { grid-column: 1; background: var(--k5-sheen), linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo)); color: var(--team-a-on); --k5-bg: var(--team-a-core); }
+.k5-team-b { grid-column: 3; align-items: flex-end; background: var(--k5-sheen), linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo)); color: var(--team-b-on); --k5-bg: var(--team-b-core); }
+
+.k5-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.k5-team-b .k5-name { flex-direction: row-reverse; }
+
+.k5-name-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.k5-mark {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.k5-score {
+  font: 800 clamp(3.5rem, 19vw, 4.6rem)/0.9 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* the preview of what the marks so far would score: a dashed tag in the card's own colour */
+.k5-pend {
+  position: absolute;
+  top: 38px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border: 2px dashed currentColor;
+  border-radius: 999px;
+  font: 800 0.95rem/1 var(--sb-num);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.k5-team-b .k5-pend { right: auto; left: 10px; }
+
+/* mat: a count, then slim pips. The count is the information; the pips show how full the mat is. */
+.k5-foot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  margin-top: 3px;
+}
+
+.k5-team-b .k5-foot { align-items: flex-end; }
+
+.k5-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.94;
+}
+
+.k5-count b { font-size: 0.95rem; font-weight: 800; }
+
+.k5-pips {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.k5-team-b .k5-pips { flex-direction: row-reverse; }
+
+.k5-pip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 7px;
+  border-radius: 4px;
+  background: currentColor;
+}
+
+.k5-pip.out,
+.k5-pip.out-now,
+.k5-pip.coming { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.k5-pip.out { opacity: 0.4; }
+.k5-pip.out-now { opacity: 0.9; }
+/* a player the marks would send out: half solid, half empty */
+.k5-pip.going { background: linear-gradient(90deg, transparent 50%, currentColor 50%); box-shadow: inset 0 0 0 1.5px currentColor; }
+.k5-pip.coming { opacity: 0.9; }
+.k5-pip.back { box-shadow: 0 0 0 2px var(--k5-bg), 0 0 0 3.5px currentColor; }
+
+/* the named moment: for a few seconds the count and pips are replaced by what just happened */
+.k5-flash-wrap {
+  position: absolute;
+  inset: -3px -6px -3px -6px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--k5-bg);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: k5-flash 4200ms ease-out forwards;
+  pointer-events: none;
+}
+
+.k5-team-b .k5-flash-wrap { justify-content: flex-end; }
+.k5-flash { overflow: hidden; text-overflow: ellipsis; --kit-underline: currentColor; }
+
+@keyframes k5-flash {
+  0% { opacity: 0; transform: translateY(4px); }
+  8%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* centre: one ink disc. At rest it carries the kabaddi mark inside a faint ring in the raiding
+   team's colour; during a raid the ring becomes the 30 s countdown and the disc shows the seconds. */
+.k5-mid {
+  grid-row: 1;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.k5-mid:disabled { cursor: default; }
+.k5-mid:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; border-radius: 12px; }
+
+.k5-ring { position: relative; display: block; width: 62px; height: 62px; }
+.k5-ring-a { --k5-line: var(--team-a-line); }
+.k5-ring-b { --k5-line: var(--team-b-line); }
+.k5-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.k5-track { fill: none; stroke: var(--sb-hair); stroke-width: 5; }
+.k5-arc { fill: none; stroke: var(--k5-line); stroke-width: 5; stroke-linecap: round; }
+.k5-ring-low .k5-arc { stroke: var(--se-color-danger); }
+.k5-ring-idle .k5-track { stroke: var(--k5-line); opacity: 0.45; }
+.k5-disc { fill: var(--se-color-ink); }
+
+.k5-ring-in {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--se-color-on-ink);
+}
+
+.k5-ring-in b { font: 800 1.5rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+.k5-ring-low .k5-ring-in b { color: var(--se-color-on-ink); }
+
+.k5-disc-mark {
+  display: block;
+  width: 30px;
+  height: 22px;
+  background: var(--se-color-on-ink);
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.k5-clock { font: 800 1.2rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+
+.k5-mid small {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+}
+
+/* rule pills: outside the strip, each as wide as the card of the team it concerns */
+.k5-cues {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  gap: 4px;
+  padding: 8px 12px 0;
+}
+
+.k5-at-a { grid-row: 1; grid-column: 1; }
+.k5-at-b { grid-row: 1; grid-column: 3; }
+.k5-at-a-wide { grid-row: 1; grid-column: 1 / span 2; }
+.k5-at-b-wide { grid-row: 1; grid-column: 2 / span 2; }
+
+.k5-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.k5-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+
+.k5-cue-dod::before {
+  content: '!';
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  color: var(--se-color-danger);
+  font-size: 0.8rem;
+}
+
+.k5-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+
+.k5-moment { animation: k5-bump 320ms ease-out; }
+@keyframes k5-bump { 0% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+@media (max-width: 380px) {
+  .k5-strip { padding-inline: 10px; grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr); }
+  .k5-team { padding: 8px 10px 8px; }
+  .k5-cues { padding-inline: 10px; grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr); }
+  .k5-cue { padding: 0 8px; font-size: 0.74rem; letter-spacing: 0; }
+  .k5-cue-dod::before { margin-right: 5px; }
+  .k5-ring { width: 56px; height: 56px; }
+  .k5-pend { top: 34px; right: 8px; }
+  .k5-team-b .k5-pend { left: 8px; }
+}
+
+@media (max-height: 680px) {
+  .k5-strip { padding-top: 2px; }
+  .k5-team { padding-top: 6px; padding-bottom: 6px; gap: 0; }
+  .k5-score { font-size: 3.1rem; }
+  .k5-foot { gap: 3px; margin-top: 1px; }
+  .k5-pip { height: 6px; }
+  .k5-ring { width: 50px; height: 50px; }
+  .k5-ring-in b { font-size: 1.25rem; }
+  .k5-disc-mark { width: 24px; height: 18px; }
+  .k5-pend { top: 28px; height: 22px; font-size: 0.85rem; }
+  .k5-cues { padding-top: 6px; }
+  .k5-cue { min-height: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k5-moment { animation: none; }
+  .k5-flash-wrap { animation-duration: 1ms; }
+}
+
+.k5-pip.out { border-style: dashed; }
