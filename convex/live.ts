@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { authedMutation } from "./lib/functions";
+import { authedMutation, authedQuery } from "./lib/functions";
 import { containsProfanity } from "./lib/profanity";
 
 // Coarse 30s time bucket for feed ranking — patched only when the bucket
@@ -163,7 +163,8 @@ export const create = authedMutation({
       sport: args.sport,
       scorecardKind: args.scorecardKind,
       status: "live",
-      visibility: args.visibility ?? "public",
+      // Older clients send public automatically; creation never grants publication.
+      visibility: "private",
       isYouthMatch: args.isYouthMatch ?? false,
       moderationStatus: flagged ? "held" : "clean",
       pointsA: 0,
@@ -387,11 +388,44 @@ export const setVisibility = authedMutation({
       v.literal("unlisted"),
       v.literal("private"),
     ),
+    snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
-    await loadOwnedMatch(ctx, args.matchId);
-    await ctx.db.patch(args.matchId, { visibility: args.visibility });
+    const match = await loadOwnedMatch(ctx, args.matchId);
+    const publishing = args.visibility !== "private";
+    if (publishing && !args.snapshot) throw new Error("Sharing requires the current score snapshot");
+    const now = Date.now();
+    await ctx.db.patch(args.matchId, {
+      visibility: args.visibility,
+      publishedAt: publishing ? now : undefined,
+      ...(publishing && args.snapshot ? {
+        ...snapshotPatch(args.snapshot),
+        pointsA: args.snapshot.pointsA,
+        pointsB: args.snapshot.pointsB,
+        lastEventAt: now,
+        feedRank: feedBucket(now),
+        status: match.status === "paused" ? "live" as const : match.status,
+      } : {}),
+    });
     return { ok: true };
+  },
+});
+
+export const getOwnedSession = authedQuery({
+  args: { clientMatchId: v.string() },
+  returns: v.union(v.null(), v.object({
+    matchId: v.id("liveMatches"), token: v.string(), lastSeq: v.number(),
+    isShared: v.boolean(),
+  })),
+  handler: async (ctx, { clientMatchId }) => {
+    const match = await ctx.db.query("liveMatches")
+      .withIndex("by_owner_client", (q) => q.eq("ownerId", ctx.user._id).eq("clientMatchId", clientMatchId))
+      .unique();
+    if (!match) return null;
+    return {
+      matchId: match._id, token: match.token, lastSeq: match.lastSeq,
+      isShared: match.visibility !== "private" && match.publishedAt !== undefined,
+    };
   },
 });
 
@@ -513,7 +547,7 @@ export const report = mutation({
       .withIndex("by_token", (q) => q.eq("token", token))
       .unique();
     // Uniform response: no enumeration leak for unknown/private/removed tokens.
-    if (!match || match.visibility === "private" || match.moderationStatus === "removed") {
+    if (!match || !isSharedMatchReadable(match)) {
       return { ok: true };
     }
 
@@ -581,23 +615,20 @@ const publicSnapshotValidator = v.object({
 // Shared token gate (§4.4 / §7.1). Token possession authorizes reads of
 // `public` OR `unlisted` matches (link sharing must work for unlisted), but
 // NEVER `private` matches or `removed` (moderated-out) content. Returns the
-// match doc only when it is readable; otherwise null.
+// match doc only after explicit publication; legacy auto-public rows fail closed.
+function isSharedMatchReadable(match: Doc<"liveMatches">) {
+  return match.visibility !== "private" && match.publishedAt !== undefined
+    && match.moderationStatus === "clean"
+    && (match.publicExpiresAt === undefined || Date.now() <= match.publicExpiresAt);
+}
+
 async function resolveReadableMatch(ctx: QueryCtx, token: string) {
   const match = await ctx.db
     .query("liveMatches")
     .withIndex("by_token", (q) => q.eq("token", token))
     .unique();
   if (!match) return null;
-  if (match.visibility === "private") return null;
-  // Only `clean` content is publicly readable — `held` (profanity/auto-report)
-  // and `removed` (moderated-out) are hidden from every public reader (§7.1).
-  if (match.moderationStatus !== "clean") return null;
-  // Auto-expire: bound standing public exposure after the match ends + grace.
-  // (Date.now() in a query is non-reactive — the view drops on the next re-run,
-  // not exactly at the deadline; a scheduled status flip is the fast-follow.)
-  if (match.publicExpiresAt != null && Date.now() > match.publicExpiresAt) {
-    return null;
-  }
+  if (!isSharedMatchReadable(match)) return null;
   return match;
 }
 
@@ -725,7 +756,7 @@ export const listLiveFeed = query({
       .take(FEED_SCAN_CAP);
 
     const fresh = rows
-      .filter((m) => !m.isYouthMatch && m.lastEventAt > freshAfter)
+      .filter((m) => isSharedMatchReadable(m) && !m.isYouthMatch && m.lastEventAt > freshAfter)
       .slice(0, cap);
 
     const items = [];

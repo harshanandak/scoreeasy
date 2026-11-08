@@ -18,7 +18,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import { useScoringCompletion } from './scoringCompletionContext';
@@ -71,7 +70,7 @@ export default function MonoSetsLiveScore() {
   // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
   // page with the engine-derived snapshot (current-set points + set tally +
   // serving). Additive — localStorage stays authoritative; gated on consent.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;
@@ -388,23 +387,25 @@ export default function MonoSetsLiveScore() {
   // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
   // point may end a set and open the next, so we read the settled sets/serving
   // here rather than guessing the post-update score inside addPoint.
+  const completed = sets.filter((s) => s.completed);
+  const showServe = rules?.version === 1 || scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
+  const liveSnapshot = {
+    pointsA: sets[currentSet]?.score1 || 0,
+    pointsB: sets[currentSet]?.score2 || 0,
+    setsA: completed.filter((s) => s.score1 > s.score2).length,
+    setsB: completed.filter((s) => s.score2 > s.score1).length,
+    setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
+    servingTeam: showServe ? broadcastServer(servingTeam) : undefined,
+    currentUnit: currentSet + 1,
+    periodLabel: `${rules?.unit || 'Set'} ${currentSet + 1}`,
+  };
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
     broadcastIntentRef.current = null;
 
-    const completed = sets.filter((s) => s.completed);
-    const showServe = rules?.version === 1 || scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
-    const snapshot = {
-      pointsA: sets[currentSet]?.score1 || 0,
-      pointsB: sets[currentSet]?.score2 || 0,
-      setsA: completed.filter((s) => s.score1 > s.score2).length,
-      setsB: completed.filter((s) => s.score2 > s.score1).length,
-      setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
-      servingTeam: showServe ? broadcastServer(servingTeam) : undefined,
-      currentUnit: currentSet + 1,
-      periodLabel: `${rules?.unit || 'Set'} ${currentSet + 1}`,
-    };
+    const snapshot = liveSnapshot;
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
@@ -702,7 +703,7 @@ export default function MonoSetsLiveScore() {
           onDiscard={handleDiscard} onFinish={saveMatch}
           scoringDisabled={!canScoreCurrentSet} controlsDisabled={isInteractionLocked}
           notice={saveWarning && <div className="mono-alert mono-alert-danger" role="alert">{saveWarning}</div>}
-          live={<LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport, scorecardKind: liveScorecardKind, teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}
+          live={<LiveBroadcastBar broadcast={live} descriptor={{ snapshot: liveSnapshot, clientMatchId: liveClientMatchId, sport, scorecardKind: liveScorecardKind, teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}
           options={(
             <BoardSheetGroup>
               <p className="sb-sheet-note"><b>{tournament.name}</b> · {targetPoints} points to win · Win by {winBy}</p>
@@ -758,6 +759,7 @@ export default function MonoSetsLiveScore() {
         <LiveBroadcastBar
           broadcast={live}
           descriptor={{
+            snapshot: liveSnapshot,
             clientMatchId: liveClientMatchId,
             sport,
             scorecardKind: liveScorecardKind,

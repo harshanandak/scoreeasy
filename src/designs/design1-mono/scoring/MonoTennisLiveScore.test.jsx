@@ -66,7 +66,8 @@ const h = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => h.navigate,
   useParams: () => h.params,

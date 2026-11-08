@@ -6,6 +6,7 @@ import MonoQuickMatch from './MonoQuickMatch';
 import * as sportRegistry from '../../models/sportRegistry';
 
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(),
   useQuery: () => [],
 }));

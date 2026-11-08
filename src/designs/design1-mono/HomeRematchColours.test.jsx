@@ -14,6 +14,7 @@ await preloadAppRoutes();
 const authState = vi.hoisted(() => ({ current: null }));
 
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(() => Promise.resolve(null)),
   useQuery: () => [],
   usePaginatedQuery: () => ({ results: [], status: 'Exhausted', loadMore: vi.fn() }),

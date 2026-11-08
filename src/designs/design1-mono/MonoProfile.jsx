@@ -170,11 +170,11 @@ export default function MonoProfile() {
   );
   const stats = useQuery(
     api.matches.getPublicUserStatsByUsername,
-    profileUsername ? { username: profileUsername } : "skip"
+    isOwnProfile && isAuthenticated && isUserReady && profileUsername ? { username: profileUsername } : "skip"
   );
   const recentMatches = useQuery(
     api.matches.getPublicRecentByUsername,
-    profileUsername ? { username: profileUsername } : "skip"
+    isOwnProfile && isAuthenticated && isUserReady && profileUsername ? { username: profileUsername } : "skip"
   );
 
   const displayUser = isOwnProfile ? currentUser : profileUser;
@@ -252,14 +252,14 @@ export default function MonoProfile() {
         {sub && <p className="kit-sub">{sub}</p>}
       </section>
 
-      <ul className="kit-statline" aria-label="Stats" style={{ "--kit-stat-cols": statItems.length }}>
+      {isOwnProfile ? <ul className="kit-statline" aria-label="Stats" style={{ "--kit-stat-cols": statItems.length }}>
         {statItems.map(([label, value]) => (
           <li key={label}>
             <b>{value}</b>
             <span>{label}</span>
           </li>
         ))}
-      </ul>
+      </ul> : <p className="kit-sub">Match history and stats are private to the scorer.</p>}
 
       {sportRows.length > 0 && (
         <section aria-labelledby="profile-sports">
