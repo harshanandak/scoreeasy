@@ -67,4 +67,22 @@ describe('durable quick stats recovery', () => {
     expect(restoreQuickStats()).toBe(true);
     expect(ids()).toEqual(['first', 'middle', 'last']);
   });
+
+  it('keeps the earlier operation restorable when a second removal and its rollback both fail', () => {
+    const first = removeQuickStats([originals[1]], 'delete');
+    const setItem = Storage.prototype.setItem;
+    let matchWriteFailed = false;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'se_quickmatches') {
+        matchWriteFailed = true;
+        throw new Error('match write failed');
+      }
+      if (key === 'se_stats_pending_undo' && matchWriteFailed) throw new Error('rollback failed');
+      return setItem.call(this, key, value);
+    });
+    expect(removeQuickStats([originals[0]], 'delete')).toBeNull();
+    failure.mockRestore();
+    expect(restoreQuickStats(first.id)).toBe(true);
+    expect(ids(), 'failed second removal must not strand the earlier removed match').toEqual(['first', 'middle', 'last']);
+  });
 });

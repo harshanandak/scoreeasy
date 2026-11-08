@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
 import { loadCompletedQuickMatches, saveQuickMatch, saveQuickMatches } from '../../utils/storage';
+import { loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from '../../utils/quickStatsRecovery';
 
 const match = (id, day) => ({
   id, sport: 'volleyball', team1: `Team ${id}`, team2: 'Visitors',
@@ -15,7 +16,7 @@ const ids = () => loadCompletedQuickMatches().map(item => item.id);
 async function openStats() {
   render(<MemoryRouter><MonoHistory /></MemoryRouter>);
   fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
-  fireEvent.click(await screen.findByRole('tab', { name: 'Quick' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Quick' }));
 }
 
 function request(kind, id = 'middle') {
@@ -35,6 +36,10 @@ describe('Stats recovery against current storage', () => {
     localStorage.clear();
     saveQuickMatches(originals);
   });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
 
   it.each(['delete', 'clear'])('keeps %s Undo after leaving Stats for Matches and returning', async kind => {
     await openStats();
@@ -43,7 +48,7 @@ describe('Stats recovery against current storage', () => {
     const views = within(screen.getByRole('tablist', { name: 'History and statistics views' }));
     fireEvent.click(views.getByRole('tab', { name: 'Matches' }));
     fireEvent.click(views.getByRole('tab', { name: 'Stats' }));
-    const quick = screen.queryByRole('tab', { name: 'Quick' });
+    const quick = screen.queryByRole('button', { name: 'Quick' });
     expect(quick, 'a pending recovery must keep the Quick tab reachable after remount').toBeInTheDocument();
     fireEvent.click(quick);
     expect(screen.queryByRole('button', { name: `Undo ${kind}` }), 'confirmed recovery must survive panel unmount').toBeInTheDocument();
@@ -91,5 +96,103 @@ describe('Stats recovery against current storage', () => {
     expect(loadCompletedQuickMatches().filter(item => item.id === 'middle')).toEqual([
       expect.objectContaining({ id: 'middle', score1: 30 }),
     ]);
+  });
+
+  it('binds tab A Undo to its own operation after tab B removes a different match', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    removeQuickStats([originals[0]], 'delete');
+    undo('delete');
+    expect(ids(), 'tab A must restore middle, never tab B first').toEqual(['middle', 'last']);
+  });
+
+  it('offers no Undo for an operation older than 24 hours', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
+    removeQuickStats([originals[1]], 'delete');
+    vi.setSystemTime(new Date('2026-11-10T10:00:00.001Z'));
+    await openStats();
+    expect(screen.queryByRole('button', { name: 'Undo delete' }), 'expired recovery must not offer Undo').not.toBeInTheDocument();
+    expect(ids()).toEqual(['first', 'last']);
+  });
+
+  it('invalidates Stats recovery when the Matches panel deliberately clears local history', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    fireEvent.click(screen.getByRole('tab', { name: 'Matches' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Stats' }));
+    expect(screen.queryByRole('button', { name: 'Undo delete' }), 'deliberately cleared history must not return through Stats Undo').not.toBeInTheDocument();
+    expect(loadQuickStatsRecovery()).toBeNull();
+  });
+
+  it('keeps Undo retryable and does not report success when consuming its operation fails', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    const setItem = Storage.prototype.setItem;
+    const removeItem = Storage.prototype.removeItem;
+    const saveFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'se_stats_pending_undo' && value === '[]') throw new Error('cleanup failed');
+      return setItem.call(this, key, value);
+    });
+    const removeFailure = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (key) {
+      if (key === 'se_stats_pending_undo') throw new Error('cleanup failed');
+      return removeItem.call(this, key);
+    });
+    undo('delete');
+    expect(screen.getByRole('status'), 'failed cleanup must not announce successful Undo').not.toHaveTextContent('Quick stat restored.');
+    expect(screen.getByRole('status')).toHaveTextContent(/restored.*tidy.*retry/i);
+    expect(screen.getByRole('button', { name: 'Undo delete' })).toBeInTheDocument();
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    saveFailure.mockRestore();
+    removeFailure.mockRestore();
+    undo('delete');
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(screen.queryByRole('button', { name: 'Undo delete' })).not.toBeInTheDocument();
+  });
+
+  it('reports unavailable and restores nothing if the shown operation was consumed elsewhere', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    restoreQuickStats(loadQuickStatsRecovery().id);
+    saveQuickMatches([originals[2]]);
+    undo('delete');
+    expect(screen.getByRole('status')).toHaveTextContent('Undo is no longer available');
+    expect(ids()).toEqual(['last']);
+  });
+
+  it('re-reads the latest operation on a storage event', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    removeQuickStats([originals[0]], 'clear');
+    act(() => window.dispatchEvent(new StorageEvent('storage', { key: 'se_stats_pending_undo' })));
+    expect(screen.queryByRole('button', { name: 'Undo clear' }), 'storage updates must show the latest operation').toBeInTheDocument();
+  });
+
+  it('does not clear Matches history or report success if invalidating Stats recovery fails', async () => {
+    await openStats();
+    request('delete');
+    confirm('delete');
+    fireEvent.click(screen.getByRole('tab', { name: 'Matches' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear local history' }));
+    const setItem = Storage.prototype.setItem;
+    const removeItem = Storage.prototype.removeItem;
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'se_stats_pending_undo') throw new Error('cannot clear recovery');
+      return setItem.call(this, key, value);
+    });
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (key) {
+      if (key === 'se_stats_pending_undo') throw new Error('cannot clear recovery');
+      return removeItem.call(this, key);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(ids(), 'history must remain intact if recovery invalidation fails').toEqual(['first', 'last']);
+    expect(screen.getByRole('status')).not.toHaveTextContent('Local history cleared.');
   });
 });
