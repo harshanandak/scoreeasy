@@ -107,8 +107,7 @@ describe('kabaddi scorer review regressions with durable storage', () => {
     ctx.search = `?result=${ID}`;
     render(<MonoQuickMatch />);
     const result = screen.getByRole('region', { name: 'Match result' });
-    expect(within(result).getByRole('status')).toHaveTextContent('Royals 23');
-    expect(within(result).getByRole('status')).toHaveTextContent('Strikers 17');
+    expect(within(result).getByText('Royals won. Won by 6 points. Royals 23, Strikers 17.')).toBeInTheDocument();
     expect(within(result).getByRole('heading', { name: 'Winner: Royals' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Raid by Royals' })).toBeNull();
     expect(loadQuickMatch(ID)).toEqual(original);
