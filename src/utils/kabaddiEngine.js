@@ -252,7 +252,7 @@ export function reopenLastRaid(state, { id, atMs }) {
   let restored = undo(state);
   restored = resume(restored, { atMs });
   restored = startRaid(restored, { id, atMs, raiderSlotId: target.raiderSlotId, raiderNamed: target.raiderNamed === true });
-  return { ...restored, activeRaid: { ...restored.activeRaid, draft: { ...clone(target.raidDraft), raidId: id } } };
+  return { ...restored, activeRaid: { ...restored.activeRaid, draft: { ...clone(target.raidDraft), raidId: id, history: (target.raidDraft.history ?? []).map(prior => ({ ...clone(prior), raidId: id })) } } };
 }
 
 /** Explicit half deadline: an active raid still requires a referee outcome. */
