@@ -118,7 +118,7 @@ async function replaceKabaddiHistory(
     validateKabaddiRaid(raid, snapshot);
     if (raid.number > snapshot.raidNumber || raid.half > snapshot.half || (index > 0 && history[index - 1].number >= raid.number)) throw new Error("Invalid kabaddi publication history");
   }
-  if ((history.at(-1)?.id ?? null) !== (snapshot.lastRaid?.id ?? null)) throw new Error("Kabaddi history does not match the saved snapshot");
+  if ((history[history.length - 1]?.id ?? null) !== (snapshot.lastRaid?.id ?? null)) throw new Error("Kabaddi history does not match the saved snapshot");
   const prior = await ctx.db.query("matchEvents").withIndex("by_match_type", q => q.eq("matchId", match._id).eq("type", "kabaddi_raid").eq("removed", undefined)).take(1001);
   if (prior.length > 1000) throw new Error("Kabaddi publication history exceeds supported capacity");
   const currentIds = new Set(history.map(raid => `kabaddi-raid:${raid.id}`));
