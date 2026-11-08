@@ -20,7 +20,7 @@ async function openStats() {
 
 function request(kind, id = 'middle') {
   fireEvent.click(screen.getByRole('button', {
-    name: kind === 'delete' ? `Delete match Team ${id} vs Visitors` : 'Clear all quick stats',
+    name: kind === 'delete' ? new RegExp(`^Delete match Team ${id} vs Visitors,`) : 'Clear all quick stats',
   }));
 }
 
