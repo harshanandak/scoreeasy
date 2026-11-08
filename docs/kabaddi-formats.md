@@ -5,7 +5,7 @@ New states use `version: 2`, `schemaVersion: 2` and `rulesVersion: rectangular-v
 references to future defaults. `assertState()` validates nested rules and compares
 the rules with the first journal snapshot after play starts.
 
-Setup defaults to Quick casual: five players, first to 21, players stay, no clocks,
+The setup component defaults to Quick casual (the scorer PR activates it in the app): five players, first to 21, players stay, no clocks,
 bonus, super tackle or do-or-die. Standard uses seven, two 20-minute halves, a
 five-minute interval and a 30-second advisory raid clock. Women/younger uses
 15-minute halves. Pro Kabaddi style uses the same rectangular baseline and does
