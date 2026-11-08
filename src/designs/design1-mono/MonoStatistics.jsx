@@ -1,6 +1,6 @@
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   clearCompletedQuickMatches,
@@ -12,7 +12,7 @@ import {
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import { sportIdentityVars } from '../../lib/sportIdentity';
-import { Chevron, EmptyHistoryArt, GoArrow, KitSection, SportBadge } from './kit/KitParts';
+import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, SportBadge } from './kit/KitParts';
 import './kit/history.css';
 import './kit/stats.css';
 import { PLAY_HUB_PATH } from '../../utils/appPaths';
@@ -250,8 +250,9 @@ export function MonoStatisticsPanel() {
 
   // The chip row scrolls sideways on a phone: keep the chosen chip in view (a By sport row can pick
   // one that sits off the right edge).
+  const chipsRef = useRef(null);
   useEffect(() => {
-    const chip = document.getElementById(`tab-stats-${tab}`);
+    const chip = chipsRef.current?.querySelector('[aria-pressed="true"]');
     if (typeof chip?.scrollIntoView === 'function') chip.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [tab]);
   const [sportsData, setSportsData] = useState({});
@@ -386,30 +387,18 @@ export function MonoStatisticsPanel() {
 
   return (
     <div className="kit-stats">
-      {/* A single category is no choice: the chips only appear once there is something to switch to. */}
+      {/* A single category is no choice: the chips only appear once there is something to switch to.
+          Plain pressed buttons, as History's sport chips: no tab role, so no arrow-key promise. */}
       {tabs.length > 1 && (
-        <div className="kit-chips" role="tablist" aria-label="Statistics categories">
+        <div className="kit-chips" role="group" aria-label="Statistics categories" ref={chipsRef}>
           {tabs.map(t => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              id={`tab-stats-${t.id}`}
-              className="kit-fchip"
-              aria-selected={tab === t.id}
-              aria-controls={`tabpanel-stats-${t.id}`}
-              style={t.sportId ? sportIdentityVars(t.sportId) : undefined}
-              onClick={() => setTab(t.id)}
-            >
-              {t.sportId && <i aria-hidden="true" />}
-              {t.label}
-            </button>
+            <FilterChip key={t.id} label={t.label} sportId={t.sportId} pressed={tab === t.id} onClick={() => setTab(t.id)} />
           ))}
         </div>
       )}
 
       {tab === OVERVIEW && (
-        <div id="tabpanel-stats-overview" role="tabpanel" aria-label="Overview">
+        <section id="stats-panel-overview" aria-label="Overview">
           {!hasAnyData ? (
             /* Lead with the CTA — skip the zero-value stat grids entirely (I-013). */
             <StatsEmpty
@@ -484,13 +473,13 @@ export function MonoStatisticsPanel() {
               </div>
             </>
           )}
-        </div>
+        </section>
       )}
 
       {/* Dynamic sport tabs */}
       {sportsWithData.map(sportData => (
         tab === sportData.sport.id && (
-          <div key={sportData.sport.id} id={`tabpanel-stats-${sportData.sport.id}`} role="tabpanel" aria-label={sportData.sport.name}>
+          <section key={sportData.sport.id} id={`stats-panel-${sportData.sport.id}`} aria-label={sportData.sport.name}>
             <KitSection title={sportData.sport.name} aside={<span>{pluralize(sportData.teams.size, 'team')}</span>} />
             <TeamStatsTable
               sportId={sportData.sport.id}
@@ -498,13 +487,13 @@ export function MonoStatisticsPanel() {
               tournaments={sportData.tournamentsRaw}
               engine={sportData.sport.engine}
             />
-          </div>
+          </section>
         )
       ))}
 
       {/* Quick Matches */}
       {tab === QUICK && (
-        <div id="tabpanel-stats-quick" role="tabpanel" aria-label="Quick matches">
+        <section id="stats-panel-quick" aria-label="Quick matches">
           {pendingDelete && !pendingDelete.deleted && (
             <div className="kit-card kit-confirm" style={{ marginTop: 18 }}>
               <p>Delete this quick stat?</p>
@@ -579,7 +568,7 @@ export function MonoStatisticsPanel() {
               )}
             </>
           )}
-        </div>
+        </section>
       )}
 
       {(statsStatus || undo) && (

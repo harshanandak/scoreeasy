@@ -8,17 +8,6 @@
   margin-top: 0;
 }
 
-/* The category chips are tabs: selection reads from the ink fill and aria-selected, as in History. */
-.kit-fchip[aria-selected='true'] {
-  background: var(--se-color-ink);
-  box-shadow: none;
-  color: var(--se-color-on-ink);
-}
-
-.kit-fchip[aria-selected='true'] i {
-  box-shadow: 0 0 0 2px var(--se-color-on-ink);
-}
-
 .kit-stats .kit-sec:first-child {
   margin-top: 18px;
 }
@@ -100,8 +89,11 @@
 .kit-form li {
   display: inline-flex;
   align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
   min-height: 32px;
-  padding: 0 12px;
+  padding: 4px 12px;
+  overflow-wrap: anywhere;
   border-radius: 999px;
   background: var(--se-color-surface-warm);
   color: var(--se-color-ink);

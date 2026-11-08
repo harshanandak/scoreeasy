@@ -94,7 +94,7 @@ describe('MonoStatistics', () => {
         { id: 'abandoned', team1Id: 'A', team2Id: 'B', status: 'completed', resultType: 'abandoned', winner: null, score1: 99, score2: 0 },
       ] }]));
     renderStatistics();
-    fireEvent.click(await screen.findByRole('tab', { name: /Football/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Football' }));
     const table = screen.getByRole('table', { name: 'Football team statistics' });
     const cells = within(within(table).getByRole('row', { name: /^Alpha/ })).getAllByRole('cell');
     expect(cells.map(cell => cell.textContent)).toEqual(['2', '1', '0', '3', '1', '2.0', '100%']);
@@ -121,7 +121,7 @@ describe('MonoStatistics', () => {
     expect(screen.getByText('Falcons vs Sharks (3 matches)')).toBeInTheDocument();
     expect(screen.getByText('Volleyball (3 matches)')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Quick' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Quick' }));
 
     expect(screen.getByRole('heading', { name: 'Quick team form' })).toBeInTheDocument();
     const falconsRow = screen.getByRole('row', { name: /Falcons/ });
@@ -143,7 +143,7 @@ describe('MonoStatistics', () => {
     expect(await screen.findByRole('heading', { name: 'No stats yet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start quick match' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create tournament' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Statistics categories' })).not.toBeInTheDocument();
 
     // The zero-value Performance/Records/Totals grids must NOT render.
     expect(screen.queryByText('Performance')).not.toBeInTheDocument();
@@ -158,16 +158,18 @@ describe('MonoStatistics', () => {
     seedFootballCup();
     renderStatistics();
 
-    const tablist = await screen.findByRole('tablist', { name: 'Statistics categories' });
-    const overview = within(tablist).getByRole('tab', { name: 'Overview' });
+    const chips = await screen.findByRole('group', { name: 'Statistics categories' });
+    const overview = within(chips).getByRole('button', { name: 'Overview' });
     expect(overview).toHaveClass('kit-fchip');
-    expect(overview).toHaveAttribute('aria-selected', 'true');
-    expect(within(tablist).getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Overview', 'Football', 'Quick']);
+    expect(overview).toHaveAttribute('aria-pressed', 'true');
+    expect(within(chips).getAllByRole('button').map((chip) => chip.textContent)).toEqual(['Overview', 'Football', 'Quick']);
+    // Plain pressed buttons, like History's sport chips: no tab role without arrow-key handling.
+    expect(within(chips).queryByRole('tab')).not.toBeInTheDocument();
 
-    fireEvent.click(within(tablist).getByRole('tab', { name: 'Football' }));
-    expect(within(tablist).getByRole('tab', { name: 'Football' })).toHaveAttribute('aria-selected', 'true');
-    expect(within(tablist).getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'false');
-    expect(screen.getByRole('tabpanel', { name: 'Football' })).toBeInTheDocument();
+    fireEvent.click(within(chips).getByRole('button', { name: 'Football' }));
+    expect(within(chips).getByRole('button', { name: 'Football' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(chips).getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('region', { name: 'Football' })).toBeInTheDocument();
   });
 
   it('opens a sport tab from its By sport row on the Overview', async () => {
@@ -175,8 +177,8 @@ describe('MonoStatistics', () => {
     seedFootballCup();
     renderStatistics();
 
-    fireEvent.click(await screen.findByRole('button', { name: /^Football/ }));
-    expect(screen.getByRole('tab', { name: 'Football' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(await screen.findByRole('button', { name: /^Football 1 tournament/ }));
+    expect(screen.getByRole('button', { name: 'Football' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('table', { name: 'Football team statistics' })).toBeInTheDocument();
   });
 
@@ -191,7 +193,7 @@ describe('MonoStatistics', () => {
   it('keeps every sport-tab stat, with Win% last, in an accessible table that fits a phone', async () => {
     seedFootballCup();
     renderStatistics();
-    fireEvent.click(await screen.findByRole('tab', { name: 'Football' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Football' }));
 
     const table = screen.getByRole('table', { name: 'Football team statistics' });
     expect(within(table).getAllByRole('columnheader').map((header) => header.textContent))
@@ -207,7 +209,7 @@ describe('MonoStatistics', () => {
     seedQuickMatches();
 
     renderStatistics();
-    fireEvent.click(await screen.findByRole('tab', { name: 'Quick' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Quick' }));
 
     fireEvent.click(screen.getAllByRole('button', { name: /Delete match Falcons vs Sharks/ })[0]);
 
@@ -236,7 +238,7 @@ describe('MonoStatistics', () => {
     await waitFor(() => {
       expect(readQuickMatches()).toHaveLength(0);
     });
-    expect(screen.getByRole('tab', { name: 'Quick' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quick' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo clear' })).toBeInTheDocument();
   });
 
@@ -312,6 +314,13 @@ describe('MonoStatistics', () => {
     expect(screen.getByText('Teams').closest('.kit-stat')).toHaveTextContent('6');
     expect(screen.queryByText('Draft A')).not.toBeInTheDocument();
     expect(screen.queryByText('Ghost A')).not.toBeInTheDocument();
+  });
+
+  it('keeps long team names inside the form pills so nothing scrolls sideways at 360px', () => {
+    const css = readFileSync(`${import.meta.dirname}/kit/stats.css`, 'utf8');
+    const pill = css.match(/\.kit-form li \{[^}]*\}/)?.[0] ?? '';
+    expect(pill).toContain('max-width: 100%');
+    expect(pill).toContain('overflow-wrap: anywhere');
   });
 
   it('keeps statistics visual states readable, on Kit parts and on tokens', () => {
