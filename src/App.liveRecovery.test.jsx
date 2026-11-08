@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
 import { useLiveBroadcast } from './hooks/useLiveBroadcast';
 import { useTournamentScoreClear } from './designs/design1-mono/hooks/useTournamentScoreClear';
@@ -11,6 +11,8 @@ import { loadSession } from './lib/live/liveSession';
 const h = vi.hoisted(() => ({
   create: vi.fn(), scorePoint: vi.fn(), undo: vi.fn(), finalize: vi.fn(),
   setVisibility: vi.fn(), query: vi.fn(), nativeForeground: null,
+  sharePromise: null, pointPromise: null, finishPromise: null,
+  online: true,
 }));
 vi.mock('convex/react', () => ({
   useConvex: () => h,
@@ -38,12 +40,17 @@ const terminal = { ...GO.snapshot, pointsA: 5, pointsB: 3 };
 function Scorer() {
   const broadcast = useLiveBroadcast();
   const navigate = useNavigate();
-  useEffect(() => { void broadcast.restore(GO); }, [broadcast.restore]);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    void broadcast.restore(GO).then(() => { if (mounted) setRestored(true); });
+    return () => { mounted = false; };
+  }, [broadcast.restore]);
   return <>
-    <button onClick={() => { void broadcast.goLive(GO); }}>Share</button>
-    <button onClick={() => { void broadcast.point({ team: 'A', at: 1 }); }}>Point</button>
+    <button disabled={!restored} onClick={() => { h.sharePromise = broadcast.goLive(GO); }}>Share</button>
+    <button onClick={() => { h.pointPromise = broadcast.point({ team: 'A', at: 1 }); }}>Point</button>
     <button onClick={() => {
-      void broadcast.finalize({ resultType: 'abandoned', snapshot: terminal });
+      h.finishPromise = broadcast.finalize({ resultType: 'abandoned', snapshot: terminal });
       navigate('/result');
     }}>Finish</button>
     {broadcast.error && <p role="alert">{broadcast.error.message}</p>}
@@ -76,35 +83,71 @@ function mount(path = '/score') {
 
 beforeEach(() => {
   localStorage.clear();
+  h.online = true;
+  vi.spyOn(navigator, 'onLine', 'get').mockImplementation(() => h.online);
   Object.values(h).filter(value => typeof value?.mockReset === 'function').forEach(value => value.mockReset());
   h.query.mockResolvedValue(null);
   h.create.mockResolvedValue({ matchId: 'old-live', token: 'OLD' });
   h.setVisibility.mockResolvedValue({ ok: true });
   h.scorePoint.mockResolvedValue({});
   h.finalize.mockResolvedValue({ archived: true });
+  h.sharePromise = h.pointPromise = h.finishPromise = null;
 });
+afterEach(() => vi.restoreAllMocks());
+
+async function share() {
+  await screen.findByRole('button', { name: 'Share' });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Share' })).toBeEnabled());
+  await act(async () => {
+    fireEvent.click(screen.getByText('Share'));
+    expect(await h.sharePromise).toEqual(expect.objectContaining({ matchId: expect.any(String) }));
+  });
+}
+
+async function point() {
+  await act(async () => {
+    fireEvent.click(screen.getByText('Point'));
+    await h.pointPromise;
+  });
+}
 
 async function offlineFinish() {
-  await screen.findByRole('button', { name: 'Share' });
-  await act(async () => { fireEvent.click(screen.getByText('Share')); });
+  await share();
+  h.online = false;
   h.scorePoint.mockRejectedValue(new Error('offline'));
-  await act(async () => { fireEvent.click(screen.getByText('Point')); });
-  await act(async () => { fireEvent.click(screen.getByText('Finish')); });
+  await point();
+  await act(async () => {
+    fireEvent.click(screen.getByText('Finish'));
+    await h.finishPromise;
+  });
   expect(screen.getByText('Saved result')).toBeVisible();
   expect(screen.queryByText('Point')).not.toBeInTheDocument();
-  expect(load()).toHaveLength(2);
+  expect(load()).toEqual([
+    expect.objectContaining({ clientEventId: `${GO.clientMatchId}:1`, value: 1 }),
+    expect.objectContaining({ clientEventId: `${GO.clientMatchId}:2`, value: 0, type: 'correction', snapshot: terminal }),
+  ]);
+  expect(loadSession(GO.clientMatchId)).toHaveProperty('finalizeIntent');
   expect(h.finalize).not.toHaveBeenCalled();
 }
 
 it('recovers offline finish after navigation unmounts the scorer, publishing terminal scores first', async () => {
   mount();
   await offlineFinish();
+  h.scorePoint.mockClear();
   const order = [];
   h.scorePoint.mockImplementation(async ({ snapshot }) => { order.push(snapshot ? 'terminal' : 'point'); });
   h.finalize.mockImplementation(async () => { order.push('finalize'); });
+  h.online = true;
   await act(async () => { globalThis.dispatchEvent(new Event('online')); });
-  await waitFor(() => expect(h.finalize).toHaveBeenCalledTimes(1));
+  await waitFor(() => {
+    expect(h.finalize).toHaveBeenCalledTimes(1);
+    expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
+  });
   expect(order).toEqual(['point', 'terminal', 'finalize']);
+  expect(h.scorePoint.mock.calls.map(([args]) => args.clientEventId)).toEqual([
+    `${GO.clientMatchId}:1`, `${GO.clientMatchId}:2`,
+  ]);
+  expect(h.scorePoint).toHaveBeenLastCalledWith(expect.objectContaining({ snapshot: terminal }));
   expect(load()).toEqual([]);
 });
 
@@ -116,8 +159,15 @@ it('recovers after reload directly onto the result route without calling board r
   mount('/result');
   await screen.findByText('Saved result');
   h.scorePoint.mockClear().mockResolvedValue({});
+  h.online = true;
   await act(async () => { globalThis.dispatchEvent(new Event('online')); });
-  await waitFor(() => expect(h.finalize).toHaveBeenCalledTimes(1));
+  await waitFor(() => {
+    expect(h.finalize).toHaveBeenCalledTimes(1);
+    expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
+  });
+  expect(h.scorePoint.mock.calls.map(([args]) => args.clientEventId)).toEqual([
+    `${GO.clientMatchId}:1`, `${GO.clientMatchId}:2`,
+  ]);
   expect(h.query).not.toHaveBeenCalled();
   expect(h.scorePoint).toHaveBeenLastCalledWith(expect.objectContaining({ matchId: 'old-live', snapshot: terminal }));
   expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
@@ -125,12 +175,13 @@ it('recovers after reload directly onto the result route without calling board r
 
 it('still recovers an unfinished live match\'s queued points on reconnect', async () => {
   mount();
-  await screen.findByRole('button', { name: 'Share' });
-  await act(async () => { fireEvent.click(screen.getByText('Share')); });
+  await share();
+  h.online = false;
   h.scorePoint.mockRejectedValue(new Error('offline'));
-  await act(async () => { fireEvent.click(screen.getByText('Point')); });
+  await point();
   expect(load()).toHaveLength(1);
   h.scorePoint.mockClear().mockResolvedValue({});
+  h.online = true;
   await act(async () => { globalThis.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(load()).toEqual([]));
   expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ matchId: 'old-live' }));
@@ -142,6 +193,7 @@ it.each(['match_not_found', 'not_authorized'])('cancels a rejected session with 
   await offlineFinish();
   localStorage.setItem('se_local_result', JSON.stringify(terminal));
   h.scorePoint.mockClear().mockRejectedValue(Object.assign(new Error('Server Error'), { data: { code } }));
+  h.online = true;
   await act(async () => { globalThis.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(load()).toEqual([]));
   expect(loadSession(GO.clientMatchId)).not.toHaveProperty('finalizeIntent');
@@ -168,10 +220,12 @@ it('score clear creates a new live generation before reopening the fixture', asy
   h.create.mockImplementation(async ({ clientMatchId }) => ({ matchId: clientMatchId === GO.clientMatchId ? 'old-live' : 'new-live', token: 'NEW' }));
   h.scorePoint.mockResolvedValue({});
   await act(async () => { fireEvent.click(screen.getByText('Reopen')); });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Share' })).toBeEnabled());
   expect(h.query.mock.calls.at(-1)[1].clientMatchId).not.toBe(GO.clientMatchId);
+  h.online = true;
   await act(async () => { globalThis.dispatchEvent(new Event('online')); });
-  await act(async () => { fireEvent.click(screen.getByText('Share')); });
-  await act(async () => { fireEvent.click(screen.getByText('Point')); });
+  await share();
+  await point();
   expect(h.create.mock.calls.at(-1)[0].clientMatchId).not.toBe(GO.clientMatchId);
   expect(h.scorePoint).toHaveBeenLastCalledWith(expect.objectContaining({ matchId: 'new-live' }));
   expect(h.finalize.mock.calls.every(([args]) => args.matchId === 'old-live')).toBe(true);
