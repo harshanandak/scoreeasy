@@ -1,3 +1,4 @@
+import { periodClockValidator } from "./lib/periodClock";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -103,6 +104,7 @@ export default defineSchema({
     servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
     currentUnit: v.number(),
     periodLabel: v.optional(v.string()),
+    periodClock: v.optional(periodClockValidator),
     lastSeq: v.number(),
     feedRank: v.number(),
     startedAt: v.number(),

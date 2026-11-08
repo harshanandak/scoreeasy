@@ -1,3 +1,9 @@
+import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, periodClock, periodLabel } from '../../../utils/goalsPeriods';
+import { useGoalsPeriodClock } from '../../../hooks/useGoalsPeriodClock';
+import GoalsPeriodControls from './GoalsPeriodControls';
+import TeamGoalsBoard from './TeamGoalsBoard';
+import { useTeamColours } from './useTeamColours';
+import { DEFAULT_TEAM_COLOURS } from '../../../lib/teamColour';
 import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
 import { isGoalsMatchDecided } from '../../../utils/goalsScoring';
 import { useScoringProgress } from './scoringProgressContext';
@@ -67,6 +73,9 @@ export default function MonoGoalsLiveScore() {
   const [score1, setScore1] = useState(0);
   const [score2, setScore2] = useState(0);
   const [history, setHistory] = useState([]);
+  const [periodState, setPeriodState] = useState(null);
+  const periodTime = useGoalsPeriodClock(periodState);
+  const colourStyle = useTeamColours(DEFAULT_TEAM_COLOURS.a, DEFAULT_TEAM_COLOURS.b, sport);
   const [hasChanges, setHasChanges] = useState(false);
   const [sidesSwapped, setSidesSwapped] = useState(false);
   const [scoreAnimKey, setScoreAnimKey] = useState({ left: 0, right: 0 });
@@ -137,6 +146,9 @@ export default function MonoGoalsLiveScore() {
     setSportConfig(config);
     setTournament(found);
     setMatch(foundMatch);
+    const frozen = foundMatch.draftState?.periodState || foundMatch.periodState;
+    const matchFormat = isKnockoutRef.current && found.knockoutConfig?.format ? found.knockoutConfig.format : found.format;
+    setPeriodState(frozen?.version === 1 ? frozen : matchFormat?.periods?.version === 1 ? createPeriodMatch(matchFormat.periods, Date.now()) : null);
 
     // Initialize from existing score if editing
     if (foundMatch.score1 !== null && foundMatch.score1 !== undefined && !foundMatch.draftState) {
@@ -157,9 +169,10 @@ export default function MonoGoalsLiveScore() {
     ? tournament.knockoutConfig.format
     : tournament?.format;
 
-  const buildLiveSnapshot = (pointsA = score1, pointsB = score2) => ({
+  const buildLiveSnapshot = (pointsA = score1, pointsB = score2, state = periodState) => ({
     pointsA, pointsB, setsA: 0, setsB: 0, setScores: [], currentUnit: 1,
     periodLabel: sportConfig?.name,
+    ...(state ? { currentUnit: state.periodIndex + 1, periodLabel: periodLabel(state), periodClock: periodClock(state), setScores: state.scores.map(s => ({ a: s.A, b: s.B })) } : {}),
   });
 
   // Start timer for timed mode
@@ -171,7 +184,7 @@ export default function MonoGoalsLiveScore() {
     }
   }, [tournament, timerStarted]);
 
-  const isDecidedScore = (a, b) => isGoalsMatchDecided({ format: effectiveFormat, score1: a, score2: b,
+  const isDecidedScore = (a, b) => periodState ? periodResultDecided(periodState, a, b, sportConfig.config.drawAllowed) : isGoalsMatchDecided({ format: effectiveFormat, score1: a, score2: b,
     elapsedSeconds: timer.elapsed, drawAllowed: sportConfig.config.drawAllowed,
     timeLimit: sport === 'football' ? getFootballMatchLimitSeconds({ timeLimitSeconds: effectiveFormat.timeLimit, timePresets: sportConfig.config.timePresets }) : effectiveFormat.timeLimit,
     overtimePeriod });
@@ -182,6 +195,7 @@ export default function MonoGoalsLiveScore() {
       score1: finalScore1,
       score2: finalScore2,
       status: 'completed',
+      ...(periodState ? { periodState } : {}),
       resultType: decided ? 'decided' : 'abandoned',
       winner: decided ? determineWinner(finalScore1, finalScore2, m) : null,
       draftState: undefined,
@@ -199,7 +213,7 @@ export default function MonoGoalsLiveScore() {
 
   // Auto-end match when time expires in timed mode
   useEffect(() => {
-    if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
+    if (periodState || !tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
     const timedMatchLimit = sport === 'football'
@@ -241,7 +255,7 @@ export default function MonoGoalsLiveScore() {
       ? getFootballMatchLimitSeconds({ timeLimitSeconds: timeLimit, timePresets: sportConfig.config.timePresets })
       : timeLimit;
     const currentPeriodLimit = getTimedPeriodLimit({ timeLimit: timedMatchLimit, overtimePeriod });
-    if (formatMode === 'timed' && timedMatchLimit && timer.elapsed >= currentPeriodLimit) {
+    if (periodState ? periodState.phase !== 'playing' : formatMode === 'timed' && timedMatchLimit && timer.elapsed >= currentPeriodLimit) {
       return; // Don't allow scoring after time expires
     }
 
@@ -280,7 +294,9 @@ export default function MonoGoalsLiveScore() {
     }
 
     // Mirror to the live broadcast (no-op when not broadcasting). team1 -> A.
-    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now(), snapshot: buildLiveSnapshot(newScore1, newScore2) });
+    const nextPeriod = periodState ? applyPeriodAction(periodState, { type: 'score', team: team === 1 ? 'A' : 'B', value, at: Date.now() }) : null;
+    if (nextPeriod) setPeriodState(nextPeriod);
+    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now(), snapshot: buildLiveSnapshot(newScore1, newScore2, nextPeriod) });
 
     // Auto-end in points mode (formatMode already declared above)
     if ((formatMode || 'free') === 'points' && effectiveFormat.target) {
@@ -295,7 +311,14 @@ export default function MonoGoalsLiveScore() {
 
   // Undo last action
   const undo = () => {
-    if (history.length === 0 || scoringPrompt.isInteractionLocked) return;
+    if (scoringPrompt.isInteractionLocked) return;
+    if (periodState) {
+      const next = undoPeriodAction(periodState, Date.now()); const totals = periodTotals(next);
+      setPeriodState(next); setScore1(totals.A); setScore2(totals.B);
+      live.point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot: buildLiveSnapshot(totals.A, totals.B, next) });
+      return;
+    }
+    if (history.length === 0) return;
 
     const last = history[history.length - 1];
     setScore1(last.score1);
@@ -309,12 +332,13 @@ export default function MonoGoalsLiveScore() {
   // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
   useEffect(() => {
     if (!tournament || !matchId || scoringPrompt.isInteractionLocked) return;
-    if (history.length === 0 && !scoringStarted) return;
+    if (!periodState && history.length === 0 && !scoringStarted) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
       draftState: {
         scoringStarted,
+        ...(periodState ? { periodState } : {}),
         score1,
         score2,
         history: structuredClone(history.slice(-50)),
@@ -322,7 +346,7 @@ export default function MonoGoalsLiveScore() {
       },
     }));
     saveSportTournament(sportConfig.storageKey, updatedTournament);
-  }, [tournament, matchId, score1, score2, history, scoringStarted, sportConfig, scoringPrompt.isInteractionLocked]);
+  }, [periodState, tournament, matchId, score1, score2, history, scoringStarted, sportConfig, scoringPrompt.isInteractionLocked]);
 
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {
@@ -459,7 +483,7 @@ export default function MonoGoalsLiveScore() {
   const remainingSeconds = isTimedMode && timedMatchLimit
     ? getTimedRemainingSeconds({ elapsedSeconds: timer.elapsed, timeLimit: timedMatchLimit, overtimePeriod })
     : null;
-  const isTimeUp = isTimedMode && remainingSeconds === 0;
+  const isTimeUp = !periodState && isTimedMode && remainingSeconds === 0;
   const footballClockState = sport === 'football' && isTimedMode
     ? getFootballClockState({
       elapsedSeconds: timer.elapsed,
@@ -475,6 +499,34 @@ export default function MonoGoalsLiveScore() {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
+
+  if (periodState) {
+    const periodAction = (type) => {
+      if (scoringPrompt.isInteractionLocked) return;
+      const next = applyPeriodAction(periodState, { type, at: Date.now() });
+      setPeriodState(next);
+      live.point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot: buildLiveSnapshot(score1, score2, next) });
+    };
+    const halves = [leftTeam, rightTeam].map(team => ({ key: team === 1 ? 'a' : 'b', team, name: team === 1 ? team1Name : team2Name, score: team === 1 ? score1 : score2 }));
+    return <>
+      <h1 className="sr-only">{sportConfig.name} match scorer</h1>
+      {scoringPrompt.renderPrompt(confirmPendingPrompt)}
+      <TeamGoalsBoard sportConfig={sportConfig} title={`${team1Name} v ${team2Name}`} subtitle={periodState.source || effectiveFormat.periods?.source}
+        colourStyle={colourStyle} halves={halves} clock={periodTime.formatted} clockLabel="Time remaining"
+        status={`${periodTime.label}${periodState.startedAt == null && periodState.phase === 'playing' ? ' · paused' : ''}`}
+        scoringLocked={periodState.phase !== 'playing' || scoringPrompt.isInteractionLocked}
+        lastLine="Score for either team" actionCount={periodState.history.length} canUndo={periodState.history.length > 0 && !scoringPrompt.isInteractionLocked}
+        undoHint="Previous action" isLive={Boolean(live.isLive)} onScore={addScore} onUndo={undo} onSwap={() => setSidesSwapped(v => !v)}
+        onCorrect={team => {
+          const next = applyPeriodAction(periodState, { type: 'score', team: team === 1 ? 'A' : 'B', value: -1, at: Date.now() });
+          const totals = periodTotals(next); setPeriodState(next); setScore1(totals.A); setScore2(totals.B);
+          live.point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot: buildLiveSnapshot(totals.A, totals.B, next) });
+        }} onFinish={saveMatch} onDiscard={handleDiscard}
+        notice={saveWarning ? <p role="alert">{saveWarning}</p> : null}
+        periodControls={<GoalsPeriodControls state={periodState} remaining={periodTime.remaining} onAction={periodAction} onFinish={saveMatch} locked={scoringPrompt.isInteractionLocked} tied={score1 === score2} />}
+        live={<LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} />} />
+    </>;
+  }
 
   return (
     <div className="mono-scorer-screen mono-arena-screen">

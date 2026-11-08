@@ -1,3 +1,4 @@
+import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { saveSportTournament } from '../../utils/storage';
@@ -1077,8 +1078,9 @@ export default function MonoTournamentSetup() {
               </div>
             )}
 
+            {sportConfig.engine === 'goals' && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
             {/* Goals-based format — custom mode only */}
-            {formatMode === 'custom' && sportConfig.engine === 'goals' && (
+            {formatMode === 'custom' && sportConfig.engine === 'goals' && !format.periods && (
               <div className="mb-8">
                 <span className="text-xs uppercase tracking-widest font-normal mb-3 block" style={{ color: '#888' }}>
                   Match mode
@@ -1428,6 +1430,7 @@ export default function MonoTournamentSetup() {
                       </div>
                     )}
 
+                    {!knockoutSameFormat && sportConfig?.engine === 'goals' && <GoalsPeriodSetup sport={sport} format={knockoutFormat || format} onChange={setKnockoutFormat} />}
                     {!knockoutSameFormat && sportConfig?.engine === 'goals' && (
                       <div className="mt-2 p-4 mono-soft-panel">
                         <div className="flex gap-2 mb-3">

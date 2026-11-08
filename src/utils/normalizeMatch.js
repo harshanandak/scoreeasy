@@ -59,7 +59,7 @@ export function normalizeMatchForConvex(result, sport) {
     team2: result.team2,
     score1,
     score2,
-    detail: detail ?? undefined,
+    detail: result.periodState ? { ...detail, periodState: result.periodState } : detail ?? undefined,
     winner: isAbandoned(result) ? undefined : result.winner || undefined,
     resultType: result.resultType || (isAbandoned(result) ? 'abandoned' : undefined),
     format: result.format || undefined,
