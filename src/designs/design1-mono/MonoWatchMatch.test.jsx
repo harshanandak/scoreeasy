@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import MonoWatchMatch from './MonoWatchMatch';
 import { api } from '../../../convex/_generated/api';
+import { createKabaddiMatch } from '../../utils/kabaddiQuickMatch';
+import { beginLiveRaid, landRaid, markDefender } from '../../utils/kabaddiBoardModel';
+import { kabaddiSnapshot } from '../../utils/kabaddiBroadcast';
 
 // Mock the Convex client hooks so useQuery / usePaginatedQuery return fixtures.
 // The component switches on the function reference, so the api mock below hands
@@ -132,6 +135,24 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+});
+
+describe('unsupported kabaddi data', () => {
+  it.each([
+    ['unknown snapshot version', k => { k.version = 99; }],
+    ['malformed last-raid pair', k => { k.lastRaid.lostSlots = [[]]; }],
+    ['invalid last-raid team index', k => { k.lastRaid.team = 3; }],
+    ['malformed score categories', k => { k.scores = [null, null]; }],
+  ])('shows the unsupported screen without crashing on %s', (_label, corrupt) => {
+    const initial = createKabaddiMatch({ names: ['Royals', 'Strikers'] });
+    const landed = landRaid(markDefender(beginLiveRaid(initial, { atMs: 100 }), 'B1', 'touched'), 'safe', { atMs: 200 });
+    const k = kabaddiSnapshot(landed);
+    corrupt(k);
+    mocks.snapshot = { ...GOALS_SNAPSHOT, sport: 'kabaddi', scorecardKind: 'kabaddi', pointsA: 1, pointsB: 0, kabaddi: k };
+    mocks.meta = { ...META, sport: 'kabaddi' };
+    renderAt();
+    expect(screen.getByRole('heading', { name: "This match can't be displayed" })).toBeInTheDocument();
+  });
 });
 
 describe('MonoWatchMatch', () => {

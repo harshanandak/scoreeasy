@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createKabaddiMatch } from './kabaddiQuickMatch';
-import { beginLiveRaid, landRaid, markDefender, reopenRaid } from './kabaddiBoardModel';
+import { beginLiveRaid, cancelLiveRaid, landRaid, markDefender, reopenRaid } from './kabaddiBoardModel';
 import { kabaddiSnapshot, kabaddiUpdates, kabaddiWatchMatch } from './kabaddiBroadcast';
 import { liveNow, raidStory } from './kabaddiLiveModel';
 import { resolveKabaddiRules } from './kabaddiRules';
@@ -8,6 +8,15 @@ import { resolveKabaddiRules } from './kabaddiRules';
 const create = () => createKabaddiMatch({ format: { kabaddiRules: resolveKabaddiRules('quick') }, names: ['Private name A', 'Private name B'], colours: [undefined, undefined] });
 
 describe('kabaddi public projection', () => {
+  it('publishes a state update when a saved raid is cancelled without a journal entry', () => {
+    const started = beginLiveRaid(create(), { atMs: 100 });
+    const cancelled = cancelLiveRaid(started);
+    expect(cancelled.state.events).toEqual(started.state.events);
+    expect(kabaddiUpdates(started, cancelled)).toEqual([{ type: 'kabaddi_state', data: { kind: 'state' } }]);
+    const refreshed = kabaddiWatchMatch(JSON.parse(JSON.stringify({ kabaddi: kabaddiSnapshot(cancelled) })), {}, []);
+    expect(refreshed.state.activeRaid).toBeNull();
+  });
+
   it('keeps names, journal, input keys, draft marks and identities out of hot snapshots', () => {
     const marked = markDefender(beginLiveRaid(create(), { atMs: 100 }), 'B1', 'touched');
     const json = JSON.stringify(kabaddiSnapshot(marked));
