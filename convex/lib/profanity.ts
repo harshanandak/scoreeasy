@@ -1,5 +1,5 @@
 // Server-side profanity/slur filter for PUBLIC strings (team names) — issue q7k,
-// design §7.1. Public-by-default means these strings are served to anyone, so the
+// design §7.1. Shared team names can be served to anonymous spectators, so the
 // check MUST run in the mutation (never client-only — the mutation is directly
 // callable). Pure, no deps, no network, O(name length).
 //

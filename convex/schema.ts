@@ -68,10 +68,11 @@ export default defineSchema({
   })
     .index("by_sport", ["sport"])
     .index("by_creator", ["createdBy"])
+    .index("by_creator_sport_name_lower", ["createdBy", "sport", "nameLower"])
     .index("by_sport_name_lower", ["sport", "nameLower"])
     .searchIndex("search_name", {
       searchField: "name",
-      filterFields: ["sport"],
+      filterFields: ["sport", "createdBy"],
     }),
 
   liveMatches: defineTable({

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 // heavy/native edges so we can unit-test the exported LazyFallback skeleton in
 // isolation (the lighter replacement for the full-splash route fallback).
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(),
   useQuery: () => [],
   useConvexConnectionState: () => ({

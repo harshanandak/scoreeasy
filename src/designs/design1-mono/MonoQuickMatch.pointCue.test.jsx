@@ -3,7 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { contrastRatio, paletteHex, paletteDarkHex } from './theme/palette';
 
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, saved: null }));
-vi.mock('convex/react', () => ({ useQuery: () => undefined, useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useQuery: () => undefined, useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),

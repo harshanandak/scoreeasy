@@ -29,7 +29,8 @@ const h = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: 'cricket', id: '1', matchId: 'm1' }),

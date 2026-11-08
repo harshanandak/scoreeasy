@@ -75,6 +75,13 @@ bunx convex env set CLERK_JWT_ISSUER_DOMAIN https://clerk.scoreeasy.app --prod
 The Clerk JWT template must be named exactly `convex`; the app requests that
 template through `ConvexProviderWithClerk`.
 
+## Production deployment
+
+The Cloudflare Worker production workflow deploys Convex and the Worker only
+from `master`. Manual dispatches from other refs fail. As an additional safeguard,
+the repository owner should set the `cloudflare-production` GitHub environment's
+deployment branches to `master` in repository settings.
+
 ## CI
 
 The repository includes `.github/workflows/ci.yml`, which runs:

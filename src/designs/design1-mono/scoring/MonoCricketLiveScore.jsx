@@ -19,7 +19,6 @@ import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunCo
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useScoringCompletion } from './scoringCompletionContext';
 
@@ -94,7 +93,7 @@ export default function MonoCricketLiveScore() {
   // Live broadcast (dkt/b0z/6fj/87d): mirror each ball/undo to the public watch
   // page with the engine-derived snapshot. Additive — localStorage stays
   // authoritative; gated on consent and no-ops when disabled.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;
@@ -693,26 +692,28 @@ export default function MonoCricketLiveScore() {
   // runs — this scorer stores a single per-team accumulator (no innings array)
   // and innings only goes 1->2, so scores.team1/team2.runs are always the totals.
   // currentUnit = current innings; periodLabel is the batting side's live line.
+  const batKey = `team${battingTeam}`;
+  const batScore = scores[batKey] || { runs: 0, balls: 0, wickets: 0 };
+  const batName = battingTeam === 1 ? team1Name : team2Name;
+  const shortName = (batName || '').slice(0, 20);
+  const oversStr = showOvers ? `${ballsToOvers(batScore.balls)} ov` : `${batScore.balls} balls`;
+  const liveSnapshot = {
+    pointsA: scores.team1.runs,
+    pointsB: scores.team2.runs,
+    setsA: 0,
+    setsB: 0,
+    setScores: [],
+    servingTeam: undefined,
+    currentUnit: innings,
+    periodLabel: `${shortName} ${batScore.runs}/${batScore.wickets} (${oversStr})`,
+  };
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
     broadcastIntentRef.current = null;
 
-    const batKey = `team${battingTeam}`;
-    const batScore = scores[batKey] || { runs: 0, balls: 0, wickets: 0 };
-    const batName = battingTeam === 1 ? team1Name : team2Name;
-    const shortName = (batName || '').slice(0, 20);
-    const oversStr = showOvers ? `${ballsToOvers(batScore.balls)} ov` : `${batScore.balls} balls`;
-    const snapshot = {
-      pointsA: scores.team1.runs,
-      pointsB: scores.team2.runs,
-      setsA: 0,
-      setsB: 0,
-      setScores: [],
-      servingTeam: undefined,
-      currentUnit: innings,
-      periodLabel: `${shortName} ${batScore.runs}/${batScore.wickets} (${oversStr})`,
-    };
+    const snapshot = liveSnapshot;
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
@@ -919,6 +920,7 @@ export default function MonoCricketLiveScore() {
         <LiveBroadcastBar
           broadcast={live}
           descriptor={{
+            snapshot: liveSnapshot,
             clientMatchId: liveClientMatchId,
             sport: sport || 'cricket',
             scorecardKind: 'cricket',

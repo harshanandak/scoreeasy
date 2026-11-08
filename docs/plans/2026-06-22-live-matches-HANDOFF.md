@@ -1,5 +1,7 @@
 # Live Matches — Orchestrator Handoff (resume here)
 
+> Visibility policy superseded on 2026-11-08: matches are private until the scorer explicitly shares each match. Public-by-default decisions below are historical; use the [current privacy audit](../security/match-visibility-audit.md) for the implemented policy.
+
 You are taking over the **live match streaming + mature scorecards** build with fresh context. Everything below is the ground truth; trust it over any stale memory.
 
 ## Progress — 2026-06-25 (resume HERE)

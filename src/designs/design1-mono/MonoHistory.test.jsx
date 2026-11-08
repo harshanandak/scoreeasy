@@ -9,7 +9,7 @@ import { shareText } from '../../mobile/share';
 
 vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
 // MonoQuickMatch (the Rematch target) reads Convex; History itself does not.
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => [] }));
+vi.mock('convex/react', () => ({ useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => [] }));
 
 /** A History row's accessible name: "<team1> <score> <team2>, <result>, <sport>, <day>. View details". */
 function row(team1, team2) {

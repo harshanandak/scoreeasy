@@ -22,7 +22,8 @@ const live = vi.hoisted(() => ({
 // sport. The resume query identifies the per-match snapshot being restored.
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: ctx.sport }),
@@ -35,7 +36,7 @@ vi.mock('../../hooks/useAuth', () => ({
 vi.mock('../../hooks/useLiveBroadcast', () => ({
   useLiveBroadcast: () => ({ ...live, isLive: false, token: null, error: null }),
 }));
-// Global consent already accepted (captured at sign-in) → liveEnabled starts true.
+// The disclosure was accepted before; each match still starts private.
 vi.mock('../../lib/live/liveSession', () => ({
   getConsent: () => 'accepted',
   setConsent: vi.fn(),
@@ -87,6 +88,20 @@ beforeEach(() => {
 });
 
 describe('MonoQuickMatch live broadcast wiring', () => {
+  it.each(['football', 'cricket', 'volleyball'])('shares the current private %s snapshot instead of zero', async (sport) => {
+    if (sport === 'football') { seedGoals(); ctx.draft.gScore1 = 2; }
+    else if (sport === 'cricket') { seedCricket(); ctx.draft.scores.team1.runs = 2; }
+    else { seedVolleyball(); ctx.draft.sets[0].score1 = 2; }
+    live.goLive.mockClear();
+    render(<MonoQuickMatch />);
+    expect(live.goLive).not.toHaveBeenCalled();
+    if (!screen.queryByRole('button', { name: /Go live/ })) {
+      fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Go live/ }));
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    expect(live.goLive.mock.calls[0][0].getSnapshot()).toMatchObject({ pointsA: 2, pointsB: 0 });
+  });
   it.each(['football', 'kabaddi', 'basketball', 'hockey'])('broadcasts the known %s match label on scoring and undo', (sport) => {
     seedGoals();
     ctx.sport = sport;
