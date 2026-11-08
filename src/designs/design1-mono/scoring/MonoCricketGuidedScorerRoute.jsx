@@ -7,7 +7,8 @@ import { loadSportTournaments, saveSportTournament } from '../../../utils/storag
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getLimitedOversResult } from '../../../utils/cricketCalculations';
-import { deriveInnings } from '../../../utils/cricketEngine';
+import { deriveInnings, undo as undoInnings } from '../../../utils/cricketEngine';
+import { guidedRulesForMatch, guidedMaxWickets } from '../../../utils/cricketRules';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import MonoCricketGuidedScorer from './MonoCricketGuidedScorer';
 import MonoCricketInningsSetup from './MonoCricketInningsSetup';
@@ -45,7 +46,8 @@ export function computeTarget(innings1Runs) {
 export function mirrorAggregate(innings, fmt) {
   const der = deriveInnings(innings, fmt || {});
   const players = fmt?.players ?? fmt?.playersPerSide ?? innings?.playersPerSide ?? 11;
-  const maxWickets = fmt?.lastManStands ? players : players - 1;
+  const maxWickets = fmt?.rulesVersion != null ? guidedMaxWickets(fmt, innings)
+    : fmt?.lastManStands ? players : players - 1;
   return {
     runs: der.runs,
     wickets: der.wkts,
@@ -132,6 +134,7 @@ export default function MonoCricketGuidedScorerRoute() {
     false, match?.draftState?.scoringStarted, matchIdentity, phase !== 'setup1',
   );
   const [pendingCompletion, setPendingCompletion] = useState(null);
+  const [undoError, setUndoError] = useState(false);
 
   const navigateToTournament = () => {
     const destination = `/${sport || 'cricket'}/tournament/${id}`;
@@ -163,9 +166,10 @@ export default function MonoCricketGuidedScorerRoute() {
   // the active-scoring setup screen never flashes for one frame before the bounce.
   if (isCompletedMatch(match)) return null;
 
-  const fmt = migrateCricketFormat(
+  const setupFormat = migrateCricketFormat(
     match.format || tournament?.knockoutConfig?.format || tournament?.format
   );
+  const fmt = guidedRulesForMatch(match, setupFormat);
   const battingOrder = battingOrderOf(match);
   const draft = match.draftState || {};
   const target = draft.target ?? null;
@@ -178,7 +182,7 @@ export default function MonoCricketGuidedScorerRoute() {
 
   const persist = (updater) =>
     saveSportTournament(storageKey, updateMatchInTournament(tournament, matchId, m => {
-      const next = updater(m);
+      const next = { ...updater(m), cricketRules: m.cricketRules ?? fmt };
       return next.draftState ? {
         ...next,
         draftState: { ...next.draftState, scoringStarted: recordScoringStarted(false) },
@@ -260,6 +264,21 @@ export default function MonoCricketGuidedScorerRoute() {
     setPhase('break');
   };
 
+  // The break is reversible until the next innings starts. Persist the undo and
+  // phase together so refresh cannot resurrect the innings-ending delivery.
+  const undoInningsEnd = () => {
+    if (!draft.innings1?.deliveries?.length) return;
+    const restored = undoInnings(draft.innings1);
+    const saved = persist(m => ({
+      ...m,
+      [slotForTeam(m, battingOrder[0])]: mirrorAggregate(restored, fmt),
+      draftState: { ...m.draftState, phase: 'innings1', guidedInnings: restored,
+        innings1: null, target: null, savedAt: now() },
+    }));
+    setUndoError(!saved);
+    if (saved) setPhase('innings1');
+  };
+
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
   const handleComplete2 = (payload) => {
     completion.complete(() => {
@@ -270,6 +289,7 @@ export default function MonoCricketGuidedScorerRoute() {
           ...m,
           status: 'completed',
           battingOrder,
+          cricketRules: m.cricketRules ?? fmt,
           [slotForTeam(m, battingOrder[1])]: agg,
           format: m.format,
         };
@@ -316,6 +336,10 @@ export default function MonoCricketGuidedScorerRoute() {
             <p className="mono-break-line">
               <b>{chasingName}</b> need <b className="mono-break-target">{target}</b> to win
             </p>
+            {draft.innings1?.deliveries?.length > 0 && (
+              <button type="button" className="se-ctl" onClick={undoInningsEnd}>Undo last ball</button>
+            )}
+            {undoError && <p role="alert">Undo could not be saved. Free storage, then retry.</p>}
           </div>
         </div>
         <MonoCricketInningsSetup

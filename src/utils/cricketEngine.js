@@ -284,6 +284,12 @@ function normalizeLoneEnds(sEnd, nEnd) {
   return [sEnd, nEnd];
 }
 
+function requireBattingBatter(innings, batter) {
+  if (batter == null || (batter !== innings.striker && batter !== innings.nonStriker)) {
+    throw new Error('Batter is not currently batting');
+  }
+}
+
 export function applyDelivery(innings, delivery, format) {
   const bpo = format.ballsPerOver || 6;
   const hr = format.houseRules || {};
@@ -311,6 +317,7 @@ export function applyDelivery(innings, delivery, format) {
 
   // ---- validation: house rules & free hit ----
   if (delivery.wicket) {
+    requireBattingBatter(innings, delivery.wicket.out);
     if (!ALL_WICKET_TYPES.has(delivery.wicket.type)) {
       throw new Error(`Unknown wicket type: ${delivery.wicket.type}`);
     }
@@ -455,6 +462,7 @@ export function changeStrike(innings) {
  * @returns {Innings}
  */
 export function applyRetire(innings, { batter, mode, incoming = null }, format) {
+  requireBattingBatter(innings, batter);
   const bpo = format.ballsPerOver || 6;
   const legalBefore = innings.deliveries.reduce((n, d) => n + (isLegalDelivery(d) ? 1 : 0), 0);
 
@@ -733,7 +741,7 @@ export function deriveInnings(innings, format) {
 export function deriveChase(innings, format) {
   const bpo = format.ballsPerOver || 6;
   const { runs, legalBalls } = deriveInnings(innings, format);
-  const totalBalls = (format.oversPerInnings || 0) * bpo;
+  const totalBalls = format.maxLegalBalls ?? (format.oversPerInnings || 0) * bpo;
   const target = innings.target || 0;
 
   const runsNeeded = Math.max(0, target - runs);
@@ -741,7 +749,7 @@ export function deriveChase(innings, format) {
 
   const CRR = legalBalls > 0 ? +((runs * bpo) / legalBalls).toFixed(2) : 0;
   const RRR = ballsLeft > 0 ? +((runsNeeded * bpo) / ballsLeft).toFixed(2) : 0;
-  const projection = Math.round(CRR * (format.oversPerInnings || 0));
+  const projection = Math.round(CRR * totalBalls / bpo);
 
   // Provisional heuristic — will be replaced. Chasing-team perspective.
   let value;

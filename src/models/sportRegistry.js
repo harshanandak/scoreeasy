@@ -39,7 +39,7 @@ export const SPORT_REGISTRY = {
       defaultSetFormat: 2, // Best of 5
       scoringModes: ['rally', 'side-out'],
       defaultScoringMode: 'rally',
-      serviceRotation: null, // No auto service tracking for volleyball
+      serviceRotation: null, // Legacy tournament drafts only; new matches use setsRules.js.
     },
     standingsColumns: ['P', 'W', 'L', 'SW', 'SL', 'PF', 'PA', '+/-', 'Pts'],
     features: [
@@ -69,7 +69,7 @@ export const SPORT_REGISTRY = {
         { label: 'Best of 3', sets: 3 },
       ],
       defaultSetFormat: 1, // Best of 3
-      serviceRotation: 1, // Service changes every point
+      serviceRotation: 1, // Legacy tournament drafts only; new matches use winner-serve (setsRules.js).
       setLabel: 'Game',
     },
     standingsColumns: ['P', 'W', 'L', 'GW', 'GL', 'PF', 'PA', '+/-', 'Pts'],
@@ -77,7 +77,7 @@ export const SPORT_REGISTRY = {
       'Rally point scoring',
       'Best of 3 games to 21',
       'Win by 2 (cap at 30)',
-      'Auto service rotation',
+      'Rally winner serves',
     ],
   },
 

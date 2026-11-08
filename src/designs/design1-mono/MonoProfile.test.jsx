@@ -44,6 +44,18 @@ function renderProfile(initialEntry = '/profile', authOverrides = {}) {
 }
 
 describe('MonoProfile recovery actions', () => {
+  it('never requests another scorer\'s history or stats', async () => {
+    const { useQuery } = await import('convex/react');
+    const { getFunctionName } = await import('convex/server');
+    useQuery.mockClear();
+    useQuery.mockImplementation((ref, args) => args === 'skip' ? undefined : { username: 'other', displayName: 'Other' });
+    renderProfile('/profile/other', { isAuthenticated: true, user: { username: 'owner' } });
+    expect(screen.getByText('Match history and stats are private to the scorer.')).toBeInTheDocument();
+    for (const [ref, args] of useQuery.mock.calls) {
+      if (getFunctionName(ref).startsWith('matches:')) expect(args).toBe('skip');
+    }
+    useQuery.mockImplementation(() => null);
+  });
   beforeEach(() => {
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {
       callback(0);

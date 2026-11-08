@@ -9,7 +9,7 @@ import { PLAY_HUB_PATH } from "../../utils/appPaths";
 
 export default function MonoUserSearch() {
   const navigate = useNavigate();
-  const { cloudAuthAvailable } = useAuth();
+  const { cloudAuthAvailable, isAuthenticated, isUserReady } = useAuth();
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(false);
 
@@ -18,7 +18,7 @@ export default function MonoUserSearch() {
   }, []);
 
   const debouncedQuery = useDebounce(query, 300);
-  const canSearchCloud = cloudAuthAvailable && debouncedQuery.length >= 2;
+  const canSearchCloud = cloudAuthAvailable && isAuthenticated && isUserReady && debouncedQuery.length >= 2;
 
   const results = useQuery(
     api.users.search,
@@ -92,7 +92,7 @@ export default function MonoUserSearch() {
         {debouncedQuery.length >= 2 && !canSearchCloud && (
           <div className="mb-4" style={{ border: "1px solid #eee", padding: 12, background: "#fff" }}>
             <p className="text-xs mb-3" style={{ color: "#888" }}>
-              Cloud search unavailable offline.
+              {isAuthenticated ? "Cloud search unavailable offline." : "Sign in to search cloud profiles."}
             </p>
             <button
               type="button"
@@ -105,7 +105,7 @@ export default function MonoUserSearch() {
           </div>
         )}
 
-        {results && results.length > 0 && (
+        {canSearchCloud && results && results.length > 0 && (
           <div className="space-y-2">
             {results.map((user) => (
               <Link
@@ -160,7 +160,7 @@ export default function MonoUserSearch() {
           </div>
         )}
 
-        {debouncedQuery.length >= 2 && results && results.length === 0 && (
+        {canSearchCloud && results && results.length === 0 && (
           <div className="mono-table-panel" style={{ padding: 16 }}>
             <p className="text-sm font-bold mb-2" style={{ color: "#111" }}>
               No players found for "{debouncedQuery}"

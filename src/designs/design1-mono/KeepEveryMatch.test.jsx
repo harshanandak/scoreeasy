@@ -9,7 +9,8 @@ import MonoPlayHub from './MonoPlayHub';
 import { loadInProgressMatches } from '../../utils/appEntry';
 import { loadQuickMatches } from '../../utils/storage';
 
-vi.mock('convex/react', () => ({ useQuery: () => undefined, useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useQuery: () => undefined, useMutation: () => vi.fn() }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
 vi.mock('./live/LiveNowStrip', () => ({ default: () => null }));
@@ -44,7 +45,7 @@ it.each(['cricket', 'volleyball'])('keeps a scoreless %s match when Finish expli
   expect(loadQuickMatches()).toEqual([expect.objectContaining({ sport, status: 'completed', score1: 0, score2: 0, winner: 'Tie', startedAt: expect.any(String) })]);
   expect(loadInProgressMatches()).toEqual([]);
   fireEvent.click(screen.getByRole('button', { name: 'Test History' }));
-  const row = sport === 'cricket' ? /Team A 0\/0–0\/0 Team B/ : /Team A 0–0 Team B/;
+  const row = sport === 'cricket' ? /Team A 0\/0 · Team B 0\/0/ : /Team A 0–0 Team B/;
   expect(await screen.findByRole('button', { name: row })).toBeVisible();
 });
 

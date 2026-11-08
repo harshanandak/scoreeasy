@@ -25,6 +25,7 @@ const convexState = vi.hoisted(() => ({ useQuery: () => [] }));
 const nativeBack = vi.hoisted(() => ({ install: vi.fn(() => () => {}) }));
 
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(() => Promise.resolve(null)),
   useQuery: (...args) => convexState.useQuery(...args),
   usePaginatedQuery: () => ({ results: [], status: 'Exhausted', loadMore: vi.fn() }),

@@ -18,6 +18,7 @@ let liveFeed = [];
 let realAccountFlow = false;
 
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(),
   useQuery: () => liveFeed,
   useConvexConnectionState: () => ({

@@ -38,6 +38,12 @@ function serveChange(events, team) {
 afterEach(() => cleanup());
 
 describe('VolleyballScorebug', () => {
+  it('shows an unknown server and the snapshot game label without a serve marker', () => {
+    render(<VolleyballScorebug state={{ currentSet: 2, unitLabel: 'Game', pointsA: 10, pointsB: 10, setsA: 1, setsB: 0, servingTeam: null }} teamA="Reds" teamB="Blues" />);
+    expect(screen.getByText('GAME 2')).toBeInTheDocument();
+    expect(screen.getByText('Server unknown')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Serving' })).toBeNull();
+  });
   it('renders both team names, the live set points, and the set label', () => {
     const events = interleave(15, 11); // open set 1, A 15-11
     render(<VolleyballScorebug events={events} config={VB} teamA="Reds" teamB="Blues" />);
