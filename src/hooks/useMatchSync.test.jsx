@@ -9,7 +9,7 @@ const options = { sport: 'football', isAuthenticated: true, user: { _id: 'owner'
 const match = { id: 'm1', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', date: '2026-11-01T12:00:00Z' };
 const key = 'se_pending_match:owner:quick%3Afootball%3Am1';
 beforeEach(() => { localStorage.clear(); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 it('keeps a durable pending record when a save fails', async () => {
   save.mockRejectedValue(new Error('Unavailable'));
@@ -57,4 +57,41 @@ it('does not retry another account pending records', async () => {
   await act(async () => { window.dispatchEvent(new Event('online')); });
   expect(save).toHaveBeenCalledTimes(1);
   expect(localStorage.getItem(key)).not.toBeNull();
+});
+
+it('backs off failed requests instead of retrying in a tight loop', async () => {
+  vi.useFakeTimers();
+  save.mockRejectedValue(new Error('Unavailable'));
+  const { result } = renderHook(() => useMatchSync(options));
+  await act(async () => { await result.current.syncMatch(match); });
+  await act(async () => { await vi.advanceTimersByTimeAsync(4999); });
+  expect(save).toHaveBeenCalledTimes(1);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(save).toHaveBeenCalledTimes(2);
+  await act(async () => { await vi.advanceTimersByTimeAsync(9999); });
+  expect(save).toHaveBeenCalledTimes(2);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(save).toHaveBeenCalledTimes(3);
+});
+
+it('retries on foreground and retains the local score after a failure', async () => {
+  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, sport: 'football', status: 'completed' }]));
+  save.mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue('server-id');
+  const { result } = renderHook(() => useMatchSync(options));
+  await act(async () => { await result.current.syncMatch(match); });
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({ score1: 2, score2: 1 });
+  await act(async () => { window.dispatchEvent(new Event('focus')); });
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].sync.status).toBe('synced');
+});
+
+it('queues during account bootstrap and sends when that same account is ready', async () => {
+  const initialProps = { ...options, user: null, clerkUser: { id: 'clerk-owner' } };
+  save.mockResolvedValue('server-id');
+  const { result, rerender } = renderHook((props) => useMatchSync(props), { initialProps });
+  await act(async () => { await result.current.syncMatch(match); });
+  expect(save).not.toHaveBeenCalled();
+  expect(localStorage.getItem('se_pending_match:clerk-owner:quick%3Afootball%3Am1')).not.toBeNull();
+  rerender({ ...initialProps, user: options.user });
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
 });

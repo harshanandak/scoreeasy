@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AuthContext } from '../../auth/AuthContext';
 import { useMatchSync } from '../../hooks/useMatchSync';
 import MonoHistory from './MonoHistory';
+import MatchSyncStatus from './components/MatchSyncStatus';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock('convex/react', () => ({ useMutation: () => save, useQuery: () => [] }));
@@ -14,7 +15,7 @@ function Harness() {
   const sync = useMatchSync({ ...auth, sport: 'football', team1Players: [], team2Players: [] });
   return <><button onClick={() => sync.syncMatch(match)}>Save cloud</button><MonoHistory /></>;
 }
-beforeEach(() => { localStorage.clear(); localStorage.setItem('se_quickmatches', JSON.stringify([match])); save.mockReset(); });
+beforeEach(() => { localStorage.clear(); localStorage.setItem('se_quickmatches', JSON.stringify([match])); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
 afterEach(cleanup);
 
 it('shows a failed-save badge in History and clears it after Retry succeeds', async () => {
@@ -38,4 +39,12 @@ it('shows Waiting for connection while offline and saves on reconnect', async ()
   await act(async () => { window.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(screen.queryByText('Waiting for connection')).not.toBeInTheDocument());
+});
+
+it('shows confirmed account status on Finish and hides every cloud status for guests', () => {
+  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, syncOwnerId: 'owner', sync: { status: 'synced' } }]));
+  const { rerender } = render(<AuthContext.Provider value={auth}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);
+  expect(screen.getByText('Saved to your account')).toBeInTheDocument();
+  rerender(<AuthContext.Provider value={{ isAuthenticated: false }}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
 });

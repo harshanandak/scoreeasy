@@ -7,6 +7,7 @@ import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
+import { useMatchSync } from '../../../hooks/useMatchSync';
 import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import {
@@ -314,7 +315,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const isQuickMatch = storageMode === 'quick';
   const quickDraftKey = isQuickMatch ? getTennisQuickDraftKey(matchId) : null;
   const lastClickRef = useRef(0);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, clerkUser } = useAuth();
+  const { syncMatch: syncQuickMatch } = useMatchSync({ sport, isAuthenticated, user, clerkUser });
   const saveMatchMutation = useMutation(api.matches.save);
   const navigateBack = () => navigate(isQuickMatch ? `/${sport}/quick` : `/${sport}/tournament/${id}`);
   const completeScoring = (path) => {
@@ -633,6 +635,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       return false;
     }
 
+    void syncQuickMatch(entry);
     clearData(quickDraftKey);
     setSaveWarning('');
     live.finalize({ resultType: entry.resultType });
