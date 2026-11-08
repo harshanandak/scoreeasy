@@ -55,12 +55,20 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const [token, setToken] = useState(null);
   const [isLive, setIsLive] = useState(false);
   const [isShared, setIsShared] = useState(false);
-  const [error, setError] = useState(null);
+  const [failure, setFailure] = useState(null);
+  const error = failure?.error ?? null;
+  const setError = useCallback((value) => {
+    setFailure(value ? { error: value, source: 'operation' } : null);
+  }, []);
 
   const flush = useCallback(async () => {
     const clientMatchId = clientMatchIdRef.current;
     const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM });
-    if (clientMatchId === clientMatchIdRef.current) setError(result?.error ?? null);
+    if (clientMatchId === clientMatchIdRef.current) {
+      setFailure(current => result?.error
+        ? { error: result.error, source: 'drain' }
+        : current?.source === 'drain' ? null : current);
+    }
     return result;
   }, [scorePointM, undoM, finalizeM]);
 
