@@ -117,7 +117,7 @@ export default function GenericGoalsTournament() {
         {/* Back */}
         <button
           onClick={() => navigate(`/${sport}/tournament`)}
-          className="flex items-center gap-1 text-sm mb-6"
+          className="flex items-center gap-1 text-sm mono-hit-back"
           style={{ color: '#888' }}
         >
           <span>←</span>

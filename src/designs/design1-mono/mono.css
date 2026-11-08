@@ -551,6 +551,19 @@ button.mono-stat-card {
 }
 
 /* --- Buttons --- */
+/* Breadcrumb and back buttons are 20 px of text. The 44 px hit area grows around the text and the
+   negative margins hand the extra height back, so nothing on screen moves. */
+.mono-hit {
+  min-height: 44px;
+  margin-block: -12px;
+}
+
+/* Same, for a back button that carried its own 24 px bottom margin (12 left after the 12 px lent). */
+.mono-hit-back {
+  min-height: 44px;
+  margin: -12px 0 12px;
+}
+
 .mono-btn {
   box-sizing: border-box;
   display: inline-flex;
