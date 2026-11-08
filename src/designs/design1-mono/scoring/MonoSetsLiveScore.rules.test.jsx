@@ -1,3 +1,5 @@
+import { freezeSetsFormat } from '../../../models/setsRules';
+import { getSportById } from '../../../models/sportRegistry';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -119,4 +121,30 @@ describe('shared sets rules regressions', () => {
     expect(broadcast.undo.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 0, pointsB: 0 });
     expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState.servingTeam).toBe(1);
   });
+
+  it('restores unknown service through undo and saves it for a refresh', async () => {
+    await renderScorer();
+    expect(screen.getByText('Server unknown', { selector: 'p' })).toBeTruthy();
+    await point(2);
+    expect(broadcast.point.mock.calls.at(-1)[0].snapshot.servingTeam).toBe('B');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^undo$/i })); });
+    expect(broadcast.undo.mock.calls.at(-1)[0].snapshot.servingTeam).toBeUndefined();
+    expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState.servingTeam).toBeNull();
+  });
+
+  it('a new-profile game boundary restores service, score and ends after refresh and undo', async () => {
+    const format = freezeSetsFormat(getSportById('badminton'), { type: 'best-of', sets: 3, points: 21, initialServer: 2 });
+    h.tournaments = [h.makeTournament({ format, draftState: { currentSet: 0, sets: [{ score1: 20, score2: 18, completed: false }], servingTeam: 1, scoringMode: 'rally', history: [] } })];
+    const view = render(<MonoSetsLiveScore />);
+    await act(async () => {});
+    await point(1);
+    const saved = structuredClone(h.saveSpy.mock.calls.at(-1)[1]);
+    expect(saved.matches[0].draftState).toMatchObject({ currentSet: 1, servingTeam: 1, sidesSwapped: true });
+    h.tournaments = [saved];
+    view.unmount();
+    await renderScorer();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^undo$/i })); });
+    expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ currentSet: 0, servingTeam: 1, sidesSwapped: false, sets: [{ score1: 20, score2: 18, completed: false }] });
+  });
+
 });

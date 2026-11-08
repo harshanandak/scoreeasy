@@ -1,5 +1,6 @@
 import { cloneSetsSnapshot } from './cloneSetsSnapshot';
 import { validateSingleSetScore } from './volleyballCalculations';
+import { isSetsGameComplete, setWinRule } from '../models/setsRules';
 
 export function applySetPoint(sets, currentSet, team) {
   const nextSets = cloneSetsSnapshot(sets);
@@ -19,6 +20,7 @@ export function applySetPoint(sets, currentSet, team) {
 }
 
 export function getSetWinRule({ format = {}, sportConfig = {}, currentSet = 0 } = {}) {
+  if (format.setsRules) return setWinRule(format.setsRules, currentSet);
   const config = sportConfig.config || {};
   const customization = format.customization || {};
   const isDecider = (format.sets || 1) > 1 && currentSet === format.sets - 1;
@@ -34,15 +36,7 @@ export function getSetWinRule({ format = {}, sportConfig = {}, currentSet = 0 } 
 }
 
 export function isSetComplete(set, rule) {
-  if (!set) return false;
-
-  const max = Math.max(set.score1, set.score2);
-  const min = Math.min(set.score1, set.score2);
-
-  if (rule.maxPoints && max >= rule.maxPoints && max > min) return true;
-  if (max < rule.target) return false;
-
-  return max - min >= rule.winBy;
+  return isSetsGameComplete(set, rule);
 }
 
 /** Next-point opportunities, in team order (independent of the board's side swap).
@@ -52,8 +46,8 @@ export function isSetComplete(set, rule) {
 export function getSetPointState({ format, sportConfig, currentSet = 0, score1, score2, setsWon1 = 0, setsWon2 = 0 }) {
   const bestOf = format.type === 'best-of';
   const setsToWin = bestOf ? Math.ceil(format.sets / 2) : 1;
-  const rule = bestOf ? getSetWinRule({ format, sportConfig, currentSet }) : null;
-  const complete = bestOf
+  const rule = bestOf || format.setsRules ? getSetWinRule({ format, sportConfig, currentSet }) : null;
+  const complete = rule
     ? (a, b) => isSetComplete({ score1: a, score2: b }, rule)
     : (a, b) => validateSingleSetScore(a, b, format.target, sportConfig?.config?.winBy ?? 2, sportConfig?.config?.maxPoints ?? null);
   const setPoint = [];

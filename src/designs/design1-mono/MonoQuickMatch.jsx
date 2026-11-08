@@ -31,6 +31,8 @@ import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetPointState, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
+import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, supportsSetsRules } from '../../models/setsRules';
+import SetsRulesControls, { ServerChoice } from './scoring/SetsRulesControls';
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
@@ -612,7 +614,7 @@ export default function MonoQuickMatch() {
     // Drafts from before team colours (or with a tampered value) fall back to red v blue.
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
-    if (draft.format) setFormat(draft.format);
+    if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
     if (typeof draft.currentSet === 'number') setCurrentSet(draft.currentSet);
@@ -627,7 +629,8 @@ export default function MonoQuickMatch() {
     if (typeof draft.battingTeam === 'number') setBattingTeam(draft.battingTeam);
     if (typeof draft.freeHit === 'boolean') setFreeHit(draft.freeHit);
     if (typeof draft.trialBallUsed === 'boolean') setTrialBallUsed(draft.trialBallUsed);
-    if (typeof draft.servingTeam === 'number') setServingTeam(draft.servingTeam);
+    if (Object.hasOwn(draft, 'servingTeam')) setServingTeam(draft.servingTeam);
+    if (typeof draft.sidesSwapped === 'boolean') setSidesSwapped(draft.sidesSwapped);
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
@@ -674,6 +677,7 @@ export default function MonoQuickMatch() {
       freeHit,
       trialBallUsed,
       servingTeam,
+      sidesSwapped,
       lastAction,
       quickMatchId: liveMatchIdRef.current,
       timerElapsed: timer.elapsed,
@@ -685,12 +689,12 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
   // effect's dependency array doesn't hit a temporal-dead-zone ReferenceError.
-  const tracksPointWinnerServe = sport === 'volleyball' || sport === 'badminton';
+  const tracksPointWinnerServe = format.setsRules?.version === 1 || sport === 'volleyball' || sport === 'badminton';
 
   // Quick goals boards track the whole match, not individual halves or quarters.
   const goalsPeriodLabel = format.mode === 'points'
@@ -740,9 +744,9 @@ export default function MonoQuickMatch() {
         setsA: completed.filter((s) => s.score1 > s.score2).length,
         setsB: completed.filter((s) => s.score2 > s.score1).length,
         setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
-        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+        servingTeam: tracksPointWinnerServe ? broadcastServer(servingTeam) : undefined,
         currentUnit: currentSet + 1,
-        periodLabel: `Set ${currentSet + 1}`,
+        periodLabel: `${format.setsRules?.unit || 'Set'} ${currentSet + 1}`,
       };
     } else {
       snapshot = {
@@ -751,7 +755,7 @@ export default function MonoQuickMatch() {
         setsA: 0,
         setsB: 0,
         setScores: [],
-        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+        servingTeam: tracksPointWinnerServe ? broadcastServer(servingTeam) : undefined,
         currentUnit: 1,
       };
     }
@@ -759,7 +763,7 @@ export default function MonoQuickMatch() {
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
-      liveRef.current.point({ team: intent.team, value: intent.value ?? 1, at: intent.at, snapshot });
+      liveRef.current.point({ team: intent.team, value: intent.kind === 'serve' ? 0 : intent.value ?? 1, ...(intent.kind === 'serve' ? { type: intent.type || 'serve_change' } : {}), at: intent.at, snapshot });
     }
   }, [scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name, goalsPeriodLabel]);
 
@@ -1077,7 +1081,9 @@ export default function MonoQuickMatch() {
     setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
     setInnings(1);
     setBattingTeam(1);
-    setServingTeam(1);
+    const frozenFormat = supportsSetsRules(sport) ? freezeSetsFormat(sportConfig, { ...format, setsRules: undefined }) : format;
+    setFormat(frozenFormat);
+    setServingTeam(frozenFormat.setsRules?.initialServer ?? (supportsSetsRules(sport) ? null : 1));
     setLastAction('');
     setSidesSwapped(false);
     setShowEndConfirm(false);
@@ -1338,7 +1344,7 @@ export default function MonoQuickMatch() {
     const resultScore = getBestOfResultScore(candidateSets);
     const t1SetsWon = resultScore.setsWon1;
     const t2SetsWon = resultScore.setsWon2;
-    const setsToWin = Math.ceil(format.sets / 2);
+    const setsToWin = format.setsRules?.setsToWin ?? Math.ceil(format.sets / 2);
 
     if (t1SetsWon >= setsToWin || t2SetsWon >= setsToWin) {
       const winner = t1SetsWon > t2SetsWon ? team1Name : team2Name;
@@ -1367,20 +1373,50 @@ export default function MonoQuickMatch() {
 
   const applySetCompletionUpdate = (update) => {
     setSets(update.nextSets);
-    if (typeof update.nextActiveSetIndex === 'number') setCurrentSet(update.nextActiveSetIndex);
+    if (typeof update.nextActiveSetIndex === 'number') {
+      setCurrentSet(update.nextActiveSetIndex);
+      if (format.setsRules?.version === 1) setServingTeam(firstServerForSet(format.setsRules, update.nextActiveSetIndex, update.nextSets));
+      if (format.setsRules?.endChangeBetweenSets) setSidesSwapped(prev => !prev);
+    }
     if (update.result) finalizeMatch(update.result);
+  };
+
+  const updateSetsServe = (score, winner, candidateSets = sets, index = currentSet) => {
+    const rules = format.setsRules;
+    if (!rules) return;
+    setServingTeam(serveAfterPoint(rules, { score, currentSet: index, sets: candidateSets, servingTeam, winner }));
+    const before = format.type === 'best-of' ? sets[index] : { score1: vScore1, score2: vScore2 };
+    if (before && endChangeDue(rules, index, score) !== endChangeDue(rules, index, before)) setSidesSwapped(prev => !prev);
+  };
+
+  const chooseSetServer = (team) => {
+    if (completion.locked) return;
+    if (team == null && servingTeam == null) return;
+    setVScoreHistory(prev => [...prev, { sets: cloneSetsSnapshot(sets), currentSet, vScore1, vScore2, servingTeam, sidesSwapped }].slice(-100));
+    const next = cloneSetsSnapshot(sets);
+    next[currentSet] = { ...next[currentSet], firstServer: team };
+    setSets(next);
+    const rules = format.setsRules;
+    const score = format.type === 'best-of' ? next[currentSet] : { score1: vScore1, score2: vScore2 };
+    setServingTeam(rules.serviceMode === 'alternating' ? serveAfterPoint(rules, { score, sets: next, currentSet, servingTeam: team }) : team);
+    setLastAction(team ? 'Server recorded' : 'Server unknown');
+    broadcastIntentRef.current = { kind: 'serve', type: team == null ? 'correction' : 'serve_change', team: broadcastServer(team ?? servingTeam), at: Date.now() };
   };
 
   // Volleyball: Add point
   const addPoint = (team) => {
     if (completion.locked) return;
+    if (format.setsRules?.scoringMode === 'side-out' && servingTeam == null) {
+      setSaveWarning('Choose the serving team before scoring a side-out rally.');
+      return;
+    }
     // Debounce rapid clicks
     const now = Date.now();
     if (now - lastClickRef.current < 150) return;
     lastClickRef.current = now;
     void scoreImpact();
 
-    if (tracksPointWinnerServe) setServingTeam(team);
+    if (!format.setsRules && tracksPointWinnerServe) setServingTeam(team);
     setLastAction(`${getTeamLabel(team)} +1 ${scoringUnit}`);
 
     broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', at: Date.now() };
@@ -1392,17 +1428,23 @@ export default function MonoQuickMatch() {
       sets: cloneSetsSnapshot(sets),
       currentSet,
       servingTeam,
+      sidesSwapped,
     }].slice(-100));
+
+    if (format.setsRules?.scoringMode === 'side-out' && servingTeam !== team) {
+      setServingTeam(team);
+      broadcastIntentRef.current = { kind: 'serve', team: broadcastServer(team), at: Date.now() };
+      return;
+    }
 
     // Best-of format (multi-set)
     if (format.type === 'best-of' && sportConfig?.config) {
       const newSets = applySetPoint(sets, currentSet, team);
+      updateSetsServe(newSets[currentSet], team, newSets);
       applySetCompletionUpdate(completeSetIfNeeded(newSets, currentSet));
     } else {
       // Single set format
       const target = format.target;
-      const winBy = sportConfig?.config?.winBy ?? 2;
-      const cap = sportConfig?.config?.maxPoints ?? null;
       const updater = (prev) => prev + 1;
       if (team === 1) {
         setVScore1(updater);
@@ -1412,8 +1454,12 @@ export default function MonoQuickMatch() {
 
       const newS1 = team === 1 ? vScore1 + 1 : vScore1;
       const newS2 = team === 2 ? vScore2 + 1 : vScore2;
+      updateSetsServe({ score1: newS1, score2: newS2 }, team);
 
-      if (validateSingleSetScore(newS1, newS2, target, winBy, cap)) {
+      const complete = format.setsRules
+        ? isSetComplete({ score1: newS1, score2: newS2 }, getSetWinRule({ format, sportConfig }))
+        : validateSingleSetScore(newS1, newS2, target, sportConfig?.config?.winBy ?? 2, sportConfig?.config?.maxPoints ?? null);
+      if (complete) {
         const winner = newS1 > newS2 ? team1Name : team2Name;
         const r = {
           id: Date.now(), sport,
@@ -1442,7 +1488,8 @@ export default function MonoQuickMatch() {
       setSets(last.sets);
       setCurrentSet(last.currentSet || 0);
     }
-    if (typeof last.servingTeam === 'number') setServingTeam(last.servingTeam);
+    if (Object.hasOwn(last, 'servingTeam')) setServingTeam(last.servingTeam);
+    if (typeof last.sidesSwapped === 'boolean') setSidesSwapped(last.sidesSwapped);
 
     if (typeof last.vScore1 === 'number' && typeof last.vScore2 === 'number') {
       setVScore1(last.vScore1);
@@ -1485,8 +1532,9 @@ export default function MonoQuickMatch() {
       sets: cloneSetsSnapshot(sets),
       currentSet,
       servingTeam,
+      sidesSwapped,
     }].slice(-100));
-    if (delta > 0 && tracksPointWinnerServe) setServingTeam(team);
+    if (!format.setsRules && delta > 0 && tracksPointWinnerServe) setServingTeam(team);
 
     if (format.type === 'best-of') {
       const nextSets = cloneSetsSnapshot(sets);
@@ -1507,15 +1555,14 @@ export default function MonoQuickMatch() {
       };
 
       if (shouldCorrectPreviousSet) nextSets.splice(targetSet + 1);
+      if (format.setsRules?.version === 1) {
+        updateSetsServe(nextSets[targetSet], delta > 0 ? team : null, nextSets, targetSet);
+        if (shouldCorrectPreviousSet && format.setsRules.endChangeBetweenSets) setSidesSwapped(prev => !prev);
+      }
 
       const update = completeSetIfNeeded(nextSets, targetSet, targetSet);
-      setSets(update.nextSets);
-      if (typeof update.nextActiveSetIndex === 'number') {
-        setCurrentSet(update.nextActiveSetIndex);
-      } else if (shouldCorrectPreviousSet) {
-        setCurrentSet(targetSet);
-      }
-      if (update.result) finalizeMatch(update.result);
+      applySetCompletionUpdate(update);
+      if (update.nextActiveSetIndex === null && shouldCorrectPreviousSet) setCurrentSet(targetSet);
       return;
     }
 
@@ -1523,8 +1570,12 @@ export default function MonoQuickMatch() {
     const newS2 = team === 2 ? Math.max(0, vScore2 + delta) : vScore2;
     setVScore1(newS1);
     setVScore2(newS2);
+    if (format.setsRules?.version === 1) updateSetsServe({ score1: newS1, score2: newS2 }, delta > 0 ? team : null);
 
-    if (delta > 0 && validateSingleSetScore(newS1, newS2, format.target, sportConfig?.config?.winBy ?? 2, sportConfig?.config?.maxPoints ?? null)) {
+    const singleComplete = format.setsRules
+      ? isSetComplete({ score1: newS1, score2: newS2 }, getSetWinRule({ format, sportConfig }))
+      : validateSingleSetScore(newS1, newS2, format.target, sportConfig?.config?.winBy ?? 2, sportConfig?.config?.maxPoints ?? null);
+    if (delta > 0 && singleComplete) {
       const winner = newS1 > newS2 ? team1Name : team2Name;
       const r = {
         id: Date.now(), sport,
@@ -1710,7 +1761,11 @@ export default function MonoQuickMatch() {
     setVScore2(0);
     setGScore1(0);
     setGScore2(0);
-    setServingTeam(1);
+    if (supportsSetsRules(sport)) {
+      const fresh = freezeSetsFormat(sportConfig, { ...format, setsRules: undefined });
+      setFormat(nextPhase === 'scoring' ? fresh : { ...fresh, setsRules: undefined });
+      setServingTeam(fresh.setsRules.initialServer);
+    } else setServingTeam(1);
     setLastAction('');
     setShowEndConfirm(false);
     setSidesSwapped(false);
@@ -1798,7 +1853,7 @@ export default function MonoQuickMatch() {
       chooseCricketFormat(choiceId);
       return;
     }
-    setFormat(prev => applyFormatChoice(sportConfig, choiceId, prev));
+    setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
   };
   const handleSetupBack = () => {
     if (rulesOpen) {
@@ -2006,11 +2061,13 @@ export default function MonoQuickMatch() {
               value={setsSingle ? `p-${format.target}` : `p-${format.points}`}
               onChange={(id) => {
                 const n = Number(id.slice(2));
-                setFormat(prev => (setsSingle ? { ...prev, target: n } : { ...prev, points: n }));
+                setFormat(prev => ({ ...prev, ...(setsSingle ? { target: n } : { points: n }), ...(prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
               }}
             />
           </div>
         )}
+
+        {supportsSetsRules(sport) && <SetsRulesControls sport={sport} format={format} onChange={setFormat} names={[team1Name, team2Name]} />}
 
         <p className="kit-setup-rules">{rulesLine}</p>
         <button type="button" className="se-ctl kit-rules-done" onClick={() => setRulesOpen(false)}>
@@ -2586,7 +2643,7 @@ export default function MonoQuickMatch() {
     if (teamColourOn) {
       // Direction E board (team colour). Same state and handlers as the classic screen below;
       // the board only renders them. Keys and band follow the team, not the side.
-      const setUnit = sportConfig?.config?.setLabel || 'Set';
+      const setUnit = format.setsRules?.unit || sportConfig?.config?.setLabel || 'Set';
       const { setPoint, matchPoint } = getSetPointState({
         format, sportConfig, currentSet,
         score1: sidesSwapped ? rightSetScore : leftSetScore,
@@ -2631,6 +2688,8 @@ export default function MonoQuickMatch() {
       const boardStatus = format.type === 'best-of'
         ? [`${setUnit} ${currentSet + 1}`, `${setUnit}s ${leftSetsWon}–${rightSetsWon}`]
         : [`First to ${format.target}`];
+      if (format.setsRules?.version === 1 && servingTeam == null) boardStatus.push('Server unknown');
+      if (format.setsRules?.version === 1 && endChangeDue(format.setsRules, currentSet, sets[currentSet])) boardStatus.push('Ends changed');
       const boardScore = boardHalves.map((h) => h.score).join('–');
       const lastPointScore = format.type === 'best-of'
         ? sets[lastEntry?.currentSet || 0]
@@ -2680,6 +2739,9 @@ export default function MonoQuickMatch() {
             onCorrect={(team) => adjustSetScore(team, -1)}
             onDiscard={requestDiscardQuickMatch}
             onFinish={requestEndMatch}
+            options={format.setsRules?.version === 1 && (
+              <ServerChoice label={format.setsRules.serviceMode === 'alternating' ? `First server this ${setUnit.toLowerCase()}` : 'Serving team'} value={format.setsRules.serviceMode === 'alternating' ? firstServerForSet(format.setsRules, currentSet, sets) : servingTeam} onChange={chooseSetServer} names={[team1Name, team2Name]} />
+            )}
             notice={<ScoringNotice message={saveWarning} />}
             live={cloudAuthAvailable ? (
               <LiveBroadcastBar

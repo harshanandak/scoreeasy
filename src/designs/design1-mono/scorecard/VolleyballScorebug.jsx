@@ -149,7 +149,7 @@ export default function VolleyballScorebug({ events, state: stateProp, config, t
   const state = stateProp ?? volleyballState(events ?? [], config);
   const nameA = sideName('A', teamA, teamB);
   const nameB = sideName('B', teamA, teamB);
-  const setLabel = `SET ${state.currentSet}`;
+  const setLabel = `${(state.unitLabel || 'Set').toUpperCase()} ${state.currentSet}`;
   const chipLabel = POINT_STATE_LABEL[state.pointState] ?? null;
 
   return (
@@ -184,6 +184,7 @@ export default function VolleyballScorebug({ events, state: stateProp, config, t
         }}
       >
         <p style={eyebrowStyle}>{setLabel}</p>
+        {!state.servingTeam && <span style={{ fontSize: '0.625rem' }}>Server unknown</span>}
         {chipLabel ? (
           <span
             style={{
@@ -218,6 +219,7 @@ VolleyballScorebug.propTypes = {
   // Pre-derived state (operator snapshot). When present, `events` is ignored.
   state: PropTypes.shape({
     currentSet: PropTypes.number,
+    unitLabel: PropTypes.oneOf(['Set', 'Game']),
     pointsA: PropTypes.number,
     pointsB: PropTypes.number,
     setsA: PropTypes.number,
