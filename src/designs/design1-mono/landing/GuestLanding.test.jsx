@@ -57,7 +57,7 @@ describe('GuestLanding', () => {
     renderLanding();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
-    expect(screen.getByText(/works offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/start as a guest in seconds/i)).toHaveTextContent(/works offline/i);
     expect(screen.getByText(/sync when you sign in/i)).toBeInTheDocument();
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
