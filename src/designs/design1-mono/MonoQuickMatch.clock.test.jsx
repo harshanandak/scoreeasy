@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Keep the real scorer, timer, board and persistence payload. Stub only external services.
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),

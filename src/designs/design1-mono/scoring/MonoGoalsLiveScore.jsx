@@ -20,7 +20,6 @@ import {
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useScoringCompletion } from './scoringCompletionContext';
@@ -77,8 +76,8 @@ export default function MonoGoalsLiveScore() {
 
   // Live broadcast (dkt/b0z/6fj): mirror each scoring action to the public watch
   // page. Purely additive — localStorage stays authoritative; a failed push never
-  // breaks scoring. Public-by-default but gated on the one-time consent.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  // breaks scoring. Sharing starts off and needs an explicit action for this match.
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveClientMatchId = `${sport}:${id}:${matchId}`;
 
@@ -155,6 +154,11 @@ export default function MonoGoalsLiveScore() {
   const effectiveFormat = isKnockoutRef.current && tournament?.knockoutConfig?.format
     ? tournament.knockoutConfig.format
     : tournament?.format;
+
+  const buildLiveSnapshot = (pointsA = score1, pointsB = score2) => ({
+    pointsA, pointsB, setsA: 0, setsB: 0, setScores: [], currentUnit: 1,
+    periodLabel: sportConfig?.name,
+  });
 
   // Start timer for timed mode
   useEffect(() => {
@@ -268,7 +272,7 @@ export default function MonoGoalsLiveScore() {
     }
 
     // Mirror to the live broadcast (no-op when not broadcasting). team1 -> A.
-    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now() });
+    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now(), snapshot: buildLiveSnapshot(newScore1, newScore2) });
 
     // Auto-end in points mode (formatMode already declared above)
     if ((formatMode || 'free') === 'points' && effectiveFormat.target) {
@@ -289,7 +293,7 @@ export default function MonoGoalsLiveScore() {
     setScore1(last.score1);
     setScore2(last.score2);
     setHistory(prev => prev.slice(0, -1));
-    live.undo({ at: Date.now() });
+    live.undo({ at: Date.now(), snapshot: buildLiveSnapshot(last.score1, last.score2) });
   };
 
   // Auto-save the in-progress match to the tournament on every score change, so
@@ -404,6 +408,7 @@ export default function MonoGoalsLiveScore() {
   const quickButtons = sportConfig.config.quickButtons;
 
   const liveDescriptor = {
+    snapshot: buildLiveSnapshot(),
     clientMatchId: liveClientMatchId,
     sport,
     scorecardKind: 'goals',

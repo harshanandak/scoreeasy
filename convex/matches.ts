@@ -1,31 +1,24 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { QueryCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 import { authedMutation, authedQuery } from "./lib/functions";
 
-async function getUserByUsername(ctx: { db: any }, username: string) {
-  return ctx.db
-    .query("users")
-    .withIndex("by_username", (q: any) => q.eq("username", username.toLowerCase().trim()))
-    .unique();
-}
-
-async function getMatchesForUserId(ctx: { db: any }, userId: Id<"users">) {
+async function getMatchesForUserId(ctx: QueryCtx, userId: Id<"users">) {
+  const matches = await ctx.db.query("matches")
+    .withIndex("by_operator", (q) => q.eq("operatedBy", userId)).collect();
+  const ownedIds = new Set(matches.map((match) => match._id));
   const playerEntries = await ctx.db
     .query("matchPlayers")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
 
-  const matchIds = [...new Set(playerEntries.map((entry: any) => entry.matchId))];
-  const matches = await Promise.all(matchIds.map((id) => ctx.db.get(id)));
-
   return {
-    playerEntries,
-    matches: matches.filter(Boolean),
+    playerEntries: playerEntries.filter((entry) => ownedIds.has(entry.matchId)),
+    matches,
   };
 }
 
-function buildStats(playerEntries: any[], matches: any[]) {
+function buildStats(playerEntries: Doc<"matchPlayers">[], matches: Doc<"matches">[]) {
   const playerMatches = playerEntries.filter((entry) => entry.role === "player");
   const operatorEntries = playerEntries.filter((entry) => entry.role === "operator");
   const matchMap = new Map(matches.map((match) => [match._id, match]));
@@ -59,7 +52,7 @@ function buildStats(playerEntries: any[], matches: any[]) {
   };
 }
 
-function sortMatchesByDate(matches: any[]) {
+function sortMatchesByDate(matches: Doc<"matches">[]) {
   return [...matches].sort((a, b) => b.date - a.date);
 }
 
@@ -109,8 +102,8 @@ export const save = authedMutation({
 
       const existing = await ctx.db
         .query("teams")
-        .withIndex("by_sport_name_lower", (q) =>
-          q.eq("sport", matchData.sport).eq("nameLower", nameLower)
+        .withIndex("by_creator_sport_name_lower", (q) =>
+          q.eq("createdBy", ctx.user._id).eq("sport", matchData.sport).eq("nameLower", nameLower)
         )
         .unique();
 
@@ -208,24 +201,22 @@ export const getRecent = authedQuery({
   },
 });
 
-export const getPublicUserStatsByUsername = query({
+export const getPublicUserStatsByUsername = authedQuery({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    const user = await getUserByUsername(ctx, username);
-    if (!user) return null;
+    if (username.toLowerCase().trim() !== ctx.user.username) throw new Error("Not authorized");
 
-    const { playerEntries, matches } = await getMatchesForUserId(ctx, user._id);
+    const { playerEntries, matches } = await getMatchesForUserId(ctx, ctx.user._id);
     return buildStats(playerEntries, matches);
   },
 });
 
-export const getPublicRecentByUsername = query({
+export const getPublicRecentByUsername = authedQuery({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
-    const user = await getUserByUsername(ctx, username);
-    if (!user) return [];
+    if (username.toLowerCase().trim() !== ctx.user.username) throw new Error("Not authorized");
 
-    const { matches } = await getMatchesForUserId(ctx, user._id);
+    const { matches } = await getMatchesForUserId(ctx, ctx.user._id);
     return sortMatchesByDate(matches).slice(0, 10);
   },
 });

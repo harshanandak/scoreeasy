@@ -19,7 +19,8 @@ const live = vi.hoisted(() => ({
   reset: vi.fn(),
 }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => ctx.queryResult }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => ctx.queryResult }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => nav,
   useParams: () => ({ sport: ctx.sport }),

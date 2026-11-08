@@ -189,6 +189,20 @@ describe('getLimitedOversResult', () => {
     expect(getLimitedOversResult(match)).toBe('Won by 6 wickets');
   });
 
+  it('uses the frozen guided wicket limit for a last-batter chase margin', () => {
+    const match = {
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'completed',
+      team1Score: { runs: 20, balls: 12, wickets: 2 },
+      team2Score: { runs: 21, balls: 10, wickets: 1 },
+      format: { overs: 2, players: 2 },
+      cricketRules: { overs: 2, players: 2, lastManStands: true },
+    };
+
+    expect(getLimitedOversResult(match)).toBe('Won by 1 wicket');
+  });
+
   it('labels a reversed-batting-order chase win by wickets', () => {
     const match = {
       team1Id: 'a',

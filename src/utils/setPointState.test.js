@@ -6,6 +6,12 @@ const none = { setPoint: [], matchPoint: [] };
 const opportunity = (team, match = false) => ({ setPoint: [team], matchPoint: match ? [team] : [] });
 
 describe('getSetPointState', () => {
+  it('offers a side-out match point only to the serving team', () => {
+    const input = { sportConfig: getSportById('volleyball'), format: { type: 'single', target: 25, scoringMode: 'side-out' }, score1: 24, score2: 23 };
+    expect(getSetPointState({ ...input, servingTeam: 2 })).toEqual(none);
+    expect(getSetPointState({ ...input, servingTeam: null })).toEqual(none);
+    expect(getSetPointState({ ...input, servingTeam: 1 })).toEqual(opportunity(1, true));
+  });
   it.each([
     ['volleyball', 24, 22, opportunity(1)],
     ['volleyball', 25, 24, opportunity(1)],

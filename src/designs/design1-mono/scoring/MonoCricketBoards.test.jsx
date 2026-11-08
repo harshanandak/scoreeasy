@@ -6,11 +6,14 @@ import { deriveTeamColours } from '../../../lib/teamColour';
 import Limited from './MonoCricketLiveScore';
 import Test from './MonoCricketTestLiveScore';
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+const sharing = vi.hoisted(() => ({ descriptor: null }));
+
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, point: vi.fn(), undo: vi.fn(), finalize: vi.fn() }) }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'declined' }));
-vi.mock('../live/LiveBroadcastBar', () => ({ default: () => null }));
+vi.mock('../live/LiveBroadcastBar', () => ({ default: ({ descriptor }) => { sharing.descriptor = descriptor; return null; } }));
 
 function mount(test = false, amend = () => {}) {
   const data = cricketFinishSeed(test ? 'test-tournament' : 'tournament');
@@ -35,6 +38,13 @@ function mount(test = false, amend = () => {}) {
 beforeEach(() => { localStorage.clear(); });
 
 describe('aggregate cricket boards', () => {
+  it.each([false, true])('shares the private cricket accumulators before any live event (Test=%s)', async (test) => {
+    mount(test);
+    await screen.findByText(test ? '3rd Innings' : 'Beta batting');
+    expect(sharing.descriptor.snapshot).toMatchObject(test
+      ? { pointsA: 220, pointsB: 150, currentUnit: 3 }
+      : { pointsA: 164, pointsB: 80, currentUnit: 2 });
+  });
   it('keeps tournament controls lean and colours the batting side from saved identity', async () => {
     const { container } = mount();
     await screen.findByText('Beta batting');

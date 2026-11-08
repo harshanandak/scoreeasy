@@ -19,6 +19,7 @@ const nativeBackButtonMock = vi.hoisted(() => ({
 // Convex surface the sibling app-shell tests use instead of letting it crash
 // into the ErrorBoundary.
 vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }),
   useMutation: () => vi.fn(),
   useQuery: () => [],
   useConvexConnectionState: () => ({

@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const ctx = vi.hoisted(() => ({ sport: 'volleyball' }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: ctx.sport }),
   useLocation: () => ({ pathname: `/${ctx.sport}/quick`, search: '' }),

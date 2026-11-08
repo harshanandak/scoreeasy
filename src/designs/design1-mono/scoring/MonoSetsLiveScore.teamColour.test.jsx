@@ -10,7 +10,8 @@ const h = vi.hoisted(() => ({
   bar: null,
 }));
 vi.mock('react-router-dom', () => ({ useParams: () => ({ sport: h.sport, id: '1', matchId: 'm1' }), useNavigate: () => h.navigate }));
-vi.mock('convex/react', () => ({ useMutation: () => h.save }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => h.save }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => h.live }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));
@@ -40,6 +41,15 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.clearAllTimers(); vi.useRealTimers(); });
 
 describe('tournament team-colour presentation', () => {
+  it('shares the current private set score and keeps the next point absolute', () => {
+    seed({ sets: [set(2, 0)] });
+    render(<MonoSetsLiveScore />);
+    expect(h.bar.enabled).toBe(false);
+    expect(h.bar.descriptor.snapshot).toMatchObject({ pointsA: 2, pointsB: 0, currentUnit: 1 });
+    tap();
+    expect(h.bar.descriptor.snapshot).toMatchObject({ pointsA: 3, pointsB: 0 });
+    expect(h.live.point.mock.calls.at(-1)[0].snapshot).toEqual(h.bar.descriptor.snapshot);
+  });
   it('opts only volleyball tournaments in independently of quick matches', () => {
     expect(isTeamColourTournamentSport('volleyball')).toBe(true);
     for (const sport of ['badminton', 'tabletennis', 'tennis', '__proto__', 'unknown']) expect(isTeamColourTournamentSport(sport)).toBe(false);

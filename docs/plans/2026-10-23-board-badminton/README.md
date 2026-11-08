@@ -1,5 +1,7 @@
 # Board G4: badminton scoring screen
 
+2026-11-08 rules update: new matches now use the [shared BWF 2025 snapshot](../../sets-rules.md) for quick and tournament scoring, including cap-before-margin, rally-winner service and explicit unknown service. Saved legacy matches retain their compatibility behavior. The images below describe the earlier board rollout and do not validate the new controls.
+
 Decisions needed: none.
 
 Badminton now opts into the shipped team-colour sets board through its own registry entry. The board, completed-game history and Finish confirmation use **Game / Games** from `config.setLabel`. The existing shuttlecock mark and Serving tag follow the rally winner. Setup colours flow through the existing colour, draft and result paths.

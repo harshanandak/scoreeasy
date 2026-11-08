@@ -37,19 +37,20 @@ const h = vi.hoisted(() => ({
     id: 1,
     teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
     // effectiveFormat reads the TOURNAMENT-level format for non-knockout matches.
-    format: format || { type: 'best-of', sets: 3, points: 25 },
+    format: format || { type: 'best-of', sets: 3, points: 25, initialServer: 1 },
     matches: [{
       id: 'm1',
       team1Id: 1,
       team2Id: 2,
-      format: format || { type: 'best-of', sets: 3, points: 25, scoringModes: ['rally', 'side-out'] },
+      format: format || { type: 'best-of', sets: 3, points: 25, initialServer: 1, scoringModes: ['rally', 'side-out'] },
       ...overrides,
     }],
     knockoutMatches: [],
   }),
 }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => h.params,
@@ -224,12 +225,13 @@ describe('MonoSetsLiveScore — issue #108', () => {
     await wait(160); // clear the 150ms rapid-click guard
   }
 
-  it('table tennis (uncapped) switches serve every 2 points pre-deuce, then every point at deuce', async () => {
+  it('legacy table tennis (uncapped) keeps every-2 and deuce service on resume', async () => {
     h.params = { sport: 'tabletennis', id: '1', matchId: 'm1' };
     h.tournaments = [h.makeTournament({
       // points: 3 → deuce at 2-2 (target-1 each), reachable in a few taps; win-by-2
       // keeps 3-2 / 3-3 from completing the set so deuce stays live to assert on.
       format: { type: 'best-of', sets: 5, points: 3 },
+      draftState: { sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0, history: [], servingTeam: 1, scoringMode: 'rally' },
     })];
     render(<MonoSetsLiveScore />);
     await screen.findByText(/points to win/);
@@ -255,13 +257,14 @@ describe('MonoSetsLiveScore — issue #108', () => {
     expect(servingTeamFromDom()).toBe('A');
   });
 
-  it('badminton (capped, rotation=1) switches serve every point even at deuce-score — deuce branch never fires', async () => {
+  it('legacy badminton retains its every-point service on resume', async () => {
     h.params = { sport: 'badminton', id: '1', matchId: 'm1' };
     h.tournaments = [h.makeTournament({
       // points: 3 so we reach the would-be deuce score (2-2) fast. badminton is
       // capped (maxPoints=30) AND serviceRotation=1, so the deuce special-case must
       // NEVER engage: serve rotates on every single point, deuce-score included.
       format: { type: 'best-of', sets: 3, points: 3 },
+      draftState: { sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0, history: [], servingTeam: 1, scoringMode: 'rally' },
     })];
     render(<MonoSetsLiveScore />);
     await screen.findByText(/points to win/);

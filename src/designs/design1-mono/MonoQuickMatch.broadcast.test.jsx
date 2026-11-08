@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { saveQuickMatch, saveData } from '../../utils/storage';
+import { freezeSetsFormat } from '../../models/setsRules';
+import { getSportById } from '../../models/sportRegistry';
 
 // Quick-match live-broadcast wiring (dkt/b0z): scoring a quick match must mirror
 // each point to the public watch page via useLiveBroadcast, with an engine-derived
@@ -22,7 +24,8 @@ const live = vi.hoisted(() => ({
 // sport. The resume query identifies the per-match snapshot being restored.
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: ctx.sport }),
@@ -35,7 +38,7 @@ vi.mock('../../hooks/useAuth', () => ({
 vi.mock('../../hooks/useLiveBroadcast', () => ({
   useLiveBroadcast: () => ({ ...live, isLive: false, token: null, error: null }),
 }));
-// Global consent already accepted (captured at sign-in) → liveEnabled starts true.
+// The disclosure was accepted before; each match still starts private.
 vi.mock('../../lib/live/liveSession', () => ({
   getConsent: () => 'accepted',
   setConsent: vi.fn(),
@@ -87,6 +90,29 @@ beforeEach(() => {
 });
 
 describe('MonoQuickMatch live broadcast wiring', () => {
+  it.each(['badminton', 'tabletennis'])('single-game %s snapshots keep Game 1 on scoring and undo', (sport) => {
+    ctx.sport = sport;
+    ctx.draft = { ...base, sport, quickMatchId: 3003, format: freezeSetsFormat(getSportById(sport), { type: 'single', sets: 1, target: 11 }), vScore1: 0, vScore2: 0, servingTeam: null };
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add point for Reds' }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot.periodLabel).toBe('Game 1');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(live.undo.mock.calls.at(-1)[0].snapshot.periodLabel).toBe('Game 1');
+  });
+  it.each(['football', 'cricket', 'volleyball'])('shares the current private %s snapshot instead of zero', async (sport) => {
+    if (sport === 'football') { seedGoals(); ctx.draft.gScore1 = 2; }
+    else if (sport === 'cricket') { seedCricket(); ctx.draft.scores.team1.runs = 2; }
+    else { seedVolleyball(); ctx.draft.sets[0].score1 = 2; }
+    live.goLive.mockClear();
+    render(<MonoQuickMatch />);
+    expect(live.goLive).not.toHaveBeenCalled();
+    if (!screen.queryByRole('button', { name: /Go live/ })) {
+      fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    }
+    fireEvent.click(screen.getByRole('button', { name: /Go live/ }));
+    await waitFor(() => expect(live.goLive).toHaveBeenCalled());
+    expect(live.goLive.mock.calls[0][0].getSnapshot()).toMatchObject({ pointsA: 2, pointsB: 0 });
+  });
   it.each(['football', 'kabaddi', 'basketball', 'hockey'])('broadcasts the known %s match label on scoring and undo', (sport) => {
     seedGoals();
     ctx.sport = sport;

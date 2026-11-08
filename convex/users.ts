@@ -166,7 +166,7 @@ export const claimUsername = authedMutation({
   },
 });
 
-export const checkUsername = query({
+export const checkUsername = authedQuery({
   args: { username: v.string() },
   handler: async (ctx, { username }) => {
     const normalized = normalizeUsernameValue(username);
@@ -181,7 +181,7 @@ export const checkUsername = query({
   },
 });
 
-export const search = query({
+export const search = authedQuery({
   args: { prefix: v.string() },
   handler: async (ctx, { prefix }) => {
     if (prefix.length < 2) return [];
