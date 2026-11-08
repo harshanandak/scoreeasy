@@ -1,0 +1,422 @@
+[
+  {
+    "scene": "setup-quick",
+    "variant": "390-light",
+    "file": "setup-quick-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "setup-standard",
+    "variant": "390-light",
+    "file": "setup-standard-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-between",
+    "variant": "390-light",
+    "file": "scorer-between-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-live",
+    "variant": "390-light",
+    "file": "scorer-live-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-result",
+    "variant": "390-light",
+    "file": "scorer-result-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-readback",
+    "variant": "390-light",
+    "file": "scorer-readback-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-super",
+    "variant": "390-light",
+    "file": "scorer-super-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-allout",
+    "variant": "390-light",
+    "file": "scorer-allout-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-quick",
+    "variant": "390-light",
+    "file": "scorer-quick-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-live",
+    "variant": "390-light",
+    "file": "viewer-live-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-raids",
+    "variant": "390-light",
+    "file": "viewer-raids-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-stats",
+    "variant": "390-light",
+    "file": "viewer-stats-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-fulltime",
+    "variant": "390-light",
+    "file": "viewer-fulltime-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-backsafe",
+    "variant": "390-light",
+    "file": "viewer-backsafe-390-light.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "setup-quick",
+    "variant": "360-light",
+    "file": "setup-quick-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "setup-standard",
+    "variant": "360-light",
+    "file": "setup-standard-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-between",
+    "variant": "360-light",
+    "file": "scorer-between-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-live",
+    "variant": "360-light",
+    "file": "scorer-live-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-result",
+    "variant": "360-light",
+    "file": "scorer-result-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-readback",
+    "variant": "360-light",
+    "file": "scorer-readback-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-super",
+    "variant": "360-light",
+    "file": "scorer-super-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-allout",
+    "variant": "360-light",
+    "file": "scorer-allout-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-quick",
+    "variant": "360-light",
+    "file": "scorer-quick-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-live",
+    "variant": "360-light",
+    "file": "viewer-live-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-raids",
+    "variant": "360-light",
+    "file": "viewer-raids-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-stats",
+    "variant": "360-light",
+    "file": "viewer-stats-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-fulltime",
+    "variant": "360-light",
+    "file": "viewer-fulltime-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-backsafe",
+    "variant": "360-light",
+    "file": "viewer-backsafe-360-light.png",
+    "viewport": [
+      360,
+      640
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "setup-quick",
+    "variant": "390-dark",
+    "file": "setup-quick-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "setup-standard",
+    "variant": "390-dark",
+    "file": "setup-standard-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-between",
+    "variant": "390-dark",
+    "file": "scorer-between-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-live",
+    "variant": "390-dark",
+    "file": "scorer-live-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-result",
+    "variant": "390-dark",
+    "file": "scorer-result-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-readback",
+    "variant": "390-dark",
+    "file": "scorer-readback-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-super",
+    "variant": "390-dark",
+    "file": "scorer-super-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-allout",
+    "variant": "390-dark",
+    "file": "scorer-allout-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "scorer-quick",
+    "variant": "390-dark",
+    "file": "scorer-quick-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-live",
+    "variant": "390-dark",
+    "file": "viewer-live-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-raids",
+    "variant": "390-dark",
+    "file": "viewer-raids-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-stats",
+    "variant": "390-dark",
+    "file": "viewer-stats-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-fulltime",
+    "variant": "390-dark",
+    "file": "viewer-fulltime-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  },
+  {
+    "scene": "viewer-backsafe",
+    "variant": "390-dark",
+    "file": "viewer-backsafe-390-dark.png",
+    "viewport": [
+      390,
+      844
+    ],
+    "devicePixelRatio": 2
+  }
+]

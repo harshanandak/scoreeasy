@@ -52,3 +52,9 @@ export function persistKabaddiDraft({ key, previous, match, save, nowIso }) {
   const totals = matchTotals(match);
   return save(key, { ...previous, kabaddi: match, gScore1: totals[0], gScore2: totals[1], updatedAt: nowIso });
 }
+
+export const boardPhase = state => state.phase === 'paused' ? state.resumePhase : state.phase;
+export function raidLog(state) {
+  const undone = new Set(state.events.filter(e => e.type === 'undo').map(e => e.targetId));
+  return state.events.filter(e => e.type === 'raid' && !undone.has(e.id)).reverse();
+}

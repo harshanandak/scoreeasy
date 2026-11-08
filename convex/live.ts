@@ -1,7 +1,8 @@
-import { periodClockValidator, type PeriodClock } from "./lib/periodClock";
-import { v, ConvexError } from "convex/values";
+import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot, validateKabaddiRaid, validateKabaddiUpdate } from './lib/kabaddiValidators';
+import { v, ConvexError, Infer } from "convex/values";
+import { periodClockValidator } from "./lib/periodClock";
 import { paginationOptsValidator } from "convex/server";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { authedMutation, authedQuery } from "./lib/functions";
 import { containsProfanity } from "./lib/profanity";
@@ -62,21 +63,15 @@ const snapshotArgValidator = v.object({
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
+  kabaddi: v.optional(kabaddiSnapshotValidator),
   periodClock: v.optional(periodClockValidator),
 });
 
 // The match-doc fields a snapshot patches (kept in one place so scorePoint and
 // undo stay in lockstep). servingTeam/periodLabel may be undefined → Convex
 // patch clears them, which is correct for sports without serving/periods.
-function snapshotPatch(snap: {
-  setsA: number;
-  setsB: number;
-  setScores: { a: number; b: number }[];
-  servingTeam?: "A" | "B";
-  currentUnit: number;
-  periodLabel?: string;
-  periodClock?: PeriodClock;
-}) {
+function snapshotPatch(snap: Infer<typeof snapshotArgValidator>) {
+  if (snap.kabaddi) validateKabaddiSnapshot(snap.kabaddi, [snap.pointsA, snap.pointsB]);
   return {
     setsA: snap.setsA,
     setsB: snap.setsB,
@@ -84,6 +79,7 @@ function snapshotPatch(snap: {
     servingTeam: snap.servingTeam,
     currentUnit: snap.currentUnit,
     periodLabel: snap.periodLabel,
+    ...(snap.kabaddi ? { kabaddi: snap.kabaddi } : {}),
     periodClock: snap.periodClock,
   };
 }
@@ -112,6 +108,37 @@ const REPORT_FLAG_THRESHOLD = 3; // distinct reporters that flag a match for rev
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
 // ---------------------------------------------------------------------------
 
+async function replaceKabaddiHistory(
+  ctx: MutationCtx & { user: Doc<"users"> }, match: Doc<"liveMatches">,
+  history: Infer<typeof kabaddiRaidValidator>[], snapshot: Infer<typeof kabaddiSnapshotValidator>,
+) {
+  if (match.ownerId !== ctx.user._id) throw new Error("Not authorized");
+  if (history.length > 1000 || new Set(history.map(raid => raid.id)).size !== history.length) throw new Error("Invalid kabaddi publication history");
+  for (const [index, raid] of history.entries()) {
+    validateKabaddiRaid(raid, snapshot);
+    if (raid.number > snapshot.raidNumber || raid.half > snapshot.half || (index > 0 && history[index - 1].number >= raid.number)) throw new Error("Invalid kabaddi publication history");
+  }
+  if ((history[history.length - 1]?.id ?? null) !== (snapshot.lastRaid?.id ?? null)) throw new Error("Kabaddi history does not match the saved snapshot");
+  const prior = await ctx.db.query("matchEvents").withIndex("by_match_type", q => q.eq("matchId", match._id).eq("type", "kabaddi_raid").eq("removed", undefined)).take(1001);
+  if (prior.length > 1000) throw new Error("Kabaddi publication history exceeds supported capacity");
+  const currentIds = new Set(history.map(raid => `kabaddi-raid:${raid.id}`));
+  // Keep dedupe records so another tab's queued append cannot restore a retired raid.
+  for (const event of prior) if (!currentIds.has(event.clientEventId)) await ctx.db.patch("matchEvents", event._id, { removed: true });
+  let seq = match.lastSeq;
+  for (const raid of history) {
+    const clientEventId = `kabaddi-raid:${raid.id}`;
+    const existing = await ctx.db.query("matchEvents").withIndex("by_match_client", q => q.eq("matchId", match._id).eq("clientEventId", clientEventId)).unique();
+    const fields = { type: "kabaddi_raid" as const, team: raid.team === 0 ? "A" as const : "B" as const, value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, kabaddi: { kind: "raid" as const, raid } };
+    if (existing) {
+      await ctx.db.patch("matchEvents", existing._id, { ...fields, removed: undefined });
+    } else {
+      seq += 1;
+      await ctx.db.insert("matchEvents", { matchId: match._id, seq, clientEventId, ...fields, at: Date.now() });
+    }
+  }
+  return seq;
+}
+
 export const create = authedMutation({
   args: {
     sport: v.string(),
@@ -123,8 +150,10 @@ export const create = authedMutation({
     ),
     isYouthMatch: v.optional(v.boolean()),
     clientMatchId: v.string(),
+    players: v.optional(v.array(v.object({ team: v.union(v.literal("A"), v.literal("B")), name: v.string(), jersey: v.optional(v.string()), slotId: v.optional(v.string()) }))),
   },
   handler: async (ctx, args) => {
+    if ((args.players?.length ?? 0) > 24) throw new Error("Match metadata exceeds supported capacity");
     // Idempotent create: reuse an existing live match for this owner+clientMatchId
     // (compound index, no table scan).
     const existing = await ctx.db
@@ -155,7 +184,7 @@ export const create = authedMutation({
     // scoring locally (and the idempotent outbox does not loop on a throw), while
     // resolveReadableMatch hides held matches from every public reader.
     const flagged =
-      containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name);
+      containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name) || (args.players ?? []).some(p => containsProfanity(p.name));
 
     const now = Date.now();
     const token = generateToken();
@@ -187,6 +216,7 @@ export const create = authedMutation({
       matchId,
       teamA: sanitizeTeamMeta(args.teamA),
       teamB: sanitizeTeamMeta(args.teamB),
+      ...(args.players ? { players: args.players } : {}),
       sport: args.sport,
     });
 
@@ -195,10 +225,10 @@ export const create = authedMutation({
 });
 
 async function loadOwnedMatch(
-  ctx: { db: any; user: { _id: Id<"users"> } },
+  ctx: MutationCtx & { user: { _id: Id<"users"> } },
   matchId: Id<"liveMatches">,
 ) {
-  const match = await ctx.db.get(matchId);
+  const match = await ctx.db.get("liveMatches", matchId);
   if (!match) throw new Error("Live match not found");
   if (match.ownerId !== ctx.user._id) {
     throw new Error("Not authorized");
@@ -218,16 +248,19 @@ export const scorePoint = authedMutation({
     // intentionally NOT accepted here. Defaults to "point" for older clients and
     // queued outbox items that predate this field.
     type: v.optional(
-      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction")),
+      v.union(v.literal("point"), v.literal("serve_change"), v.literal("correction"), v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state")),
     ),
     at: v.number(),
     playerId: v.optional(v.string()),
+    kabaddi: v.optional(kabaddiUpdateValidator),
     snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
 
     // IDEMPOTENT: a repeated clientEventId returns the prior event, no double-count.
+    if (args.kabaddi) validateKabaddiUpdate(args.kabaddi, args.snapshot?.kabaddi);
+
     const prior = await ctx.db
       .query("matchEvents")
       .withIndex("by_match_client", (q) =>
@@ -267,6 +300,7 @@ export const scorePoint = authedMutation({
       team: args.team,
       value: delta,
       playerId: args.playerId,
+      ...(args.kabaddi ? { kabaddi: args.kabaddi } : {}),
       runningA,
       runningB,
       setsA: snap ? snap.setsA : match.setsA,
@@ -393,14 +427,22 @@ export const setVisibility = authedMutation({
       v.literal("private"),
     ),
     snapshot: v.optional(snapshotArgValidator),
+    kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
     const publishing = args.visibility !== "private";
     if (publishing && !args.snapshot) throw new Error("Sharing requires the current score snapshot");
+    let lastSeq = match.lastSeq;
+    if (publishing && args.snapshot?.kabaddi) {
+      if (match.sport !== "kabaddi" || !args.kabaddiHistory) throw new Error("Sharing kabaddi requires the saved raid history");
+      validateKabaddiSnapshot(args.snapshot.kabaddi, [args.snapshot.pointsA, args.snapshot.pointsB]);
+      lastSeq = await replaceKabaddiHistory(ctx, match, args.kabaddiHistory, args.snapshot.kabaddi);
+    } else if (args.kabaddiHistory) throw new Error("Raid history requires a kabaddi snapshot");
     const now = Date.now();
     await ctx.db.patch(args.matchId, {
       visibility: args.visibility,
+      lastSeq,
       publishedAt: publishing ? now : undefined,
       ...(publishing && args.snapshot ? {
         ...snapshotPatch(args.snapshot),
@@ -477,12 +519,13 @@ export const finalize = authedMutation({
       return { matchId: existing._id, archived: false };
     }
 
-    // Cricket finalize does NOT archive into `matches` (scoreeasy-6tf). A cricket
+    // Cricket and kabaddi finalize do NOT archive into `matches` (scoreeasy-6tf). A cricket
     // result (Test draw, innings victory, D/L) cannot be derived from the live
     // snapshot's cumulative runs, so the sets/points winner below would be wrong.
     // The local cricket scorer writes the authoritative `matches` row under the
     // same clientMatchId; defer to it rather than racing it with a wrong winner.
-    if (match.scorecardKind === "cricket") {
+    // Kabaddi also needs its explicit decided/abandoned engine result.
+    if (match.scorecardKind === "cricket" || match.sport === "kabaddi") {
       return { matchId: null, archived: false };
     }
 
@@ -619,6 +662,7 @@ const publicSnapshotValidator = v.object({
   startedAt: v.number(),
   lastEventAt: v.number(),
   isYouthMatch: v.boolean(),
+  kabaddi: v.optional(kabaddiSnapshotValidator),
 });
 
 // Shared token gate (§4.4 / §7.1). Token possession authorizes reads of
@@ -667,6 +711,7 @@ export const getByToken = query({
       startedAt: match.startedAt,
       lastEventAt: match.lastEventAt,
       isYouthMatch: match.isYouthMatch,
+      ...(match.kabaddi ? { kabaddi: match.kabaddi } : {}),
     };
   },
 });
@@ -681,6 +726,7 @@ const playerMetaValidator = v.object({
   team: v.union(v.literal("A"), v.literal("B")),
   name: v.string(),
   jersey: v.optional(v.string()),
+  slotId: v.optional(v.string()),
 });
 const metaValidator = v.object({
   sport: v.string(),
@@ -709,6 +755,7 @@ export const getMeta = query({
           team: p.team,
           name: redactPlayerName(p.name),
           jersey: p.jersey,
+          ...(p.slotId ? { slotId: p.slotId } : {}),
         }))
       : meta.players;
 
@@ -814,6 +861,7 @@ const publicEventValidator = v.object({
     v.literal("undo"),
     v.literal("correction"),
     v.literal("note"),
+    v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state"),
   ),
   team: v.optional(v.union(v.literal("A"), v.literal("B"))),
   value: v.number(),
@@ -824,6 +872,7 @@ const publicEventValidator = v.object({
   servingAfter: v.optional(v.union(v.literal("A"), v.literal("B"))),
   at: v.number(),
   commentary: v.optional(v.string()),
+  kabaddi: v.optional(kabaddiUpdateValidator),
 });
 
 function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
@@ -839,6 +888,7 @@ function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
     servingAfter?: "A" | "B";
     at: number;
     commentary?: string;
+    kabaddi?: Infer<typeof kabaddiUpdateValidator>;
   } = {
     seq: e.seq,
     type: e.type,
@@ -850,6 +900,7 @@ function projectEvent(e: Doc<"matchEvents">, isYouthMatch: boolean) {
     setsB: e.setsB,
     servingAfter: e.servingAfter,
     at: e.at,
+    ...(e.kabaddi ? { kabaddi: e.kabaddi } : {}),
   };
   // Commentary is free-text; suppress it entirely for youth matches.
   if (!isYouthMatch && e.commentary !== undefined) {
@@ -880,7 +931,7 @@ export const listEvents = query({
     // analytical panels read the always-current snapshot, not this log.
     const result = await ctx.db
       .query("matchEvents")
-      .withIndex("by_match_seq", (q) => q.eq("matchId", match._id))
+      .withIndex("by_match_active_seq", (q) => q.eq("matchId", match._id).eq("removed", undefined))
       .order("desc")
       .paginate(paginationOpts);
 
@@ -905,8 +956,8 @@ export const eventsSince = query({
     // pull the entire log. The client advances sinceSeq to page the tail.
     const events = await ctx.db
       .query("matchEvents")
-      .withIndex("by_match_seq", (q) =>
-        q.eq("matchId", match._id).gt("seq", sinceSeq),
+      .withIndex("by_match_active_seq", (q) =>
+        q.eq("matchId", match._id).eq("removed", undefined).gt("seq", sinceSeq),
       )
       .order("asc")
       .take(200);

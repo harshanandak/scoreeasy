@@ -41,7 +41,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   useEffect(() => {
     if (isAuthenticated && enabled && consent === 'accepted' && descriptor?.clientMatchId && requestedMatchId === descriptor.clientMatchId && !startedRef.current) {
       startedRef.current = true;
-      void broadcast.goLive({ ...descriptor, getSnapshot: () => descriptorRef.current?.snapshot });
+      void broadcast.goLive({ ...descriptor, getSnapshot: () => descriptorRef.current?.snapshot, getKabaddiHistory: () => descriptorRef.current?.kabaddiHistory ?? [] });
     }
   }, [isAuthenticated, enabled, consent, descriptor, broadcast, retryNonce, requestedMatchId]);
 
