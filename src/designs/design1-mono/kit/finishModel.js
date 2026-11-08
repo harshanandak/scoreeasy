@@ -141,8 +141,9 @@ export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets
 
   const s1 = num(r.score1);
   const s2 = num(r.score2);
-  const team1 = { name: name1, score: String(s1), unit: null };
-  const team2 = { name: name2, score: String(s2), unit: null };
+  const scores = kind === 'cricket' ? cricketScorePair(r) : [String(s1), String(s2)];
+  const team1 = { name: name1, score: scores[0], unit: null };
+  const team2 = { name: name2, score: scores[1], unit: null };
   const chips = kind === 'sets' ? setChips(r.sets) : [];
   if (r.winner === 'Draw' || r.winner === 'Tie' || s1 === s2) {
     return finish({ outcome: 'draw', winnerSide: null, headline: drawHeadline(r.winner), detail: null, team1, team2, chips });

@@ -284,6 +284,12 @@ function normalizeLoneEnds(sEnd, nEnd) {
   return [sEnd, nEnd];
 }
 
+function requireBattingBatter(innings, batter) {
+  if (batter == null || (batter !== innings.striker && batter !== innings.nonStriker)) {
+    throw new Error('Batter is not currently batting');
+  }
+}
+
 export function applyDelivery(innings, delivery, format) {
   const bpo = format.ballsPerOver || 6;
   const hr = format.houseRules || {};
@@ -311,6 +317,7 @@ export function applyDelivery(innings, delivery, format) {
 
   // ---- validation: house rules & free hit ----
   if (delivery.wicket) {
+    requireBattingBatter(innings, delivery.wicket.out);
     if (!ALL_WICKET_TYPES.has(delivery.wicket.type)) {
       throw new Error(`Unknown wicket type: ${delivery.wicket.type}`);
     }
@@ -455,6 +462,7 @@ export function changeStrike(innings) {
  * @returns {Innings}
  */
 export function applyRetire(innings, { batter, mode, incoming = null }, format) {
+  requireBattingBatter(innings, batter);
   const bpo = format.ballsPerOver || 6;
   const legalBefore = innings.deliveries.reduce((n, d) => n + (isLegalDelivery(d) ? 1 : 0), 0);
 

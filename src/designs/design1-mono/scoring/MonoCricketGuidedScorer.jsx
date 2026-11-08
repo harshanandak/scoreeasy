@@ -266,7 +266,7 @@ export default function MonoCricketGuidedScorer({
 
   // Mankad: run out the non-striker before the ball; same apply-then-inject flow.
   const doMankad = () => {
-    if (completion.locked) return;
+    if (completion.locked || innings.nonStriker == null) return;
     setSheetOpen(false);
     const wicket = { type: 'mankad', out: innings.nonStriker, bowler: innings.bowler, incoming: null };
     let next;
@@ -681,7 +681,7 @@ export default function MonoCricketGuidedScorer({
               <>
                 <div className="menu-row">
                   <button type="button" className="pill" onClick={doDeadBall}>Dead ball</button>
-                  <button type="button" className="pill" onClick={doMankad}>Mankad</button>
+                  <button type="button" className="pill" onClick={doMankad} disabled={innings.nonStriker == null}>Mankad</button>
                   <button type="button" className="pill" onClick={() => doPenalty(5)}>Penalty +5</button>
                   <button type="button" className="pill" onClick={openBowlerPicker}>Change bowler</button>
                   <button
