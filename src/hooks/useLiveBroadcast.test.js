@@ -160,7 +160,10 @@ describe('durable live finalization', () => {
 
   it('keeps online finish ordered and clears the persisted intent after success', async () => {
     const hook = await shared();
-    await act(async () => { await hook.result.current.finalize({ resultType: 'decided', snapshot: terminal }); });
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      await hook.result.current.finalize({ resultType: 'decided', snapshot: terminal });
+    });
     expect(h.get('live:finalize')).toHaveBeenCalledTimes(1);
     expect(h.get('live:scorePoint')).toHaveBeenLastCalledWith(expect.objectContaining({ snapshot: terminal }));
     expect(h.get('live:scorePoint').mock.invocationCallOrder.at(-1)).toBeLessThan(h.get('live:finalize').mock.invocationCallOrder[0]);

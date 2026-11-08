@@ -55,6 +55,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const [token, setToken] = useState(null);
   const [isLive, setIsLive] = useState(false);
   const [isShared, setIsShared] = useState(false);
+  const [hasFinalizeIntent, setHasFinalizeIntent] = useState(false);
+  const [restoreVersion, setRestoreVersion] = useState(0);
   const [error, setError] = useState(null);
 
   // Replays ONE queued item through the matching mutation. Throws on failure so
@@ -107,16 +109,42 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     [scorePointM, undoM],
   );
 
-  // useLiveOutbox owns the in-flight guard + online/visible reconnect replay.
-  const { flush } = useLiveOutbox(sendFn, { enabled });
+  const finalizeDrained = useCallback(async () => {
+    const clientMatchId = clientMatchIdRef.current;
+    const session = loadSession(clientMatchId);
+    if (!session?.finalizeIntent || !session.matchId) return null;
+    let result = null;
+    try {
+      result = await finalizeM({ matchId: session.matchId, ...session.finalizeIntent });
+      if (clientMatchId === clientMatchIdRef.current) setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error(String(e)));
+      const code = e && typeof e === 'object' ? e.data?.code : undefined;
+      const message = e instanceof Error ? e.message : String(e);
+      // Keep transport failures; ownership/missing-match rejections cannot heal on reconnect.
+      if (!['not_authorized', 'match_not_found'].includes(code) && !/Not authorized|Live match not found/i.test(message)) {
+        return null;
+      }
+    }
+    const current = loadSession(clientMatchId);
+    if (current) {
+      delete current.finalizeIntent;
+      saveSession(clientMatchId, current);
+    }
+    if (clientMatchId === clientMatchIdRef.current) setHasFinalizeIntent(false);
+    return result;
+  }, [finalizeM]);
+
+  // Persisted finish requests still replay when a reloaded scorer starts disabled.
+  const { flush } = useLiveOutbox(sendFn, { enabled: enabled || hasFinalizeIntent, onDrained: finalizeDrained });
   useEffect(() => {
-    if (enabled && isShared) void flush();
-  }, [enabled, isShared, flush]);
+    if ((enabled && isShared) || loadSession(clientMatchIdRef.current)?.finalizeIntent) void flush();
+  }, [enabled, isShared, restoreVersion, flush]);
 
   const persistSeq = useCallback((seq) => {
     const cmid = clientMatchIdRef.current;
     if (!cmid) return;
-    saveSession(cmid, { matchId: matchIdRef.current, token: tokenRef.current, seq });
+    saveSession(cmid, { ...loadSession(cmid), matchId: matchIdRef.current, token: tokenRef.current, seq });
   }, []);
 
   const restore = useCallback(async ({ clientMatchId }) => {
@@ -127,13 +155,23 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setToken(null);
     setIsLive(false);
     setIsShared(false);
+    const pending = loadSession(clientMatchId);
+    setHasFinalizeIntent(Boolean(pending?.finalizeIntent));
+    setRestoreVersion(generation);
+    // Restore pending work before the network query, which can wait while offline.
+    if (pending?.finalizeIntent) {
+      matchIdRef.current = pending.matchId;
+      tokenRef.current = pending.token;
+      seqRef.current = pending.seq ?? 0;
+      setToken(pending.token ?? null);
+    }
     try {
       const session = await convex.query(api.live.getOwnedSession, { clientMatchId });
       if (generation !== generationRef.current) return null;
       const prior = loadSession(clientMatchId);
       clientMatchIdRef.current = clientMatchId;
-      matchIdRef.current = session?.matchId ?? null;
-      tokenRef.current = session?.token ?? null;
+      matchIdRef.current = session?.matchId ?? (prior?.finalizeIntent ? prior.matchId : null);
+      tokenRef.current = session?.token ?? (prior?.finalizeIntent ? prior.token : null);
       seqRef.current = Math.max(session?.lastSeq ?? 0, prior?.seq ?? 0);
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
@@ -239,31 +277,20 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
-    if (!enabled) return null;
+    const clientMatchId = clientMatchIdRef.current;
+    if (!enabled || !clientMatchId || !matchIdRef.current) return null;
     if (snapshot) void point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot });
-    // Drain DETERMINISTICALLY before archiving. flush() now AWAITS any in-flight
-    // point() drain (instead of no-op'ing), so finalize cannot race ahead of the
-    // last tap and make the backend archive a final score missing that point.
-    // Stop early on a network error: queued points replay on reconnect.
-    for (let i = 0; i < 10 && size() > 0; i += 1) {
-      const result = await flush();
-      if (result?.error) break;
-    }
-    // If the outbox STILL has undrained events (offline / network error broke the
-    // loop above), do NOT archive — finalizing now would persist a final score
-    // missing the queued tail. Leave the match live: the tail replays on
-    // reconnect and the match stales/auto-expires server-side until then. The
-    // local scorer's score stays authoritative regardless.
-    if (size() > 0) return null;
-    const matchId = matchIdRef.current;
-    if (!matchId) return null;
-    try {
-      return await finalizeM({ matchId, ...(resultType ? { resultType } : {}) });
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)));
-      return null;
-    }
-  }, [enabled, point, flush, finalizeM]);
+    saveSession(clientMatchId, {
+      ...loadSession(clientMatchId),
+      matchId: matchIdRef.current,
+      token: tokenRef.current,
+      seq: seqRef.current,
+      finalizeIntent: { ...(resultType ? { resultType } : {}) },
+    });
+    setHasFinalizeIntent(true);
+    const result = await flush();
+    return result?.finalized ?? null;
+  }, [enabled, point, flush]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {
@@ -303,6 +330,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setToken(null);
     setIsLive(false);
     setIsShared(false);
+    setHasFinalizeIntent(false);
     setError(null);
   }, []);
 

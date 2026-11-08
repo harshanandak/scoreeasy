@@ -23,7 +23,7 @@ export function sessionKey(clientMatchId) {
 /**
  * Load the persisted broadcast session for a local match, or null.
  * @param {string} clientMatchId
- * @returns {{ matchId?: string, token?: string, seq?: number }|null}
+ * @returns {{ matchId?: string, token?: string, seq?: number, finalizeIntent?: { resultType?: 'decided'|'abandoned' } }|null}
  */
 export function loadSession(clientMatchId) {
   if (!clientMatchId) return null;
@@ -34,7 +34,7 @@ export function loadSession(clientMatchId) {
 /**
  * Persist (replace) the broadcast session for a local match.
  * @param {string} clientMatchId
- * @param {{ matchId?: string|null, token?: string|null, seq?: number }} session
+ * @param {{ matchId?: string|null, token?: string|null, seq?: number, finalizeIntent?: { resultType?: 'decided'|'abandoned' } }} session
  * @returns {boolean} success
  */
 export function saveSession(clientMatchId, session) {
