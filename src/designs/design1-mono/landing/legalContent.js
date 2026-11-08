@@ -16,9 +16,9 @@ export const pages = {
         heading: 'The short version',
         items: [
           'You can score as a guest without an account.',
-          'We do not sell your data. There are no ads and no analytics tools in the app.',
+          'We do not sell your data. We do not use advertising or product-analytics tools.',
           'A match is private to you until you share it, one match at a time.',
-          'The app has no account deletion yet. To delete your account, email us.',
+          `To delete your Score Easy data from our database, email us at ${CONTACT_EMAIL}.`,
         ],
       },
       {
@@ -34,7 +34,7 @@ export const pages = {
           'Matches you score, drafts, history and a few settings are saved in your browser or app storage on your device. This is how scoring works without an account and without a signal.',
           'The same storage holds a queue of live score updates that are waiting to be sent, your choice about sharing live matches, and a random ID that is sent only if you report a shared match.',
           'When you sign in, Clerk also keeps a sign-in session on your device.',
-          'Guest matches stay on your device. This data stays until you delete it in the app or clear your browser or app data.',
+          'Guest matches stay on your device. Data on your device normally stays until you delete it or clear your browser or app data. App updates can remove data for retired sports, and browser or device storage limits can remove it sooner.',
         ],
       },
       {
@@ -44,14 +44,14 @@ export const pages = {
           'We then store these in our database, which is run by Convex:',
         ],
         items: [
-          'your email address, display name, profile picture link and join date',
-          'the username, role, favourite games and play style you choose when you set up your profile',
+          'your sign-in identifier, email address, display name, profile picture link and join date',
+          'the username, role, favourite games and play style you choose when you set up your profile, your first and last names and when you completed profile setup',
         ],
       },
       {
         heading: 'Matches saved to your account',
         paragraphs: [
-          'When you are signed in, finished matches are saved to your account. A saved match holds the sport, team names, scores, date, duration, format and match details such as player names you entered.',
+          'When you are signed in, the app tries to save finished match results to your account. Saving needs a connection and can fail. What is saved depends on the sport and can include duration, format and detailed scores. A saved match holds at least the sport, team names, scores and date.',
           'The team names you use are saved so the app can suggest them to you again. If you tag another user as a player, that link is saved with the match.',
           'Saved matches are private to you. Tagging someone does not let them or anyone else see the match.',
         ],
@@ -65,22 +65,25 @@ export const pages = {
           'A match you choose to share live. See the next section.',
           'Your profile card: your username, display name, profile picture and join date. Anyone who knows your username can open it without signing in.',
         ],
+        after: [
+          'Signed-in users can search usernames. Search results show your username, display name, profile picture and selected role.',
+        ],
       },
       {
         heading: 'Sharing a match live',
         paragraphs: [
           'Every new match starts private. A match is shared only when you tap Share live on that match.',
-          'When you share, anyone with the link can watch without signing in. They can see the score and status, team names and colours, player names and jersey numbers if you entered them, the scoring events with their times, and any notes you add. They cannot see your email, your username or your other matches.',
+          'When you share, anyone with the link can watch without signing in. They can see the sport, score and status, team names and colours, serve, set or period information, and the scoring events with their times. They cannot see your email, your username or your other matches.',
           'While a shared match is live, it can also appear in the Live list in the app, where anyone can see its team names and score.',
-          'Tap Stop sharing at any time and the link stops working. The link also stops working 24 hours after you finish the match.',
-          'Stopping or expiry does not delete the match. It stays in your account, private to you, until it is deleted.',
+          'Stop sharing needs a connection. Once it succeeds, the link no longer allows access. Shared matches expire 24 hours after our server receives the finished match; finishing offline can delay this.',
+          'Stopping or expiry does not delete the match. It stays in our database, private to you, until it is deleted.',
           'Anyone watching can report a shared match. We store the reason and a random ID from their device.',
         ],
       },
       {
         heading: 'Crash reports',
         paragraphs: [
-          'Score Easy can send crash reports to Sentry so we can find and fix bugs. A report can include the error, the page address, your browser or device type and basic performance timing. We do not add your name or email to it.',
+          'Score Easy can send crash reports to Sentry so we can find and fix bugs. A report can include the error, the page address, device and browser type, recent app actions (breadcrumbs) and basic timing. We do not add your name or email to them.',
         ],
       },
       {
@@ -93,23 +96,24 @@ export const pages = {
           'Convex, for the database and live score updates.',
           'Cloudflare, for hosting the app. Like any host, it handles the network requests needed to deliver the app, which include your IP address, and it may keep logs of them.',
           'Sentry, for crash reports.',
+          'Google Fonts, to load the fonts the app uses. Loading them sends requests to Google.',
         ],
         after: [
-          'These services may store data in other countries. The iOS and Android apps use the same services. They use your phone for sharing and vibration feedback, and collect nothing extra.',
+          'These services may store data in other countries. The iOS and Android apps use the same services. They use your phone for sharing and vibration feedback. The iOS and Android apps add no separate tracking tools.',
         ],
       },
       {
         heading: 'How long we keep data',
         paragraphs: [
           'We keep your account data and saved matches for as long as your account exists. We do not delete them automatically.',
-          'Data on your device stays there until you delete it or clear your browser or app data.',
+          'Data on your device normally stays until you delete it or clear your browser or app data. App updates can remove data for retired sports, and browser or device storage limits can remove it sooner.',
         ],
       },
       {
         heading: 'Deleting your data',
         paragraphs: [
           'On your device, delete a match from History or clear your browser or app data. Deleting a match in the app removes it from that device only. It does not remove a copy saved to your account.',
-          `The app cannot yet delete your account or your saved matches. This is not built. To delete your account and the data stored with it, email ${CONTACT_EMAIL} from the email address on your account. We will delete your sign-in account and your data in our database.`,
+          `To delete your Score Easy data (saved matches, profile and shared matches) from our database, email us at ${CONTACT_EMAIL}. Send it from the email address on your account.`,
           `You can also email us to ask what data we hold about you or to correct it.`,
         ],
       },
@@ -193,7 +197,7 @@ export const pages = {
       {
         heading: 'Ending your use',
         paragraphs: [
-          `You can stop using Score Easy at any time. To delete your account, email ${CONTACT_EMAIL}. The app has no in-app account deletion yet.`,
+          `You can stop using Score Easy at any time. To delete your Score Easy data (saved matches, profile and shared matches) from our database, email us at ${CONTACT_EMAIL}.`,
           'We may suspend an account that breaks these terms.',
         ],
       },
@@ -214,13 +218,13 @@ export const pages = {
       {
         heading: 'Email',
         paragraphs: [
-          `For support, privacy questions, account deletion or store review questions, email ${CONTACT_EMAIL}.`,
+          `For support, privacy questions, data deletion or store review questions, email ${CONTACT_EMAIL}.`,
         ],
       },
       {
-        heading: 'Delete your account',
+        heading: 'Delete your data',
         paragraphs: [
-          'The app cannot delete your account yet. Email us from the address on your account and ask for it to be deleted.',
+          `To delete your Score Easy data (saved matches, profile and shared matches) from our database, email us at ${CONTACT_EMAIL}. Send it from the email address on your account.`,
         ],
       },
       {

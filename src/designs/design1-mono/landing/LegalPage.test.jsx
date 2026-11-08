@@ -40,20 +40,33 @@ describe('LegalPage', () => {
     ]) {
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
     }
-    for (const service of ['Clerk', 'Convex', 'Cloudflare', 'Sentry']) {
+    for (const service of ['Clerk', 'Convex', 'Cloudflare', 'Sentry', 'Google Fonts']) {
       expect(screen.getAllByText(new RegExp(service)).length).toBeGreaterThan(0);
     }
     expect(screen.getByText(/at least 13/)).toBeInTheDocument();
     expect(screen.getByText(/We do not sell your data/)).toBeInTheDocument();
   });
 
-  it('does not promise an in-app account deletion that does not exist', () => {
+  it('offers email deletion and promises no in-app deletion or Clerk behaviour', () => {
     renderLegalPage('privacy');
 
-    expect(screen.getByText(/cannot yet delete your account/)).toBeInTheDocument();
+    expect(screen.getAllByText(/To delete your Score Easy data/).length).toBeGreaterThan(0);
     const text = JSON.stringify(pages);
     expect(text).not.toMatch(/delete (your )?account in the app/i);
     expect(text).not.toMatch(/Delete account button/i);
+    expect(text).not.toMatch(/no (in-app )?account deletion/i);
+    expect(text).not.toMatch(/cannot yet delete/i);
+  });
+
+  it('describes sharing only as the code does it', () => {
+    renderLegalPage('privacy');
+
+    expect(screen.getByText(/Stop sharing needs a connection/)).toBeInTheDocument();
+    expect(screen.getByText(/24 hours after our server receives the finished match/)).toBeInTheDocument();
+    expect(screen.getByText(/Signed-in users can search usernames/)).toBeInTheDocument();
+    const text = JSON.stringify(pages.privacy);
+    expect(text).not.toMatch(/jersey/i);
+    expect(text).not.toMatch(/notes you add/i);
   });
 
   it('sets expectations for unofficial scorekeeping and shared results', () => {
