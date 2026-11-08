@@ -1,0 +1,301 @@
+/* Kit Stats (History → Stats). Same language as the History list: compact cards on the canvas,
+   hairline-divided rows, display numerals, sport dots and gradients from the engine. Colour comes
+   only from --se-color-* tokens and --sport-* engine vars, so dark mode is a token swap. Built on
+   kit.css / history.css (kit-card, kit-sec, kit-list, kit-row, kit-fchip, kit-stack, kit-empty,
+   kit-confirm, kit-toast); nothing here restyles them. */
+
+.kit-stats > .kit-chips {
+  margin-top: 0;
+}
+
+.kit-stats .kit-sec:first-child {
+  margin-top: 18px;
+}
+
+/* ---- number tiles (Totals, Quick summary) ---- */
+.kit-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-stat-cols, 3), minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kit-stat {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 14px 10px 12px;
+  text-align: center;
+}
+
+.kit-stat b {
+  display: block;
+  font: 800 2rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-stat span {
+  display: block;
+  margin-top: 6px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ---- insight cards (Top team, streak, form) ---- */
+.kit-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kit-insight {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.kit-insight-wide {
+  grid-column: 1 / -1;
+}
+
+.kit-insight h3 {
+  margin: 0 0 6px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.kit-insight p {
+  margin: 0;
+  font: 800 1.2rem/1.2 var(--se-font-display);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.kit-insight p.is-quiet {
+  color: var(--se-color-ink-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Last five winners, newest first: one pill each, wrapping, never colour-only. */
+.kit-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-form li {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 4px 12px;
+  overflow-wrap: anywhere;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.kit-form li:first-child {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+}
+
+/* ---- label / value rows (Records, more totals) ---- */
+.kit-stat-row .kit-row-text {
+  display: grid;
+  gap: 2px;
+}
+
+.kit-stat-row {
+  min-height: 60px;
+}
+
+.kit-stat-row .kit-row-sub {
+  margin: 0;
+}
+
+/* By sport rows are buttons: the whole row is the 68px target. */
+.kit-sport-row-end {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.kit-quick-badge svg {
+  display: block;
+}
+
+/* ---- team rows: name and win rate on top, a bar, then the labelled numbers ----
+   A grid per row: name and Win% share row 1 (Win% is last in the DOM, placed with negative
+   lines so any column count works), the bar is row 2, the numbers are row 3. */
+.kit-team-table {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-team-row {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-team-cols, 6), minmax(0, 1fr));
+  column-gap: 2px;
+  align-items: end;
+  padding: 12px 14px 14px;
+}
+
+.kit-team-row + .kit-team-row {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-team-name {
+  grid-column: 1 / -3;
+  grid-row: 1;
+  align-self: center;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kit-team-win {
+  grid-column: -3 / -1;
+  grid-row: 1;
+  text-align: right;
+}
+
+.kit-team-win .kit-num {
+  display: block;
+  font: 800 1.5rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-team-win::after {
+  display: block;
+  margin-top: 2px;
+  content: attr(data-label);
+  color: var(--se-color-ink-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* The win-rate bar: the same stack-bar language as the History month card. */
+.kit-win-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: block;
+  height: 8px;
+  margin: 8px 0 10px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  overflow: hidden;
+}
+
+.kit-win-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sport-hi, var(--se-color-ink)), var(--sport-core, var(--se-color-ink)));
+}
+
+.kit-team-cell {
+  grid-row: 3;
+  text-align: center;
+}
+
+.kit-team-cell .kit-num {
+  display: block;
+  font: 800 1rem/1.1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-team-cell::before {
+  display: block;
+  margin-bottom: 3px;
+  content: attr(data-label);
+  color: var(--se-color-ink-soft);
+  font: 650 0.7rem/1 var(--se-font-sans);
+  letter-spacing: 0.02em;
+}
+
+/* Margin sign reads from the sign itself; colour only reinforces it. */
+.kit-pos {
+  color: var(--se-color-live);
+}
+
+.kit-neg {
+  color: var(--se-color-danger);
+}
+
+/* Visually hidden header row: gives every cell its column name without drawing it. */
+.kit-team-table .kit-team-header {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- recent quick matches ---- */
+.kit-recent .kit-row {
+  cursor: default;
+}
+
+.kit-recent-end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.kit-icon-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: -6px -8px -6px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-icon-btn:active {
+  background: var(--se-color-surface-warm);
+}
+
+.kit-stats-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.kit-stats .kit-empty {
+  margin-top: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-icon-btn {
+    transition: none;
+  }
+}

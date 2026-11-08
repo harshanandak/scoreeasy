@@ -225,7 +225,9 @@ describe('documented contrast pairs', () => {
 // Cricket warning labels use the warning tokens (-4); combined baseline 593.
 // Guest landing in Kit (2026-11-08), 593 -> 590: GuestLanding drops its #d0d0d0, #fff and #ccc
 // fallbacks for Kit parts and tokens (-3); the new landing, demo and auth styles add 0.
-const BASELINE = 590;
+// Stats in Kit (PR #231), 590 -> 576: MonoStatistics drops its #111, #eee and #f5f5f5 inks and
+// borders (-14); the new stats.css and the Stats JSX use tokens and sportIdentity output only (+0).
+const BASELINE = 576;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
