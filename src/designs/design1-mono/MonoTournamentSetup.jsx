@@ -1,3 +1,4 @@
+import { supportsGoalPeriods, periodPreset } from '../../utils/goalsPeriods';
 import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -160,7 +161,7 @@ export default function MonoTournamentSetup() {
     if (formatMode === 'standard') {
       const defaults = getSportDefaults(sport);
       if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(ensureScoringMode(applyStandardDefaults(sport, {}), format));
+        setFormat(ensureScoringMode(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}), format));
         return;
       }
     }
@@ -180,7 +181,7 @@ export default function MonoTournamentSetup() {
     if (formatMode === 'standard' && sport && format) {
       const defaults = getSportDefaults(sport);
       if (defaults && Object.keys(defaults).length > 0) {
-        setFormat(ensureScoringMode(applyStandardDefaults(sport, {}), format));
+        setFormat(ensureScoringMode(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}), format));
       }
     }
   }, [formatMode, sport]);

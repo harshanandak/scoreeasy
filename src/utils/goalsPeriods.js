@@ -1,7 +1,7 @@
 ﻿// Versioned match state. Time is stored as a basis, not a ticking counter.
 export function createPeriodMatch(rules, now) {
   const durations = [...rules.durations];
-  return { version: 1, sport: rules.sport, regulationCount: rules.regulationCount || durations.length, extraDurations: [...(rules.extraDurations || [])], endedEarly: false, events: [], durations, overtimeSeconds: rules.overtimeSeconds || 0, periodIndex: 0, phase: 'playing', elapsed: 0, startedAt: now, scores: durations.map(() => ({ A: 0, B: 0 })), history: [] };
+  return { version: 1, sport: rules.sport, source: rules.source, regulationCount: rules.regulationCount || durations.length, extraDurations: [...(rules.extraDurations || [])], endedEarly: false, events: [], durations, overtimeSeconds: rules.overtimeSeconds || 0, periodIndex: 0, phase: 'playing', elapsed: 0, startedAt: now, scores: durations.map(() => ({ A: 0, B: 0 })), history: [] };
 }
 export function periodElapsed(state, now) {
   const extra = state.phase === 'playing' && state.startedAt != null ? Math.max(0, (now - state.startedAt) / 1000) : 0;
@@ -17,7 +17,7 @@ export function applyPeriodAction(state, action) {
   let next = { ...state, scores: state.scores.map(score => ({ ...score })) };
   if (type === 'pause' && state.phase === 'playing' && state.startedAt != null) next = { ...next, elapsed: before.elapsed, startedAt: null };
   else if (type === 'resume' && state.phase === 'playing' && state.startedAt == null) next.startedAt = at;
-  else if (type === 'score' && state.phase === 'playing' && ['A', 'B'].includes(action.team)) {
+  else if (type === 'score' && state.phase !== 'finished' && ['A', 'B'].includes(action.team)) {
     next.scores[state.periodIndex][action.team] = Math.max(0, next.scores[state.periodIndex][action.team] + action.value);
     next.events = [...(state.events || []), { team: action.team, value: action.value, period: state.periodIndex + 1, elapsed: before.elapsed, at }];
   }
@@ -39,7 +39,7 @@ export const supportsGoalPeriods = sport => ['football', 'basketball', 'hockey']
 
 export function periodPreset(sport, preset = 'official', count, minutes) {
   const defaults = sport === 'football' ? [2, 45, 'IFAB 2026/27'] : sport === 'basketball' ? [4, 10, 'FIBA 5-on-5 2024'] : [4, 15, 'FIH outdoor 2027'];
-  const n = Math.max(1, Math.min(8, Number(count) || defaults[0]));
+  const n = Math.max(1, Math.min(8, Math.round(Number(count)) || defaults[0]));
   const seconds = Math.max(60, Math.min(7200, (Number(minutes) || defaults[1]) * 60));
   if (preset === 'casual') return { mode: 'free', periodPreset: preset };
   return { mode: 'timed', timeLimit: n * seconds, periodPreset: preset,

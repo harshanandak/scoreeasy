@@ -1,3 +1,4 @@
+import { createPeriodMatch } from '../../../utils/goalsPeriods';
 import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -187,6 +188,35 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
     expect(screen.getByText(/Save failed/)).toBeInTheDocument();
     expect(h.complete).not.toHaveBeenCalled();
     expect(h.navigate).not.toHaveBeenCalled();
+    expect(h.finalize).not.toHaveBeenCalled();
+  });
+});
+
+
+describe.each(['football', 'basketball', 'hockey'])('%s tournament periods', sport => {
+  function setup() {
+    h.sport = sport;
+    const rules = { version: 1, sport, durations: sport === 'football' ? [60, 60] : [60, 60, 60, 60], overtimeSeconds: sport === 'basketball' ? 300 : 0 };
+    h.tournaments[0].format = { mode: 'timed', timeLimit: rules.durations.length * 60, periods: rules };
+    h.tournaments[0].matches[0].draftState = { score1: 0, score2: 0, history: [], periodState: createPeriodMatch(rules, Date.now()) };
+  }
+  it('restores a paused period without counting the reload gap and undoes its boundary', () => {
+    setup();
+    const view = renderScorer(false);
+    act(() => vi.advanceTimersByTime(10000));
+    fireEvent.click(screen.getByRole('button', { name: 'Pause clock' }));
+    expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:50');
+    const saved = structuredClone(h.save.mock.calls.at(-1)[1]);
+    view.unmount(); h.tournaments = [saved];
+    act(() => vi.advanceTimersByTime(90000));
+    renderScorer(false);
+    expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:50');
+    fireEvent.click(screen.getByRole('button', { name: sport === 'football' ? 'End half' : 'End quarter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
+    expect(h.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ currentUnit: 2, periodClock: { phase: 'playing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(h.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ currentUnit: 1, periodClock: { phase: 'interval', startedAt: null } });
     expect(h.finalize).not.toHaveBeenCalled();
   });
 });

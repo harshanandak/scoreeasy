@@ -25,7 +25,7 @@ export default function GoalsPeriodControls({ state, remaining, onAction, onFini
       {last && (!tied || state.sport !== 'basketball' || state.endedEarly) && <button type="button" disabled={locked} onClick={onFinish}>Confirm full time</button>}
     </> : <span>Full-time</span>}
     {confirm && <AppScoringConfirmDialog title={zero ? "Time's up: end period?" : 'End this period?'}
-      message={remaining > 0 ? 'This period is ending early. Finishing this match will record Abandoned / no result.' : 'Confirm the referee?s decision. The clock never ends a period automatically.'}
+      message={remaining > 0 ? 'This period is ending early. Finishing this match will record Abandoned / no result.' : 'Confirm the referee decision. The clock never ends a period automatically.'}
       cancelLabel="Keep scoring" confirmLabel="Confirm period end" onCancel={() => setConfirm(false)}
       onConfirm={() => { if (!locked) { setConfirm(false); onAction('endPeriod'); } }} />}
 

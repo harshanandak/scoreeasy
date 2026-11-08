@@ -1138,3 +1138,23 @@ test("abandoned broadcasts retain the snapshot, expose no result and never archi
   await owner.mutation(api.live.finalize, { matchId, resultType: "decided" });
   expect(await t.query(api.live.getByToken, { token })).toMatchObject({ resultType: "abandoned" });
 });
+
+
+describe("goals period snapshots", () => {
+  test("publishes paused clock and period scores without exposing undo history", async () => {
+    const t = newClient();
+    await seedUser(t, "period-owner|1");
+    const owner = t.withIdentity(identityFor("period-owner|1", "period-owner"));
+    const created = await createShared(owner, { sport: "basketball", scorecardKind: "goals", ...TEAMS, clientMatchId: "period-snapshot" });
+    const periodClock = { sport: "basketball", phase: "playing" as const, elapsed: 30, startedAt: null, duration: 600, periodIndex: 2, regulationCount: 4 };
+    const snapshot = { pointsA: 3, pointsB: 2, setsA: 0, setsB: 0, setScores: [{ a: 1, b: 0 }, { a: 2, b: 2 }], currentUnit: 3, periodLabel: "Q3", periodClock };
+    await owner.mutation(api.live.scorePoint, { matchId: created.matchId, clientEventId: "period-snapshot:1", team: "A", value: 0, type: "correction", at: 1000, snapshot });
+    const read = await t.query(api.live.getByToken, { token: created.token });
+    expect(read).toMatchObject(snapshot);
+    expect(read).not.toHaveProperty("history");
+    expect(read).not.toHaveProperty("ownerId");
+    await owner.mutation(api.live.scorePoint, { matchId: created.matchId, clientEventId: "period-snapshot:2", team: "A", value: 0, type: "correction", at: 2000, snapshot: { ...snapshot, periodClock: { ...periodClock, startedAt: 2000 } } });
+    expect(await t.query(api.live.getByToken, { token: created.token })).toMatchObject({ periodClock: { startedAt: 2000, elapsed: 30 } });
+    await expect(t.mutation(api.live.scorePoint, { matchId: created.matchId, clientEventId: "intruder:1", team: "A", at: 3000, snapshot })).rejects.toThrow();
+  });
+});

@@ -174,7 +174,7 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   }, [snapshot.periodClock, snapshot.status]);
 
   const isFinal = snapshot.status === 'final';
-  const stale = !isFinal && Date.now() - snapshot.lastEventAt > STALE_MS;
+  const stale = !isFinal && !snapshot.periodClock && Date.now() - snapshot.lastEventAt > STALE_MS;
 
   let eyebrow = 'LIVE';
   if (isFinal) eyebrow = isAbandoned(snapshot) ? ABANDONED_LABEL : 'FINAL';
@@ -182,7 +182,7 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   else if (snapshot.status === 'paused') eyebrow = 'PAUSED';
 
   const winner = isFinal && !isAbandoned(snapshot) ? winnerName(snapshot, nameA, nameB) : null;
-  const periodLine = snapshot.periodClock ? `${snapshot.periodLabel || `Q${snapshot.currentUnit}`} · ${snapshot.periodClock.startedAt == null ? 'paused' : formatPeriodClock(clockRemaining(snapshot.periodClock, Date.now()))}` : snapshot.periodLabel
+  const periodLine = snapshot.periodClock ? `${snapshot.periodLabel || `Q${snapshot.currentUnit}`} · ${isFinal ? formatPeriodClock(clockRemaining(snapshot.periodClock, snapshot.lastEventAt)) : snapshot.periodClock.startedAt == null ? 'paused' : formatPeriodClock(clockRemaining(snapshot.periodClock, Date.now()))}` : snapshot.periodLabel
     ? snapshot.periodLabel
     : getSportById(snapshot.sport)?.engine === 'sets'
       ? `${snapshot.setsA}–${snapshot.setsB} sets`
@@ -473,17 +473,23 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return <TennisScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'goals' || scorecardKind === 'lines') {
-    // Spectators get no period config, so the line score is total-only — take the
+    // Legacy snapshots stay total-only — take the
     // authoritative totals straight from the snapshot (re-summing a partial event
     // page would be wrong). isFinalResult gates the winner highlight so a LIVE
-    // match isn't shown as decided. Per-period columns: scoreeasy-rvc.
+    // match isn't shown as decided.
     return (
+      <>
+        {snapshot.periodClock && <table aria-label="Period scores" style={{ width: '100%', marginBottom: 16 }}>
+          <caption>Score by period</caption><thead><tr><th>Period</th><th>{nameA}</th><th>{nameB}</th></tr></thead>
+          <tbody>{snapshot.setScores.map((score, i) => <tr key={i}><th>{i >= snapshot.periodClock.regulationCount ? `Extra ${i + 1 - snapshot.periodClock.regulationCount}` : snapshot.sport === 'football' ? `Half ${i + 1}` : `Q${i + 1}`}</th><td>{score.a}</td><td>{score.b}</td></tr>)}</tbody>
+        </table>}
       <LineScore
         totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
         isFinalResult={snapshot.status === 'final' && !isAbandoned(snapshot)}
         teamA={nameA}
         teamB={nameB}
       />
+      </>
     );
   }
   return <SnapshotSummary snapshot={snapshot} nameA={nameA} nameB={nameB} />;

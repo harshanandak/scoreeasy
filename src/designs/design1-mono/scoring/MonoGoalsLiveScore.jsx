@@ -195,11 +195,12 @@ export default function MonoGoalsLiveScore() {
       score1: finalScore1,
       score2: finalScore2,
       status: 'completed',
-      ...(periodState ? { periodState } : {}),
+      ...(periodState ? { periodState: { ...periodState, phase: decided ? 'finished' : periodState.phase, startedAt: null } } : {}),
       resultType: decided ? 'decided' : 'abandoned',
       winner: decided ? determineWinner(finalScore1, finalScore2, m) : null,
       draftState: undefined,
       completedAt: new Date().toISOString(),
+      ...(periodState ? { elapsedSeconds: periodState.durations.slice(0, periodState.periodIndex).reduce((a, b) => a + b, 0) + periodTime.elapsed } : {}),
     }));
     if (!saveSportTournament(sportConfig.storageKey, updatedTournament)) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
@@ -213,7 +214,8 @@ export default function MonoGoalsLiveScore() {
 
   // Auto-end match when time expires in timed mode
   useEffect(() => {
-    if (periodState || !tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
+    if (!tournament || !sportConfig || scoringPrompt.isInteractionLocked) return undefined;
+    if (periodState) return undefined;
     const formatMode = effectiveFormat?.mode;
     const timeLimit = effectiveFormat?.timeLimit;
     const timedMatchLimit = sport === 'football'

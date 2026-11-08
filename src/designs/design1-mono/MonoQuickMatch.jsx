@@ -467,7 +467,7 @@ export default function MonoQuickMatch() {
   });
   const [format, setFormat] = useState(() => {
     if (isCricket) return buildCricketFormat(initialPreset);
-    if (initialFormatMode === 'standard') return applyStandardDefaults(sport, {});
+    if (initialFormatMode === 'standard') return supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
     return { type: 'single', target: 15, points: 25 };
   });
@@ -813,7 +813,7 @@ export default function MonoQuickMatch() {
     setRulesOpen(false);
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
-      setFormat(applyStandardDefaults(sport, {}));
+      setFormat(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}));
     }
   }, [isCricket, sport]);
 
@@ -824,7 +824,7 @@ export default function MonoQuickMatch() {
 
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
-      setFormat(applyStandardDefaults(sport, {}));
+      setFormat(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}));
     }
   }, [formatMode, isCricket, sport]);
 
@@ -976,6 +976,7 @@ export default function MonoQuickMatch() {
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
     const nextResult = {
       ...entry,
+      ...(entry.periodState ? { periodState: { ...entry.periodState, phase: decided ? 'finished' : entry.periodState.phase, startedAt: null } } : {}),
       id: matchId,
       status: 'completed',
       clientMatchId,

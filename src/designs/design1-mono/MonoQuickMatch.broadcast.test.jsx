@@ -1,3 +1,4 @@
+import { createPeriodMatch } from '../../utils/goalsPeriods';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { saveQuickMatch, saveData } from '../../utils/storage';
@@ -84,6 +85,7 @@ function seedVolleyball() {
 }
 
 beforeEach(() => {
+  saveQuickMatch.mockClear();
   live.point.mockClear();
   live.undo.mockClear();
   live.finalize.mockClear();
@@ -371,10 +373,52 @@ describe('goals period board integration', () => {
     expect(screen.getByText('Half-time')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
     expect(screen.getByText('2nd half')).toBeInTheDocument();
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 2, periodClock: { phase: 'playing' } });
     fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
     expect(screen.getByText('Half-time')).toBeInTheDocument();
     const draft = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1];
     expect(draft.periodState).toMatchObject({ periodIndex: 0, phase: 'interval', scores: [{ A: 1, B: 0 }, { A: 0, B: 0 }] });
-    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 2, periodClock: { phase: 'playing' } });
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 1, periodClock: { phase: 'interval', startedAt: null } });
+  });
+});
+
+
+describe.each(['football', 'basketball', 'hockey'])('%s period completion', sport => {
+  function seedClock(periodIndex = 0, elapsed = 0) {
+    seedGoals(); ctx.sport = sport; ctx.draft.sport = sport;
+    const durations = sport === 'football' ? [60, 60] : [60, 60, 60, 60];
+    const periods = { version: 1, sport, durations, regulationCount: durations.length, overtimeSeconds: sport === 'basketball' ? 300 : 0 };
+    ctx.draft.format = { mode: 'timed', timeLimit: durations.length * 60, periods };
+    ctx.draft.periodState = { ...createPeriodMatch(periods, Date.now()), periodIndex, elapsed, startedAt: null };
+  }
+  it('signals zero without completing, keeps scoring available and requires a confirmed period end', () => {
+    seedClock(0, 60);
+    render(<MonoQuickMatch />);
+    expect(screen.getByRole('dialog', { name: "Time's up: end period?" })).toBeInTheDocument();
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep scoring' }));
+    fireEvent.click(screen.getByRole('button', { name: sport === 'basketball' ? 'Add +1 for Reds' : 'Add 1 to Reds' }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot.pointsA).toBe(1);
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+  });
+  it('records a confirmed early finish as abandoned even with a lead', () => {
+    seedClock();
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: sport === 'basketball' ? 'Add +1 for Reds' : 'Add 1 to Reds' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent(/abandoned/i);
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    expect(saveQuickMatch.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', winner: null, score1: 1, score2: 0 });
+  });
+  it('saves full time only after the last period and separate full-time confirmation', () => {
+    seedClock(sport === 'football' ? 1 : 3, 60);
+    ctx.draft.gScore1 = 1;
+    ctx.draft.periodState.scores[0].A = 1;
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm full time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    expect(saveQuickMatch.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'decided', winner: 'Reds', periodState: { phase: 'finished' } });
   });
 });
