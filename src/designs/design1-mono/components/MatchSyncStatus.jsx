@@ -1,11 +1,18 @@
 import PropTypes from 'prop-types';
-import { usePendingMatchSaves } from '../../../hooks/usePendingMatchSaves';
+import { matchSaveOwner, usePendingMatchSaveStatus } from '../../../hooks/usePendingMatchSaves';
+import { useAuth } from '../../../hooks/useAuth';
 import { loadQuickMatch } from '../../../utils/storage';
 import { isMatchSaveConfirmed } from '../../../utils/pendingMatchSaves';
 import './matchSyncStatus.css';
 
-export default function MatchSyncStatus({ clientMatchId, quickMatchId, compact = false }) {
-  const { ownerId, records, retry } = usePendingMatchSaves(undefined, false);
+export default function MatchSyncStatus(props) {
+  const auth = useAuth();
+  if (!matchSaveOwner(auth)) return null;
+  return <AccountMatchSyncStatus {...props} />;
+}
+
+function AccountMatchSyncStatus({ clientMatchId, quickMatchId, compact = false }) {
+  const { ownerId, records, retry } = usePendingMatchSaveStatus();
   if (!ownerId) return null;
   const local = loadQuickMatch(quickMatchId);
   const identity = local?.clientMatchId || clientMatchId;

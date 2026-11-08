@@ -3,6 +3,7 @@ import { ConvexError } from 'convex/values';
 
 const PREFIX = 'se_pending_match:';
 export const PENDING_SAVES_CHANGED = 'se-pending-match-saves-changed';
+export const RETRY_PENDING_SAVE = 'se-retry-pending-match-save';
 const inFlight = new Map();
 const confirmed = new Set();
 // Keep an actionable record in this session if device storage is full or blocked.

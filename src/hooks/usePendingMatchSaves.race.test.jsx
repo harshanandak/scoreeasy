@@ -6,7 +6,7 @@ import { attemptMatchSave, enqueueMatchSave } from '../utils/pendingMatchSaves';
 import MatchSyncStatus from '../designs/design1-mono/components/MatchSyncStatus';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock('convex/react', () => ({ useMutation: () => save }));
+vi.mock('convex/react', () => ({ useConvex: () => ({}), useMutation: () => save }));
 const ownerId = 'race-owner';
 const clientMatchId = 'race-result';
 const key = `se_pending_match:${ownerId}:${clientMatchId}`;

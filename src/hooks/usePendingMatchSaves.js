@@ -1,15 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useAuth } from './useAuth';
 import { addAppStateChangeListener } from '../mobile/lifecycle';
-import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, PENDING_SAVES_CHANGED } from '../utils/pendingMatchSaves';
+import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, PENDING_SAVES_CHANGED, RETRY_PENDING_SAVE } from '../utils/pendingMatchSaves';
 
 export function matchSaveOwner({ isAuthenticated, clerkUser, user }) {
   return isAuthenticated ? (clerkUser?.id || user?._id || null) : null;
 }
 
-export function usePendingMatchSaves(authOverride, process = true) {
+export function usePendingMatchSaveStatus() {
+  const auth = useAuth();
+  const client = useConvex();
+  const ownerId = client ? matchSaveOwner(auth) : null;
+  const [, refresh] = useState(0);
+  useEffect(() => {
+    const changed = () => refresh((value) => value + 1);
+    const events = [PENDING_SAVES_CHANGED, 'storage', 'online', 'offline'];
+    events.forEach((event) => globalThis.addEventListener(event, changed));
+    return () => events.forEach((event) => globalThis.removeEventListener(event, changed));
+  }, []);
+  return {
+    ownerId,
+    records: pendingMatchSaves(ownerId),
+    retry: (clientMatchId) => globalThis.dispatchEvent(new CustomEvent(RETRY_PENDING_SAVE, { detail: { ownerId, clientMatchId } })),
+  };
+}
+
+export function usePendingMatchSaves(authOverride) {
   const auth = useAuth();
   const currentAuth = authOverride || auth;
   const ownerId = matchSaveOwner(currentAuth);
@@ -24,12 +42,6 @@ export function usePendingMatchSaves(authOverride, process = true) {
     return attemptMatchSave(record, save, () => active.current.ownerId === ownerId && active.current.ready, manual);
   };
   useEffect(() => {
-    if (!process) {
-      const changed = () => refresh((value) => value + 1);
-      const events = [PENDING_SAVES_CHANGED, 'storage', 'online', 'offline'];
-      events.forEach((event) => globalThis.addEventListener(event, changed));
-      return () => events.forEach((event) => globalThis.removeEventListener(event, changed));
-    }
     let timer;
     let disposed = false;
     const run = () => {
@@ -48,9 +60,13 @@ export function usePendingMatchSaves(authOverride, process = true) {
       if (upcoming.length) timer = setTimeout(() => run(), Math.max(1000, Math.min(...upcoming.map((entry) => entry.nextAttemptAt)) - Date.now()));
     };
     const changed = () => run();
+    const manualRetry = ({ detail }) => {
+      if (detail?.ownerId === ownerId) void send(detail.clientMatchId, true);
+    };
     const reconnect = () => run();
     const foreground = () => { if (document.visibilityState === 'visible') run(); };
     globalThis.addEventListener(PENDING_SAVES_CHANGED, changed);
+    globalThis.addEventListener(RETRY_PENDING_SAVE, manualRetry);
     globalThis.addEventListener('storage', changed);
     globalThis.addEventListener('online', reconnect);
     globalThis.addEventListener('offline', changed);
@@ -67,12 +83,13 @@ export function usePendingMatchSaves(authOverride, process = true) {
       clearTimeout(timer);
       removeNative?.();
       globalThis.removeEventListener(PENDING_SAVES_CHANGED, changed);
+      globalThis.removeEventListener(RETRY_PENDING_SAVE, manualRetry);
       globalThis.removeEventListener('storage', changed);
       globalThis.removeEventListener('online', reconnect);
       globalThis.removeEventListener('offline', changed);
       globalThis.removeEventListener('focus', reconnect);
       document.removeEventListener('visibilitychange', foreground);
     };
-  }, [ownerId, ready, process]);
+  }, [ownerId, ready]);
   return { ownerId, records: pendingMatchSaves(ownerId), retry: (id) => send(id, true), send, save, ready };
 }
