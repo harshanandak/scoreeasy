@@ -1,0 +1,208 @@
+/* Guest landing (/marketing), Kit. Everything here composes Kit parts (kit.css, history.css chips);
+   only layout and the few landing-only rules live in this file. Colour comes from --se-color-*
+   tokens and the engine vars, so a dark theme is a token swap. */
+
+.kit-landing {
+  padding-bottom: 40px;
+  background: transparent;
+}
+
+.kit-landing-hero .kit-title {
+  margin-top: 10px;
+}
+
+.kit-landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.kit-landing-actions .se-go,
+.kit-landing-actions .se-ctl {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 56px;
+  text-decoration: none;
+}
+
+.kit-landing-actions .se-ctl {
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+/* The inside of the closing card brings its own padding. */
+.kit-landing-ready .kit-landing-actions {
+  margin-top: 0;
+}
+
+/* ---- sport chips: one scrolling row, thumb-sized ---- */
+.kit-landing-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px 12px;
+  padding: 2px 16px 6px;
+  scrollbar-width: none;
+}
+
+.kit-landing-chips::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- the example card: the Kit last-match card, a little larger ---- */
+.kit-landing-card {
+  gap: 10px;
+  padding: 16px;
+}
+
+.kit-landing-card .kit-last-team {
+  min-height: 52px;
+}
+
+.kit-landing-card .kit-last-bar {
+  height: 38px;
+}
+
+.kit-landing-card .kit-last-score {
+  font-size: 2.5rem;
+}
+
+.kit-landing-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-landing-note {
+  margin: 10px 2px 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ---- steps ---- */
+.kit-landing-steps .kit-row {
+  min-height: 72px;
+}
+
+/* ---- closing card ---- */
+.kit-landing-ready {
+  margin-top: 26px;
+}
+
+.kit-landing-ready .kit-hero-intro p {
+  padding-right: 0;
+}
+
+.kit-landing-ready .kit-hero-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- footer: every link a 48px target ---- */
+.kit-landing-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-top: 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--se-color-line-soft);
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kit-landing-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -12px;
+}
+
+.kit-landing-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 12px;
+  color: var(--se-color-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.kit-landing-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ---- desktop: hero left, example right, wide tiles, steps in a row ---- */
+@media (min-width: 900px) {
+  .kit-landing {
+    max-width: 1080px;
+    padding: 0 32px 56px;
+  }
+
+  /* The tint would end in a hard edge at the 1080px column, so its sides fade out.
+     (A 100vw-wide wash was tried first; it froze the page in the preview browser.) */
+  .kit-landing > .kit-wash {
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  }
+
+  .kit-landing-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: center;
+    padding-top: 20px;
+  }
+
+  .kit-landing-hero .kit-title {
+    font-size: 3.6rem;
+  }
+
+  .kit-landing-hero .kit-sub {
+    max-width: 30ch;
+    font-size: 1.12rem;
+  }
+
+  .kit-landing-actions {
+    max-width: 360px;
+  }
+
+  .kit-landing-example .kit-sec:first-child {
+    margin-top: 0;
+  }
+
+  .kit-landing-chips {
+    flex-wrap: wrap;
+    overflow: visible;
+    margin: 0 0 14px;
+    padding: 2px 0;
+  }
+
+  .kit-landing-tiles {
+    gap: 14px;
+  }
+
+  .kit-landing-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .kit-landing-steps .kit-row + .kit-row {
+    border-top: 0;
+    border-left: 1px solid var(--se-color-line-soft);
+  }
+
+  .kit-landing-ready {
+    max-width: 640px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}

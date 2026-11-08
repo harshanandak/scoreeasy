@@ -1,21 +1,26 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
+import { getSportsList } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
+}
 
 function renderLanding({ cloudAuthAvailable = false } = {}) {
   return render(
     <LocalAuthProvider reason="missing-config" cloudAuthAvailable={cloudAuthAvailable}>
       <MemoryRouter>
-        <GuestLanding />
+        <LocationProbe />
+        <Routes>
+          <Route path="*" element={<GuestLanding />} />
+        </Routes>
       </MemoryRouter>
     </LocalAuthProvider>,
   );
-}
-
-function expectReadyStartLink(label, href) {
-  expect(screen.getAllByRole('link', { name: label }).at(-1)).toHaveAttribute('href', href);
 }
 
 function setViewport(width, mobile = false) {
@@ -36,7 +41,10 @@ function setViewport(width, mobile = false) {
   });
 }
 
-describe('GuestLanding bottom CTA', () => {
+const chipFor = (name) => within(screen.getByRole('group', { name: 'Pick a sport' })).getByRole('button', { name });
+const startLinks = (name) => screen.getAllByRole('link', { name });
+
+describe('GuestLanding', () => {
   beforeEach(() => {
     setViewport(1024);
   });
@@ -45,76 +53,94 @@ describe('GuestLanding bottom CTA', () => {
     cleanup();
   });
 
-  it('keeps the signup CTA visible on preview/local auth builds', () => {
+  it('says what the app is and gives one primary action plus a secondary sign in', () => {
+    renderLanding();
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
+    expect(screen.getByText(/works offline/i)).toBeInTheDocument();
+    expect(screen.getByText(/sync when you sign in/i)).toBeInTheDocument();
+    expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+  });
+
+  it('always points Sign in at the unified /login route, even on local auth builds', () => {
     renderLanding({ cloudAuthAvailable: false });
 
-    expectReadyStartLink('START CRICKET', '/play?sport=cricket');
-    expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', 'https://scoreeasy.app/signup');
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
 
-  it('always points SIGN IN at the unified /login route, even on local auth builds', () => {
+  it('shows a chip for every registered sport', () => {
+    renderLanding();
+
+    for (const sport of getSportsList()) {
+      expect(chipFor(sport.name)).toBeInTheDocument();
+    }
+    expect(getSportsList()).toHaveLength(9);
+  });
+
+  it('keeps the chip, the example card and every Start button on the same sport', () => {
+    renderLanding();
+
+    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
+    expect(within(screen.getByTestId('landing-example')).getByText('Cricket')).toBeInTheDocument();
+    expect(startLinks('Start Cricket')).toHaveLength(2);
+
+    fireEvent.click(chipFor('Badminton'));
+
+    expect(chipFor('Badminton')).toHaveAttribute('aria-pressed', 'true');
+    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'false');
+    expect(within(screen.getByTestId('landing-example')).getByText('Badminton')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Start Cricket' })).not.toBeInTheDocument();
+    for (const link of startLinks('Start Badminton')) {
+      expect(link).toHaveAttribute('href', '/play?sport=badminton');
+    }
+  });
+
+  it('builds the example scores from the engines, one sport at a time', () => {
+    renderLanding();
+
+    const card = screen.getByTestId('landing-example');
+    expect(within(card).getByText('India')).toBeInTheDocument();
+    expect(within(card).getByText(/^\d+\/\d+$/)).toBeInTheDocument();
+
+    fireEvent.click(chipFor('Volleyball'));
+    expect(within(card).getByText('Eagles')).toBeInTheDocument();
+    expect(within(card).getByText('18')).toBeInTheDocument();
+    expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
+  });
+
+  it('turns each sport tile into a start link for that sport', () => {
+    renderLanding();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Table Tennis' }));
+
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=tabletennis');
+  });
+
+  it('points Create a free account at the app on cloud builds and at production otherwise', () => {
+    renderLanding({ cloudAuthAvailable: true });
+    expect(screen.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
+    cleanup();
+
     renderLanding({ cloudAuthAvailable: false });
-
-    expect(screen.getByRole('link', { name: 'SIGN IN' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', 'https://scoreeasy.app/signup');
   });
 
-  it('keeps the hero START CTA tied to the displayed sport', () => {
-    renderLanding({ cloudAuthAvailable: true });
+  it('links the legal pages from the footer', () => {
+    renderLanding();
 
-    expect(screen.getAllByRole('link', { name: 'START CRICKET' }).at(0)).toHaveAttribute('href', '/play?sport=cricket');
+    const legal = within(screen.getByRole('navigation', { name: 'Legal' }));
+    expect(legal.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy');
+    expect(legal.getByRole('link', { name: 'Terms' })).toHaveAttribute('href', '/terms');
+    expect(legal.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
   });
 
-  it('keeps the signup CTA visible with cloud auth enabled', () => {
-    renderLanding({ cloudAuthAvailable: true });
-
-    expectReadyStartLink('START CRICKET', '/play?sport=cricket');
-    expect(screen.getByRole('link', { name: 'SIGN UP FREE' })).toHaveAttribute('href', '/signup');
-  });
-
-  it('updates the ready CTA when a different hero sport is selected', () => {
-    renderLanding({ cloudAuthAvailable: true });
-
-    fireEvent.mouseEnter(screen.getByRole('button', { name: 'VOLLEYBALL' }));
-
-    expectReadyStartLink('START VOLLEYBALL', '/play?sport=volleyball');
-    expect(screen.queryByRole('link', { name: 'START A GAME' })).not.toBeInTheDocument();
-  });
-
-  it('keeps mobile hero controls at touch target size', () => {
+  it('renders on a phone viewport with the same actions', () => {
     setViewport(390, true);
 
     renderLanding({ cloudAuthAvailable: true });
 
-    expect(screen.getAllByRole('link', { name: 'START CRICKET' }).at(0)).toHaveStyle({ minHeight: '44px' });
-    expect(screen.getAllByRole('link', { name: 'CHOOSE SPORT' }).at(0)).toHaveStyle({ minHeight: '44px' });
-    expect(screen.getByRole('button', { name: 'CRICKET' })).toHaveStyle({ minHeight: '44px' });
-  });
-
-  it('turns landing sport cards into mobile-friendly start links', () => {
-    setViewport(390, true);
-
-    renderLanding({ cloudAuthAvailable: true });
-
-    const cricketCard = screen.getByRole('link', { name: 'Start Cricket from sports' });
-    expect(cricketCard).toHaveAttribute('href', '/play?sport=cricket');
-    expect(cricketCard).toHaveStyle({ minHeight: '0' });
-    expect(cricketCard).toHaveStyle({ textAlign: 'center' });
-    expect(screen.getByRole('link', { name: 'Start Football from sports' })).toHaveAttribute('href', '/play?sport=football');
-    expect(screen.getByRole('link', { name: 'Start Volleyball from sports' })).toHaveAttribute('href', '/play?sport=volleyball');
-    expect(screen.getByRole('link', { name: 'Start Table Tennis from sports' })).toHaveAttribute('href', '/play?sport=tabletennis');
-    expect(screen.getByRole('link', { name: 'Start Kabaddi from sports' })).toHaveAttribute('href', '/play?sport=kabaddi');
-  });
-
-  it('turns the three-step section into active sport actions', () => {
-    renderLanding({ cloudAuthAvailable: true });
-
-    expect(screen.getAllByRole('link', { name: 'CHOOSE SPORT' }).at(-1)).toHaveAttribute('href', '/play');
-    expect(screen.getByRole('link', { name: 'SET UP CRICKET' })).toHaveAttribute('href', '/play?sport=cricket');
-    expect(screen.getByRole('link', { name: 'START SCORING' })).toHaveAttribute('href', '/play?sport=cricket');
-
-    fireEvent.mouseEnter(screen.getByRole('button', { name: 'VOLLEYBALL' }));
-
-    expect(screen.getByRole('link', { name: 'SET UP VOLLEYBALL' })).toHaveAttribute('href', '/play?sport=volleyball');
-    expect(screen.getByRole('link', { name: 'START SCORING' })).toHaveAttribute('href', '/play?sport=volleyball');
+    expect(startLinks('Start Cricket')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Quick match: Kabaddi' })).toBeInTheDocument();
   });
 });
