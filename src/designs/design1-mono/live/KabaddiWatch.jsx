@@ -37,7 +37,7 @@ function resultOf(live) {
 /* ------------------------------------------------------------------ top: header, score strip */
 
 function Header({ live, halfMins }) {
-  const status = isEnded(live.phase) ? 'Full time' : live.phase === 'halfTime' ? 'Half time' : 'Live';
+  const status = isEnded(live.phase) ? 'Full time' : live.phase === 'halfTime' ? 'Half time' : live.phase === 'paused' ? 'Paused' : 'Live';
   return (
     <header className="kw-top">
       <SportBadge sportId="kabaddi" />
