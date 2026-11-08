@@ -21,7 +21,8 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => h.navigate,
   useParams: () => ({ sport: h.sport, id: '100', matchId: 'm1' }),
 }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useTimer', () => ({ useTimer: () => h.timer }));
 vi.mock('../../../utils/storage', () => ({

@@ -22,7 +22,8 @@ vi.mock('../../models/sportRegistry', async (importOriginal) => {
 });
 const storage = vi.hoisted(() => ({ saveData: null, saveQuickMatch: null }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ sport: ctx.sport }),

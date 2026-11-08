@@ -8,7 +8,8 @@ import Test from './MonoCricketTestLiveScore';
 
 const sharing = vi.hoisted(() => ({ descriptor: null }));
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLive: false, point: vi.fn(), undo: vi.fn(), finalize: vi.fn() }) }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'declined' }));

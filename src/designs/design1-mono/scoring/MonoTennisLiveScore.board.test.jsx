@@ -4,7 +4,8 @@ import { contrastReport, deriveTeamColours } from '../../../lib/teamColour';
 import { sportMarkMaskUrl } from '../../../lib/sportMarks';
 
 const ctx = vi.hoisted(() => ({ draft: null, saved: null, navigate: vi.fn(), descriptor: null }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => ctx.navigate, useParams: () => ({ sport: 'tennis', matchId: 'g7' }), useLocation: () => ({ pathname: '/tennis/quick/live/g7', search: '' }) }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), isLive: false }) }));

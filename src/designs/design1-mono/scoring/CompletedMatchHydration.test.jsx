@@ -10,7 +10,8 @@ import MonoQuickMatch from '../MonoQuickMatch';
 import { loadSportTournaments, saveQuickMatch } from '../../../utils/storage';
 
 const live = vi.hoisted(() => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => live }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));

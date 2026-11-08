@@ -4,7 +4,8 @@ import { deriveTeamColours } from '../../lib/teamColour';
 import { readFileSync } from 'node:fs';
 
 const state = vi.hoisted(() => ({ draft: null, saved: null }));
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(), useParams: () => ({ sport: 'cricket' }),
   useLocation: () => ({ pathname: '/cricket/quick', search: '' }),

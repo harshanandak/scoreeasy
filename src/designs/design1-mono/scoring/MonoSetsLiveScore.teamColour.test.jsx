@@ -10,7 +10,8 @@ const h = vi.hoisted(() => ({
   bar: null,
 }));
 vi.mock('react-router-dom', () => ({ useParams: () => ({ sport: h.sport, id: '1', matchId: 'm1' }), useNavigate: () => h.navigate }));
-vi.mock('convex/react', () => ({ useMutation: () => h.save }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => h.save }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => h.live }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));
