@@ -116,7 +116,7 @@ export const create = authedMutation({
     ),
     isYouthMatch: v.optional(v.boolean()),
     clientMatchId: v.string(),
-    players: v.optional(v.array(v.object({ team: v.union(v.literal("A"), v.literal("B")), name: v.string(), jersey: v.optional(v.string()) }))),
+    players: v.optional(v.array(v.object({ team: v.union(v.literal("A"), v.literal("B")), name: v.string(), jersey: v.optional(v.string()), slotId: v.optional(v.string()) }))),
     kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
@@ -684,6 +684,7 @@ const playerMetaValidator = v.object({
   team: v.union(v.literal("A"), v.literal("B")),
   name: v.string(),
   jersey: v.optional(v.string()),
+  slotId: v.optional(v.string()),
 });
 const metaValidator = v.object({
   sport: v.string(),
@@ -712,6 +713,7 @@ export const getMeta = query({
           team: p.team,
           name: redactPlayerName(p.name),
           jersey: p.jersey,
+          ...(p.slotId ? { slotId: p.slotId } : {}),
         }))
       : meta.players;
 

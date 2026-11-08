@@ -161,7 +161,7 @@ function RaidSummary({ e, names, roster, halfMs, hand }) {
           <i className={`kit-live-team-dot kw-dot-${sideKey(e.team)}`} aria-hidden="true" />
           {hand ? <HandUnderline>{title}</HandUnderline> : title}
         </h3>
-        <p>Raider: <b>{playerLabel(roster, e.raiderSlot)}</b>{raiderOut ? <> · <b>out</b></> : out.length > 0 && <> · Out: <b>{joinNames(out)}</b></>}</p>
+        <p>Raider: <b>{playerLabel(roster, e.raiderSlot) || 'not named'}</b>{raiderOut ? <> · <b>out</b></> : out.length > 0 && <> · Out: <b>{joinNames(out)}</b></>}</p>
         <p className="kw-sum-lead">{leadLine(e, names)}</p>
       </div>
       <div className="kw-sum-r">

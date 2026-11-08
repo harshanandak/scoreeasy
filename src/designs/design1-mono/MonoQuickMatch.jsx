@@ -901,7 +901,7 @@ export default function MonoQuickMatch() {
     teamA: teamColourOn ? { name: team1Name, color: team1Color } : { name: team1Name },
     teamB: teamColourOn ? { name: team2Name, color: team2Color } : { name: team2Name },
     ...(isKabaddi && kabaddiMatch ? {
-      players: kabaddiMatch.rosters.flatMap((list, i) => list.filter(Boolean).map(name => ({ team: i ? 'B' : 'A', name }))),
+      players: kabaddiMatch.rosters.flatMap((list, i) => list.map((name, slot) => ({ team: i ? 'B' : 'A', name, slotId: `${i ? 'B' : 'A'}${slot + 1}` })).filter(p => p.name)),
       kabaddiHistory: raidStory(kabaddiMatch),
     } : {}),
   };

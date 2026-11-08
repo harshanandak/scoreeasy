@@ -756,7 +756,12 @@ function WatchMatchPage({ onRetry }) {
   const canLoadMore = status === 'CanLoadMore';
   if (snapshot.sport === 'kabaddi' && snapshot.kabaddi) {
     const match = kabaddiWatchMatch(snapshot, meta, eventRows);
-    const roster = ['A', 'B'].map(team => (meta?.players ?? []).filter(p => p.team === team).map(p => p.name));
+    const roster = ['A', 'B'].map(team => {
+      const players = (meta?.players ?? []).filter(p => p.team === team);
+      const names = Array(snapshot.kabaddi.rules.initialPlayers).fill('');
+      players.forEach((p, i) => { const index = p.slotId ? Number(p.slotId.slice(1)) - 1 : i; if (index >= 0 && index < names.length) names[index] = p.name; });
+      return names;
+    });
     return <>
       <ConnectionBanner status={connectionStatus} />
       <KabaddiWatch match={match} now={viewerNow} roster={roster} />

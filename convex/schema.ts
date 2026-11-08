@@ -134,6 +134,7 @@ export default defineSchema({
           team: v.union(v.literal("A"), v.literal("B")),
           name: v.string(),
           jersey: v.optional(v.string()),
+          slotId: v.optional(v.string()),
         }),
       ),
     ),
