@@ -23,7 +23,7 @@ Acceptance coverage (rung 4 unless marked otherwise):
 - [x] Palette ratchet measures exactly 669. No baseline or exclusion changes.
 - [x] Final focused validation: 8 files, 175 passing tests, 10 expected failures (185 total); zero unexpected failures. Includes MonoTennisLiveScore, the merged MonoGoalsLiveScore tests, routes.contract, appEntry, AppEntryRoute, both stability-audit files and palette. There are 6 routing expected failures and 4 stability expected failures, down from master's 7 + 4.
 - [x] Lint: 0 errors, 29 warnings. Type-check passed. Normal merge commit hooks passed lint, type-check and agent-config sync. Sweep syntax check passed.
-- [ ] Full suite and build: verify the required CI `verify` check. The local pre-push hook selects related tests or the full suite for any tracked deletion/rename and test-environment changes; it does not build. No hosted-check pass is inferred from local validation.
+- [ ] Full suite and build: verify the required CI `verify` check. There is no local pre-push hook. No hosted-check pass is inferred from local validation.
 
 Historical limit at the tennis completion integration: SA-07 recorded that Undo to an empty history was not autosaved, including tennis (`35cbce6e-7e28-49de-826a-204bb3e46904`). A temporary remount test reproduced it for both tennis modes: the board reverted, but storage retained the undone point. That completion patch covered nonempty history and left four stability cases expected failures. Navigation round two subsequently fixes SA-07 and adds zero-score/remount guard contracts for both tennis modes; see the [navigation evidence](../navigation-decisions/README.md). Winning-point refresh before Finish remains outside this original routing proof (SA-04).
 

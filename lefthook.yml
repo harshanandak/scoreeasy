@@ -7,9 +7,3 @@ pre-commit:
       run: bun run type-check
     - name: agent-config-sync
       run: bun run sync:agents -- --check
-
-pre-push:
-  parallel: false
-  jobs:
-    - name: related-tests
-      run: bun scripts/pre-push-tests.mjs

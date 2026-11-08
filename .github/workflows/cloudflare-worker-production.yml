@@ -4,7 +4,7 @@ name: Cloudflare Worker Production
 # master. Modeled on harshanandak/Zwapit. The Convex BACKEND is deployed here too
 # (`convex deploy --cmd`) so backend + frontend ship together on every merge — a
 # referenced-but-undeployed function can't reach prod. See docs/DEPLOY.md. The job
-# skips green until the required secrets are configured.
+# fails if required deployment inputs are missing.
 
 on:
   push:
@@ -51,7 +51,8 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Required secrets (CLOUDFLARE_API_TOKEN, CONVEX_DEPLOY_KEY, VITE_CLERK_PUBLISHABLE_KEY) not set — skipping deploy. Add them in repo Settings → Secrets and variables → Actions."
+            echo "::error::Required deployment inputs are missing: CLOUDFLARE_API_TOKEN, CONVEX_DEPLOY_KEY, or VITE_CLERK_PUBLISHABLE_KEY. Check repository and environment secrets and variables."
+            exit 1
           fi
 
       - name: Checkout
@@ -134,7 +135,7 @@ jobs:
             });
 
       - name: Mark failure
-        if: failure() && steps.guard.outputs.ready == 'true'
+        if: failure()
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |

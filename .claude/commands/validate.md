@@ -5,7 +5,7 @@ description: Complete validation (type/lint/tests/security)
 > **Note:** Three things share the "validate" name in Forge:
 > - `/validate` (this command): Workflow Stage 3 — rebases onto the base branch, then runs type/lint/test/security checks
 > - `forge-preflight` (formerly forge-validate): CLI tool — checks prerequisites before a stage
-> - `lefthook run pre-commit` / `lefthook run pre-push`: Local checks — pre-commit runs lint, type-check, and agent-config-sync; pre-push selects related tests since `origin/master`, or the full suite for any tracked deletion/rename and test-environment changes (does NOT rebase; fetch `origin master` first). The required CI `verify` check (`.github/workflows/ci.yml`) is the full-suite gate: build, all tests, lint, and type-check. CI does **not** run `sync:agents --check`, so commits made outside the local hook can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
+> - `lefthook run pre-commit`: Local checks — runs lint, type-check, and agent-config-sync (does NOT rebase). There is no pre-push hook and no local test run; tests run only on GitHub CI. The required CI `verify` check (`.github/workflows/ci.yml`) is the full-suite gate: build, all tests, lint, and type-check. CI does **not** run `sync:agents --check`, so commits made outside the local hook can land stale generated harness files. Re-run `bun run sync:agents` yourself if you touched anything it generates.
 
 Run comprehensive validation including type checking, linting, code review, security review, and tests.
 
@@ -23,8 +23,8 @@ Or use the validation script (checks only — no rebase):
 
 ```bash
 lefthook run pre-commit   # lint + type-check + agent-config-sync
-lefthook run pre-push     # related tests, or full suite for conservative triggers; max 2 workers, no local build
-                          # Neither rebases. Use /validate for the full workflow (rebase + checks).
+                          # No pre-push hook: tests never run locally; GitHub CI runs them.
+                          # Does not rebase. Use /validate for the full workflow (rebase + checks).
 ```
 
 ```
@@ -68,7 +68,7 @@ reflect the true state of what will be merged.
 
 ## What This Command Does
 
-**Quick Start**: Run `lefthook run pre-commit && lefthook run pre-push` for the local checks (`lefthook.yml`). Pre-push calls `bun scripts/pre-push-tests.mjs`: any tracked deletion/rename or changes to `package.json`, `bun.lock`, `vite.config.*`, `vitest.config.*`, `tsconfig*.json`, `src/test/**`, or the selection script run the full suite. Otherwise `--changed origin/master --passWithNoTests` selects tests through source imports and explicitly reports success when none are related. Missing base/history blocks with recovery instructions; detached HEAD is supported. See `docs/agents/forge-workflow.md` for the staged/unstaged rules and Sonar tooling scope. The required CI `verify` check runs the full test suite and build, plus lint and type-check. The workflow command is `/validate`. See individual steps below for details.
+**Quick Start**: Run `lefthook run pre-commit` for the local checks (`lefthook.yml`: lint, type-check, agent-config-sync). There is no pre-push hook, and the test suite is never run locally. Tests and the build run only on GitHub CI; the required CI `verify` check runs the full test suite and build, plus lint and type-check. See `docs/agents/forge-workflow.md` for the staged/unstaged rules and Sonar tooling scope. The workflow command is `/validate`. See individual steps below for details.
 
 ### Step 1: Type Check
 ```bash
@@ -124,14 +124,11 @@ bun audit
 - Verify security mitigations implemented
 - Check for sensitive data exposure
 
-### Step 5: Tests
-```bash
-# Run your project's test command
-bun test    # or: npm run test, jest, vitest, etc.
-```
-- All tests passing
-- Includes security test scenarios
-- TDD tests from /dev phase
+### Step 5: Tests (GitHub CI only)
+Tests are not run locally. The laptop runs no test suite; GitHub CI is the test gate.
+- Push the exact head SHA you are validating
+- Confirm the CI run on that SHA passed, and link the run
+- CI covers all tests, including security test scenarios and TDD tests from /dev phase
 
 > **💭 Plan-Act-Reflect Checkpoint**
 > Before declaring validation complete:
@@ -223,18 +220,19 @@ If all pass:
 ```
 <HARD-GATE: /validate exit>
 Do NOT output any variation of "check complete", "ready to ship", or proceed to /ship
-until ALL FOUR show fresh output in this session:
+until ALL FOUR are shown in this session:
 
 1. Type check: [command run] → [actual output] → exit 0 confirmed
 2. Lint: [command run] → [actual output] → exit 0 and 0 errors confirmed.
    Warnings are a known baseline (`explicit-table-ids` and two other Convex rules
    are configured `warn` in eslint.config.js; CODING_STANDARDS.md records why).
    Do not add new ones — say the count and whether your change moved it.
-3. Tests: [command run] → [actual output] → N/N passing confirmed
+3. Tests: pushed head SHA [sha] → CI run [link] on that SHA → passed confirmed.
+   No local test run; the laptop runs no tests.
 4. Security scan: [command run] → [actual output] → no critical issues confirmed
 
 "Should pass", "was passing earlier", and "I'm confident" are not evidence.
-Run the commands. Show the output. THEN declare done.
+Run the commands and check the CI run. Show the output. THEN declare done.
 
 5. Context check: Run `forge issue show <id>` and confirm by eye that the issue has a
    description, at least one stage-transition comment, and that the latest one carries a summary
