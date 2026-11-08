@@ -1,3 +1,4 @@
+import { isAbandoned } from './matchOutcome';
 /**
  * Normalizes match results from different sport engines into a common shape
  * for the Convex matches table: { score1, score2, detail, ... }
@@ -24,10 +25,10 @@ export function normalizeMatchForConvex(result, sport) {
   // Test cricket — scores are in innings array
   else if (result.innings && Array.isArray(result.innings)) {
     const team1Innings = result.innings.filter(
-      (inn) => inn.teamId === result.team1 || inn.teamId === "team1"
+      (inn) => inn.teamId === result.team1Id || inn.teamId === result.team1 || inn.teamId === "team1"
     );
     const team2Innings = result.innings.filter(
-      (inn) => inn.teamId === result.team2 || inn.teamId === "team2"
+      (inn) => inn.teamId === result.team2Id || inn.teamId === result.team2 || inn.teamId === "team2"
     );
     score1 = team1Innings.reduce((sum, inn) => sum + (inn.runs ?? 0), 0);
     score2 = team2Innings.reduce((sum, inn) => sum + (inn.runs ?? 0), 0);
@@ -38,8 +39,8 @@ export function normalizeMatchForConvex(result, sport) {
   }
   // Sets-based with best-of format — has sets array and setsWon
   else if (result.sets && Array.isArray(result.sets)) {
-    score1 = result.setsWon1 ?? 0;
-    score2 = result.setsWon2 ?? 0;
+    score1 = (isAbandoned(result) ? result.score1 : undefined) ?? result.setsWon1 ?? 0;
+    score2 = (isAbandoned(result) ? result.score2 : undefined) ?? result.setsWon2 ?? 0;
     detail = {
       sets: result.sets,
       setsWon1: result.setsWon1,
@@ -59,7 +60,8 @@ export function normalizeMatchForConvex(result, sport) {
     score1,
     score2,
     detail: detail ?? undefined,
-    winner: result.winner || undefined,
+    winner: isAbandoned(result) ? undefined : result.winner || undefined,
+    resultType: result.resultType || (isAbandoned(result) ? 'abandoned' : undefined),
     format: result.format || undefined,
     date: Date.now(),
     duration: result.elapsedSeconds || undefined,

@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
@@ -85,7 +86,7 @@ function getEntrySearchText(entry) {
     entry.participants,
     entry.sportName,
     entry.score,
-    winnerLabel(entry.winner),
+    (isAbandoned(entry) ? ABANDONED_LABEL : winnerLabel(entry.winner)),
     entry.source === 'quick' ? 'quick match' : 'tournament',
   ].filter(Boolean).join(' ').toLowerCase();
 }
@@ -137,6 +138,7 @@ function getScoreMargin(score) {
 
 function matchesResultFilter(entry, resultFilter) {
   if (resultFilter === RESULT_ALL) return true;
+  if (isAbandoned(entry)) return false;
   if (resultFilter === RESULT_DRAW) return isDrawLikeWinner(entry.winner);
   if (resultFilter === RESULT_DECIDED) return Boolean(entry.winner) && !isDrawLikeWinner(entry.winner);
   if (resultFilter === RESULT_CLOSE) {
@@ -148,7 +150,7 @@ function matchesResultFilter(entry, resultFilter) {
 
 function buildEntryShareText(entry) {
   const title = entry.isLegacy ? entry.tournamentName : `${entry.team1} vs ${entry.team2}`;
-  return `${title} - ${entry.score} - ${winnerLabel(entry.winner)}`;
+  return `${title} - ${entry.score} - ${(isAbandoned(entry) ? ABANDONED_LABEL : winnerLabel(entry.winner))}`;
 }
 
 function getShareStatusText(response) {
@@ -234,7 +236,8 @@ function buildTournamentEntries() {
           team2: team2Name,
           score: matchScore(match, team1Ref, team2Ref),
           cricketLabel: sport.id === 'cricket' ? cricketScoreLine(match, [team1Name, team2Name], [team1Ref, team2Ref]) : null,
-          winner: resolveTournamentWinner(match, team1Name, team2Name),
+          resultType: match.resultType,
+          winner: isAbandoned(match) ? null : resolveTournamentWinner(match, team1Name, team2Name),
           elapsedSeconds: match.elapsedSeconds,
           date: getCompletedAt(match) || tournament.createdAt,
         });
@@ -305,7 +308,8 @@ export default function MonoHistory() {
         team2: qm.team2,
         score,
         cricketLabel: qm.sport === 'cricket' ? cricketScoreLine(qm) : null,
-        winner: normalizeNonTeamWinner(qm.winner),
+        resultType: qm.resultType,
+        winner: isAbandoned(qm) ? null : normalizeNonTeamWinner(qm.winner),
         elapsedSeconds: qm.elapsedSeconds,
         date: qm.completedAt || qm.date || qm.createdAt,
         // The pair the scorer picked (kept locally since S1); only plain hex survives.
@@ -778,7 +782,7 @@ function entryLabel(entry) {
 function rowLabel(entry, context, day) {
   const score = displayScore(entry.score);
   const title = entry.cricketLabel ?? (entry.isLegacy ? `${entry.tournamentName} ${score}` : `${entry.team1} ${score} ${entry.team2}`);
-  const result = normalizeNonTeamWinner(entry.winner) ? winnerLabel(entry.winner) : null;
+  const result = isAbandoned(entry) ? ABANDONED_LABEL : normalizeNonTeamWinner(entry.winner) ? winnerLabel(entry.winner) : null;
   return `${[title, result, entry.sportName, context, day].filter(Boolean).join(', ')}. View details`;
 }
 
@@ -794,7 +798,7 @@ function HistoryRow({ entry, onOpen, buttonRef = undefined }) {
       <span className="kit-row-text">
         <span className="kit-row-title">{entry.cricketLabel ?? entryTitle(entry)}</span>
         <span className="kit-row-sub">
-          {[entry.sportName, context, day, entry.cricketLabel && entry.winner ? winnerLabel(entry.winner) : null].filter(Boolean).join(' · ')}
+          {[entry.sportName, isAbandoned(entry) ? ABANDONED_LABEL : null, context, day, !isAbandoned(entry) && entry.cricketLabel && entry.winner ? winnerLabel(entry.winner) : null].filter(Boolean).join(' · ')}
         </span>
       </span>
       {!entry.cricketLabel && <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>}
@@ -864,7 +868,7 @@ function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, o
       )}
       <p className="kit-detail-result">
         {entry.cricketLabel ?? displayScore(entry.score)}
-        <span className="kit-row-sub" style={{ display: 'inline', marginLeft: 10, fontFamily: 'var(--se-font-sans)' }}>{winnerLabel(entry.winner)}</span>
+        <span className="kit-row-sub" style={{ display: 'inline', marginLeft: 10, fontFamily: 'var(--se-font-sans)' }}>{(isAbandoned(entry) ? ABANDONED_LABEL : winnerLabel(entry.winner))}</span>
       </p>
       <div className="kit-btnstack">
         {onRematch && <button type="button" className="se-go" onClick={onRematch}>Rematch <GoArrow /></button>}

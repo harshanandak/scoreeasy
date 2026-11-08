@@ -262,6 +262,18 @@ describe('MonoWatchMatch', () => {
     expect(within(card).queryByText('Final')).not.toBeInTheDocument();
   });
 
+  it('an abandoned final snapshot keeps the score without a winner highlight', () => {
+    mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final', resultType: 'abandoned' };
+    mocks.meta = { ...META, sport: 'football' };
+    renderAt('ABC123', '?kiosk=1');
+    expect(screen.getByText('Abandoned · no result')).toBeInTheDocument();
+    const card = screen.getByRole('region', { name: 'Line score' });
+    expect(within(card).getByText('3')).toBeInTheDocument();
+    expect(within(card).getByText('2')).toBeInTheDocument();
+    expect(card.querySelector('[data-winner]')).toBeNull();
+    expect(screen.queryByText('▸ Reds')).not.toBeInTheDocument();
+  });
+
   it('scorecard (goals) DOES highlight the winner once the match is final', () => {
     mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final' };
     mocks.meta = { ...META, sport: 'football' };

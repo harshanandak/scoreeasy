@@ -239,7 +239,7 @@ describe('app-owned scoring prompts', () => {
     // The confirm dialog shell lives in mono.css (colour audit migration PR 6).
     expect(monoCss).toContain('.app-confirm-danger');
     expect(monoCss).toMatch(/@media \(max-width: 767px\)\s*\{\s*\.app-confirm-backdrop/);
-    expect(monoCss).toMatch(/\.app-confirm-backdrop\s*\{[^}]*env\(safe-area-inset-bottom, 0px\)/);
+    expect(monoCss).toMatch(/\.app-confirm-backdrop\s*\{[^}]*var\(--se-safe-bottom\)/);
   });
 
   it('keeps active scorer layouts compact and thumb-reachable on mobile', () => {
@@ -254,7 +254,7 @@ describe('app-owned scoring prompts', () => {
     expect(monoCss).toContain('.mono-scorer-control-strip');
     expect(monoCss).toMatch(/\.mono-scorer-control-strip\s*\{[\s\S]*position:\s*sticky/);
     expect(monoCss).toMatch(/\.mono-scorer-control-strip\s*\{[\s\S]*bottom:\s*0/);
-    expect(monoCss).toContain('env(safe-area-inset-bottom, 0px)');
+    expect(monoCss).toContain('var(--se-safe-bottom)');
     expect(monoCss).toContain('clamp(2.75rem, 16vw, 3.5rem)');
     expect(monoCss).toContain('grid-template-columns: repeat(7, minmax(0, 1fr))');
     expect(monoCss).toContain('@media (max-width: 640px) and (max-height: 740px)');
@@ -265,9 +265,9 @@ describe('app-owned scoring prompts', () => {
         expect(source).toContain('<BoardBar');
         expect(source).toContain('className="tsb-big mono-score-animate"');
         const shellCss = readFileSync(`${import.meta.dirname}/boardShell.css`, 'utf8');
-        expect(shellCss).toContain('min-height: 100dvh');
+        expect(shellCss).toContain('min-height: calc(100dvh - var(--se-safe-top))');
         expect(shellCss).toContain('min-height: 60px');
-        expect(shellCss).toContain('env(safe-area-inset-bottom, 0px)');
+        expect(shellCss).toContain('var(--se-safe-bottom)');
         continue;
       }
       expect(source, componentFile).toContain('mono-scorer-screen');
@@ -380,10 +380,10 @@ describe('app-owned scoring prompts', () => {
       readFileSync(new URL(componentFile, import.meta.url), 'utf8'),
     ]));
 
-    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('if (!tournament || !match || scoringPrompt.isInteractionLocked) return;');
-    expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
-    expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(isInteractionLocked\) return;/);
-    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('if (!tournament || !match || (!confirmed && scoringPrompt.isInteractionLocked)) return;');
+    expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && scoringPrompt\.isInteractionLocked\) return;/);
     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const canScoreCurrentSet =.*!scoringPrompt\.isInteractionLocked/);
     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/scoringPrompt\.isInteractionLocked\r?\n {4}\? 'Scoring is temporarily locked'/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.pendingPrompt\) return;/);

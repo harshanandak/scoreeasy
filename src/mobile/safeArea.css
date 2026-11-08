@@ -1,0 +1,33 @@
+/* Capacitor 8 SystemBars CSS mode reports the remaining WebView inset (zero
+   when older Android WebViews already have native padding). Safari/PWAs use env. */
+:root {
+  --se-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --se-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --se-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --se-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
+/* Own the top inset once, outside navigation and all routes. Board headers keep
+   their ordinary spacing; their height budget subtracts this shared padding. */
+.se-app-shell {
+  padding: var(--se-safe-top) var(--se-safe-right) 0 var(--se-safe-left);
+}
+
+/* Fixed surfaces escape the shell's padding, including portals mounted on body. */
+.mono-sheet-backdrop,
+.sb-sheet-layer,
+.kit-share-backdrop {
+  padding-top: var(--se-safe-top);
+  padding-right: var(--se-safe-right);
+  padding-left: var(--se-safe-left);
+}
+
+.mono-sheet-backdrop > .mono-card {
+  max-height: calc(100dvh - var(--se-safe-top) - var(--se-safe-bottom));
+  overflow-y: auto;
+  margin-bottom: var(--se-safe-bottom);
+}
+
+.se-app-shell #main-content > .min-h-screen {
+  min-height: calc(100vh - var(--se-safe-top));
+}

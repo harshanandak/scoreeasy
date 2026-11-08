@@ -197,6 +197,63 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(container.querySelectorAll('.kit-tile .kit-badge, .kit-tile svg')).toHaveLength(0);
     });
 
+    describe('abandoned and decided results', () => {
+      // A stale `winner` can sit on an abandoned record (older finishes); the marker wins.
+      const cricket = {
+        id: 'cr-1', sport: 'cricket', team1: 'Lions', team2: 'Tigers', score1: 164, score2: 158, winner: 'Lions',
+        status: 'completed', team1Score: { runs: 164, wickets: 6 }, team2Score: { runs: 158, wickets: 9 },
+        date: iso(2 * day), completedAt: iso(2 * day),
+      };
+      const abandonedVolleyball = { ...volleyball, id: 'vb-ab', resultType: 'abandoned', winner: 'Royals', date: iso(3600e3), completedAt: iso(3600e3) };
+      const abandonedCricket = { ...cricket, id: 'cr-ab', resultType: 'abandoned', winner: 'Lions', date: iso(2 * day), completedAt: iso(2 * day) };
+      const decided = (record) => ({ ...record, resultType: 'decided' });
+
+      it('Last match: an abandoned record shows the label, no winner emphasis and no "won"', () => {
+        seed([abandonedVolleyball, kabaddi]);
+        const { container } = renderDashboard();
+        const card = container.querySelector('.kit-last');
+        expect(card.querySelectorAll('.kit-last-team.is-winner')).toHaveLength(0);
+        expect(within(card).getByRole('group', { name: 'Royals 3, Strikers 1. Abandoned · no result' })).toBeInTheDocument();
+        expect(card.querySelector('.kit-last-detail')).toHaveTextContent('Abandoned · no result');
+        expect(card.textContent).not.toMatch(/won|Completed/i);
+      });
+
+      it('Last match: a decided record still shows its winner', () => {
+        seed([decided(volleyball), kabaddi]);
+        const { container } = renderDashboard();
+        const card = container.querySelector('.kit-last');
+        expect(card.querySelectorAll('.kit-last-team.is-winner')).toHaveLength(1);
+        expect(within(card).getByRole('group', { name: 'Royals 3, Strikers 1. Royals won' })).toBeInTheDocument();
+      });
+
+      it('Recent: abandoned rows show the label, bold no team and never say "won"', () => {
+        seed([volleyball, abandonedVolleyball, abandonedCricket, kabaddi]);
+        renderDashboard();
+        const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
+        const abandonedRows = rows.filter((row) => /Abandoned/.test(row.textContent));
+        expect(abandonedRows).toHaveLength(2);
+        abandonedRows.forEach((row) => {
+          expect(row.querySelector('strong')).toBeNull();
+          expect(row.textContent).toContain('Abandoned · no result');
+          expect(row.textContent).not.toMatch(/won/i);
+          expect(row.getAttribute('aria-label')).toContain('Abandoned · no result');
+          expect(row.getAttribute('aria-label')).not.toMatch(/won/i);
+        });
+      });
+
+      it('Recent: a decided row still bolds its winner and says who won', () => {
+        seed([volleyball, decided(kabaddi), decided(cricket)]);
+        renderDashboard();
+        const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
+        const bulls = rows.find((row) => /Bulls/.test(row.textContent));
+        expect(bulls.querySelector('strong')).toHaveTextContent('Bulls');
+        expect(bulls).toHaveAccessibleName(/Bulls won/);
+        const lions = rows.find((row) => /Lions/.test(row.textContent));
+        expect(lions.textContent).toMatch(/Lions won/);
+        expect(lions).toHaveAccessibleName(/Lions won/);
+      });
+    });
+
     it('greets a signed-in scorer by name with the underline, and the avatar opens the profile', async () => {
       authState = { ...authState, isAuthenticated: true, user: { username: 'harsha', favoriteGames: ['cricket'] } };
       seed([volleyball]);

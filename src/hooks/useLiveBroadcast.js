@@ -236,7 +236,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     [enabled, flush, persistSeq],
   );
 
-  const finalize = useCallback(async () => {
+  const finalize = useCallback(async ({ resultType } = {}) => {
     if (!enabled) return null;
     // Drain DETERMINISTICALLY before archiving. flush() now AWAITS any in-flight
     // point() drain (instead of no-op'ing), so finalize cannot race ahead of the
@@ -255,7 +255,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     const matchId = matchIdRef.current;
     if (!matchId) return null;
     try {
-      return await finalizeM({ matchId });
+      return await finalizeM({ matchId, ...(resultType ? { resultType } : {}) });
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)));
       return null;

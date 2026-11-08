@@ -1,3 +1,4 @@
+import { isLimitedOversMatchDecided } from '../../../utils/cricketCalculations';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
 import { useScoringProgress } from './scoringProgressContext';
@@ -244,6 +245,7 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // Innings 1 ended -> freeze its aggregate, set the target, go to the break.
   const handleComplete1 = (payload) => {
+    if (payload?.reason === 'manual-match') { finishAbandoned(payload); return; }
     const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
     const agg = mirrorAggregate(finalInnings, fmt);
     const nextTarget = computeTarget(agg.runs);
@@ -280,7 +282,29 @@ export default function MonoCricketGuidedScorerRoute() {
   };
 
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
+  const finishAbandoned = (payload) => {
+    completion.complete(() => {
+      const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
+      const agg = mirrorAggregate(finalInnings, fmt);
+      const updated = updateMatchInTournament(tournament, matchId, m => ({ ...m,
+        team1Score: battingSlot === 'team1Score' ? agg : m.team1Score || { runs: 0, wickets: 0, balls: 0 },
+        team2Score: battingSlot === 'team2Score' ? agg : m.team2Score || { runs: 0, wickets: 0, balls: 0 },
+        battingOrder, status: 'completed', resultType: 'abandoned', winner: null, winDesc: '',
+        guidedInnings: secondInnings ? [m.draftState?.innings1 ?? null, finalInnings] : [finalInnings],
+        draftState: undefined, completedAt: now(),
+      }));
+      const saved = saveSportTournament(storageKey, updated);
+      setPendingCompletion(saved ? null : { ...payload, innings: finalInnings });
+      return saved;
+    }, navigateToTournament);
+  };
+
   const handleComplete2 = (payload) => {
+    const agg = mirrorAggregate(payload?.innings ?? draft.guidedInnings ?? { deliveries: [] }, fmt);
+    const candidate = { ...match, [battingSlot]: agg };
+    if ((payload?.reason === 'manual-match' || payload?.reason === 'manual-innings') && !isLimitedOversMatchDecided({ ...candidate, format: match.format, innings: 2, battingSecond: battingSlot === 'team1Score' ? 1 : 2 })) {
+      finishAbandoned(payload); return;
+    }
     completion.complete(() => {
       const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
       const agg = mirrorAggregate(finalInnings, fmt);
@@ -288,6 +312,7 @@ export default function MonoCricketGuidedScorerRoute() {
         const completed = {
           ...m,
           status: 'completed',
+          resultType: 'decided',
           battingOrder,
           cricketRules: m.cricketRules ?? fmt,
           [slotForTeam(m, battingOrder[1])]: agg,
@@ -395,7 +420,7 @@ export default function MonoCricketGuidedScorerRoute() {
 }
 
 const BREAK_STYLES = `
-.mono-break-screen { min-height: 100dvh; padding: 16px 14px 0; }
+.mono-break-screen { min-height: calc(100dvh - var(--se-safe-top)); padding: 16px 14px 0; }
 .mono-break-shell { max-width: 390px; margin: 0 auto; }
 .mono-break-screen .mono-setup-screen { min-height: 0; }
 .mono-break-banner { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--se-color-line); border-radius: 14px; background: var(--se-color-surface); color: var(--se-color-ink); padding: 16px 16px; }

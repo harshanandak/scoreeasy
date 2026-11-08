@@ -112,7 +112,7 @@ describe('finishFromVerdict: tournament sets results', () => {
 
   it('an abandoned match has no result', () => {
     const verdict = matchVerdict({ kind: 'sets', status: 'abandoned', team1: 'A', team2: 'B' });
-    expect(finishFromVerdict(verdict, { team1Name: 'A', team2Name: 'B' })).toMatchObject({ outcome: 'none', headline: 'Match abandoned' });
+    expect(finishFromVerdict(verdict, { team1Name: 'A', team2Name: 'B' })).toMatchObject({ outcome: 'none', headline: 'Abandoned · no result' });
   });
 });
 

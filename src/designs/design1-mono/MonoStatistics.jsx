@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,7 @@ function getQuickScore(match) {
 }
 
 function resolveWinner(match, score) {
+  if (isAbandoned(match)) return null;
   const winnerText = String(match.winner || '').toLowerCase();
   const team1 = String(match.team1 || '').toLowerCase();
   const team2 = String(match.team2 || '').toLowerCase();
@@ -81,6 +83,7 @@ function ensureQuickTeam(teamMap, teamName) {
     teamMap[teamName] = {
       name: teamName,
       played: 0,
+      noResult: 0,
       won: 0,
       lost: 0,
       drawn: 0,
@@ -104,6 +107,7 @@ function buildQuickTeamRows(matches) {
 
     team1Row.played++;
     team2Row.played++;
+    if (isAbandoned(match)) { team1Row.noResult++; team2Row.noResult++; return; }
     team1Row.pointsFor += score.score1;
     team1Row.pointsAgainst += score.score2;
     team2Row.pointsFor += score.score2;
@@ -125,13 +129,13 @@ function buildQuickTeamRows(matches) {
     .map((row) => ({
       ...row,
       margin: row.pointsFor - row.pointsAgainst,
-      winRate: row.played > 0 ? Math.round((row.won / row.played) * 100) : 0,
+      winRate: (row.played - row.noResult) > 0 ? Math.round((row.won / (row.played - row.noResult)) * 100) : 0,
     }))
     .sort((a, b) => b.won - a.won || b.winRate - a.winRate || b.margin - a.margin || a.name.localeCompare(b.name));
 }
 
 function buildQuickInsights(matches) {
-  const sorted = [...matches].sort((a, b) => getMatchDate(b) - getMatchDate(a));
+  const sorted = matches.filter(match => !isAbandoned(match)).sort((a, b) => getMatchDate(b) - getMatchDate(a));
   const teamRows = buildQuickTeamRows(sorted);
   const sportCounts = {};
   const pairCounts = {};
@@ -197,8 +201,8 @@ function formatQuickScore(match) {
 }
 
 function recordTeamResult(teamMap, team1, team2, score1, score2) {
-  teamMap[team1].played++;
-  teamMap[team2].played++;
+  teamMap[team1].resultMatches++;
+  teamMap[team2].resultMatches++;
   teamMap[team1].pointsFor += score1;
   teamMap[team1].pointsAgainst += score2;
   teamMap[team2].pointsFor += score2;
@@ -602,7 +606,7 @@ export function MonoStatisticsPanel() {
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs mono-action-text">{qm.winner}</span>
+                            <span className="text-xs mono-action-text">{isAbandoned(qm) ? ABANDONED_LABEL : qm.winner}</span>
                             <span className="text-xs mono-subtle-text">
                               {new Date(qm.completedAt || qm.date || qm.createdAt).toLocaleDateString()}
                             </span>
@@ -771,6 +775,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           teamMap[team.name] = {
             name: team.name,
             played: 0,
+            resultMatches: 0,
             won: 0,
             lost: 0,
             pointsFor: 0,
@@ -797,7 +802,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           const s2 = typeof match.score2 === 'number'
             ? match.score2
             : (match.team2Score?.runs || 0);
-          recordTeamResult(teamMap, t1, t2, s1, s2);
+          if (!isAbandoned(match)) recordTeamResult(teamMap, t1, t2, s1, s2);
         } else {
           // Sets/Goals scoring
           if (!isTournamentMatchCompleted(match, engine, match.format || t.format)) return;
@@ -812,9 +817,9 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           if (Array.isArray(match.sets) && match.sets.length > 0) {
             const sets1 = match.setsWon1 ?? match.sets.filter((s) => s.score1 > s.score2).length;
             const sets2 = match.setsWon2 ?? match.sets.filter((s) => s.score2 > s.score1).length;
-            recordTeamResult(teamMap, t1, t2, sets1, sets2);
+            if (!isAbandoned(match)) recordTeamResult(teamMap, t1, t2, sets1, sets2);
           } else if (typeof match.score1 === 'number' && typeof match.score2 === 'number') {
-            recordTeamResult(teamMap, t1, t2, match.score1, match.score2);
+            if (!isAbandoned(match)) recordTeamResult(teamMap, t1, t2, match.score1, match.score2);
           }
         }
       });
@@ -823,8 +828,8 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
     setData(Object.values(teamMap)
       .map((row) => ({
         ...row,
-        averageMargin: row.played > 0
-          ? ((row.pointsFor - row.pointsAgainst) / row.played).toFixed(1)
+        averageMargin: row.resultMatches > 0
+          ? ((row.pointsFor - row.pointsAgainst) / row.resultMatches).toFixed(1)
           : '0.0',
       }))
       .sort((a, b) => b.won - a.won || b.pointsFor - a.pointsFor));
@@ -860,7 +865,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
                 <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.pointsAgainst}</td>
                 <td className={`text-center font-mono ${Number(row.averageMargin) > 0 ? 'mono-table-action' : Number(row.averageMargin) < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
                 <td className="text-center font-mono mono-table-action" style={{ padding: '12px 16px' }}>
-                  {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
+                  {row.resultMatches > 0 ? Math.round((row.won / row.resultMatches) * 100) : 0}%
                 </td>
               </tr>
             ))}
