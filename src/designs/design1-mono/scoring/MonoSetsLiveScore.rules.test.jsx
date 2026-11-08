@@ -82,6 +82,29 @@ async function renderScorer() {
 }
 
 describe('shared sets rules regressions', () => {
+  it.each([null, 1])('inherits tournament side-out mode on first open and restore (first server %s)', async (initialServer) => {
+    h.params.sport = 'volleyball';
+    const tournament = h.makeTournament();
+    tournament.format = { type: 'best-of', sets: 3, points: 25, scoringMode: 'side-out', initialServer };
+    delete tournament.matches[0].format;
+    h.tournaments = [tournament];
+    const view = render(<MonoSetsLiveScore />);
+    await act(async () => {});
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Add point for Beta' })); });
+    if (initialServer === null) {
+      expect(screen.getByRole('alert')).toHaveTextContent('Choose the serving team');
+      expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toBeUndefined();
+    } else {
+      const saved = structuredClone(h.saveSpy.mock.calls.at(-1)[1]);
+      expect(saved.matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 2, sets: [{ score1: 0, score2: 0, completed: false }] });
+      h.tournaments = [saved];
+      view.unmount();
+      await act(async () => { render(<MonoSetsLiveScore />); vi.advanceTimersByTime(160); });
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Add point for Alpha' })); });
+      expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 1, sets: [{ score1: 0, score2: 0, completed: false }] });
+    }
+  });
+
   async function point(team) {
     await act(async () => {
       vi.advanceTimersByTime(160);

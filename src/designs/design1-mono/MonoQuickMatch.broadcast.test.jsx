@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { saveQuickMatch, saveData } from '../../utils/storage';
+import { freezeSetsFormat } from '../../models/setsRules';
+import { getSportById } from '../../models/sportRegistry';
 
 // Quick-match live-broadcast wiring (dkt/b0z): scoring a quick match must mirror
 // each point to the public watch page via useLiveBroadcast, with an engine-derived
@@ -87,6 +89,15 @@ beforeEach(() => {
 });
 
 describe('MonoQuickMatch live broadcast wiring', () => {
+  it.each(['badminton', 'tabletennis'])('single-game %s snapshots keep Game 1 on scoring and undo', (sport) => {
+    ctx.sport = sport;
+    ctx.draft = { ...base, sport, quickMatchId: 3003, format: freezeSetsFormat(getSportById(sport), { type: 'single', sets: 1, target: 11 }), vScore1: 0, vScore2: 0, servingTeam: null };
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add point for Reds' }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot.periodLabel).toBe('Game 1');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(live.undo.mock.calls.at(-1)[0].snapshot.periodLabel).toBe('Game 1');
+  });
   it.each(['football', 'kabaddi', 'basketball', 'hockey'])('broadcasts the known %s match label on scoring and undo', (sport) => {
     seedGoals();
     ctx.sport = sport;

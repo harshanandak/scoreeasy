@@ -52,6 +52,12 @@ describe('frozen edition-specific sets rules', () => {
 });
 
 describe('team-level service and end changes', () => {
+  it('changes ends at five in a single table-tennis game, its last possible game', () => {
+    const rules = rulesFor('tabletennis', { type: 'single', sets: 1, target: 11 });
+    expect(endChangeDue(rules, 0, score(4, 3))).toBe(false);
+    expect(endChangeDue(rules, 0, score(5, 3))).toBe(true);
+    expect(Boolean(endChangeDue({ ...rules, version: 0 }, 0, score(5, 3)))).toBe(false);
+  });
   it.each(['volleyball', 'badminton'])('%s gives service to the rally winner', (sport) => {
     const rules = rulesFor(sport);
     expect(serveAfterPoint(rules, { score: score(1, 0), servingTeam: null, winner: 1 })).toBe(1);
