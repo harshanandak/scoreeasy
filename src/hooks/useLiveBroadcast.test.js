@@ -64,6 +64,58 @@ function setup(opts) {
 }
 
 describe('useLiveBroadcast', () => {
+  it('does not send a restored snapshot after unmount while the drain ack is pending', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    let resolvePoint;
+    h.get('live:scorePoint').mockReturnValue(new Promise((done) => { resolvePoint = done; }));
+    enqueue({ kind: 'point', clientMatchId: 'cm1', clientEventId: 'cm1:7', team: 'A', value: 1, at: 1 });
+    const { result, unmount } = setup();
+    await act(async () => { await result.current.restore(GO); });
+    expect(h.spies['live:scorePoint']).toHaveBeenCalledTimes(1);
+    unmount();
+    await act(async () => { resolvePoint({}); });
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+  });
+
+  it.each(['online', 'visibilitychange'])('retries a failed restore snapshot with the CURRENT score on %s', async (event) => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    h.get('live:setVisibility').mockRejectedValueOnce(new Error('offline'));
+    let snapshot = { ...GO.snapshot, pointsA: 3 };
+    const { result } = setup();
+    await act(async () => { await result.current.restore({ ...GO, getSnapshot: () => snapshot }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
+    expect(result.current.error).toBeTruthy();
+    snapshot = { ...snapshot, pointsA: 4 };
+    await act(async () => {
+      if (event === 'online') window.dispatchEvent(new Event(event));
+      else {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValueOnce('visible');
+        document.dispatchEvent(new Event(event));
+      }
+    });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(2);
+    expect(h.spies['live:setVisibility']).toHaveBeenLastCalledWith({ matchId: 'mid1', visibility: 'public', snapshot, onlyIfShared: true });
+    expect(result.current.error).toBeNull();
+  });
+
+  it.each(['online', 'visibilitychange'])('retries a failed owner lookup while broadcasting is disabled on %s', async (event) => {
+    h.query.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    const { result, rerender } = renderHook(({ enabled }) => useLiveBroadcast({ enabled }), { initialProps: { enabled: false } });
+    await act(async () => { await result.current.restore(GO); });
+    expect(h.query).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      if (event === 'online') window.dispatchEvent(new Event(event));
+      else {
+        vi.spyOn(document, 'visibilityState', 'get').mockReturnValueOnce('visible');
+        document.dispatchEvent(new Event(event));
+      }
+    });
+    expect(h.query).toHaveBeenCalledTimes(2);
+    expect(result.current.isShared).toBe(true);
+    await act(async () => { rerender({ enabled: true }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['public', 'unlisted'])('syncs the current committed snapshot once after restoring a %s session', async (visibility) => {
     let resolve;
     h.query.mockReturnValue(new Promise((done) => { resolve = done; }));

@@ -114,6 +114,20 @@ describe("profile and team data minimization", () => {
 });
 
 describe("explicit live sharing", () => {
+  test("a reconcile after finalize cannot regress the spectator snapshot or final archive", async () => {
+    const { t, owner, matchId, token } = await fixture();
+    const finalScore = { ...SHARED_SCORE, pointsA: 4, pointsB: 2 };
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: finalScore });
+    expect(await owner.query(api.live.getOwnedSession, { clientMatchId: "private-live" })).toMatchObject({ isShared: true });
+    const archive = await owner.mutation(api.live.finalize, { matchId });
+    await expect(owner.mutation(api.live.setVisibility, {
+      matchId, visibility: "public", snapshot: { ...finalScore, pointsA: 3 }, onlyIfShared: true,
+    })).rejects.toMatchObject({ data: { code: "match_final" } });
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject({ status: "final", pointsA: 4, pointsB: 2 });
+    if (!archive.matchId) throw new Error("Expected a final archive");
+    expect(await t.run((ctx) => ctx.db.get("matches", archive.matchId!))).toMatchObject({ score1: 4, score2: 2 });
+  });
+
   test("restore reconciliation cannot publish a private or concurrently stopped session", async () => {
     const { t, owner, matchId, token } = await fixture();
     const reconcile = () => owner.mutation(api.live.setVisibility, {

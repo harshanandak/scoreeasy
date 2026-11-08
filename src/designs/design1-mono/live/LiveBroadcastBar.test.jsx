@@ -48,6 +48,15 @@ function renderBar(props) {
 }
 
 describe('LiveBroadcastBar (b0z)', () => {
+  it('enables broadcasting when recovery later restores an already shared session', () => {
+    const onEnableChange = vi.fn();
+    const broadcast = makeBroadcast({ isShared: false, restore: vi.fn().mockResolvedValue(null) });
+    const { rerender } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
+    onEnableChange.mockClear();
+    rerender(<MemoryRouter><LiveBroadcastBar broadcast={{ ...broadcast, isShared: true }} descriptor={descriptor} enabled={false} onEnableChange={onEnableChange} /></MemoryRouter>);
+    expect(onEnableChange).toHaveBeenCalledWith(true);
+  });
+
   it('shows Stop for a restored public match even when enabled and consent start off', async () => {
     const broadcast = makeBroadcast({ isShared: true, token: 'TOK', restore: vi.fn().mockResolvedValue({ isShared: true }) });
     const onEnableChange = vi.fn();
