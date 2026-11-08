@@ -114,7 +114,7 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
                 key={`set-${set.score1}-${set.score2}-${i}`}
                 className="px-3 py-1.5 rounded font-mono"
                 style={{
-                  background: isAbandoned(match) ? '#f5f5f5' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
+                  background: isAbandoned(match) ? 'var(--se-color-surface-warm)' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
                   color: '#111',
                   fontSize: '0.875rem'
                 }}
