@@ -1441,6 +1441,34 @@ export default function Design1Mono() {
   const protectedRouteHistoryIndexRef = useRef(null);
   const protectedGuardDepthRef = useRef(0);
   const protectedGuardRouteKeyRef = useRef(null);
+  // The pending fallback navigation (timer + one-shot popstate listener) lives at
+  // component level, not in one effect run: the exit callbacks handed to the native
+  // back guard and the exit dialog outlive that run, so a late call must still be
+  // cleared when the scorer unmounts.
+  const pendingFallbackTimeoutRef = useRef(null);
+  const pendingFallbackPopListenerRef = useRef(null);
+  const protectedGuardUnmountedRef = useRef(false);
+  const clearPendingFallbackNavigation = useCallback(() => {
+    if (pendingFallbackTimeoutRef.current !== null) {
+      globalThis.clearTimeout?.(pendingFallbackTimeoutRef.current);
+      pendingFallbackTimeoutRef.current = null;
+    }
+
+    if (pendingFallbackPopListenerRef.current) {
+      // Second layer: a test environment can be torn down before this runs.
+      if (typeof globalThis.removeEventListener === 'function') {
+        globalThis.removeEventListener('popstate', pendingFallbackPopListenerRef.current);
+      }
+      pendingFallbackPopListenerRef.current = null;
+    }
+  }, []);
+  useEffect(() => {
+    protectedGuardUnmountedRef.current = false;
+    return () => {
+      protectedGuardUnmountedRef.current = true;
+      clearPendingFallbackNavigation();
+    };
+  }, [clearPendingFallbackNavigation]);
   const nativeDeepLinkContextRef = useRef({
     hash: '',
     pathname: '/',
@@ -1546,20 +1574,6 @@ export default function Design1Mono() {
       globalThis.history.pushState({ ...globalThis.history.state, gameProtection: true }, '');
     }
 
-    let fallbackTimeoutId = null;
-    let replaceScoringEntryOnPop = null;
-    const clearPendingFallbackNavigation = () => {
-      if (fallbackTimeoutId !== null) {
-        globalThis.clearTimeout(fallbackTimeoutId);
-        fallbackTimeoutId = null;
-      }
-
-      if (replaceScoringEntryOnPop) {
-        globalThis.removeEventListener('popstate', replaceScoringEntryOnPop);
-        replaceScoringEntryOnPop = null;
-      }
-    };
-
     const leaveProtectedRouteAfterConfirm = (fallbackPath) => {
       const protectedBackFallback = fallbackPath || getProtectedScoringBackFallback(location.pathname) || '/play';
       const currentRouteHistoryIndex = globalThis.history.state?.idx;
@@ -1577,16 +1591,21 @@ export default function Design1Mono() {
         return;
       }
 
+      // A stale exit callback can run after the scorer is gone; there is no
+      // navigator left to finish the fallback, and nothing would clear it.
+      if (protectedGuardUnmountedRef.current) return;
+
       clearPendingFallbackNavigation();
       allowNextProtectedPopRef.current = true;
-      replaceScoringEntryOnPop = () => {
+      const replaceScoringEntryOnPop = () => {
         clearPendingFallbackNavigation();
         navigate(protectedBackFallback, { replace: true });
       };
+      pendingFallbackPopListenerRef.current = replaceScoringEntryOnPop;
 
       globalThis.addEventListener('popstate', replaceScoringEntryOnPop, { once: true });
       globalThis.history.back();
-      fallbackTimeoutId = globalThis.setTimeout(() => {
+      pendingFallbackTimeoutRef.current = globalThis.setTimeout(() => {
         clearPendingFallbackNavigation();
         if (isProtectedScoringPath(globalThis.location.pathname, globalThis.location.search)) {
           navigate(protectedBackFallback, { replace: true });
@@ -1641,7 +1660,7 @@ export default function Design1Mono() {
       clearPendingFallbackNavigation();
       cleanupNativeBackButton();
     };
-  }, [location.pathname, location.search, scoringStarted, navigate, requestScoringExit]);
+  }, [location.pathname, location.search, scoringStarted, navigate, requestScoringExit, clearPendingFallbackNavigation]);
 
   // Finish a protected scorer: land on its destination while unwinding
   // the scorer entry AND its protection guard entries, so Back from Result returns
