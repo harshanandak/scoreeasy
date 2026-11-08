@@ -85,7 +85,7 @@ describe('useLiveBroadcast', () => {
       await restoring;
     });
     await act(async () => { rerender({ enabled: true }); });
-    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility, snapshot });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility, snapshot, onlyIfShared: true });
     expect(h.spies['live:create']).not.toHaveBeenCalled();
     await act(async () => { await result.current.point({ team: 'B', at: 3, snapshot: { ...snapshot, pointsB: 2 } }); });
     expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
@@ -97,6 +97,15 @@ describe('useLiveBroadcast', () => {
     await act(async () => { await result.current.restore({ ...GO, getSnapshot: () => GO.snapshot }); });
     expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
     expect(result.current.isShared).toBe(false);
+  });
+
+  it('clears restored sharing status if another tab stopped before reconciliation', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 0, isShared: true, visibility: 'public' });
+    h.get('live:setVisibility').mockResolvedValue({ ok: false });
+    const { result } = setup();
+    await act(async () => { await result.current.restore(GO); });
+    expect(result.current).toMatchObject({ isShared: false, isLive: false, error: null });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
   });
 
   it('does not add a snapshot sync to normal scoring without a restore', async () => {
@@ -122,7 +131,7 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
     snapshot = { ...snapshot, pointsA: 3 };
     await act(async () => { resolvePoint({}); });
-    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'public', snapshot });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'public', snapshot, onlyIfShared: true });
     expect(load()).toEqual([]);
   });
 

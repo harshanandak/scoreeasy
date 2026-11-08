@@ -114,6 +114,32 @@ describe("profile and team data minimization", () => {
 });
 
 describe("explicit live sharing", () => {
+  test("restore reconciliation cannot publish a private or concurrently stopped session", async () => {
+    const { t, owner, matchId, token } = await fixture();
+    const reconcile = () => owner.mutation(api.live.setVisibility, {
+      matchId, visibility: "public", snapshot: SHARED_SCORE, onlyIfShared: true,
+    });
+    expect(await reconcile()).toEqual({ ok: false });
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: SHARED_SCORE });
+    expect(await owner.query(api.live.getOwnedSession, { clientMatchId: "private-live" })).toMatchObject({ isShared: true });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "private" });
+    expect(await reconcile()).toEqual({ ok: false });
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await owner.query(api.live.getOwnedSession, { clientMatchId: "private-live" })).toMatchObject({ isShared: false, visibility: "private" });
+  });
+
+  test("restore reconciliation preserves a concurrent unlisted choice and absolute totals", async () => {
+    const { t, owner, matchId, token } = await fixture();
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "unlisted", snapshot: SHARED_SCORE });
+    const snapshot = { ...SHARED_SCORE, pointsA: 4 };
+    for (let i = 0; i < 2; i += 1) {
+      expect(await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot, onlyIfShared: true })).toEqual({ ok: true });
+    }
+    expect(await owner.query(api.live.getOwnedSession, { clientMatchId: "private-live" })).toMatchObject({ visibility: "unlisted" });
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject({ pointsA: 4, pointsB: snapshot.pointsB });
+  });
+
   test("owner session restoration is read-only and cannot expose another scorer's session", async () => {
     const { t, owner, other, matchId, token } = await fixture();
     const args = { clientMatchId: "private-live" };

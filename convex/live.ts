@@ -389,14 +389,17 @@ export const setVisibility = authedMutation({
       v.literal("private"),
     ),
     snapshot: v.optional(snapshotArgValidator),
+    onlyIfShared: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
-    const publishing = args.visibility !== "private";
+    if (args.onlyIfShared && (match.visibility === "private" || match.publishedAt === undefined)) return { ok: false };
+    const visibility = args.onlyIfShared ? match.visibility : args.visibility;
+    const publishing = visibility !== "private";
     if (publishing && !args.snapshot) throw new Error("Sharing requires the current score snapshot");
     const now = Date.now();
     await ctx.db.patch(args.matchId, {
-      visibility: args.visibility,
+      visibility,
       publishedAt: publishing ? now : undefined,
       ...(publishing && args.snapshot ? {
         ...snapshotPatch(args.snapshot),

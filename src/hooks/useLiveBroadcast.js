@@ -126,8 +126,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         if (drained?.error || size() > 0) throw new Error('Waiting for queued scores to sync');
         const snapshot = pending.getSnapshot ? pending.getSnapshot() : pending.snapshot;
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
-        await setVisibilityM({ matchId: pending.matchId, visibility: pending.visibility, snapshot });
-        if (pending.generation === generationRef.current) setError(null);
+        const result = await setVisibilityM({ matchId: pending.matchId, visibility: pending.visibility, snapshot, onlyIfShared: true });
+        if (pending.generation !== generationRef.current) return;
+        if (result?.ok === false) {
+          setIsLive(false);
+          setIsShared(false);
+        }
+        setError(null);
       } catch (e) {
         if (pending.generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
       } finally {
