@@ -23,8 +23,8 @@ const controlEdge = {
   backgroundColor: 'var(--se-ctl-bg)',
   fontWeight: 700,
   "&:hover": { backgroundColor: 'var(--se-color-surface-warm)' },
-  "&:focus-visible": { boxShadow: FOCUS_RING },
-  "&:active": { transform: 'translate(2px, 2px)', boxShadow: 'var(--se-ctl-shadow-press)' },
+  "&:focus-visible": { boxShadow: `${FOCUS_RING} !important` },
+  "&:active": { transform: 'translate(2px, 2px)', boxShadow: 'var(--se-ctl-shadow-press) !important' },
 };
 
 export const monoClerkAppearance = {
@@ -128,8 +128,8 @@ export const monoClerkAppearance = {
       fontWeight: 800,
       textTransform: 'none',
       "&:hover": { background: 'linear-gradient(168deg, var(--se-color-action-hi), var(--se-color-action) 55%, var(--se-color-action-strong))', filter: 'brightness(1.06)' },
-      "&:focus-visible": { boxShadow: FOCUS_RING },
-      "&:active": { transform: 'translate(2px, 2px)', boxShadow: 'var(--se-ctl-shadow-press)' },
+      "&:focus-visible": { boxShadow: `${FOCUS_RING} !important` },
+      "&:active": { transform: 'translate(2px, 2px)', boxShadow: 'var(--se-ctl-shadow-press) !important' },
     },
     footer: {
       backgroundColor: 'transparent',
