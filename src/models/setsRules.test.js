@@ -98,7 +98,7 @@ describe('team-level service and end changes', () => {
     expect(endChangeDue(rules, rules.sets - 1, score(threshold - 1, 0))).toBe(false);
     expect(endChangeDue(rules, rules.sets - 1, score(threshold, 0))).toBe(true);
     expect(endChangeDue(rules, 0, score(threshold, 0))).toBe(false);
-    expect(Boolean(endChangeDue({ ...rules, sets: 1 }, 0, score(threshold, 0)))).toBe(false);
+    expect(endChangeDue({ ...rules, sets: 1 }, 0, score(threshold, 0))).toBe(true);
   });
 });
 

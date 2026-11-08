@@ -82,6 +82,18 @@ async function renderScorer() {
 }
 
 describe('shared sets rules regressions', () => {
+  it('keeps frozen side-out mode authoritative over a stale draft mode', async () => {
+    h.params.sport = 'volleyball';
+    h.tournaments = [h.makeTournament({
+      format: freezeSetsFormat(getSportById('volleyball'), { type: 'best-of', sets: 3, points: 25, scoringMode: 'side-out', initialServer: 1 }),
+      scoringMode: 'rally',
+      draftState: { currentSet: 0, sets: [{ score1: 0, score2: 0, completed: false }], servingTeam: 2, scoringMode: 'rally', history: [] },
+    })];
+    await act(async () => { render(<MonoSetsLiveScore />); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Add point for Alpha' })); });
+    expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 1, sets: [{ score1: 0, score2: 0, completed: false }] });
+  });
+
   it.each([null, 1])('inherits tournament side-out mode on first open and restore (first server %s)', async (initialServer) => {
     h.params.sport = 'volleyball';
     const tournament = h.makeTournament();

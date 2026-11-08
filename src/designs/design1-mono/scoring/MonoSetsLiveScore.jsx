@@ -157,7 +157,9 @@ export default function MonoSetsLiveScore() {
     const defaultScoringMode = (Array.isArray(supportedModes) && supportedModes.includes(config?.config?.defaultScoringMode))
       ? config.config.defaultScoringMode
       : (config?.config?.scoringType === 'side-out' ? 'side-out' : 'rally');
-    const loadedMode = foundMatch.scoringMode
+    const loadedMode = capturedFormat.setsRules?.version === 1
+      ? capturedFormat.setsRules.scoringMode
+      : foundMatch.scoringMode
       || foundMatch.draftState?.scoringMode
       || foundMatch.format?.scoringMode
       || defaultScoringMode;
@@ -184,7 +186,7 @@ export default function MonoSetsLiveScore() {
       setCurrentSet(foundMatch.draftState.currentSet);
       setHistory(foundMatch.draftState.history || []);
       if (Object.hasOwn(foundMatch.draftState, 'servingTeam')) setServingTeam(foundMatch.draftState.servingTeam);
-      if (foundMatch.draftState.scoringMode) setScoringMode(foundMatch.draftState.scoringMode);
+      if (capturedFormat.setsRules?.version !== 1 && foundMatch.draftState.scoringMode) setScoringMode(foundMatch.draftState.scoringMode);
       if (typeof foundMatch.draftState.sidesSwapped === 'boolean') setSidesSwapped(foundMatch.draftState.sidesSwapped);
     }
   }, [sport, id, matchId]);

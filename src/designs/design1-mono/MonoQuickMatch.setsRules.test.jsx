@@ -38,6 +38,22 @@ beforeEach(() => { ctx.draft = null; ctx.saved = null; savedMatch.mockClear(); }
 
 
 describe('quick match shared service rules', () => {
+  it('switches ends at five in a single game and restores ends and score through undo', async () => {
+    const single = freezeSetsFormat(getSportById('tabletennis'), { type: 'single', sets: 1, target: 11, initialServer: 1 });
+    seed(0, 0, { format: single, vScore1: 4, vScore2: 3 });
+    const view = render(<MonoQuickMatch />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add point for Royals' }));
+    expect(ctx.saved).toMatchObject({ sidesSwapped: true, vScore1: 5, vScore2: 3 });
+    expect(board()).toHaveTextContent('Ends changed');
+    ctx.draft = structuredClone(ctx.saved);
+    view.unmount();
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Royals' });
+    expect(board()).toHaveTextContent('Ends changed');
+    fireEvent.click(undo());
+    expect(ctx.saved).toMatchObject({ sidesSwapped: false, vScore1: 4, vScore2: 3 });
+    expect(board()).not.toHaveTextContent('Ends changed');
+  });
   const format = (initialServer = null) => freezeSetsFormat(getSportById('tabletennis'), { type: 'best-of', sets: 5, points: 11, initialServer });
 
   it('keeps unknown service through a point and refresh without inventing a marker', async () => {

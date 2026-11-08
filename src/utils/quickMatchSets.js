@@ -43,7 +43,7 @@ export function isSetComplete(set, rule) {
  * Probe the scorer's own completion predicates so caps and deciding targets cannot drift.
  * Single formats deliberately use their existing selected target and registry rules.
  */
-export function getSetPointState({ format, sportConfig, currentSet = 0, score1, score2, setsWon1 = 0, setsWon2 = 0 }) {
+export function getSetPointState({ format, sportConfig, currentSet = 0, score1, score2, setsWon1 = 0, setsWon2 = 0, servingTeam }) {
   const bestOf = format.type === 'best-of';
   const setsToWin = bestOf ? Math.ceil(format.sets / 2) : 1;
   const rule = bestOf || format.setsRules ? getSetWinRule({ format, sportConfig, currentSet }) : null;
@@ -55,6 +55,7 @@ export function getSetPointState({ format, sportConfig, currentSet = 0, score1, 
   if (setsWon1 >= setsToWin || setsWon2 >= setsToWin || complete(score1, score2)) return { setPoint, matchPoint };
 
   for (const team of [1, 2]) {
+    if ((format.setsRules?.scoringMode ?? format.scoringMode) === 'side-out' && servingTeam !== team) continue;
     if (complete(score1 + (team === 1 ? 1 : 0), score2 + (team === 2 ? 1 : 0))) {
       setPoint.push(team);
       if ((team === 1 ? setsWon1 : setsWon2) + 1 >= setsToWin) matchPoint.push(team);

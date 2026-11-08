@@ -116,7 +116,7 @@ export function serveAfterPoint(rules, { score, currentSet = 0, sets = [], servi
 }
 
 export function endChangeDue(rules, index, score) {
-  return rules.version === 1 && rules.decidingEndChange && rules.sets > 1 && index === rules.sets - 1
+  return rules.version === 1 && rules.decidingEndChange && index === rules.sets - 1
     && Math.max(score.score1, score.score2) >= rules.decidingEndChange;
 }
 

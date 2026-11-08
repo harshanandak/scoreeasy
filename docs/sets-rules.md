@@ -27,6 +27,10 @@ The scorer can choose a first server or leave **Server unknown**. Unknown servic
 
 Service can be recorded in match options (or the classic tournament controls). The score, per-set first server, current service and side placement are captured together in undo history and drafts. Crossing the configured deciding threshold changes ends; crossing it in reverse through a correction reverses the change. A point correction cannot reconstruct an unknown rally winner, so winner-serve becomes unknown until the next rally or a manual record.
 
+The configured end change applies in the last possible game, including a one-game match. A single table-tennis game therefore changes ends at five and Undo reverses that change. Side-out pressure cues offer a game/match point only to the serving team. Both single- and multiple-game broadcasts include the Game/Set unit.
+
+Tournament completion repair reads each match's frozen `setsToWin`, so an individually customized match can be longer or shorter than the tournament default. New tournament scorers initialize and restore their active scoring mode from the same frozen snapshot, including inherited side-out mode.
+
 ## Saved-match compatibility
 
 Unversioned in-progress drafts and scored tournament matches migrate to a frozen **version 0** compatibility snapshot. Their existing targets, service behavior and cap ordering are retained. In particular, an old tournament badminton draft retains the old margin-before-cap behavior and every-point service; an old quick table-tennis draft retains untracked service. This is deliberate compatibility with the task's requirement that saved matches keep their behavior, not a claim that those old rules are correct. New matches use version 1. Starting a rematch creates a new version-1 snapshot.
@@ -38,3 +42,5 @@ Tennis and throwball are outside this implementation. Tennis continues through i
 The test-only commit is `7fcf30f62244fc1eeeccf6caf10d93797d22b98c`. [Hosted CI](https://github.com/harshanandak/scoreeasy/actions/runs/42504511905) failed the 30–29 completion and tournament winner-serve regressions. The undo control passed. This is rung 4 executable evidence, not a live-match reproduction. No local tests were run; local validation is lint and type-check only.
 
 Before/after screenshots are unavailable: the T3 integrated browser disconnected during both navigation and open, then timed out during snapshot. Both created tabs were closed and the dev server was stopped. The new setup and service controls have not been visually verified; this draft is not merge-ready.
+
+During review follow-up, a production build and Vite preview replaced the dev server for capture. Both permitted T3 navigation attempts timed out after 15000 ms. Capture retries stopped after those two attempts; the preview tab and server were closed. Screenshots of the setup summary, service/unknown-server boards, pressure cue and spectator label remain unavailable.

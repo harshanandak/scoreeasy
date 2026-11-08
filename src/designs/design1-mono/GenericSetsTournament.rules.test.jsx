@@ -14,7 +14,7 @@ describe('tournament completion repair uses frozen match length', () => {
   it.each([
     [{ type: 'single', sets: 1, points: 21 }, 3, 1],
     [{ type: 'best-of', sets: 3, points: 21 }, 5, 2],
-  ])('keeps a best-of-%i match open inside a shorter tournament format', async (tournamentFormat, matchLength, won) => {
+  ])('keeps an unfinished longer match open inside tournament format %j', async (tournamentFormat, matchLength, won) => {
     const format = freezeSetsFormat(getSportById('badminton'), { type: 'best-of', sets: matchLength, points: 21 });
     h.tournament = {
       id: 1, name: 'Club Cup', format: tournamentFormat,
@@ -26,5 +26,17 @@ describe('tournament completion repair uses frozen match length', () => {
     expect(await screen.findByText('In Progress')).toBeTruthy();
     expect(h.save.mock.calls.at(-1)[1].matches[0]).toMatchObject({ status: 'in-progress', format });
     expect(h.save.mock.calls.at(-1)[1].matches[0].winner).toBeUndefined();
+  });
+
+  it('repairs a truly finished frozen match even when its tournament is longer', async () => {
+    h.tournament = {
+      id: 1, name: 'Club Cup', format: { type: 'best-of', sets: 5, points: 21 },
+      teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
+      matches: [{ id: 'm1', team1Id: 1, team2Id: 2, format: freezeSetsFormat(getSportById('badminton'), { type: 'single', sets: 1, target: 21 }), status: 'in-progress', sets: [{ score1: 21, score2: 10, completed: true }] }],
+      knockoutMatches: [],
+    };
+    render(<GenericSetsTournament />);
+    expect(await screen.findByText('Completed')).toBeTruthy();
+    expect(h.save.mock.calls.at(-1)[1].matches[0]).toMatchObject({ status: 'completed', winner: 1 });
   });
 });

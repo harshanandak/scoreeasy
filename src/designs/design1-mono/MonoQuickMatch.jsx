@@ -757,6 +757,7 @@ export default function MonoQuickMatch() {
         setScores: [],
         servingTeam: tracksPointWinnerServe ? broadcastServer(servingTeam) : undefined,
         currentUnit: 1,
+        periodLabel: `${format.setsRules?.unit || sportConfig?.config?.setLabel || 'Set'} 1`,
       };
     }
 
@@ -2646,6 +2647,7 @@ export default function MonoQuickMatch() {
       const setUnit = format.setsRules?.unit || sportConfig?.config?.setLabel || 'Set';
       const { setPoint, matchPoint } = getSetPointState({
         format, sportConfig, currentSet,
+        servingTeam,
         score1: sidesSwapped ? rightSetScore : leftSetScore,
         score2: sidesSwapped ? leftSetScore : rightSetScore,
         setsWon1: sidesSwapped ? rightSetsWon : leftSetsWon,
@@ -2689,7 +2691,7 @@ export default function MonoQuickMatch() {
         ? [`${setUnit} ${currentSet + 1}`, `${setUnit}s ${leftSetsWon}–${rightSetsWon}`]
         : [`First to ${format.target}`];
       if (format.setsRules?.version === 1 && servingTeam == null) boardStatus.push('Server unknown');
-      if (format.setsRules?.version === 1 && endChangeDue(format.setsRules, currentSet, sets[currentSet])) boardStatus.push('Ends changed');
+      if (format.setsRules?.version === 1 && endChangeDue(format.setsRules, currentSet, format.type === 'best-of' ? sets[currentSet] : { score1: vScore1, score2: vScore2 })) boardStatus.push('Ends changed');
       const boardScore = boardHalves.map((h) => h.score).join('–');
       const lastPointScore = format.type === 'best-of'
         ? sets[lastEntry?.currentSet || 0]
