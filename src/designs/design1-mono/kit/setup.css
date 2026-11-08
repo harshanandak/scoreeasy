@@ -51,9 +51,16 @@
 
 .kit-setup-title h1 {
   margin: 0;
-  font: 800 1.3rem/1.05 var(--se-font-display);
+  /* Shrink with the viewport and wrap only between words: "Basketball" must never split to
+     "Basketba / ll" on a 360 px phone with a wide fallback font. */
+  font-family: var(--se-font-display);
+  font-size: clamp(1.05rem, 5vw, 1.3rem);
+  font-weight: 800;
+  line-height: 1.05;
   letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .kit-setup-title p {
@@ -435,6 +442,17 @@
 
 body.has-mobile-bottom-nav .kit-screen > .kit-setup-cta {
   bottom: calc(78px + var(--se-safe-bottom));
+}
+
+/* Anything focused or scrolled into view stops above the sticky Start bar (about 86 px) and, when
+   the dock shows, above the dock as well, so a Format or Match length control is never left
+   underneath them. */
+html:has(.kit-setup) {
+  scroll-padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+
+html:has(body.has-mobile-bottom-nav .kit-setup) {
+  scroll-padding-bottom: calc(182px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
