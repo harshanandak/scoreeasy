@@ -47,8 +47,7 @@ export function storyEntry(entry, carried = [0, 0], raiders = {}) {
     lost: effects.lost.map((slots) => slots.length),
     lostSlots: effects.lost.map((slots) => [...slots]),
     revivedSlots: effects.revived.map((slots) => [...slots]),
-    // The engine journal does not record the raider's slot, so it is carried beside the match
-    // (`match.raiders`, keyed by raid id, read from activeRaid.raiderSlotId at raid start).
+    // Named raiders come from the engine record; older preview fixtures may carry a side map.
     raiderSlot: entry.raiderNamed ? entry.raiderSlotId : raiders[entry.id] ?? null,
     revived: effects.revived.map((slots) => slots.length),
     allOut: effects.allOut.length ? effects.allOut[0] : null,
@@ -68,7 +67,7 @@ export function raidStory(match) {
   return raidLog(match.state).reverse().map((entry) => storyEntry(entry, match.carried || [0, 0], match.raiders));
 }
 
-/** Points by kind for each team, summed from the raid log's awards (the breakdown a viewer wants). */
+/** Points by kind for each team, from the current engine categories (the breakdown a viewer wants). */
 export function pointsBreakdown(match) {
   const totals = match.state.teams.map(({ score }) => ({ raid: score.touch + score.bonus, touch: score.touch, bonus: score.bonus, tackle: score.tackleBase + score.superTackleExtra, superTackle: score.superTackleExtra, allOut: score.allOut, extras: score.technical + score.defenderOut }));
   return totals;
@@ -81,7 +80,7 @@ export function engineBreakdown(match) {
 
 /**
  * The live situation right now. `now` is the viewer's clock on the same monotonic base as the
- * scorer's anchors (the broadcast would carry the anchors; see NOTES).
+ * scorer's anchors (broadcast snapshots carry those anchors).
  */
 export function liveNow(match, now) {
   const { state } = match;

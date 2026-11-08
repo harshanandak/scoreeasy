@@ -10,6 +10,7 @@ import { beginLiveRaid, landRaid, markDefender, toggleBonus } from '../src/utils
 import { buildEnd, buildOpen, buildRest } from './fixture';
 import '../src/index.css';
 import '../src/designs/design1-mono/mono.css';
+import '../src/designs/design1-mono/kit/setup.css';
 
 const NOW = 1800000000000;
 const params = new URLSearchParams(location.search);
@@ -40,7 +41,7 @@ function Preview() {
   const [format, setFormat] = useState({ kabaddiRules: resolveKabaddiRules(scene === 'setup-standard' ? 'standard' : 'quick') });
   const [notice, setNotice] = useState('');
   if (scene.startsWith('setup')) return <main className="kit-screen" style={{ maxWidth: 560, margin: 'auto', padding: '24px 20px' }}>
-    <h1>Kabaddi</h1><p>Royals v Strikers</p><KabaddiSetup format={format} onChange={setFormat} />
+    <h1>Kabaddi</h1><p>Royals v Strikers</p><KabaddiSetup format={format} onChange={setFormat} names={['Royals', 'Strikers']} />
   </main>;
   const key = `kabaddi-acceptance:${scene}`;
   const match = JSON.parse(localStorage.getItem(key) || 'null') || initial();

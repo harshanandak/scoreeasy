@@ -17,7 +17,7 @@ import '../kit/kit.css';
 import '../kit/live.css';
 import './kabaddiWatch.css';
 
-// Kabaddi live viewer, exploration k2 round 5 (notes: E:/tmp/kabaddi-k2/viewer-r5/NOTES.md).
+// Kabaddi live viewer, ported from the reviewed k2 round-five design.
 // Game progression first. Live: the score strip (team gradients, small player pips, a raid-clock ring
 // with the kabaddi mark between the cards; the score is the only big number) over a broadcast-style
 // court that plays a single raid animation. Raids: a two-sided timeline, one line per raid. Stats:
@@ -37,7 +37,7 @@ function resultOf(live) {
 /* ------------------------------------------------------------------ top: header, score strip */
 
 function Header({ live, halfMins }) {
-  const status = isEnded(live.phase) ? 'Full time' : live.phase === 'halfTime' ? 'Half time' : live.phase === 'paused' ? 'Paused' : 'Live';
+  const status = live.resultType === 'abandoned' ? 'No result' : isEnded(live.phase) ? 'Full time' : live.phase === 'halfTime' ? 'Half time' : live.phase === 'paused' ? 'Paused' : 'Live';
   return (
     <header className="kw-top">
       <SportBadge sportId="kabaddi" />

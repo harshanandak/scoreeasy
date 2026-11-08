@@ -213,7 +213,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
-      const clientEventId = `${clientMatchId}:${seqRef.current}`;
+      const clientEventId = type === 'kabaddi_raid' && kabaddi?.kind === 'raid' ? `kabaddi-raid:${kabaddi.raid.id}` : `${clientMatchId}:${seqRef.current}`;
       // snapshot (engine-derived sets/serving/period for non-flat sports) + the
       // owning clientMatchId travel WITH the event through the outbox to the mutation.
       // `kind` stays 'point' (the outbox routing discriminator vs 'undo'); `type` is

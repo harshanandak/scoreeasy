@@ -1,7 +1,7 @@
 import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot } from './lib/kabaddiValidators';
 import { v, ConvexError, Infer } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { authedMutation, authedQuery } from "./lib/functions";
 import { containsProfanity } from "./lib/profanity";
@@ -105,6 +105,18 @@ const REPORT_FLAG_THRESHOLD = 3; // distinct reporters that flag a match for rev
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
 // ---------------------------------------------------------------------------
 
+async function seedKabaddiHistory(ctx: MutationCtx, matchId: Id<"liveMatches">, history: Infer<typeof kabaddiRaidValidator>[], lastSeq: number) {
+  let seq = lastSeq;
+  for (const raid of history) {
+    const clientEventId = `kabaddi-raid:${raid.id}`;
+    const prior = await ctx.db.query("matchEvents").withIndex("by_match_client", q => q.eq("matchId", matchId).eq("clientEventId", clientEventId)).unique();
+    if (prior) continue;
+    seq += 1;
+    await ctx.db.insert("matchEvents", { matchId, seq, clientEventId, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: Date.now(), kabaddi: { kind: "raid", raid } });
+  }
+  if (seq !== lastSeq) await ctx.db.patch("liveMatches", matchId, { lastSeq: seq });
+}
+
 export const create = authedMutation({
   args: {
     sport: v.string(),
@@ -120,6 +132,8 @@ export const create = authedMutation({
     kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
+    if ((args.players?.length ?? 0) > 24 || (args.kabaddiHistory?.length ?? 0) > 1000) throw new Error("Match metadata exceeds supported capacity");
+    if (args.kabaddiHistory?.length && args.sport !== "kabaddi") throw new Error("Raid history requires kabaddi");
     // Idempotent create: reuse an existing live match for this owner+clientMatchId
     // (compound index, no table scan).
     const existing = await ctx.db
@@ -129,6 +143,7 @@ export const create = authedMutation({
       )
       .unique();
     if (existing) {
+      await seedKabaddiHistory(ctx, existing._id, args.kabaddiHistory ?? [], existing.lastSeq);
       return { token: existing.token, matchId: existing._id };
     }
 
@@ -149,7 +164,6 @@ export const create = authedMutation({
     // client-only). A hit HOLDS the match: the row persists so the operator keeps
     // scoring locally (and the idempotent outbox does not loop on a throw), while
     // resolveReadableMatch hides held matches from every public reader.
-    if ((args.players?.length ?? 0) > 24 || (args.kabaddiHistory?.length ?? 0) > 1000) throw new Error("Match metadata exceeds supported capacity");
     const flagged =
       containsProfanity(args.teamA.name) || containsProfanity(args.teamB.name) || (args.players ?? []).some(p => containsProfanity(p.name));
 
@@ -173,7 +187,7 @@ export const create = authedMutation({
       setsB: 0,
       setScores: [],
       currentUnit: 1,
-      lastSeq: args.kabaddiHistory?.length ?? 0,
+      lastSeq: 0,
       feedRank: feedBucket(now),
       startedAt: now,
       lastEventAt: now,
@@ -187,9 +201,7 @@ export const create = authedMutation({
       sport: args.sport,
     });
 
-    for (const [index, raid] of (args.kabaddiHistory ?? []).entries()) {
-      await ctx.db.insert("matchEvents", { matchId, seq: index + 1, clientEventId: `kabaddi-history:${raid.id}`, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: now, kabaddi: { kind: "raid", raid } });
-    }
+    await seedKabaddiHistory(ctx, matchId, args.kabaddiHistory ?? [], 0);
     return { token, matchId };
   },
 });

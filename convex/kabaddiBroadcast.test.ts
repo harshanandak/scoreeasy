@@ -26,7 +26,7 @@ describe('kabaddi live publication', () => {
     const snapshot = { pointsA: 0, pointsB: 0, setsA: 0, setsB: 0, setScores: [], currentUnit: 1, kabaddi: kabaddiSnapshot(landed) as Infer<typeof kabaddiSnapshotValidator> };
     await owner.mutation(api.live.setVisibility, { matchId, visibility: 'unlisted', snapshot });
     const raid = kabaddiUpdates(started, landed)[0].data;
-    const args = { matchId, clientEventId: 'empty-1', team: 'A' as const, value: 0, at: 200, type: 'kabaddi_raid' as const, kabaddi: raid, snapshot };
+    const args = { matchId, clientEventId: `kabaddi-raid:${raid.raid.id}`, team: 'A' as const, value: 0, at: 200, type: 'kabaddi_raid' as const, kabaddi: raid, snapshot };
     await owner.mutation(api.live.scorePoint, args);
     await owner.mutation(api.live.scorePoint, args);
     const read = await t.query(api.live.getByToken, { token });
@@ -37,6 +37,8 @@ describe('kabaddi live publication', () => {
     const events = await t.query(api.live.eventsSince, { token, sinceSeq: 0 });
     expect(events).toHaveLength(1);
     expect(events[0].kabaddi?.kind).toBe('raid');
+    await owner.mutation(api.live.create, { sport: 'kabaddi', scorecardKind: 'kabaddi', teamA: { name: 'A' }, teamB: { name: 'B' }, clientMatchId: 'private-kabaddi', kabaddiHistory: [raid.raid] });
+    expect(await t.query(api.live.eventsSince, { token, sinceSeq: 0 })).toHaveLength(1);
     await owner.mutation(api.live.finalize, { matchId });
     const archives = await t.run(ctx => ctx.db.query('matches').collect());
     expect(archives).toEqual([]);
