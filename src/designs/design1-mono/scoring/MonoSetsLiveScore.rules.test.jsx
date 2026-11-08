@@ -94,6 +94,24 @@ describe('shared sets rules regressions', () => {
     expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 1, sets: [{ score1: 0, score2: 0, completed: false }] });
   });
 
+  it('keeps frozen side-out mode through undo of a stale rally history entry', async () => {
+    h.params.sport = 'volleyball';
+    h.tournaments = [h.makeTournament({
+      format: freezeSetsFormat(getSportById('volleyball'), { type: 'best-of', sets: 3, points: 25, scoringMode: 'side-out', initialServer: 1 }),
+      draftState: {
+        currentSet: 0,
+        sets: [{ score1: 1, score2: 0, completed: false }],
+        servingTeam: 1,
+        scoringMode: 'rally',
+        history: [{ sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0, servingTeam: 1, scoringMode: 'rally' }],
+      },
+    })];
+    await act(async () => { render(<MonoSetsLiveScore />); });
+    await act(async () => { vi.advanceTimersByTime(160); fireEvent.click(screen.getByRole('button', { name: /^undo$/i })); });
+    await act(async () => { vi.advanceTimersByTime(160); fireEvent.click(screen.getByRole('button', { name: 'Add point for Beta' })); });
+    expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 2, sets: [{ score1: 0, score2: 0, completed: false }] });
+  });
+
   it.each([null, 1])('inherits tournament side-out mode on first open and restore (first server %s)', async (initialServer) => {
     h.params.sport = 'volleyball';
     const tournament = h.makeTournament();
