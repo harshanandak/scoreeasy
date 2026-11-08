@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadQuickMatches, saveQuickMatch, saveQuickMatches } from './storage';
-import { loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from './quickStatsRecovery';
+import { loadData, loadQuickMatches, saveQuickMatch, saveQuickMatches } from './storage';
+import { loadQuickStatsRecoveries, loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from './quickStatsRecovery';
 
 const completed = id => ({ id, status: 'completed', sport: 'football', score1: 2, score2: 1, winner: 'Home' });
 const originals = [completed('first'), completed('middle'), completed('last')];
@@ -11,23 +11,26 @@ describe('durable quick stats recovery', () => {
     localStorage.clear();
     saveQuickMatches(originals);
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
 
   it('can load the recovery after a module reload and preserves active drafts', async () => {
     saveQuickMatch({ id: 'draft', sport: 'football', status: 'in-progress', score1: 1 });
     removeQuickStats(originals, 'clear');
     vi.resetModules();
     const reloaded = await import('./quickStatsRecovery');
-    expect(reloaded.loadQuickStatsRecovery().removed.map(({ match }) => match.id)).toEqual(['first', 'middle', 'last']);
-    expect(reloaded.restoreQuickStats()).toBe(true);
+    expect(reloaded.loadQuickStatsRecovery().items.map(({ match }) => match.id)).toEqual(['first', 'middle', 'last']);
+    expect(reloaded.restoreQuickStats(reloaded.loadQuickStatsRecovery().id)).toBe(true);
     expect(ids()).toEqual(['first', 'middle', 'last', 'draft']);
     expect(loadQuickMatches().at(-1).status).toBe('in-progress');
   });
 
   it('does not resurrect unrelated matches removed while Undo was pending', () => {
-    removeQuickStats([originals[1]], 'delete');
+    const operation = removeQuickStats([originals[1]], 'delete');
     saveQuickMatches([originals[2], completed('later')]);
-    expect(restoreQuickStats()).toBe(true);
+    expect(restoreQuickStats(operation.id)).toBe(true);
     expect(ids()).toEqual(['middle', 'last', 'later']);
     expect(loadQuickStatsRecovery()).toBeNull();
   });
@@ -60,11 +63,11 @@ describe('durable quick stats recovery', () => {
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota', 'QuotaExceededError');
     });
-    expect(restoreQuickStats()).toBe(false);
+    expect(restoreQuickStats(recovery.id)).toBe(false);
     expect(ids()).toEqual(['first', 'last']);
     expect(loadQuickStatsRecovery()).toEqual(recovery);
     failure.mockRestore();
-    expect(restoreQuickStats()).toBe(true);
+    expect(restoreQuickStats(recovery.id)).toBe(true);
     expect(ids()).toEqual(['first', 'middle', 'last']);
   });
 
@@ -82,7 +85,47 @@ describe('durable quick stats recovery', () => {
     });
     expect(removeQuickStats([originals[0]], 'delete')).toBeNull();
     failure.mockRestore();
+    const extraOperation = loadQuickStatsRecovery();
     expect(restoreQuickStats(first.id)).toBe(true);
     expect(ids(), 'failed second removal must not strand the earlier removed match').toEqual(['first', 'middle', 'last']);
+    expect(loadQuickStatsRecoveries().map(operation => operation.id)).toEqual([extraOperation.id]);
+    expect(restoreQuickStats(extraOperation.id)).toBe(true);
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+  });
+
+  it('keeps only the last five operations and refuses an evicted id', () => {
+    const operations = Array.from({ length: 6 }, (_, index) => {
+      const match = completed(`extra-${index}`);
+      saveQuickMatch(match);
+      return removeQuickStats([match], 'delete');
+    });
+    expect(loadQuickStatsRecoveries().map(operation => operation.id)).toEqual(operations.slice(1).map(operation => operation.id));
+    expect(loadData('se_stats_pending_undo')).toHaveLength(5);
+    expect(new Set(operations.map(operation => operation.id)).size).toBe(6);
+    expect(restoreQuickStats(operations[0].id)).toBe('unavailable');
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+  });
+
+  it('prunes operations at 24 hours on reads and before appending another operation', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
+    const expired = removeQuickStats([originals[1]], 'delete');
+    vi.setSystemTime(new Date('2026-11-10T10:00:00Z'));
+    expect(loadQuickStatsRecovery()).toBeNull();
+    expect(loadData('se_stats_pending_undo')).toEqual([]);
+    const current = removeQuickStats([originals[0]], 'delete');
+    expect(loadQuickStatsRecoveries().map(operation => operation.id)).toEqual([current.id]);
+    expect(restoreQuickStats(expired.id)).toBe('unavailable');
+  });
+
+  it('never restores expired items even when persisting expiry pruning fails', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
+    const expired = removeQuickStats([originals[1]], 'delete');
+    vi.setSystemTime(new Date('2026-11-10T10:00:00Z'));
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('storage unavailable'); });
+    expect(loadQuickStatsRecovery()).toBeNull();
+    expect(restoreQuickStats(expired.id)).toBe('unavailable');
+    expect(ids()).toEqual(['first', 'last']);
   });
 });

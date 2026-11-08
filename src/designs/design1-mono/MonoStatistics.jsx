@@ -267,8 +267,16 @@ export function MonoStatisticsPanel() {
   const [statsStatus, setStatsStatus] = useState('');
 
   useEffect(() => {
-    setQuickMatches(loadQuickStatsMatches());
+    const refresh = () => {
+      setRecovery(loadQuickStatsRecovery());
+      setQuickMatches(loadQuickStatsMatches());
+    };
+    refresh();
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, []);
 
+  useEffect(() => {
     // Load stats for ALL sports
     const allSports = getSportsList();
     const dataMap = {};
@@ -318,15 +326,26 @@ export function MonoStatisticsPanel() {
     setStatsStatus('Quick stat deleted.');
   };
 
-  const undoDeleteQuickMatch = () => {
-    if (!restoreQuickStats()) {
-      setStatsStatus('Could not restore quick stat. Please try again.');
+  const undoQuickStats = (message) => {
+    const result = restoreQuickStats(recovery?.id);
+    setQuickMatches(loadQuickStatsMatches());
+    if (result === 'unavailable') {
+      setRecovery(loadQuickStatsRecovery());
+      setStatsStatus('Undo is no longer available.');
       return;
     }
-    setQuickMatches(loadQuickStatsMatches());
-    setRecovery(null);
-    setStatsStatus('Quick stat restored.');
+    if (result === 'cleanup-failed') {
+      setStatsStatus("Restored, but couldn't tidy up. Tap Undo to retry.");
+      return;
+    }
+    if (!result) {
+      setStatsStatus('Could not restore quick stats. Please try again.');
+      return;
+    }
+    setRecovery(loadQuickStatsRecovery());
+    setStatsStatus(message);
   };
+  const undoDeleteQuickMatch = () => undoQuickStats('Quick stat restored.');
 
   const requestClearAllQuickMatches = () => {
     setPendingDelete(null);
@@ -350,15 +369,7 @@ export function MonoStatisticsPanel() {
     setStatsStatus('Quick stats cleared.');
   };
 
-  const undoClearAllQuickMatches = () => {
-    if (!restoreQuickStats()) {
-      setStatsStatus('Could not restore quick stats. Please try again.');
-      return;
-    }
-    setQuickMatches(loadQuickStatsMatches());
-    setRecovery(null);
-    setStatsStatus('Quick stats restored.');
-  };
+  const undoClearAllQuickMatches = () => undoQuickStats('Quick stats restored.');
 
   // Calculate totals
   const totalTournaments = Object.values(sportsData).reduce((sum, d) => sum + d.tournaments, 0);
