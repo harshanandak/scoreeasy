@@ -40,6 +40,8 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
   const secs = view.raidMs === null ? null : Math.ceil(view.raidMs / 1000);
   const frac = view.raidMs === null ? 0 : Math.max(0, Math.min(1, view.raidMs / view.raidTotalMs));
   const low = secs !== null && secs <= 5;
+  const hasClock = view.timed || view.raidTotalMs !== null;
+  const ClockSurface = hasClock ? 'button' : 'div';
   return (
     <>
       <div className="k5-strip">
@@ -71,8 +73,8 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
             </section>
           );
         })}
-        <button type="button" className="k5-mid" onClick={onClock} disabled={!scoring || !view.timed}
-          aria-label={view.paused ? `Clock paused at ${clock}. Resume` : `${clock} left in the ${halfWord}${secs === null ? '' : `, raid clock ${secs} seconds`}. Pause`}>
+        <ClockSurface className="k5-mid" {...(hasClock ? { type: 'button', onClick: onClock, disabled: !scoring || view.phase === 'ready' } : {})}
+          aria-label={!view.timed ? `${view.progress}. Raid ${view.raidNumber}${secs === null ? '' : `, raid clock ${secs} seconds`}` : view.paused ? `Clock paused at ${clock}. Resume` : `${clock} left in the ${halfWord}${secs === null ? '' : `, raid clock ${secs} seconds`}. Pause`}>
           <span className={`k5-ring k5-ring-${raider === null ? 'a' : side(raider)}${low ? ' k5-ring-low' : ''}${secs === null ? ' k5-ring-idle' : ''}`}>
             <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
               <circle className="k5-track" cx="32" cy="32" r="27" />
@@ -83,7 +85,7 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
           </span>
           <b className="k5-clock">{view.timed ? clock : `Raid ${view.raidNumber}`}</b>
           <small>{halfWord}</small>
-        </button>
+        </ClockSurface>
       </div>
 
       {scoring && (view.doOrDie || view.superTackleOn) && (

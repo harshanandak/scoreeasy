@@ -29,6 +29,7 @@ describe('kabaddi raid route', () => {
     render(<MonoQuickMatch />);
     expect(screen.queryByRole('button', { name: /Bonus line/ })).toBeNull();
     expect(screen.queryByText(/second clock/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /clock|0:00/i })).toBeNull();
     start();
     fireEvent.click(within(screen.getByRole('group', { name: 'Quick touch count' })).getByRole('button', { name: '+1' }));
     expect(screen.getByLabelText('Royals score')).toHaveTextContent('1');
