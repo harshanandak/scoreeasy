@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "prepare": "lefthook install",
     "sync:agents": "node scripts/sync-agent-config.mjs",
-    "type-check": "tsc --noEmit -p tsconfig.json",
+    "type-check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p convex",
     "mobile:build": "vite build && cap sync",
     "mobile:sync": "cap sync",
     "mobile:android": "vite build && cap sync android",
