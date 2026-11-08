@@ -35,7 +35,7 @@ vi.mock('../../hooks/useAuth', () => ({
 vi.mock('../../hooks/useLiveBroadcast', () => ({
   useLiveBroadcast: () => ({ ...live, isLive: false, token: null, error: null }),
 }));
-// Global consent already accepted (captured at sign-in) → liveEnabled starts true.
+// The disclosure was accepted before; each match still starts private.
 vi.mock('../../lib/live/liveSession', () => ({
   getConsent: () => 'accepted',
   setConsent: vi.fn(),

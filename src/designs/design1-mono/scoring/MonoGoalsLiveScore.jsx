@@ -76,7 +76,7 @@ export default function MonoGoalsLiveScore() {
 
   // Live broadcast (dkt/b0z/6fj): mirror each scoring action to the public watch
   // page. Purely additive — localStorage stays authoritative; a failed push never
-  // breaks scoring. Public-by-default but gated on the one-time consent.
+  // breaks scoring. Sharing starts off and needs an explicit action for this match.
   const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveClientMatchId = `${sport}:${id}:${matchId}`;

@@ -1,4 +1,6 @@
 <!--
+
+> Visibility policy superseded on 2026-11-08: matches are private until the scorer explicitly shares each match. Public-by-default decisions below are historical; use the [current privacy audit](../security/match-visibility-audit.md) for the implemented policy.
 Provenance: synthesized 2026-06-22 from an 8-dimension multi-agent research fan-out
 (architecture/competitors, moderation/safety, set-sport scorecards, tennis, cricket,
 goals/generic scorecards, Convex real-time, feed/commentary UX). Feeds the design doc
