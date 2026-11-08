@@ -153,4 +153,59 @@ describe('Matches operation-bound Undo', () => {
     expect(legacy()).toEqual([old]);
     expect(ids()).toEqual(['first', 'middle', 'last']);
   });
+
+  it('keeps quick and older-history records with the same id distinct', () => {
+    const old = { ...olderMatch('Old court'), id: 'middle' };
+    localStorage.setItem('gs_history', JSON.stringify([old]));
+    mount();
+    clear();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(legacy()).toEqual([old]);
+  });
+
+  it('does not remove matches if recovery cannot be persisted', () => {
+    mount();
+    failWrites(RECOVERY_KEY);
+    clear();
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
+    expect(screen.queryByRole('button', { name: 'Undo clear' })).not.toBeInTheDocument();
+  });
+
+  it('does not report success if consuming recovery fails, and retry does not duplicate matches', () => {
+    mount();
+    clear();
+    const failure = failWrites(RECOVERY_KEY);
+    fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
+    failure.mockRestore();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(screen.getByRole('status')).toHaveTextContent('History restored.');
+  });
+
+  it('retains durable recovery and offers Undo when clearing older history and rollback both fail', () => {
+    const old = olderMatch('Old court');
+    localStorage.setItem('gs_history', JSON.stringify([old]));
+    mount();
+    const setItem = Storage.prototype.setItem;
+    let olderFailed = false;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'gs_history') {
+        olderFailed = true;
+        throw new Error('older write failed');
+      }
+      if (key === 'se_quickmatches' && olderFailed) throw new Error('rollback failed');
+      return setItem.call(this, key, value);
+    });
+    clear();
+    expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
+    expect(JSON.parse(localStorage.getItem(RECOVERY_KEY))).toHaveLength(1);
+    failure.mockRestore();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+    expect(legacy()).toEqual([old]);
+  });
 });
