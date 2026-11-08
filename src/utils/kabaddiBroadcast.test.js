@@ -4,10 +4,19 @@ import { beginLiveRaid, cancelLiveRaid, landRaid, markDefender, reopenRaid } fro
 import { kabaddiSnapshot, kabaddiUpdates, kabaddiWatchMatch } from './kabaddiBroadcast';
 import { liveNow, raidStory } from './kabaddiLiveModel';
 import { resolveKabaddiRules } from './kabaddiRules';
+import { undo } from './kabaddiEngine';
 
 const create = () => createKabaddiMatch({ format: { kabaddiRules: resolveKabaddiRules('quick') }, names: ['Private name A', 'Private name B'], colours: [undefined, undefined] });
 
 describe('kabaddi public projection', () => {
+  it('accepts the saved paused-ready state after undoing the first half start', () => {
+    const cancelled = cancelLiveRaid(beginLiveRaid(create(), { atMs: 100 }));
+    const match = { ...cancelled, state: undo(cancelled.state) };
+    const watch = kabaddiWatchMatch({ kabaddi: kabaddiSnapshot(match) }, {}, []);
+    expect(watch).not.toBeNull();
+    expect(watch.state.resumePhase).toBe('ready');
+  });
+
   it('publishes a state update when a saved raid is cancelled without a journal entry', () => {
     const started = beginLiveRaid(create(), { atMs: 100 });
     const cancelled = cancelLiveRaid(started);

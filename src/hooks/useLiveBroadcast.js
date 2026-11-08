@@ -175,7 +175,6 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           teamA: opts.teamA,
           teamB: opts.teamB,
           ...(opts.players ? { players: opts.players } : {}),
-          ...(opts.kabaddiHistory ? { kabaddiHistory: opts.kabaddiHistory } : {}),
           visibility: 'private',
           isYouthMatch: opts.isYouthMatch ?? false,
         });
@@ -189,7 +188,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         const snapshot = opts.getSnapshot ? opts.getSnapshot() : opts.snapshot;
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
-        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot });
+        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) });
         if (generation !== generationRef.current) return null;
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
@@ -277,7 +276,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       ++generationRef.current;
       try {
         const snapshot = opts?.getSnapshot ? opts.getSnapshot() : opts?.snapshot;
-        const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}) });
+        const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}), ...(visibility !== 'private' && snapshot?.kabaddi ? { kabaddiHistory: opts?.getKabaddiHistory ? opts.getKabaddiHistory() : opts?.kabaddiHistory ?? [] } : {}) });
         setIsShared(visibility !== 'private');
         setIsLive(visibility !== 'private');
         setError(null);

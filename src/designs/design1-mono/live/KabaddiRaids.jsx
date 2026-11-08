@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { halfTimeScore, playerLabel } from '../../../utils/kabaddiLiveModel';
 import { atMinute, isEnded, outcomeWords, scorerOf, sideKey } from './kabaddiView';
+import { matchTotals } from '../../../utils/kabaddiQuickMatch';
 
 // Raids tab, round 5: one timeline, one line per raid. The first team's raids sit on the left of a
 // centre spine, the second team's on the right, newest first. Each raid is the raider and what
@@ -38,7 +39,7 @@ function buildRows(match, story, names) {
   }
   flush();
   if (isEnded(match.state.phase) && story.length) {
-    const end = story.at(-1).score;
+    const end = matchTotals(match);
     rows.push({ id: 'ft', band: `Full time · ${end[0]}–${end[1]}` });
   }
   return rows.reverse();

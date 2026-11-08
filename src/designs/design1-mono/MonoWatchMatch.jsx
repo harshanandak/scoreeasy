@@ -754,8 +754,9 @@ function WatchMatchPage({ onRetry }) {
   const nameB = meta?.teamB?.name ?? 'Team B';
   const eventRows = events ?? [];
   const canLoadMore = status === 'CanLoadMore';
-  if (snapshot.sport === 'kabaddi' && snapshot.kabaddi) {
+  if (snapshot.sport === 'kabaddi' && (snapshot.kabaddi !== undefined || snapshot.scorecardKind === 'kabaddi')) {
     const match = kabaddiWatchMatch(snapshot, meta, eventRows);
+    if (!match) return <UnsupportedSportScreen />;
     const roster = ['A', 'B'].map(team => {
       const players = (meta?.players ?? []).filter(p => p.team === team);
       const names = Array(snapshot.kabaddi.rules.initialPlayers).fill('');

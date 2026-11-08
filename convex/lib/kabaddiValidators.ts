@@ -1,5 +1,5 @@
 import { Infer, v } from 'convex/values';
-import { validateKabaddiRules } from '../../src/utils/kabaddiRules.js';
+import { assertKabaddiSnapshot, assertKabaddiRaid, assertKabaddiUpdate } from '../../src/utils/kabaddiPublicState.js';
 
 const pair = v.array(v.number());
 const nullableNumber = v.union(v.null(), v.number());
@@ -40,16 +40,13 @@ export const kabaddiUpdateValidator = v.union(
 );
 
 export function validateKabaddiSnapshot(k: Infer<typeof kabaddiSnapshotValidator>, points: number[]) {
-  validateKabaddiRules(k.rules);
-  const check = (ok: boolean) => { if (!ok) throw new Error('Invalid kabaddi public state'); };
-  const pairOfCounts = (values: number[]) => values.length === 2 && values.every(n => Number.isSafeInteger(n) && n >= 0);
-  check(k.scores.length === 2 && k.mat.length === 2 && k.outQueue.length === 2 && pairOfCounts(k.emptyStreak) && pairOfCounts(k.raidsByTeam));
-  check(k.raidsByTeam[0] + k.raidsByTeam[1] === k.raidNumber && [1, 2].includes(k.half) && [0, 1].includes(k.nextRaidTeam));
-  check(['ready', 'playing', 'paused', 'halfPending', 'halfTime', 'fullPending', 'finishReview', 'finished'].includes(k.phase));
-  for (const team of [0, 1]) {
-    const values = Object.values(k.scores[team]);
-    check(values.every(n => Number.isSafeInteger(n) && n >= 0) && values.reduce((a, b) => a + b, 0) === points[team]);
-    const slots = [...k.mat[team], ...k.outQueue[team]];
-    check(slots.length === k.rules.initialPlayers && new Set(slots).size === slots.length && slots.every(s => new RegExp(`^${team ? 'B' : 'A'}([1-9]|1[0-2])$`).test(s) && Number(s.slice(1)) <= k.rules.initialPlayers));
-  }
+  assertKabaddiSnapshot(k, points);
+}
+
+export function validateKabaddiRaid(raid: Infer<typeof kabaddiRaidValidator>, snapshot: Infer<typeof kabaddiSnapshotValidator>) {
+  assertKabaddiRaid(raid, snapshot.rules);
+}
+
+export function validateKabaddiUpdate(update: Infer<typeof kabaddiUpdateValidator>, snapshot?: Infer<typeof kabaddiSnapshotValidator>) {
+  assertKabaddiUpdate(update, snapshot?.rules);
 }

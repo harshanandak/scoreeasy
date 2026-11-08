@@ -1,4 +1,4 @@
-import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot } from './lib/kabaddiValidators';
+import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot, validateKabaddiRaid, validateKabaddiUpdate } from './lib/kabaddiValidators';
 import { v, ConvexError, Infer } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
@@ -105,16 +105,26 @@ const REPORT_FLAG_THRESHOLD = 3; // distinct reporters that flag a match for rev
 // MUTATIONS — operator only (authedMutation; owner enforced per handler)
 // ---------------------------------------------------------------------------
 
-async function seedKabaddiHistory(ctx: MutationCtx, matchId: Id<"liveMatches">, history: Infer<typeof kabaddiRaidValidator>[], lastSeq: number) {
-  let seq = lastSeq;
-  for (const raid of history) {
-    const clientEventId = `kabaddi-raid:${raid.id}`;
-    const prior = await ctx.db.query("matchEvents").withIndex("by_match_client", q => q.eq("matchId", matchId).eq("clientEventId", clientEventId)).unique();
-    if (prior) continue;
-    seq += 1;
-    await ctx.db.insert("matchEvents", { matchId, seq, clientEventId, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: Date.now(), kabaddi: { kind: "raid", raid } });
+async function replaceKabaddiHistory(
+  ctx: MutationCtx & { user: Doc<"users"> }, match: Doc<"liveMatches">,
+  history: Infer<typeof kabaddiRaidValidator>[], snapshot: Infer<typeof kabaddiSnapshotValidator>,
+) {
+  if (match.ownerId !== ctx.user._id) throw new Error("Not authorized");
+  if (history.length > 1000 || new Set(history.map(raid => raid.id)).size !== history.length) throw new Error("Invalid kabaddi publication history");
+  for (const [index, raid] of history.entries()) {
+    validateKabaddiRaid(raid, snapshot);
+    if (raid.number > snapshot.raidNumber || raid.half > snapshot.half || (index > 0 && history[index - 1].number >= raid.number)) throw new Error("Invalid kabaddi publication history");
   }
-  if (seq !== lastSeq) await ctx.db.patch("liveMatches", matchId, { lastSeq: seq });
+  if ((history.at(-1)?.id ?? null) !== (snapshot.lastRaid?.id ?? null)) throw new Error("Kabaddi history does not match the saved snapshot");
+  const prior = await ctx.db.query("matchEvents").withIndex("by_match_type", q => q.eq("matchId", match._id).eq("type", "kabaddi_raid")).take(1001);
+  if (prior.length > 1000) throw new Error("Kabaddi publication history exceeds supported capacity");
+  for (const event of prior) await ctx.db.delete("matchEvents", event._id);
+  let seq = match.lastSeq;
+  for (const raid of history) {
+    seq += 1;
+    await ctx.db.insert("matchEvents", { matchId: match._id, seq, clientEventId: `kabaddi-raid:${raid.id}`, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: Date.now(), kabaddi: { kind: "raid", raid } });
+  }
+  return seq;
 }
 
 export const create = authedMutation({
@@ -129,11 +139,9 @@ export const create = authedMutation({
     isYouthMatch: v.optional(v.boolean()),
     clientMatchId: v.string(),
     players: v.optional(v.array(v.object({ team: v.union(v.literal("A"), v.literal("B")), name: v.string(), jersey: v.optional(v.string()), slotId: v.optional(v.string()) }))),
-    kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
-    if ((args.players?.length ?? 0) > 24 || (args.kabaddiHistory?.length ?? 0) > 1000) throw new Error("Match metadata exceeds supported capacity");
-    if (args.kabaddiHistory?.length && args.sport !== "kabaddi") throw new Error("Raid history requires kabaddi");
+    if ((args.players?.length ?? 0) > 24) throw new Error("Match metadata exceeds supported capacity");
     // Idempotent create: reuse an existing live match for this owner+clientMatchId
     // (compound index, no table scan).
     const existing = await ctx.db
@@ -143,7 +151,6 @@ export const create = authedMutation({
       )
       .unique();
     if (existing) {
-      await seedKabaddiHistory(ctx, existing._id, args.kabaddiHistory ?? [], existing.lastSeq);
       return { token: existing.token, matchId: existing._id };
     }
 
@@ -201,16 +208,15 @@ export const create = authedMutation({
       sport: args.sport,
     });
 
-    await seedKabaddiHistory(ctx, matchId, args.kabaddiHistory ?? [], 0);
     return { token, matchId };
   },
 });
 
 async function loadOwnedMatch(
-  ctx: { db: any; user: { _id: Id<"users"> } },
+  ctx: MutationCtx & { user: { _id: Id<"users"> } },
   matchId: Id<"liveMatches">,
 ) {
-  const match = await ctx.db.get(matchId);
+  const match = await ctx.db.get("liveMatches", matchId);
   if (!match) throw new Error("Live match not found");
   if (match.ownerId !== ctx.user._id) {
     throw new Error("Not authorized");
@@ -241,6 +247,8 @@ export const scorePoint = authedMutation({
     const match = await loadOwnedMatch(ctx, args.matchId);
 
     // IDEMPOTENT: a repeated clientEventId returns the prior event, no double-count.
+    if (args.kabaddi) validateKabaddiUpdate(args.kabaddi, args.snapshot?.kabaddi);
+
     const prior = await ctx.db
       .query("matchEvents")
       .withIndex("by_match_client", (q) =>
@@ -407,14 +415,22 @@ export const setVisibility = authedMutation({
       v.literal("private"),
     ),
     snapshot: v.optional(snapshotArgValidator),
+    kabaddiHistory: v.optional(v.array(kabaddiRaidValidator)),
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
     const publishing = args.visibility !== "private";
     if (publishing && !args.snapshot) throw new Error("Sharing requires the current score snapshot");
+    let lastSeq = match.lastSeq;
+    if (publishing && args.snapshot?.kabaddi) {
+      if (match.sport !== "kabaddi" || !args.kabaddiHistory) throw new Error("Sharing kabaddi requires the saved raid history");
+      validateKabaddiSnapshot(args.snapshot.kabaddi, [args.snapshot.pointsA, args.snapshot.pointsB]);
+      lastSeq = await replaceKabaddiHistory(ctx, match, args.kabaddiHistory, args.snapshot.kabaddi);
+    } else if (args.kabaddiHistory) throw new Error("Raid history requires a kabaddi snapshot");
     const now = Date.now();
     await ctx.db.patch(args.matchId, {
       visibility: args.visibility,
+      lastSeq,
       publishedAt: publishing ? now : undefined,
       ...(publishing && args.snapshot ? {
         ...snapshotPatch(args.snapshot),

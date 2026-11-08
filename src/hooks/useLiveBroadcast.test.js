@@ -64,6 +64,20 @@ function setup(opts) {
 }
 
 describe('useLiveBroadcast', () => {
+  it('publishes the fresh kabaddi journal with its snapshot after queued writes drain', async () => {
+    h.get('live:create').mockResolvedValue({ matchId: 'm1', token: 'ABC123' });
+    let history = [{ id: 'old-raid' }];
+    h.get('live:scorePoint').mockImplementation(async () => { history = [{ id: 'replacement-raid' }]; });
+    enqueue({ kind: 'point', clientMatchId: GO.clientMatchId, clientEventId: 'queued-before-stop', team: 'A', value: 0, at: 100 });
+    const { result } = setup({ enabled: true });
+    const snapshot = { ...GO.snapshot, kabaddi: { version: 1 } };
+    await act(async () => {
+      await result.current.goLive({ ...GO, sport: 'kabaddi', snapshot, kabaddiHistory: history, getKabaddiHistory: () => history });
+    });
+    expect(h.get('live:create').mock.calls[0][0]).not.toHaveProperty('kabaddiHistory');
+    expect(h.get('live:setVisibility')).toHaveBeenLastCalledWith({ matchId: 'm1', visibility: 'public', snapshot, kabaddiHistory: [{ id: 'replacement-raid' }] });
+  });
+
   it('ignores a delayed restore after the scorer resets to a different match', async () => {
     let resolve;
     h.query.mockReturnValue(new Promise((done) => { resolve = done; }));

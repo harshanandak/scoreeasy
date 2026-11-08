@@ -1,5 +1,6 @@
 import { deriveTeamColours } from '../lib/teamColour';
 import { halfTimeScore, raidStory, storyEntry } from './kabaddiLiveModel';
+import { assertKabaddiSnapshot, assertKabaddiUpdate } from './kabaddiPublicState';
 
 const clockCopy = clock => clock ? { remainingAtAnchorMs: clock.remainingAtAnchorMs, anchorMonotonicMs: clock.anchorMonotonicMs, running: clock.running, persistedWallAnchor: null } : null;
 
@@ -27,11 +28,27 @@ export function kabaddiUpdates(before, after) {
     data: e.type === 'raid' ? { kind: 'raid', raid: storyEntry(e) } : e.type === 'undo' ? { kind: 'undo', targetId: e.targetId } : { kind: 'state' },
   }));
   if (after.state.activeRaid && before.state.activeRaid?.id !== after.state.activeRaid.id) updates.push({ type: 'raid_start', data: { kind: 'raidStart', raidId: after.state.activeRaid.id } });
+  if (before.state.activeRaid && !after.state.activeRaid && updates.length === 0) updates.push({ type: 'kabaddi_state', data: { kind: 'state' } });
   return updates;
 }
 
 /** Rebuild a display model from whitelisted state + paginated public raid records. No scoring. */
 export function kabaddiWatchMatch(snapshot, meta, events) {
+  try {
+    const totals = snapshot && ('pointsA' in snapshot || 'pointsB' in snapshot) ? [snapshot.pointsA, snapshot.pointsB] : undefined;
+    assertKabaddiSnapshot(snapshot?.kabaddi, totals);
+    for (const event of events) if (event.kabaddi) {
+      if (!Number.isSafeInteger(event.seq) || event.seq < 1) return null;
+      assertKabaddiUpdate(event.kabaddi, snapshot.kabaddi.rules);
+    }
+    if ([meta?.teamA?.name, meta?.teamB?.name].some(name => name !== undefined && typeof name !== 'string')) return null;
+    const players = meta?.players ?? [];
+    if (!Array.isArray(players) || players.some(p => !p || !['A', 'B'].includes(p.team) || typeof p.name !== 'string' || (p.slotId !== undefined && (typeof p.slotId !== 'string' || !new RegExp(`^${p.team}([1-9]|1[0-2])$`).test(p.slotId))))) return null;
+    return projectWatchMatch(snapshot, meta, events);
+  } catch { return null; }
+}
+
+function projectWatchMatch(snapshot, meta, events) {
   const k = snapshot.kabaddi;
   const colours = deriveTeamColours(meta?.teamA?.color, meta?.teamB?.color);
   const names = [meta?.teamA?.name ?? 'Team A', meta?.teamB?.name ?? 'Team B'];
