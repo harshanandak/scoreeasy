@@ -352,6 +352,10 @@ export default function MonoGoalsLiveScore() {
     saveSportTournament(sportConfig.storageKey, updatedTournament);
   }, [periodState, tournament, matchId, score1, score2, history, scoringStarted, sportConfig, scoringPrompt.isInteractionLocked]);
 
+  // Keyboard input shares the current handlers, including the latest broadcast and period state.
+  const keyboardActionsRef = useRef(null);
+  keyboardActionsRef.current = { addScore, undo };
+
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {
     if (isTouchDevice) return;
@@ -363,13 +367,13 @@ export default function MonoGoalsLiveScore() {
 
       switch (e.key.toLowerCase()) {
         case 'q':
-          addScore(leftTeam, 1);
+          keyboardActionsRef.current.addScore(leftTeam, 1);
           break;
         case 'p':
-          addScore(rightTeam, 1);
+          keyboardActionsRef.current.addScore(rightTeam, 1);
           break;
         case 'u':
-          undo();
+          keyboardActionsRef.current.undo();
           break;
         default:
           break;
@@ -378,7 +382,7 @@ export default function MonoGoalsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [periodState, score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked, effectiveFormat, timerStarted, timer.elapsed, overtimePeriod]); // Dependencies for addScore/undo
+  }, [sidesSwapped, scoringPrompt.isInteractionLocked]);
 
   // Save match and return
   const saveMatch = (confirmed = false) => {

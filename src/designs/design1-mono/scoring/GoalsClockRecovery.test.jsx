@@ -79,3 +79,16 @@ describe('review regression: tournament clock recovery', () => {
     expect(savedMatch()).toMatchObject({ elapsedSeconds: 20, resultType: 'abandoned', periodState: { elapsedByPeriod: [10, 10] } });
   });
 });
+
+
+it('keyboard scoring uses the current broadcast callback after sharing state changes', () => {
+  const previousPoint = h.point;
+  try {
+    const view = render(<MonoGoalsLiveScore />);
+    h.point = vi.fn();
+    view.rerender(<MonoGoalsLiveScore />);
+    press('q');
+    expect(h.point).toHaveBeenCalledWith(expect.objectContaining({ snapshot: expect.objectContaining({ pointsA: 1 }) }));
+    expect(previousPoint).not.toHaveBeenCalled();
+  } finally { h.point = previousPoint; }
+});

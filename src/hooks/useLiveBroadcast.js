@@ -32,7 +32,7 @@ import { loadSession, saveSession } from '../lib/live/liveSession';
  *   goLive: (opts: object) => Promise<{token: string, matchId: string}|null>,
  *   point: (input: { team: 'A'|'B', value?: number, at: number, type?: 'point'|'serve_change'|'correction' }) => Promise<unknown>,
  *   undo: (input: { at: number }) => Promise<unknown>,
- *   finalize: () => Promise<unknown>,
+ *   finalize: (input?: {resultType?: 'decided'|'abandoned', snapshot?: object}) => Promise<unknown>,
  *   setVisibility: (visibility: 'public'|'unlisted'|'private', opts?: object) => Promise<unknown>,
  *   reset: () => void,
  * }}
