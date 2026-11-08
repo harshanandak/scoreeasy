@@ -174,6 +174,7 @@ export function buildTournamentConvexPayload({ sportId, tournament, match }) {
     };
   }
 
+  if (match.periodState) resultShape.periodState = match.periodState;
   const normalized = normalizeMatchForConvex(resultShape, sportId);
   normalized.date = toTimestamp(getCompletedAt(match));
   normalized.clientMatchId = getTournamentMatchClientId({ sportId, tournament, match });

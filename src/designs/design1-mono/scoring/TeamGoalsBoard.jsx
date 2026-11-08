@@ -9,7 +9,7 @@ import './goalsBoard.css';
 export default function TeamGoalsBoard({
   sportConfig, title, subtitle, colourStyle, halves, clock, clockLabel, status, isTimeUp, scoringLocked,
   lastLine, momentTeam, actionCount, canUndo, undoHint, isLive,
-  onScore, onUndo, onSwap, onCorrect, onFinish, onDiscard, live, notice,
+  onScore, onUndo, onSwap, onCorrect, onFinish, onDiscard, live, notice, periodControls,
 }) {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const sheetId = useId();
@@ -30,6 +30,7 @@ export default function TeamGoalsBoard({
         <span className="tgb-clock" aria-label={clockLabel}>{isTimeUp ? "Time's up!" : clock}</span>
         {status && <span className="tgb-status">{status}</span>}
       </div>
+      {periodControls}
       <p className="tgb-last" aria-label="Last action" aria-live="polite">{lastLine}</p>
       <div className="tgb-keys">
         {halves.map((h) => hasActions ? (
@@ -92,4 +93,5 @@ TeamGoalsBoard.propTypes = {
   onDiscard: PropTypes.func.isRequired,
   live: PropTypes.node,
   notice: PropTypes.node,
+  periodControls: PropTypes.node,
 };

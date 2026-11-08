@@ -1,3 +1,4 @@
+import { clockRemaining, formatPeriodClock } from '../../utils/goalsPeriods';
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 // PUBLIC spectator page for /live/:token — no sign-in required.
 //
@@ -171,16 +172,23 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   // snapshot arrives — otherwise PAUSED would never appear after the operator
   // goes quiet (see useStaleTick). The tick value itself is intentionally unused.
   useStaleTick();
+  const [, tickClock] = useState(0);
+  useEffect(() => {
+    if (!snapshot.periodClock || snapshot.status === 'final') return;
+    const interval = setInterval(() => tickClock(v => v + 1), 1000);
+    return () => clearInterval(interval);
+  }, [snapshot.periodClock, snapshot.status]);
 
   const isFinal = snapshot.status === 'final';
-  const stale = !isFinal && Date.now() - snapshot.lastEventAt > STALE_MS;
+  const stale = !isFinal && !snapshot.periodClock && Date.now() - snapshot.lastEventAt > STALE_MS;
 
   let eyebrow = 'LIVE';
   if (isFinal) eyebrow = isAbandoned(snapshot) ? ABANDONED_LABEL : 'FINAL';
+  else if (snapshot.periodClock && (snapshot.periodClock.startedAt == null || snapshot.periodClock.phase !== 'playing')) eyebrow = 'PAUSED';
   else if (snapshot.status === 'paused') eyebrow = 'PAUSED';
 
   const winner = isFinal && !isAbandoned(snapshot) ? winnerName(snapshot, nameA, nameB) : null;
-  const periodLine = snapshot.periodLabel
+  const periodLine = snapshot.periodClock ? `${snapshot.periodLabel || `Q${snapshot.currentUnit}`} · ${isFinal ? `${formatPeriodClock(snapshot.periodClock.playedSeconds ?? snapshot.periodClock.elapsed)} played` : snapshot.periodClock.startedAt == null ? 'paused' : formatPeriodClock(clockRemaining(snapshot.periodClock, Date.now()))}` : snapshot.periodLabel
     ? snapshot.periodLabel
     : getSportById(snapshot.sport)?.engine === 'sets'
       ? `${snapshot.setsA}–${snapshot.setsB} sets`
@@ -471,17 +479,23 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return <TennisScorebug state={state} teamA={nameA} teamB={nameB} />;
   }
   if (scorecardKind === 'goals' || scorecardKind === 'lines') {
-    // Spectators get no period config, so the line score is total-only — take the
+    // Legacy snapshots stay total-only — take the
     // authoritative totals straight from the snapshot (re-summing a partial event
     // page would be wrong). isFinalResult gates the winner highlight so a LIVE
-    // match isn't shown as decided. Per-period columns: scoreeasy-rvc.
+    // match isn't shown as decided.
     return (
+      <>
+        {snapshot.periodClock && <table aria-label="Period scores" style={{ width: '100%', marginBottom: 16 }}>
+          <caption>Score by period</caption><thead><tr><th>Period</th><th>{nameA}</th><th>{nameB}</th></tr></thead>
+          <tbody>{snapshot.setScores.map((score, i) => <tr key={i}><th>{i >= snapshot.periodClock.regulationCount ? `Extra ${i + 1 - snapshot.periodClock.regulationCount}` : snapshot.sport === 'football' ? `Half ${i + 1}` : `Q${i + 1}`}</th><td>{score.a}</td><td>{score.b}</td></tr>)}</tbody>
+        </table>}
       <LineScore
         totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
         isFinalResult={snapshot.status === 'final' && !isAbandoned(snapshot)}
         teamA={nameA}
         teamB={nameB}
       />
+      </>
     );
   }
   return <SnapshotSummary snapshot={snapshot} nameA={nameA} nameB={nameB} />;

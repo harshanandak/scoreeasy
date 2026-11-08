@@ -1,0 +1,9 @@
+.gp-controls { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:6px 14px; }
+.gp-controls button { min-height:48px; padding:8px 14px; border:2px solid var(--se-color-ink); border-radius:12px; background:var(--se-color-surface); color:var(--se-color-ink); font:inherit; font-weight:750; touch-action:manipulation; }
+.gp-controls button:focus-visible { outline:3px solid var(--se-color-focus-ring); outline-offset:2px; }
+.gp-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.gp-fields input { width:100%; }
+.gp-extra { display:flex; align-items:center; gap:10px; min-height:44px; margin-top:8px; }
+.gp-extra input { width:22px; height:22px; }
+.gp-setup select { width:100%; margin-bottom:8px; }
+.tgb:has(.gp-controls) .tgb-whole { min-height:180px; }
