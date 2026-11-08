@@ -6,9 +6,7 @@ import { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from 'convex/react';
-import { useMatchSync } from '../../../hooks/useMatchSync';
-import { api } from '../../../../convex/_generated/api';
+import { enqueueQuickMatchSave } from '../../../hooks/useMatchSync';
 import { getSportById } from '../../../models/sportRegistry';
 import {
   clearData,
@@ -21,7 +19,7 @@ import {
 } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
-import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useTournamentMatchSync } from '../../../hooks/useTournamentMatchSync';
 import {
   buildTennisQuickHistoryEntry,
   getTennisQuickDraftKey,
@@ -316,8 +314,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const quickDraftKey = isQuickMatch ? getTennisQuickDraftKey(matchId) : null;
   const lastClickRef = useRef(0);
   const { isAuthenticated, user, clerkUser } = useAuth();
-  const { syncMatch: syncQuickMatch } = useMatchSync({ sport, isAuthenticated, user, clerkUser });
-  const saveMatchMutation = useMutation(api.matches.save);
+  const syncQuickMatch = (entry) => enqueueQuickMatchSave({ sport, isAuthenticated, user, clerkUser }, entry);
+  const saveTournamentToConvex = useTournamentMatchSync({ sport, matchId });
   const navigateBack = () => navigate(isQuickMatch ? `/${sport}/quick` : `/${sport}/tournament/${id}`);
   const completeScoring = (path) => {
     if (completeProtectedScoring) completeProtectedScoring(path);
@@ -361,22 +359,6 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     : `${sport}:${id}:${matchId}`;
   const broadcastIntentRef = useRef(null);
 
-  const saveTournamentToConvex = (updatedTournament) => {
-    if (!isAuthenticated || !updatedTournament) return;
-    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
-      .find((m) => m.id === matchId || m.id === Number(matchId));
-    if (!savedMatch) return;
-    try {
-      const payload = buildTournamentConvexPayload({
-        sportId: sport,
-        tournament: updatedTournament,
-        match: savedMatch,
-      });
-      saveMatchMutation(payload).catch(() => {});
-    } catch {
-      // Local save is primary; cloud sync failures are non-blocking.
-    }
-  };
 
   // Load tournament/quick match data
   const { scoringStarted } = useScoringProgress(

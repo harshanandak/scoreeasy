@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AuthContext } from '../../../auth/AuthContext';
 import { cricketFinishSeed } from '../../../test/cricketFinishFixtures';
 import { ScoringCompletionContext } from './scoringCompletionContext';
+import { usePendingMatchSaves } from '../../../hooks/usePendingMatchSaves';
 import MonoCricketTestLiveScore from './MonoCricketTestLiveScore';
 import MonoTennisLiveScore from './MonoTennisLiveScore';
 import MonoQuickMatch from '../MonoQuickMatch';
@@ -18,6 +19,7 @@ vi.mock('../live/LiveBroadcastBar', () => ({ default: () => null }));
 
 let auth;
 let owner = 0;
+function Worker() { usePendingMatchSaves(); return null; }
 beforeEach(() => {
   localStorage.clear();
   save.mockReset();
@@ -44,6 +46,7 @@ function mountTest() {
   Object.entries(seed).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
   return render(
     <AuthContext.Provider value={auth}>
+      <Worker />
       <MemoryRouter initialEntries={['/cricket/quick/test-match/300']}>
         <ScoringCompletionContext.Provider value={vi.fn()}>
           <Routes><Route path="/:sport/quick/test-match/:matchId" element={<MonoCricketTestLiveScore storageMode="quick" />} /></Routes>
@@ -84,6 +87,7 @@ it('keeps the volatile tennis warning visible on Finish and History after the re
   save.mockRejectedValue(new Error('Result rejected'));
   render(
     <AuthContext.Provider value={auth}>
+      <Worker />
       <MemoryRouter initialEntries={['/tennis/quick/tennis-status']}>
         <Routes>
           <Route path="/:sport/quick/:matchId" element={<MonoTennisLiveScore storageMode="quick" />} />

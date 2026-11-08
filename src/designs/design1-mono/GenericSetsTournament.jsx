@@ -1,3 +1,4 @@
+import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -277,6 +278,7 @@ export default function GenericSetsTournament() {
                     </div>
                   </div>
 
+                  <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
                   <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} />
 
                   {/* Teams and scores */}
