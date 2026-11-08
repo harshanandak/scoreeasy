@@ -69,7 +69,7 @@ export function CoachArrow() {
   return (
     <svg className="kit-coach-arrow" viewBox="0 0 60 60" aria-hidden="true" focusable="false">
       <path d="M5 6.5C22 3.2 41 9.6 50 24.4C55.6 33.6 55.2 44.4 49.6 55" vectorEffect="non-scaling-stroke" />
-      <path d="M41.8 49.4C44.6 51.6 47 53.6 49.8 56.3C51.2 52.6 52.4 49.2 53.8 45.6" vectorEffect="non-scaling-stroke" />
+      <path d="M41.8 49.4C44.6 51.6 47 53.6 49.8 56.3C52.6 54.4 55.6 52.4 58.8 50.4" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
