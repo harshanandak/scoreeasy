@@ -428,7 +428,7 @@ export default function MonoSetsLiveScore() {
     // Save all sets that have any score (including in-progress)
     const setsToSave = sets
       .filter(s => s.score1 > 0 || s.score2 > 0)
-      .map(s => ({ score1: s.score1, score2: s.score2, completed: s.completed || false }));
+      .map(s => ({ ...s, completed: s.completed || false }));
 
     // Count completed sets to determine match status
     const completedSets = sets.filter(s => s.completed);
@@ -636,7 +636,7 @@ export default function MonoSetsLiveScore() {
     if (team == null && servingTeam == null) return;
     setHistory(prev => [...prev, { sets: structuredClone(sets), currentSet, servingTeam, sidesSwapped, scoringMode }].slice(-100));
     const next = structuredClone(sets);
-    next[currentSet] = { ...next[currentSet], firstServer: team };
+    if (rules.serviceMode === 'alternating' || (!next[currentSet].score1 && !next[currentSet].score2)) next[currentSet] = { ...next[currentSet], firstServer: team };
     setSets(next);
     setServingTeam(rules.serviceMode === 'alternating' ? serveAfterPoint(rules, { score: next[currentSet], currentSet, sets: next, servingTeam: team }) : team);
     setHasChanges(true);
@@ -671,7 +671,7 @@ export default function MonoSetsLiveScore() {
     const last = history.at(-1);
     const undoSet = last?.sets[last.currentSet];
     const undoHint = undoSet
-      ? `back to ${halves.map(h => undoSet[h.team === 1 ? 'score1' : 'score2']).join('–')} · Set ${last.currentSet + 1}`
+      ? `back to ${halves.map(h => undoSet[h.team === 1 ? 'score1' : 'score2']).join('–')} · ${rules.unit} ${last.currentSet + 1}`
       : '';
     return (
       <>

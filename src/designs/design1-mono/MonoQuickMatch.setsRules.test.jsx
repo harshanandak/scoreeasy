@@ -72,6 +72,21 @@ describe('quick match shared service rules', () => {
     expect(ctx.saved.sets[0]).toMatchObject({ score1: 10, score2: 9 });
   });
 
+  it('records manual service without rewriting the game first server, then undoes it', async () => {
+    const manual = freezeSetsFormat(getSportById('tabletennis'), { type: 'best-of', sets: 5, points: 11, initialServer: 1, customization: { serviceMode: 'manual' } });
+    seed(3, 2, { format: manual, sets: [{ score1: 3, score2: 2, completed: false, firstServer: 1 }] });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Royals' });
+    fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Serving team' }), { target: { value: '2' } });
+    expect(ctx.saved.servingTeam).toBe(2);
+    expect(ctx.saved.sets[0].firstServer).toBe(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    fireEvent.click(undo());
+    expect(ctx.saved.servingTeam).toBe(1);
+    expect(ctx.saved.sets[0]).toMatchObject({ score1: 3, score2: 2, firstServer: 1 });
+  });
+
   it('restores the game boundary, first server and ends after refresh and undo', async () => {
     seed(10, 8, { format: format(2), servingTeam: 1 });
     const view = render(<MonoQuickMatch />);

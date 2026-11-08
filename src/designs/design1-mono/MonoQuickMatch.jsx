@@ -1394,10 +1394,10 @@ export default function MonoQuickMatch() {
     if (team == null && servingTeam == null) return;
     setVScoreHistory(prev => [...prev, { sets: cloneSetsSnapshot(sets), currentSet, vScore1, vScore2, servingTeam, sidesSwapped }].slice(-100));
     const next = cloneSetsSnapshot(sets);
-    next[currentSet] = { ...next[currentSet], firstServer: team };
-    setSets(next);
     const rules = format.setsRules;
     const score = format.type === 'best-of' ? next[currentSet] : { score1: vScore1, score2: vScore2 };
+    if (rules.serviceMode === 'alternating' || (!score.score1 && !score.score2)) next[currentSet] = { ...next[currentSet], firstServer: team };
+    setSets(next);
     setServingTeam(rules.serviceMode === 'alternating' ? serveAfterPoint(rules, { score, sets: next, currentSet, servingTeam: team }) : team);
     setLastAction(team ? 'Server recorded' : 'Server unknown');
     broadcastIntentRef.current = { kind: 'serve', type: team == null ? 'correction' : 'serve_change', team: broadcastServer(team ?? servingTeam), at: Date.now() };
