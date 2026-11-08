@@ -702,59 +702,61 @@ export default function MonoQuickMatch() {
   // (a single tap can end a set / chase / open the next unit, which React applies
   // asynchronously). No-op until the bar has run goLive — point/undo return null
   // until then. The dependency array lists EVERY score-state variable read below.
+  let liveSnapshot;
+  if (isCricket) {
+    const battingName = battingTeam === 1 ? team1Name : team2Name;
+    const battingScore = battingTeam === 1 ? scores.team1 : scores.team2;
+    liveSnapshot = {
+      pointsA: scores.team1.runs,
+      pointsB: scores.team2.runs,
+      setsA: 0,
+      setsB: 0,
+      setScores: [],
+      servingTeam: undefined,
+      currentUnit: innings,
+      periodLabel: `${battingName} ${battingScore.runs}/${battingScore.wickets} (${ballsToOvers(battingScore.balls)})`,
+    };
+  } else if (isGoals) {
+    liveSnapshot = {
+      pointsA: gScore1,
+      pointsB: gScore2,
+      setsA: 0,
+      setsB: 0,
+      setScores: [],
+      currentUnit: 1,
+      periodLabel: goalsPeriodLabel,
+    };
+  } else if (format.type === 'best-of') {
+    const completed = sets.filter((s) => s.completed);
+    liveSnapshot = {
+      pointsA: sets[currentSet]?.score1 || 0,
+      pointsB: sets[currentSet]?.score2 || 0,
+      setsA: completed.filter((s) => s.score1 > s.score2).length,
+      setsB: completed.filter((s) => s.score2 > s.score1).length,
+      setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
+      servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+      currentUnit: currentSet + 1,
+      periodLabel: `Set ${currentSet + 1}`,
+    };
+  } else {
+    liveSnapshot = {
+      pointsA: vScore1,
+      pointsB: vScore2,
+      setsA: 0,
+      setsB: 0,
+      setScores: [],
+      servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+      currentUnit: 1,
+    };
+  }
+
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
     broadcastIntentRef.current = null;
 
-    let snapshot;
-    if (isCricket) {
-      const battingName = battingTeam === 1 ? team1Name : team2Name;
-      const battingScore = battingTeam === 1 ? scores.team1 : scores.team2;
-      snapshot = {
-        pointsA: scores.team1.runs,
-        pointsB: scores.team2.runs,
-        setsA: 0,
-        setsB: 0,
-        setScores: [],
-        servingTeam: undefined,
-        currentUnit: innings,
-        periodLabel: `${battingName} ${battingScore.runs}/${battingScore.wickets} (${ballsToOvers(battingScore.balls)})`,
-      };
-    } else if (isGoals) {
-      snapshot = {
-        pointsA: gScore1,
-        pointsB: gScore2,
-        setsA: 0,
-        setsB: 0,
-        setScores: [],
-        currentUnit: 1,
-        periodLabel: goalsPeriodLabel,
-      };
-    } else if (format.type === 'best-of') {
-      const completed = sets.filter((s) => s.completed);
-      snapshot = {
-        pointsA: sets[currentSet]?.score1 || 0,
-        pointsB: sets[currentSet]?.score2 || 0,
-        setsA: completed.filter((s) => s.score1 > s.score2).length,
-        setsB: completed.filter((s) => s.score2 > s.score1).length,
-        setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
-        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
-        currentUnit: currentSet + 1,
-        periodLabel: `Set ${currentSet + 1}`,
-      };
-    } else {
-      snapshot = {
-        pointsA: vScore1,
-        pointsB: vScore2,
-        setsA: 0,
-        setsB: 0,
-        setScores: [],
-        servingTeam: tracksPointWinnerServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
-        currentUnit: 1,
-      };
-    }
-
+    const snapshot = liveSnapshot;
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
@@ -843,6 +845,7 @@ export default function MonoQuickMatch() {
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
   const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
   const liveDescriptor = {
+    snapshot: liveSnapshot,
     clientMatchId: liveMatchIdRef.current !== null ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
     sport,
     scorecardKind: liveScorecardKind,

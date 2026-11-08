@@ -155,6 +155,11 @@ export default function MonoGoalsLiveScore() {
     ? tournament.knockoutConfig.format
     : tournament?.format;
 
+  const buildLiveSnapshot = (pointsA = score1, pointsB = score2) => ({
+    pointsA, pointsB, setsA: 0, setsB: 0, setScores: [], currentUnit: 1,
+    periodLabel: sportConfig?.name,
+  });
+
   // Start timer for timed mode
   useEffect(() => {
     if (!tournament || !timerStarted) return;
@@ -267,7 +272,7 @@ export default function MonoGoalsLiveScore() {
     }
 
     // Mirror to the live broadcast (no-op when not broadcasting). team1 -> A.
-    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now() });
+    live.point({ team: team === 1 ? 'A' : 'B', value, at: Date.now(), snapshot: buildLiveSnapshot(newScore1, newScore2) });
 
     // Auto-end in points mode (formatMode already declared above)
     if ((formatMode || 'free') === 'points' && effectiveFormat.target) {
@@ -288,7 +293,7 @@ export default function MonoGoalsLiveScore() {
     setScore1(last.score1);
     setScore2(last.score2);
     setHistory(prev => prev.slice(0, -1));
-    live.undo({ at: Date.now() });
+    live.undo({ at: Date.now(), snapshot: buildLiveSnapshot(last.score1, last.score2) });
   };
 
   // Auto-save the in-progress match to the tournament on every score change, so
@@ -403,6 +408,7 @@ export default function MonoGoalsLiveScore() {
   const quickButtons = sportConfig.config.quickButtons;
 
   const liveDescriptor = {
+    snapshot: buildLiveSnapshot(),
     clientMatchId: liveClientMatchId,
     sport,
     scorecardKind: 'goals',

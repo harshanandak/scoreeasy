@@ -48,6 +48,28 @@ function renderBar(props) {
 }
 
 describe('LiveBroadcastBar (b0z)', () => {
+  it('shows Stop for a restored public match even when enabled and consent start off', async () => {
+    const broadcast = makeBroadcast({ isShared: true, token: 'TOK', restore: vi.fn().mockResolvedValue({ isShared: true }) });
+    const onEnableChange = vi.fn();
+    renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Go live/i })).not.toBeInTheDocument();
+    await waitFor(() => expect(broadcast.restore).toHaveBeenCalledWith({ clientMatchId: 'cm1' }));
+    expect(broadcast.goLive).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    await waitFor(() => expect(broadcast.setVisibility).toHaveBeenCalledWith('private'));
+  });
+
+  it('re-share uses the latest descriptor snapshot through goLive, not a visibility-only write', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, isShared: false });
+    const snapshot = { pointsA: 2, pointsB: 0 };
+    renderBar({ broadcast, descriptor: { ...descriptor, snapshot }, enabled: true, onEnableChange: vi.fn() });
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
+    expect(broadcast.setVisibility).not.toHaveBeenCalled();
+    const opts = broadcast.goLive.mock.calls[0][0];
+    expect(opts.getSnapshot()).toEqual(snapshot);
+  });
   it('keeps the public status and controls when Stop fails', async () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK', error: new Error('offline') });
@@ -109,7 +131,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(broadcast.goLive).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
     expect(broadcast.goLive).toHaveBeenCalledTimes(1);
-    expect(broadcast.goLive).toHaveBeenCalledWith(descriptor);
+    expect(broadcast.goLive).toHaveBeenCalledWith(expect.objectContaining(descriptor));
 
     rerender(
       <MemoryRouter initialEntries={['/football/quick']}>

@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { authedMutation } from "./lib/functions";
+import { authedMutation, authedQuery } from "./lib/functions";
 import { containsProfanity } from "./lib/profanity";
 
 // Coarse 30s time bucket for feed ranking — patched only when the bucket
@@ -163,8 +163,8 @@ export const create = authedMutation({
       sport: args.sport,
       scorecardKind: args.scorecardKind,
       status: "live",
-      visibility: args.visibility ?? "private",
-      publishedAt: args.visibility && args.visibility !== "private" ? now : undefined,
+      // Older clients send public automatically; creation never grants publication.
+      visibility: "private",
       isYouthMatch: args.isYouthMatch ?? false,
       moderationStatus: flagged ? "held" : "clean",
       pointsA: 0,
@@ -388,14 +388,44 @@ export const setVisibility = authedMutation({
       v.literal("unlisted"),
       v.literal("private"),
     ),
+    snapshot: v.optional(snapshotArgValidator),
   },
   handler: async (ctx, args) => {
-    await loadOwnedMatch(ctx, args.matchId);
+    const match = await loadOwnedMatch(ctx, args.matchId);
+    const publishing = args.visibility !== "private";
+    if (publishing && !args.snapshot) throw new Error("Sharing requires the current score snapshot");
+    const now = Date.now();
     await ctx.db.patch(args.matchId, {
       visibility: args.visibility,
-      publishedAt: args.visibility === "private" ? undefined : Date.now(),
+      publishedAt: publishing ? now : undefined,
+      ...(publishing && args.snapshot ? {
+        ...snapshotPatch(args.snapshot),
+        pointsA: args.snapshot.pointsA,
+        pointsB: args.snapshot.pointsB,
+        lastEventAt: now,
+        feedRank: feedBucket(now),
+        status: match.status === "paused" ? "live" as const : match.status,
+      } : {}),
     });
     return { ok: true };
+  },
+});
+
+export const getOwnedSession = authedQuery({
+  args: { clientMatchId: v.string() },
+  returns: v.union(v.null(), v.object({
+    matchId: v.id("liveMatches"), token: v.string(), lastSeq: v.number(),
+    isShared: v.boolean(),
+  })),
+  handler: async (ctx, { clientMatchId }) => {
+    const match = await ctx.db.query("liveMatches")
+      .withIndex("by_owner_client", (q) => q.eq("ownerId", ctx.user._id).eq("clientMatchId", clientMatchId))
+      .unique();
+    if (!match) return null;
+    return {
+      matchId: match._id, token: match.token, lastSeq: match.lastSeq,
+      isShared: match.visibility !== "private" && match.publishedAt !== undefined,
+    };
   },
 });
 

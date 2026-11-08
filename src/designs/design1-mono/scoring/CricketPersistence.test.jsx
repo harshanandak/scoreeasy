@@ -6,7 +6,8 @@ import { ScoringCompletionContext } from './scoringCompletionContext';
 import MonoCricketGuidedScorerRoute from './MonoCricketGuidedScorerRoute';
 import { createInnings, applyDelivery, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 
 delete globalThis.ontouchstart;
 Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 0 });

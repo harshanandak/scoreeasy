@@ -3,12 +3,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../../lib/teamColour';
 import { sportMarkMaskUrl } from '../../../lib/sportMarks';
 
-const ctx = vi.hoisted(() => ({ draft: null, saved: null, navigate: vi.fn() }));
+const ctx = vi.hoisted(() => ({ draft: null, saved: null, navigate: vi.fn(), descriptor: null }));
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => ctx.navigate, useParams: () => ({ sport: 'tennis', matchId: 'g7' }), useLocation: () => ({ pathname: '/tennis/quick/live/g7', search: '' }) }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), isLive: false }) }));
-vi.mock('../live/LiveBroadcastBar', () => ({ default: () => null }));
+vi.mock('../live/LiveBroadcastBar', () => ({ default: ({ descriptor }) => { ctx.descriptor = descriptor; return null; } }));
 vi.mock('../../../utils/storage', () => ({
   loadData: () => ctx.draft, loadQuickMatch: () => null, clearData: vi.fn(),
   saveData: (_key, value) => { ctx.saved = structuredClone(value); return true; },
@@ -24,6 +24,15 @@ const key = name => screen.getByRole('button', { name: new RegExp(`^${name}:`) }
 const score = name => key(name).querySelector('.tsb-big').textContent;
 const undo = () => fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
 beforeEach(() => { seed(); ctx.saved = null; ctx.navigate.mockClear(); });
+
+it('shares private tennis games and the current point label together', async () => {
+  seed({ games1: 2, points1: 2 });
+  render(<Scorer storageMode="quick" />);
+  await screen.findByRole('button', { name: /^Anya:/ });
+  expect(ctx.descriptor.snapshot).toMatchObject({ pointsA: 2, pointsB: 0, periodLabel: '30-0', currentUnit: 1 });
+  fireEvent.click(key('Anya'));
+  expect(ctx.descriptor.snapshot).toMatchObject({ pointsA: 2, pointsB: 0, periodLabel: '40-0' });
+});
 
 it('uses picked colours, serve dot and tennis mark, saves 15–0 and restores it with Undo after remount', async () => {
   const first = render(<Scorer storageMode="quick" />);

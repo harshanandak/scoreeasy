@@ -571,30 +571,32 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
   // point can finish a game/set, which React applies asynchronously, so we read
   // the settled sets here rather than guessing the post-point score in addPoint.
+  const cur = sets[currentSet] || {};
+  const completed = sets.filter((s) => s.completed);
+  const { team1Sets: liveSetsA, team2Sets: liveSetsB } = countSetsWon(completed);
+  const [labelA, labelB] = tennisGameLabels(cur);
+  // Serve change is never a user action in tennis — it's a consequence of a
+  // point, which already fires point()/undo(). So we don't add a serveChange
+  // mirror; we just carry the derived server in the existing snapshot (team1->A),
+  // matching how MonoSetsLiveScore broadcasts servingTeam.
+  const server = deriveServer(sets, currentSet);
+  const liveSnapshot = {
+    pointsA: cur.games1 || 0,
+    pointsB: cur.games2 || 0,
+    setsA: liveSetsA,
+    setsB: liveSetsB,
+    setScores: completed.map((s) => ({ a: s.games1 || 0, b: s.games2 || 0 })),
+    servingTeam: server === 1 ? 'A' : 'B',
+    currentUnit: currentSet + 1,
+    periodLabel: `${labelA}-${labelB}`,
+  };
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
     broadcastIntentRef.current = null;
 
-    const cur = sets[currentSet] || {};
-    const completed = sets.filter((s) => s.completed);
-    const { team1Sets, team2Sets } = countSetsWon(completed);
-    const [labelA, labelB] = tennisGameLabels(cur);
-    // Serve change is never a user action in tennis — it's a consequence of a
-    // point, which already fires point()/undo(). So we don't add a serveChange
-    // mirror; we just carry the derived server in the existing snapshot (team1->A),
-    // matching how MonoSetsLiveScore broadcasts servingTeam.
-    const server = deriveServer(sets, currentSet);
-    const snapshot = {
-      pointsA: cur.games1 || 0,
-      pointsB: cur.games2 || 0,
-      setsA: team1Sets,
-      setsB: team2Sets,
-      setScores: completed.map((s) => ({ a: s.games1 || 0, b: s.games2 || 0 })),
-      servingTeam: server === 1 ? 'A' : 'B',
-      currentUnit: currentSet + 1,
-      periodLabel: `${labelA}-${labelB}`,
-    };
+    const snapshot = liveSnapshot;
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
@@ -840,7 +842,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       </div>
       <BoardBar canUndo={history.length > 0 && !scoringPrompt.isInteractionLocked} undoHint={undoHint} onUndo={undo} sheetId={sheetId} sheetOpen={optionsOpen} onMore={() => setOptionsOpen(true)} />
       <BoardOptionsSheet id={sheetId} open={optionsOpen} onClose={() => setOptionsOpen(false)} onDiscard={handleCancel}
-        live={<LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport, scorecardKind: 'tennis', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}>
+        live={<LiveBroadcastBar broadcast={live} descriptor={{ snapshot: liveSnapshot, clientMatchId: liveClientMatchId, sport, scorecardKind: 'tennis', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />}>
         <BoardSheetGroup>
           <button type="button" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { handleSwapSides(); setOptionsOpen(false); }}>Swap sides</button>
         </BoardSheetGroup>

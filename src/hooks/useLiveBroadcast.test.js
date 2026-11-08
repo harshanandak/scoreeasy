@@ -13,6 +13,7 @@ const h = vi.hoisted(() => {
   const spies = {};
   return {
     spies,
+    query: vi.fn(),
     get: (key) => {
       if (!spies[key]) spies[key] = vi.fn().mockResolvedValue(undefined);
       return spies[key];
@@ -28,12 +29,14 @@ vi.mock('../../convex/_generated/api', () => ({
       undo: 'live:undo',
       finalize: 'live:finalize',
       setVisibility: 'live:setVisibility',
+      getOwnedSession: 'live:getOwnedSession',
     },
   },
 }));
 
 vi.mock('convex/react', () => ({
   useMutation: (ref) => h.get(ref),
+  useConvex: () => h,
 }));
 
 import { useLiveBroadcast } from './useLiveBroadcast';
@@ -46,10 +49,12 @@ const GO = {
   teamA: { name: 'Alpha' },
   teamB: { name: 'Beta' },
   visibility: 'public',
+  snapshot: { pointsA: 0, pointsB: 0, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 },
 };
 
 beforeEach(() => {
   localStorage.clear();
+  h.query.mockReset().mockResolvedValue(null);
   Object.values(h.spies).forEach((s) => s.mockReset());
   h.get('live:setVisibility').mockResolvedValue({ ok: true });
 });
@@ -59,6 +64,68 @@ function setup(opts) {
 }
 
 describe('useLiveBroadcast', () => {
+  it('ignores a delayed restore after the scorer resets to a different match', async () => {
+    let resolve;
+    h.query.mockReturnValue(new Promise((done) => { resolve = done; }));
+    const { result } = setup({ enabled: false });
+    await act(async () => {
+      const restoring = result.current.restore(GO);
+      result.current.reset();
+      resolve({ matchId: 'old', token: 'OLD', lastSeq: 9, isShared: true });
+      await restoring;
+    });
+    expect(result.current).toMatchObject({ isShared: false, isLive: false, token: null });
+  });
+
+  it('allows only one publication while a share request is in flight', async () => {
+    let resolve;
+    h.get('live:create').mockReturnValue(new Promise((done) => { resolve = done; }));
+    const { result } = setup();
+    await act(async () => {
+      const sharing = result.current.goLive(GO);
+      await result.current.goLive(GO);
+      resolve({ matchId: 'mid1', token: 'TOK' });
+      await sharing;
+    });
+    expect(h.spies['live:create']).toHaveBeenCalledTimes(1);
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
+  });
+  it('restores true sharing state and Stop after reopening without creating or publishing', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true });
+    const { result } = setup({ enabled: false });
+    await act(async () => { await result.current.restore(GO); });
+    expect(result.current).toMatchObject({ isShared: true, token: 'TOK' });
+    expect(h.spies['live:create']).not.toHaveBeenCalled();
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+    await act(async () => { await result.current.setVisibility('private'); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'private' });
+    expect(result.current.isShared).toBe(false);
+  });
+
+  it('publishes the latest private score and reshares current progress instead of a stale descriptor', async () => {
+    h.get('live:create').mockResolvedValue({ matchId: 'mid1', token: 'TOK' });
+    let snapshot = { ...GO.snapshot, pointsA: 2 };
+    const { result, rerender } = renderHook(({ enabled }) => useLiveBroadcast({ enabled }), { initialProps: { enabled: false } });
+    await act(async () => { await result.current.point({ team: 'A', at: 1, snapshot }); });
+    expect(h.spies['live:scorePoint']).not.toHaveBeenCalled();
+    rerender({ enabled: true });
+    await act(async () => { await result.current.goLive({ ...GO, getSnapshot: () => snapshot }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenLastCalledWith({ matchId: 'mid1', visibility: 'public', snapshot });
+    await act(async () => { await result.current.setVisibility('private'); });
+    snapshot = { ...snapshot, pointsA: 5 };
+    await act(async () => { await result.current.goLive({ ...GO, getSnapshot: () => snapshot }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenLastCalledWith({ matchId: 'mid1', visibility: 'public', snapshot });
+  });
+
+  it('does not publish while older queued scores are still failing', async () => {
+    h.get('live:create').mockResolvedValue({ matchId: 'mid1', token: 'TOK' });
+    h.get('live:scorePoint').mockRejectedValue(new Error('offline'));
+    enqueue({ kind: 'point', clientMatchId: 'cm1', clientEventId: 'cm1:old', team: 'A', value: 1, at: 1 });
+    const { result } = setup();
+    await act(async () => { await result.current.goLive(GO); });
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+    expect(load()).toHaveLength(1);
+  });
   it('does not announce a stopped/legacy match as live until explicit publishing succeeds', async () => {
     h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
     h.get('live:setVisibility').mockRejectedValue(new Error('offline'));
@@ -91,7 +158,7 @@ describe('useLiveBroadcast', () => {
     );
     expect(result.current.isLive).toBe(true);
     expect(result.current.token).toBe('TOK123');
-    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public' });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot });
   });
 
   it('point() sends scorePoint with matchId + derived clientEventId and drains the outbox', async () => {
@@ -422,9 +489,9 @@ describe('useLiveBroadcast', () => {
     // Operator pressed "Stop" → the scorer flips enabled off.
     rerender({ enabled: false });
     await act(async () => {
-      await result.current.setVisibility('public'); // resume
+      await result.current.setVisibility('public', GO); // resume
     });
     // Must NOT be a no-op just because enabled is false — a match exists.
-    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public' });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot });
   });
 });

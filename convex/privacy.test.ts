@@ -5,6 +5,8 @@ import { getFunctionName } from "convex/server";
 import schema from "./schema";
 import { api } from "./_generated/api";
 
+const SHARED_SCORE = { pointsA: 1, pointsB: 0, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 };
+
 const modules = (import.meta as unknown as {
   glob: (pattern: string) => Record<string, () => Promise<unknown>>;
 }).glob("./**/*.ts");
@@ -112,6 +114,57 @@ describe("profile and team data minimization", () => {
 });
 
 describe("explicit live sharing", () => {
+  test("owner session restoration is read-only and cannot expose another scorer's session", async () => {
+    const { t, owner, other, matchId, token } = await fixture();
+    const args = { clientMatchId: "private-live" };
+    await expect(t.query(api.live.getOwnedSession, args)).rejects.toThrow(/authenticated/i);
+    expect(await other.query(api.live.getOwnedSession, args)).toBeNull();
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: false });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: SHARED_SCORE });
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: true });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "private" });
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ isShared: false });
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+  });
+
+  test.each(["public", "unlisted"] as const)("legacy create(%s) cannot publish a new broadcast", async (visibility) => {
+    const { t, owner } = await fixture();
+    const { matchId, token } = await owner.mutation(api.live.create, {
+      sport: "football", scorecardKind: "goals", teamA: { name: "A" }, teamB: { name: "B" },
+      clientMatchId: visibility, visibility,
+    });
+    expect(await t.run((ctx) => ctx.db.get("liveMatches", matchId))).toMatchObject({ visibility: "private" });
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect(await t.query(api.live.getMeta, { token })).toBeNull();
+    expect(await t.query(api.live.listLiveFeed, {})).toEqual([]);
+    await expect(owner.mutation(api.live.setVisibility, { matchId, visibility })).rejects.toThrow(/snapshot/i);
+    await owner.mutation(api.live.setVisibility, { matchId, visibility, snapshot: SHARED_SCORE });
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject(SHARED_SCORE);
+  });
+
+  test.each([
+    { sport: "football", pointsA: 2, pointsB: 0, currentUnit: 1, periodLabel: "Football" },
+    { sport: "volleyball", pointsA: 2, pointsB: 0, currentUnit: 2, periodLabel: "Set 2" },
+    { sport: "badminton", pointsA: 2, pointsB: 0, currentUnit: 1, periodLabel: "Set 1" },
+    { sport: "tennis", pointsA: 2, pointsB: 0, currentUnit: 1, periodLabel: "30-0" },
+    { sport: "cricket", pointsA: 2, pointsB: 0, currentUnit: 1, periodLabel: "A 2/0 (0.1 ov)" },
+    { sport: "cricket-test", pointsA: 102, pointsB: 100, currentUnit: 3, periodLabel: "A 2/0 (0.1 ov)" },
+  ])("$sport shares the local score atomically and reshares private progress", async ({ sport, ...score }) => {
+    const { t, owner, matchId, token } = await fixture();
+    const snapshot = { ...score, setsA: 0, setsB: 0, setScores: [], servingTeam: "A" as const };
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot });
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject(snapshot);
+    await owner.mutation(api.live.scorePoint, {
+      matchId, team: "A", value: 1, clientEventId: sport, at: 2,
+      snapshot: { ...snapshot, pointsA: snapshot.pointsA + 1 },
+    });
+    expect((await t.query(api.live.getByToken, { token }))?.pointsA).toBe(snapshot.pointsA + 1);
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "private" });
+    const resumed = { ...snapshot, pointsA: snapshot.pointsA + 5 };
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: resumed });
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject(resumed);
+  });
   test("create requires auth and scopes a reused client ID to each scorer", async () => {
     const { t, other, otherId, matchId } = await fixture();
     const args = {
@@ -138,7 +191,7 @@ describe("explicit live sharing", () => {
     expect(await t.query(api.live.listLiveFeed, {})).toEqual([]);
     await t.mutation(api.live.report, { token, reason: "spam", reporterId: "anon" });
     expect(await t.run((ctx) => ctx.db.query("moderationReports").collect())).toEqual([]);
-    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public" });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: SHARED_SCORE });
     for (const client of [t, owner, other]) {
       const snapshot = await client.query(api.live.getByToken, { token });
       expect(snapshot?.pointsA).toBe(1);
@@ -150,7 +203,7 @@ describe("explicit live sharing", () => {
     }
     await t.mutation(api.live.report, { token, reason: "spam", reporterId: "anon" });
     expect(await t.run((ctx) => ctx.db.query("moderationReports").collect())).toHaveLength(1);
-    await owner.mutation(api.live.setVisibility, { matchId, visibility: "unlisted" });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "unlisted", snapshot: SHARED_SCORE });
     expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
     expect(await t.query(api.live.listLiveFeed, {})).toEqual([]);
     await owner.mutation(api.live.setVisibility, { matchId, visibility: "private" });
@@ -165,7 +218,7 @@ describe("explicit live sharing", () => {
     const calls = [
       [api.live.scorePoint, { matchId, clientEventId: "p2", team: "B" as const, at: 2 }],
       [api.live.undo, { matchId, clientEventId: "u1", at: 3 }],
-      [api.live.setVisibility, { matchId, visibility: "public" as const }],
+      [api.live.setVisibility, { matchId, visibility: "public" as const, snapshot: SHARED_SCORE }],
       [api.live.pause, { matchId }],
       [api.live.finalize, { matchId }],
     ] as const;
@@ -176,12 +229,15 @@ describe("explicit live sharing", () => {
     }
   });
 
-  test("explicit create visibility is a share decision; held and expired matches stay hidden", async () => {
+  test("legacy create visibility cannot publish; explicit sharing respects moderation and expiry", async () => {
     const { t, owner } = await fixture();
     const { matchId, token } = await owner.mutation(api.live.create, {
       sport: "volleyball", scorecardKind: "volleyball", teamA: { name: "A" }, teamB: { name: "B" },
       clientMatchId: "explicit", visibility: "public",
     });
+    expect(await t.query(api.live.getByToken, { token })).toBeNull();
+    expect((await t.run((ctx) => ctx.db.get("liveMatches", matchId)))?.publishedAt).toBeUndefined();
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: SHARED_SCORE });
     expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
     for (const patch of [{ moderationStatus: "held" as const }, { moderationStatus: "clean" as const, publicExpiresAt: 1 }]) {
       await t.run((ctx) => ctx.db.patch("liveMatches", matchId, patch));

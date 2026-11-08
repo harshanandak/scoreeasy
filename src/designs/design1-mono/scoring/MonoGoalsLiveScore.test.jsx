@@ -14,6 +14,7 @@ const h = vi.hoisted(() => ({
   timer: { elapsed: 0, start: vi.fn(), pause: vi.fn(), reset: vi.fn() },
   tournaments: [],
   sport: 'football',
+  descriptor: null,
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -31,7 +32,7 @@ vi.mock('../../../hooks/useLiveBroadcast', () => ({
   useLiveBroadcast: () => ({ point: h.point, undo: h.undo, finalize: h.finalize }),
 }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));
-vi.mock('../live/LiveBroadcastBar', () => ({ default: () => null }));
+vi.mock('../live/LiveBroadcastBar', () => ({ default: ({ descriptor }) => { h.descriptor = descriptor; return null; } }));
 vi.mock('../utils/confetti', () => ({ triggerConfetti: vi.fn() }));
 
 beforeEach(() => {
@@ -80,6 +81,22 @@ function finish(exit, view) {
 
 describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport, storageKey }) => {
   beforeEach(() => { h.sport = sport; });
+
+  it('keeps the share snapshot and subsequent absolute point/undo scores aligned with private progress', () => {
+    h.tournaments[0].matches[0].draftState = { score1: 0, score2: 0, history: [] };
+    renderScorer(false);
+    const score = () => fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
+    score();
+    act(() => { vi.advanceTimersByTime(160); });
+    score();
+    expect(h.descriptor.snapshot).toMatchObject({ pointsA: 2, pointsB: 0 });
+    act(() => { vi.advanceTimersByTime(160); });
+    score();
+    expect(h.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 3, pointsB: 0 });
+    act(() => { vi.advanceTimersByTime(160); });
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(h.undo.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 2, pointsB: 0 });
+  });
 
   it.each(['score', 'Undo', 'Finish'])('keeps the 1–0 result and live event stream after a fast %s', (attack) => {
     h.tournaments[0].matches[0].draftState = { score1: 0, score2: 0, history: [] };

@@ -200,25 +200,27 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   // Broadcast the latest ball/undo AFTER its state commits (§87d snapshot).
   // pointsA/pointsB are each team's CUMULATIVE runs across innings; currentUnit
   // is the current innings; periodLabel is the batting side's live line.
+  const sumRuns = (teamId) =>
+    innings.reduce((acc, inn) => acc + (inn.teamId === teamId ? inn.runs : 0), 0);
+  const inn = innings[currentInningsIndex] || { runs: 0, wickets: 0, balls: 0, teamId: null };
+  const battingName = inn.teamId === team2Id ? team2Name : team1Name;
+  const liveSnapshot = {
+    pointsA: sumRuns(team1Id),
+    pointsB: sumRuns(team2Id),
+    setsA: 0,
+    setsB: 0,
+    setScores: [],
+    servingTeam: undefined,
+    currentUnit: currentInningsIndex + 1,
+    periodLabel: `${(battingName || '').slice(0, 18)} ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)`,
+  };
+
   useEffect(() => {
     const intent = broadcastIntentRef.current;
     if (!intent) return;
     broadcastIntentRef.current = null;
 
-    const sumRuns = (teamId) =>
-      innings.reduce((acc, inn) => acc + (inn.teamId === teamId ? inn.runs : 0), 0);
-    const inn = innings[currentInningsIndex] || { runs: 0, wickets: 0, balls: 0, teamId: null };
-    const battingName = inn.teamId === team2Id ? team2Name : team1Name;
-    const snapshot = {
-      pointsA: sumRuns(team1Id),
-      pointsB: sumRuns(team2Id),
-      setsA: 0,
-      setsB: 0,
-      setScores: [],
-      servingTeam: undefined,
-      currentUnit: currentInningsIndex + 1,
-      periodLabel: `${(battingName || '').slice(0, 18)} ${inn.runs}/${inn.wickets} (${ballsToOvers(inn.balls)} ov)`,
-    };
+    const snapshot = liveSnapshot;
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
@@ -791,7 +793,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           subtitle={`Test cricket · Over ${ballsToOvers(currentInning.balls)}`}
           isLive={live.isLive} onFinish={handleFinish} />
         <BoardOptionsSheet id="cricket-test-options" open={showActions} onClose={() => setShowActions(false)} onDiscard={handleDiscard}>
-          <LiveBroadcastBar broadcast={live} descriptor={{ clientMatchId: liveClientMatchId, sport: sport || 'cricket', scorecardKind: 'cricket', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />
+          <LiveBroadcastBar broadcast={live} descriptor={{ snapshot: liveSnapshot, clientMatchId: liveClientMatchId, sport: sport || 'cricket', scorecardKind: 'cricket', teamA: { name: team1Name }, teamB: { name: team2Name } }} enabled={liveEnabled} onEnableChange={setLiveEnabled} />
           <BoardSheetGroup>
             <div role="menu" aria-label="Test match actions">
             {showDeclare && !isInningsOver && <button role="menuitem" className="sb-row" disabled={scoringPrompt.isInteractionLocked} onClick={() => { setShowActions(false); handleDeclare(); }}>Declare innings</button>}

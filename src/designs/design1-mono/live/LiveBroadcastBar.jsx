@@ -15,6 +15,8 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   const [consent, setConsentState] = useState(() => getConsent());
   const [shareOpen, setShareOpen] = useState(false);
   const [requestedMatchId, setRequestedMatchId] = useState(null);
+  const descriptorRef = useRef(descriptor);
+  descriptorRef.current = descriptor;
   const startedRef = useRef(false);
   // Bumped to force the one-shot effect to re-run after a FAILED go-live (a ref
   // reset alone doesn't schedule an effect, and onEnableChange(true) is a
@@ -23,13 +25,23 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   const { cloudAuthAvailable, isAuthenticated, isUserReady } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const sharing = broadcast.isShared ?? (enabled && broadcast.isLive);
+
+  useEffect(() => {
+    if (!isAuthenticated || !descriptor?.clientMatchId || !broadcast.restore) return undefined;
+    let canceled = false;
+    void broadcast.restore({ clientMatchId: descriptor.clientMatchId }).then((session) => {
+      if (!canceled && session) onEnableChange(Boolean(session.isShared));
+    });
+    return () => { canceled = true; };
+  }, [isAuthenticated, descriptor?.clientMatchId, broadcast.restore]);
 
   // Fire go-live exactly once per mount when broadcasting is on, consented, AND the
   // user is signed in (create is authed — never fire for a signed-out user).
   useEffect(() => {
     if (isAuthenticated && enabled && consent === 'accepted' && descriptor?.clientMatchId && requestedMatchId === descriptor.clientMatchId && !startedRef.current) {
       startedRef.current = true;
-      void broadcast.goLive(descriptor);
+      void broadcast.goLive({ ...descriptor, getSnapshot: () => descriptorRef.current?.snapshot });
     }
   }, [isAuthenticated, enabled, consent, descriptor, broadcast, retryNonce, requestedMatchId]);
 
@@ -46,27 +58,16 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     onEnableChange(false);
   };
 
-  const goLiveNow = async () => {
+  const goLiveNow = () => {
     setRequestedMatchId(descriptor?.clientMatchId);
     // Opt back in for this match (consent already seen).
     if (consent !== 'accepted') {
       setConsent('accepted');
       setConsentState('accepted');
     }
-    if (broadcast.isLive) {
-      // Already created — "Stop" only flipped us to private, so re-publish.
-      // setVisibility is NOT enabled-gated in the hook (visibility control works
-      // whenever a match exists), so this runs even though `enabled` is still
-      // false at this instant (onEnableChange(true) below is async).
-      const result = await broadcast.setVisibility('public');
-      if (!result?.ok) return;
-    } else {
-      // Never created (declined from the start) or a prior go-live FAILED:
-      // re-arm + bump the nonce so the one-shot effect actually re-runs and
-      // (re)creates the match (a bare ref reset would not schedule the effect).
-      startedRef.current = false;
-      setRetryNonce((n) => n + 1);
-    }
+    // First share and re-share both sync the current local score before publishing.
+    startedRef.current = false;
+    setRetryNonce((n) => n + 1);
     onEnableChange(true);
   };
 
@@ -105,7 +106,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   }
 
   // First-ever decision: the one-time disclosure card.
-  if (consent === null) {
+  if (consent === null && !sharing) {
     return (
       <div
         className="kit-live-offer kit-live-consent"
@@ -127,7 +128,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   }
 
   // Live: status pill + share + stop.
-  if (enabled && broadcast.isLive) {
+  if (sharing) {
     return (
       <div
         className="kit-live-bar"
@@ -199,11 +200,14 @@ LiveBroadcastBar.propTypes = {
     goLive: PropTypes.func.isRequired,
     setVisibility: PropTypes.func.isRequired,
     isLive: PropTypes.bool,
+    isShared: PropTypes.bool,
+    restore: PropTypes.func,
     token: PropTypes.string,
     error: PropTypes.instanceOf(Error),
   }).isRequired,
   descriptor: PropTypes.shape({
     clientMatchId: PropTypes.string,
+    snapshot: PropTypes.object,
     teamA: PropTypes.shape({ name: PropTypes.string }),
     teamB: PropTypes.shape({ name: PropTypes.string }),
   }),

@@ -7,7 +7,8 @@ import MonoCricketLiveScore from './MonoCricketLiveScore';
 import MonoCricketTestLiveScore from './MonoCricketTestLiveScore';
 import MonoCricketGuidedScorerRoute from './MonoCricketGuidedScorerRoute';
 
-vi.mock('convex/react', () => ({ useMutation: () => vi.fn() }));
+vi.mock('convex/react', () => ({
+  useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn() }));
 vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }));
 vi.mock('../utils/confetti', () => ({ triggerConfetti: vi.fn() }));
 
