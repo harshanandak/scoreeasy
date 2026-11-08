@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -353,7 +354,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probe scorer' }));
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
     const finished = JSON.parse(localStorage.getItem('se_football'));
     await act(async () => {
@@ -380,7 +381,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Probe scorer' }));
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
     await pressProbeBack();
     await waitFor(() => expect(currentRoute()).toBe('/history'));
@@ -400,14 +401,14 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     renderApp([tournamentPath, `${tournamentPath}/match/m1/score`]);
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     await waitFor(() => expect(currentRoute()).toBe(tournamentPath));
 
     await pressProbeBack();
 
     expect(currentRoute()).toBe(tournamentPath);
     expect(JSON.parse(localStorage.getItem(storageKey))[0].matches[0]).toMatchObject({
-      status: 'completed', score1: 2, score2: 1, winner: 't1',
+      status: 'completed', score1: 2, score2: 1, winner: null, resultType: 'abandoned',
     });
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
   });
@@ -427,7 +428,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
     const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
-    expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: 'Red' })]);
+    expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: null, resultType: 'abandoned' })]);
     expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
     await pressProbeBack();
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();

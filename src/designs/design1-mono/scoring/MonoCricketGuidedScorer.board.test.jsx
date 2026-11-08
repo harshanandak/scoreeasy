@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import MonoCricketGuidedScorer from './MonoCricketGuidedScorer';
@@ -86,7 +87,7 @@ describe('cricket team-colour board', () => {
     const onComplete = vi.fn();
     board({ onComplete });
     fireEvent.click(screen.getByRole('button', { name: 'Four' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ runs: 4, reason: 'manual-match' }));
   });
 

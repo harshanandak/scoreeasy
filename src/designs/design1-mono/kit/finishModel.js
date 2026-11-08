@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../../utils/matchOutcome';
 // Finish (Kit S3, plan 2026-10-22 §9): one display model for every result screen, built from what
 // the engines persisted. Pure, so each sport's truth is unit-tested away from the DOM. It never
 // decides a sport rule itself: winners come from the persisted scores, cricket margins from
@@ -88,7 +89,14 @@ function drawHeadline(winner) {
  *   maxWickets: the quick scorer's all-out count (team 1 always bats first in a quick match)
  * @returns {FinishModel}
  */
-export function finishFromQuickResult(result, { kind, unit = 'point', maxWickets = 10 } = {}) {
+export function finishFromQuickResult(result, options = {}) {
+  const model = finishFromQuickResultBase(result, options);
+  if (!isAbandoned(result)) return model;
+  return finish({ ...model, outcome: 'none', winnerSide: null, headline: ABANDONED_LABEL,
+    detail: null, chips: model.chips.map(chip => ({ ...chip, side: null })) });
+}
+
+function finishFromQuickResultBase(result, { kind, unit = 'point', maxWickets = 10 } = {}) {
   const r = result || {};
   const name1 = r.team1 || r.team1Name || 'Team 1';
   const name2 = r.team2 || r.team2Name || 'Team 2';
@@ -169,9 +177,9 @@ export function finishFromVerdict(verdict, { team1Name = 'Team 1', team2Name = '
   const [a = '0', b = '0'] = String(v.scoreLine || '').split(DASH).map((s) => s.trim());
   const team1 = { name: team1Name, score: a, unit: null };
   const team2 = { name: team2Name, score: b, unit: null };
-  const chips = setChips(sets);
+  const chips = setChips(sets).map(chip => v.status === 'abandoned' ? { ...chip, side: null } : chip);
   if (v.status === 'abandoned') {
-    return finish({ outcome: 'none', winnerSide: null, headline: 'Match abandoned', detail: null, team1, team2, chips });
+    return finish({ outcome: 'none', winnerSide: null, headline: ABANDONED_LABEL, detail: null, team1, team2, chips });
   }
   if (!v.isDecided) {
     return finish({ outcome: 'draw', winnerSide: null, headline: v.headline || 'Match drawn', detail: null, team1, team2, chips });

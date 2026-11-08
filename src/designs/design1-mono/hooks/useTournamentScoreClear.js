@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { resetMatchOutcome } from '../../../utils/matchOutcome';
 
 export function useTournamentScoreClear({
   scoreKind,
@@ -61,6 +62,6 @@ function getTeamName(teams, teamId) {
 
 function clearMatchScore(match, scoreKind) {
   return scoreKind === 'sets'
-    ? { ...match, sets: [], status: 'pending', winner: null }
-    : { ...match, score1: null, score2: null, status: 'pending', winner: null };
+    ? { ...resetMatchOutcome(match), sets: [], score1: null, score2: null }
+    : { ...resetMatchOutcome(match), score1: null, score2: null };
 }

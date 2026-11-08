@@ -1,3 +1,10 @@
+export function isGoalsMatchDecided({ format = {}, score1 = 0, score2 = 0, elapsedSeconds = 0, drawAllowed = true, timeLimit = format.timeLimit, overtimePeriod = 0 }) {
+  const reachedEnd = format.mode === 'points'
+    ? Number(format.target) > 0 && Math.max(score1, score2) >= format.target
+    : format.mode === 'timed' && Number(timeLimit) > 0 && elapsedSeconds >= getTimedPeriodLimit({ timeLimit, overtimePeriod });
+  return Boolean(reachedEnd && (drawAllowed || score1 !== score2));
+}
+
 export function getBasketballCompletionState({
   score1,
   score2,
