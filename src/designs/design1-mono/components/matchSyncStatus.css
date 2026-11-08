@@ -1,0 +1,24 @@
+.kit-sync-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 14px;
+  color: var(--se-color-ink);
+  font-size: 14px;
+}
+
+.kit-sync-status.is-compact {
+  font-size: 12px;
+  background: var(--se-color-surface);
+}
+
+.kit-sync-status .se-ctl {
+  flex-shrink: 0;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.kit-sync-status + .kit-row {
+  border-top: 1px solid var(--se-color-line-soft);
+}

@@ -40,6 +40,7 @@ import { useTimer } from '../../hooks/useTimer';
 import { getSportDefaults, applyStandardDefaults } from '../../utils/sportDefaults';
 import { useAuth } from '../../hooks/useAuth';
 import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
+import MatchSyncStatus from './components/MatchSyncStatus';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useLiveBroadcast } from '../../hooks/useLiveBroadcast';
 import LiveBroadcastBar from './live/LiveBroadcastBar';
@@ -409,7 +410,7 @@ export default function MonoQuickMatch() {
   }, [saveWarning]);
 
   // Auth + Convex integration for match saving
-  const { isAuthenticated, user, cloudAuthAvailable } = useAuth();
+  const { isAuthenticated, user, clerkUser, cloudAuthAvailable } = useAuth();
 
   // Referee toggle (only for referee/both roles)
   const showRefereeOption = isAuthenticated && (user?.role === 'referee' || user?.role === 'both');
@@ -465,9 +466,10 @@ export default function MonoQuickMatch() {
   const [team2Players, setTeam2Players] = useState([]);
   const [showTeam1Roster, setShowTeam1Roster] = useState(false);
   const [showTeam2Roster, setShowTeam2Roster] = useState(false);
-  const { syncState, syncError, syncMatch, retrySync, resetSync } = useMatchSync({
+  const { syncMatch, resetSync } = useMatchSync({
     sport,
     isAuthenticated,
+    clerkUser,
     user,
     team1Players,
     team2Players,
@@ -975,32 +977,12 @@ export default function MonoQuickMatch() {
     return true;
   };
 
-  const applySyncStateToResult = (entry, status, error = '', clientMatchId = entry.clientMatchId) => {
-    const nextResult = {
-      ...entry,
-      clientMatchId,
-      sync: createSyncMeta(status, error),
-    };
-    setResult(nextResult);
-    persistQuickMatch(nextResult);
-  };
-
   const syncCompletedMatch = (entry) => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated) {
       resetSync();
       return;
     }
-
-    void syncMatch(entry).then((response) => {
-      if (!response) return;
-      if (response.status === 'synced') {
-        applySyncStateToResult(entry, 'synced', '', response.clientMatchId);
-        return;
-      }
-      if (response.status === 'failed') {
-        applySyncStateToResult(entry, 'failed', response.error, response.clientMatchId);
-      }
-    });
+    void syncMatch(entry);
   };
 
   const finalizeMatch = (entry, decided = true) => completion.complete(() => {
@@ -1088,29 +1070,6 @@ export default function MonoQuickMatch() {
     void correctionImpact();
     setSidesSwapped(prev => !prev);
     setLastAction('Sides swapped');
-  };
-
-  const retryResultSync = () => {
-    if (!result) return;
-
-    const nextResult = {
-      ...result,
-      clientMatchId: result.clientMatchId || buildQuickMatchClientId(sport, result.id),
-    };
-
-    applySyncStateToResult(nextResult, 'syncing', '', nextResult.clientMatchId);
-
-    const request = syncState === 'failed' ? retrySync() : syncMatch(nextResult);
-    void request.then((response) => {
-      if (!response) return;
-      if (response.status === 'synced') {
-        applySyncStateToResult(nextResult, 'synced', '', response.clientMatchId);
-        return;
-      }
-      if (response.status === 'failed') {
-        applySyncStateToResult(nextResult, 'failed', response.error, response.clientMatchId);
-      }
-    });
   };
 
   const totalBalls = isCricket
@@ -2988,7 +2947,6 @@ export default function MonoQuickMatch() {
     !isCricket && !isGoals && resultFormat?.type === 'best-of' ? `Best of ${resultFormat.sets || 3}` : null,
     formatDuration(result?.elapsedSeconds),
   ].filter(Boolean).join(' · ');
-  const syncTone = syncState === 'failed' ? 'mono-alert-danger' : syncState === 'synced' ? 'mono-alert-success' : 'mono-alert-info';
 
   return (
     <KitFinish
@@ -3019,20 +2977,7 @@ export default function MonoQuickMatch() {
           {saveWarning && <div className="mono-alert mono-alert-danger">{saveWarning}</div>}
           {result && !saveWarning && <p className="kit-fin-note" role="status">Match saved to History on this device.</p>}
           {shareStatus && <p className="kit-fin-note" role="status">{shareStatus}</p>}
-          {isAuthenticated && syncState !== 'idle' && (
-            <div className={`mono-alert ${syncTone}`}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm" style={{ margin: 0 }}>
-                  {syncState === 'syncing' && 'Syncing this match to your profile...'}
-                  {syncState === 'synced' && 'Synced to your profile.'}
-                  {syncState === 'failed' && (syncError || 'Could not sync this match to your profile.')}
-                </p>
-                {syncState === 'failed' && (
-                  <button type="button" onClick={retryResultSync} className="se-ctl">Retry</button>
-                )}
-              </div>
-            </div>
-          )}
+          <MatchSyncStatus clientMatchId={result?.clientMatchId || (result ? buildQuickMatchClientId(sport, result.id) : undefined)} quickMatchId={result?.id} />
         </>
       )}
     />
