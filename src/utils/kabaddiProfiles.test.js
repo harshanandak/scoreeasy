@@ -1,11 +1,48 @@
 import { describe, expect, it } from 'vitest';
 import { applyRaid, assertState, createKabaddiState, finish, migrateKabaddiState, pause, remainingTime, resume, startHalf, startRaid, teamTotal, timeUp, undo } from './kabaddiEngine';
-import { resolveKabaddiRules, validateKabaddiRules } from './kabaddiRules';
+import { kabaddiRulesLine, resolveKabaddiRules, validateKabaddiRules } from './kabaddiRules';
 
 const begin = (presetId, rules) => startHalf(createKabaddiState({ presetId, rules }));
 const raid = (s, type = 'empty', extra = {}) => applyRaid(s, { id: `r-${s.revision}`, type, ...extra });
 
 describe('versioned kabaddi formats', () => {
+  it.each([
+    ['physicalTackle', true, 2],
+    ['physicalTackle', false, 1],
+    ['anyRaiderOut', true, 2],
+    ['anyRaiderOut', false, 2],
+  ])('mixed %s ruling with physical tackle %s awards defence %i and revives once', (outcomes, physicalTackle, points) => {
+    const rules = resolveKabaddiRules('standard');
+    rules.superTackle.outcomes = outcomes;
+    const before = begin('custom', rules);
+    before.mat[1] = ['B1', 'B2', 'B3'];
+    before.outQueue[1] = ['B4', 'B5', 'B6', 'B7'].map((slotId, index) => ({ slotId, outEventId: 'earlier', outSequence: index + 1 }));
+    before.nextOutSequence = 4;
+    const after = raid(before, 'mixed', { physicalTackle, reason: 'Defender boundary followed by raider dismissal', dismissals: [
+      { team: 1, slotId: 'B1', category: 'defenderOut' },
+      { team: 0, slotId: 'A1', category: 'tackleBase' },
+    ] });
+    expect(after.teams.map(teamTotal)).toEqual([1, points]);
+    expect(after.teams[1].score.superTackleExtra).toBe(points - 1);
+    expect(after.events.at(-1).effects.revived[1]).toEqual(['B4']);
+    expect(after.mat[1]).toEqual(['B2', 'B3', 'B4']);
+    expect(undo(after).mat).toEqual(before.mat);
+  });
+
+  it('describes the half clock when Quick is customized to two timed halves', () => {
+    const rules = resolveKabaddiRules('custom', { ...resolveKabaddiRules('quick'), end: { kind: 'timed', halves: 2, halfMs: 600000, intervalMs: 300000 } });
+    expect(kabaddiRulesLine(rules)).toContain('2 × 10 min');
+    expect(kabaddiRulesLine(rules)).toContain('no raid clock');
+    expect(kabaddiRulesLine(rules)).not.toContain('no clocks');
+  });
+
+  it('keeps the Standard half clock in its summary when only the raid clock is off', () => {
+    const rules = resolveKabaddiRules('custom', { ...resolveKabaddiRules('standard'), raidLimitMs: null });
+    expect(kabaddiRulesLine(rules)).toContain('2 × 20 min');
+    expect(kabaddiRulesLine(rules)).toContain('no raid clock');
+    expect(kabaddiRulesLine(rules)).not.toContain('no clocks');
+  });
+
   it('copies complete presets and rejects unsupported combinations and fields', () => {
     const a = resolveKabaddiRules('quick');
     expect(a).toMatchObject({ initialPlayers: 5, strategy: 'pointsOnly', raidLimitMs: null, bonus: { enabled: false }, end: { kind: 'target', points: 21 } });
