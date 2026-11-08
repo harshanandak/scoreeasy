@@ -3,6 +3,13 @@ import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutco
 import { isSetsMatchDecided } from '../../utils/quickMatchSets';
 import { isGoalsMatchDecided } from '../../utils/goalsScoring';
 import { isLimitedOversMatchDecided } from '../../utils/cricketCalculations';
+import KabaddiLive from './scoring/KabaddiLiveBoard';
+import { createKabaddiMatch, matchTotals, persistKabaddiDraft, resolveKabaddiFinishState, restoreKabaddiMatch } from '../../utils/kabaddiQuickMatch';
+import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabaddiBackups } from '../../utils/kabaddiMigrationBackups';
+import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
+import { kabaddiRulesLine } from '../../utils/kabaddiRules';
+import KabaddiSetup from './kit/KabaddiSetup';
+import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
 import { useScoringProgress } from './scoring/scoringProgressContext';
@@ -343,6 +350,7 @@ export default function MonoQuickMatch() {
   const isCricket = engine === 'custom-cricket';
   const isTennis = sport === 'tennis';
   const isGoals = engine === 'goals';
+  const isKabaddi = sport === 'kabaddi';
 
   const timer = useTimer();
   const startedAtRef = useRef(null);
@@ -464,6 +472,7 @@ export default function MonoQuickMatch() {
     isRefereeing,
   });
   const [format, setFormat] = useState(() => {
+    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('quick') };
     if (isCricket) return buildCricketFormat(initialPreset);
     if (initialFormatMode === 'standard') return applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
@@ -495,12 +504,14 @@ export default function MonoQuickMatch() {
   const [gScore1, setGScore1] = useState(0);
   const [gScore2, setGScore2] = useState(0);
   const [gScoreHistory, setGScoreHistory] = useState([]);
+  const [kabaddiMatch, setKabaddiMatch] = useState(null);
+  const kabaddiRef = useRef(null);
 
   // Cricket undo history
   const [cricketHistory, setCricketHistory] = useState([]);
   const [cricketOptionsOpen, setCricketOptionsOpen] = useState(false);
 
-  const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
+  const hasRecordedScore = Boolean(kabaddiMatch?.state.activeRaid || kabaddiMatch?.state.raidNumber) || vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
     sets.some(set => set.score1 > 0 || set.score2 > 0) ||
     Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0);
   const { scoringStarted, resetScoringStarted } = useScoringProgress(
@@ -562,6 +573,7 @@ export default function MonoQuickMatch() {
     restoredDraftRef.current = false;
     scoringSportRef.current = null;
     setRestoredScoringStarted(false);
+    if (isKabaddi) migrateLegacyKabaddiBackups();
 
     if (resultMatchId) {
       const saved = loadQuickMatch(resultMatchId);
@@ -594,6 +606,10 @@ export default function MonoQuickMatch() {
       ? loadQuickMatchDrafts([sportConfig]).sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0))[0]
       : null;
     const restoredKey = resumeMatchId ? getQuickMatchDraftKey(sport, resumeMatchId) : startNewMatch ? null : currentDraft?.draftKey || migrated?.key;
+    if (isKabaddiMigrationBackup(restoredKey)) {
+      navigate('/history', { replace: true });
+      return;
+    }
     const draft = restoredKey ? (migrated?.key === restoredKey ? migrated.draft : loadData(restoredKey, null)) : null;
     hydratedDraftKeyRef.current = restoredKey;
     setActiveDraftKey(restoredKey || null);
@@ -638,6 +654,23 @@ export default function MonoQuickMatch() {
     if (Object.hasOwn(draft, 'servingTeam')) setServingTeam(draft.servingTeam);
     if (typeof draft.sidesSwapped === 'boolean') setSidesSwapped(draft.sidesSwapped);
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
+    if (isKabaddi && draft.kabaddi) {
+      try {
+        const { match, migrated } = restoreKabaddiMatch(draft, {
+          format: draft.format, names: [draft.team1Name || 'Team A', draft.team2Name || 'Team B'],
+          colours: [normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a, normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b],
+        });
+        const backupKey = kabaddiMigrationBackupKey(restoredKey);
+        if (migrated && !loadData(backupKey) && !saveData(backupKey, draft)) throw new Error('Could not retain original saved match');
+        kabaddiRef.current = match;
+        setKabaddiMatch(match);
+        setGScore1(matchTotals(match)[0]); setGScore2(matchTotals(match)[1]);
+        setFormat({ ...draft.format, kabaddiRules: match.state.rules });
+      } catch {
+        setSaveWarning('This saved kabaddi match could not be read. Its original data is retained.');
+        return;
+      }
+    }
     // Restore the stable live id (R2) so a reload re-attaches to the SAME live match
     // (create is idempotent on owner+clientMatchId). Fall back for pre-feature drafts.
     liveMatchIdRef.current = draft.quickMatchId ?? createQuickMatchId();
@@ -685,6 +718,7 @@ export default function MonoQuickMatch() {
       servingTeam,
       sidesSwapped,
       lastAction,
+      ...(isKabaddi && kabaddiMatch ? { kabaddi: kabaddiMatch } : {}),
       quickMatchId: liveMatchIdRef.current,
       timerElapsed: timer.elapsed,
       startedAt: startedAtRef.current,
@@ -695,7 +729,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -801,6 +835,7 @@ export default function MonoQuickMatch() {
   useEffect(() => {
     if (restoredDraftRef.current) return;
     if (isCricket || !sport) return;
+    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('quick') }); return; }
 
     setFormatMode('standard');
     setRulesOpen(false);
@@ -813,7 +848,7 @@ export default function MonoQuickMatch() {
   // Apply standard defaults when format mode is 'standard'
   useEffect(() => {
     if (restoredDraftRef.current) return;
-    if (isCricket || formatMode !== 'standard' || !sport) return;
+    if (isCricket || formatMode !== 'standard' || !sport || sport === 'kabaddi') return;
 
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
@@ -822,8 +857,8 @@ export default function MonoQuickMatch() {
   }, [formatMode, isCricket, sport]);
 
   // Goals mode helpers
-  const isTimedMode = isGoals && format.mode === 'timed';
-  const isPointsMode = isGoals && format.mode === 'points';
+  const isTimedMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'timed';
+  const isPointsMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'points';
   const timeLimit = isTimedMode ? format.timeLimit : null;
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
@@ -1118,6 +1153,15 @@ export default function MonoQuickMatch() {
     setActiveDraftKey(getQuickMatchDraftKey(sport, liveMatchIdRef.current));
     hydratedDraftKeyRef.current = getQuickMatchDraftKey(sport, liveMatchIdRef.current);
     draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
+    if (isKabaddi) {
+      const match = createKabaddiMatch({ format, names: [team1Name.trim(), team2Name.trim()], colours: [team1Color, team2Color], rosters: [team1Players, team2Players] });
+      const key = getQuickMatchDraftKey(sport, liveMatchIdRef.current);
+      const initial = { phase: 'scoring', sport, team1Name, team2Name, team1Color, team2Color, format, quickMatchId: liveMatchIdRef.current, startedAt: new Date().toISOString() };
+      if (!persistKabaddiDraft({ key, previous: initial, match, save: saveData, nowIso: new Date().toISOString() })) {
+        setSaveWarning('Save failed. Free device storage before starting.'); return;
+      }
+      kabaddiRef.current = match; setKabaddiMatch(match);
+    }
     navigate(`/${sport}/quick?resume=${liveMatchIdRef.current}`, { replace: true });
     setPhase('scoring');
   };
@@ -1646,11 +1690,39 @@ export default function MonoQuickMatch() {
     }
   };
 
-  const isCurrentMatchDecided = () => isCricket
+  const isCurrentMatchDecided = () => isKabaddi && kabaddiRef.current
+    ? resolveKabaddiFinishState(kabaddiRef.current.state, Date.now()).phase === 'finishReview'
+    : isCricket
     ? isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })
     : isGoals
       ? isGoalsMatchDecided({ format, score1: gScore1, score2: gScore2, elapsedSeconds: timer.elapsed, drawAllowed: sportConfig?.config?.drawAllowed ?? true })
       : isSetsMatchDecided({ sets, format, sportConfig, score1: vScore1, score2: vScore2 });
+  const commitKabaddi = next => {
+    if (completion.locked || !quickMatchDraftKey) return false;
+    const previous = loadData(quickMatchDraftKey);
+    if (!previous || !persistKabaddiDraft({ key: quickMatchDraftKey, previous, match: next, save: saveData, nowIso: new Date().toISOString() })) {
+      setSaveWarning('Save failed. The last tap was not accepted. Free storage and try again.');
+      return false;
+    }
+    kabaddiRef.current = next;
+    setKabaddiMatch(next);
+    const totals = matchTotals(next);
+    setGScore1(totals[0]); setGScore2(totals[1]);
+    return true;
+  };
+
+  const finalizeKabaddi = () => {
+    const current = kabaddiRef.current;
+    if (!current || completion.locked) return;
+    const state = resolveKabaddiFinishState(current.state, Date.now());
+    const natural = state.phase === 'finishReview';
+    const finalMatch = natural ? { ...current, state: finishKabaddi(state) } : current;
+    const [score1, score2] = matchTotals(finalMatch);
+    finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name, score1, score2,
+      winner: natural ? (score1 === score2 ? 'Draw' : score1 > score2 ? team1Name : team2Name) : null,
+      resultType: natural ? 'decided' : 'abandoned', kabaddi: finalMatch,
+      format, date: new Date().toISOString(), ...makeTimerFields() }, natural);
+  };
 
   const endMatchGoals = () => {
     if (isCurrentMatchDecided()) return finalizeGoalScore(gScore1, gScore2);
@@ -1681,6 +1753,8 @@ export default function MonoQuickMatch() {
     if (completion.locked) return;
     if (isCricket) {
       finishCricketMatch(scores);
+    } else if (isKabaddi && kabaddiRef.current) {
+      finalizeKabaddi();
     } else if (isGoals) {
       endMatchGoals();
     } else {
@@ -1733,6 +1807,7 @@ export default function MonoQuickMatch() {
     setShowEndConfirm(false);
     setSidesSwapped(false);
     setGScoreHistory([]);
+    kabaddiRef.current = null; setKabaddiMatch(null);
     setVScoreHistory([]);
     setSets([{ score1: 0, score2: 0, completed: false }]);
     setCurrentSet(0);
@@ -1754,6 +1829,10 @@ export default function MonoQuickMatch() {
     setActiveDraftKey(nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null);
     hydratedDraftKeyRef.current = nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null;
     if (nextPhase === 'scoring') {
+      if (isKabaddi) {
+        const match = createKabaddiMatch({ format, names: [team1Name, team2Name], colours: [team1Color, team2Color], rosters: [team1Players, team2Players] });
+        kabaddiRef.current = match; setKabaddiMatch(match);
+      }
       scoringSportRef.current = sport;
       draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
       navigate(`/${sport}/quick?resume=${liveMatchIdRef.current}`, { replace: true });
@@ -2113,6 +2192,7 @@ export default function MonoQuickMatch() {
           </div>
         ))}
 
+        {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
         <section className="kit-setup-field" aria-labelledby="setup-format-label">
           <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
           <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />
@@ -2136,6 +2216,8 @@ export default function MonoQuickMatch() {
             )}
           </div>
         </section>
+
+        )}
 
         <div className="kit-setup-field">
           <button type="button" onClick={toggleRosterSetup} className="kit-setup-link" aria-expanded={showRosterSetup}>
@@ -2447,6 +2529,20 @@ export default function MonoQuickMatch() {
     if (isGoals) {
       const leftScore = sidesSwapped ? gScore2 : gScore1;
       const rightScore = sidesSwapped ? gScore1 : gScore2;
+
+      if (isKabaddi && kabaddiMatch) {
+        const summary = <div className="sb-confirm-summary"><span>Kabaddi</span><strong>{matchTotals(kabaddiMatch).join('\u2013')}</strong></div>;
+        return <>
+          <h1 className="sr-only">{quickMatchScoringHeading}</h1>
+          {renderEndMatchDialog({ className: 'sb-confirm', summary })}
+          {renderDiscardDialog({ className: 'sb-confirm', summary })}
+          <KabaddiLive key={liveMatchIdRef.current} initialMatch={kabaddiMatch} colourStyle={teamColourStyle}
+            title={`${team1Name} v ${team2Name}`} subtitle={kabaddiRulesLine(kabaddiMatch.state.rules)}
+            onSave={commitKabaddi} onFinish={requestEndMatch} onDiscard={requestDiscardQuickMatch}
+            notice={<ScoringNotice message={saveWarning || (kabaddiMatch.legacyScore ? 'Earlier score retained. Player history starts with raid tracking.' : '')} />}
+            broadcast={cloudAuthAvailable ? <LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} /> : null} />
+        </>;
+      }
 
       if (teamColourOn) {
         const halves = [leftTeam, rightTeam].map((team) => ({

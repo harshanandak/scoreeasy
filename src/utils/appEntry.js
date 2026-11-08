@@ -4,6 +4,7 @@ import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDr
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
 import { inProgressTimestamp } from './inProgressMatch';
+import { isKabaddiMigrationBackup, migrateLegacyKabaddiBackups } from './kabaddiMigrationBackups';
 
 export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
@@ -31,8 +32,9 @@ export function hasReturningPlayerState({
 }
 
 export function loadQuickMatchDrafts(sports = getSportsList()) {
+  migrateLegacyKabaddiBackups();
   sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
-  return listDataKeys().filter(key => key.startsWith(QUICK_MATCH_DRAFT_PREFIX)).flatMap((key) => {
+  return listDataKeys().filter(key => key.startsWith(QUICK_MATCH_DRAFT_PREFIX) && !isKabaddiMigrationBackup(key)).flatMap((key) => {
     const draft = loadData(key, null);
     const sport = draft?.sport || sports.find(sp => key === `${QUICK_MATCH_DRAFT_PREFIX}${sp.id}`)?.id;
     if (!sport || draft?.phase !== 'scoring' || !sports.some(sp => sp.id === sport)) return [];

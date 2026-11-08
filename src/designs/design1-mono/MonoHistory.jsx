@@ -21,11 +21,12 @@ import {
 } from '../../utils/tournamentSync';
 import { shareText } from '../../mobile/share';
 import { MonoStatisticsPanel } from './MonoStatistics';
+import { clearQuickStatsRecovery } from '../../utils/quickStatsRecovery';
 import MonoSheet from './components/MonoSheet';
 import { deriveTeamColours, normaliseHex, teamColourVars } from '../../lib/teamColour';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
 import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, KitTop, KitWash, SportBadge } from './kit/KitParts';
-import { displayScore, groupByMonth, latestMonthSummary, sportCounts, winnerSide } from './kit/historyModel';
+import { displayScore, groupByMonth, latestMonthSummary, quickMatchScore, sportCounts, winnerSide } from './kit/historyModel';
 import { relativeDay } from './kit/dates';
 import { cricketScoreLine } from '../../utils/cricketScoreFormat';
 import './kit/history.css';
@@ -298,13 +299,7 @@ export default function MonoHistory() {
 
   const quickEntries = useMemo(() => {
     return quickMatches.map((qm) => {
-      const inningsScore = Array.isArray(qm.innings) && qm.innings.length > 0
-        ? `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`
-        : null;
-      const score = inningsScore
-        || (qm.team1Score && qm.team2Score
-          ? `${qm.team1Score.runs}/${qm.team1Score.wickets} vs ${qm.team2Score.runs}/${qm.team2Score.wickets}`
-          : `${qm.score1 ?? 0} - ${qm.score2 ?? 0}`);
+      const score = quickMatchScore(qm);
 
       return {
         id: `quick-${qm.id}`,
@@ -446,6 +441,10 @@ export default function MonoHistory() {
   };
 
   const clearMutableHistory = () => {
+    if (!clearQuickStatsRecovery()) {
+      setHistoryStatus('Could not clear local history. Please try again.');
+      return;
+    }
     const snapshot = {
       quick: quickMatches,
       legacy: loadHistory(),

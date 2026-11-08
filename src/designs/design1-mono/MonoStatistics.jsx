@@ -3,12 +3,10 @@ import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  clearCompletedQuickMatches,
-  deleteQuickMatch as deleteStoredQuickMatch,
   loadCompletedQuickMatches,
   loadSportTournaments,
-  replaceCompletedQuickMatches,
 } from '../../utils/storage';
+import { loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from '../../utils/quickStatsRecovery';
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import { sportIdentityVars } from '../../lib/sportIdentity';
@@ -19,6 +17,10 @@ import { PLAY_HUB_PATH } from '../../utils/appPaths';
 
 function getMatchDate(match) {
   return new Date(match.completedAt || match.date || match.createdAt || 0);
+}
+
+function loadQuickStatsMatches() {
+  return loadCompletedQuickMatches().sort((a, b) => getMatchDate(b) - getMatchDate(a));
 }
 
 function pluralize(count, singular, plural = `${singular}s`) {
@@ -257,15 +259,24 @@ export function MonoStatisticsPanel() {
   }, [tab]);
   const [sportsData, setSportsData] = useState({});
   const [quickMatches, setQuickMatches] = useState([]);
-  const [pendingDelete, setPendingDelete] = useState(null);
-  const [pendingClear, setPendingClear] = useState(null);
+  const [deleteConfirmation, setPendingDelete] = useState(null);
+  const [clearConfirmation, setPendingClear] = useState(null);
+  const [recovery, setRecovery] = useState(loadQuickStatsRecovery);
+  const pendingDelete = deleteConfirmation || (!clearConfirmation && recovery?.kind === 'delete' ? { deleted: true } : null);
+  const pendingClear = clearConfirmation || (!deleteConfirmation && recovery?.kind === 'clear' ? { cleared: true } : null);
   const [statsStatus, setStatsStatus] = useState('');
 
   useEffect(() => {
-    const qm = loadCompletedQuickMatches();
-    qm.sort((a, b) => new Date(b.completedAt || b.date || b.createdAt) - new Date(a.completedAt || a.date || a.createdAt));
-    setQuickMatches(qm);
+    const refresh = () => {
+      setRecovery(loadQuickStatsRecovery());
+      setQuickMatches(loadQuickStatsMatches());
+    };
+    refresh();
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
+  }, []);
 
+  useEffect(() => {
     // Load stats for ALL sports
     const allSports = getSportsList();
     const dataMap = {};
@@ -293,17 +304,10 @@ export function MonoStatisticsPanel() {
     setSportsData(dataMap);
   }, []);
 
-  const deleteQuickMatch = (id) => {
-    const updated = quickMatches.filter(qm => qm.id !== id);
-    setQuickMatches(updated);
-    deleteStoredQuickMatch(id);
-  };
-
   const requestDeleteQuickMatch = (match) => {
     setPendingClear(null);
     setPendingDelete({
       match,
-      quickSnapshot: quickMatches,
       deleted: false,
     });
     setStatsStatus('');
@@ -311,21 +315,37 @@ export function MonoStatisticsPanel() {
 
   const completeDeleteQuickMatch = () => {
     if (!pendingDelete?.match?.id) return;
-    deleteQuickMatch(pendingDelete.match.id);
-    setPendingDelete({
-      ...pendingDelete,
-      deleted: true,
-    });
+    const saved = removeQuickStats([pendingDelete.match], 'delete');
+    if (!saved) {
+      setStatsStatus('Could not delete quick stat. Please try again.');
+      return;
+    }
+    setRecovery(saved);
+    setQuickMatches(loadQuickStatsMatches());
+    setPendingDelete(null);
     setStatsStatus('Quick stat deleted.');
   };
 
-  const undoDeleteQuickMatch = () => {
-    if (!pendingDelete?.quickSnapshot) return;
-    setQuickMatches(pendingDelete.quickSnapshot);
-    replaceCompletedQuickMatches(pendingDelete.quickSnapshot);
-    setPendingDelete(null);
-    setStatsStatus('Quick stat restored.');
+  const undoQuickStats = (message) => {
+    const result = restoreQuickStats(recovery?.id);
+    setQuickMatches(loadQuickStatsMatches());
+    if (result === 'unavailable') {
+      setRecovery(loadQuickStatsRecovery());
+      setStatsStatus('Undo is no longer available.');
+      return;
+    }
+    if (result === 'cleanup-failed') {
+      setStatsStatus("Restored, but couldn't tidy up. Tap Undo to retry.");
+      return;
+    }
+    if (!result) {
+      setStatsStatus('Could not restore quick stats. Please try again.');
+      return;
+    }
+    setRecovery(loadQuickStatsRecovery());
+    setStatsStatus(message);
   };
+  const undoDeleteQuickMatch = () => undoQuickStats('Quick stat restored.');
 
   const requestClearAllQuickMatches = () => {
     setPendingDelete(null);
@@ -336,28 +356,20 @@ export function MonoStatisticsPanel() {
     setStatsStatus('');
   };
 
-  const clearAllQuickMatches = () => {
-    setQuickMatches([]);
-    clearCompletedQuickMatches();
-  };
-
   const completeClearAllQuickMatches = () => {
     if (!pendingClear?.quickSnapshot) return;
-    clearAllQuickMatches();
-    setPendingClear({
-      ...pendingClear,
-      cleared: true,
-    });
+    const saved = removeQuickStats(pendingClear.quickSnapshot, 'clear');
+    if (!saved) {
+      setStatsStatus('Could not clear quick stats. Please try again.');
+      return;
+    }
+    setRecovery(saved);
+    setQuickMatches(loadQuickStatsMatches());
+    setPendingClear(null);
     setStatsStatus('Quick stats cleared.');
   };
 
-  const undoClearAllQuickMatches = () => {
-    if (!pendingClear?.quickSnapshot) return;
-    setQuickMatches(pendingClear.quickSnapshot);
-    replaceCompletedQuickMatches(pendingClear.quickSnapshot);
-    setPendingClear(null);
-    setStatsStatus('Quick stats restored.');
-  };
+  const undoClearAllQuickMatches = () => undoQuickStats('Quick stats restored.');
 
   // Calculate totals
   const totalTournaments = Object.values(sportsData).reduce((sum, d) => sum + d.tournaments, 0);

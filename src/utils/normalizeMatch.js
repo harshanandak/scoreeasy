@@ -53,6 +53,8 @@ export function normalizeMatchForConvex(result, sport) {
     score2 = result.score2;
   }
 
+  if (sport === 'kabaddi' && result.kabaddi) detail = { kabaddi: result.kabaddi, resultType: result.resultType || 'decided' };
+
   return {
     sport,
     team1: result.team1,
