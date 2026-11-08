@@ -85,6 +85,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           value: item.value,
           // Older queued items have no `type`; the mutation defaults it to "point".
           type: item.type,
+          ...(item.kabaddi ? { kabaddi: item.kabaddi } : {}),
           at: item.at,
           snapshot: item.snapshot,
         });
@@ -173,6 +174,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           scorecardKind: opts.scorecardKind,
           teamA: opts.teamA,
           teamB: opts.teamB,
+          ...(opts.players ? { players: opts.players } : {}),
           visibility: 'private',
           isYouthMatch: opts.isYouthMatch ?? false,
         });
@@ -186,7 +188,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         const snapshot = opts.getSnapshot ? opts.getSnapshot() : opts.snapshot;
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
-        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot });
+        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) });
         if (generation !== generationRef.current) return null;
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
@@ -206,17 +208,17 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   const point = useCallback(
-    ({ team, value = 1, at, snapshot, type = 'point' }) => {
+    ({ team, value = 1, at, snapshot, type = 'point', kabaddi }) => {
       if (!enabled || !clientMatchIdRef.current) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
-      const clientEventId = `${clientMatchId}:${seqRef.current}`;
+      const clientEventId = type === 'kabaddi_raid' && kabaddi?.kind === 'raid' ? `kabaddi-raid:${kabaddi.raid.id}` : `${clientMatchId}:${seqRef.current}`;
       // snapshot (engine-derived sets/serving/period for non-flat sports) + the
       // owning clientMatchId travel WITH the event through the outbox to the mutation.
       // `kind` stays 'point' (the outbox routing discriminator vs 'undo'); `type` is
       // the public EVENT type (point | serve_change | correction) the spectator feed
       // labels by. Both ride along so a queued event keeps its label while offline.
-      enqueue({ kind: 'point', type, team, value, at, snapshot, clientMatchId, clientEventId });
+      enqueue({ kind: 'point', type, team, value, at, snapshot, ...(kabaddi ? { kabaddi } : {}), clientMatchId, clientEventId });
       persistSeq(seqRef.current);
       return publishingRef.current ? Promise.resolve(null) : flush();
     },
@@ -275,7 +277,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       ++generationRef.current;
       try {
         const snapshot = opts?.getSnapshot ? opts.getSnapshot() : opts?.snapshot;
-        const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}) });
+        const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}), ...(visibility !== 'private' && snapshot?.kabaddi ? { kabaddiHistory: opts?.getKabaddiHistory ? opts.getKabaddiHistory() : opts?.kabaddiHistory ?? [] } : {}) });
         setIsShared(visibility !== 'private');
         setIsLive(visibility !== 'private');
         setError(null);

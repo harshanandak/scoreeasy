@@ -1,3 +1,4 @@
+import { kabaddiSnapshotValidator, kabaddiUpdateValidator } from './lib/kabaddiValidators';
 import { periodClockValidator } from "./lib/periodClock";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -78,6 +79,7 @@ export default defineSchema({
     }),
 
   liveMatches: defineTable({
+    kabaddi: v.optional(kabaddiSnapshotValidator),
     token: v.string(),
     ownerId: v.id("users"),
     clientMatchId: v.string(),
@@ -134,6 +136,7 @@ export default defineSchema({
           team: v.union(v.literal("A"), v.literal("B")),
           name: v.string(),
           jersey: v.optional(v.string()),
+          slotId: v.optional(v.string()),
         }),
       ),
     ),
@@ -141,6 +144,8 @@ export default defineSchema({
   }).index("by_match", ["matchId"]),
 
   matchEvents: defineTable({
+    kabaddi: v.optional(kabaddiUpdateValidator),
+    removed: v.optional(v.literal(true)),
     matchId: v.id("liveMatches"),
     seq: v.number(),
     clientEventId: v.string(),
@@ -152,6 +157,7 @@ export default defineSchema({
       v.literal("undo"),
       v.literal("correction"),
       v.literal("note"),
+      v.literal("raid_start"), v.literal("kabaddi_raid"), v.literal("kabaddi_undo"), v.literal("kabaddi_state"),
     ),
     team: v.optional(v.union(v.literal("A"), v.literal("B"))),
     value: v.number(),
@@ -166,6 +172,8 @@ export default defineSchema({
     at: v.number(),
   })
     .index("by_match_seq", ["matchId", "seq"])
+    .index("by_match_active_seq", ["matchId", "removed", "seq"])
+    .index("by_match_type", ["matchId", "type", "removed"])
     .index("by_match_client", ["matchId", "clientEventId"]),
 
   // Signed-out moderation reports (§7.1 floor). reporterId is an untrusted client
