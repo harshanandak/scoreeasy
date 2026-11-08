@@ -1762,7 +1762,7 @@ export default function MonoQuickMatch() {
     setGScore1(0);
     setGScore2(0);
     if (supportsSetsRules(sport)) {
-      const fresh = freezeSetsFormat(sportConfig, { ...format, setsRules: undefined });
+      const fresh = freezeSetsFormat(sportConfig, { ...format, initialServer: null, setsRules: undefined });
       setFormat(nextPhase === 'scoring' ? fresh : { ...fresh, setsRules: undefined });
       setServingTeam(fresh.setsRules.initialServer);
     } else setServingTeam(1);

@@ -76,6 +76,11 @@ describe('team-level service and end changes', () => {
     expect(firstServerForSet(rules, 0, [{ firstServer: 2 }])).toBe(2);
   });
 
+  it('keeps a custom alternating cadence outside table tennis', () => {
+    const rules = rulesFor('volleyball', { points: 3, initialServer: 1, customization: { serviceMode: 'alternating', serviceEvery: 2 } });
+    expect(serveAfterPoint(rules, { score: score(3, 2), winner: 1, servingTeam: 2 })).toBe(1);
+  });
+
   it('uses the badminton game winner, and asks again for volleyball', () => {
     const sets = [score(21, 18, true)];
     expect(firstServerForSet(rulesFor('badminton'), 1, sets)).toBe(1);

@@ -11,10 +11,9 @@ import { eyebrowStyle, tabularNums } from './scorecardStyles';
 // the set label (eyebrow 700 / 0.08em) and — when state.pointState !== 'normal' —
 // a SET POINT / MATCH POINT chip.
 //
-// EVERY value is derived from `volleyballState(events, config)`; team NAMES are
-// static presentation labels resolved via `sideName`. `servingTeam` is read from
-// the engine (stored serve_change / config.initialServer), NEVER inferred from the
-// last scorer. Numeral slots fit 2 digits so a no-cap deuce (32-30) never clips.
+// The watch supplies its authoritative snapshot; historical event views fall back
+// to volleyballState(events, config). Team names are static presentation labels.
+// Serve comes from that state, never from the most recently scored event here.
 
 /** 8px serving dot for the serving side, else an 8px spacer that holds the slot. */
 function ServingGlyph({ active }) {

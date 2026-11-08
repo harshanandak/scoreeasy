@@ -54,6 +54,7 @@ export function freezeSetsFormat(sportConfig, format = {}, { legacy = false, pat
     decidingPoints: legacy ? (config.deciderPoints || points) : (custom.decidingPoints ?? profile.decidingPoints),
     serviceMode: legacy ? legacyService : (custom.serviceMode ?? profile.serviceMode),
     serviceEvery: legacy ? (rotation || 1) : (custom.serviceEvery ?? profile.serviceEvery),
+    deuceServiceEvery: !legacy && sportConfig.id === 'tabletennis' ? 1 : null,
     initialServer: legacy ? 1 : knownServer(format.initialServer),
     firstServerPolicy: legacy ? 'carry' : (custom.firstServerPolicy ?? profile.firstServerPolicy),
     perSetServers: Object.freeze([]),
@@ -108,7 +109,9 @@ export function serveAfterPoint(rules, { score, currentSet = 0, sets = [], servi
   }
   const first = firstServerForSet(rules, currentSet, sets);
   const deuceStart = 2 * (target - 1);
-  const turns = Math.floor(Math.min(total, deuceStart) / rules.serviceEvery) + Math.max(0, total - deuceStart);
+  const turns = rules.deuceServiceEvery
+    ? Math.floor(Math.min(total, deuceStart) / rules.serviceEvery) + Math.floor(Math.max(0, total - deuceStart) / rules.deuceServiceEvery)
+    : Math.floor(total / rules.serviceEvery);
   return turns % 2 ? other(first) : first;
 }
 
