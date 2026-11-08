@@ -37,5 +37,8 @@ describe('kabaddi live publication', () => {
     const events = await t.query(api.live.eventsSince, { token, sinceSeq: 0 });
     expect(events).toHaveLength(1);
     expect(events[0].kabaddi?.kind).toBe('raid');
+    await owner.mutation(api.live.finalize, { matchId });
+    const archives = await t.run(ctx => ctx.db.query('matches').collect());
+    expect(archives).toEqual([]);
   });
 });
