@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -240,10 +241,10 @@ export default function GenericSetsTournament() {
               }
 
               // Determine winner and colors
-              const isTeam1Winner = hasScore && t1SetsWon > t2SetsWon;
-              const isTeam2Winner = hasScore && t2SetsWon > t1SetsWon;
-              const team1Color = isTeam1Winner || !hasScore ? '#111' : '#888';
-              const team2Color = isTeam2Winner || !hasScore ? '#111' : '#888';
+              const isTeam1Winner = !isAbandoned(match) && hasScore && t1SetsWon > t2SetsWon;
+              const isTeam2Winner = !isAbandoned(match) && hasScore && t2SetsWon > t1SetsWon;
+              const team1Color = isAbandoned(match) || isTeam1Winner || !hasScore ? '#111' : '#888';
+              const team2Color = isAbandoned(match) || isTeam2Winner || !hasScore ? '#111' : '#888';
 
               return (
                 <div key={match.id} className="mono-card p-5">
@@ -255,7 +256,7 @@ export default function GenericSetsTournament() {
                     <div className="flex items-center gap-2">
                       {hasScore && match.status === 'completed' && (
                         <span className="mono-badge mono-badge-final">
-                          Completed
+                          {isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}
                         </span>
                       )}
                       {hasScore && match.status !== 'completed' && (

@@ -1,3 +1,4 @@
+import { isLimitedOversMatchDecided } from '../../../utils/cricketCalculations';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
 import { useScoringProgress } from './scoringProgressContext';
@@ -244,6 +245,7 @@ export default function MonoCricketGuidedScorerRoute() {
 
   // Innings 1 ended -> freeze its aggregate, set the target, go to the break.
   const handleComplete1 = (payload) => {
+    if (payload?.reason === 'manual-match') { finishAbandoned(payload); return; }
     const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
     const agg = mirrorAggregate(finalInnings, fmt);
     const nextTarget = computeTarget(agg.runs);
@@ -280,7 +282,25 @@ export default function MonoCricketGuidedScorerRoute() {
   };
 
   // Innings 2 ended -> finalize the match, resolve winner, clear the draft.
+  const finishAbandoned = (payload) => {
+    completion.complete(() => {
+      const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
+      const agg = mirrorAggregate(finalInnings, fmt);
+      const updated = updateMatchInTournament(tournament, matchId, m => ({ ...m,
+        [battingSlot]: agg, battingOrder, status: 'completed', resultType: 'abandoned', winner: null, winDesc: '',
+        guidedInnings: secondInnings ? [m.draftState?.innings1 ?? null, finalInnings] : [finalInnings],
+        draftState: undefined, completedAt: now(),
+      }));
+      return saveSportTournament(storageKey, updated);
+    }, navigateToTournament);
+  };
+
   const handleComplete2 = (payload) => {
+    const agg = mirrorAggregate(payload?.innings ?? draft.guidedInnings ?? { deliveries: [] }, fmt);
+    const candidate = { ...match, [battingSlot]: agg };
+    if (payload?.reason === 'manual-match' && !isLimitedOversMatchDecided({ ...candidate, format: match.format, innings: 2, battingSecond: battingSlot === 'team1Score' ? 1 : 2 })) {
+      finishAbandoned(payload); return;
+    }
     completion.complete(() => {
       const finalInnings = payload?.innings ?? draft.guidedInnings ?? { deliveries: [] };
       const agg = mirrorAggregate(finalInnings, fmt);

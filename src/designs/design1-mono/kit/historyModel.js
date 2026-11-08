@@ -1,3 +1,4 @@
+import { isAbandoned } from '../../../utils/matchOutcome';
 // History screen model (Kit S4, plan 2026-10-22 §9 S4). Pure functions over the History entries
 // MonoHistory already builds, so the month card, its legend and the month sections all count the
 // same rows: the bar and the legend always sum to that month's list.
@@ -77,6 +78,7 @@ export function displayScore(score) {
 
 /** Which side of an entry won: 'a', 'b' or null (draws, ties and unresolved winners stay plain). */
 export function winnerSide(entry) {
+  if (isAbandoned(entry)) return null;
   const winner = entry?.winner;
   if (!winner || ['draw', 'tie'].includes(String(winner).toLowerCase())) return null;
   if (winner === entry.team1 && winner !== entry.team2) return 'a';

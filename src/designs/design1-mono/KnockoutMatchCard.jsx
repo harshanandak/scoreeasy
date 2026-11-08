@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
 
 function getScoreInfo(match, engine) {
@@ -40,8 +41,8 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
 
   const { hasScore, t1SetsWon, t2SetsWon } = getScoreInfo(match, engine);
 
-  const isTeam1Winner = match.status === 'completed' && match.winner === match.team1Id;
-  const isTeam2Winner = match.status === 'completed' && match.winner === match.team2Id;
+  const isTeam1Winner = !isAbandoned(match) && match.status === 'completed' && match.winner === match.team1Id;
+  const isTeam2Winner = !isAbandoned(match) && match.status === 'completed' && match.winner === match.team2Id;
 
   const team1Color = getTeamColor(team1Ready, isTeam1Winner, hasScore);
   const team2Color = getTeamColor(team2Ready, isTeam2Winner, hasScore);

@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -379,9 +380,9 @@ export default function MonoCricketTournament() {
               // Determine winner
               let t1Wins = false;
               let t2Wins = false;
-              let winDesc = match.winDesc || '';
+              let winDesc = isAbandoned(match) ? ABANDONED_LABEL : match.winDesc || '';
 
-              if (isComplete) {
+              if (isComplete && !isAbandoned(match)) {
                 if (match.winner) {
                   t1Wins = match.winner === match.team1Id;
                   t2Wins = match.winner === match.team2Id;
@@ -419,7 +420,7 @@ export default function MonoCricketTournament() {
                       {isComplete && (
                         <>
                           <span className="mono-badge mono-badge-final" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>
-                            Completed
+                            {isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}
                           </span>
                           <button
                             onClick={(e) => {

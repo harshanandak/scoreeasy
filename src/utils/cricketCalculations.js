@@ -1,3 +1,4 @@
+import { isAbandoned } from './matchOutcome';
 // Cricket scoring calculations
 import { guidedMaxWickets, resolveGuidedRules } from './cricketRules';
 
@@ -372,6 +373,7 @@ export function calculateCricketPointsTable(teams, matches) {
 
     t1.played++;
     t2.played++;
+    if (isAbandoned(match)) { t1.noResult++; t2.noResult++; return; }
 
     if (match.innings && match.innings.length > 0) {
       const totalBallsPerInnings = match.format?.overs ? match.format.overs * 6 : null;
@@ -398,4 +400,11 @@ export function calculateCricketPointsTable(teams, matches) {
     if (b.points !== a.points) return b.points - a.points;
     return b.nrr - a.nrr;
   });
+}
+export function isLimitedOversMatchDecided({ team1Score, team2Score, format = {}, innings = 2, battingSecond = 2 }) {
+  if (innings !== 2 || !team1Score || !team2Score) return false;
+  const chase = battingSecond === 1 ? team1Score : team2Score;
+  const first = battingSecond === 1 ? team2Score : team1Score;
+  return chase.runs > first.runs || Boolean(chase.allOut)
+    || chase.wickets >= getMaxWickets(format) || chase.balls >= getTotalBalls(format);
 }

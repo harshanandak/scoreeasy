@@ -39,6 +39,16 @@ export function isSetComplete(set, rule) {
   return isSetsGameComplete(set, rule);
 }
 
+export function isSetsMatchDecided({ sets = [], format = {}, sportConfig = {}, score1 = 0, score2 = 0 }) {
+  if (format.type === 'single') {
+    return validateSingleSetScore(score1, score2, format.target, sportConfig.config?.winBy ?? 2, sportConfig.config?.maxPoints ?? null)
+      || sets.some(set => set.completed);
+  }
+  const { setsWon1, setsWon2 } = summarizeBestOfSets(sets);
+  const toWin = Math.ceil((format.sets || 3) / 2);
+  return setsWon1 >= toWin || setsWon2 >= toWin;
+}
+
 /** Next-point opportunities, in team order (independent of the board's side swap).
  * Probe the scorer's own completion predicates so caps and deciding targets cannot drift.
  * Single formats deliberately use their existing selected target and registry rules.

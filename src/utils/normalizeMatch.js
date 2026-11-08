@@ -1,3 +1,4 @@
+import { isAbandoned } from './matchOutcome';
 /**
  * Normalizes match results from different sport engines into a common shape
  * for the Convex matches table: { score1, score2, detail, ... }
@@ -59,7 +60,8 @@ export function normalizeMatchForConvex(result, sport) {
     score1,
     score2,
     detail: detail ?? undefined,
-    winner: result.winner || undefined,
+    winner: isAbandoned(result) ? undefined : result.winner || undefined,
+    resultType: result.resultType || (isAbandoned(result) ? 'abandoned' : undefined),
     format: result.format || undefined,
     date: Date.now(),
     duration: result.elapsedSeconds || undefined,

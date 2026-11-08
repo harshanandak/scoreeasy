@@ -1,3 +1,5 @@
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
+import { AppScoringConfirmDialog } from '../components/AppScoringPrompt';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -372,9 +374,13 @@ export default function MonoCricketGuidedScorer({
     setSheetOpen(false);
     completion.complete(() => onComplete?.({ innings, ...der, reason: 'manual-innings' }));
   };
-  const endMatch = () => {
+  const [confirmEarlyFinish, setConfirmEarlyFinish] = useState(false);
+  const endMatch = (confirmed = false) => {
+    confirmed = confirmed === true;
     if (completion.locked) return;
     setSheetOpen(false);
+    if (!confirmed && !(innings.target != null && completionReason(innings, der))) { setConfirmEarlyFinish(true); return; }
+    setConfirmEarlyFinish(false);
     completion.complete(() => onComplete?.({ innings, ...der, reason: 'manual-match' }));
   };
 
@@ -428,6 +434,7 @@ export default function MonoCricketGuidedScorer({
   return (
     <div className="mono-scorer-screen cricket-board" data-cricket-board="" data-batting={battingTeam === 2 ? 'b' : 'a'} style={colourStyle} inert={completion.isCompleting ? '' : undefined}>
       <style>{STYLES}</style>
+      {confirmEarlyFinish && <AppScoringConfirmDialog title="End match?" message={EARLY_FINISH_MESSAGE} confirmLabel="End match" cancelLabel="Keep scoring" onCancel={() => setConfirmEarlyFinish(false)} onConfirm={() => endMatch(true)} />}
       <div className="mono-scorer-shell sb crb">
         <h1 className="sr-only">Cricket match scorer</h1>
 

@@ -439,13 +439,15 @@ export const pause = authedMutation({
 });
 
 export const finalize = authedMutation({
-  args: { matchId: v.id("liveMatches") },
+  args: { matchId: v.id("liveMatches"), resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))) },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
+    const resultType = match.status === "final" ? match.resultType : args.resultType;
     const now = Date.now();
 
     await ctx.db.patch(args.matchId, {
       status: "final",
+      ...(resultType ? { resultType } : {}),
       publicExpiresAt: now + PUBLIC_EXPIRY_GRACE_MS,
     });
 
@@ -481,7 +483,7 @@ export const finalize = authedMutation({
     }
 
     // Sets are PRIMARY; current points break ties only when sets are equal.
-    const winner =
+    const winner = resultType === "abandoned" ? undefined :
       match.setsA !== match.setsB
         ? match.setsA > match.setsB
           ? team1
@@ -507,6 +509,7 @@ export const finalize = authedMutation({
       score1,
       score2,
       winner,
+      ...(resultType ? { resultType } : {}),
       operatedBy: ctx.user._id,
       date: now,
       clientMatchId: match.clientMatchId,
@@ -598,6 +601,7 @@ const publicSnapshotValidator = v.object({
   sport: v.string(),
   status: v.union(v.literal("live"), v.literal("paused"), v.literal("final")),
   scorecardKind: v.string(),
+  resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))),
   pointsA: v.number(),
   pointsB: v.number(),
   setsA: v.number(),
@@ -644,6 +648,7 @@ export const getByToken = query({
       sport: match.sport,
       status: match.status,
       scorecardKind: match.scorecardKind,
+      ...(match.resultType ? { resultType: match.resultType } : {}),
       pointsA: match.pointsA,
       pointsB: match.pointsB,
       setsA: match.setsA,
