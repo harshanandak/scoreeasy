@@ -45,7 +45,7 @@ it.each(['cricket', 'volleyball'])('keeps a scoreless %s match when Finish expli
   expect(loadQuickMatches()).toEqual([expect.objectContaining({ sport, status: 'completed', score1: 0, score2: 0, winner: 'Tie', startedAt: expect.any(String) })]);
   expect(loadInProgressMatches()).toEqual([]);
   fireEvent.click(screen.getByRole('button', { name: 'Test History' }));
-  const row = sport === 'cricket' ? /Team A 0\/0–0\/0 Team B/ : /Team A 0–0 Team B/;
+  const row = sport === 'cricket' ? /Team A 0\/0 · Team B 0\/0/ : /Team A 0–0 Team B/;
   expect(await screen.findByRole('button', { name: row })).toBeVisible();
 });
 

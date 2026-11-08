@@ -75,7 +75,7 @@
 .cricket-board .sb-undo-t { font-size: 0.9rem; }
 .cricket-board .sb-undo-w { margin: 0; font-size: 0.68rem; overflow: visible; white-space: normal; }
 .cricket-swap { min-width: 48px; min-height: 56px; font-size: 1.4rem; }
-.cricket-board .cricket-aggregate-hero :is(p,span) { color: inherit !important; }
+.cricket-board .cricket-aggregate-hero :is(p,span):not(.mono-over-pip) { color: inherit !important; }
 .cricket-board .cricket-aggregate-hero :is(.cricket-warning,.cricket-warning p,.mono-cricket-chip-warn) { color: var(--se-color-warning) !important; background: var(--se-color-warning-soft); }
 .cricket-board .cricket-aggregate-hero .mono-cricket-chip-accent { color: var(--cricket-on) !important; background: var(--cricket-scrim); }
 .cricket-board .cricket-aggregate-hero .mono-scorer-score-value { justify-content: flex-start !important; font-family: var(--se-font-num); font-size: 4rem !important; }

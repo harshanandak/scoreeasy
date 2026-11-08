@@ -382,11 +382,11 @@ describe('MonoHistory', () => {
     renderHistory();
 
     expect(await screen.findByRole('button', { name: row('Falcons', 'Sharks') })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: row('Riders', 'Kings') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Riders 151\/\? · Kings 140\/\?, Riders won/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: row('City', 'United') })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Find match'), { target: { value: 'riders' } });
-    expect(screen.getByRole('button', { name: row('Riders', 'Kings') })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Riders 151\/\? · Kings 140\/\?, Riders won/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: row('Falcons', 'Sharks') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
@@ -398,14 +398,14 @@ describe('MonoHistory', () => {
     fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Draws' }));
 
     expect(screen.getByRole('button', { name: row('City', 'United') })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: row('Riders', 'Kings') })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Riders 151\/\? · Kings 140\/\?/ })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
     expect(within(sportChips).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(within(screen.getByRole('group', { name: 'Result' })).getByRole('button', { name: 'Close' }));
 
     expect(screen.getByRole('button', { name: row('Falcons', 'Sharks') })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: row('Riders', 'Kings') })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Riders 151\/\? · Kings 140\/\?/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: row('City', 'United') })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
