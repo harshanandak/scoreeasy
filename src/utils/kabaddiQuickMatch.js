@@ -1,4 +1,4 @@
-import { assertState, createKabaddiState, migrateKabaddiState, teamTotal } from './kabaddiEngine';
+import { assertState, createKabaddiState, migrateKabaddiState, remainingTime, resume, teamTotal, timeUp } from './kabaddiEngine';
 import { resolveKabaddiRules } from './kabaddiRules';
 
 export function createKabaddiMatch({ format = {}, names, colours, rosters = [[], []] }) {
@@ -10,6 +10,15 @@ export function createKabaddiMatch({ format = {}, names, colours, rosters = [[],
 }
 
 export const matchTotals = match => match.state.teams.map(teamTotal);
+
+/** Finish may resolve an elapsed final half, but never an unresolved raid. */
+export function resolveKabaddiFinishState(state, atMs) {
+  const phase = state.phase === 'paused' ? state.resumePhase : state.phase;
+  if (phase !== 'playing' || state.activeRaid || state.rules.end.kind !== 'timed' || state.half !== state.rules.end.halves) return state;
+  const now = Math.max(atMs, state.clock.anchorMonotonicMs);
+  if (remainingTime(state, now) !== 0) return state;
+  return timeUp(state.phase === 'paused' ? resume(state, { atMs: now }) : state);
+}
 
 /** Unknown/corrupt engine data throws; it must never fall back to an empty match. */
 export function restoreKabaddiMatch(draft, setup) {

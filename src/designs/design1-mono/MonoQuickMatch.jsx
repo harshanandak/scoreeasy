@@ -6,7 +6,7 @@ import { isLimitedOversMatchDecided } from '../../utils/cricketCalculations';
 import { kabaddiSnapshot, kabaddiUpdates } from '../../utils/kabaddiBroadcast';
 import { raidStory } from '../../utils/kabaddiLiveModel';
 import KabaddiLive from './scoring/KabaddiLiveBoard';
-import { createKabaddiMatch, matchTotals, persistKabaddiDraft, restoreKabaddiMatch } from '../../utils/kabaddiQuickMatch';
+import { createKabaddiMatch, matchTotals, persistKabaddiDraft, resolveKabaddiFinishState, restoreKabaddiMatch } from '../../utils/kabaddiQuickMatch';
 import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabaddiBackups } from '../../utils/kabaddiMigrationBackups';
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
@@ -1740,7 +1740,7 @@ export default function MonoQuickMatch() {
   };
 
   const isCurrentMatchDecided = () => isKabaddi && kabaddiRef.current
-    ? kabaddiRef.current.state.phase === 'finishReview'
+    ? resolveKabaddiFinishState(kabaddiRef.current.state, Date.now()).phase === 'finishReview'
     : isCricket
     ? isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })
     : isGoals
@@ -1769,8 +1769,9 @@ export default function MonoQuickMatch() {
   const finalizeKabaddi = () => {
     const current = kabaddiRef.current;
     if (!current || completion.locked) return;
-    const natural = current.state.phase === 'finishReview';
-    const finalMatch = { ...current, ...(natural ? { state: finishKabaddi(current.state) } : {}), resultType: natural ? 'decided' : 'abandoned' };
+    const state = resolveKabaddiFinishState(current.state, Date.now());
+    const natural = state.phase === 'finishReview';
+    const finalMatch = { ...current, ...(natural ? { state: finishKabaddi(state) } : {}), resultType: natural ? 'decided' : 'abandoned' };
     const [score1, score2] = matchTotals(finalMatch);
     const saved = finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name, score1, score2,
       winner: natural ? (score1 === score2 ? 'Draw' : score1 > score2 ? team1Name : team2Name) : null,
