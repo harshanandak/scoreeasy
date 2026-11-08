@@ -1462,11 +1462,15 @@ export default function Design1Mono() {
       pendingFallbackPopListenerRef.current = null;
     }
   }, []);
+  // Same for a finishing scorer's unwind (history.go + 300 ms fallback): one entry per call.
+  const pendingCompletionsRef = useRef(new Set());
   useEffect(() => {
     protectedGuardUnmountedRef.current = false;
+    const pendingCompletions = pendingCompletionsRef.current;
     return () => {
       protectedGuardUnmountedRef.current = true;
       clearPendingFallbackNavigation();
+      for (const pending of [...pendingCompletions]) pending.cancel();
     };
   }, [clearPendingFallbackNavigation]);
   const nativeDeepLinkContextRef = useRef({
@@ -1688,23 +1692,36 @@ export default function Design1Mono() {
       return;
     }
 
+    // A stale call after the shell unmounted has no navigator left to finish it,
+    // and nothing would clear its timer or listener.
+    if (protectedGuardUnmountedRef.current) return;
+
     allowNextProtectedPopRef.current = true;
     let settled = false;
-    let fallbackTimeoutId = null;
+    const pending = { timeoutId: null, onUnwound: null, cancel: null };
+    pending.cancel = () => {
+      if (pending.timeoutId !== null) globalThis.clearTimeout?.(pending.timeoutId);
+      pending.timeoutId = null;
+      // Second layer: a test environment can be torn down before this runs.
+      if (typeof globalThis.removeEventListener === 'function') {
+        globalThis.removeEventListener('popstate', pending.onUnwound);
+      }
+      pendingCompletionsRef.current.delete(pending);
+    };
     const finish = (popLanded) => {
       if (settled) return;
       settled = true;
-      if (fallbackTimeoutId !== null) globalThis.clearTimeout(fallbackTimeoutId);
-      globalThis.removeEventListener('popstate', onUnwound);
+      pending.cancel();
       // Tournament completion can land on its destination while unwinding.
       // Reuse that entry; pushing it again makes the first Back a no-op.
       const landedOnResult = `${globalThis.location.pathname}${globalThis.location.search}${globalThis.location.hash}` === resultPath;
       navigate(resultPath, (replaceAtEnd || !popLanded || landedOnResult) ? { replace: true } : undefined);
     };
-    const onUnwound = () => finish(true);
-    globalThis.addEventListener('popstate', onUnwound, { once: true });
+    pending.onUnwound = () => finish(true);
+    pendingCompletionsRef.current.add(pending);
+    globalThis.addEventListener('popstate', pending.onUnwound, { once: true });
     globalThis.history.go(-backDelta);
-    fallbackTimeoutId = globalThis.setTimeout(() => finish(false), 300);
+    pending.timeoutId = globalThis.setTimeout(() => finish(false), 300);
   }, [navigate]);
 
   return (
