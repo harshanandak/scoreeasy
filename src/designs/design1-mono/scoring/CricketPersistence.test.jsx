@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { cricketFinishSeed } from '../../../test/cricketFinishFixtures';
 import { ScoringCompletionContext } from './scoringCompletionContext';
 import MonoCricketGuidedScorerRoute from './MonoCricketGuidedScorerRoute';
+import MonoCricketTournament from '../MonoCricketTournament';
+import { calculateCricketPointsTable } from '../../../utils/cricketCalculations';
 import { createInnings, applyDelivery, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 
 vi.mock('convex/react', () => ({
@@ -68,6 +70,39 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
 describe('cricket persistence transactions', () => {
+  it('clears an abandoned guided match and replays it to an explicitly decided chase win counted in standings', () => {
+    seed('guided', match => {
+      match.status = 'completed'; match.resultType = 'abandoned'; match.winner = null;
+      match.winDesc = ''; match.completedAt = '2026-10-21';
+      match.team2Score = { runs: 0, wickets: 0, balls: 0 };
+      match.draftState = undefined;
+    });
+    const overview = render(<MemoryRouter initialEntries={['/cricket/tournament/100']}><Routes>
+      <Route path="/:sport/tournament/:id" element={<MonoCricketTournament />} />
+    </Routes></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear', exact: true }));
+    const cleared = stored('guided');
+    expect(cleared).toMatchObject({ status: 'pending', winner: null });
+    expect(cleared.resultType).toBeUndefined();
+    expect(cleared.completedAt).toBeUndefined();
+    overview.unmount();
+    const tournament = JSON.parse(localStorage.getItem('se_cricket'))[0];
+    const replay = cricketFinishSeed('guided').se_cricket[0].matches[0];
+    tournament.matches[0] = { ...cleared, status: 'in-progress', team1Score: replay.team1Score, draftState: replay.draftState };
+    localStorage.setItem('se_cricket', JSON.stringify([tournament]));
+    mount('guided');
+    fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+    expect(stored('guided')).toMatchObject({ resultType: 'decided', winner: 'B', status: 'completed' });
+    expect(calculateCricketPointsTable(tournament.teams, [stored('guided')]).find(row => row.teamId === 'B')).toMatchObject({ played: 1, won: 1, noResult: 0 });
+  });
+
+  it('a guided terminal save overwrites stale abandoned metadata explicitly', () => {
+    seed('guided', match => { match.resultType = 'abandoned'; });
+    mount('guided');
+    fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+    expect(stored('guided')).toMatchObject({ status: 'completed', resultType: 'decided', winner: 'B' });
+  });
+
   it('guided failed final save stays open, retains the winning ball on refresh, and retries once', () => {
     seed('guided');
     const complete = vi.fn();

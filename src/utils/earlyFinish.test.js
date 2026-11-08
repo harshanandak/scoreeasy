@@ -6,6 +6,7 @@ import { isLimitedOversMatchDecided, calculateCricketPointsTable } from './crick
 import { buildTennisQuickHistoryEntry } from './tennisQuickMatch';
 import { normalizeMatchForConvex } from './normalizeMatch';
 import { calculateSetsStandings } from './standingsCalculator';
+import { isTennisMatchDecided } from './tennisQuickMatch';
 
 it('keeps the final score and undo snapshot but clears a premature winner', () => {
   const original = { score1: 2, score2: 1, winner: 'Royals', history: [{ score1: 1, score2: 1 }] };
@@ -71,4 +72,12 @@ it('counts a scoreless abandoned fixture as played and no result', () => {
 
 it('keeps Test runs keyed by team id when cloud records use display names', () => {
   expect(normalizeMatchForConvex({ resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', team1Id: 'A', team2Id: 'B', innings: [{ teamId: 'A', runs: 13 }, { teamId: 'B', runs: 0 }] }, 'cricket')).toMatchObject({ resultType: 'abandoned', score1: 13, score2: 0 });
+});
+
+it('keeps capped sets, a tennis tiebreak and a full-time draw decided', () => {
+  expect(isSetsMatchDecided({ format: { type: 'single', setsRules: { sets: 1, setsToWin: 1, points: 21, winBy: 2, cap: 30 } }, score1: 30, score2: 29 })).toBe(true);
+  const sets = [{ games1: 7, games2: 6, isTiebreak: true, tiebreakPoints1: 7, tiebreakPoints2: 5, completed: true }];
+  expect(isTennisMatchDecided(sets, { sets: 1 })).toBe(true);
+  expect(buildTennisQuickHistoryEntry({ match: { team1: 'A', team2: 'B' }, sets, isComplete: true, finished: true })).toMatchObject({ resultType: 'decided', winner: 'A' });
+  expect(isGoalsMatchDecided({ format: { mode: 'timed', timeLimit: 60 }, elapsedSeconds: 60, score1: 2, score2: 2, drawAllowed: true })).toBe(true);
 });

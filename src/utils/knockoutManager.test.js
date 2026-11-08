@@ -21,6 +21,29 @@ const createPendingSemiFromPlayIn = () => ({
 });
 
 describe('updateKnockoutBracket', () => {
+  it.each([false, true])('does not advance a winner or loser from an abandoned semi and settles by reference (source-linked %s)', linked => {
+    const sources = linked ? { sourceMatchIds: ['s1', 's2'], sourceSlots: ['team1Id', 'team2Id'] } : {};
+    const bracket = [
+      { id: 's1', round: 'semi-1', team1Id: 'A', team2Id: 'D', status: 'completed', resultType: 'abandoned', winner: null },
+      { id: 's2', round: 'semi-2', team1Id: 'B', team2Id: 'C', status: 'completed', resultType: 'decided', winner: 'B' },
+      { id: 'f', round: 'final', team1Id: null, team2Id: null, status: 'pending', ...sources },
+      { id: 't', round: 'third-place', team1Id: null, team2Id: null, status: 'pending', ...sources },
+    ];
+    const updated = updateKnockoutBracket(bracket);
+    expect(updated.slice(2).every(match => !['A', 'D'].includes(match.team1Id) && !['A', 'D'].includes(match.team2Id))).toBe(true);
+    expect(updateKnockoutBracket(updated)).toBe(updated);
+    expect(updated[2].team1Id).toBeNull();
+    expect(updated[3].team1Id).toBeNull();
+  });
+
+  it('an explicit abandoned outcome overrides a stale stored winner for advancement', () => {
+    const bracket = [
+      { id: 's1', round: 'semi-1', team1Id: 'A', team2Id: 'D', status: 'completed', resultType: 'abandoned', winner: 'A' },
+      { id: 's2', round: 'semi-2', team1Id: 'B', team2Id: 'C', status: 'completed', winner: 'B' },
+      { id: 'f', round: 'final', team1Id: null, team2Id: null, status: 'pending' },
+    ];
+    expect(updateKnockoutBracket(bracket)[2].team1Id).toBeNull();
+  });
   it('places a single play-in winner into the open seeded semi-final slot', () => {
     const playIn = {
       id: 'play-in-1',
