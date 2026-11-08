@@ -41,11 +41,13 @@ export function removeQuickStats(matches, kind) {
     order: current.map(match => String(match.id)),
   };
   // Persist recovery before deletion so navigation or a refresh cannot strand it.
-  if (!writeRecoveries([...loadQuickStatsRecoveries(), recovery])) return null;
+  const previous = loadQuickStatsRecoveries();
+  if (!writeRecoveries([...previous, recovery])) return null;
   const removedIds = new Set(items.map(({ match }) => String(match.id)));
   if (!saveQuickMatches(current.filter(match => !removedIds.has(String(match.id))))) {
-    if (!writeRecoveries(loadQuickStatsRecoveries().filter(operation => operation.id !== recovery.id))) {
-      console.warn('[ScoreEasy] Could not roll back Stats recovery. Restoring this extra operation is safe to retry.');
+    // Include the oldest operation that appending may have evicted at capacity.
+    if (!saveData(RECOVERY_KEY, previous)) {
+      console.warn('[ScoreEasy] Could not restore the prior Stats recovery list after a failed removal.');
     }
     return null;
   }
