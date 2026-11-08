@@ -75,5 +75,7 @@ function resolvePreset(id) {
 
 export function kabaddiRulesLine(r) {
   const end = r.end.kind === 'timed' ? `2 × ${r.end.halfMs / 60000} min` : r.end.kind === 'target' ? `First to ${r.end.points}` : `${r.end.raidsPerTeam} raids each`;
-  return `${r.initialPlayers} a side · ${end} · ${r.strategy === 'pointsOnly' ? 'players stay' : 'FIFO revival'}${r.raidLimitMs === null ? ' · no clocks' : ''}`;
+  const halfClock = r.end.kind === 'timed' ? '' : ' · no half clock';
+  const raidClock = r.raidLimitMs === null ? 'no raid clock' : `${r.raidLimitMs / 1000} s raid clock`;
+  return `${r.initialPlayers} a side · ${end} · ${r.strategy === 'pointsOnly' ? 'players stay' : 'FIFO revival'}${halfClock} · ${raidClock}`;
 }

@@ -9,7 +9,7 @@ const CATEGORIES = ['touch', 'bonus', 'tackleBase', 'superTackleExtra', 'allOut'
 const PHASES = ['ready', 'playing', 'paused', 'halfPending', 'halfTime', 'fullPending', 'finishReview', 'finished'];
 const PLAYING = ['playing', 'halfPending', 'fullPending'];
 const OUTCOMES = ['touch', 'bonus', 'tackled', 'selfOut', 'empty', 'defenderOut', 'mixed', 'technical'];
-const EVENT_KEYS = ['id', 'expectedRevision', 'raidId', 'type', 'count', 'bonusAwarded', 'bonusBeforeContact', 'outsInOrder', 'reason', 'dismissals', 'technicalAwards', 'to', 'offender', 'turnEffect', 'atMs'];
+const EVENT_KEYS = ['id', 'expectedRevision', 'raidId', 'type', 'count', 'bonusAwarded', 'bonusBeforeContact', 'outsInOrder', 'reason', 'dismissals', 'technicalAwards', 'to', 'offender', 'turnEffect', 'atMs', 'physicalTackle'];
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const check = (condition, message) => { if (!condition) throw new Error(`Kabaddi: ${message}`); };
 const integer = (value, min = 0) => Number.isSafeInteger(value) && value >= min;
@@ -252,6 +252,7 @@ function validateInput(event) {
   check(Object.keys(event).every((key) => EVENT_KEYS.includes(key)), 'unsupported event field');
   check(typeof event.id === 'string' && event.id.trim() && !event.id.startsWith('admin-') && !event.id.startsWith('undo-') && !event.id.startsWith('reopen-'), 'unique client event id is required (admin/undo/reopen prefixes reserved)');
   check(OUTCOMES.includes(event.type), 'unsupported raid outcome');
+  if (event.physicalTackle !== undefined) check(event.type === 'mixed' && typeof event.physicalTackle === 'boolean', 'physicalTackle is a mixed-ruling flag');
   if (event.expectedRevision !== undefined) check(integer(event.expectedRevision), 'expectedRevision must be nonnegative');
   if (event.bonusAwarded !== undefined) check(typeof event.bonusAwarded === 'boolean', 'bonusAwarded must be boolean');
   if (event.bonusBeforeContact !== undefined) check(typeof event.bonusBeforeContact === 'boolean', 'bonusBeforeContact must be boolean');
@@ -397,7 +398,7 @@ export function applyRaid(state, event) {
         if (out.team === raidingTeam) check(out.slotId === raid.raiderSlotId && out.category === 'tackleBase', 'only the raider can be dismissed for a failed raid');
         else check(['touch', 'defenderOut'].includes(out.category), 'defender dismissal category must be touch or defenderOut');
         dismiss(current, effects, event.id, out.team, out.slotId, out.category);
-        if (out.team === raidingTeam && raid.superEligibleAtStart && current.rules.superTackle.outcomes === 'anyRaiderOut') award(current, effects, defender, 'superTackleExtra', 1);
+        if (out.team === raidingTeam && raid.superEligibleAtStart && (current.rules.superTackle.outcomes === 'anyRaiderOut' || event.physicalTackle === true)) award(current, effects, defender, 'superTackleExtra', 1);
       }
     }
     if (bonus) award(current, effects, raidingTeam, 'bonus', 1);
