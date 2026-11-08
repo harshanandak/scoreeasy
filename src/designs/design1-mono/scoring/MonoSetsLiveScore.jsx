@@ -1,3 +1,5 @@
+import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, setWinRule, isSetsGameComplete } from '../../../models/setsRules';
+import SetsRulesControls, { ServerChoice } from './SetsRulesControls';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
@@ -63,6 +65,7 @@ export default function MonoSetsLiveScore() {
   const isInteractionLocked = scoringPrompt.isInteractionLocked;
   const [servingTeam, setServingTeam] = useState(1);
   const [scoringMode, setScoringMode] = useState('rally');
+  const [frozenFormat, setFrozenFormat] = useState(null);
 
   // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
   // page with the engine-derived snapshot (current-set points + set tally +
@@ -142,6 +145,10 @@ export default function MonoSetsLiveScore() {
       else navigate(resultPath, { replace: true });
     })) return;
     setSportConfig(config);
+    const sourceFormat = isKnockoutRef.current && found.knockoutConfig?.format ? found.knockoutConfig.format : found.format;
+    const legacy = Boolean(foundMatch.draftState || foundMatch.sets?.length || foundMatch.status === 'in-progress');
+    const capturedFormat = freezeSetsFormat(config, foundMatch.format?.setsRules ? foundMatch.format : legacy ? sourceFormat : { ...sourceFormat, ...foundMatch.format }, { legacy, path: 'tournament' });
+    setFrozenFormat(capturedFormat);
     setTournament(found);
     setMatch(foundMatch);
     setLoadStatus('ready');
@@ -149,7 +156,9 @@ export default function MonoSetsLiveScore() {
     const defaultScoringMode = (Array.isArray(supportedModes) && supportedModes.includes(config?.config?.defaultScoringMode))
       ? config.config.defaultScoringMode
       : (config?.config?.scoringType === 'side-out' ? 'side-out' : 'rally');
-    const loadedMode = foundMatch.scoringMode
+    const loadedMode = capturedFormat.setsRules?.version === 1
+      ? capturedFormat.setsRules.scoringMode
+      : foundMatch.scoringMode
       || foundMatch.draftState?.scoringMode
       || foundMatch.format?.scoringMode
       || defaultScoringMode;
@@ -157,7 +166,11 @@ export default function MonoSetsLiveScore() {
       ? (supportedModes.includes(loadedMode) ? loadedMode : defaultScoringMode)
       : loadedMode;
     setScoringMode(validMode);
-    setServingTeam(foundMatch.draftState?.servingTeam || 1);
+    if (!foundMatch.format?.setsRules) {
+      const capturedTournament = updateMatchInTournament(found, matchId, m => ({ ...m, format: capturedFormat }));
+      if (!saveSportTournament(config.storageKey, capturedTournament)) setSaveWarning('Save failed - storage may be full. Export your data.');
+    }
+    setServingTeam(Object.hasOwn(foundMatch.draftState || {}, 'servingTeam') ? foundMatch.draftState.servingTeam : capturedFormat.setsRules?.initialServer ?? null);
 
     // Initialize from existing score if editing
     if (foundMatch.sets?.length > 0 && !foundMatch.draftState) {
@@ -171,89 +184,24 @@ export default function MonoSetsLiveScore() {
       setSets(foundMatch.draftState.sets);
       setCurrentSet(foundMatch.draftState.currentSet);
       setHistory(foundMatch.draftState.history || []);
-      if (foundMatch.draftState.servingTeam) setServingTeam(foundMatch.draftState.servingTeam);
-      if (foundMatch.draftState.scoringMode) setScoringMode(foundMatch.draftState.scoringMode);
+      if (Object.hasOwn(foundMatch.draftState, 'servingTeam')) setServingTeam(foundMatch.draftState.servingTeam);
+      if (capturedFormat.setsRules?.version !== 1 && foundMatch.draftState.scoringMode) setScoringMode(foundMatch.draftState.scoringMode);
+      if (typeof foundMatch.draftState.sidesSwapped === 'boolean') setSidesSwapped(foundMatch.draftState.sidesSwapped);
     }
   }, [sport, id, matchId]);
 
-  // Effective format: use knockout format for knockout matches
-  const effectiveFormat = isKnockoutRef.current && tournament?.knockoutConfig?.format
-    ? tournament.knockoutConfig.format
-    : tournament?.format;
-
-  // Check if current set is complete
-  const checkSetComplete = (set) => {
-    if (!sportConfig) return false;
-
-    const { winBy, maxPoints } = sportConfig.config;
-    const max = Math.max(set.score1, set.score2);
-    const min = Math.min(set.score1, set.score2);
-
-    // Default to best-of if type not specified (backwards compatibility)
-    const formatType = effectiveFormat.type || 'best-of';
-
-    // Single-set format
-    if (formatType === 'single') {
-      const target = effectiveFormat.points;
-      if (max < target) return false;
-      if (max - min < winBy) return false;
-      if (maxPoints && max >= maxPoints && max > min) return true;
-      return true;
-    }
-
-    // Best-of format
-    const { pointsPerSet, deciderPoints } = sportConfig.config;
-    const isDecider = effectiveFormat.sets > 1 && currentSet === (effectiveFormat.sets - 1);
-    const target = isDecider && deciderPoints ? deciderPoints : (effectiveFormat.points || pointsPerSet);
-
-    // Must reach target
-    if (max < target) return false;
-
-    // Must win by N
-    if (max - min < winBy) return false;
-
-    // Badminton cap at 30
-    if (maxPoints && max >= maxPoints && max > min) return true;
-
-    return true;
-  };
-
-  const getCurrentSetTarget = (setIndex, format) => {
-    if (!sportConfig) return 0;
-    const formatType = format.type || 'best-of';
-    if (formatType === 'single') return format.points;
-    const { pointsPerSet, deciderPoints } = sportConfig.config;
-    const isDecider = format.sets > 1 && setIndex === (format.sets - 1);
-    return isDecider && deciderPoints ? deciderPoints : (format.points || pointsPerSet);
-  };
-
-  const rotateServeAfterPoint = (setScore) => {
-    const rotation = sportConfig?.config?.serviceRotation;
-    if (!rotation) return;
-    if (rotation === 1) {
-      setServingTeam((prev) => (prev === 1 ? 2 : 1));
-      return;
-    }
-    const target = getCurrentSetTarget(currentSet, effectiveFormat);
-    const totalPoints = (setScore?.score1 || 0) + (setScore?.score2 || 0);
-    // The every-point-at-deuce switch only applies to UNCAPPED formats (e.g.
-    // table tennis). Capped sports (badminton, maxPoints=30) don't use it — and
-    // in fact reach this code path only via rotation===1 (handled above), so the
-    // guard keeps the deuce special-case from ever mis-firing for them (#108).
-    const maxPoints = sportConfig?.config?.maxPoints;
-    const atDeuce = !maxPoints && (setScore?.score1 || 0) >= target - 1 && (setScore?.score2 || 0) >= target - 1;
-    if (atDeuce) {
-      setServingTeam((prev) => (prev === 1 ? 2 : 1));
-      return;
-    }
-    if (totalPoints % rotation === 0) {
-      setServingTeam((prev) => (prev === 1 ? 2 : 1));
-    }
-  };
+  const effectiveFormat = frozenFormat;
+  const rules = effectiveFormat?.setsRules;
+  const checkSetComplete = (set) => rules ? isSetsGameComplete(set, setWinRule(rules, currentSet)) : false;
+  const getCurrentSetTarget = (index) => rules ? setWinRule(rules, index).target : 0;
 
   // Add point
   const addPoint = (team) => {
     if (!sportConfig || !tournament || isInteractionLocked || completion.locked) return;
+    if (scoringMode === 'side-out' && servingTeam == null) {
+      setSaveWarning('Choose the serving team before scoring a side-out rally.');
+      return;
+    }
 
     // Debounce rapid clicks
     const now = Date.now();
@@ -273,6 +221,7 @@ export default function MonoSetsLiveScore() {
       currentSet,
       servingTeam,
       scoringMode,
+      sidesSwapped,
     }].slice(-100)); // Keep last 100
 
     setHasChanges(true);
@@ -293,66 +242,72 @@ export default function MonoSetsLiveScore() {
     // once the set state settles, see the broadcast effect). team1 -> A.
     broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', value: 1, at: Date.now() };
 
-    setSets(prevSets => {
-      const newSets = prevSets.map(s => ({ ...s }));
-      const scoreKey = team === 1 ? 'score1' : 'score2';
-      newSets[currentSet][scoreKey]++;
-      if (scoringMode !== 'side-out') {
-        rotateServeAfterPoint(newSets[currentSet]);
+    const newSets = sets.map(s => ({ ...s }));
+    const scoreKey = team === 1 ? 'score1' : 'score2';
+    newSets[currentSet][scoreKey]++;
+    if (scoringMode !== 'side-out') {
+      setServingTeam(serveAfterPoint(rules, { score: newSets[currentSet], currentSet, sets: newSets, servingTeam, winner: team }));
+    }
+
+    if (rules.version === 1 && endChangeDue(rules, currentSet, newSets[currentSet]) && !endChangeDue(rules, currentSet, sets[currentSet])) setSidesSwapped(prev => !prev);
+
+    // Check if set complete
+    const isComplete = checkSetComplete(newSets[currentSet]);
+    if (isComplete) {
+      newSets[currentSet].completed = true;
+
+      // Haptic feedback: double pulse for set won
+      triggerHaptic([50, 100, 50]);
+
+      // Show set won notification
+      const winnerId = newSets[currentSet].score1 > newSets[currentSet].score2 ? match.team1Id : match.team2Id;
+      const winningTeam = tournament.teams.find(t => t.id === winnerId)?.name;
+
+      setSetWonTeam(winningTeam || `Team ${team}`);
+      setSetWonNumber(currentSet + 1); // the set that just completed (1-indexed)
+      setShowSetWon(true);
+      setTimeout(() => setShowSetWon(false), 1500);
+
+      const formatType = effectiveFormat.type || 'best-of';
+
+      // Single-set format: match ends after first set
+      if (formatType === 'single') {
+        triggerConfetti();
+        triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
+        setSets(newSets);
+        return;
       }
 
-      // Check if set complete
-      const isComplete = checkSetComplete(newSets[currentSet]);
-      if (isComplete) {
-        newSets[currentSet].completed = true;
+      // Best-of format: check if match complete
+      const t1SetsWon = newSets.filter(s => s.completed && s.score1 > s.score2).length;
+      const t2SetsWon = newSets.filter(s => s.completed && s.score2 > s.score1).length;
+      const setsToWin = rules.setsToWin;
 
-        // Haptic feedback: double pulse for set won
-        triggerHaptic([50, 100, 50]);
-
-        // Show set won notification
-        const winnerId = newSets[currentSet].score1 > newSets[currentSet].score2 ? match.team1Id : match.team2Id;
-        const winningTeam = tournament.teams.find(t => t.id === winnerId)?.name;
-
-        setSetWonTeam(winningTeam || `Team ${team}`);
-        setSetWonNumber(currentSet + 1); // the set that just completed (1-indexed)
-        setShowSetWon(true);
-        setTimeout(() => setShowSetWon(false), 1500);
-
-        const formatType = effectiveFormat.type || 'best-of';
-
-        // Single-set format: match ends after first set
-        if (formatType === 'single') {
-          triggerConfetti();
-          triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
-          return newSets;
-        }
-
-        // Best-of format: check if match complete
-        const t1SetsWon = newSets.filter(s => s.completed && s.score1 > s.score2).length;
-        const t2SetsWon = newSets.filter(s => s.completed && s.score2 > s.score1).length;
-        const setsToWin = Math.ceil(effectiveFormat.sets / 2);
-
-        if (t1SetsWon >= setsToWin || t2SetsWon >= setsToWin) {
-          // Match complete - trigger confetti
-          triggerConfetti();
-          triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
-          return newSets;
-        }
-
-        // Start next set
-        if (currentSet < effectiveFormat.sets - 1) {
-          newSets.push({ score1: 0, score2: 0, completed: false });
-          setCurrentSet(prev => prev + 1);
-        }
+      if (t1SetsWon >= setsToWin || t2SetsWon >= setsToWin) {
+        // Match complete - trigger confetti
+        triggerConfetti();
+        triggerHaptic([100, 100, 100, 100, 100]); // Victory pattern
+        setSets(newSets);
+        return;
       }
 
-      return newSets;
-    });
+      // Start next set
+      if (currentSet < effectiveFormat.sets - 1) {
+        newSets.push({ score1: 0, score2: 0, completed: false });
+        setCurrentSet(prev => prev + 1);
+        if (rules.version === 1) {
+          setServingTeam(firstServerForSet(rules, currentSet + 1, newSets));
+          if (rules.endChangeBetweenSets) setSidesSwapped(prev => !prev);
+        }
+      }
+    }
+
+    setSets(newSets);
   };
 
   // Per-point correction (-1) for a team — fixes a mis-tap without unwinding the
-  // whole undo stack. Floors at 0 (a no-op when the score is already 0), records
-  // history so it is itself undoable, and never completes a set or rotates serve.
+  // whole undo stack. Floors at 0, records undo history, and recomputes tracked
+  // service/end changes without completing a game. A missing rally winner stays unknown.
   // Mirrored to the broadcast as a value:-1 point so spectators stay in sync.
   const correctPoint = (team) => {
     if (!sportConfig || !tournament || isInteractionLocked || completion.locked) return;
@@ -374,17 +329,20 @@ export default function MonoSetsLiveScore() {
       currentSet,
       servingTeam,
       scoringMode,
+      sidesSwapped,
     }].slice(-100));
 
     setHasChanges(true);
 
     broadcastIntentRef.current = { kind: 'correction', team: team === 1 ? 'A' : 'B', value: -1, at: Date.now() };
 
-    setSets(prevSets => {
-      const newSets = prevSets.map(s => ({ ...s }));
-      newSets[currentSet][scoreKey] = Math.max(0, newSets[currentSet][scoreKey] - 1);
-      return newSets;
-    });
+    const newSets = sets.map(s => ({ ...s }));
+    newSets[currentSet][scoreKey] = Math.max(0, newSets[currentSet][scoreKey] - 1);
+    if (rules.version === 1) {
+      setServingTeam(serveAfterPoint(rules, { score: newSets[currentSet], currentSet, sets: newSets, servingTeam, winner: null }));
+      if (endChangeDue(rules, currentSet, newSets[currentSet]) !== endChangeDue(rules, currentSet, sets[currentSet])) setSidesSwapped(prev => !prev);
+    }
+    setSets(newSets);
   };
 
   // Undo last action
@@ -395,8 +353,10 @@ export default function MonoSetsLiveScore() {
     const last = history[history.length - 1];
     setSets(last.sets);
     setCurrentSet(last.currentSet);
-    if (last.servingTeam) setServingTeam(last.servingTeam);
-    if (last.scoringMode) setScoringMode(last.scoringMode);
+    if (Object.hasOwn(last, 'servingTeam')) setServingTeam(last.servingTeam);
+    if (typeof last.sidesSwapped === 'boolean') setSidesSwapped(last.sidesSwapped);
+    // Frozen (version 1) rules own the scoring mode; only legacy matches restore it from history.
+    if (rules?.version !== 1 && last.scoringMode) setScoringMode(last.scoringMode);
     setHistory(prev => prev.slice(0, -1));
   };
 
@@ -405,11 +365,11 @@ export default function MonoSetsLiveScore() {
   // clears this draft (reverts to the committed match); "Save" commits via saveMatch.
   useEffect(() => {
     if (!tournament || !matchId || isInteractionLocked) return;
-    if (history.length === 0 && !scoringStarted) return;
+    if (history.length === 0 && !scoringStarted && !hasChanges) return;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       status: 'in-progress',
-      format: { ...(m.format || effectiveFormat || {}), scoringMode },
+      format: { ...effectiveFormat, scoringMode },
       draftState: {
         scoringStarted,
         currentSet,
@@ -417,26 +377,27 @@ export default function MonoSetsLiveScore() {
         history: structuredClone(history.slice(-50)),
         servingTeam,
         scoringMode,
+        sidesSwapped,
         savedAt: new Date().toISOString(),
       },
     }));
     saveSportTournament(sportConfig.storageKey, updatedTournament);
-  }, [tournament, matchId, isInteractionLocked, sets, currentSet, history, scoringStarted, servingTeam, scoringMode, effectiveFormat, sportConfig]);
+  }, [tournament, matchId, isInteractionLocked, sets, currentSet, history, scoringStarted, servingTeam, scoringMode, effectiveFormat, sportConfig, sidesSwapped, hasChanges]);
 
   // Broadcast the latest point/undo AFTER its state commits (§87d snapshot): a
   // point may end a set and open the next, so we read the settled sets/serving
   // here rather than guessing the post-update score inside addPoint.
   const completed = sets.filter((s) => s.completed);
-  const showServe = scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
+  const showServe = rules?.version === 1 || scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
   const liveSnapshot = {
     pointsA: sets[currentSet]?.score1 || 0,
     pointsB: sets[currentSet]?.score2 || 0,
     setsA: completed.filter((s) => s.score1 > s.score2).length,
     setsB: completed.filter((s) => s.score2 > s.score1).length,
     setScores: completed.map((s) => ({ a: s.score1, b: s.score2 })),
-    servingTeam: showServe ? (servingTeam === 1 ? 'A' : 'B') : undefined,
+    servingTeam: showServe ? broadcastServer(servingTeam) : undefined,
     currentUnit: currentSet + 1,
-    periodLabel: `Set ${currentSet + 1}`,
+    periodLabel: `${rules?.unit || 'Set'} ${currentSet + 1}`,
   };
 
   useEffect(() => {
@@ -454,14 +415,14 @@ export default function MonoSetsLiveScore() {
       // EVENT type so the spectator feed labels a serve switch / correction
       // instead of rendering a meaningless "+0" / "+-1" (the snapshot still
       // owns the score, so the label changes nothing about the running totals).
-      const broadcastType = intent.kind === 'serve'
+      const broadcastType = intent.type || (intent.kind === 'serve'
         ? 'serve_change'
         : intent.kind === 'correction'
           ? 'correction'
-          : 'point';
+          : 'point');
       liveRef.current.point({ team: intent.team, value: intent.value ?? 1, type: broadcastType, at: intent.at, snapshot });
     }
-  }, [sets, currentSet, servingTeam, scoringMode, sportConfig]);
+  }, [sets, currentSet, servingTeam, scoringMode, sportConfig, rules]);
 
   // Save match and return
   const saveMatch = () => {
@@ -471,7 +432,7 @@ export default function MonoSetsLiveScore() {
     // Save all sets that have any score (including in-progress)
     const setsToSave = sets
       .filter(s => s.score1 > 0 || s.score2 > 0)
-      .map(s => ({ score1: s.score1, score2: s.score2, completed: s.completed || false }));
+      .map(s => ({ ...s, completed: s.completed || false }));
 
     // Count completed sets to determine match status
     const completedSets = sets.filter(s => s.completed);
@@ -484,7 +445,7 @@ export default function MonoSetsLiveScore() {
       // Single-set format: match is complete when the one set is done
       isMatchComplete = completedSets.length > 0;
     } else {
-      const setsToWin = Math.ceil(effectiveFormat.sets / 2);
+      const setsToWin = rules.setsToWin;
       isMatchComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
     }
 
@@ -493,7 +454,7 @@ export default function MonoSetsLiveScore() {
       sets: setsToSave,
       status: isMatchComplete ? 'completed' : 'in-progress',
       winner: isMatchComplete ? (t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id) : null,
-      format: { ...(m.format || effectiveFormat || {}), scoringMode },
+      format: { ...effectiveFormat, scoringMode },
       setsWon1: t1SetsWon,
       setsWon2: t2SetsWon,
       scoringMode,
@@ -505,6 +466,7 @@ export default function MonoSetsLiveScore() {
         history: structuredClone(history.slice(-50)),
         servingTeam,
         scoringMode,
+        sidesSwapped,
         savedAt: new Date().toISOString(),
       },
     }));
@@ -624,10 +586,10 @@ export default function MonoSetsLiveScore() {
   const teamAccent = (mine, other) =>
     mine > other ? 'var(--primary)' : mine === other ? 'var(--se-color-warning)' : 'var(--se-color-ink)';
   const availableScoringModes = effectiveFormat?.scoringModes || sportConfig?.config?.scoringModes || ['rally'];
-  const showServeIndicator = scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
+  const showServeIndicator = rules?.version === 1 || scoringMode === 'side-out' || Boolean(sportConfig?.config?.serviceRotation);
   const leftServing = sidesSwapped ? servingTeam === 2 : servingTeam === 1;
   const rightServing = sidesSwapped ? servingTeam === 1 : servingTeam === 2;
-  const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally');
+  const canToggleScoringMode = availableScoringModes.includes('side-out') && availableScoringModes.includes('rally') && (rules.version === 0 || (!scoringStarted && history.length === 0));
   // Broadcast scorecard kind, derived from the sport's ENGINE rather than
   // hardcoded (#108). Every sport this scorer drives (volleyball, badminton,
   // tabletennis) is engine 'sets' and renders through the
@@ -637,17 +599,9 @@ export default function MonoSetsLiveScore() {
   // Tennis routes to its own scorer, so it never reaches here.
   const liveScorecardKind = sportConfig?.engine === 'sets' ? 'volleyball' : 'generic';
 
-  const { pointsPerSet, deciderPoints, winBy } = sportConfig.config;
+  const { winBy } = rules;
   const formatType = effectiveFormat.type || 'best-of';
-  const isDeciderSet = effectiveFormat.sets > 1 && currentSet === (effectiveFormat.sets - 1);
-  let targetPoints;
-  if (formatType === 'single') {
-    targetPoints = effectiveFormat.points;
-  } else if (isDeciderSet && deciderPoints) {
-    targetPoints = deciderPoints;
-  } else {
-    targetPoints = effectiveFormat.points || pointsPerSet;
-  }
+  const targetPoints = getCurrentSetTarget(currentSet);
   const isCurrentSetComplete = sets[currentSet]?.completed || false;
   const canScoreCurrentSet = !isCurrentSetComplete && !isInteractionLocked;
   const scoreCardAssistiveHint = isInteractionLocked
@@ -666,9 +620,37 @@ export default function MonoSetsLiveScore() {
     if (completion.locked) return;
     const next = scoringMode === 'side-out' ? 'rally' : 'side-out';
     if (!availableScoringModes.includes(next)) return;
+    if (rules.version === 1 && scoringStarted) return;
     setScoringMode(next);
-    setServingTeam(1);
+    if (rules.version === 1) updatePendingRules({ ...effectiveFormat, scoringMode: next });
+    if (rules.version === 0) setServingTeam(1);
   };
+
+  const updatePendingRules = (format) => {
+    if (scoringStarted || history.length || completion.locked) return;
+    const captured = freezeSetsFormat(sportConfig, { ...format, setsRules: undefined });
+    setFrozenFormat(captured);
+    setServingTeam(captured.setsRules.initialServer);
+    setScoringMode(captured.setsRules.scoringMode);
+    const updated = updateMatchInTournament(tournament, matchId, m => ({ ...m, format: captured }));
+    if (!saveSportTournament(sportConfig.storageKey, updated)) setSaveWarning('Save failed - storage may be full. Export your data.');
+  };
+  const chooseSetServer = (team) => {
+    if (completion.locked || isInteractionLocked) return;
+    if (team == null && servingTeam == null) return;
+    setHistory(prev => [...prev, { sets: structuredClone(sets), currentSet, servingTeam, sidesSwapped, scoringMode }].slice(-100));
+    const next = structuredClone(sets);
+    if (rules.serviceMode === 'alternating' || (!next[currentSet].score1 && !next[currentSet].score2)) next[currentSet] = { ...next[currentSet], firstServer: team };
+    setSets(next);
+    setServingTeam(rules.serviceMode === 'alternating' ? serveAfterPoint(rules, { score: next[currentSet], currentSet, sets: next, servingTeam: team }) : team);
+    setHasChanges(true);
+    broadcastIntentRef.current = { kind: 'serve', type: team == null ? 'correction' : 'serve_change', team: broadcastServer(team ?? servingTeam), value: 0, at: Date.now() };
+  };
+  const pendingRules = rules.version === 1 && !scoringStarted && history.length === 0;
+  const serviceControls = rules.version === 1 && <>
+    {pendingRules ? <SetsRulesControls sport={sport} format={effectiveFormat} onChange={updatePendingRules} names={[team1Name, team2Name]} />
+      : <ServerChoice label={rules.serviceMode === 'alternating' ? `First server this ${rules.unit.toLowerCase()}` : 'Serving team'} value={rules.serviceMode === 'alternating' ? firstServerForSet(rules, currentSet, sets) : servingTeam} onChange={chooseSetServer} names={[team1Name, team2Name]} />}
+  </>;
 
   if (isTeamColourTournamentSport(sport)) {
     const halves = [leftTeam, rightTeam].map(team => ({
@@ -680,8 +662,7 @@ export default function MonoSetsLiveScore() {
     }));
     const completedSets = sets.filter(s => s.completed);
     const wins = team => completedSets.filter(s => team === 1 ? s.score1 > s.score2 : s.score2 > s.score1).length;
-    // Ask the existing tournament completion predicate about the next point;
-    // quick-match rules differ and must not decide tournament cues.
+    // Probe the same frozen completion predicate that handles a scoring tap.
     const nextWinners = canScoreCurrentSet ? [1, 2].filter(team => {
       const next = { ...sets[currentSet] };
       next[team === 1 ? 'score1' : 'score2']++;
@@ -689,12 +670,12 @@ export default function MonoSetsLiveScore() {
     }) : [];
     const isMatchPoint = team => formatType === 'single' || wins(team) + 1 >= Math.ceil(effectiveFormat.sets / 2);
     const pointCue = nextWinners.length === 1
-      ? `${isMatchPoint(nextWinners[0]) ? 'Match' : 'Set'} point · ${nextWinners[0] === 1 ? team1Name : team2Name}`
+      ? `${isMatchPoint(nextWinners[0]) ? 'Match' : rules.unit} point · ${nextWinners[0] === 1 ? team1Name : team2Name}`
       : '';
     const last = history.at(-1);
     const undoSet = last?.sets[last.currentSet];
     const undoHint = undoSet
-      ? `back to ${halves.map(h => undoSet[h.team === 1 ? 'score1' : 'score2']).join('–')} · Set ${last.currentSet + 1}`
+      ? `back to ${halves.map(h => undoSet[h.team === 1 ? 'score1' : 'score2']).join('–')} · ${rules.unit} ${last.currentSet + 1}`
       : '';
     return (
       <>
@@ -704,14 +685,15 @@ export default function MonoSetsLiveScore() {
           title={`${team1Name} v ${team2Name}`}
           subtitle={`${sportConfig.name} · ${targetPoints} points to win · Win by ${winBy}`}
           sportColour={sportIdentity(sport)?.core}
+          setUnit={rules.unit}
           colourStyle={teamColourStyle}
           halves={halves}
           isLive={Boolean(live.isLive)}
-          meta={[formatType === 'single' ? 'Single Set' : `Set ${currentSet + 1} of ${effectiveFormat.sets}`, `Sets ${wins(leftTeam)}–${wins(rightTeam)}`]}
+          meta={[formatType === 'single' ? `Single ${rules.unit}` : `${rules.unit} ${currentSet + 1} of ${rules.sets}`, `${rules.unit}s ${wins(leftTeam)}–${wins(rightTeam)}`, ...(rules.version === 1 && servingTeam == null ? ['Server unknown'] : [])]}
           pointCue={pointCue}
           lastLine={isCurrentSetComplete ? 'Match complete · Finish to save result' : `Score ${leftScore}–${rightScore} · ${scoringMode === 'side-out' ? 'Side-out' : 'Rally'}`}
           setHistory={completedSets.map((s, i) => ({
-            label: `Set ${i + 1}`,
+            label: `${rules.unit} ${i + 1}`,
             left: s[leftTeam === 1 ? 'score1' : 'score2'], right: s[rightTeam === 1 ? 'score1' : 'score2'],
             winnerKey: s.score1 > s.score2 ? 'a' : 'b', winnerName: s.score1 > s.score2 ? team1Name : team2Name,
           }))}
@@ -725,13 +707,14 @@ export default function MonoSetsLiveScore() {
           options={(
             <BoardSheetGroup>
               <p className="sb-sheet-note"><b>{tournament.name}</b> · {targetPoints} points to win · Win by {winBy}</p>
+              {serviceControls}
               <button type="button" className="sb-row" onClick={navigateToTournament}>Back to tournament</button>
               {canToggleScoringMode && <button type="button" className="sb-row" title="Toggle scoring model" disabled={isInteractionLocked} onClick={handleToggleScoringMode}>{scoringMode === 'side-out' ? 'Side-out' : 'Rally'}</button>}
               {!isTouchDevice && <p className="sb-sheet-note">Keyboard: Q = {leftName} · P = {rightName} · U = Undo</p>}
             </BoardSheetGroup>
           )}
         />
-        {showSetWon && <div className="mono-set-won mono-set-won-animate">{setWonTeam} wins Set {setWonNumber}!</div>}
+        {showSetWon && <div className="mono-set-won mono-set-won-animate">{setWonTeam} wins {rules.unit} {setWonNumber}!</div>}
       </>
     );
   }
@@ -746,6 +729,8 @@ export default function MonoSetsLiveScore() {
           </div>
         )}
         {scoringPrompt.renderPrompt(confirmPendingPrompt)}
+        {rules.version === 1 && servingTeam == null && <p role="status">Server unknown</p>}
+        {rules.version === 1 && <details><summary style={{ minHeight: 44 }}>Service and rules</summary>{serviceControls}</details>}
         {/* Top bar */}
         <div className="mono-scorer-topbar">
           <span className="text-sm font-swiss" style={{ color: 'var(--se-color-ink-muted)' }}>
@@ -753,7 +738,7 @@ export default function MonoSetsLiveScore() {
           </span>
           <div className="mono-scorer-topbar-actions">
             <span className={`mono-badge ${isCurrentSetComplete ? 'mono-badge-final' : 'mono-badge-live'}`}>
-              {formatType === 'single' ? 'Single Set' : `Set ${currentSet + 1} of ${effectiveFormat.sets}`}
+              {formatType === 'single' ? `Single ${rules.unit}` : `${rules.unit} ${currentSet + 1} of ${rules.sets}`}
             </span>
             {canToggleScoringMode && (
               <button
@@ -792,7 +777,7 @@ export default function MonoSetsLiveScore() {
           aria-atomic="true"
           className="sr-only"
         >
-          {team1Name}: {sets[currentSet]?.score1 || 0}. {team2Name}: {sets[currentSet]?.score2 || 0}. Set {currentSet + 1} of {effectiveFormat?.sets || 0}.
+          {team1Name}: {sets[currentSet]?.score1 || 0}. {team2Name}: {sets[currentSet]?.score2 || 0}. {rules.unit} {currentSet + 1} of {rules.sets}.
         </div>
 
         {/* Score halves — same arena structure as the quick scorer: big tabular
@@ -891,7 +876,7 @@ export default function MonoSetsLiveScore() {
             <div className="flex justify-center gap-3 flex-wrap">
               {sets.filter(s => s.completed).map((s, i) => (
                 <span key={`completed-set-${i}-${s.score1}-${s.score2}`} className="font-mono">
-                  Set {i + 1}: {s.score1}-{s.score2}
+                  {rules.unit} {i + 1}: {s.score1}-{s.score2}
                 </span>
               ))}
             </div>
@@ -937,7 +922,7 @@ export default function MonoSetsLiveScore() {
       {/* Set Won Notification */}
       {showSetWon && (
         <div className="mono-set-won mono-set-won-animate">
-          {setWonTeam} wins Set {setWonNumber}!
+          {setWonTeam} wins {rules.unit} {setWonNumber}!
         </div>
       )}
     </div>

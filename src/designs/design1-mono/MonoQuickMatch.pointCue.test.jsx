@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { contrastRatio, paletteHex, paletteDarkHex } from './theme/palette';
+import { freezeSetsFormat } from '../../models/setsRules';
+import { getSportById } from '../../models/sportRegistry';
 
 const ctx = vi.hoisted(() => ({ sport: 'volleyball', draft: null, saved: null }));
 vi.mock('convex/react', () => ({
@@ -41,6 +43,19 @@ beforeEach(() => {
 });
 
 describe('sets board point cue', () => {
+  it('hides a side-out match point until that team serves, and restores it through undo', async () => {
+    const format = freezeSetsFormat(getSportById('volleyball'), { type: 'single', sets: 1, target: 25, scoringMode: 'side-out' });
+    seed('volleyball', 0, 0, { format, vScore1: 24, vScore2: 23, servingTeam: 2 });
+    render(<MonoQuickMatch />);
+    await screen.findByRole('button', { name: 'Add point for Royals' });
+    expect(cue()).toBeNull();
+    point('Royals');
+    expect(ctx.saved).toMatchObject({ vScore1: 24, vScore2: 23, servingTeam: 1 });
+    expect(cue()).toHaveTextContent('Match point');
+    undo();
+    expect(ctx.saved.servingTeam).toBe(2);
+    expect(cue()).toBeNull();
+  });
   it.each([['volleyball', 24, 'Set'], ['badminton', 20, 'Game'], ['tabletennis', 10, 'Set']])('updates %s words on points, Undo and remount', async (sport, edge, unit) => {
     seed(sport, edge - 1, edge - 1);
     const view = render(<MonoQuickMatch />);

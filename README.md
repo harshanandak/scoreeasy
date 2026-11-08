@@ -2,6 +2,8 @@
 
 Score Easy is a Vite + React sports scoring app that now ships with Clerk authentication, Convex persistence, and optional Sentry error reporting.
 
+Volleyball, badminton and table-tennis scoring use [versioned match rules](docs/sets-rules.md), with shared quick/tournament service and explicit unknown-server handling. Saved legacy matches retain their compatibility rules.
+
 ## Requirements
 
 - [Bun](https://bun.sh/) >=1.2.15 (the pinned version is in `package.json`)

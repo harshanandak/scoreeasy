@@ -1,5 +1,7 @@
 # Board G8: table tennis scoring screen
 
+2026-11-08 rules update: this document and its images describe the original board rollout. New matches now use the [shared versioned rules model](../../sets-rules.md), including two-point/deuce service in quick and tournament scoring, Game wording and an explicit unknown server. Legacy drafts retain the behavior documented below. The old screenshots do not validate the new controls.
+
 Table tennis quick matches now use the shipped team-colour sets board. The product change is the table tennis registry opt-in. Score, set completion, save/restore, Undo, and the live outbox retain their existing handlers.
 
 ## Evidence and limits

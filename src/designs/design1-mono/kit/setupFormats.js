@@ -4,6 +4,7 @@
 // cricketCalculations, quickMatchSets) and adds none: the summary states what the board will do.
 import { CRICKET_FORMATS } from '../../../utils/cricketCalculations';
 import { applyStandardDefaults } from '../../../utils/sportDefaults';
+import { freezeSetsFormat, supportsSetsRules } from '../../../models/setsRules';
 
 const CRICKET_LABELS = { test: 'Test', gully: 'Gully' };
 
@@ -134,6 +135,15 @@ function cricketLine(format) {
 
 function setsLine(sportConfig, format) {
   const config = sportConfig?.config || {};
+  if (supportsSetsRules(sportConfig?.id)) {
+    const rules = freezeSetsFormat(sportConfig, format).setsRules;
+    const parts = format.type === 'best-of'
+      ? [`${rules.points} points a ${rules.unit.toLowerCase()}`, `win by ${rules.winBy}`]
+      : [`First to ${rules.points}`, `win by ${rules.winBy}`];
+    if (rules.sets > 1 && rules.decidingPoints !== rules.points) parts.push(`decider to ${rules.decidingPoints}`);
+    if (rules.cap) parts.push(`cap ${rules.cap}`);
+    return parts.join(' · ');
+  }
   if (sportConfig?.id === 'tennis') {
     const games = format.points || config.pointsPerSet || 6;
     const at = format.customization?.tiebreakAt || config.tiebreakAt;

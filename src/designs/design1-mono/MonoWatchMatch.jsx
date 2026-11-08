@@ -438,6 +438,7 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
   if (scorecardKind === 'volleyball') {
     const state = {
       currentSet: snapshot.currentUnit,
+      unitLabel: snapshot.periodLabel?.startsWith('Game ') ? 'Game' : 'Set',
       pointsA: snapshot.pointsA,
       pointsB: snapshot.pointsB,
       setsA: snapshot.setsA,

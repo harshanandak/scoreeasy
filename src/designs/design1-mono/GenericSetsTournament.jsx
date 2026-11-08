@@ -34,13 +34,9 @@ export default function GenericSetsTournament() {
         if (completedSets.length === 0) return m;
         const t1SetsWon = completedSets.filter(s => s.score1 > s.score2).length;
         const t2SetsWon = completedSets.filter(s => s.score2 > s.score1).length;
-        let isComplete;
-        if (formatType === 'single') {
-          isComplete = completedSets.length > 0;
-        } else {
-          const setsToWin = Math.ceil((found.format?.sets || 3) / 2);
-          isComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
-        }
+        const setsToWin = m.format?.setsRules?.setsToWin
+          ?? (formatType === 'single' ? 1 : Math.ceil((found.format?.sets || 3) / 2));
+        const isComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
         if (isComplete && m.status !== 'completed') {
           needsRepair = true;
           return { ...m, status: 'completed', winner: t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id };

@@ -278,7 +278,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Single set' }));
     expect(screen.getByRole('button', { name: 'Single set' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Best of 3' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByText('First to 25 · win by 2')).toBeInTheDocument();
+    expect(screen.getByText('First to 25 · win by 2 · cap 27')).toBeInTheDocument();
   });
 
   it('gives goals sports a clock or a target under the format', async () => {
