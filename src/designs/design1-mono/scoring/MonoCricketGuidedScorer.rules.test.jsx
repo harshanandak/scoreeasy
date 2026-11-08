@@ -39,6 +39,23 @@ describe('guided setup rules', () => {
     expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ reason: 'allout', wkts: 2 }));
   });
 
+  it('blocks a phantom Mankad and other non-striker dismissals when only the last batter remains', () => {
+    const onComplete = vi.fn();
+    scorer({ overs: 5, players: 2, lastManStands: true }, { onComplete });
+    tap('Wicket'); tap('Bowled');
+    tap('More options');
+    expect(screen.getByRole('button', { name: 'Mankad' })).toBeDisabled();
+    tap('Mankad');
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(screen.getByTestId('hero-score')).toHaveTextContent('0/1');
+    tap('Retire');
+    expect(screen.getByRole('button', { name: '—' })).toBeDisabled();
+    tap('Cancel');
+    tap('Close sheet');
+    tap('Wicket'); tap('Run out');
+    expect(screen.getByRole('button', { name: 'Non-striker' })).toBeDisabled();
+  });
+
   it.each([
     [{ overs: 1, players: 11, ballsPerOver: 2 }, 2],
     [{ trackOvers: false, maxBalls: 2, players: 11 }, 2],

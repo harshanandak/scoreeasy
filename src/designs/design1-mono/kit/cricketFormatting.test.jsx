@@ -21,6 +21,29 @@ describe('cricket scorecard formatting across surfaces', () => {
   it('keeps a missing innings distinct from a recorded 0/0', () => {
     expect(scorePair({ sport: 'cricket', team1Score: result.team1Score })).toEqual(['13/1', 'Yet to bat']);
   });
+  it.each([
+    [{ score1: 151, score2: 140 }, ['151/?', '140/?']],
+    [{ team1Score: { runs: 151, wickets: 3, balls: 60 } }, ['151/3', 'Yet to bat']],
+    [{ team2Score: { runs: 140, wickets: 4, balls: 60 } }, ['Yet to bat', '140/4']],
+    [{ team1Score: { runs: 151, wickets: 3, balls: 60 }, score2: 140 }, ['151/3', '140/?']],
+    [{ team1Score: { runs: 0, wickets: 0, balls: 0 } }, ['0/0', 'Yet to bat']],
+    [{}, ['Yet to bat', 'Yet to bat']],
+  ])('uses the shared formatter for incomplete cricket result %j', (saved, expected) => {
+    const record = { sport: 'cricket', team1: 'Royals', team2: 'Strikers', ...saved };
+    const finish = finishFromQuickResult(record, { kind: 'cricket' });
+    expect([finish.team1.score, finish.team2.score]).toEqual(expected);
+    expect(scorePair(record)).toEqual(expected);
+    expect(cricketScoreLine(record)).toBe(`Royals ${expected[0]} · Strikers ${expected[1]}`);
+  });
+
+  it.each([
+    [{ score1: 151, score2: 140 }, { outcome: 'win', winnerSide: 'team1', headline: 'Royals', detail: 'Won by 11 points' }],
+    [{ score1: 151, score2: 140, winner: 'Draw' }, { outcome: 'draw', winnerSide: null, headline: 'Match drawn', detail: null }],
+    [{ team1Score: { runs: 151, wickets: 3, balls: 60 } }, { outcome: 'draw', winnerSide: null, headline: 'Match drawn', detail: null }],
+  ])('preserves the existing fallback winner policy for %j', (saved, expected) => {
+    expect(finishFromQuickResult({ team1: 'Royals', team2: 'Strikers', ...saved }, { kind: 'cricket' }))
+      .toMatchObject(expected);
+  });
   it('shows Test innings separately with wickets and declaration marks on every surface', () => {
     const test = { ...result, format: { totalInnings: 4 }, team1Id: 'a', team2Id: 'b',
       innings: [{ teamId: 'a', runs: 243, wickets: 10, balls: 300, allOut: true },
