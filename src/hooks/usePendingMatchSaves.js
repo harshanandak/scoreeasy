@@ -6,7 +6,7 @@ import { addAppStateChangeListener } from '../mobile/lifecycle';
 import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, PENDING_SAVES_CHANGED } from '../utils/pendingMatchSaves';
 
 export function matchSaveOwner({ isAuthenticated, clerkUser, user }) {
-  return isAuthenticated ? (clerkUser?.id || user?.clerkId || user?._id || null) : null;
+  return isAuthenticated ? (clerkUser?.id || user?._id || null) : null;
 }
 
 export function usePendingMatchSaves(authOverride, process = true) {

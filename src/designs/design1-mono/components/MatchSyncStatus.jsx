@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { usePendingMatchSaves } from '../../../hooks/usePendingMatchSaves';
 import { loadQuickMatch } from '../../../utils/storage';
+import { isMatchSaveConfirmed } from '../../../utils/pendingMatchSaves';
 import './matchSyncStatus.css';
 
 export default function MatchSyncStatus({ clientMatchId, quickMatchId, compact = false }) {
@@ -8,7 +9,8 @@ export default function MatchSyncStatus({ clientMatchId, quickMatchId, compact =
   if (!ownerId) return null;
   const pending = records.find((record) => record.payload.clientMatchId === clientMatchId);
   const local = loadQuickMatch(quickMatchId);
-  if (!pending && (compact || local?.syncOwnerId !== ownerId || local?.sync?.status !== 'synced')) return null;
+  const saved = isMatchSaveConfirmed(ownerId, clientMatchId) || (local?.syncOwnerId === ownerId && local?.sync?.status === 'synced');
+  if (!pending && (compact || !saved)) return null;
   const failed = pending?.state === 'failed';
   const waiting = pending && (navigator.onLine === false || pending.state === 'pending');
   const label = !pending ? 'Saved to your account' : failed && !waiting ? "Couldn't save" : waiting ? 'Waiting for connection' : 'Saving to your account…';

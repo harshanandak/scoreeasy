@@ -499,7 +499,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         setSaveWarning('Save failed - storage may be full. Export your data.');
         return false;
       }
-      void syncQuickMatch(entry);
+      void syncQuickMatch({ ...entry, clientMatchId: entry.clientMatchId || liveClientMatchId });
     } else {
       const storageKey = sportConfig?.storageKey || 'se_cricket';
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({

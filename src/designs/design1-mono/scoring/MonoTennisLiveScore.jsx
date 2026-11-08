@@ -635,7 +635,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       return false;
     }
 
-    void syncQuickMatch(entry);
+    void syncQuickMatch({ ...entry, clientMatchId: entry.clientMatchId || liveClientMatchId });
     clearData(quickDraftKey);
     setSaveWarning('');
     live.finalize({ resultType: entry.resultType });

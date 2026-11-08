@@ -95,3 +95,11 @@ it('queues during account bootstrap and sends when that same account is ready', 
   rerender({ ...initialProps, user: options.user });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
 });
+
+it('preserves a dedicated scorer clientMatchId on every retry', async () => {
+  save.mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue('server-id');
+  const { result } = renderHook(() => useMatchSync({ ...options, sport: 'tennis' }));
+  await act(async () => { await result.current.syncMatch({ ...match, clientMatchId: 'tennis:quick:m1' }); });
+  await act(async () => { await result.current.retrySync(); });
+  expect(save.mock.calls.map(([payload]) => payload.clientMatchId)).toEqual(['tennis:quick:m1', 'tennis:quick:m1']);
+});

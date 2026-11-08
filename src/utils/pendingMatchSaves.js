@@ -9,6 +9,8 @@ const volatileRecords = new Map();
 const keyFor = (ownerId, clientMatchId) => `${PREFIX}${encodeURIComponent(ownerId)}:${encodeURIComponent(clientMatchId)}`;
 const notify = () => globalThis.dispatchEvent(new Event(PENDING_SAVES_CHANGED));
 
+export const isMatchSaveConfirmed = (ownerId, clientMatchId) => confirmed.has(keyFor(ownerId, clientMatchId));
+
 export function pendingMatchSaves(ownerId) {
   if (!ownerId) return [];
   const records = new Map();

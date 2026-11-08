@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { normalizeMatchForConvex } from '../utils/normalizeMatch';
 import { enqueueMatchSave } from '../utils/pendingMatchSaves';
 import { usePendingMatchSaves } from './usePendingMatchSaves';
