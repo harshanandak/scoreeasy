@@ -892,7 +892,7 @@ export default function MonoQuickMatch() {
 
   // Live broadcast descriptor (shared across all three sport branches). clientMatchId
   // stays null until scoring starts (so the bar doesn't fire goLive on setup).
-  const liveScorecardKind = isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
+  const liveScorecardKind = isKabaddi && kabaddiMatch ? 'kabaddi' : isCricket ? 'cricket' : isGoals ? 'goals' : 'volleyball';
   const liveDescriptor = {
     snapshot: liveSnapshot,
     clientMatchId: liveMatchIdRef.current !== null ? buildQuickMatchClientId(sport, liveMatchIdRef.current) : null,
@@ -1771,13 +1771,15 @@ export default function MonoQuickMatch() {
     if (!current || completion.locked) return;
     const natural = current.state.phase === 'finishReview';
     const finalMatch = { ...current, ...(natural ? { state: finishKabaddi(current.state) } : {}), resultType: natural ? 'decided' : 'abandoned' };
-    const finalTotals = matchTotals(finalMatch);
-    void liveRef.current.point({ team: 'A', value: 0, at: Date.now(), type: 'kabaddi_state', kabaddi: { kind: 'state' }, snapshot: { pointsA: finalTotals[0], pointsB: finalTotals[1], setsA: 0, setsB: 0, setScores: [], currentUnit: finalMatch.state.half, kabaddi: kabaddiSnapshot(finalMatch) } });
     const [score1, score2] = matchTotals(finalMatch);
-    finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name, score1, score2,
+    const saved = finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name, score1, score2,
       winner: natural ? (score1 === score2 ? 'Draw' : score1 > score2 ? team1Name : team2Name) : null,
       resultType: natural ? 'decided' : 'abandoned', kabaddi: finalMatch,
       format, date: new Date().toISOString(), ...makeTimerFields() }, natural);
+    if (saved) {
+      const finalTotals = matchTotals(finalMatch);
+      void liveRef.current.point({ team: 'A', value: 0, at: Date.now(), type: 'kabaddi_state', kabaddi: { kind: 'state' }, snapshot: { pointsA: finalTotals[0], pointsB: finalTotals[1], setsA: 0, setsB: 0, setScores: [], currentUnit: finalMatch.state.half, kabaddi: kabaddiSnapshot(finalMatch) } });
+    }
   };
 
   const endMatchGoals = () => {

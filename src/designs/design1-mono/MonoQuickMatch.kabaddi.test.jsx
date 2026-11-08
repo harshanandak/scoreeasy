@@ -3,11 +3,11 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { createKabaddiMatch } from '../../utils/kabaddiQuickMatch';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 
-const ctx = vi.hoisted(() => ({ draft: null, fail: false, failBackup: false, backups: {}, writes: [], results: [] }));
+const ctx = vi.hoisted(() => ({ draft: null, fail: false, failBackup: false, backups: {}, writes: [], results: [], point: vi.fn() }));
 vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined, useConvex: () => ({ query: async () => null }) }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({ sport: 'kabaddi' }), useLocation: () => ({ pathname: '/kabaddi/quick', search: '' }), useSearchParams: () => [new URLSearchParams(''), vi.fn()] }));
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
-vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
+vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: ctx.point, undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
 vi.mock('../../utils/storage', () => ({
   listDataKeys: () => [], loadQuickMatch: () => null, saveQuickMatch: data => { if (ctx.fail) return false; ctx.results.push(data); return true; }, clearData: () => true, isStaleQuickMatchDraft: () => false,
   loadData: (key, fallback) => key.includes('_before_') ? ctx.backups[key] || fallback : key.startsWith('se_quickmatch_draft_kabaddi') ? ctx.draft : fallback,
@@ -22,7 +22,7 @@ vi.mock('../../utils/storage', () => ({
 const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
 
 beforeEach(() => {
-  vi.useFakeTimers(); ctx.fail = false; ctx.failBackup = false; ctx.backups = {}; ctx.writes = []; ctx.results = [];
+  vi.useFakeTimers(); ctx.point.mockClear(); ctx.fail = false; ctx.failBackup = false; ctx.backups = {}; ctx.writes = []; ctx.results = [];
   const format = { kabaddiRules: resolveKabaddiRules('quick') };
   ctx.draft = { phase: 'scoring', sport: 'kabaddi', quickMatchId: 'raid-game', team1Name: 'Royals', team2Name: 'Strikers', format,
     kabaddi: createKabaddiMatch({ format, names: ['Royals', 'Strikers'], colours: [undefined, undefined] }) };
@@ -31,6 +31,14 @@ afterEach(() => vi.useRealTimers());
 const start = () => fireEvent.click(screen.getByRole('button', { name: 'Raid by Royals' }));
 
 describe('kabaddi raid route', () => {
+  it('keeps a failed early Finish local instead of publishing abandonment', () => {
+    render(<MonoQuickMatch />); ctx.fail = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    expect(screen.getByRole('button', { name: 'Raid by Royals' })).toBeInTheDocument();
+    expect(ctx.point).not.toHaveBeenCalled();
+  });
+
   it('uses the shared abandoned outcome after an early raid-game finish', () => {
     render(<MonoQuickMatch />);
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
