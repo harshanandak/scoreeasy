@@ -1,6 +1,6 @@
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   loadCompletedQuickMatches,
@@ -9,7 +9,10 @@ import {
 import { loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from '../../utils/quickStatsRecovery';
 import { getSportsList } from '../../models/sportRegistry';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
-import SportIcon from './SportIcon';
+import { sportIdentityVars } from '../../lib/sportIdentity';
+import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, SportBadge } from './kit/KitParts';
+import './kit/history.css';
+import './kit/stats.css';
 import { PLAY_HUB_PATH } from '../../utils/appPaths';
 
 function getMatchDate(match) {
@@ -182,6 +185,7 @@ function buildQuickInsights(matches) {
   const averageMargin = sorted.length > 0 ? (totalMargin / sorted.length).toFixed(1) : '0.0';
 
   return {
+    formResults: lastFive.map((winner) => (isDrawWinner(winner) ? 'Draw' : winner)),
     topTeam: topTeam ? `${topTeam.name} ${topTeam.won}W / ${topTeam.winRate}%` : 'No winner yet',
     form: lastFive.length > 0 ? lastFive.map((winner) => (isDrawWinner(winner) ? 'Draw' : winner)).join(' -> ') : 'No form yet',
     streak: currentStreak > 0 ? `${latestWinner} W${currentStreak}` : 'No active streak',
@@ -219,13 +223,40 @@ function recordTeamResult(teamMap, team1, team2, score1, score2) {
   }
 }
 
+const OVERVIEW = 'overview';
+const QUICK = 'quick';
+
+function BoltMark() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M13 3L5 13.5h6L10 21l8-10.5h-6L13 3z" />
+    </svg>
+  );
+}
+
+function CrossMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" focusable="false">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
 // The stats body, shell-free, so the merged History page (MonoHistory) hosts it
 // under its own page shell + tab bar. There is no standalone /statistics route any
 // more — /statistics and /stats redirect to /history — so this panel is the only
 // entry point (the former default-export wrapper was unreachable and was removed).
 export function MonoStatisticsPanel() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(OVERVIEW);
+
+  // The chip row scrolls sideways on a phone: keep the chosen chip in view (a By sport row can pick
+  // one that sits off the right edge).
+  const chipsRef = useRef(null);
+  useEffect(() => {
+    const chip = chipsRef.current?.querySelector('[aria-pressed="true"]');
+    if (typeof chip?.scrollIntoView === 'function') chip.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [tab]);
   const [sportsData, setSportsData] = useState({});
   const [quickMatches, setQuickMatches] = useState([]);
   const [deleteConfirmation, setPendingDelete] = useState(null);
@@ -346,315 +377,231 @@ export function MonoStatisticsPanel() {
   const hasAnyData = sportsWithData.length > 0 || quickMatches.length > 0;
   const hasQuickRecovery = pendingDelete?.deleted || pendingClear?.cleared;
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    ...sportsWithData.map(d => ({ id: d.sport.id, label: d.sport.name })),
-    ...(quickMatches.length > 0 || hasQuickRecovery ? [{ id: 'quick', label: 'Quick' }] : []),
+    { id: OVERVIEW, label: 'Overview' },
+    ...sportsWithData.map(d => ({ id: d.sport.id, label: d.sport.name, sportId: d.sport.id })),
+    ...(quickMatches.length > 0 || hasQuickRecovery ? [{ id: QUICK, label: 'Quick' }] : []),
   ];
+  const startQuickMatch = () => navigate(PLAY_HUB_PATH);
+  const undo = pendingDelete?.deleted
+    ? { label: 'Undo delete', onClick: undoDeleteQuickMatch }
+    : pendingClear?.cleared ? { label: 'Undo clear', onClick: undoClearAllQuickMatches } : null;
 
   return (
-    <>
-        {/* Tabs */}
-        <div className="mono-tabs" role="tablist" aria-label="Statistics categories">
+    <div className="kit-stats">
+      {/* A single category is no choice: the chips only appear once there is something to switch to.
+          Plain pressed buttons, as History's sport chips: no tab role, so no arrow-key promise. */}
+      {tabs.length > 1 && (
+        <div className="kit-chips" role="group" aria-label="Statistics categories" ref={chipsRef}>
           {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              role="tab"
-              aria-selected={tab === t.id}
-              aria-controls={`tabpanel-stats-${t.id}`}
-              className={tab === t.id ? 'mono-tab mono-tab-active' : 'mono-tab'}
-            >
-              {t.label}
-            </button>
+            <FilterChip key={t.id} label={t.label} sportId={t.sportId} pressed={tab === t.id} onClick={() => setTab(t.id)} />
           ))}
         </div>
+      )}
 
-        {/* Overview */}
-        {tab === 'overview' && (
-          <div id="tabpanel-stats-overview" role="tabpanel" aria-label="Overview">
-            {!hasAnyData ? (
-              /* Lead with the CTA — skip the zero-value stat grids entirely (I-013). */
-              <EmptyState
-                icon="📊"
-                label="No game data yet. Finish a quick match or tournament to unlock win rates, streaks, and form."
-                primaryAction={{ label: 'Start quick match', onClick: () => navigate(PLAY_HUB_PATH) }}
-                secondaryAction={{ label: 'Create tournament', onClick: () => navigate(PLAY_HUB_PATH) }}
-              />
-            ) : (
+      {tab === OVERVIEW && (
+        <section id="stats-panel-overview" aria-label="Overview">
+          {!hasAnyData ? (
+            /* Lead with the CTA — skip the zero-value stat grids entirely (I-013). */
+            <StatsEmpty
+              id="stats-empty-title"
+              title="No stats yet"
+              text="Finish a quick match or tournament to unlock win rates, streaks, and form."
+              onStart={startQuickMatch}
+              withArt
+            />
+          ) : (
             <>
-            {/* Importance tiers: performance first, records second, library totals last. */}
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Performance</p>
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              <InsightCard label="Top team" value={quickInsights.topTeam} />
-              <InsightCard label="Last 5 form" value={quickInsights.form} />
-              <InsightCard label="Current streak" value={quickInsights.streak} />
+              {/* Importance tiers: performance first, records second, library totals last. */}
+              <KitSection title="Performance" />
+              <div className="kit-insights">
+                <InsightCard label="Top team" value={quickInsights.topTeam} />
+                <InsightCard label="Current streak" value={quickInsights.streak} />
+                <section className="kit-card kit-insight kit-insight-wide" aria-labelledby="stats-form-label">
+                  <h3 id="stats-form-label">Last 5 form</h3>
+                  {quickInsights.formResults.length > 0 ? (
+                    <ul className="kit-form" aria-labelledby="stats-form-label">
+                      {quickInsights.formResults.map((winner, index) => <li key={`${index}-${winner}`}>{winner}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="is-quiet">No form yet</p>
+                  )}
+                </section>
+              </div>
+
+              <KitSection title="Records" />
+              <div className="kit-list">
+                <StatRow label="Head-to-head" value={quickInsights.rivalry} />
+                <StatRow label="Closest match" value={quickInsights.closest} />
+                <StatRow label="Biggest win" value={quickInsights.biggest} />
+              </div>
+
+              <KitSection title="By sport" />
+              <div className="kit-list">
+                {sportsWithData.map(sportData => (
+                  <button key={sportData.sport.id} type="button" className="kit-row" onClick={() => setTab(sportData.sport.id)}>
+                    <SportBadge sportId={sportData.sport.id} />
+                    <span className="kit-row-text">
+                      <span className="kit-row-title">{sportData.sport.name}</span>
+                      <span className="kit-row-sub">
+                        {pluralize(sportData.tournaments, 'tournament')} &middot; {pluralize(sportData.matches, 'match', 'matches')}
+                      </span>
+                    </span>
+                    <span className="kit-sport-row-end">{pluralize(sportData.teams.size, 'team')}<Chevron /></span>
+                  </button>
+                ))}
+                {quickMatches.length > 0 && (
+                  <button type="button" className="kit-row" onClick={() => setTab(QUICK)}>
+                    <span className="kit-badge kit-quick-badge" aria-hidden="true"><BoltMark /></span>
+                    <span className="kit-row-text">
+                      <span className="kit-row-title">Quick matches</span>
+                      <span className="kit-row-sub">{pluralize(quickMatches.length, 'match', 'matches')} played</span>
+                    </span>
+                    <span className="kit-sport-row-end"><Chevron /></span>
+                  </button>
+                )}
+              </div>
+
+              <KitSection title="Totals" />
+              <div className="kit-stat-grid">
+                <StatTile label="Tournaments" value={totalTournaments} />
+                <StatTile label="Matches" value={totalMatches} />
+                <StatTile label="Teams" value={totalTeams} />
+              </div>
+              <div className="kit-list" style={{ marginTop: 10 }}>
+                <StatRow label="Most played sport" value={quickInsights.topSport} />
+                <StatRow label="Draw rate" value={quickInsights.drawRate} />
+                <StatRow label="Avg margin" value={quickInsights.averageMargin} />
+              </div>
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Dynamic sport tabs */}
+      {sportsWithData.map(sportData => (
+        tab === sportData.sport.id && (
+          <section key={sportData.sport.id} id={`stats-panel-${sportData.sport.id}`} aria-label={sportData.sport.name}>
+            <KitSection title={sportData.sport.name} aside={<span>{pluralize(sportData.teams.size, 'team')}</span>} />
+            <TeamStatsTable
+              sportId={sportData.sport.id}
+              sportName={sportData.sport.name}
+              tournaments={sportData.tournamentsRaw}
+              engine={sportData.sport.engine}
+            />
+          </section>
+        )
+      ))}
+
+      {/* Quick Matches */}
+      {tab === QUICK && (
+        <section id="stats-panel-quick" aria-label="Quick matches">
+          {pendingDelete && !pendingDelete.deleted && (
+            <div className="kit-card kit-confirm" style={{ marginTop: 18 }}>
+              <p>Delete this quick stat?</p>
+              <p>{getQuickMatchLabel(pendingDelete.match)} will be removed from Statistics and History.</p>
+              <div className="kit-btnrow">
+                <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={() => setPendingDelete(null)}>Cancel</button>
+                <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={completeDeleteQuickMatch}>Delete</button>
+              </div>
             </div>
+          )}
 
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Records</p>
-            <div className="mono-stat-insight-grid grid gap-3 mb-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-              <InsightCard label="Head-to-head" value={quickInsights.rivalry} />
-              <InsightCard label="Closest match" value={quickInsights.closest} />
-              <InsightCard label="Biggest win" value={quickInsights.biggest} />
+          {pendingClear && !pendingClear.cleared && (
+            <div className="kit-card kit-confirm" style={{ marginTop: 18 }}>
+              <p>Clear all quick stats?</p>
+              <p>This removes quick matches from Statistics and History. You can undo before leaving this screen.</p>
+              <div className="kit-btnrow">
+                <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={() => setPendingClear(null)}>Cancel</button>
+                <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={completeClearAllQuickMatches}>Clear all</button>
+              </div>
             </div>
+          )}
 
-            <p className="font-mono" style={{ margin: '0 0 8px', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Totals</p>
-            <div className="mono-stat-insight-grid grid gap-3 mb-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))' }}>
-              <StatCard label="Tournaments" value={totalTournaments} />
-              <StatCard label="Matches" value={totalMatches} />
-              <StatCard label="Teams" value={totalTeams} />
-              <InsightCard label="Most played sport" value={quickInsights.topSport} />
-              <InsightCard label="Draw rate" value={quickInsights.drawRate} />
-              <InsightCard label="Avg margin" value={quickInsights.averageMargin} />
-            </div>
+          {quickMatches.length === 0 ? (
+            <StatsEmpty
+              id="stats-quick-empty-title"
+              title="No quick matches yet"
+              text="Score one match to unlock team form, streaks, and head-to-head stats."
+              onStart={startQuickMatch}
+            />
+          ) : (
+            <>
+              <div className="kit-stat-grid" style={{ marginTop: 18 }}>
+                <StatTile label="Quick matches" value={quickMatches.length} />
+                <StatTile label="Quick teams" value={quickTeamRows.length} />
+                <StatTile label="Draws" value={quickMatches.filter((match) => isDrawWinner(resolveWinner(match, getQuickScore(match)))).length} />
+              </div>
 
-            <hr className="mono-divider mb-6" />
+              <KitSection title="Quick team form" aside={<span>Win rate and margin</span>} />
+              <QuickTeamTable rows={quickTeamRows} />
 
-            <div className="mono-stat-list flex flex-col">
-              {/* Show all sports with data */}
-              {sportsWithData.map(sportData => (
-                <div key={sportData.sport.id} className="mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
-                  <div className="flex items-center gap-3">
-                    <SportIcon name={sportData.sport.name} size={24} color="var(--se-color-action)" />
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: '#111' }}>{sportData.sport.name}</p>
-                      <p className="text-xs mono-muted-text">
-                        {sportData.tournaments} tournament{sportData.tournaments > 1 ? 's' : ''} &middot; {sportData.matches} match{sportData.matches !== 1 ? 'es' : ''}
-                      </p>
+              <KitSection title="Recent quick matches" />
+              <div className="kit-list kit-recent">
+                {quickMatches.map(qm => {
+                  const score = formatQuickScore(qm);
+                  return (
+                    <div key={qm.id} className="kit-row">
+                      <span className="kit-row-text">
+                        <span className="kit-row-title">{qm.team1} vs {qm.team2}</span>
+                        <span className="kit-row-sub">
+                          {isAbandoned(qm) ? ABANDONED_LABEL : qm.winner} &middot; {new Date(qm.completedAt || qm.date || qm.createdAt).toLocaleDateString()}
+                        </span>
+                      </span>
+                      <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>
+                      <button
+                        type="button"
+                        className="kit-icon-btn"
+                        onClick={() => requestDeleteQuickMatch(qm)}
+                        title="Delete this match"
+                        aria-label={`Delete match ${qm.team1} vs ${qm.team2}, ${score}`}
+                      >
+                        <CrossMark />
+                      </button>
                     </div>
-                  </div>
-                  <span className="font-mono text-sm mono-muted-text">
-                    {sportData.teams.size} team{sportData.teams.size !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
 
-              {/* Quick matches */}
-              {quickMatches.length > 0 && (
-                <div className="mono-stat-card mono-stat-row flex items-center justify-between" style={{ padding: '16px 20px' }}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-mono mono-action-text" aria-hidden="true">Q</span>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: '#111' }}>Quick Matches</p>
-                      <p className="text-xs mono-muted-text">
-                        {quickMatches.length} match{quickMatches.length !== 1 ? 'es' : ''} played
-                      </p>
-                    </div>
-                  </div>
+              {quickMatches.length > 1 && !pendingClear && (
+                <div className="kit-stats-actions">
+                  <button type="button" className="kit-quiet" onClick={requestClearAllQuickMatches}>Clear all quick stats</button>
                 </div>
               )}
-
-            </div>
             </>
-            )}
-          </div>
-        )}
+          )}
+        </section>
+      )}
 
-        {/* Dynamic sport tabs */}
-        {sportsWithData.map(sportData => (
-          tab === sportData.sport.id && (
-            <div key={sportData.sport.id} id={`tabpanel-stats-${sportData.sport.id}`} role="tabpanel" aria-label={sportData.sport.name}>
-              <TeamStatsTable
-                sportId={sportData.sport.id}
-                sportName={sportData.sport.name}
-                sportIcon={sportData.sport.name}
-                tournaments={sportData.tournamentsRaw}
-                engine={sportData.sport.engine}
-              />
-            </div>
-          )
-        ))}
-
-        {/* Quick Matches */}
-        {tab === 'quick' && (
-          <div id="tabpanel-stats-quick" role="tabpanel" aria-label="Quick matches">
-            {statsStatus && (
-              <div
-                className="mono-card mono-status-card mb-4"
-                role="status"
-                aria-live="polite"
-                style={{ padding: '10px 12px' }}
-              >
-                {statsStatus}
-              </div>
-            )}
-
-            {pendingDelete && !pendingDelete.deleted && (
-              <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
-                <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Delete this quick stat?</p>
-                <p className="text-xs mb-4 mono-muted-text">
-                  {getQuickMatchLabel(pendingDelete.match)} will be removed from Statistics and History.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="mono-btn flex-1"
-                    style={{ minHeight: 44, padding: '10px' }}
-                    onClick={() => setPendingDelete(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="mono-btn-primary mono-btn-danger flex-1"
-                    style={{ minHeight: 44, padding: '10px' }}
-                    onClick={completeDeleteQuickMatch}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {pendingDelete?.deleted && (
-              <button
-                type="button"
-                className="mono-btn mb-4 w-full"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={undoDeleteQuickMatch}
-              >
-                Undo delete
-              </button>
-            )}
-
-            {pendingClear && !pendingClear.cleared && (
-              <div className="mono-card mono-danger-card mb-4" style={{ padding: '14px 16px' }}>
-                <p className="text-sm font-semibold mb-1" style={{ color: '#111' }}>Clear all quick stats?</p>
-                <p className="text-xs mb-4 mono-muted-text">
-                  This removes quick matches from Statistics and History. You can undo before leaving this screen.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="mono-btn flex-1"
-                    style={{ minHeight: 44, padding: '10px' }}
-                    onClick={() => setPendingClear(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="mono-btn-primary mono-btn-danger flex-1"
-                    style={{ minHeight: 44, padding: '10px' }}
-                    onClick={completeClearAllQuickMatches}
-                  >
-                    Clear all
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {pendingClear?.cleared && (
-              <button
-                type="button"
-                className="mono-btn mb-4 w-full"
-                style={{ minHeight: 44, padding: '10px' }}
-                onClick={undoClearAllQuickMatches}
-              >
-                Undo clear
-              </button>
-            )}
-
-            {quickMatches.length === 0 ? (
-              <EmptyState
-                icon={'\u26A1'}
-                label="No quick matches yet. Score one match to unlock team form, streaks, and head-to-head stats."
-                primaryAction={{ label: 'Start quick match', onClick: () => navigate(PLAY_HUB_PATH) }}
-                secondaryAction={{ label: 'View history', onClick: () => navigate('/history') }}
-              />
-            ) : (
-              <>
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <StatCard label="Quick matches" value={quickMatches.length} />
-                  <StatCard label="Quick teams" value={quickTeamRows.length} />
-                  <StatCard label="Draws" value={quickMatches.filter((match) => isDrawWinner(resolveWinner(match, getQuickScore(match)))).length} />
-                </div>
-
-                <div className="mono-table-panel mono-stat-panel mb-6" style={{ padding: 0 }}>
-                  <div className="flex items-center justify-between gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid #eee' }}>
-                    <h2 className="text-sm font-semibold" style={{ color: '#111', margin: 0 }}>Quick team form</h2>
-                    <span className="text-xs mono-muted-text">Win rate and margin</span>
-                  </div>
-                  <QuickTeamTable rows={quickTeamRows} />
-                </div>
-
-                {quickMatches.length > 1 && (
-                  <div className="flex justify-end mb-3">
-                    <button
-                      type="button"
-                      onClick={requestClearAllQuickMatches}
-                      className="mono-btn mono-btn-danger font-swiss text-xs"
-                      style={{
-                        minHeight: 40,
-                        padding: '0 12px',
-                      }}
-                    >
-                      Clear all quick stats
-                    </button>
-                  </div>
-                )}
-                <h2 className="text-sm font-semibold mb-3" style={{ color: '#111' }}>Recent quick matches</h2>
-                <div className="mono-stat-list flex flex-col">
-                  {quickMatches.map(qm => (
-                    <div key={qm.id} className="mono-stat-card mono-stat-row" style={{ padding: '12px 16px' }}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm" style={{ color: '#111' }}>
-                              {qm.team1} vs {qm.team2}
-                            </span>
-                            <span className="text-xs font-mono mono-muted-text">
-                              {formatQuickScore(qm)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs mono-action-text">{isAbandoned(qm) ? ABANDONED_LABEL : qm.winner}</span>
-                            <span className="text-xs mono-subtle-text">
-                              {new Date(qm.completedAt || qm.date || qm.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => requestDeleteQuickMatch(qm)}
-                          className="bg-transparent border-none cursor-pointer text-sm"
-                          style={{ color: 'var(--se-color-ink-muted)', minHeight: 40, minWidth: 40, padding: '2px 6px' }}
-                          title="Delete this match"
-                          aria-label={`Delete match ${qm.team1} vs ${qm.team2}, ${formatQuickScore(qm)}`}
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-    </>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div className="mono-stat-strip mono-stat-card mono-stat-number-card text-center" style={{ padding: '16px 12px' }}>
-      <p className="text-2xl font-bold font-mono mono-score" style={{ color: '#111' }}>{value}</p>
-      <p className="text-xs mt-1 mono-muted-text">{label}</p>
+      {(statsStatus || undo) && (
+        <div className="kit-toast">
+          <span role="status" aria-live="polite">{statsStatus}</span>
+          {undo && <button type="button" onClick={undo.onClick}>{undo.label}</button>}
+        </div>
+      )}
     </div>
   );
 }
 
-StatCard.propTypes = {
+function StatTile({ label, value }) {
+  return (
+    <div className="kit-card kit-stat">
+      <b>{value}</b>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+StatTile.propTypes = {
   label: PropTypes.string,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
 function InsightCard({ label, value }) {
   return (
-    <div className="mono-stat-strip mono-stat-card" style={{ padding: '14px 16px', minHeight: 82 }}>
-      <p className="text-xs uppercase mb-2 mono-muted-text" style={{ letterSpacing: '0.08em' }}>{label}</p>
-      <p className="text-sm font-semibold" style={{ color: '#111', lineHeight: 1.35 }}>{value}</p>
-    </div>
+    <section className="kit-card kit-insight">
+      <h3>{label}</h3>
+      <p className={String(value).startsWith('No ') ? 'is-quiet' : undefined}>{value}</p>
+    </section>
   );
 }
 
@@ -663,42 +610,89 @@ InsightCard.propTypes = {
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
-function QuickTeamTable({ rows }) {
-  if (rows.length === 0) return null;
-
+function StatRow({ label, value }) {
   return (
-    <div className="mono-table-scroll">
-      <table className="mono-data-table">
-        <caption className="sr-only">Quick match team form</caption>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #eee' }}>
-            <th scope="col" className="text-left" style={{ padding: '10px 12px' }}>Team</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>P</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>W</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>L</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>D</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 6px' }}>+/-</th>
-            <th scope="col" className="text-center font-mono" style={{ padding: '10px 12px' }}>Win%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
-              <th scope="row" className="font-medium mono-table-primary text-left" style={{ padding: '10px 12px' }}>{row.name}</th>
-              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.played}</td>
-              <td className="text-center font-mono mono-table-primary" style={{ padding: '10px 6px' }}>{row.won}</td>
-              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.lost}</td>
-              <td className="text-center font-mono" style={{ padding: '10px 6px' }}>{row.drawn}</td>
-              <td className={`text-center font-mono ${row.margin > 0 ? 'mono-table-action' : row.margin < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '10px 6px' }}>
-                {row.margin > 0 ? `+${row.margin}` : row.margin}
-              </td>
-              <td className="text-center font-mono mono-table-action" style={{ padding: '10px 12px' }}>{row.winRate}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="kit-row kit-stat-row">
+      <span className="kit-row-text">
+        <span className="kit-row-sub">{label}</span>
+        <span className="kit-row-title">{value}</span>
+      </span>
     </div>
   );
+}
+
+StatRow.propTypes = {
+  label: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+};
+
+/* One team per row: name and win rate on top, a win-rate bar, then the labelled numbers. Rows are
+   ARIA table rows (a visually hidden header row names every column) so the cells stay readable
+   and the numbers never scroll off a 360px screen. DOM order is P W L ... Win%; the grid places
+   Win% beside the name. */
+function TeamTable({ label, columns, rows, sportId }) {
+  return (
+    <div
+      className="kit-team-table"
+      role="table"
+      aria-label={label}
+      style={{ ...(sportId ? sportIdentityVars(sportId) : {}), '--kit-team-cols': columns.length }}
+    >
+      <div className="kit-team-header" role="row">
+        {['Team', ...columns.map((column) => column.header), 'Win rate'].map((header) => (
+          <span key={header} role="columnheader">{header}</span>
+        ))}
+      </div>
+      {rows.map((row) => (
+        <div key={row.name} className="kit-team-row" role="row">
+          <span className="kit-team-name" role="rowheader">{row.name}</span>
+          <span className="kit-win-bar" aria-hidden="true"><i style={{ width: `${row.winRate}%` }} /></span>
+          {columns.map((column) => (
+            <span key={column.header} className="kit-team-cell" role="cell" data-label={column.label}>
+              <span className={`kit-num${column.tone ? ` ${column.tone(row)}` : ''}`}>{column.value(row)}</span>
+            </span>
+          ))}
+          <span className="kit-team-win" role="cell" data-label="win rate">
+            <span className="kit-num">{row.winRate}%</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const signTone = (value) => {
+  if (Number(value) > 0) return 'kit-pos';
+  if (Number(value) < 0) return 'kit-neg';
+  return '';
+};
+
+TeamTable.propTypes = {
+  label: PropTypes.string.isRequired,
+  sportId: PropTypes.string,
+  columns: PropTypes.arrayOf(PropTypes.shape({
+    header: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    value: PropTypes.func.isRequired,
+    tone: PropTypes.func,
+  })).isRequired,
+  rows: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string,
+    winRate: PropTypes.number,
+  })).isRequired,
+};
+
+const QUICK_COLUMNS = [
+  { header: 'Played', label: 'P', value: (row) => row.played },
+  { header: 'Won', label: 'W', value: (row) => row.won },
+  { header: 'Lost', label: 'L', value: (row) => row.lost },
+  { header: 'Drawn', label: 'D', value: (row) => row.drawn },
+  { header: 'Margin', label: '+/-', value: (row) => (row.margin > 0 ? `+${row.margin}` : row.margin), tone: (row) => signTone(row.margin) },
+];
+
+function QuickTeamTable({ rows }) {
+  if (rows.length === 0) return null;
+  return <TeamTable label="Quick match team form" columns={QUICK_COLUMNS} rows={rows} />;
 }
 
 QuickTeamTable.propTypes = {
@@ -713,58 +707,43 @@ QuickTeamTable.propTypes = {
   })),
 };
 
-function EmptyState({ icon, label, primaryAction, secondaryAction }) {
-  const isEmoji = icon && icon.length <= 2;
+/* The Kit empty card (History's, with the same scorebook doodle on the main one): a title, one
+   line of why, and the one action. */
+function StatsEmpty({ id, title, text, onStart, withArt = false }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: '20vh' }}>
-      {isEmoji ? (
-        <span className="text-4xl mb-3">{icon}</span>
-      ) : (
-        <div className="mb-3"><SportIcon name={icon} size={36} color="var(--se-color-ink-muted)" /></div>
-      )}
-      <p className="text-sm mb-4 mono-muted-text" style={{ maxWidth: 340 }}>{label}</p>
-      {(primaryAction || secondaryAction) && (
-        <div className="flex flex-col sm:flex-row gap-2">
-          {primaryAction && (
-            <button
-              type="button"
-              className="mono-btn-primary"
-              style={{ minHeight: 44, padding: '10px 16px' }}
-              onClick={primaryAction.onClick}
-            >
-              {primaryAction.label}
-            </button>
-          )}
-          {secondaryAction && (
-            <button
-              type="button"
-              className="mono-btn"
-              style={{ minHeight: 44, padding: '10px 16px' }}
-              onClick={secondaryAction.onClick}
-            >
-              {secondaryAction.label}
-            </button>
-          )}
+    <section className="kit-card kit-empty" aria-labelledby={id}>
+      {withArt && <EmptyHistoryArt />}
+      <h2 id={id}>{title}</h2>
+      <p>{text}</p>
+      {onStart && (
+        <div className="kit-btnstack">
+          <button type="button" className="se-go" onClick={onStart}>
+            Start quick match <GoArrow />
+          </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
-EmptyState.propTypes = {
-  icon: PropTypes.string,
-  label: PropTypes.string,
-  primaryAction: PropTypes.shape({
-    label: PropTypes.string,
-    onClick: PropTypes.func,
-  }),
-  secondaryAction: PropTypes.shape({
-    label: PropTypes.string,
-    onClick: PropTypes.func,
-  }),
+StatsEmpty.propTypes = {
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  onStart: PropTypes.func,
+  withArt: PropTypes.bool,
 };
 
-function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // sportId intentionally omitted — unused param removed (S1854)
+const SPORT_COLUMNS = [
+  { header: 'Played', label: 'P', value: (row) => row.played },
+  { header: 'Won', label: 'W', value: (row) => row.won },
+  { header: 'Lost', label: 'L', value: (row) => row.lost },
+  { header: 'For', label: 'For', value: (row) => row.pointsFor },
+  { header: 'Against', label: 'Agst', value: (row) => row.pointsAgainst },
+  { header: 'Avg margin', label: 'Avg', value: (row) => row.averageMargin, tone: (row) => signTone(row.averageMargin) },
+];
+
+function TeamStatsTable({ sportId, sportName, tournaments, engine }) {
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -836,51 +815,26 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
       .sort((a, b) => b.won - a.won || b.pointsFor - a.pointsFor));
   }, [tournaments, engine]);
 
-  if (data.length === 0) return <EmptyState icon={sportIcon} label={`No ${sportName.toLowerCase()} data yet`} />;
+  if (data.length === 0) {
+    return (
+      <section className="kit-card kit-empty" aria-labelledby="stats-sport-empty-title">
+        <h2 id="stats-sport-empty-title">{`No ${sportName.toLowerCase()} data yet`}</h2>
+        <p>Teams appear here once a tournament match is finished.</p>
+      </section>
+    );
+  }
 
-  return (
-    <div className="mono-table-panel mono-stat-panel" style={{ padding: 0 }}>
-      <div className="mono-table-scroll">
-        <table className="mono-data-table">
-          <caption className="sr-only">{sportName} team statistics</caption>
-          <thead>
-            <tr style={{ borderBottom: '1px solid #eee' }}>
-              <th scope="col" className="text-left" style={{ padding: '12px 16px' }}>Team</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>P</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>W</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>L</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>For</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>Agst</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 8px' }}>Avg</th>
-              <th scope="col" className="text-center font-mono" style={{ padding: '12px 16px' }}>Win%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(row => (
-              <tr key={row.name} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                <th scope="row" className="font-medium mono-table-primary text-left" style={{ padding: '12px 16px' }}>{row.name}</th>
-                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.played}</td>
-                <td className="text-center font-mono mono-table-primary" style={{ padding: '12px 8px' }}>{row.won}</td>
-                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.lost}</td>
-                <td className="text-center font-mono mono-table-primary" style={{ padding: '12px 8px' }}>{row.pointsFor}</td>
-                <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.pointsAgainst}</td>
-                <td className={`text-center font-mono ${Number(row.averageMargin) > 0 ? 'mono-table-action' : Number(row.averageMargin) < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
-                <td className="text-center font-mono mono-table-action" style={{ padding: '12px 16px' }}>
-                  {row.resultMatches > 0 ? Math.round((row.won / row.resultMatches) * 100) : 0}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const rows = data.map((row) => ({
+    ...row,
+    winRate: row.resultMatches > 0 ? Math.round((row.won / row.resultMatches) * 100) : 0,
+  }));
+
+  return <TeamTable label={`${sportName} team statistics`} columns={SPORT_COLUMNS} rows={rows} sportId={sportId} />;
 }
 
 TeamStatsTable.propTypes = {
+  sportId: PropTypes.string,
   sportName: PropTypes.string,
-  sportIcon: PropTypes.string,
   tournaments: PropTypes.array,
   engine: PropTypes.string,
 };
-

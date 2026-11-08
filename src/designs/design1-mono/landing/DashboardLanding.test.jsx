@@ -166,7 +166,7 @@ describe('DashboardLanding (Kit Home)', () => {
     });
 
     it('keeps a sportless stored match without offering an invalid rematch path', () => {
-      seed([{ id: 'recent-1', team1: 'A', team2: 'B' }]);
+      seed([{ id: 'recent-1', team1: 'A', team2: 'B', status: 'completed' }]);
       const { container } = renderDashboard();
       expect(screen.getByRole('heading', { level: 1, name: 'Welcome back.' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Rematch:/ })).not.toBeInTheDocument();
@@ -184,7 +184,7 @@ describe('DashboardLanding (Kit Home)', () => {
       seed([volleyball, kabaddi, football]);
       const { container } = renderDashboard();
 
-      const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /v/ });
+      const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
       expect(rows).toHaveLength(2);
       expect(rows[0]).toHaveTextContent('Bulls v Panthers');
       expect(rows[0]).toHaveTextContent('38–31');
@@ -195,6 +195,64 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(badge.querySelector('svg')).toHaveAttribute('stroke-width', '2');
       expect(badge.style.getPropertyValue('--sport-core')).not.toBe('');
       expect(container.querySelectorAll('.kit-tile .kit-badge, .kit-tile svg')).toHaveLength(0);
+    });
+
+    describe('abandoned and decided results', () => {
+      // A stale `winner` can sit on an abandoned record (older finishes); the marker wins.
+      const cricket = {
+        id: 'cr-1', sport: 'cricket', team1: 'Lions', team2: 'Tigers', score1: 164, score2: 158, winner: 'Lions',
+        status: 'completed', team1Score: { runs: 164, wickets: 6 }, team2Score: { runs: 158, wickets: 9 },
+        date: iso(2 * day), completedAt: iso(2 * day),
+      };
+      const abandonedVolleyball = { ...volleyball, id: 'vb-ab', resultType: 'abandoned', winner: 'Royals', date: iso(3600e3), completedAt: iso(3600e3) };
+      const abandonedCricket = { ...cricket, id: 'cr-ab', resultType: 'abandoned', winner: 'Lions', date: iso(2 * day), completedAt: iso(2 * day) };
+      const decided = (record) => ({ ...record, resultType: 'decided' });
+
+      it('Last match: an abandoned record shows the label, no winner emphasis and no "won"', () => {
+        seed([abandonedVolleyball, kabaddi]);
+        const { container } = renderDashboard();
+        const card = container.querySelector('.kit-last');
+        expect(card.querySelectorAll('.kit-last-team.is-winner')).toHaveLength(0);
+        expect(within(card).getByRole('group', { name: 'Royals 3, Strikers 1. Abandoned · no result' })).toBeInTheDocument();
+        expect(card.querySelector('.kit-last-detail')).toHaveTextContent('Abandoned · no result');
+        expect(card.textContent).not.toMatch(/won|Completed/i);
+      });
+
+      it('Last match: a decided record still shows its winner', () => {
+        seed([decided(volleyball), kabaddi]);
+        const { container } = renderDashboard();
+        const card = container.querySelector('.kit-last');
+        expect(card.querySelectorAll('.kit-last-team.is-winner')).toHaveLength(1);
+        expect(within(card).getByRole('group', { name: 'Royals 3, Strikers 1. Royals won' })).toBeInTheDocument();
+      });
+
+      it('Recent: abandoned rows show the label, bold no team and never say "won"', () => {
+        // `volleyball` (yesterday) is the newest, so it is the Last match card; both abandoned records are Recent rows.
+        seed([volleyball, { ...abandonedVolleyball, date: iso(1.5 * day), completedAt: iso(1.5 * day) }, abandonedCricket, kabaddi]);
+        renderDashboard();
+        const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
+        const abandonedRows = rows.filter((row) => /Abandoned/.test(row.textContent));
+        expect(abandonedRows).toHaveLength(2);
+        abandonedRows.forEach((row) => {
+          expect(row.querySelector('strong')).toBeNull();
+          expect(row.textContent).toContain('Abandoned · no result');
+          expect(row.textContent).not.toMatch(/won/i);
+          expect(row.getAttribute('aria-label')).toContain('Abandoned · no result');
+          expect(row.getAttribute('aria-label')).not.toMatch(/won/i);
+        });
+      });
+
+      it('Recent: a decided row still bolds its winner and says who won', () => {
+        seed([volleyball, decided(kabaddi), decided(cricket)]);
+        renderDashboard();
+        const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
+        const bulls = rows.find((row) => /Bulls/.test(row.textContent));
+        expect(bulls.querySelector('strong')).toHaveTextContent('Bulls');
+        expect(bulls).toHaveAccessibleName(/Bulls won/);
+        const lions = rows.find((row) => /Lions/.test(row.textContent));
+        expect(lions.textContent).toMatch(/Lions won/);
+        expect(lions).toHaveAccessibleName(/Lions won/);
+      });
     });
 
     it('greets a signed-in scorer by name with the underline, and the avatar opens the profile', async () => {
@@ -253,6 +311,102 @@ describe('DashboardLanding (Kit Home)', () => {
       seed([volleyball]);
       renderDashboard();
       expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('with matches in progress (Home v2)', () => {
+    const draft = (sport, id, overrides = {}) => {
+      const value = {
+        sport, quickMatchId: id, phase: 'scoring', team1Name: `Royals ${id}`, team2Name: 'Strikers',
+        vScore1: 12, vScore2: 9, gScore1: 12, gScore2: 9, currentSet: 0,
+        sets: [{ score1: 12, score2: 9, completed: false }], format: { type: 'single', target: 25 },
+        updatedAt: iso(3600e3), ...overrides,
+      };
+      globalThis.localStorage.setItem(`se_quickmatch_draft_${sport}_${id}`, JSON.stringify(value));
+    };
+    const cricket = {
+      id: 'cr-1', sport: 'cricket', team1: 'Lions', team2: 'Tigers', score1: 164, score2: 158, winner: 'Lions',
+      status: 'completed', team1Score: { runs: 164, wickets: 6 }, team2Score: { runs: 158, wickets: 9 },
+      date: iso(2 * day), completedAt: iso(2 * day),
+    };
+    const seedTwoInProgress = () => { draft('volleyball', 1); draft('kabaddi', 2, { updatedAt: iso(7200e3) }); };
+
+    it('never says "0 matches scored" beside matches in progress; it says how many are in progress', () => {
+      seedTwoInProgress();
+      renderDashboard();
+      expect(screen.getByRole('heading', { name: 'In progress' })).toBeInTheDocument();
+      expect(screen.queryByText(/0 matches scored/)).not.toBeInTheDocument();
+      expect(screen.getByText('2 matches in progress')).toBeInTheDocument();
+    });
+
+    it('counts only finished matches as scored', () => {
+      seedTwoInProgress();
+      // An in-progress summary and a shell with no result are not finished matches.
+      seed([volleyball, { id: 'open', sport: 'cricket', team1: 'A', team2: 'B', status: 'in-progress' }, { id: 'shell', sport: 'football', team1: 'C', team2: 'D', date: iso(day) }]);
+      renderDashboard();
+      expect(screen.getByText('1 match scored this week')).toBeInTheDocument();
+    });
+
+    it('offers one obvious Start a match as the only Go, and it opens the play hub', async () => {
+      seedTwoInProgress();
+      seed([volleyball, kabaddi]);
+      const { container } = renderDashboard();
+      const gos = container.querySelectorAll('.se-go');
+      expect(gos).toHaveLength(1);
+      expect(gos[0]).toHaveAccessibleName('Start a match');
+      expect(gos[0].closest('.kit-home-cta')).not.toBeNull();
+      fireEvent.click(gos[0]);
+      await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/play'));
+    });
+
+    it('keeps quick-start tiles for the sports in progress when nothing is finished yet', () => {
+      seedTwoInProgress();
+      renderDashboard();
+      expect(within(screen.getByRole('region', { name: 'Recent' })).getByText('Finished matches will appear here')).toBeInTheDocument();
+      expect(within(screen.getByRole('region', { name: 'Quick start' })).getAllByRole('button').map((b) => b.dataset.sport))
+        .toEqual(['volleyball', 'kabaddi']);
+    });
+
+    it('lists the last 3 finished matches, newest first, with History scores, and See all opens History', async () => {
+      seedTwoInProgress();
+      seed([football, volleyball, kabaddi, cricket]);
+      const { container } = renderDashboard();
+      expect(screen.queryByRole('heading', { name: 'Last match' })).not.toBeInTheDocument();
+      // The underline still takes the last match's sport colour, as it does with the card.
+      expect(container.querySelector('[data-screen="home"]').style.getPropertyValue('--kit-underline')).not.toBe('');
+      const recent = screen.getByRole('region', { name: 'Recent' });
+      const rows = within(recent).getAllByRole('button', { name: /View details/ });
+      expect(rows.map((row) => row.querySelector('.kit-row-title').textContent)).toEqual(['Royals v Strikers', 'Lions 164/6 · Tigers 158/9', 'Bulls v Panthers']);
+      expect(rows[0]).toHaveAccessibleName('Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details');
+      // Cricket shows runs and wickets from the shared cricket formatter, the same line History shows,
+      // and has no separate score column.
+      expect(rows[1].querySelector('.kit-row-score')).toBeNull();
+      expect(rows[1]).toHaveAccessibleName(/^Lions 164\/6 · Tigers 158\/9, Lions won, Cricket, /);
+      fireEvent.click(within(recent).getByRole('button', { name: 'See all' }));
+      await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/history'));
+    });
+
+    it('drops the start button and recounts once the last match in progress is deleted', async () => {
+      draft('volleyball', 1);
+      seed([volleyball, kabaddi]);
+      const { container } = renderDashboard();
+      expect(screen.getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Delete Volleyball: Royals 1/ }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+      await waitFor(() => expect(screen.queryByRole('heading', { name: 'In progress' })).not.toBeInTheDocument());
+      expect(screen.queryByRole('button', { name: 'Start a match' })).not.toBeInTheDocument();
+      // Back to the returning Home: the last match is the hero and Rematch is the only Go.
+      expect(screen.getByRole('heading', { name: 'Last match' })).toBeInTheDocument();
+      expect(container.querySelectorAll('.se-go')).toHaveLength(1);
+      expect(screen.getByText('2 matches scored this week')).toBeInTheDocument();
+    });
+
+    it('returns to first run when the only match in progress is deleted', async () => {
+      draft('volleyball', 1);
+      renderDashboard();
+      fireEvent.click(screen.getByRole('button', { name: /Delete Volleyball: Royals 1/ }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+      expect(await screen.findByRole('heading', { name: 'Play your first match.' })).toBeInTheDocument();
     });
   });
 
