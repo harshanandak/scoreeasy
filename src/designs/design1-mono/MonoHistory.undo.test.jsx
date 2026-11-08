@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import MonoHistory from './MonoHistory';
 import { loadQuickMatches, saveQuickMatches } from '../../utils/storage';
+import { removeMatchHistory, restoreMatchHistory } from '../../utils/matchHistoryRecovery';
 import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 
 const RECOVERY_KEY = 'se_matches_pending_undo';
@@ -207,5 +208,48 @@ describe('Matches operation-bound Undo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
     expect(ids()).toEqual(['first', 'middle', 'last']);
     expect(legacy()).toEqual([old]);
+  });
+
+  it('keeps all five original recoveries and a partial sixth Clear restorable after both writes fail', () => {
+    const operations = Array.from({ length: 5 }, (_, index) => {
+      const match = completed(`capacity-${index}`);
+      saveQuickMatches([...loadQuickMatches(), match]);
+      return removeMatchHistory(match.id, 'delete');
+    });
+    const old = olderMatch('Old court');
+    localStorage.setItem('gs_history', JSON.stringify([old]));
+    mount();
+    const setItem = Storage.prototype.setItem;
+    let olderFailed = false;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === 'gs_history') {
+        olderFailed = true;
+        throw new Error('older write failed');
+      }
+      if (key === 'se_quickmatches' && olderFailed) throw new Error('rollback failed');
+      return setItem.call(this, key, value);
+    });
+    clear();
+    expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
+    failure.mockRestore();
+    const stored = JSON.parse(localStorage.getItem(RECOVERY_KEY));
+    const partial = stored.at(-1);
+    const results = operations.map(operation => restoreMatchHistory(operation.id));
+    results.push(restoreMatchHistory(partial.id));
+    expect(results, 'every original operation and partial Clear must remain restorable').toEqual(Array(6).fill(true));
+    const expected = ['first', 'middle', 'last', ...operations.map((_, index) => `capacity-${index}`)];
+    expect(new Set(ids())).toEqual(new Set(expected));
+    expect(ids()).toHaveLength(expected.length);
+    expect(legacy()).toEqual([old]);
+    expect(stored.map(operation => operation.id)).toEqual([...operations.map(operation => operation.id), partial.id]);
+  });
+
+  it('revokes earlier Matches Undo operations after a successful deliberate Matches Clear', () => {
+    const removed = removeMatchHistory('middle', 'delete');
+    const cleared = removeMatchHistory(null, 'clear');
+    expect(restoreMatchHistory(removed.id)).toBe('unavailable');
+    expect(ids()).toEqual([]);
+    expect(restoreMatchHistory(cleared.id)).toBe(true);
+    expect(ids()).toEqual(['first', 'last']);
   });
 });
