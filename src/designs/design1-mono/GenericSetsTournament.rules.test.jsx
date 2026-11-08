@@ -4,11 +4,11 @@ import { freezeSetsFormat } from '../../models/setsRules';
 import { getSportById } from '../../models/sportRegistry';
 import GenericSetsTournament from './GenericSetsTournament';
 
-const h = vi.hoisted(() => ({ tournament: null, save: vi.fn(() => true) }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({ sport: 'badminton', id: '1' }) }));
+const h = vi.hoisted(() => ({ tournament: null, sport: 'badminton', save: vi.fn(() => true) }));
+vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({ sport: h.sport, id: '1' }) }));
 vi.mock('../../utils/storage', () => ({ loadSportTournaments: () => [h.tournament], saveSportTournament: h.save }));
 
-beforeEach(() => { vi.clearAllMocks(); });
+beforeEach(() => { vi.clearAllMocks(); h.sport = 'badminton'; });
 
 describe('tournament completion repair uses frozen match length', () => {
   it.each([
@@ -38,5 +38,44 @@ describe('tournament completion repair uses frozen match length', () => {
     render(<GenericSetsTournament />);
     expect(await screen.findByText('Completed')).toBeTruthy();
     expect(h.save.mock.calls.at(-1)[1].matches[0]).toMatchObject({ status: 'completed', resultType: 'decided', winner: 1 });
+  });
+});
+
+describe('group card set outcomes', () => {
+  it.each(['abandoned', 'decided'])('renders a %s volleyball result without inventing a won set', async (resultType) => {
+    h.sport = 'volleyball';
+    const abandoned = resultType === 'abandoned';
+    h.tournament = {
+      id: 1, name: 'Club Cup', format: { type: 'best-of', sets: 3, points: 25 },
+      teams: [{ id: 1, name: 'Alpha' }, { id: 2, name: 'Beta' }],
+      matches: [{
+        id: 'm1', team1Id: 1, team2Id: 2, status: 'completed', resultType,
+        winner: abandoned ? null : 1,
+        sets: abandoned ? [{ score1: 2, score2: 1, completed: false }]
+          : [{ score1: 25, score2: 23, completed: true }, { score1: 25, score2: 20, completed: true }],
+      }],
+      knockoutMatches: [],
+    };
+    const { container } = render(<GenericSetsTournament />);
+    await screen.findByText('Alpha');
+    const totals = [...container.querySelectorAll('.text-3xl')].map(node => node.textContent);
+    expect.soft(totals, 'only completed sets count toward group-card totals').toEqual(abandoned ? ['0', '0'] : ['2', '0']);
+    expect.soft(screen.queryByText(abandoned ? 'Abandoned · no result' : 'Completed'), 'group-card outcome label').toBeInTheDocument();
+    const chips = container.querySelectorAll('span.rounded.font-mono');
+    for (const chip of chips) {
+      if (abandoned) {
+        expect.soft(chip, 'abandoned group-card chip has no winner colour').not.toHaveStyle({ background: '#dcfce7' });
+        expect.soft(chip, 'abandoned group-card chip has no loser colour').not.toHaveStyle({ background: '#fee2e2' });
+        expect.soft(chip.firstElementChild, 'abandoned group-card score has no winner emphasis').toHaveStyle({ fontWeight: 'normal' });
+      } else {
+        expect(chip, 'decided group-card winning sets stay green').toHaveStyle({ background: '#dcfce7' });
+        expect(chip.firstElementChild).toHaveStyle({ fontWeight: '600' });
+      }
+    }
+    expect(chips).toHaveLength(abandoned ? 1 : 2);
+    if (!abandoned) {
+      expect(screen.getByText('Alpha')).toHaveStyle({ color: '#111' });
+      expect(screen.getByText('Beta')).toHaveStyle({ color: '#888' });
+    }
   });
 });
