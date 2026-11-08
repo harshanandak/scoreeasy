@@ -237,3 +237,8 @@
 
 .kl-raider-select { display: grid; gap: 6px; margin-bottom: 10px; }
 .kl-raider-select select { min-height: 48px; width: 100%; }
+
+.kl-tools { display: flex; align-items: stretch; gap: 8px; }
+.kl-tools .kl-mode { flex: 1 1 auto; min-width: 0; margin: 0; }
+.kl-tools .kl-counts { flex: 0 0 160px; }
+.kl-tools button { min-height: 48px; min-width: 0; font-size: 0.85rem; }

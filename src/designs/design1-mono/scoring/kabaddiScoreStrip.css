@@ -298,3 +298,5 @@
   .k5-moment { animation: none; }
   .k5-flash-wrap { animation-duration: 1ms; }
 }
+
+.k5-pip.out { border-style: dashed; }

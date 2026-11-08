@@ -268,6 +268,7 @@ export function KabaddiLiveBoard({
         {live ? (
           <div className={`kl-live kl-def-${teamKey(defending)} kl-rd-${teamKey(raider)}`}>
             <p className="kl-hint">{mode === 'out' ? `Tap each ${names[defending]} player who stepped out of the court` : `Tap each ${names[defending]} player the raider touches`}</p>
+            <div className="kl-tools">
             <div className="kit-seg kl-mode" role="group" aria-label="What a tap on a player marks">
               <button type="button" aria-pressed={mode === 'touched'} onClick={() => onMode('touched')}>Touched</button>
               <button type="button" disabled={view.rules.boundary === 'none'} aria-pressed={mode === 'out'} onClick={() => onMode('out')}>Stepped out</button>
@@ -276,6 +277,7 @@ export function KabaddiLiveBoard({
               {(moreCounts ? tokens.filter(p => p.on).map((_, i) => i + 1).filter(n => n >= 3) : [1, 2]).map(n => <button key={n} type="button" disabled={n > tokens.filter(p => p.on).length} onClick={() => { onCount(n); setMoreCounts(false); }}>+{n}</button>)}
               <button type="button" disabled={tokens.filter(p => p.on).length < 3} onClick={() => setMoreCounts(v => !v)}>{moreCounts ? '1 / 2' : '3+'}</button>
             </div>}
+            </div>
             <div className="kl-tokens" role="group" aria-label={`${names[defending]} on the mat`}>
               {tokens.map((p) => (
                 <button key={p.slot} type="button" className={`se-ctl kl-token${p.mark ? ` kl-token-${p.mark}` : ''}${p.on ? '' : ' kl-token-gone'}${named ? '' : ' kl-token-num'}`}
