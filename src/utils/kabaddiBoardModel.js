@@ -222,7 +222,7 @@ export function boardView(match, now) {
     timed: state.rules.end.kind === 'timed',
     playerOuts: state.rules.strategy === 'rectangularOuts',
     rules: state.rules,
-    progress: state.rules.end.kind === 'target' ? `First to ${state.rules.end.points}` : state.rules.end.kind === 'raids' ? `${state.raidsByTeam.join('?')} of ${state.rules.end.raidsPerTeam} raids each` : null,
+    progress: state.rules.end.kind === 'target' ? `First to ${state.rules.end.points}` : state.rules.end.kind === 'raids' ? `${state.raidsByTeam.join('\u2013')} of ${state.rules.end.raidsPerTeam} raids each` : null,
     raidingTeam: state.nextRaidTeam,
     raidNumber: state.raidNumber + 1,
     raidActive: Boolean(state.activeRaid),

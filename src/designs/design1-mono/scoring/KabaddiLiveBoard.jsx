@@ -324,7 +324,7 @@ export function KabaddiLiveBoard({
             {showRaidBy && (
               <button type="button" className={`se-ctl kl-raidby kl-raidby-${teamKey(raider)}`} aria-label={`Raid by ${names[raider]}`} onClick={onRaidBy}>
                 <b>Raid by {names[raider]}</b>
-                <small>Raid {view.raidNumber} · starts the {Math.round(view.raidTotalMs / 1000)} second clock</small>
+                <small>Raid {view.raidNumber}{view.raidTotalMs === null ? ' - mark what happens' : ` - starts the ${Math.round(view.raidTotalMs / 1000)} second clock`}</small>
               </button>
             )}
           </>

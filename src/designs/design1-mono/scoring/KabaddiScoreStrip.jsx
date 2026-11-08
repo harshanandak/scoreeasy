@@ -56,7 +56,7 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
                 <span className="k5-name-text">{names[team]}</span>
               </span>
               {gain > 0 && <em className="k5-pend" aria-label={`${gain} pending`}>+{gain}</em>}
-              <span className="k5-score">{view.totals[team]}</span>
+              <span className="k5-score" aria-label={`${names[team]} score`}>{view.totals[team]}</span>
               <span className="k5-foot">
                 {view.playerOuts && <>
                 <span className="k5-count" aria-hidden="true">

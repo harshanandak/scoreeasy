@@ -507,7 +507,7 @@ export default function MonoQuickMatch() {
   const [cricketHistory, setCricketHistory] = useState([]);
   const [cricketOptionsOpen, setCricketOptionsOpen] = useState(false);
 
-  const hasRecordedScore = vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
+  const hasRecordedScore = Boolean(kabaddiMatch?.state.activeRaid || kabaddiMatch?.state.raidNumber) || vScore1 !== 0 || vScore2 !== 0 || gScore1 !== 0 || gScore2 !== 0 ||
     sets.some(set => set.score1 > 0 || set.score2 > 0) ||
     Object.values(scores).some(score => score.balls > 0 || score.runs > 0 || score.wickets > 0);
   const { scoringStarted, resetScoringStarted } = useScoringProgress(
@@ -645,7 +645,7 @@ export default function MonoQuickMatch() {
     if (Object.hasOwn(draft, 'servingTeam')) setServingTeam(draft.servingTeam);
     if (typeof draft.sidesSwapped === 'boolean') setSidesSwapped(draft.sidesSwapped);
     if (typeof draft.lastAction === 'string') setLastAction(draft.lastAction);
-    if (isKabaddi) {
+    if (isKabaddi && draft.kabaddi) {
       try {
         const { match, migrated } = restoreKabaddiMatch(draft, {
           format: draft.format, names: [draft.team1Name || 'Team A', draft.team2Name || 'Team B'],
@@ -846,8 +846,8 @@ export default function MonoQuickMatch() {
   }, [formatMode, isCricket, sport]);
 
   // Goals mode helpers
-  const isTimedMode = isGoals && !isKabaddi && format.mode === 'timed';
-  const isPointsMode = isGoals && !isKabaddi && format.mode === 'points';
+  const isTimedMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'timed';
+  const isPointsMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'points';
   const timeLimit = isTimedMode ? format.timeLimit : null;
   const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
@@ -1784,7 +1784,7 @@ export default function MonoQuickMatch() {
     if (completion.locked) return;
     if (isCricket) {
       finishCricketMatch(scores);
-    } else if (isKabaddi) {
+    } else if (isKabaddi && kabaddiRef.current) {
       finalizeKabaddi();
     } else if (isGoals) {
       endMatchGoals();
@@ -2559,7 +2559,7 @@ export default function MonoQuickMatch() {
       const rightScore = sidesSwapped ? gScore1 : gScore2;
 
       if (isKabaddi && kabaddiMatch) {
-        const summary = <div className="sb-confirm-summary"><span>Kabaddi</span><strong>{matchTotals(kabaddiMatch).join('?')}</strong></div>;
+        const summary = <div className="sb-confirm-summary"><span>Kabaddi</span><strong>{matchTotals(kabaddiMatch).join('\u2013')}</strong></div>;
         return <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
           {renderEndMatchDialog({ className: 'sb-confirm', summary })}
