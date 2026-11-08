@@ -318,10 +318,12 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(container.querySelector('[data-screen="home"]').style.getPropertyValue('--kit-underline')).not.toBe('');
       const recent = screen.getByRole('region', { name: 'Recent' });
       const rows = within(recent).getAllByRole('button', { name: /View details/ });
-      expect(rows.map((row) => row.querySelector('.kit-row-title').textContent)).toEqual(['Royals v Strikers', 'Lions v Tigers', 'Bulls v Panthers']);
+      expect(rows.map((row) => row.querySelector('.kit-row-title').textContent)).toEqual(['Royals v Strikers', 'Lions 164/6 · Tigers 158/9', 'Bulls v Panthers']);
       expect(rows[0]).toHaveAccessibleName('Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details');
-      // Cricket shows runs and wickets, as History does.
-      expect(rows[1].querySelector('.kit-row-score')).toHaveTextContent('164/6–158/9');
+      // Cricket shows runs and wickets from the shared cricket formatter, the same line History shows,
+      // and has no separate score column.
+      expect(rows[1].querySelector('.kit-row-score')).toBeNull();
+      expect(rows[1]).toHaveAccessibleName(/^Lions 164\/6 · Tigers 158\/9, Lions won, Cricket, /);
       fireEvent.click(within(recent).getByRole('button', { name: 'See all' }));
       await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/history'));
     });

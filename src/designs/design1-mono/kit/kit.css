@@ -612,5 +612,5 @@ button.kit-row {
 }
 
 body.has-mobile-bottom-nav .kit-screen > .kit-home-cta {
-  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(78px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
