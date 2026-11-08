@@ -26,7 +26,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { useMatchSync, buildQuickMatchClientId } from '../../hooks/useMatchSync';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useLiveBroadcast } from '../../hooks/useLiveBroadcast';
-import { getConsent } from '../../lib/live/liveSession';
 import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
@@ -512,7 +511,7 @@ export default function MonoQuickMatch() {
   // Live broadcast (dkt/b0z): mirror each point/undo to the public watch page with
   // the engine-derived snapshot. Additive — localStorage stays authoritative; a
   // failed/offline broadcast never breaks local scoring. Consent is global.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;
@@ -1686,6 +1685,8 @@ export default function MonoQuickMatch() {
   };
 
   const resetMatchState = (nextPhase = 'setup', options = {}) => {
+    setLiveEnabled(false);
+    live.reset();
     resetScoringStarted();
     setRestoredScoringStarted(false);
     completion.reset();

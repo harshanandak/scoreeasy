@@ -2,7 +2,6 @@ import { useScoringProgress } from './scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
@@ -349,7 +348,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   // page. Tennis maps to the generic snapshot as: current-set GAMES -> pointsA/B,
   // sets won -> setsA/B, completed sets -> setScores, current game points ->
   // periodLabel ("40-30"). Additive; localStorage authoritative; gated on consent.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;

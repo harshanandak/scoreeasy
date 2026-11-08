@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LiveBroadcastBar from './LiveBroadcastBar';
 import MonoSheet from '../components/MonoSheet';
@@ -48,6 +48,29 @@ function renderBar(props) {
 }
 
 describe('LiveBroadcastBar (b0z)', () => {
+  it('keeps the public status and controls when Stop fails', async () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast({ isLive: true, token: 'TOK', error: new Error('offline') });
+    broadcast.setVisibility.mockResolvedValue(null);
+    const onEnableChange = vi.fn();
+    renderBar({ broadcast, descriptor, enabled: true, onEnableChange });
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    await waitFor(() => expect(broadcast.setVisibility).toHaveBeenCalledWith('private'));
+    expect(onEnableChange).not.toHaveBeenCalled();
+    expect(screen.getByText('Live · public')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Couldn’t change sharing');
+  });
+  it('does not publish a new match from remembered consent or a stale enabled flag', () => {
+    localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
+    const broadcast = makeBroadcast();
+    const { rerender } = renderBar({ broadcast, descriptor, enabled: true, onEnableChange: vi.fn() });
+    expect(broadcast.goLive).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
+    expect(broadcast.goLive).toHaveBeenCalledTimes(1);
+    const nextBroadcast = makeBroadcast();
+    rerender(<MemoryRouter><LiveBroadcastBar broadcast={nextBroadcast} descriptor={{ ...descriptor, clientMatchId: 'next' }} enabled onEnableChange={vi.fn()} /></MemoryRouter>);
+    expect(nextBroadcast.goLive).not.toHaveBeenCalled();
+  });
   it('shows the one-time consent disclosure when consent is unseen', () => {
     const broadcast = makeBroadcast();
     renderBar({ broadcast, descriptor, enabled: false, onEnableChange: () => {} });
@@ -78,11 +101,13 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(localStorage.getItem('se_live_public_consent')).toContain('declined');
   });
 
-  it('fires goLive exactly once when enabled and consent already accepted', () => {
+  it('fires goLive once after a per-match tap, even when consent was remembered', () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast();
     const { rerender } = renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
+    expect(broadcast.goLive).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
     expect(broadcast.goLive).toHaveBeenCalledTimes(1);
     expect(broadcast.goLive).toHaveBeenCalledWith(descriptor);
 
@@ -94,7 +119,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     expect(broadcast.goLive).toHaveBeenCalledTimes(1);
   });
 
-  it('when live, shows LIVE + Share + Stop; Stop flips visibility to private', () => {
+  it('when live, shows LIVE + Share + Stop; Stop flips visibility to private', async () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
     const onEnableChange = vi.fn();
@@ -104,7 +129,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
 
     expect(broadcast.setVisibility).toHaveBeenCalledWith('private');
-    expect(onEnableChange).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(onEnableChange).toHaveBeenCalledWith(false));
   });
 
   it('Go live when no match exists yet re-enables without re-publishing', () => {
@@ -125,6 +150,7 @@ describe('LiveBroadcastBar (b0z)', () => {
     broadcast.goLive.mockResolvedValue(null);
     renderBar({ broadcast, descriptor, enabled: true, onEnableChange: () => {} });
 
+    fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
     expect(broadcast.goLive).toHaveBeenCalledTimes(1); // initial (failed)
     fireEvent.click(screen.getByRole('button', { name: /Go live/i }));
     expect(broadcast.goLive).toHaveBeenCalledTimes(2); // retried
@@ -230,7 +256,7 @@ describe('Kit live controls', () => {
     expect(screen.getByRole('button', { name: 'Keep private' })).toHaveClass('se-ctl');
   });
 
-  it('stops from the sheet with the same visibility action as the bar', () => {
+  it('stops from the sheet with the same visibility action as the bar', async () => {
     localStorage.setItem('se_live_public_consent', JSON.stringify('accepted'));
     const broadcast = makeBroadcast({ isLive: true, token: 'TOK' });
     const onEnableChange = vi.fn();
@@ -238,7 +264,7 @@ describe('Kit live controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Share' }));
     fireEvent.click(screen.getByRole('button', { name: 'Stop sharing' }));
     expect(broadcast.setVisibility).toHaveBeenCalledExactlyOnceWith('private');
-    expect(onEnableChange).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(onEnableChange).toHaveBeenCalledWith(false));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 

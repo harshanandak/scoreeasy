@@ -103,7 +103,7 @@ describe("profile and team data minimization", () => {
     expect(await other.query(api.teams.search, args)).toEqual([]);
     // Old shared team counters may include other scorers' matches.
     await t.run(async (ctx) => {
-      for (const team of await ctx.db.query("teams").collect()) await ctx.db.patch(team._id, { matchCount: 99 });
+      for (const team of await ctx.db.query("teams").collect()) await ctx.db.patch("teams", team._id, { matchCount: 99 });
     });
     const found = await owner.query(api.teams.search, args);
     expect(found).toHaveLength(2);
@@ -112,9 +112,20 @@ describe("profile and team data minimization", () => {
 });
 
 describe("explicit live sharing", () => {
+  test("create requires auth and scopes a reused client ID to each scorer", async () => {
+    const { t, other, otherId, matchId } = await fixture();
+    const args = {
+      sport: "volleyball", scorecardKind: "volleyball",
+      teamA: { name: "Other A" }, teamB: { name: "Other B" }, clientMatchId: "private-live",
+    };
+    await expect(t.mutation(api.live.create, args)).rejects.toThrow(/authenticated/i);
+    const created = await other.mutation(api.live.create, args);
+    expect(created.matchId).not.toBe(matchId);
+    expect(await t.run((ctx) => ctx.db.get("liveMatches", created.matchId))).toMatchObject({ ownerId: otherId, visibility: "private" });
+  });
   test("default/legacy public rows stay hidden until this match is explicitly shared", async () => {
     const { t, owner, other, token, matchId } = await fixture();
-    expect((await t.run((ctx) => ctx.db.get(matchId)))?.visibility).toBe("private");
+    expect((await t.run((ctx) => ctx.db.get("liveMatches", matchId)))?.visibility).toBe("private");
     for (const client of [t, owner, other]) {
       expect(await client.query(api.live.getByToken, { token })).toBeNull();
       expect(await client.query(api.live.getMeta, { token })).toBeNull();
@@ -122,7 +133,7 @@ describe("explicit live sharing", () => {
       expect((await client.query(api.live.listEvents, { token, paginationOpts: { numItems: 10, cursor: null } })).page).toEqual([]);
       expect(await client.query(api.live.listLiveFeed, {})).toEqual([]);
     }
-    await t.run((ctx) => ctx.db.patch(matchId, { visibility: "public" }));
+    await t.run((ctx) => ctx.db.patch("liveMatches", matchId, { visibility: "public" }));
     expect(await t.query(api.live.getByToken, { token })).toBeNull();
     expect(await t.query(api.live.listLiveFeed, {})).toEqual([]);
     await t.mutation(api.live.report, { token, reason: "spam", reporterId: "anon" });
@@ -173,7 +184,7 @@ describe("explicit live sharing", () => {
     });
     expect(await t.query(api.live.getByToken, { token })).not.toBeNull();
     for (const patch of [{ moderationStatus: "held" as const }, { moderationStatus: "clean" as const, publicExpiresAt: 1 }]) {
-      await t.run((ctx) => ctx.db.patch(matchId, patch));
+      await t.run((ctx) => ctx.db.patch("liveMatches", matchId, patch));
       expect(await t.query(api.live.getByToken, { token })).toBeNull();
       expect(await t.query(api.live.getMeta, { token })).toBeNull();
       expect(await t.query(api.live.eventsSince, { token, sinceSeq: 0 })).toEqual([]);

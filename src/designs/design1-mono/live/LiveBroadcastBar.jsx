@@ -8,19 +8,13 @@ import '../kit/sharelive.css';
 
 // LiveBroadcastBar (issue b0z): the operator-facing live control.
 //
-// Public-by-default with a ONE-TIME consent disclosure (§7): the first time a
-// user could go live we explain that scores + team names become public to anyone
-// with the link, and let them opt out. After that the choice is remembered
-// globally (se_live_public_consent) and matches go live automatically — with a
-// per-match "Stop sharing" to flip back to private at any point.
-//
-// It OWNS the go-live trigger (so screens stay thin): when broadcasting is
-// enabled and consent is accepted, it fires `broadcast.goLive(descriptor)` once.
-// The scorer just calls broadcast.point/undo/finalize at its existing handlers.
+// The disclosure choice is remembered, but publishing always needs a tap for this
+// match. The scorer's enabled flag alone never grants consent for a new match.
 
 export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEnableChange }) {
   const [consent, setConsentState] = useState(() => getConsent());
   const [shareOpen, setShareOpen] = useState(false);
+  const [requestedMatchId, setRequestedMatchId] = useState(null);
   const startedRef = useRef(false);
   // Bumped to force the one-shot effect to re-run after a FAILED go-live (a ref
   // reset alone doesn't schedule an effect, and onEnableChange(true) is a
@@ -33,13 +27,14 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // Fire go-live exactly once per mount when broadcasting is on, consented, AND the
   // user is signed in (create is authed — never fire for a signed-out user).
   useEffect(() => {
-    if (isAuthenticated && enabled && consent === 'accepted' && descriptor?.clientMatchId && !startedRef.current) {
+    if (isAuthenticated && enabled && consent === 'accepted' && descriptor?.clientMatchId && requestedMatchId === descriptor.clientMatchId && !startedRef.current) {
       startedRef.current = true;
       void broadcast.goLive(descriptor);
     }
-  }, [isAuthenticated, enabled, consent, descriptor, broadcast, retryNonce]);
+  }, [isAuthenticated, enabled, consent, descriptor, broadcast, retryNonce, requestedMatchId]);
 
   const accept = () => {
+    setRequestedMatchId(descriptor?.clientMatchId);
     setConsent('accepted');
     setConsentState('accepted');
     onEnableChange(true);
@@ -51,7 +46,8 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     onEnableChange(false);
   };
 
-  const goLiveNow = () => {
+  const goLiveNow = async () => {
+    setRequestedMatchId(descriptor?.clientMatchId);
     // Opt back in for this match (consent already seen).
     if (consent !== 'accepted') {
       setConsent('accepted');
@@ -62,7 +58,8 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
       // setVisibility is NOT enabled-gated in the hook (visibility control works
       // whenever a match exists), so this runs even though `enabled` is still
       // false at this instant (onEnableChange(true) below is async).
-      void broadcast.setVisibility('public');
+      const result = await broadcast.setVisibility('public');
+      if (!result?.ok) return;
     } else {
       // Never created (declined from the start) or a prior go-live FAILED:
       // re-arm + bump the nonce so the one-shot effect actually re-runs and
@@ -73,9 +70,12 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
     onEnableChange(true);
   };
 
-  const stopSharing = () => {
-    void broadcast.setVisibility('private');
-    onEnableChange(false);
+  const stopSharing = async () => {
+    const result = await broadcast.setVisibility('private');
+    if (result?.ok) {
+      setRequestedMatchId(null);
+      onEnableChange(false);
+    }
   };
 
   // No cloud backend (offline build) → broadcasting isn't possible; render nothing.
@@ -137,6 +137,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
         <span className="kit-live-pill">
           Live · public
         </span>
+        {broadcast.error && <p role="alert">Couldn’t change sharing — check your connection and try again.</p>}
         <button
           type="button"
           onClick={(event) => {
@@ -170,12 +171,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   // doubles as the retry. The message is deliberately generic: Convex REDACTS error
   // messages in production (see useLiveBroadcast notes), so the raw message is unreliable.
   //
-  // GATE on !broadcast.isLive: the hook shares ONE `error` across goLive/setVisibility/
-  // finalize. A failed Stop (setVisibility('private') rejects) leaves isLive=true but
-  // flips enabled=false, so it also lands in this bottom branch — without the gate we'd
-  // mislabel a Stop/finalize failure as "Couldn't go live". `isLive` is true ONLY after a
-  // successful goLive and cleared ONLY by reset() (which also clears error), so
-  // isLive=false && error uniquely identifies a genuine go-live failure.
+  // Stop failures stay in the public bar above; only failed creation belongs here.
   const goLiveFailed = Boolean(broadcast.error) && !broadcast.isLive;
   return (
     <div className="kit-live-offer" role="region" aria-label="Live sharing">

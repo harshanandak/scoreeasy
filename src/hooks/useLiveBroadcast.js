@@ -135,9 +135,11 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           scorecardKind: opts.scorecardKind,
           teamA: opts.teamA,
           teamB: opts.teamB,
-          visibility: opts.visibility ?? 'public',
+          visibility: 'private',
           isYouthMatch: opts.isYouthMatch ?? false,
         });
+        // Re-sharing a stopped or legacy session requires a fresh explicit publish.
+        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public' });
         matchIdRef.current = res.matchId;
         tokenRef.current = res.token;
         setToken(res.token);
@@ -152,7 +154,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         return null;
       }
     },
-    [enabled, createM, flush, persistSeq],
+    [enabled, createM, setVisibilityM, flush, persistSeq],
   );
 
   const point = useCallback(
@@ -222,7 +224,9 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       const matchId = matchIdRef.current;
       if (!matchId) return null;
       try {
-        return await setVisibilityM({ matchId, visibility });
+        const result = await setVisibilityM({ matchId, visibility });
+        setError(null);
+        return result;
       } catch (e) {
         setError(e instanceof Error ? e : new Error(String(e)));
         return null;

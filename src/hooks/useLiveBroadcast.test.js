@@ -51,6 +51,7 @@ const GO = {
 beforeEach(() => {
   localStorage.clear();
   Object.values(h.spies).forEach((s) => s.mockReset());
+  h.get('live:setVisibility').mockResolvedValue({ ok: true });
 });
 
 function setup(opts) {
@@ -58,6 +59,18 @@ function setup(opts) {
 }
 
 describe('useLiveBroadcast', () => {
+  it('does not announce a stopped/legacy match as live until explicit publishing succeeds', async () => {
+    h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+    h.get('live:setVisibility').mockRejectedValue(new Error('offline'));
+    const { result } = setup();
+    await act(async () => { await result.current.goLive(GO); });
+    expect(result.current.isLive).toBe(false);
+    expect(result.current.error).toBeTruthy();
+    h.get('live:setVisibility').mockResolvedValue({ ok: true });
+    await act(async () => { await result.current.goLive(GO); });
+    expect(result.current.isLive).toBe(true);
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(2);
+  });
   it('goLive creates a live match and exposes token + isLive', async () => {
     h.get('live:create').mockResolvedValue({ token: 'TOK123', matchId: 'mid1' });
     const { result } = setup();
@@ -73,11 +86,12 @@ describe('useLiveBroadcast', () => {
         scorecardKind: 'goals',
         teamA: { name: 'Alpha' },
         teamB: { name: 'Beta' },
-        visibility: 'public',
+        visibility: 'private',
       }),
     );
     expect(result.current.isLive).toBe(true);
     expect(result.current.token).toBe('TOK123');
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public' });
   });
 
   it('point() sends scorePoint with matchId + derived clientEventId and drains the outbox', async () => {

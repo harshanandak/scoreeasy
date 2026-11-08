@@ -20,7 +20,6 @@ import {
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useScoringCompletion } from './scoringCompletionContext';
@@ -78,7 +77,7 @@ export default function MonoGoalsLiveScore() {
   // Live broadcast (dkt/b0z/6fj): mirror each scoring action to the public watch
   // page. Purely additive — localStorage stays authoritative; a failed push never
   // breaks scoring. Public-by-default but gated on the one-time consent.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveClientMatchId = `${sport}:${id}:${matchId}`;
 

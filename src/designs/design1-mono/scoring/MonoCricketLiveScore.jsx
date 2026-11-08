@@ -19,7 +19,6 @@ import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunCo
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useScoringCompletion } from './scoringCompletionContext';
 
@@ -94,7 +93,7 @@ export default function MonoCricketLiveScore() {
   // Live broadcast (dkt/b0z/6fj/87d): mirror each ball/undo to the public watch
   // page with the engine-derived snapshot. Additive — localStorage stays
   // authoritative; gated on consent and no-ops when disabled.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;

@@ -48,6 +48,7 @@ describe("live.create", () => {
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
 
     const res = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -67,12 +68,14 @@ describe("live.create", () => {
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
 
     const first = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
       clientMatchId: "cm-dup",
     });
     const second = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -100,6 +103,7 @@ describe("live.create — team colour is stored only when it is a strict hex", (
     const teamB =
       colorB === undefined ? { name: "Hawks" } : { name: "Hawks", color: colorB };
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       teamA,
@@ -149,6 +153,7 @@ describe("live.create — team colour is stored only when it is a strict hex", (
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       teamA: { name: "Falcons", color: "#1d4ed8" },
@@ -193,6 +198,7 @@ describe("live.scorePoint", () => {
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
 
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -228,6 +234,7 @@ describe("live.scorePoint", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -266,6 +273,7 @@ describe("live.scorePoint", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "rugby",
       scorecardKind: "generic",
       ...TEAMS,
@@ -289,6 +297,7 @@ describe("live.scorePoint", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -326,6 +335,7 @@ describe("live.undo", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -364,6 +374,7 @@ describe("live.undo", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -400,6 +411,7 @@ describe("live.getByToken — §7.2 data-minimization whitelist", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -454,6 +466,7 @@ describe("live ownership enforcement", () => {
     const asAttacker = t.withIdentity(identityFor("attacker|2", "attacker-2"));
 
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -477,6 +490,7 @@ describe("live event reads", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -517,6 +531,7 @@ describe("live event reads", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -563,6 +578,7 @@ describe("live read gating — private & removed return nothing", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -598,6 +614,7 @@ describe("live read gating — private & removed return nothing", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -634,6 +651,7 @@ describe("live.finalize — winner uses sets as primary, points as tiebreaker", 
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -671,6 +689,7 @@ describe("live.scorePoint/undo — finalized match rejects with a STRUCTURED err
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -702,6 +721,7 @@ describe("live.scorePoint — resuming a paused match clears the paused status",
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -729,6 +749,7 @@ describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => 
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -775,6 +796,7 @@ describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => 
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -812,6 +834,7 @@ describe("live.scorePoint — operator snapshot push (87d, sets-sports)", () => 
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -848,6 +871,7 @@ describe("live write guards — reject writes to a finalized match (87d)", () =>
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -886,6 +910,7 @@ describe("live write guards — reject writes to a finalized match (87d)", () =>
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -911,6 +936,7 @@ describe("live.finalize — cricket defers archive to the local scorer (6tf)", (
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId, token } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "cricket",
       scorecardKind: "cricket",
       ...TEAMS,
@@ -943,6 +969,7 @@ describe("live.finalize — cricket defers archive to the local scorer (6tf)", (
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -963,6 +990,7 @@ describe("live moderation floor (q7k)", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { token, matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       teamA: { name: "Shit FC" },
@@ -982,6 +1010,7 @@ describe("live moderation floor (q7k)", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { token, matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -996,6 +1025,7 @@ describe("live moderation floor (q7k)", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { token, matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -1012,6 +1042,7 @@ describe("live moderation floor (q7k)", () => {
     await seedUser(t, "owner|1");
     const asOwner = t.withIdentity(identityFor("owner|1", "owner-1"));
     const { token, matchId } = await asOwner.mutation(api.live.create, {
+      visibility: "public",
       sport: "volleyball",
       scorecardKind: "volleyball",
       ...TEAMS,
@@ -1059,6 +1090,7 @@ describe("live moderation floor (q7k)", () => {
     // 21 creates succeed (cap is 20 EXISTING before a create is blocked).
     for (let i = 0; i <= 20; i += 1) {
       await asOwner.mutation(api.live.create, {
+      visibility: "public",
         sport: "volleyball",
         scorecardKind: "volleyball",
         ...TEAMS,
@@ -1067,6 +1099,7 @@ describe("live moderation floor (q7k)", () => {
     }
     await expect(
       asOwner.mutation(api.live.create, {
+      visibility: "public",
         sport: "volleyball",
         scorecardKind: "volleyball",
         ...TEAMS,

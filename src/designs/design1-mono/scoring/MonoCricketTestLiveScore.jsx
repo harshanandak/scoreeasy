@@ -19,7 +19,6 @@ import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../u
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useScoringCompletion } from './scoringCompletionContext';
 
@@ -66,7 +65,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   // page. Cricket maps to the generic snapshot as: each team's CUMULATIVE runs ->
   // pointsA/B, current innings -> currentUnit, batting line -> periodLabel.
   // Additive — localStorage authoritative; gated on consent, no-ops when off.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;

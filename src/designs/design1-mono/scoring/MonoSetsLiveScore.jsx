@@ -16,7 +16,6 @@ import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
-import { getConsent } from '../../../lib/live/liveSession';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import RouteRecoveryActions from '../components/RouteRecoveryActions';
 import { useScoringCompletion } from './scoringCompletionContext';
@@ -68,7 +67,7 @@ export default function MonoSetsLiveScore() {
   // Live broadcast (dkt/b0z/6fj/87d): mirror each point/undo to the public watch
   // page with the engine-derived snapshot (current-set points + set tally +
   // serving). Additive — localStorage stays authoritative; gated on consent.
-  const [liveEnabled, setLiveEnabled] = useState(() => getConsent() === 'accepted');
+  const [liveEnabled, setLiveEnabled] = useState(false);
   const live = useLiveBroadcast({ enabled: liveEnabled });
   const liveRef = useRef(live);
   liveRef.current = live;
