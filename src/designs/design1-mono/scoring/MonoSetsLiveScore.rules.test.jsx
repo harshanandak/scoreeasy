@@ -107,7 +107,7 @@ describe('shared sets rules regressions', () => {
       },
     })];
     await act(async () => { render(<MonoSetsLiveScore />); });
-    await act(async () => { vi.advanceTimersByTime(160); fireEvent.click(screen.getByRole('button', { name: /^undo$/i })); });
+    await act(async () => { vi.advanceTimersByTime(160); fireEvent.click(screen.getByRole('button', { name: 'Undo last action' })); });
     await act(async () => { vi.advanceTimersByTime(160); fireEvent.click(screen.getByRole('button', { name: 'Add point for Beta' })); });
     expect(h.saveSpy.mock.calls.at(-1)[1].matches[0].draftState).toMatchObject({ scoringMode: 'side-out', servingTeam: 2, sets: [{ score1: 0, score2: 0, completed: false }] });
   });
