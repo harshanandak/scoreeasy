@@ -124,14 +124,11 @@ bun audit
 - Verify security mitigations implemented
 - Check for sensitive data exposure
 
-### Step 5: Tests
-```bash
-# Run your project's test command
-bun test    # or: npm run test, jest, vitest, etc.
-```
-- All tests passing
-- Includes security test scenarios
-- TDD tests from /dev phase
+### Step 5: Tests (GitHub CI only)
+Tests are not run locally. The laptop runs no test suite; GitHub CI is the test gate.
+- Push the exact head SHA you are validating
+- Confirm the CI run on that SHA passed, and link the run
+- CI covers all tests, including security test scenarios and TDD tests from /dev phase
 
 > **💭 Plan-Act-Reflect Checkpoint**
 > Before declaring validation complete:
@@ -223,18 +220,19 @@ If all pass:
 ```
 <HARD-GATE: /validate exit>
 Do NOT output any variation of "check complete", "ready to ship", or proceed to /ship
-until ALL FOUR show fresh output in this session:
+until ALL FOUR are shown in this session:
 
 1. Type check: [command run] → [actual output] → exit 0 confirmed
 2. Lint: [command run] → [actual output] → exit 0 and 0 errors confirmed.
    Warnings are a known baseline (`explicit-table-ids` and two other Convex rules
    are configured `warn` in eslint.config.js; CODING_STANDARDS.md records why).
    Do not add new ones — say the count and whether your change moved it.
-3. Tests: [command run] → [actual output] → N/N passing confirmed
+3. Tests: pushed head SHA [sha] → CI run [link] on that SHA → passed confirmed.
+   No local test run; the laptop runs no tests.
 4. Security scan: [command run] → [actual output] → no critical issues confirmed
 
 "Should pass", "was passing earlier", and "I'm confident" are not evidence.
-Run the commands. Show the output. THEN declare done.
+Run the commands and check the CI run. Show the output. THEN declare done.
 
 5. Context check: Run `forge issue show <id>` and confirm by eye that the issue has a
    description, at least one stage-transition comment, and that the latest one carries a summary
