@@ -1,4 +1,5 @@
 // Cricket scoring calculations
+import { guidedMaxWickets, resolveGuidedRules } from './cricketRules';
 
 // ==========================================
 // CRICKET FORMAT PRESETS
@@ -291,7 +292,10 @@ export function getLimitedOversResult(match) {
 
   // Team 2 won — won by wickets
   if (winner === chasingTeam) {
-    const maxWickets = (match.format?.players || 11) - 1;
+    // Guided matches carry frozen rules (e.g. last batter stands); use the same limit that ended the innings.
+    const maxWickets = match.cricketRules
+      ? guidedMaxWickets(resolveGuidedRules(match.cricketRules), { playersPerSide: match.format?.players })
+      : (match.format?.players || 11) - 1;
     const wicketsLeft = maxWickets - (winnerScore.wickets || 0);
     const plural = wicketsLeft === 1 ? '' : 's';
     return `Won by ${wicketsLeft} wicket${plural}`;

@@ -26,6 +26,7 @@ import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
 import { Chevron, EmptyHistoryArt, FilterChip, GoArrow, KitSection, KitTop, KitWash, SportBadge } from './kit/KitParts';
 import { displayScore, groupByMonth, latestMonthSummary, sportCounts, winnerSide } from './kit/historyModel';
 import { relativeDay } from './kit/dates';
+import { cricketScoreLine } from '../../utils/cricketScoreFormat';
 import './kit/history.css';
 import InProgressMatches from './components/InProgressMatches';
 
@@ -232,6 +233,7 @@ function buildTournamentEntries() {
           team1: team1Name,
           team2: team2Name,
           score: matchScore(match, team1Ref, team2Ref),
+          cricketLabel: sport.id === 'cricket' ? cricketScoreLine(match, [team1Name, team2Name], [team1Ref, team2Ref]) : null,
           winner: resolveTournamentWinner(match, team1Name, team2Name),
           elapsedSeconds: match.elapsedSeconds,
           date: getCompletedAt(match) || tournament.createdAt,
@@ -308,6 +310,7 @@ export default function MonoHistory() {
         team1: qm.team1,
         team2: qm.team2,
         score,
+        cricketLabel: qm.sport === 'cricket' ? cricketScoreLine(qm) : null,
         winner: normalizeNonTeamWinner(qm.winner),
         elapsedSeconds: qm.elapsedSeconds,
         date: qm.completedAt || qm.date || qm.createdAt,
@@ -780,7 +783,7 @@ function entryLabel(entry) {
    "Royals 3–1 Strikers, Royals won, Volleyball, Yesterday. View details"; a draw names no winner. */
 function rowLabel(entry, context, day) {
   const score = displayScore(entry.score);
-  const title = entry.isLegacy ? `${entry.tournamentName} ${score}` : `${entry.team1} ${score} ${entry.team2}`;
+  const title = entry.cricketLabel ?? (entry.isLegacy ? `${entry.tournamentName} ${score}` : `${entry.team1} ${score} ${entry.team2}`);
   const result = normalizeNonTeamWinner(entry.winner) ? winnerLabel(entry.winner) : null;
   return `${[title, result, entry.sportName, context, day].filter(Boolean).join(', ')}. View details`;
 }
@@ -795,12 +798,12 @@ function HistoryRow({ entry, onOpen, buttonRef = undefined }) {
     <button type="button" className="kit-row" ref={buttonRef} onClick={onOpen} aria-label={rowLabel(entry, context, day)}>
       <SportBadge sportId={entry.sport} />
       <span className="kit-row-text">
-        <span className="kit-row-title">{entryTitle(entry)}</span>
+        <span className="kit-row-title">{entry.cricketLabel ?? entryTitle(entry)}</span>
         <span className="kit-row-sub">
-          {[entry.sportName, context, day].filter(Boolean).join(' · ')}
+          {[entry.sportName, context, day, entry.cricketLabel && entry.winner ? winnerLabel(entry.winner) : null].filter(Boolean).join(' · ')}
         </span>
       </span>
-      <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>
+      {!entry.cricketLabel && <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>}
       <Chevron />
     </button>
   );
@@ -866,7 +869,7 @@ function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, o
         </div>
       )}
       <p className="kit-detail-result">
-        {displayScore(entry.score)}
+        {entry.cricketLabel ?? displayScore(entry.score)}
         <span className="kit-row-sub" style={{ display: 'inline', marginLeft: 10, fontFamily: 'var(--se-font-sans)' }}>{winnerLabel(entry.winner)}</span>
       </p>
       <div className="kit-btnstack">

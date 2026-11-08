@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { cricketScorePair, cricketScoreLine } from '../../../utils/cricketScoreFormat';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
@@ -69,6 +70,7 @@ function getWinnerLabel(winner) {
 
 /** The two sides' scores as display strings. */
 export function scorePair(qm) {
+  if (qm.sport === 'cricket' || qm.team1Score || qm.team2Score) return cricketScorePair(qm);
   if (typeof qm.score1 === 'number' && typeof qm.score2 === 'number') return [String(qm.score1), String(qm.score2)];
   if (Array.isArray(qm.innings) && qm.innings.length > 0) {
     const team1Id = qm.team1Id || 'team1';
@@ -206,11 +208,13 @@ function MatchRow({ qm, onOpen }) {
       <SportBadge sportId={qm.sport} />
       <span className="kit-row-text">
         <span className="kit-row-title">
+          {qm.sport === 'cricket' ? cricketScoreLine(qm) : <>
           {team1Won ? <strong>{qm.team1}</strong> : qm.team1} v {team2Won ? <strong>{qm.team2}</strong> : qm.team2}
+          </>}
         </span>
-        <span className="kit-row-sub">{[sportName, when].filter(Boolean).join(' · ')}</span>
+        <span className="kit-row-sub">{[sportName, when, qm.sport === 'cricket' && qm.winner ? getWinnerLabel(qm.winner) : null].filter(Boolean).join(' · ')}</span>
       </span>
-      <span className="kit-row-score">{`${score1}–${score2}`}</span>
+      {qm.sport !== 'cricket' && <span className="kit-row-score">{`${score1}–${score2}`}</span>}
       <Chevron />
     </button>
   );
