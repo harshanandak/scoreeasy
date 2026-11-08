@@ -354,7 +354,7 @@ export default function MonoGoalsLiveScore() {
 
   // Keyboard input shares the current handlers, including the latest broadcast and period state.
   const keyboardActionsRef = useRef(null);
-  keyboardActionsRef.current = { addScore, undo };
+  keyboardActionsRef.current = { addScore, undo, leftTeam: sidesSwapped ? 2 : 1, rightTeam: sidesSwapped ? 1 : 2 };
 
   // Keyboard shortcuts (skip on touch-only devices)
   useEffect(() => {
@@ -367,10 +367,10 @@ export default function MonoGoalsLiveScore() {
 
       switch (e.key.toLowerCase()) {
         case 'q':
-          keyboardActionsRef.current.addScore(leftTeam, 1);
+          keyboardActionsRef.current.addScore(keyboardActionsRef.current.leftTeam, 1);
           break;
         case 'p':
-          keyboardActionsRef.current.addScore(rightTeam, 1);
+          keyboardActionsRef.current.addScore(keyboardActionsRef.current.rightTeam, 1);
           break;
         case 'u':
           keyboardActionsRef.current.undo();
