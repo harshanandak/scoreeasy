@@ -62,7 +62,7 @@ describe('kabaddi live publication', () => {
     await owner.mutation(api.live.setVisibility, { matchId, visibility: 'private' });
     expect(await t.query(api.live.getByToken, { token })).toBeNull();
     const cancelled = cancelLiveRaid(reopenRaid(first, { atMs: 300 }));
-    const replacement = landRaid(markDefender(beginLiveRaid(cancelled, { atMs: 400, raider: undefined }), 'B2', 'touched'), 'safe', { atMs: 500 });
+    const replacement = landRaid(markDefender(markDefender(beginLiveRaid(cancelled, { atMs: 400, raider: undefined }), 'B2', 'touched'), 'B3', 'touched'), 'safe', { atMs: 500 });
     if (!replacement) throw new Error('Expected a replacement fixture raid');
     const expected = raidStory(replacement);
     expect(expected).toHaveLength(1);
@@ -72,6 +72,20 @@ describe('kabaddi live publication', () => {
     expect(events.flatMap(e => e.kabaddi?.kind === 'raid' ? [e.kabaddi.raid.id] : [])).toEqual(expected.map((e: { id: string }) => e.id));
     const refreshed = kabaddiWatchMatch(await t.query(api.live.getByToken, { token }), await t.query(api.live.getMeta, { token }), events);
     expect(raidStory(refreshed).map((e: { id: string }) => e.id)).toEqual(expected.map((e: { id: string }) => e.id));
+    const beforeStaleAppend = await t.query(api.live.getByToken, { token });
+    const removedRaid = raidStory(first)[0];
+    const staleAppend = { matchId, clientEventId: `kabaddi-raid:${removedRaid.id}`, team: 'A' as const, value: 1, at: 200, type: 'kabaddi_raid' as const, kabaddi: { kind: 'raid' as const, raid: removedRaid }, snapshot: snapshot(first) };
+    await owner.mutation(api.live.scorePoint, staleAppend);
+    expect(await t.query(api.live.getByToken, { token })).toEqual(beforeStaleAppend);
+    const afterStaleAppend = await t.query(api.live.eventsSince, { token, sinceSeq: 0 });
+    expect(afterStaleAppend.map(e => e.kabaddi?.kind === 'raid' ? e.kabaddi.raid.id : null)).toEqual(expected.map((e: { id: string }) => e.id));
+    const page = await t.query(api.live.listEvents, { token, paginationOpts: { numItems: 1, cursor: null } });
+    expect(page.page).toHaveLength(1);
+    expect(page.isDone).toBe(true);
+    expect(page.page[0].kabaddi).toEqual({ kind: 'raid', raid: expected[0] });
+    const afterRefresh = kabaddiWatchMatch(await t.query(api.live.getByToken, { token }), await t.query(api.live.getMeta, { token }), afterStaleAppend);
+    expect(raidStory(afterRefresh).map((e: { id: string }) => e.id)).toEqual(expected.map((e: { id: string }) => e.id));
+    expect(await t.run(ctx => ctx.db.query('matchEvents').withIndex('by_match_client', q => q.eq('matchId', matchId).eq('clientEventId', staleAppend.clientEventId)).unique())).toMatchObject({ removed: true });
   });
 
   test('a cancelled saved raid is absent after the spectator reloads the server snapshot', async () => {
