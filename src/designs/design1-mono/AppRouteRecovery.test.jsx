@@ -286,6 +286,15 @@ describe('app route recovery', () => {
     expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
   });
 
+  it('shows the scorer recovery page for an unknown cricket Test match link', async () => {
+    renderApp('/cricket/quick/test-match/xyz');
+
+    expect(await screen.findByRole('heading', { name: 'Match not found' })).toBeInTheDocument();
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to Cricket setup' })).toBeInTheDocument();
+  });
+
   it('keeps quick test scoring restricted to cricket routes', async () => {
     renderApp('/tennis/quick/test/123');
 
