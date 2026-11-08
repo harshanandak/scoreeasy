@@ -1,3 +1,4 @@
+import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPeriodMatch } from '../../../utils/goalsPeriods';
@@ -65,6 +66,7 @@ describe('review regression: tournament clock recovery', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(screen.getByRole('button', { name: 'End match' }));
     expect(savedMatch()).toMatchObject({ resultType: 'abandoned', winner: null, elapsedSeconds: 30, periodState: { elapsed: 30, startedAt: null } });
+    expect(buildTournamentConvexPayload({ sportId: 'football', tournament: h.tournaments[0], match: savedMatch() })).toMatchObject({ duration: 30, detail: { periodState: { elapsed: 30, startedAt: null } } });
     expect(h.finalize.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', snapshot: { pointsA: 1, periodClock: { elapsed: 30, startedAt: null, playedSeconds: 30 } } });
   });
   it('sums actual early-ended period time when abandoning the next period', () => {

@@ -1,3 +1,4 @@
+import { normalizeMatchForConvex } from '../../utils/normalizeMatch';
 import { createPeriodMatch } from '../../utils/goalsPeriods';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -443,6 +444,7 @@ describe('review regression: terminal quick clocks', () => {
       const saved = saveQuickMatch.mock.calls.at(-1)[0];
       expect(saved.periodState).toMatchObject({ elapsed: 30, startedAt: null });
       expect(saved).toMatchObject({ resultType: 'abandoned', winner: null, elapsedSeconds: 30 });
+      expect(normalizeMatchForConvex(saved, 'football')).toMatchObject({ duration: 30, detail: { periodState: { elapsed: 30, startedAt: null } } });
       expect(live.finalize.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', snapshot: { pointsA: 1, periodClock: { elapsed: 30, startedAt: null, playedSeconds: 30 } } });
       expect(screen.getByText(/Football.*30s/)).toBeInTheDocument();
     } finally { vi.useRealTimers(); }

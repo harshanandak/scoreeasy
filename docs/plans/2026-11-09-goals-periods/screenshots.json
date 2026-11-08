@@ -4,293 +4,473 @@
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "basketball-full-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "basketball-half-time-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-half-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-paused-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-paused-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-period-end-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-period-end-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-running-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-running-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "basketball-setup-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "basketball-setup-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "basketball-viewer-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "basketball-viewer-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-full-time-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-full-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-half-time-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-half-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-paused-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-paused-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-period-end-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-period-end-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-running-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-running-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "football-setup-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-setup-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-viewer-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "football-viewer-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-full-time-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-full-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-half-time-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-half-time-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-paused-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-paused-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-period-end-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-period-end-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-running-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-running-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved",
+    "capturedPrimaryControlMinHeightPx": 44,
+    "currentPrimaryControlMinHeightPx": 48,
+    "currentSizeEvidence": "round1-dom-measurements.json (DOM only)",
+    "recaptureStatus": "pending morning: T3 capture timed out; owner away"
   },
   {
     "file": "hockey-setup-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-setup-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-viewer-360.png",
     "cssWidth": 360,
     "cssHeight": 640,
     "pngWidth": 720,
-    "pngHeight": 1280
+    "pngHeight": 1280,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   },
   {
     "file": "hockey-viewer-390.png",
     "cssWidth": 390,
     "cssHeight": 844,
     "pngWidth": 780,
-    "pngHeight": 1688
+    "pngHeight": 1688,
+    "captureHead": "7246c68c378c9e60b871dd32137bd82d528e62ba",
+    "evidenceStatus": "pre-review capture preserved"
   }
 ]
