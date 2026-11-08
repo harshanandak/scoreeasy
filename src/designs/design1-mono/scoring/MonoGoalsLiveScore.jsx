@@ -9,14 +9,11 @@ import { isGoalsMatchDecided } from '../../../utils/goalsScoring';
 import { useScoringProgress } from './scoringProgressContext';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
 import { getSportById } from '../../../models/sportRegistry';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useTimer } from '../../../hooks/useTimer';
-import { useAuth } from '../../../hooks/useAuth';
-import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useTournamentMatchSync } from '../../../hooks/useTournamentMatchSync';
 import {
   getBasketballCompletionState,
   getFootballClockState,
@@ -52,8 +49,7 @@ export default function MonoGoalsLiveScore() {
   const navigate = useNavigate();
   const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
-  const { isAuthenticated } = useAuth();
-  const saveMatchMutation = useMutation(api.matches.save);
+  const saveTournamentToConvex = useTournamentMatchSync({ sport, matchId });
   const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
   const completeMatch = useCallback(() => {
     const tournamentPath = `/${sport}/tournament/${id}`;
@@ -105,22 +101,6 @@ export default function MonoGoalsLiveScore() {
   score1Ref.current = score1;
   score2Ref.current = score2;
 
-  const saveTournamentToConvex = (updatedTournament) => {
-    if (!isAuthenticated || !updatedTournament) return;
-    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
-      .find((m) => m.id === matchId || m.id === Number(matchId));
-    if (!savedMatch) return;
-    try {
-      const payload = buildTournamentConvexPayload({
-        sportId: sport,
-        tournament: updatedTournament,
-        match: savedMatch,
-      });
-      saveMatchMutation(payload).catch(() => {});
-    } catch {
-      // Local save is primary; sync failures are non-blocking.
-    }
-  };
 
   // Load tournament and match
   const { scoringStarted } = useScoringProgress(

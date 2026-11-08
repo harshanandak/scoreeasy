@@ -4,16 +4,19 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { contrastReport, deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
 import { isTeamColourTournamentSport } from '../../../models/sportRegistry';
+import { pendingMatchSaves } from '../../../utils/pendingMatchSaves';
+import { usePendingMatchSaves } from '../../../hooks/usePendingMatchSaves';
 
 const h = vi.hoisted(() => ({
   sport: 'volleyball', navigate: vi.fn(), save: vi.fn(() => Promise.resolve()),
   live: { point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), isLive: true },
   bar: null,
+  ownerId: '',
 }));
 vi.mock('react-router-dom', () => ({ useParams: () => ({ sport: h.sport, id: '1', matchId: 'm1' }), useNavigate: () => h.navigate }));
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }), useMutation: () => h.save }));
-vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
+vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, user: { _id: h.ownerId } }) }));
 vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => h.live }));
 vi.mock('../../../lib/live/liveSession', () => ({ getConsent: () => 'accepted' }));
 vi.mock('../live/LiveBroadcastBar', () => ({ default: (props) => { h.bar = props; return <button>Broadcast controls</button>; } }));
@@ -35,8 +38,11 @@ const saved = () => loadSportTournaments(`se_${h.sport}`)[0];
 const key = (name = 'Alpha') => screen.getByRole('button', { name: `Add point for ${name}` });
 const tap = (name) => { act(() => { vi.advanceTimersByTime(160); fireEvent.click(key(name)); }); };
 const options = () => fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+function Worker() { usePendingMatchSaves(); return null; }
+let accountSequence = 0;
 beforeEach(() => {
   vi.clearAllMocks(); localStorage.clear(); h.sport = 'volleyball';
+  h.ownerId = `team-colour-owner-${++accountSequence}`;
   vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-23T12:00:00Z')); seed();
 });
 afterEach(() => { cleanup(); vi.clearAllTimers(); vi.useRealTimers(); });
@@ -81,16 +87,20 @@ describe('tournament team-colour presentation', () => {
     expect(saved().matches[0].draftState).toMatchObject({ currentSet: 0, sets: [set(24, 20)] });
     expect(screen.getByText('Set 1 of 3')).toBeTruthy();
   });
-  it('preserves knockout completion, explicit Finish, sync and result navigation', () => {
+  it('preserves knockout completion, explicit Finish, sync and result navigation', async () => {
     seed({ knockout: true, currentSet: 1, sets: [set(25, 12, true), set(24, 20)] });
-    render(<MonoSetsLiveScore />);
+    render(<><Worker /><MonoSetsLiveScore /></>);
     expect(screen.getByText('Match point · Alpha')).toBeTruthy(); tap();
     expect(h.navigate).not.toHaveBeenCalled();
     expect(key().disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     expect(saved().knockoutMatches[0]).toMatchObject({ status: 'completed', winner: 1, setsWon1: 2, setsWon2: 0 });
     expect(saved().knockoutMatches[0].draftState).toBeUndefined();
-    expect(h.save).toHaveBeenCalledTimes(1); expect(h.live.finalize).toHaveBeenCalledTimes(1);
+    await act(async () => {});
+    expect(h.save).toHaveBeenCalledTimes(1);
+    expect(h.save).toHaveBeenCalledWith(expect.objectContaining({ clientMatchId: 'tournament:volleyball:1:m1', winner: 'Alpha', score1: 2, score2: 0 }));
+    expect(pendingMatchSaves(h.ownerId)).toEqual([]);
+    expect(h.live.finalize).toHaveBeenCalledTimes(1);
     expect(h.navigate).toHaveBeenCalledWith('/volleyball/tournament/1/match/m1/result', { replace: true });
   });
   it('can undo a match-winning point before Finish', () => {
@@ -99,12 +109,16 @@ describe('tournament team-colour presentation', () => {
     expect(key().disabled).toBe(false);
     expect(saved().matches[0].draftState.sets[1]).toEqual(set(24, 20));
   });
-  it('Finish on an unfinished match saves its snapshot as abandoned and opens the result', () => {
-    render(<MonoSetsLiveScore />); tap(); fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
+  it('Finish on an unfinished match saves its snapshot as abandoned and opens the result', async () => {
+    render(<><Worker /><MonoSetsLiveScore /></>); tap(); fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     expect(saved().matches[0]).toMatchObject({ status: 'completed', resultType: 'abandoned', winner: null, sets: [set(1, 0)] });
     expect(saved().matches[0].draftState).toBeUndefined();
     expect(h.navigate).toHaveBeenCalledWith('/volleyball/tournament/1/match/m1/result', { replace: true });
-    expect(h.live.finalize).toHaveBeenCalledWith({ resultType: 'abandoned' }); expect(h.save).toHaveBeenCalled();
+    expect(h.live.finalize).toHaveBeenCalledWith({ resultType: 'abandoned' });
+    await act(async () => {});
+    expect(h.save).toHaveBeenCalled();
+    expect(h.save).toHaveBeenCalledWith(expect.objectContaining({ clientMatchId: 'tournament:volleyball:1:m1', resultType: 'abandoned' }));
+    expect(pendingMatchSaves(h.ownerId)).toEqual([]);
   });
   it('uses the same colour fallback and honours existing tournament team colours with mark contrast', () => {
     const teams = [{ id: 1, name: 'Alpha', color: '#facc15' }, { id: 2, name: 'Beta', color: '#1d4ed8' }];

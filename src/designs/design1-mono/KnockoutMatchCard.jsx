@@ -1,3 +1,4 @@
+import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
 
@@ -50,6 +51,7 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
 
   return (
     <div className="mono-card p-5">
+      <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-mono uppercase tracking-wider" style={{ color: '#aaa' }}>
