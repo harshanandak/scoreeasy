@@ -34,7 +34,7 @@ it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'ho
 
 it.each(['sets', 'goals', 'cricket'])('%s abandoned display never promotes the leader to winner', kind => {
   const model = finishFromQuickResult({ resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', winner: null, score1: 13, score2: 0 }, { kind });
-  expect(model).toMatchObject({ outcome: 'none', winnerSide: null, headline: 'Abandoned · no result', team1: { score: '13' }, team2: { score: '0' } });
+  expect(model).toMatchObject({ outcome: 'none', winnerSide: null, headline: 'Abandoned · no result', team1: { score: kind === 'cricket' ? '13/?' : '13' }, team2: { score: kind === 'cricket' ? '0/?' : '0' } });
 });
 
 it.each([calculateGoalsStandings, calculateSetsStandings])('abandoned fixtures award no standings win or points', calculate => {

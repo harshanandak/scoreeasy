@@ -1126,7 +1126,10 @@ test("abandoned broadcasts retain the snapshot, expose no result and never archi
   const { matchId, token } = await owner.mutation(api.live.create, {
     sport: "volleyball", scorecardKind: "volleyball", visibility: "public", ...TEAMS, clientMatchId: "early-finish",
   });
-  await t.run(ctx => ctx.db.patch("liveMatches", matchId, { pointsA: 2, pointsB: 1 }));
+  await owner.mutation(api.live.setVisibility, {
+    matchId, visibility: "public",
+    snapshot: { pointsA: 2, pointsB: 1, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 },
+  });
   const result = await owner.mutation(api.live.finalize, { matchId, resultType: "abandoned" });
   const archived = await t.run(ctx => ctx.db.get("matches", result.matchId!));
   expect(archived).toMatchObject({ resultType: "abandoned", score1: 2, score2: 1 });
