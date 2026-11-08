@@ -416,6 +416,7 @@ export const getOwnedSession = authedQuery({
   returns: v.union(v.null(), v.object({
     matchId: v.id("liveMatches"), token: v.string(), lastSeq: v.number(),
     isShared: v.boolean(),
+    visibility: v.union(v.literal("public"), v.literal("unlisted"), v.literal("private")),
   })),
   handler: async (ctx, { clientMatchId }) => {
     const match = await ctx.db.query("liveMatches")
@@ -425,6 +426,7 @@ export const getOwnedSession = authedQuery({
     return {
       matchId: match._id, token: match.token, lastSeq: match.lastSeq,
       isShared: match.visibility !== "private" && match.publishedAt !== undefined,
+      visibility: match.visibility,
     };
   },
 });

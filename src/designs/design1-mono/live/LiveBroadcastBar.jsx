@@ -30,7 +30,7 @@ export default function LiveBroadcastBar({ broadcast, descriptor, enabled, onEna
   useEffect(() => {
     if (!isAuthenticated || !descriptor?.clientMatchId || !broadcast.restore) return undefined;
     let canceled = false;
-    void broadcast.restore({ clientMatchId: descriptor.clientMatchId }).then((session) => {
+    void broadcast.restore({ clientMatchId: descriptor.clientMatchId, getSnapshot: () => descriptorRef.current?.snapshot }).then((session) => {
       if (!canceled && session) onEnableChange(Boolean(session.isShared));
     });
     return () => { canceled = true; };

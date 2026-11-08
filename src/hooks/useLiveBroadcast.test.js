@@ -108,6 +108,37 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot });
   });
 
+  it('drains older queued snapshots before reading the restored current score', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    let snapshot = { ...GO.snapshot, pointsA: 2 };
+    let resolvePoint;
+    h.get('live:scorePoint').mockReturnValue(new Promise((done) => { resolvePoint = done; }));
+    enqueue({ kind: 'point', clientMatchId: 'cm1', clientEventId: 'cm1:7', team: 'A', value: 1, at: 1, snapshot: GO.snapshot });
+    const { result, rerender } = renderHook(({ enabled }) => useLiveBroadcast({ enabled }), {
+      initialProps: { enabled: false },
+    });
+    await act(async () => { await result.current.restore({ ...GO, getSnapshot: () => snapshot }); });
+    act(() => { rerender({ enabled: true }); });
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+    snapshot = { ...snapshot, pointsA: 3 };
+    await act(async () => { resolvePoint({}); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'public', snapshot });
+    expect(load()).toEqual([]);
+  });
+
+  it('does not re-publish when Stop cancels a restored snapshot waiting on the outbox', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    let resolvePoint;
+    h.get('live:scorePoint').mockReturnValue(new Promise((done) => { resolvePoint = done; }));
+    enqueue({ kind: 'point', clientMatchId: 'cm1', clientEventId: 'cm1:7', team: 'A', value: 1, at: 1 });
+    const { result } = setup();
+    await act(async () => { await result.current.restore(GO); });
+    await act(async () => { await result.current.setVisibility('private'); });
+    await act(async () => { resolvePoint({}); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'private' });
+    expect(result.current.isShared).toBe(false);
+  });
+
   it('ignores a delayed restore after the scorer resets to a different match', async () => {
     let resolve;
     h.query.mockReturnValue(new Promise((done) => { resolve = done; }));
@@ -134,7 +165,7 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:create']).toHaveBeenCalledTimes(1);
     expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
   });
-  it('restores true sharing state and Stop after reopening without creating or publishing', async () => {
+  it('restores true sharing state and Stop before broadcasting reactivates', async () => {
     h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true });
     const { result } = setup({ enabled: false });
     await act(async () => { await result.current.restore(GO); });

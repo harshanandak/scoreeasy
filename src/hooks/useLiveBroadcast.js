@@ -26,7 +26,7 @@ import { loadSession, saveSession } from '../lib/live/liveSession';
  * @returns {{
  *   isLive: boolean,
  *   isShared: boolean,
- *   restore: (opts: {clientMatchId: string}) => Promise<object|null>,
+ *   restore: (opts: {clientMatchId: string, getSnapshot?: () => object, snapshot?: object}) => Promise<object|null>,
  *   token: string|null,
  *   error: Error|null,
  *   goLive: (opts: object) => Promise<{token: string, matchId: string}|null>,
@@ -51,6 +51,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const seqRef = useRef(0);
   const generationRef = useRef(0);
   const publishingRef = useRef(false);
+  const pendingRestoreRef = useRef(null);
 
   const [token, setToken] = useState(null);
   const [isLive, setIsLive] = useState(false);
@@ -109,8 +110,32 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   // useLiveOutbox owns the in-flight guard + online/visible reconnect replay.
   const { flush } = useLiveOutbox(sendFn, { enabled });
   useEffect(() => {
-    if (enabled && isShared) void flush();
-  }, [enabled, isShared, flush]);
+    if (!enabled || !isShared) return;
+    const pending = pendingRestoreRef.current;
+    if (!pending) {
+      void flush();
+      return;
+    }
+    pendingRestoreRef.current = null;
+    publishingRef.current = true;
+    void (async () => {
+      try {
+        // Older queued snapshots must land before the current committed score.
+        const drained = await flush();
+        if (pending.generation !== generationRef.current) return;
+        if (drained?.error || size() > 0) throw new Error('Waiting for queued scores to sync');
+        const snapshot = pending.getSnapshot ? pending.getSnapshot() : pending.snapshot;
+        if (!snapshot) throw new Error('Sharing requires the current score snapshot');
+        await setVisibilityM({ matchId: pending.matchId, visibility: pending.visibility, snapshot });
+        if (pending.generation === generationRef.current) setError(null);
+      } catch (e) {
+        if (pending.generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
+      } finally {
+        publishingRef.current = false;
+        if (pending.generation === generationRef.current) void flush();
+      }
+    })();
+  }, [enabled, isShared, flush, setVisibilityM]);
 
   const persistSeq = useCallback((seq) => {
     const cmid = clientMatchIdRef.current;
@@ -118,8 +143,9 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     saveSession(cmid, { matchId: matchIdRef.current, token: tokenRef.current, seq });
   }, []);
 
-  const restore = useCallback(async ({ clientMatchId }) => {
+  const restore = useCallback(async ({ clientMatchId, getSnapshot, snapshot }) => {
     const generation = ++generationRef.current;
+    pendingRestoreRef.current = null;
     clientMatchIdRef.current = clientMatchId;
     matchIdRef.current = null;
     tokenRef.current = null;
@@ -134,6 +160,9 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       matchIdRef.current = session?.matchId ?? null;
       tokenRef.current = session?.token ?? null;
       seqRef.current = Math.max(session?.lastSeq ?? 0, prior?.seq ?? 0);
+      if (session?.isShared) {
+        pendingRestoreRef.current = { generation, matchId: session.matchId, visibility: session.visibility, getSnapshot, snapshot };
+      }
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
@@ -293,6 +322,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   // mis-deliver early events to the old one. Route-based scorers remount instead.
   const reset = useCallback(() => {
     ++generationRef.current;
+    pendingRestoreRef.current = null;
     matchIdRef.current = null;
     tokenRef.current = null;
     clientMatchIdRef.current = null;
