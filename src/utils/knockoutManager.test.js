@@ -56,6 +56,15 @@ describe('updateKnockoutBracket', () => {
     expect(cleared[2]).toMatchObject({ team1Id: null, team2Id: null });
     expect(updateKnockoutBracket(cleared)).toBe(cleared);
   });
+
+  it('leaves explicit source order authoritative instead of alternating it with legacy semi order', () => {
+    const bracket = [
+      { id: 's1', round: 'semi-1', team1Id: 'A', team2Id: 'D', status: 'completed', winner: 'A' },
+      { id: 's2', round: 'semi-2', team1Id: 'B', team2Id: 'C', status: 'completed', winner: 'B' },
+      { id: 'f', round: 'final', team1Id: 'B', team2Id: 'A', status: 'pending', sourceMatchIds: ['s2', 's1'], sourceSlots: ['team1Id', 'team2Id'] },
+    ];
+    expect(updateKnockoutBracket(bracket)).toBe(bracket);
+  });
   it('places a single play-in winner into the open seeded semi-final slot', () => {
     const playIn = {
       id: 'play-in-1',

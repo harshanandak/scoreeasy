@@ -6,6 +6,7 @@ import { isAbandoned } from './matchOutcome';
 
 function hasResolvedWinner(match) {
   return match?.status === 'completed' && !isAbandoned(match) && match.winner != null
+    && match.team1Id != null && match.team2Id != null
     && (match.winner === match.team1Id || match.winner === match.team2Id);
 }
 
@@ -98,12 +99,13 @@ export function updateKnockoutBracket(knockoutMatches) {
     // If a semi was reset, clear the final/3rd-place team assignments
     const final_ = knockoutMatches.find(m => m.round === 'final');
     const third = knockoutMatches.find(m => m.round === 'third-place');
-    const needsClear = [final_, third].some(match => match?.status === 'pending'
+    const needsClear = [final_, third].some(match => match?.status === 'pending' && !match.sourceMatchIds?.length
       && (match.team1Id != null || match.team2Id != null));
 
     if (needsClear) {
       return knockoutMatches.map(m => {
         if ((m.round === 'final' || m.round === 'third-place') && m.status === 'pending'
+          && !m.sourceMatchIds?.length
           && (m.team1Id != null || m.team2Id != null)) {
           return { ...m, team1Id: null, team2Id: null };
         }
@@ -121,11 +123,11 @@ export function updateKnockoutBracket(knockoutMatches) {
   let changed = false;
 
   const updated = knockoutMatches.map(m => {
-    if (m.round === 'final' && m.status === 'pending' && (m.team1Id !== semi1Winner || m.team2Id !== semi2Winner)) {
+    if (m.round === 'final' && m.status === 'pending' && !m.sourceMatchIds?.length && (m.team1Id !== semi1Winner || m.team2Id !== semi2Winner)) {
       changed = true;
       return { ...m, team1Id: semi1Winner, team2Id: semi2Winner };
     }
-    if (m.round === 'third-place' && m.status === 'pending' && (m.team1Id !== semi1Loser || m.team2Id !== semi2Loser)) {
+    if (m.round === 'third-place' && m.status === 'pending' && !m.sourceMatchIds?.length && (m.team1Id !== semi1Loser || m.team2Id !== semi2Loser)) {
       changed = true;
       return { ...m, team1Id: semi1Loser, team2Id: semi2Loser };
     }
