@@ -16,6 +16,7 @@ import { getSportById, getSportsList } from '../../models/sportRegistry';
 import {
   getCompletedAt,
   getTournamentMatches,
+  getTournamentMatchClientId,
   isTournamentMatchCompleted,
   normalizeNonTeamWinner,
 } from '../../utils/tournamentSync';
@@ -232,6 +233,8 @@ function buildTournamentEntries() {
         entries.push({
           id: `tour-${sport.id}-${tournament.id}-${match.id}`,
           source: 'tournament',
+          clientMatchId: getTournamentMatchClientId({ sportId: sport.id, tournament, match }),
+          tournamentMatch: { storageKey: sport.storageKey, tournamentId: tournament.id, matchId: match.id },
           sport: sport.id,
           sportName: sport.name,
           tournamentName: tournament.name,
@@ -650,6 +653,7 @@ export default function MonoHistory() {
                           }}
                         />
                         {entry.source === 'quick' && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} quickMatchId={entry.rawId} />}
+                        {entry.tournamentMatch && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} tournamentMatch={entry.tournamentMatch} />}
                         </Fragment>
                       ))}
                     </div>

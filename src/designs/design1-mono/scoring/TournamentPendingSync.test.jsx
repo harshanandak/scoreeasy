@@ -13,6 +13,8 @@ import CricketScorer from './MonoCricketLiveScore';
 import TestScorer from './MonoCricketTestLiveScore';
 import GuidedScorer from './MonoCricketGuidedScorerRoute';
 import GenericGoalsTournament from '../GenericGoalsTournament';
+import GenericSetsTournament from '../GenericSetsTournament';
+import MonoCricketTournament from '../MonoCricketTournament';
 import MonoMatchResult from '../components/MonoMatchResult';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
@@ -41,11 +43,12 @@ function mount(sport = 'football', Scorer = GoalsScorer, kind) {
       draftState: { scoringStarted: true, score1: 2, score2: 1, sets: [set], currentSet: 0, history: [] } }],
   };
   const seed = sport === 'cricket' ? cricketFinishSeed(kind || 'aggregate') : { [`se_${sport}`]: [tournament] };
+  const Fixtures = sport === 'cricket' ? MonoCricketTournament : ['volleyball', 'tennis'].includes(sport) ? GenericSetsTournament : GenericGoalsTournament;
   Object.entries(seed).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
   render(<AuthContext.Provider value={auth}><MemoryRouter initialEntries={[`/${sport}/tournament/100/match/m1/score`]}>
     <Worker /><Routes>
       <Route path="/:sport/tournament/:id/match/:matchId/score" element={<Scorer />} />
-      <Route path="/:sport/tournament/:id" element={<GenericGoalsTournament />} />
+      <Route path="/:sport/tournament/:id" element={<Fixtures />} />
       <Route path="/:sport/tournament/:id/match/:matchId/result" element={<MonoMatchResult />} />
     </Routes>
   </MemoryRouter></AuthContext.Provider>);
@@ -57,9 +60,9 @@ async function finish() {
 }
 
 it.each([
-  ['volleyball', SetsScorer], ['football', GoalsScorer], ['tennis', TennisScorer],
-  ['cricket', CricketScorer, 'aggregate'], ['cricket', TestScorer, 'test-tournament'], ['cricket', GuidedScorer, 'guided'],
-])('%s %s retains a failed tournament result with a stable identity', async (sport, Scorer, kind) => {
+  ['sets', 'volleyball', SetsScorer], ['goals', 'football', GoalsScorer], ['tennis', 'tennis', TennisScorer],
+  ['aggregate cricket', 'cricket', CricketScorer, 'aggregate'], ['Test cricket', 'cricket', TestScorer, 'test-tournament'], ['guided cricket', 'cricket', GuidedScorer, 'guided'],
+])('%s retains a failed tournament result with a stable identity', async (_label, sport, Scorer, kind) => {
   save.mockRejectedValue(new TypeError('Failed to fetch'));
   mount(sport, Scorer, kind);
   await finish();

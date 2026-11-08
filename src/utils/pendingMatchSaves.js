@@ -1,4 +1,4 @@
-import { loadQuickMatch, saveQuickMatch } from './storage';
+import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTournament } from './storage';
 import { ConvexError } from 'convex/values';
 
 const PREFIX = 'se_pending_match:';
@@ -13,8 +13,15 @@ const notify = () => globalThis.dispatchEvent(new Event(PENDING_SAVES_CHANGED));
 
 export const isMatchSaveConfirmed = (ownerId, clientMatchId) => confirmed.has(keyFor(ownerId, clientMatchId));
 
+export function loadMatchSaveLocal({ quickMatchId, tournamentMatch }) {
+  if (!tournamentMatch) return loadQuickMatch(quickMatchId);
+  const { storageKey, tournamentId, matchId } = tournamentMatch;
+  const tournament = loadSportTournaments(storageKey).find((entry) => String(entry.id) === String(tournamentId));
+  return [...(tournament?.matches || []), ...(tournament?.knockoutMatches || [])].find((entry) => String(entry.id) === String(matchId));
+}
+
 function localSaveConfirmed(record) {
-  const match = loadQuickMatch(record.quickMatchId);
+  const match = loadMatchSaveLocal(record);
   return match?.clientMatchId === record.payload.clientMatchId && match?.syncOwnerId === record.ownerId && match?.sync?.status === 'synced';
 }
 
@@ -68,19 +75,28 @@ function write(record) {
   return record;
 }
 
-export function enqueueMatchSave(ownerId, payload, quickMatchId) {
+export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch) {
   confirmed.delete(keyFor(ownerId, payload.clientMatchId));
   const existing = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === payload.clientMatchId);
   if (existing) return existing;
-  const record = write({ ownerId, payload, quickMatchId, state: 'pending', attempts: 0, nextAttemptAt: 0 });
+  const record = write({ ownerId, payload, quickMatchId, tournamentMatch, state: 'pending', attempts: 0, nextAttemptAt: 0 });
   updateLocalMatch(record, 'pending');
   return record;
 }
 
 function updateLocalMatch(record, status) {
-  const match = loadQuickMatch(record.quickMatchId);
-  if (!match || match.sync?.status === 'synced') return;
-  saveQuickMatch({ ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId, sync: { status } });
+  const match = loadMatchSaveLocal(record);
+  if (!match || localSaveConfirmed(record)) return;
+  const updated = { ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId, sync: { status } };
+  if (!record.tournamentMatch) {
+    saveQuickMatch(updated);
+    return;
+  }
+  const { storageKey, tournamentId, matchId } = record.tournamentMatch;
+  const tournament = loadSportTournaments(storageKey).find((entry) => String(entry.id) === String(tournamentId));
+  if (!tournament) return;
+  const replace = (matches) => matches?.map((entry) => String(entry.id) === String(matchId) ? updated : entry);
+  saveSportTournament(storageKey, { ...tournament, matches: replace(tournament.matches), knockoutMatches: replace(tournament.knockoutMatches) });
 }
 
 export function isSaveInFlight(record) {

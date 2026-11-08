@@ -1,3 +1,4 @@
+import { useTournamentMatchSync } from '../../../hooks/useTournamentMatchSync';
 import { isLimitedOversMatchDecided } from '../../../utils/cricketCalculations';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect } from 'react';
@@ -116,6 +117,7 @@ function initialPhase(match) {
 
 export default function MonoCricketGuidedScorerRoute() {
   const { sport, id, matchId } = useParams();
+  const syncTournament = useTournamentMatchSync({ sport: sport || 'cricket', matchId });
   const navigate = useNavigate();
   const completeProtectedScoring = useScoringCompletion();
 
@@ -294,6 +296,7 @@ export default function MonoCricketGuidedScorerRoute() {
         draftState: undefined, completedAt: now(),
       }));
       const saved = saveSportTournament(storageKey, updated);
+      if (saved) syncTournament(updated);
       setPendingCompletion(saved ? null : { ...payload, innings: finalInnings });
       return saved;
     }, navigateToTournament);
@@ -329,6 +332,7 @@ export default function MonoCricketGuidedScorerRoute() {
         };
       });
       const saved = saveSportTournament(storageKey, updated);
+      if (saved) syncTournament(updated);
       setPendingCompletion(saved ? null : { ...payload, innings: finalInnings });
       return saved;
     }, navigateToTournament);

@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import { matchSaveOwner, usePendingMatchSaveStatus } from '../../../hooks/usePendingMatchSaves';
 import { useAuth } from '../../../hooks/useAuth';
-import { loadQuickMatch } from '../../../utils/storage';
-import { isMatchSaveConfirmed } from '../../../utils/pendingMatchSaves';
+import { isMatchSaveConfirmed, loadMatchSaveLocal } from '../../../utils/pendingMatchSaves';
 import './matchSyncStatus.css';
 
 export default function MatchSyncStatus(props) {
@@ -11,10 +10,10 @@ export default function MatchSyncStatus(props) {
   return <AccountMatchSyncStatus {...props} />;
 }
 
-function AccountMatchSyncStatus({ clientMatchId, quickMatchId, compact = false }) {
+function AccountMatchSyncStatus({ clientMatchId, quickMatchId, tournamentMatch, compact = false }) {
   const { ownerId, records, retry } = usePendingMatchSaveStatus();
   if (!ownerId) return null;
-  const local = loadQuickMatch(quickMatchId);
+  const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
   const identity = local?.clientMatchId || clientMatchId;
   const saved = isMatchSaveConfirmed(ownerId, identity) || (local?.clientMatchId === identity && local?.syncOwnerId === ownerId && local?.sync?.status === 'synced');
   const pending = saved ? undefined : records.find((record) => record.payload.clientMatchId === identity);
@@ -34,5 +33,10 @@ function AccountMatchSyncStatus({ clientMatchId, quickMatchId, compact = false }
 MatchSyncStatus.propTypes = {
   clientMatchId: PropTypes.string,
   quickMatchId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  tournamentMatch: PropTypes.shape({
+    storageKey: PropTypes.string.isRequired,
+    tournamentId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    matchId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  }),
   compact: PropTypes.bool,
 };
