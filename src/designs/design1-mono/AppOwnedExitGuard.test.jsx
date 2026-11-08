@@ -128,6 +128,55 @@ describe('app-owned scoring exit guard', () => {
     expect(historyBack).toHaveBeenCalledTimes(1);
   });
 
+  describe('pending fallback navigation after the guard is gone', () => {
+    const mountScorer = async () => {
+      const view = render(
+        <MemoryRouter initialEntries={['/volleyball/quick']}>
+          <Design1Mono />
+        </MemoryRouter>,
+      );
+      await waitFor(() => {
+        expect(nativeBackButtonMock.installNativeBackButtonGuard).toHaveBeenCalled();
+      });
+      const { goBack } = nativeBackButtonMock.installNativeBackButtonGuard.mock.calls.at(-1)[0];
+      return { ...view, goBack };
+    };
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('clears a pending fallback timer and popstate listener when the scorer unmounts', async () => {
+      vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
+      const { goBack, unmount } = await mountScorer();
+
+      vi.useFakeTimers();
+      goBack();
+      expect(vi.getTimerCount()).toBe(1);
+
+      const removeEventListener = vi.spyOn(globalThis, 'removeEventListener');
+      unmount();
+
+      expect(vi.getTimerCount()).toBe(0);
+      expect(removeEventListener).toHaveBeenCalledWith('popstate', expect.any(Function));
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+    });
+
+    it('starts no fallback timer or popstate listener when a stale exit callback runs after unmount', async () => {
+      vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
+      const { goBack, unmount } = await mountScorer();
+      unmount();
+
+      vi.useFakeTimers();
+      const addEventListener = vi.spyOn(globalThis, 'addEventListener');
+      goBack();
+
+      expect(vi.getTimerCount()).toBe(0);
+      expect(addEventListener).not.toHaveBeenCalledWith('popstate', expect.any(Function), expect.anything());
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+    });
+  });
+
   it('does not install scoring exit guards on game resume recovery routes', async () => {
     const addEventListener = vi.spyOn(globalThis, 'addEventListener');
 
