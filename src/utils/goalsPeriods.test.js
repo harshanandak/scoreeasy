@@ -68,6 +68,8 @@ describe('frozen timing rules and outcomes', () => {
   it('supports two football extra-time halves and repeated basketball overtime with complete undo', () => {
     let football = createPeriodMatch({ ...periodPreset('football').periods, durations: [60, 60], extraDurations: [30, 30] }, 0);
     football = act(football, 'endPeriod', 60000); football = act(football, 'startPeriod', 60000); football = act(football, 'endPeriod', 120000);
+    expect(periodResultDecided(football, 1, 1, true)).toBe(false);
+    expect(periodResultDecided(football, 1, 0, true)).toBe(true);
     football = act(football, 'overtime', 120000);
     expect(football.durations).toEqual([60, 60, 30, 30]);
     football = undoPeriodAction(football, 121000);
@@ -92,4 +94,17 @@ it('keeps a long match durable without duplicating its event log in every undo f
   state = undoPeriodAction(state, 1000000);
   expect(state.events).toHaveLength(999);
   expect(periodTotals(state)).toEqual({ A: 998, B: 1000 });
+});
+
+
+it('corrects an earlier period score after the boundary and undoes it atomically', () => {
+  let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+  state = act(state, 'score', 1000, { team: 'A', value: 1 });
+  state = act(state, 'endPeriod', 60000); state = act(state, 'startPeriod', 61000);
+  state = act(state, 'score', 62000, { team: 'A', value: -1 });
+  expect(periodTotals(state)).toEqual({ A: 0, B: 0 });
+  expect(state.events.at(-1)).toMatchObject({ period: 1, value: -1 });
+  state = undoPeriodAction(state, 63000);
+  expect(state.scores).toEqual([{ A: 1, B: 0 }, { A: 0, B: 0 }]);
+  expect(state.periodIndex).toBe(1);
 });

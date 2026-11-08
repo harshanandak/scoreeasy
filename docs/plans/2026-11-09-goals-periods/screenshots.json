@@ -1,0 +1,296 @@
+[
+  {
+    "file": "basketball-full-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-full-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-half-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-half-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-paused-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-paused-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-period-end-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-period-end-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-running-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-running-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-setup-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-setup-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "basketball-viewer-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "basketball-viewer-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-full-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-full-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-half-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-half-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-paused-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-paused-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-period-end-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-period-end-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-running-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-running-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-setup-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-setup-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "football-viewer-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "football-viewer-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-full-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-full-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-half-time-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-half-time-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-paused-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-paused-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-period-end-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-period-end-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-running-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-running-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-setup-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-setup-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  },
+  {
+    "file": "hockey-viewer-360.png",
+    "cssWidth": 360,
+    "cssHeight": 640,
+    "pngWidth": 720,
+    "pngHeight": 1280
+  },
+  {
+    "file": "hockey-viewer-390.png",
+    "cssWidth": 390,
+    "cssHeight": 844,
+    "pngWidth": 780,
+    "pngHeight": 1688
+  }
+]

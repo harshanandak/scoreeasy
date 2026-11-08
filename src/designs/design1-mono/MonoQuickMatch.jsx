@@ -1300,7 +1300,7 @@ export default function MonoQuickMatch() {
   const makeTimerFields = () => ({
     startedAt: startedAtRef.current,
     endedAt: new Date().toISOString(),
-    elapsedSeconds: timer.elapsed,
+    elapsedSeconds: periodState ? periodState.durations.slice(0, periodState.periodIndex).reduce((a, b) => a + b, 0) + periodTime.elapsed : timer.elapsed,
     ...(periodState ? { periodState } : {}),
   });
 

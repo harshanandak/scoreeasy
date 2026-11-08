@@ -22,7 +22,7 @@ export default function GoalsPeriodControls({ state, remaining, onAction, onFini
     </> : state.phase === 'interval' ? <>
       {!last && <button type="button" disabled={locked} onClick={() => onAction('startPeriod')}>Start next period</button>}
       {overtime && <button type="button" disabled={locked} onClick={() => onAction('overtime')}>Start extra time</button>}
-      {last && (!tied || state.sport !== 'basketball' || state.endedEarly) && <button type="button" disabled={locked} onClick={onFinish}>Confirm full time</button>}
+      {last && (!overtime || state.endedEarly) && <button type="button" disabled={locked} onClick={onFinish}>Confirm full time</button>}
     </> : <span>Full-time</span>}
     {confirm && <AppScoringConfirmDialog title={zero ? "Time's up: end period?" : 'End this period?'}
       message={remaining > 0 ? 'This period is ending early. Finishing this match will record Abandoned / no result.' : 'Confirm the referee decision. The clock never ends a period automatically.'}

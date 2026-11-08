@@ -21,8 +21,14 @@ export function applyPeriodAction(state, action) {
   if (type === 'pause' && state.phase === 'playing' && state.startedAt != null) next = { ...next, elapsed: before.elapsed, startedAt: null };
   else if (type === 'resume' && state.phase === 'playing' && state.startedAt == null) next.startedAt = at;
   else if (type === 'score' && state.phase !== 'finished' && ['A', 'B'].includes(action.team)) {
-    next.scores[state.periodIndex][action.team] = Math.max(0, next.scores[state.periodIndex][action.team] + action.value);
-    next.events = [...(state.events || []), { team: action.team, value: action.value, period: state.periodIndex + 1, elapsed: before.elapsed, at }];
+    let index = state.periodIndex;
+    if (action.value < 0) {
+      while (index > 0 && next.scores[index][action.team] === 0) index -= 1;
+    }
+    const value = Math.max(-next.scores[index][action.team], action.value);
+    if (value === 0) return state;
+    next.scores[index][action.team] += value;
+    next.events = [...(state.events || []), { team: action.team, value, period: index + 1, elapsed: before.elapsed, at }];
   }
   else if (type === 'endPeriod' && state.phase === 'playing') next = { ...next, phase: 'interval', endedEarly: state.endedEarly || before.elapsed < state.durations[state.periodIndex], elapsed: before.elapsed, startedAt: null };
   else if (type === 'startPeriod' && state.phase === 'interval' && state.periodIndex < state.durations.length - 1) next = { ...next, phase: 'playing', periodIndex: state.periodIndex + 1, elapsed: 0, startedAt: at };
@@ -79,5 +85,5 @@ export function clockRemaining(clock, now) {
 export const formatPeriodClock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
 export function periodResultDecided(state, a, b, drawAllowed) {
-  return !state.endedEarly && state.phase !== 'playing' && state.periodIndex === state.durations.length - 1 && (drawAllowed || a !== b);
+  return !(a === b && state.extraDurations?.length > 0) && !state.endedEarly && state.phase !== 'playing' && state.periodIndex === state.durations.length - 1 && (drawAllowed || a !== b);
 }
