@@ -380,10 +380,10 @@ describe('app-owned scoring prompts', () => {
       readFileSync(new URL(componentFile, import.meta.url), 'utf8'),
     ]));
 
-    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('if (!tournament || !match || scoringPrompt.isInteractionLocked) return;');
-    expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
-    expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(isInteractionLocked\) return;/);
-    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(\) => \{\s+if \(scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoCricketLiveScore.jsx']).toContain('if (!tournament || !match || (!confirmed && scoringPrompt.isInteractionLocked)) return;');
+    expect(sourceByComponent['MonoGoalsLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && scoringPrompt\.isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoSetsLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && isInteractionLocked\) return;/);
+    expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const saveMatch = \(confirmed = false\) => \{\s+confirmed = confirmed === true;\s+if \(!confirmed && scoringPrompt\.isInteractionLocked\) return;/);
     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/const canScoreCurrentSet =.*!scoringPrompt\.isInteractionLocked/);
     expect(sourceByComponent['MonoTennisLiveScore.jsx']).toMatch(/scoringPrompt\.isInteractionLocked\r?\n {4}\? 'Scoring is temporarily locked'/);
     expect(sourceByComponent['MonoCricketTestLiveScore.jsx']).toMatch(/const saveCompleteMatch = \(\) => \{\s+if \(scoringPrompt\.pendingPrompt\) return;/);

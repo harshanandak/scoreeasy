@@ -1,3 +1,4 @@
+import { isAbandoned } from './matchOutcome';
 // Generic standings calculators for sets-based and goals-based sports
 
 /**
@@ -11,6 +12,7 @@ export function calculateSetsStandings(teams, matches, config) {
   const stats = teams.map(team => ({
     teamId: team.id,
     teamName: team.name,
+    noResult: 0,
     played: 0,
     won: 0,
     lost: 0,
@@ -24,7 +26,7 @@ export function calculateSetsStandings(teams, matches, config) {
 
   matches.forEach(match => {
     // Skip pending matches
-    if (!match.sets || match.sets.length === 0) return;
+    if ((!match.sets || match.sets.length === 0) && !isAbandoned(match)) return;
     if (match.status === 'pending') return;
 
     const t1 = stats.find(s => s.teamId === match.team1Id);
@@ -33,6 +35,7 @@ export function calculateSetsStandings(teams, matches, config) {
 
     t1.played++;
     t2.played++;
+    if (isAbandoned(match)) { t1.noResult++; t2.noResult++; return; }
 
     let t1SetsWon = 0;
     let t2SetsWon = 0;
@@ -98,6 +101,7 @@ export function calculateGoalsStandings(teams, matches, config) {
   const stats = teams.map(team => ({
     teamId: team.id,
     teamName: team.name,
+    noResult: 0,
     played: 0,
     won: 0,
     drawn: 0,
@@ -121,6 +125,7 @@ export function calculateGoalsStandings(teams, matches, config) {
 
     t1.played++;
     t2.played++;
+    if (isAbandoned(match)) { t1.noResult++; t2.noResult++; return; }
     t1.goalsFor += s1;
     t1.goalsAgainst += s2;
     t2.goalsFor += s2;

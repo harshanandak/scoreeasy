@@ -1,9 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { cricketFinishSeed } from '../../../test/cricketFinishFixtures';
 import { ScoringCompletionContext } from './scoringCompletionContext';
 import MonoCricketGuidedScorerRoute from './MonoCricketGuidedScorerRoute';
+import MonoCricketTournament from '../MonoCricketTournament';
+import { calculateCricketPointsTable } from '../../../utils/cricketCalculations';
+import { useTournamentScoreClear } from '../hooks/useTournamentScoreClear';
 import { createInnings, applyDelivery, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 
 vi.mock('convex/react', () => ({
@@ -50,7 +55,7 @@ function rejectResults(kind) {
 }
 function manualFinish() {
   fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' })); confirmEarlyFinish();
 }
 function expectVisibleInnings(runs, overs) {
   const score = document.querySelector('.mono-scorer-score-value');
@@ -67,6 +72,55 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
 describe('cricket persistence transactions', () => {
+  it.each(['sets', 'goals'])('%s Clear drops old outcome metadata and Undo restores the exact abandoned record', scoreKind => {
+    const match = { id: 'm1', status: 'completed', resultType: 'abandoned', winner: null, winDesc: '', completedAt: '2026-10-21', setsWon1: 1, setsWon2: 0, sets: [{ score1: 2, score2: 1 }], score1: 2, score2: 1, draftState: { old: true } };
+    let current;
+    const { result } = renderHook(() => {
+      const [tournament, setTournament] = useState({ teams: [], matches: [match] });
+      current = tournament;
+      return useTournamentScoreClear({ scoreKind, setTournament, tournament, teams: [], tournamentScopeKey: 'test' });
+    });
+    act(() => result.current.requestScoreClear(match));
+    act(() => result.current.confirmScoreClear());
+    expect(current.matches[0]).toMatchObject({ status: 'pending', winner: null });
+    for (const field of ['resultType', 'winDesc', 'completedAt', 'setsWon1', 'setsWon2', 'draftState']) expect(current.matches[0][field]).toBeUndefined();
+    act(() => result.current.undoScoreClear());
+    expect(current.matches[0]).toEqual(match);
+  });
+
+  it('clears an abandoned guided match and replays it to an explicitly decided chase win counted in standings', () => {
+    seed('guided', match => {
+      match.status = 'completed'; match.resultType = 'abandoned'; match.winner = null;
+      match.winDesc = ''; match.completedAt = '2026-10-21';
+      match.team2Score = { runs: 0, wickets: 0, balls: 0 };
+      match.draftState = undefined;
+    });
+    const overview = render(<MemoryRouter initialEntries={['/cricket/tournament/100']}><Routes>
+      <Route path="/:sport/tournament/:id" element={<MonoCricketTournament />} />
+    </Routes></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear', exact: true }));
+    const cleared = stored('guided');
+    expect(cleared).toMatchObject({ status: 'pending', winner: null });
+    expect(cleared.resultType).toBeUndefined();
+    expect(cleared.completedAt).toBeUndefined();
+    overview.unmount();
+    const tournament = JSON.parse(localStorage.getItem('se_cricket'))[0];
+    const replay = cricketFinishSeed('guided').se_cricket[0].matches[0];
+    tournament.matches[0] = { ...cleared, status: 'in-progress', team1Score: replay.team1Score, draftState: replay.draftState };
+    localStorage.setItem('se_cricket', JSON.stringify([tournament]));
+    mount('guided');
+    fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+    expect(stored('guided')).toMatchObject({ resultType: 'decided', winner: 'B', status: 'completed' });
+    expect(calculateCricketPointsTable(tournament.teams, [stored('guided')]).find(row => row.teamId === 'B')).toMatchObject({ played: 1, won: 1, noResult: 0 });
+  });
+
+  it('a guided terminal save overwrites stale abandoned metadata explicitly', () => {
+    seed('guided', match => { match.resultType = 'abandoned'; });
+    mount('guided');
+    fireEvent.click(screen.getByRole('button', { name: 'Four' }));
+    expect(stored('guided')).toMatchObject({ status: 'completed', resultType: 'decided', winner: 'B' });
+  });
+
   it('guided failed final save stays open, retains the winning ball on refresh, and retries once', () => {
     seed('guided');
     const complete = vi.fn();
@@ -101,7 +155,7 @@ describe('cricket persistence transactions', () => {
     expect(saved.draftState).toBeUndefined();
   });
 
-  it.each(['test-tournament', 'test-quick'])('%s manual finish persists an unfinished match as a draw', (kind) => {
+  it.each(['test-tournament', 'test-quick'])('%s manual finish preserves an unfinished match as abandoned', (kind) => {
     // Illegal post-Finish inputs must not trigger a separate natural-completion lock.
     seed(kind, match => { match.draftState.innings[0].runs = 20; });
     const complete = vi.fn();
@@ -110,7 +164,7 @@ describe('cricket persistence transactions', () => {
     expectVisibleInnings(1, '0.1');
     expect(stored(kind).draftState.innings[3]).toMatchObject({ runs: 1, balls: 1 });
     manualFinish();
-    expect(stored(kind)).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw', completedAt: expect.any(String) });
+    expect(stored(kind)).toMatchObject({ status: 'completed', winner: null, resultType: 'abandoned', completedAt: expect.any(String) });
     expect(stored(kind).innings[3]).toMatchObject({ runs: 1, balls: 1 });
     expect(stored(kind).draftState).toBeUndefined();
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? '/cricket/quick?result=300' : '/cricket/tournament/100');

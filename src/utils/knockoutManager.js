@@ -2,6 +2,13 @@
 // Shared logic for phase transitions, bracket seeding, and match discovery
 
 import { generateKnockoutMatches } from './roundRobin';
+import { isAbandoned } from './matchOutcome';
+
+function hasResolvedWinner(match) {
+  return match?.status === 'completed' && !isAbandoned(match) && match.winner != null
+    && match.team1Id != null && match.team2Id != null
+    && (match.winner === match.team1Id || match.winner === match.team2Id);
+}
 
 /**
  * Check if all group stage matches are completed.
@@ -55,7 +62,7 @@ export function updateKnockoutBracket(knockoutMatches) {
       }
 
       const sources = match.sourceMatchIds.map((sourceId) => knockoutMatches.find((candidate) => candidate.id === sourceId));
-      if (sources.some((source) => source?.status !== 'completed' || !source?.winner || source?.winner === 'draw' || source?.winner === 'tie')) {
+      if (sources.some(source => !hasResolvedWinner(source))) {
         const sourceSlots = getSourceSlots(match);
         const cleared = sourceSlots.reduce((next, slot) => ({ ...next, [slot]: null }), match);
         if (sourceSlots.every((slot) => cleared[slot] === match[slot])) return match;
@@ -69,7 +76,7 @@ export function updateKnockoutBracket(knockoutMatches) {
       const sourceSlots = getSourceSlots(match);
       const nextMatch = sourceSlots.reduce((next, slot, index) => ({
         ...next,
-        [slot]: teamIds[index] || null,
+        [slot]: teamIds[index] ?? null,
       }), match);
       if (nextMatch.team1Id === match.team1Id && nextMatch.team2Id === match.team2Id) return match;
 
@@ -86,18 +93,20 @@ export function updateKnockoutBracket(knockoutMatches) {
   // No semis = nothing to update (top-2 format)
   if (!semi1 || !semi2) return knockoutMatches;
 
-  const bothSemisComplete = semi1.status === 'completed' && semi2.status === 'completed';
+  const bothSemisComplete = hasResolvedWinner(semi1) && hasResolvedWinner(semi2);
 
   if (!bothSemisComplete) {
     // If a semi was reset, clear the final/3rd-place team assignments
     const final_ = knockoutMatches.find(m => m.round === 'final');
     const third = knockoutMatches.find(m => m.round === 'third-place');
-    const needsClear = (final_?.team1Id && final_.status === 'pending') ||
-                       (third?.team1Id && third.status === 'pending');
+    const needsClear = [final_, third].some(match => match?.status === 'pending' && !match.sourceMatchIds?.length
+      && (match.team1Id != null || match.team2Id != null));
 
     if (needsClear) {
       return knockoutMatches.map(m => {
-        if ((m.round === 'final' || m.round === 'third-place') && m.status === 'pending') {
+        if ((m.round === 'final' || m.round === 'third-place') && m.status === 'pending'
+          && !m.sourceMatchIds?.length
+          && (m.team1Id != null || m.team2Id != null)) {
           return { ...m, team1Id: null, team2Id: null };
         }
         return m;
@@ -114,11 +123,11 @@ export function updateKnockoutBracket(knockoutMatches) {
   let changed = false;
 
   const updated = knockoutMatches.map(m => {
-    if (m.round === 'final' && m.status === 'pending' && (!m.team1Id || !m.team2Id)) {
+    if (m.round === 'final' && m.status === 'pending' && !m.sourceMatchIds?.length && (m.team1Id !== semi1Winner || m.team2Id !== semi2Winner)) {
       changed = true;
       return { ...m, team1Id: semi1Winner, team2Id: semi2Winner };
     }
-    if (m.round === 'third-place' && m.status === 'pending' && (!m.team1Id || !m.team2Id)) {
+    if (m.round === 'third-place' && m.status === 'pending' && !m.sourceMatchIds?.length && (m.team1Id !== semi1Loser || m.team2Id !== semi2Loser)) {
       changed = true;
       return { ...m, team1Id: semi1Loser, team2Id: semi2Loser };
     }
@@ -162,7 +171,7 @@ export function isTournamentComplete(tournament) {
 export function getTournamentWinner(tournament) {
   if (tournament.winnerMode === 'knockouts') {
     const final_ = tournament.knockoutMatches?.find(m => m.round === 'final');
-    if (final_?.status === 'completed' && final_.winner) {
+    if (hasResolvedWinner(final_)) {
       return tournament.teams.find(t => t.id === final_.winner) || null;
     }
   }

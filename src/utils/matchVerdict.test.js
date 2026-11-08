@@ -324,7 +324,7 @@ describe('matchVerdict — cricket shape (derived totals)', () => {
 describe('matchVerdict — edge states', () => {
   it('reports an abandoned match', () => {
     const v = matchVerdict({ team1: 'A', team2: 'B', status: 'abandoned' });
-    expect(v.headline).toBe('Match abandoned');
+    expect(v.headline).toBe('Abandoned · no result');
     expect(v.isDecided).toBe(false);
     expect(v.isDraw).toBe(false);
     expect(v.winnerSide).toBe('none');

@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 // PUBLIC spectator page for /live/:token — no sign-in required.
 //
 // ── EGRESS / CACHING-EFFICIENT SPLIT-QUERY CONTRACT ────────────────────────
@@ -169,10 +170,10 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   const stale = !isFinal && Date.now() - snapshot.lastEventAt > STALE_MS;
 
   let eyebrow = 'LIVE';
-  if (isFinal) eyebrow = 'FINAL';
+  if (isFinal) eyebrow = isAbandoned(snapshot) ? ABANDONED_LABEL : 'FINAL';
   else if (snapshot.status === 'paused') eyebrow = 'PAUSED';
 
-  const winner = isFinal ? winnerName(snapshot, nameA, nameB) : null;
+  const winner = isFinal && !isAbandoned(snapshot) ? winnerName(snapshot, nameA, nameB) : null;
   const periodLine = snapshot.periodLabel
     ? snapshot.periodLabel
     : getSportById(snapshot.sport)?.engine === 'sets'
@@ -471,7 +472,7 @@ function ScorecardPanel({ scorecardKind, snapshot, nameA, nameB }) {
     return (
       <LineScore
         totals={{ a: snapshot.pointsA, b: snapshot.pointsB }}
-        isFinalResult={snapshot.status === 'final'}
+        isFinalResult={snapshot.status === 'final' && !isAbandoned(snapshot)}
         teamA={nameA}
         teamB={nameB}
       />

@@ -24,6 +24,7 @@ function buildStats(playerEntries: Doc<"matchPlayers">[], matches: Doc<"matches"
   const matchMap = new Map(matches.map((match) => [match._id, match]));
 
   let wins = 0;
+  let decidedMatches = 0;
   const sportBreakdown: Record<string, { played: number; wins: number }> = {};
 
   for (const entry of playerMatches) {
@@ -35,6 +36,8 @@ function buildStats(playerEntries: Doc<"matchPlayers">[], matches: Doc<"matches"
     }
     sportBreakdown[entry.sport].played += 1;
 
+    if (match.resultType === "abandoned") continue;
+    decidedMatches += 1;
     if (match.winner && match.winner === entry.team) {
       wins += 1;
       sportBreakdown[entry.sport].wins += 1;
@@ -46,7 +49,7 @@ function buildStats(playerEntries: Doc<"matchPlayers">[], matches: Doc<"matches"
   return {
     totalMatches,
     wins,
-    winRate: totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0,
+    winRate: decidedMatches > 0 ? Math.round((wins / decidedMatches) * 100) : 0,
     gamesOperated: operatorEntries.length,
     sportBreakdown,
   };
@@ -65,6 +68,7 @@ export const save = authedMutation({
     score2: v.number(),
     detail: v.optional(v.any()),
     winner: v.optional(v.string()),
+    resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))),
     format: v.optional(v.any()),
     date: v.number(),
     duration: v.optional(v.number()),

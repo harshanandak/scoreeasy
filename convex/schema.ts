@@ -30,6 +30,7 @@ export default defineSchema({
     score2: v.number(),
     detail: v.optional(v.any()),
     winner: v.optional(v.string()),
+    resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))),
     format: v.optional(v.any()),
     operatedBy: v.id("users"),
     date: v.number(),
@@ -81,6 +82,7 @@ export default defineSchema({
     clientMatchId: v.string(),
     sport: v.string(),
     scorecardKind: v.string(),
+    resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))),
     status: v.union(v.literal("live"), v.literal("paused"), v.literal("final")),
     visibility: v.union(
       v.literal("public"),

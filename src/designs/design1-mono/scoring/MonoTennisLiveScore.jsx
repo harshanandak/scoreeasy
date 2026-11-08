@@ -1,3 +1,5 @@
+import { isTennisMatchDecided } from '../../../utils/tennisQuickMatch';
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
 import { useScoringProgress } from './scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef, useMemo, useId } from 'react';
@@ -437,12 +439,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightName = sidesSwapped ? team1Name : team2Name;
 
   // Check if match is complete
-  const isMatchComplete = useMemo(() => {
-    const completedSets = sets.filter(s => s.completed);
-    const setsToWin = Math.ceil(sets.length / 2);
-    const { team1Sets, team2Sets } = countSetsWon(completedSets);
-    return team1Sets >= setsToWin || team2Sets >= setsToWin;
-  }, [sets]);
+  const isMatchComplete = useMemo(() => isTennisMatchDecided(sets), [sets]);
 
   // Add point to team
   const addPoint = (team) => {
@@ -627,28 +624,8 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       sets,
       isComplete: isMatchComplete,
       completedAt,
+      finished: true,
     });
-
-    if (!isMatchComplete) {
-      const ok = saveData(quickDraftKey, {
-        ...entry,
-        sets,
-        draftState: {
-          scoringStarted,
-          currentSet,
-          sets,
-          history,
-          savedAt: completedAt,
-        },
-      });
-      if (!ok) {
-        setSaveWarning('Save failed - storage may be full. Export your data.');
-        return false;
-      }
-      setSaveWarning('');
-      scoringPrompt.scheduleDraftRedirect(navigateBack);
-      return;
-    }
 
     const ok = saveStoredQuickMatch(entry);
     if (!ok) {
@@ -658,13 +635,18 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
     clearData(quickDraftKey);
     setSaveWarning('');
-    live.finalize();
+    live.finalize({ resultType: entry.resultType });
     completeScoring(`/${sport}/quick?result=${encodeURIComponent(matchId)}`);
   };
 
   // Save match and return
-  const saveMatch = () => {
-    if (scoringPrompt.isInteractionLocked) return;
+  const saveMatch = (confirmed = false) => {
+    confirmed = confirmed === true;
+    if (!confirmed && scoringPrompt.isInteractionLocked) return;
+    if (!isMatchComplete && !confirmed) {
+      scoringPrompt.requestPrompt({ type: 'early-finish', title: 'End match?', message: EARLY_FINISH_MESSAGE, confirmLabel: 'End match', cancelLabel: 'Keep scoring' });
+      return;
+    }
 
     completion.complete(() => {
       if (isMatchComplete) {
@@ -686,23 +668,12 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
       const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
         ...m,
-        // Persist the shared set contract (score1/score2 = games) so standings + the
-        // bracket UI can read sets — but ONLY once the match is complete. An
-        // in-progress save must leave the top-level result fields empty, otherwise
-        // calculateSetsStandings (which skips only pending/empty matches) would count
-        // the unfinished match and award match points. draftState below keeps the raw
-        // live shape for resume.
-        sets: isMatchComplete ? mapTennisSetsForQuickHistory(sets) : [],
-        status: isMatchComplete ? 'completed' : 'in-progress',
+        sets: mapTennisSetsForQuickHistory(sets),
+        status: 'completed',
+        resultType: isMatchComplete ? 'decided' : 'abandoned',
         winner: isMatchComplete ? winner : null,
-        completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
-        draftState: isMatchComplete ? undefined : {
-          scoringStarted,
-          currentSet,
-          sets,
-          history,
-          savedAt: new Date().toISOString(),
-        },
+        completedAt: new Date().toISOString(),
+        draftState: undefined,
       }));
 
       const ok = saveSportTournament(sportConfig.storageKey, updatedTournament);
@@ -711,13 +682,9 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
         return false;
       }
       setSaveWarning('');
-      if (isMatchComplete) {
-        saveTournamentToConvex(updatedTournament);
-        live.finalize();
-        completeScoring(`/${sport}/tournament/${id}`);
-        return;
-      }
-      navigate(`/${sport}/tournament/${id}`);
+      saveTournamentToConvex(updatedTournament);
+      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned' });
+      completeScoring(`/${sport}/tournament/${id}`);
     });
   };
 
@@ -745,7 +712,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard match?',
     message: `Delete ${team1Name} v ${team2Name}, ${sets[currentSet]?.games1 || 0}–${sets[currentSet]?.games2 || 0} games? This can't be undone.`,
   });
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
+  const confirmPendingPrompt = () => {
+    if (scoringPrompt.pendingPrompt?.type === 'early-finish') { scoringPrompt.closePrompt(); saveMatch(true); return; }
+    scoringPrompt.confirmDiscard(discardAndExit);
+  };
 
   if ((!isQuickMatch && !tournament) || !match) {
     return (

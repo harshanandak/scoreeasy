@@ -1,5 +1,7 @@
 import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, setWinRule, isSetsGameComplete } from '../../../models/setsRules';
 import SetsRulesControls, { ServerChoice } from './SetsRulesControls';
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
+import { isSetsMatchDecided } from '../../../utils/quickMatchSets';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
@@ -425,8 +427,9 @@ export default function MonoSetsLiveScore() {
   }, [sets, currentSet, servingTeam, scoringMode, sportConfig, rules]);
 
   // Save match and return
-  const saveMatch = () => {
-    if (isInteractionLocked) return;
+  const saveMatch = (confirmed = false) => {
+    confirmed = confirmed === true;
+    if (!confirmed && isInteractionLocked) return;
     if (completion.locked) return;
 
     // Save all sets that have any score (including in-progress)
@@ -439,36 +442,24 @@ export default function MonoSetsLiveScore() {
     const t1SetsWon = completedSets.filter(s => s.score1 > s.score2).length;
     const t2SetsWon = completedSets.filter(s => s.score2 > s.score1).length;
 
-    const formatType = effectiveFormat.type || 'best-of';
-    let isMatchComplete;
-    if (formatType === 'single') {
-      // Single-set format: match is complete when the one set is done
-      isMatchComplete = completedSets.length > 0;
-    } else {
-      const setsToWin = rules.setsToWin;
-      isMatchComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
+    const isMatchComplete = isSetsMatchDecided({ sets, format: effectiveFormat, sportConfig });
+    if (!isMatchComplete && !confirmed) {
+      scoringPrompt.requestPrompt({ type: 'early-finish', title: 'End match?', message: EARLY_FINISH_MESSAGE, confirmLabel: 'End match', cancelLabel: 'Keep scoring' });
+      return;
     }
 
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       sets: setsToSave,
-      status: isMatchComplete ? 'completed' : 'in-progress',
+      status: 'completed',
+      resultType: isMatchComplete ? 'decided' : 'abandoned',
       winner: isMatchComplete ? (t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id) : null,
       format: { ...effectiveFormat, scoringMode },
       setsWon1: t1SetsWon,
       setsWon2: t2SetsWon,
       scoringMode,
-      completedAt: isMatchComplete ? new Date().toISOString() : m.completedAt,
-      draftState: isMatchComplete ? undefined : {
-        scoringStarted,
-        currentSet,
-        sets: structuredClone(sets),
-        history: structuredClone(history.slice(-50)),
-        servingTeam,
-        scoringMode,
-        sidesSwapped,
-        savedAt: new Date().toISOString(),
-      },
+      completedAt: new Date().toISOString(),
+      draftState: undefined,
     }));
 
     completion.complete(() => {
@@ -478,24 +469,20 @@ export default function MonoSetsLiveScore() {
         return false;
       }
       setSaveWarning('');
-      if (isMatchComplete) {
-        saveTournamentToConvex(updatedTournament);
-        live.finalize();
-        // Reference wiring (kernel 42f06561): a completed match lands on the
-        // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
-        // guard entry through the app-owned seam so Back from Result returns to the
-        // bracket, never the frozen completed scorer (PR #128). A plain replace only
-        // drops the guard entry, orphaning the scorer entry underneath.
-        const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
-        if (completeProtectedScoring) {
-          completeProtectedScoring(resultPath);
-        } else {
-          navigate(resultPath, { replace: true });
-        }
-        return;
+      saveTournamentToConvex(updatedTournament);
+      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned' });
+      // Reference wiring (kernel 42f06561): a completed match lands on the
+      // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
+      // guard entry through the app-owned seam so Back from Result returns to the
+      // bracket, never the frozen completed scorer (PR #128). A plain replace only
+      // drops the guard entry, orphaning the scorer entry underneath.
+      const resultPath = `/${sport}/tournament/${id}/match/${matchId}/result`;
+      if (completeProtectedScoring) {
+        completeProtectedScoring(resultPath);
+      } else {
+        navigate(resultPath, { replace: true });
       }
-
-      navigate(`/${sport}/tournament/${id}`);
+      return;
     });
   };
 
@@ -549,7 +536,10 @@ export default function MonoSetsLiveScore() {
     cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard changes?',
     message: `Delete ${team1Name} v ${team2Name}, ${sets[currentSet]?.score1 || 0}–${sets[currentSet]?.score2 || 0}? This can't be undone.`,
   });
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
+  const confirmPendingPrompt = () => {
+    if (scoringPrompt.pendingPrompt?.type === 'early-finish') { scoringPrompt.closePrompt(); saveMatch(true); return; }
+    scoringPrompt.confirmDiscard(discardAndExit);
+  };
 
   if (loadStatus === 'notfound') {
     return (

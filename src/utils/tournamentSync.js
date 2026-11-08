@@ -132,7 +132,10 @@ export function buildTournamentConvexPayload({ sportId, tournament, match }) {
   let resultShape = {
     team1: team1Name,
     team2: team2Name,
+    team1Id: match.team1Id,
+    team2Id: match.team2Id,
     winner,
+    resultType: match.resultType,
     format: match.format || tournament?.format,
     elapsedSeconds: match.elapsedSeconds,
   };
@@ -175,7 +178,7 @@ export function buildTournamentConvexPayload({ sportId, tournament, match }) {
   normalized.date = toTimestamp(getCompletedAt(match));
   normalized.clientMatchId = getTournamentMatchClientId({ sportId, tournament, match });
 
-  if (winner) {
+  if (winner && match.resultType !== 'abandoned') {
     normalized.winner = winner;
   }
   if (match.matchRole) {

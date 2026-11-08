@@ -87,6 +87,18 @@ function renderStatistics() {
 }
 
 describe('MonoStatistics', () => {
+  it('tournament one win plus one abandoned keeps played two, win rate 100% and average margin over the one result', async () => {
+    localStorage.setItem('se_football', JSON.stringify([{ id: 100, name: 'Cup', format: { mode: 'timed' },
+      teams: [{ id: 'A', name: 'Alpha' }, { id: 'B', name: 'Beta' }], knockoutMatches: [], matches: [
+        { id: 'win', team1Id: 'A', team2Id: 'B', status: 'completed', resultType: 'decided', winner: 'A', score1: 3, score2: 1 },
+        { id: 'abandoned', team1Id: 'A', team2Id: 'B', status: 'completed', resultType: 'abandoned', winner: null, score1: 99, score2: 0 },
+      ] }]));
+    renderStatistics();
+    fireEvent.click(await screen.findByRole('tab', { name: /Football/ }));
+    const table = screen.getByRole('table', { name: 'Football team statistics' });
+    const cells = within(within(table).getByRole('row', { name: /^Alpha/ })).getAllByRole('cell');
+    expect(cells.map(cell => cell.textContent)).toEqual(['2', '1', '0', '3', '1', '2.0', '100%']);
+  });
   beforeEach(() => {
     globalThis.localStorage.clear();
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => {

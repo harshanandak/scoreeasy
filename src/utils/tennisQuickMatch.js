@@ -1,3 +1,4 @@
+import { recordMatchOutcome } from './matchOutcome';
 export const TENNIS_QUICK_DRAFT_PREFIX = 'se_tennis_quick_draft_';
 
 export function getTennisQuickDraftKey(matchId) {
@@ -37,6 +38,12 @@ export function countTennisQuickSetsWon(sets) {
     }, { setsWon1: 0, setsWon2: 0 });
 }
 
+export function isTennisMatchDecided(sets, format = {}) {
+  const { setsWon1, setsWon2 } = countTennisQuickSetsWon(sets);
+  const toWin = Math.ceil((format.sets || sets?.length || 3) / 2);
+  return setsWon1 >= toWin || setsWon2 >= toWin;
+}
+
 export function getVisibleTennisSetRows(sets) {
   if (!Array.isArray(sets)) return [];
 
@@ -68,7 +75,7 @@ export function buildTennisQuickDraft({ matchId, sport, team1Name, team2Name, fo
   };
 }
 
-export function buildTennisQuickHistoryEntry({ match, sets, isComplete, completedAt }) {
+export function buildTennisQuickHistoryEntry({ match, sets, isComplete, completedAt, finished = false }) {
   const setRows = mapTennisSetsForQuickHistory(sets);
   const { setsWon1, setsWon2 } = countTennisQuickSetsWon(sets);
   const winner = setsWon1 > setsWon2
@@ -77,7 +84,7 @@ export function buildTennisQuickHistoryEntry({ match, sets, isComplete, complete
       ? match.team2Name || match.team2
       : null;
 
-  return {
+  const entry = {
     ...match,
     sets: setRows,
     setsWon1,
@@ -89,4 +96,5 @@ export function buildTennisQuickHistoryEntry({ match, sets, isComplete, complete
     completedAt: isComplete ? completedAt : match.completedAt,
     updatedAt: completedAt,
   };
+  return finished ? recordMatchOutcome({ ...entry, completedAt }, isComplete) : entry;
 }

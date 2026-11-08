@@ -1,3 +1,8 @@
+import { getQuickCricketTransition } from '../../utils/cricketCalculations';
+import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutcome';
+import { isSetsMatchDecided } from '../../utils/quickMatchSets';
+import { isGoalsMatchDecided } from '../../utils/goalsScoring';
+import { isLimitedOversMatchDecided } from '../../utils/cricketCalculations';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
 import { useScoringProgress } from './scoring/scoringProgressContext';
@@ -774,7 +779,7 @@ export default function MonoQuickMatch() {
   // it. A separate effect declared IMMEDIATELY AFTER the snapshot effect runs in
   // source order — so the last point enqueues BEFORE finalize drains+archives.
   useEffect(() => {
-    if (phase === 'result') void liveRef.current.finalize();
+    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType });
   }, [phase]);
 
   // Apply cricket defaults when the quick-match sport route changes.
@@ -953,7 +958,8 @@ export default function MonoQuickMatch() {
     });
   };
 
-  const finalizeMatch = (entry) => completion.complete(() => {
+  const finalizeMatch = (entry, decided = true) => completion.complete(() => {
+    entry = recordMatchOutcome(entry, decided);
     void endMatchImpact();
 
     const matchId = liveMatchIdRef.current ?? entry.id;
@@ -1158,16 +1164,7 @@ export default function MonoQuickMatch() {
   };
 
   cricketScoresRef.current = scores;
-  const getCricketTransition = (candidate) => {
-    const key = battingTeam === 1 ? 'team1' : 'team2';
-    const team = candidate[key];
-    if (!team) return null;
-    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
-    const chaseTarget = battingTeam === 2 ? candidate.team1.runs : candidate.team2.runs;
-    if (innings === 1 && inningsOver) return 'break';
-    if (innings === 2 && (inningsOver || team.runs > chaseTarget)) return 'complete';
-    return null;
-  };
+  const getCricketTransition = candidate => getQuickCricketTransition(candidate, { format, innings, battingTeam });
 
   const commitCricketScores = (update) => {
     if (completion.locked) return;
@@ -1306,7 +1303,7 @@ export default function MonoQuickMatch() {
       date: new Date().toISOString(),
       ...makeTimerFields(),
     };
-            finalizeMatch(r);
+    finalizeMatch(r, isLimitedOversMatchDecided({ team1Score: s.team1, team2Score: s.team2, format, innings, battingSecond: battingTeam }));
   };
 
   // Cricket innings flip / match finish as a single POST-COMMIT effect, instead of
@@ -1690,14 +1687,16 @@ export default function MonoQuickMatch() {
     }
   };
 
+  const isCurrentMatchDecided = () => isCricket
+    ? isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })
+    : isGoals
+      ? isGoalsMatchDecided({ format, score1: gScore1, score2: gScore2, elapsedSeconds: timer.elapsed, drawAllowed: sportConfig?.config?.drawAllowed ?? true })
+      : isSetsMatchDecided({ sets, format, sportConfig, score1: vScore1, score2: vScore2 });
+
   const endMatchGoals = () => {
-    const drawAllowed = sportConfig?.config?.drawAllowed ?? true;
-    if (!drawAllowed && gScore1 === gScore2) {
-      void warningImpact();
-      setSaveWarning(`${sportConfig.name} cannot end tied. Add the deciding score before ending.`);
-      return;
-    }
-    finalizeGoalScore(gScore1, gScore2);
+    if (isCurrentMatchDecided()) return finalizeGoalScore(gScore1, gScore2);
+    return finalizeMatch({ id: Date.now(), sport, team1: team1Name, team2: team2Name,
+      score1: gScore1, score2: gScore2, format, date: new Date().toISOString(), ...makeTimerFields() }, false);
   };
 
   const getManualSetsResult = () => {
@@ -1735,7 +1734,7 @@ export default function MonoQuickMatch() {
         winner: manualResult.winner, format, date: new Date().toISOString(),
         ...makeTimerFields(),
       };
-            finalizeMatch(r);
+      finalizeMatch(r, isCurrentMatchDecided());
     }
   };
 
@@ -2247,7 +2246,7 @@ export default function MonoQuickMatch() {
   const presetLabel = formatPreset?.name || '';
   // `skin` lets a board restyle the dialogs (and show the score they act on) without forking them.
   const renderEndMatchDialog = (skin = {}) => (showEndConfirm ? (
-    <ConfirmDialog {...skin} onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
+    <ConfirmDialog {...skin} message={isCurrentMatchDecided() ? undefined : EARLY_FINISH_MESSAGE} onCancel={cancelEndMatch} onConfirm={confirmEndMatch} />
   ) : null);
   const endMatchDialog = renderEndMatchDialog();
 
