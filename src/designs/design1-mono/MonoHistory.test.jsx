@@ -522,7 +522,7 @@ describe('MonoHistory', () => {
     fireEvent.click(within(viewTabs).getByRole('tab', { name: 'Stats' }));
 
     expect(await screen.findByText('Performance')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Overview' })).toBeInTheDocument();
     expect(screen.getByText('Top team')).toBeInTheDocument();
     // The match list is hidden while viewing Stats.
     expect(screen.queryByRole('button', { name: row('Team A', 'Team B') })).not.toBeInTheDocument();

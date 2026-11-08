@@ -1,31 +1,29 @@
-// Pure count-only Club standard rules. No storage, wall-clock reads or UI wiring.
+// Pure versioned rectangular rules. No storage, wall-clock reads or UI wiring.
 import { deriveTeamColours, PRESETS } from '../lib/teamColour.js';
+import { resolveKabaddiRules, validateKabaddiRules } from './kabaddiRules.js';
+import { assertState as assertLegacyState } from './kabaddiLegacyEngine.js';
 
-const VERSION = 1;
-const RULES_VERSION = 'club-rectangular-v1';
+const VERSION = 2;
+const RULES_VERSION = 'rectangular-v2';
 const CATEGORIES = ['touch', 'bonus', 'tackleBase', 'superTackleExtra', 'allOut', 'technical', 'defenderOut'];
 const PHASES = ['ready', 'playing', 'paused', 'halfPending', 'halfTime', 'fullPending', 'finishReview', 'finished'];
 const PLAYING = ['playing', 'halfPending', 'fullPending'];
 const OUTCOMES = ['touch', 'bonus', 'tackled', 'selfOut', 'empty', 'defenderOut', 'mixed', 'technical'];
-const EVENT_KEYS = ['id', 'expectedRevision', 'raidId', 'type', 'count', 'bonusAwarded', 'bonusBeforeContact', 'outsInOrder', 'reason', 'dismissals', 'technicalAwards', 'to', 'offender', 'turnEffect', 'atMs'];
+const EVENT_KEYS = ['id', 'expectedRevision', 'raidId', 'type', 'count', 'bonusAwarded', 'bonusBeforeContact', 'outsInOrder', 'reason', 'dismissals', 'technicalAwards', 'to', 'offender', 'turnEffect', 'atMs', 'physicalTackle'];
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const check = (condition, message) => { if (!condition) throw new Error(`Kabaddi: ${message}`); };
 const integer = (value, min = 0) => Number.isSafeInteger(value) && value >= min;
 const teamId = (value) => value === 0 || value === 1;
-const slotsFor = (team) => Array.from({ length: 7 }, (_, i) => `${team === 0 ? 'A' : 'B'}${i + 1}`);
-
-function rulesFor(halfMs, intervalMs) {
-  return {
-    profile: 'club', initialSlots: 7, halfMs, intervalMs, raidLimitMs: 30000,
-    doOrDieLimit: 2, superTackleOutcomes: 'anyRaiderOut', superThresholdMoment: 'raidStart',
-    carryEmptyAcrossHalf: true, drawAllowed: true,
-    management: 'refereeManaged',
-  };
-}
+const slotsFor = (team, count) => Array.from({ length: count }, (_, i) => `${team === 0 ? 'A' : 'B'}${i + 1}`);
+const halfLimit = state => state.rules.end.kind === 'timed' ? state.rules.end.halfMs : null;
+const bonusEligible = (state, defenders) => state.rules.bonus.enabled && defenders >= state.rules.bonus.minDefenders;
+const superEligible = (state, defenders) => Boolean(state.rules.superTackle && defenders <= state.rules.superTackle.maxDefenders);
+const dodEligible = (state, team) => Boolean(state.rules.doOrDie && state.emptyStreak[team] === state.rules.doOrDie.emptyRaids);
+const makeClock = (limit, atMs, running) => limit === null ? null : { remainingAtAnchorMs: limit, anchorMonotonicMs: atMs, running, persistedWallAnchor: null };
 
 /** Create a serialisable match. Teams are always indexes 0/1; slots are anonymous. */
 export function createKabaddiState(options = {}) {
-  check(options && typeof options === 'object' && Object.keys(options).every((key) => ['halfMs', 'intervalMs', 'openingRaidTeam', 'names', 'colours'].includes(key)), 'unsupported match configuration');
+  check(options && typeof options === 'object' && Object.keys(options).every((key) => ['presetId', 'rules', 'halfMs', 'intervalMs', 'openingRaidTeam', 'names', 'colours'].includes(key)), 'unsupported match configuration');
   const { halfMs = 1200000, intervalMs = 300000, openingRaidTeam = 0,
     names = ['Team A', 'Team B'], colours = PRESETS['Purple v Orange'] } = options;
   check(integer(halfMs, 1) && integer(intervalMs), 'halfMs must be positive and intervalMs nonnegative integer milliseconds');
@@ -33,14 +31,18 @@ export function createKabaddiState(options = {}) {
   check(Array.isArray(names) && names.length === 2 && names.every((name) => typeof name === 'string' && name.trim()), 'two team names are required');
   check(Array.isArray(colours) && colours.length === 2, 'two team colours are required');
   const derived = deriveTeamColours(...colours);
-  const rules = rulesFor(halfMs, intervalMs);
+  let rules = resolveKabaddiRules(options.presetId ?? 'standard', options.rules);
+  if (options.halfMs !== undefined || options.intervalMs !== undefined) {
+    check(rules.end.kind === 'timed', 'duration overrides require timed rules');
+    rules = resolveKabaddiRules('custom', { ...rules, end: { ...rules.end, halfMs, intervalMs } });
+  }
   return {
     version: VERSION, schemaVersion: VERSION, rulesVersion: RULES_VERSION, rules,
     teams: names.map((name, i) => ({ name, colours: derived[i === 0 ? 'A' : 'B'], score: Object.fromEntries(CATEGORIES.map((key) => [key, 0])) })),
-    rosterMode: 'countOnly', mat: [slotsFor(0), slotsFor(1)], outQueue: [[], []], unavailable: [[], []],
+    rosterMode: 'countOnly', mat: [slotsFor(0, rules.initialPlayers), slotsFor(1, rules.initialPlayers)], outQueue: [[], []], unavailable: [[], []],
     phase: 'ready', resumePhase: null, half: 1, openingRaidTeam, nextRaidTeam: openingRaidTeam,
-    courtSide: [0, 1], emptyStreak: [0, 0], raidNumber: 0, nextOutSequence: 0,
-    clock: { remainingAtAnchorMs: halfMs, anchorMonotonicMs: 0, running: false, persistedWallAnchor: null },
+    courtSide: [0, 1], emptyStreak: [0, 0], raidNumber: 0, raidsByTeam: [0, 0], nextOutSequence: 0,
+    clock: makeClock(rules.end.kind === 'timed' ? rules.end.halfMs : null, 0, false),
     activeRaid: null, events: [], revision: 0,
   };
 }
@@ -53,8 +55,7 @@ export function teamTotal(team) {
 /** Validate restored drafts before any mutation. Cards/numbered players require a later rules version. */
 export function assertState(state) {
   check(state?.version === VERSION && state.schemaVersion === VERSION && state.rulesVersion === RULES_VERSION, 'unsupported state or rules version');
-  check(integer(state.rules?.halfMs, 1) && integer(state.rules?.intervalMs), 'invalid half duration');
-  check(JSON.stringify(state.rules) === JSON.stringify(rulesFor(state.rules.halfMs, state.rules.intervalMs)), 'unsupported rules profile');
+  validateKabaddiRules(state.rules);
   // Configuration is fixed by the first journal snapshot once play starts.
   if (state.events?.length) check(JSON.stringify(state.rules) === JSON.stringify(state.events[0].before.rules), 'rules profile cannot change midmatch');
   check(state.rosterMode === 'countOnly', 'only countOnly rosters are supported');
@@ -62,7 +63,7 @@ export function assertState(state) {
   check(teamId(state.openingRaidTeam) && teamId(state.nextRaidTeam), 'invalid raiding team');
   check(integer(state.revision) && integer(state.raidNumber) && integer(state.nextOutSequence), 'invalid revision or sequence');
   check(Array.isArray(state.events) && state.revision === state.events.length, 'revision must match journal length');
-  for (const field of ['teams', 'mat', 'outQueue', 'unavailable', 'emptyStreak', 'courtSide']) check(Array.isArray(state[field]) && state[field].length === 2, `invalid ${field}`);
+  for (const field of ['teams', 'mat', 'outQueue', 'unavailable', 'emptyStreak', 'courtSide', 'raidsByTeam']) check(Array.isArray(state[field]) && state[field].length === 2, `invalid ${field}`);
   for (const team of [0, 1]) {
     check(CATEGORIES.every((key) => integer(state.teams[team]?.score?.[key])) && integer(teamTotal(state.teams[team])), 'score categories must be nonnegative safe integers');
     check(Object.keys(state.teams[team].score).every((key) => CATEGORIES.includes(key)), 'unknown score category');
@@ -70,21 +71,24 @@ export function assertState(state) {
     check(state.unavailable[team].length === 0, 'card/injury restrictions are unsupported in countOnly v1');
     check(state.mat[team].length > 0, 'zero active slots is not a stable playable state');
     const partition = [...state.mat[team], ...state.outQueue[team].map((out) => out.slotId)];
-    check(partition.length === 7 && new Set(partition).size === 7 && partition.every((slot) => slotsFor(team).includes(slot)), 'active and FIFO out slots must partition seven anonymous slots without duplicates');
+    check(partition.length === state.rules.initialPlayers && new Set(partition).size === state.rules.initialPlayers && partition.every((slot) => slotsFor(team, state.rules.initialPlayers).includes(slot)), 'active and FIFO out slots must partition seven anonymous slots without duplicates');
     check(state.outQueue[team].every((out, i, queue) => typeof out.outEventId === 'string' && integer(out.outSequence, 1) && out.outSequence <= state.nextOutSequence && (i === 0 || out.outSequence > queue[i - 1].outSequence)), 'invalid FIFO out queue sequence');
-    check(integer(state.emptyStreak[team]) && state.emptyStreak[team] <= 2, 'empty streak must be 0–2');
+    check(integer(state.emptyStreak[team]) && state.emptyStreak[team] <= (state.rules.doOrDie?.emptyRaids ?? 0), 'invalid empty streak');
+    check(integer(state.raidsByTeam[team]), 'invalid raid count');
+    if (state.rules.strategy === 'pointsOnly') check(state.outQueue[team].length === 0, 'points-only players must stay');
   }
   check(state.courtSide.includes(0) && state.courtSide.includes(1), 'court sides must partition 0/1');
-  check(integer(state.clock?.remainingAtAnchorMs) && state.clock.remainingAtAnchorMs <= state.rules.halfMs && Number.isFinite(state.clock.anchorMonotonicMs) && typeof state.clock.running === 'boolean', 'invalid match clock');
+  check(state.raidsByTeam[0] + state.raidsByTeam[1] === state.raidNumber, 'raid counts must agree');
+  check(halfLimit(state) === null ? state.clock === null : integer(state.clock?.remainingAtAnchorMs) && state.clock.remainingAtAnchorMs <= halfLimit(state) && Number.isFinite((state.clock?.anchorMonotonicMs ?? 0)) && typeof state.clock.running === 'boolean', 'invalid match clock');
   if (state.activeRaid) {
     const raid = state.activeRaid;
     check(typeof raid.id === 'string' && raid.id.trim() && integer(raid.startedAtRevision) && raid.startedAtRevision <= state.revision, 'invalid active raid identity/revision');
     check(raid.raidingTeam === state.nextRaidTeam && raid.startedInHalf === state.half, 'active raid ownership/half mismatch');
     check(state.mat[raid.raidingTeam].includes(raid.raiderSlotId), 'raider must be active');
     check(Array.isArray(raid.startMat) && raid.startMat.length === 2 && raid.startMat.every((n, i) => n === state.mat[i].length), 'active raid mat changed before resolution');
-    check(raid.bonusEligibleAtStart === (raid.startMat[1 - raid.raidingTeam] >= 6) && raid.superEligibleAtStart === (raid.startMat[1 - raid.raidingTeam] <= 3), 'corrupt raid-start eligibility');
-    check(raid.doOrDieAtStart === (state.emptyStreak[raid.raidingTeam] === 2), 'corrupt do-or-die snapshot');
-    check(raid.startedBeforeHalfEnd === true && raid.raidClock?.durationMs === 30000 && integer(raid.raidClock.remainingAtAnchorMs) && raid.raidClock.remainingAtAnchorMs <= 30000 && Number.isFinite(raid.raidClock.anchorMonotonicMs) && typeof raid.raidClock.running === 'boolean', 'invalid active raid clock');
+    check(raid.bonusEligibleAtStart === bonusEligible(state, raid.startMat[1 - raid.raidingTeam]) && raid.superEligibleAtStart === superEligible(state, raid.startMat[1 - raid.raidingTeam]), 'corrupt raid-start eligibility');
+    check(raid.doOrDieAtStart === dodEligible(state, raid.raidingTeam), 'corrupt do-or-die snapshot');
+    check(raid.startedBeforeHalfEnd === true && (state.rules.raidLimitMs === null ? raid.raidClock === null : raid.raidClock?.durationMs === state.rules.raidLimitMs && integer(raid.raidClock.remainingAtAnchorMs) && raid.raidClock.remainingAtAnchorMs <= state.rules.raidLimitMs && Number.isFinite(raid.raidClock.anchorMonotonicMs) && typeof raid.raidClock.running === 'boolean'), 'invalid active raid clock');
   }
 }
 
@@ -121,10 +125,10 @@ function admin(state, after, action, details = {}) {
 export function nextRaider(state) { return state.nextRaidTeam; }
 export function isDoOrDie(state, team = state.nextRaidTeam) {
   check(teamId(team), 'team must be 0 or 1');
-  return state.activeRaid?.raidingTeam === team ? state.activeRaid.doOrDieAtStart : state.emptyStreak[team] === 2;
+  return state.activeRaid?.raidingTeam === team ? state.activeRaid.doOrDieAtStart : dodEligible(state, team);
 }
 export function isSuperTackleOn(state) {
-  return state.activeRaid?.superEligibleAtStart ?? state.mat[1 - state.nextRaidTeam].length <= 3;
+  return state.activeRaid?.superEligibleAtStart ?? superEligible(state, state.mat[1 - state.nextRaidTeam].length);
 }
 
 /** atMs is caller-supplied monotonic time. Reading expiry never resolves a raid. */
@@ -139,6 +143,7 @@ export function remainingTime(state, atMs, which = 'half') {
 
 function frozenClock(state, atMs, which = 'half') {
   const clock = which === 'half' ? state.clock : state.activeRaid.raidClock;
+  if (!clock) return null;
   return { ...clock, remainingAtAnchorMs: remainingTime(state, atMs, which), anchorMonotonicMs: atMs, running: false, persistedWallAnchor: null };
 }
 
@@ -157,26 +162,28 @@ export function startHalf(state, { atMs = 0 } = {}) {
     after.nextRaidTeam = 1 - state.openingRaidTeam;
     after.courtSide = [...state.courtSide].reverse();
   }
-  after.clock = { remainingAtAnchorMs: state.rules.halfMs, anchorMonotonicMs: atMs, running: true, persistedWallAnchor: null };
+  after.clock = makeClock(halfLimit(state), atMs, true);
+  if (second && !state.rules.doOrDie?.carryAcrossHalf) after.emptyStreak = [0, 0];
   return admin(state, after, 'startHalf');
 }
 
 /** Start a draft. Anonymous raider selection has no player-performance meaning. */
-export function startRaid(state, { id, team = state.nextRaidTeam, raiderSlotId = state.mat[team]?.[0], atMs = state.clock.anchorMonotonicMs } = {}) {
+export function startRaid(state, { id, team = state.nextRaidTeam, raiderSlotId = state.mat[team]?.[0], atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {
   assertState(state);
   check(state.phase === 'playing' && !state.activeRaid, 'startRaid requires playing with no active raid');
   check(team === state.nextRaidTeam, 'raid team must be the next raiding team');
   check(typeof id === 'string' && id.trim(), 'raid id is required');
   check(state.mat[team].includes(raiderSlotId), 'raider must be active');
-  check(remainingTime(state, atMs) > 0, 'half expired; call timeUp before a new raid');
+  check(halfLimit(state) === null || remainingTime(state, atMs) > 0, 'half expired; call timeUp before a new raid');
   const after = copyState(state);
   const before = snapshot(state);
   before.clock = frozenClock(state, atMs);
   after.activeRaid = {
     id, raidingTeam: team, raiderSlotId, startedAtRevision: state.revision, startedInHalf: state.half, startedBeforeHalfEnd: true,
-    startMat: state.mat.map((slots) => slots.length), bonusEligibleAtStart: state.mat[1 - team].length >= 6,
-    superEligibleAtStart: state.mat[1 - team].length <= 3, doOrDieAtStart: state.emptyStreak[team] === 2,
-    raidClock: { startedAtMs: atMs, durationMs: 30000, remainingAtAnchorMs: 30000, anchorMonotonicMs: atMs, running: true, persistedWallAnchor: null },
+    startMat: state.mat.map((slots) => slots.length), bonusEligibleAtStart: bonusEligible(state, state.mat[1 - team].length),
+    superEligibleAtStart: superEligible(state, state.mat[1 - team].length), doOrDieAtStart: dodEligible(state, team),
+    raidClock: state.rules.raidLimitMs === null ? null : { ...makeClock(state.rules.raidLimitMs, atMs, true), startedAtMs: atMs, durationMs: state.rules.raidLimitMs },
+    startedAtMs: atMs,
     draft: null, before,
   };
   return after;
@@ -192,14 +199,14 @@ export function cancelRaid(state) {
 /** Explicit half deadline: an active raid still requires a referee outcome. */
 export function timeUp(state) {
   assertState(state);
-  check(state.phase === 'playing', 'timeUp requires playing');
+  check(state.phase === 'playing' && halfLimit(state) !== null, 'timeUp requires timed play');
   const after = copyState(state);
   after.clock = { ...after.clock, remainingAtAnchorMs: 0, running: false, persistedWallAnchor: null };
   after.phase = state.activeRaid ? (state.half === 1 ? 'halfPending' : 'fullPending') : (state.half === 1 ? 'halfTime' : 'finishReview');
   return admin(state, after, 'timeUp');
 }
 
-export function pause(state, { atMs = state.clock.anchorMonotonicMs } = {}) {
+export function pause(state, { atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {
   assertState(state);
   check(PLAYING.includes(state.phase), 'pause requires playing or a pending deadline');
   const after = copyState(state);
@@ -210,15 +217,15 @@ export function pause(state, { atMs = state.clock.anchorMonotonicMs } = {}) {
   return admin(state, after, 'pause');
 }
 
-export function resume(state, { atMs = state.clock.anchorMonotonicMs } = {}) {
+export function resume(state, { atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {
   assertState(state);
   check(state.phase === 'paused' && PHASES.includes(state.resumePhase), 'resume requires paused review');
   check(Number.isFinite(atMs), 'atMs must be finite');
   const after = copyState(state);
   after.phase = state.resumePhase;
   after.resumePhase = null;
-  after.clock = { ...after.clock, anchorMonotonicMs: atMs, running: after.phase === 'playing' };
-  if (after.activeRaid) after.activeRaid.raidClock = { ...after.activeRaid.raidClock, anchorMonotonicMs: atMs, running: PLAYING.includes(after.phase) };
+  if (after.clock) after.clock = { ...after.clock, anchorMonotonicMs: atMs, running: after.phase === 'playing' };
+  if (after.activeRaid?.raidClock) after.activeRaid.raidClock = { ...after.activeRaid.raidClock, anchorMonotonicMs: atMs, running: PLAYING.includes(after.phase) };
   return admin(state, after, 'resume');
 }
 
@@ -230,11 +237,11 @@ export function correctClock(state, { halfRemainingMs, raidRemainingMs, reason }
   check(halfRemainingMs !== undefined || raidRemainingMs !== undefined, 'clock correction needs a remaining time');
   const after = copyState(state);
   if (halfRemainingMs !== undefined) {
-    check(integer(halfRemainingMs) && halfRemainingMs <= state.rules.halfMs, 'half correction exceeds configured duration');
+    check(state.clock && integer(halfRemainingMs) && halfRemainingMs <= halfLimit(state), 'half correction exceeds configured duration');
     after.clock.remainingAtAnchorMs = halfRemainingMs;
   }
   if (raidRemainingMs !== undefined) {
-    check(state.activeRaid && integer(raidRemainingMs) && raidRemainingMs <= 30000, 'raid correction requires an active raid and 0–30000 ms');
+    check(state.activeRaid?.raidClock && integer(raidRemainingMs) && raidRemainingMs <= state.rules.raidLimitMs, 'raid correction requires an active raid and 0–30000 ms');
     after.activeRaid.raidClock.remainingAtAnchorMs = raidRemainingMs;
   }
   return admin(state, after, 'correctClock', { reason });
@@ -245,6 +252,7 @@ function validateInput(event) {
   check(Object.keys(event).every((key) => EVENT_KEYS.includes(key)), 'unsupported event field');
   check(typeof event.id === 'string' && event.id.trim() && !event.id.startsWith('admin-') && !event.id.startsWith('undo-') && !event.id.startsWith('reopen-'), 'unique client event id is required (admin/undo/reopen prefixes reserved)');
   check(OUTCOMES.includes(event.type), 'unsupported raid outcome');
+  if (event.physicalTackle !== undefined) check(event.type === 'mixed' && typeof event.physicalTackle === 'boolean', 'physicalTackle is a mixed-ruling flag');
   if (event.expectedRevision !== undefined) check(integer(event.expectedRevision), 'expectedRevision must be nonnegative');
   if (event.bonusAwarded !== undefined) check(typeof event.bonusAwarded === 'boolean', 'bonusAwarded must be boolean');
   if (event.bonusBeforeContact !== undefined) check(typeof event.bonusBeforeContact === 'boolean', 'bonusBeforeContact must be boolean');
@@ -262,7 +270,7 @@ function validateInput(event) {
 function requireReason(reason) { check(typeof reason === 'string' && reason.trim(), 'referee reason is required'); }
 
 function dismissalOrder(state, event, defender) {
-  check(integer(event.count, 1) && event.count <= 7, 'touch/out count must be an integer from 1 to 7');
+  check(integer(event.count, 1) && event.count <= state.rules.initialPlayers, 'touch/out count must be an integer from 1 to 7');
   check(event.count <= state.mat[defender].length, 'count exceeds active defenders');
   const order = event.outsInOrder ?? state.mat[defender].slice(0, event.count);
   check(Array.isArray(order) && order.length === event.count, 'dismissal order must match count');
@@ -284,6 +292,7 @@ function dismiss(state, effects, eventId, team, slotId, category) {
   check(state.mat[team].includes(slotId), 'dismissed slot must be active');
   const recipient = 1 - team;
   award(state, effects, recipient, category, 1);
+  if (state.rules.strategy === 'pointsOnly') return;
   state.mat[team].splice(state.mat[team].indexOf(slotId), 1);
   state.nextOutSequence += 1;
   state.outQueue[team].push({ slotId, outEventId: eventId, outSequence: state.nextOutSequence });
@@ -297,7 +306,7 @@ function dismiss(state, effects, eventId, team, slotId, category) {
   }
   if (state.mat[team].length === 0) {
     check(!effects.allOut.includes(team), 'second all-out from one raid is invalid');
-    award(state, effects, recipient, 'allOut', 2);
+    award(state, effects, recipient, 'allOut', state.rules.outs.allOutPoints);
     state.mat[team] = state.outQueue[team].map((out) => out.slotId);
     state.outQueue[team] = [];
     effects.allOut.push(team);
@@ -308,6 +317,7 @@ function dismiss(state, effects, eventId, team, slotId, category) {
 function completeRaid(state, raidingTeam) {
   state.nextRaidTeam = 1 - raidingTeam;
   state.raidNumber += 1;
+  state.raidsByTeam[raidingTeam] += 1;
   state.activeRaid = null;
   if (state.phase === 'halfPending') state.phase = 'halfTime';
   if (state.phase === 'fullPending') state.phase = 'finishReview';
@@ -333,7 +343,7 @@ export function applyRaid(state, event) {
   check(state.phase === 'playing' || state.activeRaid, 'deadline requires an existing raid');
   if (event.raidId !== undefined) check(state.activeRaid?.id === event.raidId, 'raidId does not match the active raid');
   const technical = event.type === 'technical';
-  const current = technical || state.activeRaid ? copyState(state) : startRaid(state, { id: event.id, atMs: event.atMs ?? state.clock.anchorMonotonicMs });
+  const current = technical || state.activeRaid ? copyState(state) : startRaid(state, { id: event.id, atMs: event.atMs ?? (state.clock?.anchorMonotonicMs ?? 0) });
   const raid = current.activeRaid;
   const raidingTeam = current.nextRaidTeam;
   const defender = 1 - raidingTeam;
@@ -350,6 +360,7 @@ export function applyRaid(state, event) {
   if (!technical) check(event.to === undefined && event.offender === undefined && event.turnEffect === undefined, 'technical award fields require technical outcome');
 
   if (technical) {
+    check(state.rules.technical !== 'off', 'technical awards are disabled');
     requireReason(event.reason);
     check(teamId(event.to), 'technical recipient must be 0 or 1');
     check(['none', 'forfeit', 'replay'].includes(event.turnEffect), 'technical turnEffect must be none, forfeit or replay');
@@ -372,7 +383,7 @@ export function applyRaid(state, event) {
       if (event.type === 'selfOut') requireReason(event.reason);
       if (event.type === 'empty') outcome = 'doOrDieFailure';
       dismiss(current, effects, event.id, raidingTeam, raid.raiderSlotId, 'tackleBase');
-      if (raid.superEligibleAtStart) award(current, effects, defender, 'superTackleExtra', 1);
+      if (raid.superEligibleAtStart && (current.rules.superTackle.outcomes === 'anyRaiderOut' || event.type === 'tackled')) award(current, effects, defender, 'superTackleExtra', 1);
     } else if (event.type === 'mixed') {
       requireReason(event.reason);
       check(Array.isArray(event.dismissals) && event.dismissals.length > 0, 'mixed ruling requires ordered dismissals');
@@ -387,14 +398,21 @@ export function applyRaid(state, event) {
         if (out.team === raidingTeam) check(out.slotId === raid.raiderSlotId && out.category === 'tackleBase', 'only the raider can be dismissed for a failed raid');
         else check(['touch', 'defenderOut'].includes(out.category), 'defender dismissal category must be touch or defenderOut');
         dismiss(current, effects, event.id, out.team, out.slotId, out.category);
-        if (out.team === raidingTeam && raid.superEligibleAtStart) award(current, effects, defender, 'superTackleExtra', 1);
+        if (out.team === raidingTeam && raid.superEligibleAtStart && (current.rules.superTackle.outcomes === 'anyRaiderOut' || event.physicalTackle === true)) award(current, effects, defender, 'superTackleExtra', 1);
       }
     }
     if (bonus) award(current, effects, raidingTeam, 'bonus', 1);
-    current.emptyStreak[raidingTeam] = outcome === 'empty' ? current.emptyStreak[raidingTeam] + 1 : 0;
+    current.emptyStreak[raidingTeam] = outcome === 'empty' && current.rules.doOrDie ? current.emptyStreak[raidingTeam] + 1 : 0;
     completeRaid(current, raidingTeam);
   }
+  check(!event.technicalAwards?.length || state.rules.technical !== 'off', 'technical awards are disabled');
   for (const technicalAward of event.technicalAwards ?? []) award(current, effects, technicalAward.to, 'technical', 1);
+  if (current.raidNumber > state.raidNumber) {
+    const end = current.rules.end;
+    const totals = current.teams.map(teamTotal);
+    if (!technical && end.kind === 'target' && Math.max(...totals) >= end.points && totals[0] !== totals[1]) current.phase = 'finishReview';
+    if (end.kind === 'raids' && current.raidsByTeam.every(n => n >= end.raidsPerTeam)) current.phase = 'finishReview';
+  }
   const raidPoints = effects.awards.filter((item) => item.team === raidingTeam && ['touch', 'bonus'].includes(item.category)).reduce((sum, item) => sum + item.points, 0);
   return append(state, current, {
     id: event.id, type: technical ? 'technical' : 'raid', input: clone(event), inputKey,
@@ -436,9 +454,8 @@ export function undo(state) {
   const after = { ...clone(target.before), events: state.events, revision: state.revision };
   after.resumePhase = after.phase === 'paused' ? after.resumePhase : after.phase;
   after.phase = 'paused';
-  after.clock.running = false;
-  after.clock.persistedWallAnchor = null;
-  if (after.activeRaid) {
+  if (after.clock) { after.clock.running = false; after.clock.persistedWallAnchor = null; }
+  if (after.activeRaid?.raidClock) {
     after.activeRaid.raidClock.running = false;
     after.activeRaid.raidClock.persistedWallAnchor = null;
   }
@@ -458,6 +475,7 @@ export function result(state) {
 export function finish(state) {
   assertState(state);
   check(state.phase === 'finishReview' && !state.activeRaid, 'finish requires finishReview after the final raid ruling');
+  check(state.rules.tie === 'draw' || teamTotal(state.teams[0]) !== teamTotal(state.teams[1]), 'tied match needs a referee decision');
   return admin(state, { ...copyState(state), phase: 'finished' }, 'finish');
 }
 
@@ -465,4 +483,51 @@ export function reopen(state) {
   assertState(state);
   check(state.phase === 'finished', 'reopen requires a finished match');
   return append(state, { ...copyState(state), phase: 'finishReview' }, { id: `reopen-${state.revision + 1}`, type: 'reopen' });
+}
+
+/** Transactional reader: the supplied durable original is never changed. Save its backup before replacing. */
+export function migrateKabaddiState(saved) {
+  if (saved?.version === VERSION) { assertState(saved); return saved; }
+  assertLegacyState(saved);
+  const migrateGame = (game, counts) => {
+    const next = clone(game);
+    const old = next.rules;
+    check(next.version === 1 && next.schemaVersion === 1 && next.rulesVersion === 'club-rectangular-v1', 'unknown legacy snapshot version');
+    const expected = { profile: 'club', initialSlots: 7, halfMs: old.halfMs, intervalMs: old.intervalMs, raidLimitMs: 30000, doOrDieLimit: 2, superTackleOutcomes: 'anyRaiderOut', superThresholdMoment: 'raidStart', carryEmptyAcrossHalf: true, drawAllowed: true, management: 'refereeManaged' };
+    check(JSON.stringify(old) === JSON.stringify(expected), 'unsupported legacy snapshot rules');
+    next.version = VERSION;
+    next.schemaVersion = VERSION;
+    next.rulesVersion = RULES_VERSION;
+    next.rules = resolveKabaddiRules('legacy-club', { ...resolveKabaddiRules('standard'), end: { kind: 'timed', halves: 2, halfMs: old.halfMs, intervalMs: old.intervalMs }, source: 'Exact club-rectangular-v1 semantics' });
+    next.raidsByTeam = [...counts];
+    if (next.activeRaid) {
+      next.activeRaid.startedAtMs = next.activeRaid.raidClock.startedAtMs;
+      next.activeRaid.before = migrateGame(game.activeRaid.before, counts);
+    }
+    return next;
+  };
+  let counts = [0, 0];
+  const beforeCounts = new Map();
+  const entries = saved.events.map(entry => {
+    const before = [...counts];
+    beforeCounts.set(entry.id, before);
+    if (entry.type === 'undo') {
+      check(beforeCounts.has(entry.targetId), 'unknown legacy undo target');
+      counts = [...beforeCounts.get(entry.targetId)];
+    } else if (entry.after.raidNumber > entry.before.raidNumber) {
+      check(teamId(entry.raidingTeam) && entry.after.raidNumber === entry.before.raidNumber + 1, 'invalid legacy turn');
+      counts = counts.map((n, team) => n + (team === entry.raidingTeam ? 1 : 0));
+    }
+    return { ...clone(entry), before: migrateGame(entry.before, before), after: migrateGame(entry.after, counts) };
+  });
+  const migrated = migrateGame(saved, counts);
+  migrated.events = entries;
+  const validateSnapshot = game => {
+    const probe = { ...game, events: [], revision: 0, activeRaid: game.activeRaid ? { ...game.activeRaid, startedAtRevision: 0 } : null };
+    assertState(probe);
+    if (game.activeRaid) validateSnapshot(game.activeRaid.before);
+  };
+  entries.forEach(entry => { validateSnapshot(entry.before); validateSnapshot(entry.after); });
+  assertState(migrated);
+  return migrated;
 }
