@@ -25,7 +25,7 @@ Kit F0 integration used a normal merge with no conflicts. Git automatically comb
 
 After that integration, `bun run test --maxWorkers=1` passed all 10 selected navigation, route-contract, completion-lock, recovery, result, palette, modal-skin and board-shell files: **333 ordinary passes / 4 expected failures = 337 cases**, zero failures. The exact palette equality check passes at 662.
 
-The normal pre-push hook runs related tests. Hosted CI `verify` owns the full-suite result; local focused evidence does not substitute for that check.
+There is no pre-push hook. Hosted CI `verify` owns the full-suite result; local focused evidence does not substitute for that check.
 
 Round-two persistence and legal-page contracts (rung 4):
 

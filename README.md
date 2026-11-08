@@ -21,6 +21,8 @@ VITE_SENTRY_DSN=https://...
 
 `VITE_SENTRY_DSN` is optional. The app will start without it.
 
+Development/internal flags: `VITE_SHOW_INTERNAL_ROUTES` and `VITE_ENABLE_REACT_GRAB`.
+
 For Vercel Preview deployments, use the Clerk development application and a
 development Convex deployment. Set the Clerk issuer to match that development
 application, for example:

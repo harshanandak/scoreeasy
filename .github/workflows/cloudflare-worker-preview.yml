@@ -29,7 +29,7 @@ env:
   CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
   # Preview tier: Clerk DEV instance (pk_test_). The build step selects either
   # the shared dev URL or an isolated per-PR Convex preview URL.
-  VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || secrets.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+  VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.PREVIEW_VITE_CLERK_PUBLISHABLE_KEY }}
   VITE_SENTRY_DSN: ${{ vars.PREVIEW_VITE_SENTRY_DSN || secrets.PREVIEW_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
 
 concurrency:
@@ -87,7 +87,11 @@ jobs:
           CONVEX_PREVIEW_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
           BACKEND_MODE: ${{ steps.backend.outputs.mode }}
         run: |
-          if [ -n "$CF_API_TOKEN" ] && [ -n "$VITE_CLERK_PUBLISHABLE_KEY" ] && { [ "$BACKEND_MODE" = "shared" ] || [ -n "$CONVEX_PREVIEW_DEPLOY_KEY" ]; }; then
+          if [ -z "$VITE_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::error::Missing required secret PREVIEW_VITE_CLERK_PUBLISHABLE_KEY."
+            exit 1
+          fi
+          if [ -n "$CF_API_TOKEN" ] && { [ "$BACKEND_MODE" = "shared" ] || [ -n "$CONVEX_PREVIEW_DEPLOY_KEY" ]; }; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"

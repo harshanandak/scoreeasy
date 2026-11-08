@@ -130,7 +130,7 @@ The response fields (`kind`, `deploymentType`, `projectId`, `previewIdentifier`,
 
 ## Other GitHub Actions configuration
 
-Deployment workflows skip when their required deployment credentials are absent.
+Production deployment fails when required inputs are absent. Preview deployment fails when the preview Clerk secret is absent; it skips when other required preview credentials are absent.
 Shared frontend builds do not require `CONVEX_PREVIEW_DEPLOY_KEY`; isolated
 builds do. Cleanup uses only the team token and project ID above.
 
@@ -143,8 +143,7 @@ builds do. Cleanup uses only the team token and project ID above.
 | `PREVIEW_VITE_CLERK_PUBLISHABLE_KEY` | preview | Clerk development instance (`pk_test_…`) |
 | `PRODUCTION_VITE_SENTRY_DSN` / `PREVIEW_VITE_SENTRY_DSN` | optional | Sentry project DSN |
 
-The Clerk/Sentry frontend configuration can also be repository variables, as
-shown in the workflows. Isolated previews need default environment variables
+Production Clerk and Sentry frontend configuration can also be repository variables, as shown in the workflows. The preview Clerk key must be a secret. Isolated previews need default environment variables
 in the Convex dashboard, including Clerk's development `CLERK_JWT_ISSUER_DOMAIN`.
 The shared backend needs the corresponding development auth configuration too.
 
