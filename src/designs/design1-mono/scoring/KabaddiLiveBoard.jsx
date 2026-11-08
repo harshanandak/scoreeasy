@@ -13,13 +13,13 @@ import './kabaddiOneTap.css';
 import './kabaddiLive.css';
 
 // Kabaddi scorer, round 5 (exploration k2, 2026-11-01): the raid happens live and points land when
-// it ends. "Raid by <team>" starts the raid and its 30 s clock. While it runs the defending side's
+// it ends. "Raid by <team>" starts the raid and its configured clock when enabled. While it runs the defending side's
 // players are big tokens: tap one when the raider touches him, or switch to "Stepped out" and tap
 // one who left the court; the Bonus cell marks the bonus line. Nothing is scored; the score cards
 // only preview what the marks would do. The raid ends with one tap on the result (Back safe,
 // Tackled, Raider out, or Empty when nothing was marked) and everything lands together. Undo
 // takes back the last mark; after a raid has landed it reopens that raid with its marks. The marks
-// live on the match draft (`match.draft`), so a refresh mid-raid keeps them. Every number, key
+// live in the engine draft (`state.activeRaid.draft`), so a refresh mid-raid keeps them. Every number, key
 // state and word comes from the raid engine through kabaddiBoardModel; this view decides nothing
 // about the rules.
 

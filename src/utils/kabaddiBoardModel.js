@@ -8,7 +8,7 @@ import {
   teamTotal, timeUp, undo, editRaidDraft, undoRaidDraft, reopenLastRaid,
 } from './kabaddiEngine.js';
 
-/** A new match. `rosters` is the optional team list from setup: up to 7 names or shirt numbers per team. */
+/** A new match. `rosters` is the optional team list from setup: up to the configured capacity per team. */
 export function createBoardMatch({ halfMs, presetId, rules, names, colours, openingRaidTeam = 0, rosters = [[], []] }) {
   return { state: createKabaddiState({ ...(halfMs === undefined ? {} : { halfMs }), ...(presetId ? { presetId } : {}), ...(rules ? { rules } : {}), names, colours, openingRaidTeam }), rosters: rosters.map((list) => (list ?? []).slice(0, rules?.initialPlayers ?? 7)) };
 }
@@ -234,7 +234,7 @@ export function boardView(match, now) {
     mat: [0, 1].map((team) => ({
       on: state.mat[team].length,
       onMat: state.mat[team].map((slot) => ({ slot, name: playerName(match, team, slot) })),
-      // All seven seats in shirt order, on the mat or not: the live raid's tokens keep their place.
+      // All configured seats in shirt order, on the mat or not: the live raid's tokens keep their place.
       players: [...state.mat[team], ...state.outQueue[team].map((o) => o.slotId)].sort((x, y) => slotIndex(x) - slotIndex(y))
         .map((slot) => ({ slot, name: playerName(match, team, slot), on: state.mat[team].includes(slot) })),
       // Out players in revival order: the first one listed is the next back on the mat.
@@ -317,7 +317,7 @@ export function undoLabel(state) {
   return undoHint(state);
 }
 
-// ---- round 4: Raid by (a started raid with the 30 s raid clock), flags on the mat icons ----
+// ---- round 4: Raid by (a started raid with its configured clock), flags on the mat icons ----
 
 /** Raid by: start the raid now. The raid clock runs from this tap; the outcome key finishes it. */
 export function beginRaid(match, { atMs, raider }) {
@@ -341,7 +341,7 @@ export function stepBackLabel(state) {
   return undoLabel(state);
 }
 
-/** Raid clock for the ring: ms left of the 30 s, or null when no raid has been started. */
+/** Raid clock for the ring: ms left of the configured limit, or null when no raid has been started. */
 export const raidClockMs = (state, atMs) => (state.activeRaid ? remainingTime(state, atMs, 'raid') : null);
 export const raidClockTotalMs = (state) => state.activeRaid?.raidClock?.durationMs ?? state.rules.raidLimitMs;
 
