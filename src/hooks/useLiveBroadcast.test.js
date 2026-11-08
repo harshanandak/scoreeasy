@@ -116,6 +116,27 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps a failed reconciliation recoverable if Stop also fails', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    h.get('live:setVisibility').mockRejectedValueOnce(new Error('sync offline')).mockRejectedValueOnce(new Error('Stop offline'));
+    const { result } = setup();
+    await act(async () => { await result.current.restore(GO); });
+    await act(async () => { await result.current.setVisibility('private'); });
+    await act(async () => { window.dispatchEvent(new Event('online')); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(3);
+    expect(h.spies['live:setVisibility']).toHaveBeenLastCalledWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot, onlyIfShared: true });
+    expect(result.current.error).toBeNull();
+  });
+
+  it('does not retry a finalized snapshot on recovery', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility: 'public' });
+    h.get('live:setVisibility').mockRejectedValueOnce(Object.assign(new Error('Server Error'), { data: { code: 'match_final' } }));
+    const { result } = setup();
+    await act(async () => { await result.current.restore(GO); });
+    await act(async () => { window.dispatchEvent(new Event('online')); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['public', 'unlisted'])('syncs the current committed snapshot once after restoring a %s session', async (visibility) => {
     let resolve;
     h.query.mockReturnValue(new Promise((done) => { resolve = done; }));

@@ -52,6 +52,14 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const generationRef = useRef(0);
   const publishingRef = useRef(false);
   const pendingRestoreRef = useRef(null);
+  const recoveryRef = useRef(null);
+  const onRecover = useCallback(() => recoveryRef.current?.(), []);
+
+  useEffect(() => () => {
+    ++generationRef.current;
+    pendingRestoreRef.current = null;
+    recoveryRef.current = null;
+  }, []);
 
   const [token, setToken] = useState(null);
   const [isLive, setIsLive] = useState(false);
@@ -108,39 +116,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   );
 
   // useLiveOutbox owns the in-flight guard + online/visible reconnect replay.
-  const { flush } = useLiveOutbox(sendFn, { enabled });
-  useEffect(() => {
-    if (!enabled || !isShared) return;
-    const pending = pendingRestoreRef.current;
-    if (!pending) {
-      void flush();
-      return;
-    }
-    pendingRestoreRef.current = null;
-    publishingRef.current = true;
-    void (async () => {
-      try {
-        // Older queued snapshots must land before the current committed score.
-        const drained = await flush();
-        if (pending.generation !== generationRef.current) return;
-        if (drained?.error || size() > 0) throw new Error('Waiting for queued scores to sync');
-        const snapshot = pending.getSnapshot ? pending.getSnapshot() : pending.snapshot;
-        if (!snapshot) throw new Error('Sharing requires the current score snapshot');
-        const result = await setVisibilityM({ matchId: pending.matchId, visibility: pending.visibility, snapshot, onlyIfShared: true });
-        if (pending.generation !== generationRef.current) return;
-        if (result?.ok === false) {
-          setIsLive(false);
-          setIsShared(false);
-        }
-        setError(null);
-      } catch (e) {
-        if (pending.generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
-      } finally {
-        publishingRef.current = false;
-        if (pending.generation === generationRef.current) void flush();
-      }
-    })();
-  }, [enabled, isShared, flush, setVisibilityM]);
+  const { flush } = useLiveOutbox(sendFn, { enabled, onRecover });
 
   const persistSeq = useCallback((seq) => {
     const cmid = clientMatchIdRef.current;
@@ -148,9 +124,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     saveSession(cmid, { matchId: matchIdRef.current, token: tokenRef.current, seq });
   }, []);
 
-  const restore = useCallback(async ({ clientMatchId, getSnapshot, snapshot }) => {
+  const restore = useCallback(async (opts) => {
+    const { clientMatchId } = opts;
     const generation = ++generationRef.current;
-    pendingRestoreRef.current = null;
+    publishingRef.current = false;
+    const pending = { ...opts, generation, inFlight: true, lookupFailed: false };
+    pendingRestoreRef.current = pending;
     clientMatchIdRef.current = clientMatchId;
     matchIdRef.current = null;
     tokenRef.current = null;
@@ -166,23 +145,80 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       tokenRef.current = session?.token ?? null;
       seqRef.current = Math.max(session?.lastSeq ?? 0, prior?.seq ?? 0);
       if (session?.isShared) {
-        pendingRestoreRef.current = { generation, matchId: session.matchId, visibility: session.visibility, getSnapshot, snapshot };
+        pending.matchId = session.matchId;
+        pending.visibility = session.visibility;
+      } else {
+        pendingRestoreRef.current = null;
       }
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
+      setError(null);
       if (session) persistSeq(seqRef.current);
       return session;
     } catch (e) {
-      if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
+      if (generation === generationRef.current) {
+        pending.lookupFailed = true;
+        setError(e instanceof Error ? e : new Error(String(e)));
+      }
       return null;
+    } finally {
+      pending.inFlight = false;
     }
   }, [convex, persistSeq]);
+
+  const recover = useCallback(async () => {
+    const pending = pendingRestoreRef.current;
+    if (!pending) return publishingRef.current ? null : flush();
+    const { generation } = pending;
+    if (generation !== generationRef.current || pending.inFlight) return null;
+    if (pending.lookupFailed) return restore(pending);
+    if (!enabled || !isShared) return null;
+    pending.inFlight = true;
+    publishingRef.current = true;
+    try {
+      // Older queued snapshots must land before the current committed score.
+      const drained = await flush();
+      if (generation !== generationRef.current) return null;
+      if (drained?.error || size() > 0) throw new Error('Waiting for queued scores to sync');
+      const snapshot = pending.getSnapshot ? pending.getSnapshot() : pending.snapshot;
+      if (!snapshot) throw new Error('Sharing requires the current score snapshot');
+      if (generation !== generationRef.current) return null;
+      const result = await setVisibilityM({ matchId: pending.matchId, visibility: pending.visibility, snapshot, onlyIfShared: true });
+      if (generation !== generationRef.current) return null;
+      pendingRestoreRef.current = null;
+      if (result?.ok === false) {
+        setIsLive(false);
+        setIsShared(false);
+      }
+      setError(null);
+      return result;
+    } catch (e) {
+      if (generation === generationRef.current) {
+        const code = e && typeof e === 'object' ? e.data?.code : undefined;
+        if (code === 'match_final') pendingRestoreRef.current = null;
+        setError(e instanceof Error ? e : new Error(String(e)));
+      }
+      return null;
+    } finally {
+      pending.inFlight = false;
+      if (generation === generationRef.current) {
+        publishingRef.current = false;
+        void flush();
+      }
+    }
+  }, [enabled, isShared, flush, restore, setVisibilityM]);
+
+  useEffect(() => {
+    recoveryRef.current = recover;
+    if (enabled && isShared) void recover();
+  }, [enabled, isShared, recover]);
 
   const goLive = useCallback(
     async (opts) => {
       if (!enabled || !opts?.clientMatchId || publishingRef.current) return null;
       const generation = ++generationRef.current;
+      pendingRestoreRef.current = null;
       publishingRef.current = true;
       clientMatchIdRef.current = opts.clientMatchId;
 
@@ -305,7 +341,10 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       // guard already prevents acting before a match is created.
       const matchId = matchIdRef.current;
       if (!matchId) return null;
-      ++generationRef.current;
+      const pending = pendingRestoreRef.current;
+      const generation = ++generationRef.current;
+      pendingRestoreRef.current = null;
+      publishingRef.current = false;
       try {
         const snapshot = opts?.getSnapshot ? opts.getSnapshot() : opts?.snapshot;
         const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}) });
@@ -314,6 +353,9 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         setError(null);
         return result;
       } catch (e) {
+        if (generation === generationRef.current && pending) {
+          pendingRestoreRef.current = { ...pending, generation, inFlight: false };
+        }
         setError(e instanceof Error ? e : new Error(String(e)));
         return null;
       }
@@ -328,6 +370,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const reset = useCallback(() => {
     ++generationRef.current;
     pendingRestoreRef.current = null;
+    publishingRef.current = false;
     matchIdRef.current = null;
     tokenRef.current = null;
     clientMatchIdRef.current = null;

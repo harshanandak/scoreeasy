@@ -13,9 +13,10 @@ import { reconcile } from '../lib/live/outbox';
  * @param {(item: object) => Promise<unknown>} sendFn  replays one queued event
  * @param {object} [options]
  * @param {boolean} [options.enabled=true]  gate replay (e.g. broadcast kill-switch, §12.2)
+ * @param {() => Promise<unknown>} [options.onRecover] recover a pending session before replay
  * @returns {{ flush: () => Promise<object|null> }}
  */
-export function useLiveOutbox(sendFn, { enabled = true } = {}) {
+export function useLiveOutbox(sendFn, { enabled = true, onRecover } = {}) {
   const sendFnRef = useRef(sendFn);
   const inFlightRef = useRef(false);
   const inFlightPromiseRef = useRef(null);
@@ -49,14 +50,14 @@ export function useLiveOutbox(sendFn, { enabled = true } = {}) {
   }, [enabled]);
 
   useEffect(() => {
-    if (!enabled) return undefined;
+    if (!enabled && !onRecover) return undefined;
 
     const onOnline = () => {
-      void flush();
+      void (onRecover ? onRecover() : flush());
     };
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
-        void flush();
+        onOnline();
       }
     };
 
@@ -67,7 +68,7 @@ export function useLiveOutbox(sendFn, { enabled = true } = {}) {
       window.removeEventListener('online', onOnline);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [enabled, flush]);
+  }, [enabled, flush, onRecover]);
 
   return { flush };
 }

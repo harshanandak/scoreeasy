@@ -393,6 +393,9 @@ export const setVisibility = authedMutation({
   },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
+    if (match.status === "final" && (args.onlyIfShared || args.visibility !== "private")) {
+      throw new ConvexError({ code: "match_final", message: "Match is final" });
+    }
     if (args.onlyIfShared && (match.visibility === "private" || match.publishedAt === undefined)) return { ok: false };
     const visibility = args.onlyIfShared ? match.visibility : args.visibility;
     const publishing = visibility !== "private";
