@@ -408,3 +408,12 @@ export function isLimitedOversMatchDecided({ team1Score, team2Score, format = {}
   return chase.runs > first.runs || Boolean(chase.allOut)
     || chase.wickets >= getMaxWickets(format) || chase.balls >= getTotalBalls(format);
 }
+
+export function getQuickCricketTransition(scores, { format, innings, battingTeam }) {
+  const team = scores[battingTeam === 1 ? 'team1' : 'team2'];
+  if (!team) return null;
+  const inningsOver = team.balls >= getTotalBalls(format) || team.wickets >= getMaxWickets(format);
+  if (innings === 1 && inningsOver) return 'break';
+  if (isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })) return 'complete';
+  return null;
+}

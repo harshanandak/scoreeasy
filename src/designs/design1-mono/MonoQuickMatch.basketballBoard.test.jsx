@@ -142,8 +142,8 @@ describe('Basketball on the shared goals board', () => {
     expect(screen.getByText('Deciding score needed')).toBeInTheDocument();
     for (const button of board().querySelectorAll('.tgb-actions button')) expect(button).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
-    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
-    expect(screen.getByText('Basketball cannot end tied. Add the deciding score before ending.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent(/abandoned.*no result/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Keep scoring' }));
     expect(screen.queryByTestId('winner-card')).toBeNull();
     add('Dunkers', 2);
     expect(score('Dunkers')).toHaveTextContent('51');

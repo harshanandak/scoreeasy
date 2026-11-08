@@ -1,3 +1,4 @@
+import { getQuickCricketTransition } from '../../utils/cricketCalculations';
 import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutcome';
 import { isSetsMatchDecided } from '../../utils/quickMatchSets';
 import { isGoalsMatchDecided } from '../../utils/goalsScoring';
@@ -1163,16 +1164,7 @@ export default function MonoQuickMatch() {
   };
 
   cricketScoresRef.current = scores;
-  const getCricketTransition = (candidate) => {
-    const key = battingTeam === 1 ? 'team1' : 'team2';
-    const team = candidate[key];
-    if (!team) return null;
-    const inningsOver = team.balls >= totalBalls || team.wickets >= maxWickets;
-    const chaseTarget = battingTeam === 2 ? candidate.team1.runs : candidate.team2.runs;
-    if (innings === 1 && inningsOver) return 'break';
-    if (innings === 2 && (inningsOver || team.runs > chaseTarget)) return 'complete';
-    return null;
-  };
+  const getCricketTransition = candidate => getQuickCricketTransition(candidate, { format, innings, battingTeam });
 
   const commitCricketScores = (update) => {
     if (completion.locked) return;

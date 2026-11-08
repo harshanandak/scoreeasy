@@ -1,3 +1,4 @@
+import { isTennisMatchDecided } from '../../../utils/tennisQuickMatch';
 import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
 import { useScoringProgress } from './scoringProgressContext';
 import { isCompletedMatch, useMatchCompletion } from '../../../hooks/useMatchCompletion';
@@ -438,12 +439,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const rightName = sidesSwapped ? team1Name : team2Name;
 
   // Check if match is complete
-  const isMatchComplete = useMemo(() => {
-    const completedSets = sets.filter(s => s.completed);
-    const setsToWin = Math.ceil(sets.length / 2);
-    const { team1Sets, team2Sets } = countSetsWon(completedSets);
-    return team1Sets >= setsToWin || team2Sets >= setsToWin;
-  }, [sets]);
+  const isMatchComplete = useMemo(() => isTennisMatchDecided(sets), [sets]);
 
   // Add point to team
   const addPoint = (team) => {

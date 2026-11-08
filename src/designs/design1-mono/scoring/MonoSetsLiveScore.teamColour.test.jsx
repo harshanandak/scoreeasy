@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
@@ -98,11 +99,12 @@ describe('tournament team-colour presentation', () => {
     expect(key().disabled).toBe(false);
     expect(saved().matches[0].draftState.sets[1]).toEqual(set(24, 20));
   });
-  it('Finish on an unfinished match keeps the draft and returns to the tournament', () => {
-    render(<MonoSetsLiveScore />); tap(); fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
-    expect(saved().matches[0]).toMatchObject({ status: 'in-progress', draftState: { sets: [set(1, 0)] } });
-    expect(h.navigate).toHaveBeenCalledWith('/volleyball/tournament/1');
-    expect(h.live.finalize).not.toHaveBeenCalled(); expect(h.save).not.toHaveBeenCalled();
+  it('Finish on an unfinished match saves its snapshot as abandoned and opens the result', () => {
+    render(<MonoSetsLiveScore />); tap(); fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
+    expect(saved().matches[0]).toMatchObject({ status: 'completed', resultType: 'abandoned', winner: null, sets: [set(1, 0)] });
+    expect(saved().matches[0].draftState).toBeUndefined();
+    expect(h.navigate).toHaveBeenCalledWith('/volleyball/tournament/1/match/m1/result', { replace: true });
+    expect(h.live.finalize).toHaveBeenCalledWith({ resultType: 'abandoned' }); expect(h.save).toHaveBeenCalled();
   });
   it('uses the same colour fallback and honours existing tournament team colours with mark contrast', () => {
     const teams = [{ id: 1, name: 'Alpha', color: '#facc15' }, { id: 2, name: 'Beta', color: '#1d4ed8' }];

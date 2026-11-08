@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -50,7 +51,7 @@ function rejectResults(kind) {
 }
 function manualFinish() {
   fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' })); confirmEarlyFinish();
 }
 function expectVisibleInnings(runs, overs) {
   const score = document.querySelector('.mono-scorer-score-value');
@@ -101,7 +102,7 @@ describe('cricket persistence transactions', () => {
     expect(saved.draftState).toBeUndefined();
   });
 
-  it.each(['test-tournament', 'test-quick'])('%s manual finish persists an unfinished match as a draw', (kind) => {
+  it.each(['test-tournament', 'test-quick'])('%s manual finish preserves an unfinished match as abandoned', (kind) => {
     // Illegal post-Finish inputs must not trigger a separate natural-completion lock.
     seed(kind, match => { match.draftState.innings[0].runs = 20; });
     const complete = vi.fn();
@@ -110,7 +111,7 @@ describe('cricket persistence transactions', () => {
     expectVisibleInnings(1, '0.1');
     expect(stored(kind).draftState.innings[3]).toMatchObject({ runs: 1, balls: 1 });
     manualFinish();
-    expect(stored(kind)).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw', completedAt: expect.any(String) });
+    expect(stored(kind)).toMatchObject({ status: 'completed', winner: null, resultType: 'abandoned', completedAt: expect.any(String) });
     expect(stored(kind).innings[3]).toMatchObject({ runs: 1, balls: 1 });
     expect(stored(kind).draftState).toBeUndefined();
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? '/cricket/quick?result=300' : '/cricket/tournament/100');

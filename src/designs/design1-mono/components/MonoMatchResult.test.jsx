@@ -183,12 +183,12 @@ describe('MonoMatchResultView — edge states', () => {
       ...decided,
       verdict: {
         status: 'abandoned', isDecided: false, isDraw: false, winnerSide: 'none',
-        winnerName: null, headline: 'Match abandoned', scoreLine: '1 – 0',
-        detailLabel: null, lineScore: [], ariaSummary: 'Match abandoned.',
+        winnerName: null, headline: 'Abandoned · no result', scoreLine: '1 – 0',
+        detailLabel: null, lineScore: [], ariaSummary: 'Abandoned · no result.',
       },
     };
     const { container } = render(<MonoMatchResultView {...abandoned} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Match abandoned');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Abandoned · no result');
     expect(screen.getByText('No result')).toBeInTheDocument();
     expect(container.querySelector('.kit-fin-medallion')).toBeNull();
   });

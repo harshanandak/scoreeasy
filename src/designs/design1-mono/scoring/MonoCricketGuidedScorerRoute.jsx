@@ -298,7 +298,7 @@ export default function MonoCricketGuidedScorerRoute() {
   const handleComplete2 = (payload) => {
     const agg = mirrorAggregate(payload?.innings ?? draft.guidedInnings ?? { deliveries: [] }, fmt);
     const candidate = { ...match, [battingSlot]: agg };
-    if (payload?.reason === 'manual-match' && !isLimitedOversMatchDecided({ ...candidate, format: match.format, innings: 2, battingSecond: battingSlot === 'team1Score' ? 1 : 2 })) {
+    if ((payload?.reason === 'manual-match' || payload?.reason === 'manual-innings') && !isLimitedOversMatchDecided({ ...candidate, format: match.format, innings: 2, battingSecond: battingSlot === 'team1Score' ? 1 : 2 })) {
       finishAbandoned(payload); return;
     }
     completion.complete(() => {
