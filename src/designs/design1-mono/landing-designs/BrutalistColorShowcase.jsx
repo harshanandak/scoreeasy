@@ -409,9 +409,9 @@ const styles = {
   // FLOATING BAR
   floatingBar: {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
+    top: 'var(--se-safe-top)',
+    left: 'var(--se-safe-left)',
+    right: 'var(--se-safe-right)',
     zIndex: 9999,
     background: 'rgba(0,0,0,0.9)',
     backdropFilter: 'blur(12px)',

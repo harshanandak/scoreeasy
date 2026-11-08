@@ -434,7 +434,7 @@
 }
 
 body.has-mobile-bottom-nav .kit-screen > .kit-setup-cta {
-  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(78px + var(--se-safe-bottom));
 }
 
 /* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
