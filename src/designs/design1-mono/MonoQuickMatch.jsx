@@ -2159,7 +2159,7 @@ export default function MonoQuickMatch() {
           </div>
         ))}
 
-        {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} /> : (
+        {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
         <section className="kit-setup-field" aria-labelledby="setup-format-label">
           <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
           <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />

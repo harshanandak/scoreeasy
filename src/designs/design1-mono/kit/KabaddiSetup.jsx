@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { KABADDI_PRESETS, kabaddiRulesLine, resolveKabaddiRules } from '../../../utils/kabaddiRules';
 
-export default function KabaddiSetup({ format, onChange }) {
+export default function KabaddiSetup({ format, onChange, names = ['Team A', 'Team B'] }) {
   const [expanded, setExpanded] = useState(false);
   const r = format.kabaddiRules || resolveKabaddiRules('quick');
   const change = patch => onChange({ ...format, kabaddiRules: resolveKabaddiRules('custom', { ...r, ...patch }) });
@@ -21,6 +21,13 @@ export default function KabaddiSetup({ format, onChange }) {
     <div className="kit-setup-rules-row">
       <p className="kit-setup-rules">{kabaddiRulesLine(r)}</p>
       <button type="button" className="kit-setup-link" aria-expanded={expanded} onClick={() => setExpanded(v => !v)}>Change rules</button>
+    </div>
+    <div role="group" aria-label="First raid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+      <p className="kit-setup-label" style={{ gridColumn: '1 / -1', margin: 0 }}>First raid</p>
+      {names.map((name, team) => <button key={team} type="button" style={{ minHeight: 48 }}
+        className={(format.openingRaidTeam ?? 0) === team ? 'mono-btn-primary' : 'mono-btn'}
+        aria-pressed={(format.openingRaidTeam ?? 0) === team}
+        onClick={() => onChange({ ...format, openingRaidTeam: team })}>{name || `Team ${team ? 'B' : 'A'}`}</button>)}
     </div>
     {expanded && <div style={{ display: 'grid', gap: 16, marginTop: 16 }}>
       <p className="kit-setup-rules">Changes use Custom rules. Line decisions and match administration stay with the referee. Beach, Circle and shootouts are not supported.</p>
