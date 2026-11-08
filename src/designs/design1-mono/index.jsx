@@ -168,8 +168,22 @@ SportRouteGuard.propTypes = {
 };
 
 function CricketQuickTestScorerRoute() {
-  const { sport } = useParams();
+  const { sport, matchId } = useParams();
   if (sport !== 'cricket') return <NotFoundRoute />;
+  // The scorer loads its match in an effect and shows "Loading..." until it finds one, so an id
+  // that is not saved on this device would wait forever. Same recovery page the tennis scorer uses.
+  if (!loadQuickMatch(matchId)) {
+    return (
+      <RouteRecoveryActions
+        eyebrow="Scorer recovery"
+        title="Match not found"
+        message="This cricket scorer link does not match a saved quick match on this device."
+        sportId="cricket"
+        primaryLabel="Back to Cricket setup"
+        primaryPath="/cricket/quick"
+      />
+    );
+  }
 
   return (
     <SportRouteGuard>

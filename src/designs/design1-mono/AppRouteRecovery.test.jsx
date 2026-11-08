@@ -286,6 +286,17 @@ describe('app route recovery', () => {
     expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
   });
 
+  it('shows the scorer recovery page for an unknown cricket Test match link', async () => {
+    renderApp('/cricket/quick/test-match/xyz');
+
+    const heading = await screen.findByRole('heading', { name: 'Match not found' });
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    // The app shell has its own Home control; check the recovery card's own escape routes.
+    const card = within(heading.closest('.max-w-2xl'));
+    expect(card.getByRole('button', { name: 'Home' })).toBeInTheDocument();
+    expect(card.getByRole('button', { name: 'Back to Cricket setup' })).toBeInTheDocument();
+  });
+
   it('keeps quick test scoring restricted to cricket routes', async () => {
     renderApp('/tennis/quick/test/123');
 
