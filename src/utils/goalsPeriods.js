@@ -14,6 +14,9 @@ export function applyPeriodAction(state, action) {
   const { type, at } = action;
   const before = { ...state, elapsed: periodElapsed(state, at), startedAt: state.startedAt == null ? null : at };
   delete before.history;
+  // Store the event cursor rather than duplicating the full log in every undo frame.
+  before.eventCount = state.events?.length || 0;
+  delete before.events;
   let next = { ...state, scores: state.scores.map(score => ({ ...score })) };
   if (type === 'pause' && state.phase === 'playing' && state.startedAt != null) next = { ...next, elapsed: before.elapsed, startedAt: null };
   else if (type === 'resume' && state.phase === 'playing' && state.startedAt == null) next.startedAt = at;
@@ -31,7 +34,8 @@ export function applyPeriodAction(state, action) {
 export function undoPeriodAction(state, at) {
   const previous = state.history.at(-1);
   if (!previous) return state;
-  return { ...previous, startedAt: previous.startedAt == null ? null : at, history: state.history.slice(0, -1) };
+  const { eventCount, events, ...snapshot } = previous;
+  return { ...snapshot, events: events || (state.events || []).slice(0, eventCount), startedAt: previous.startedAt == null ? null : at, history: state.history.slice(0, -1) };
 }
 
 

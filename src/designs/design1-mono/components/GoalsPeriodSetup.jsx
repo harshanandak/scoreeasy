@@ -6,7 +6,10 @@ export default function GoalsPeriodSetup({ sport, format, onChange }) {
   if (!supportsGoalPeriods(sport)) return null;
   const rules = format.periods;
   const preset = format.periodPreset || (rules ? 'custom' : 'casual');
-  const update = (count, minutes) => onChange(periodPreset(sport, 'custom', count, minutes));
+  const update = (count, minutes) => {
+    const next = periodPreset(sport, 'custom', count, minutes);
+    onChange({ ...next, periods: { ...next.periods, extraDurations: [...(rules.extraDurations || [])] } });
+  };
   return <section className="kit-setup-field gp-setup" aria-label="Period rules">
     <label className="kit-setup-label" htmlFor="goal-period-preset">Timing preset</label>
     <select className="kit-setup-input" id="goal-period-preset" value={preset} onChange={e => onChange(periodPreset(sport, e.target.value))}>

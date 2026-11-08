@@ -80,3 +80,16 @@ describe('frozen timing rules and outcomes', () => {
     expect(periodTotals(basketball)).toEqual({ A: 0, B: 3 });
   });
 });
+
+
+it('keeps a long match durable without duplicating its event log in every undo frame', () => {
+  let state = createPeriodMatch({ sport: 'basketball', durations: [3600] }, 0);
+  for (let i = 0; i < 1000; i += 1) state = act(state, 'score', i * 1000, { team: i % 2 ? 'A' : 'B', value: 2 });
+  const saved = JSON.stringify(state);
+  expect(saved.length).toBeLessThan(700000);
+  state = readPeriodMatch(JSON.parse(saved));
+  expect(periodTotals(state)).toEqual({ A: 1000, B: 1000 });
+  state = undoPeriodAction(state, 1000000);
+  expect(state.events).toHaveLength(999);
+  expect(periodTotals(state)).toEqual({ A: 998, B: 1000 });
+});
