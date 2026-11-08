@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves, pruneSyncedMatchSaves } from './pendingMatchSaves';
+import { loadSportTournaments, saveSportTournament } from './storage';
 
 const reference = { storageKey: 'se_football', tournamentId: 100, matchId: 'final' };
 const payload = { sport: 'football', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 1, date: 1, clientMatchId: 'tournament:football:100:final' };
@@ -44,4 +45,28 @@ it('keeps a failed result and its durable record when transport fails', async ()
   expect(pendingMatchSaves(owner)[0]).toMatchObject({ state: 'failed', terminal: false, tournamentMatch: reference });
   expect(JSON.parse(localStorage.getItem('se_football'))[0].knockoutMatches[0]).toMatchObject({ status: 'completed', score1: 2, score2: 1, sync: { status: 'failed' } });
   expect(pendingMatchSaves('another-account')).toEqual([]);
+});
+
+it.each(['matches', 'knockoutMatches'])('preserves reconnect confirmation when a stale fixture screen saves %s after acknowledgement', async (collection) => {
+  localStorage.setItem('se_football', JSON.stringify([{ id: 100, [collection]: [{ id: 'final', status: 'completed', score1: 2, score2: 1 }] }]));
+  const record = enqueueMatchSave(owner, payload, undefined, reference);
+  await attemptMatchSave(record, vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+  // The fixture screen captures the failed result before its passive save effect runs.
+  const snapshot = loadSportTournaments('se_football')[0];
+  expect(snapshot[collection][0].sync.status).toBe('failed');
+  let acknowledge;
+  const save = vi.fn(() => new Promise(resolve => { acknowledge = resolve; }));
+  const retry = attemptMatchSave(pendingMatchSaves(owner)[0], save, () => true, true);
+  await Promise.resolve();
+  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  acknowledge('server-id');
+  expect(await retry).toMatchObject({ status: 'synced' });
+  expect(loadSportTournaments('se_football')[0][collection][0].sync.status).toBe('synced');
+
+  expect(saveSportTournament('se_football', { ...snapshot, name: 'Cup' })).toBe(true);
+  expect(pendingMatchSaves(owner)).toEqual([]);
+  expect(loadSportTournaments('se_football')[0]).toMatchObject({
+    name: 'Cup', [collection]: [{ score1: 2, score2: 1, clientMatchId: payload.clientMatchId,
+      syncOwnerId: owner, sync: { status: 'synced', completionId: record.completionId } }],
+  });
 });
