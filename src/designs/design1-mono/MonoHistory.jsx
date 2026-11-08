@@ -4,14 +4,9 @@ import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
-  clearCompletedQuickMatches,
-  deleteQuickMatch as deleteStoredQuickMatch,
   loadCompletedQuickMatches,
   loadSportTournaments,
-  replaceCompletedQuickMatches,
-  saveData,
 } from '../../utils/storage';
-import { loadHistory } from '../../utils/universalStorage';
 import { getSportById, getSportsList } from '../../models/sportRegistry';
 import {
   getCompletedAt,
@@ -23,6 +18,7 @@ import {
 import { shareText } from '../../mobile/share';
 import { MonoStatisticsPanel } from './MonoStatistics';
 import { clearQuickStatsRecovery } from '../../utils/quickStatsRecovery';
+import { removeMatchHistory, restoreMatchHistory } from '../../utils/matchHistoryRecovery';
 import MonoSheet from './components/MonoSheet';
 import { deriveTeamColours, normaliseHex, teamColourVars } from '../../lib/teamColour';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
@@ -256,7 +252,7 @@ function buildTournamentEntries() {
 
 export default function MonoHistory() {
   const navigate = useNavigate();
-  const { history, clearAll: clearLegacyHistory, refresh: refreshLegacyHistory } = useGameHistory();
+  const { history, refresh: refreshLegacyHistory } = useGameHistory();
   const [view, setView] = useState('matches');
   const [quickMatches, setQuickMatches] = useState([]);
   const [tournamentEntries, setTournamentEntries] = useState([]);
@@ -393,17 +389,10 @@ export default function MonoHistory() {
     setSortOrder(SORT_NEWEST);
   };
 
-  const deleteQuickMatch = (id) => {
-    const updated = quickMatches.filter((qm) => qm.id !== id);
-    setQuickMatches(updated);
-    deleteStoredQuickMatch(id);
-  };
-
   const confirmDeleteQuickMatch = (entry) => {
     setPendingClear(null);
     setPendingDelete({
       entry,
-      quickSnapshot: quickMatches,
       deleted: false,
     });
     setHistoryStatus('');
@@ -411,29 +400,37 @@ export default function MonoHistory() {
 
   const completeDeleteQuickMatch = () => {
     if (!pendingDelete?.entry?.rawId) return;
+    const operation = removeMatchHistory(pendingDelete.entry.rawId, 'delete');
+    if (!operation) {
+      setHistoryStatus('Could not delete quick match. Please try again.');
+      return;
+    }
     const index = filteredEntries.findIndex((entry) => entry.id === pendingDelete.entry.id);
     const next = index >= 0 ? filteredEntries[index + 1] : null;
     setFocusAfterDelete(next ? next.id : FOCUS_LIST_HEADING);
-    deleteQuickMatch(pendingDelete.entry.rawId);
+    setQuickMatches(loadCompletedQuickMatches());
     setSelectedEntry((current) => (current?.id === pendingDelete.entry.id ? null : current));
     setPendingDelete({
       ...pendingDelete,
+      operationId: operation.id,
       deleted: true,
     });
-    setHistoryStatus('Quick match deleted.');
+    setHistoryStatus(operation.failed ? 'Could not delete quick match. Please try again.' : 'Quick match deleted.');
   };
 
   const undoDeleteQuickMatch = () => {
-    if (!pendingDelete?.quickSnapshot) return;
-    setQuickMatches(pendingDelete.quickSnapshot);
-    replaceCompletedQuickMatches(pendingDelete.quickSnapshot);
-    setPendingDelete(null);
-    setHistoryStatus('Quick match restored.');
-  };
-
-  const clearAllQuickMatches = () => {
-    setQuickMatches([]);
-    clearCompletedQuickMatches();
+    if (!pendingDelete?.operationId) return;
+    const result = restoreMatchHistory(pendingDelete.operationId);
+    setQuickMatches(loadCompletedQuickMatches());
+    if (result === 'unavailable') {
+      setPendingDelete(null);
+      setHistoryStatus('Undo is no longer available');
+    } else if (result !== true) {
+      setHistoryStatus('Could not restore quick match. Please try again.');
+    } else {
+      setPendingDelete(null);
+      setHistoryStatus('Quick match restored.');
+    }
   };
 
   const confirmClearMutableHistory = () => {
@@ -448,28 +445,33 @@ export default function MonoHistory() {
       setHistoryStatus('Could not clear local history. Please try again.');
       return;
     }
-    const snapshot = {
-      quick: quickMatches,
-      legacy: loadHistory(),
-      cleared: true,
-    };
-
-    clearLegacyHistory();
-    clearAllQuickMatches();
-    setPendingClear(snapshot);
+    const operation = removeMatchHistory(null, 'clear');
+    if (!operation) {
+      setHistoryStatus('Could not clear local history. Please try again.');
+      return;
+    }
+    setQuickMatches(loadCompletedQuickMatches());
+    refreshLegacyHistory();
+    setPendingClear({ operationId: operation.id, cleared: true });
     setPendingDelete(null);
     setSelectedEntry(null);
-    setHistoryStatus('Local history cleared.');
+    setHistoryStatus(operation.failed ? 'Could not clear local history. Please try again.' : 'Local history cleared.');
   };
 
   const undoClearMutableHistory = () => {
-    if (!pendingClear) return;
-    setQuickMatches(pendingClear.quick);
-    replaceCompletedQuickMatches(pendingClear.quick);
-    saveData('gs_history', pendingClear.legacy);
+    if (!pendingClear?.operationId) return;
+    const result = restoreMatchHistory(pendingClear.operationId);
+    setQuickMatches(loadCompletedQuickMatches());
     refreshLegacyHistory();
-    setPendingClear(null);
-    setHistoryStatus('History restored.');
+    if (result === 'unavailable') {
+      setPendingClear(null);
+      setHistoryStatus('Undo is no longer available');
+    } else if (result !== true) {
+      setHistoryStatus('Could not restore local history. Please try again.');
+    } else {
+      setPendingClear(null);
+      setHistoryStatus('History restored.');
+    }
   };
 
   const shareEntry = async (entry) => {
