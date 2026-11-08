@@ -540,3 +540,13 @@ describe('period-aware spectator snapshots', () => {
     expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent(`${label} \u00b7 0:20`);
   });
 });
+
+
+it('shows the frozen terminal played time rather than projecting from the last scoring event', () => {
+  mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final', resultType: 'abandoned', lastEventAt: 10000, periodLabel: '1st half',
+    periodClock: { sport: 'football', phase: 'playing', elapsed: 30, startedAt: null, duration: 120, periodIndex: 0, regulationCount: 2, playedSeconds: 30 } };
+  mocks.meta = META;
+  renderAt();
+  expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent('0:30 played');
+  expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent(/abandoned/i);
+});

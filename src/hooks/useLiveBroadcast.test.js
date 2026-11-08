@@ -495,3 +495,16 @@ describe('useLiveBroadcast', () => {
     expect(h.spies['live:setVisibility']).toHaveBeenCalledWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot });
   });
 });
+
+
+it('publishes the frozen terminal clock through the snapshot path before archiving', async () => {
+  h.get('live:create').mockResolvedValue({ token: 'TOK', matchId: 'mid1' });
+  h.get('live:scorePoint').mockResolvedValue({});
+  h.get('live:finalize').mockResolvedValue({ archived: true });
+  const { result } = setup();
+  await act(async () => { await result.current.goLive(GO); });
+  const snapshot = { ...GO.snapshot, periodLabel: '1st half', periodClock: { sport: 'football', phase: 'playing', elapsed: 30, startedAt: null, duration: 60, periodIndex: 0, regulationCount: 2, playedSeconds: 30 } };
+  await act(async () => { await result.current.finalize({ resultType: 'abandoned', snapshot }); });
+  expect(h.spies['live:scorePoint']).toHaveBeenCalledWith(expect.objectContaining({ snapshot, type: 'correction', value: 0 }));
+  expect(h.spies['live:scorePoint'].mock.invocationCallOrder.at(-1)).toBeLessThan(h.spies['live:finalize'].mock.invocationCallOrder.at(-1));
+});

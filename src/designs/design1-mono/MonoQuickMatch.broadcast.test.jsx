@@ -422,3 +422,46 @@ describe.each(['football', 'basketball', 'hockey'])('%s period completion', spor
     expect(saveQuickMatch.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'decided', winner: 'Reds', periodState: { phase: 'finished' } });
   });
 });
+
+
+describe('review regression: terminal quick clocks', () => {
+  function seedRunning() {
+    seedGoals();
+    const periods = { sport: 'football', durations: [120, 120] };
+    ctx.draft.format = { mode: 'timed', timeLimit: 240, periods };
+    ctx.draft.periodState = createPeriodMatch(periods, Date.now());
+  }
+  it('abandons with the same 30 seconds played in saved state and terminal broadcast', () => {
+    vi.useFakeTimers();
+    try {
+      seedRunning(); render(<MonoQuickMatch />);
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+      act(() => vi.advanceTimersByTime(20000));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+      const saved = saveQuickMatch.mock.calls.at(-1)[0];
+      expect(saved.periodState).toMatchObject({ elapsed: 30, startedAt: null });
+      expect(saved).toMatchObject({ resultType: 'abandoned', winner: null, elapsedSeconds: 30 });
+      expect(live.finalize.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', snapshot: { pointsA: 1, periodClock: { elapsed: 30, startedAt: null, playedSeconds: 30 } } });
+      expect(screen.getByText(/Football.*30s/)).toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+  });
+  it('sums 10 seconds actually played in each period instead of the configured lengths', () => {
+    vi.useFakeTimers();
+    try {
+      seedRunning(); render(<MonoQuickMatch />);
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'End half' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+      const saved = saveQuickMatch.mock.calls.at(-1)[0];
+      expect(saved.elapsedSeconds).toBe(20);
+      expect(saved.periodState.elapsedByPeriod).toEqual([10, 10]);
+      expect(saved.resultType).toBe('abandoned');
+    } finally { vi.useRealTimers(); }
+  });
+});

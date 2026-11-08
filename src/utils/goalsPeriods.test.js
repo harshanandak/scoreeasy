@@ -108,3 +108,33 @@ it('corrects an earlier period score after the boundary and undoes it atomically
   expect(state.scores).toEqual([{ A: 1, B: 0 }, { A: 0, B: 0 }]);
   expect(state.periodIndex).toBe(1);
 });
+
+
+describe('review regression: clocks survive Undo', () => {
+  it.each([false, true])('delayed score Undo preserves the current running basis (refresh=%s)', refresh => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+    state = act(state, 'score', 10000, { team: 'A', value: 1 });
+    if (refresh) state = readPeriodMatch(JSON.parse(JSON.stringify(state)));
+    const basis = { elapsed: state.elapsed, startedAt: state.startedAt };
+    state = undoPeriodAction(state, 40000);
+    expect(periodElapsed(state, 40000)).toBe(40);
+    expect(state).toMatchObject(basis);
+    expect(periodTotals(state)).toEqual({ A: 0, B: 0 });
+  });
+  it('undoing Resume pauses at the elapsed time reached since resuming', () => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+    state = act(state, 'pause', 10000); state = act(state, 'resume', 20000);
+    state = undoPeriodAction(state, 40000);
+    expect(state).toMatchObject({ elapsed: 30, startedAt: null });
+  });
+  it('undoing and redoing a period start retains the playing time already spent in that period', () => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+    state = act(state, 'endPeriod', 10000); state = act(state, 'startPeriod', 20000);
+    state = undoPeriodAction(state, 30000);
+    expect(state).toMatchObject({ phase: 'interval', periodIndex: 0, elapsedByPeriod: [10, 10] });
+    state = act(state, 'startPeriod', 40000);
+    expect(periodElapsed(state, 40000)).toBe(10);
+    state = act(state, 'endPeriod', 50000);
+    expect(state.elapsedByPeriod).toEqual([10, 20]);
+  });
+});
