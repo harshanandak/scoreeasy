@@ -145,6 +145,7 @@ export default defineSchema({
 
   matchEvents: defineTable({
     kabaddi: v.optional(kabaddiUpdateValidator),
+    removed: v.optional(v.literal(true)),
     matchId: v.id("liveMatches"),
     seq: v.number(),
     clientEventId: v.string(),
@@ -171,7 +172,8 @@ export default defineSchema({
     at: v.number(),
   })
     .index("by_match_seq", ["matchId", "seq"])
-    .index("by_match_type", ["matchId", "type"])
+    .index("by_match_active_seq", ["matchId", "removed", "seq"])
+    .index("by_match_type", ["matchId", "type", "removed"])
     .index("by_match_client", ["matchId", "clientEventId"]),
 
   // Signed-out moderation reports (§7.1 floor). reporterId is an untrusted client

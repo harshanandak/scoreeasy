@@ -220,12 +220,13 @@ export function halfTimeScore(match) {
 export function halfStory(match) {
   const story = raidStory(match);
   const ht = halfTimeScore(match);
+  const totals = totalsOf(match.state, match.carried ?? [0, 0]);
   const halves = [];
   for (const half of [1, 2]) {
     const raids = story.filter((e) => e.half === half);
-    if (!raids.length) continue;
-    const start = half === 1 ? [0, 0].map((n, i) => n + (match.carried?.[i] ?? 0)) : (ht ?? raids[0].scoreBefore);
-    const end = raids.at(-1).score;
+    if (half > match.state.half) continue;
+    const start = half === 1 ? [...(match.carried ?? [0, 0])] : (ht ?? raids[0]?.scoreBefore ?? totals);
+    const end = half === 1 ? (ht ?? totals) : totals;
     let biggest = { margin: 0, team: null };
     for (const e of raids) {
       const m = e.score[0] - e.score[1];

@@ -119,13 +119,22 @@ async function replaceKabaddiHistory(
     if (raid.number > snapshot.raidNumber || raid.half > snapshot.half || (index > 0 && history[index - 1].number >= raid.number)) throw new Error("Invalid kabaddi publication history");
   }
   if ((history.at(-1)?.id ?? null) !== (snapshot.lastRaid?.id ?? null)) throw new Error("Kabaddi history does not match the saved snapshot");
-  const prior = await ctx.db.query("matchEvents").withIndex("by_match_type", q => q.eq("matchId", match._id).eq("type", "kabaddi_raid")).take(1001);
+  const prior = await ctx.db.query("matchEvents").withIndex("by_match_type", q => q.eq("matchId", match._id).eq("type", "kabaddi_raid").eq("removed", undefined)).take(1001);
   if (prior.length > 1000) throw new Error("Kabaddi publication history exceeds supported capacity");
-  for (const event of prior) await ctx.db.delete("matchEvents", event._id);
+  const currentIds = new Set(history.map(raid => `kabaddi-raid:${raid.id}`));
+  // Keep dedupe records so another tab's queued append cannot restore a retired raid.
+  for (const event of prior) if (!currentIds.has(event.clientEventId)) await ctx.db.patch("matchEvents", event._id, { removed: true });
   let seq = match.lastSeq;
   for (const raid of history) {
-    seq += 1;
-    await ctx.db.insert("matchEvents", { matchId: match._id, seq, clientEventId: `kabaddi-raid:${raid.id}`, type: "kabaddi_raid", team: raid.team === 0 ? "A" : "B", value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, at: Date.now(), kabaddi: { kind: "raid", raid } });
+    const clientEventId = `kabaddi-raid:${raid.id}`;
+    const existing = await ctx.db.query("matchEvents").withIndex("by_match_client", q => q.eq("matchId", match._id).eq("clientEventId", clientEventId)).unique();
+    const fields = { type: "kabaddi_raid" as const, team: raid.team === 0 ? "A" as const : "B" as const, value: raid.points[raid.team], runningA: raid.score[0], runningB: raid.score[1], setsA: 0, setsB: 0, kabaddi: { kind: "raid" as const, raid } };
+    if (existing) {
+      await ctx.db.patch("matchEvents", existing._id, { ...fields, removed: undefined });
+    } else {
+      seq += 1;
+      await ctx.db.insert("matchEvents", { matchId: match._id, seq, clientEventId, ...fields, at: Date.now() });
+    }
   }
   return seq;
 }
@@ -922,7 +931,7 @@ export const listEvents = query({
     // analytical panels read the always-current snapshot, not this log.
     const result = await ctx.db
       .query("matchEvents")
-      .withIndex("by_match_seq", (q) => q.eq("matchId", match._id))
+      .withIndex("by_match_active_seq", (q) => q.eq("matchId", match._id).eq("removed", undefined))
       .order("desc")
       .paginate(paginationOpts);
 
@@ -947,8 +956,8 @@ export const eventsSince = query({
     // pull the entire log. The client advances sinceSeq to page the tail.
     const events = await ctx.db
       .query("matchEvents")
-      .withIndex("by_match_seq", (q) =>
-        q.eq("matchId", match._id).gt("seq", sinceSeq),
+      .withIndex("by_match_active_seq", (q) =>
+        q.eq("matchId", match._id).eq("removed", undefined).gt("seq", sinceSeq),
       )
       .order("asc")
       .take(200);
