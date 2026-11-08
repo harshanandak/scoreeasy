@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { teamTotal } from './kabaddiEngine.js';
 import {
-  beginLiveRaid, boardView, cancelLiveRaid, createBoardMatch, draftOf, landRaid, lastMark, liveRaids, markDefender, namedOutMap, previewDraft,
+  beginLiveRaid, boardView, callDeadline, cancelLiveRaid, createBoardMatch, draftOf, landRaid, lastMark, liveRaids, markDefender, namedOutMap, previewDraft,
   raiderLost, raidFlags, readback, reopenRaid, rulingForDraft, startHalf, toggleBonus, undoMark,
 } from './kabaddiBoardModel.js';
 
@@ -19,6 +19,13 @@ const totals = (m) => m.state.teams.map(teamTotal);
 const tap = (m, ...marks) => marks.reduce((acc, [slot, kind]) => markDefender(acc, slot, kind), m);
 
 describe('live raid draft', () => {
+  it('does not erase remaining half time, but accepts an expired deadline', () => {
+    const match = createBoardMatch({ halfMs: HALF, names: ['Royals', 'Strikers'] });
+    match.state = startHalf(match.state, { atMs: NOW });
+    expect(callDeadline(match, NOW + 1000)).toBe(match);
+    expect(callDeadline(match, NOW + HALF).state.phase).toBe('halfTime');
+  });
+
   it('opens an empty draft for the started raid and the engine has an active raid', () => {
     const m = live();
     expect(m.state.activeRaid).not.toBeNull();

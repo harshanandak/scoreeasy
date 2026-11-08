@@ -5,6 +5,7 @@ import { isGoalsMatchDecided } from '../../utils/goalsScoring';
 import { isLimitedOversMatchDecided } from '../../utils/cricketCalculations';
 import KabaddiLive from './scoring/KabaddiLiveBoard';
 import { createKabaddiMatch, matchTotals, persistKabaddiDraft, restoreKabaddiMatch } from '../../utils/kabaddiQuickMatch';
+import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabaddiBackups } from '../../utils/kabaddiMigrationBackups';
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import KabaddiSetup from './kit/KabaddiSetup';
@@ -570,6 +571,7 @@ export default function MonoQuickMatch() {
     restoredDraftRef.current = false;
     scoringSportRef.current = null;
     setRestoredScoringStarted(false);
+    if (isKabaddi) migrateLegacyKabaddiBackups();
 
     if (resultMatchId) {
       const saved = loadQuickMatch(resultMatchId);
@@ -602,6 +604,10 @@ export default function MonoQuickMatch() {
       ? loadQuickMatchDrafts([sportConfig]).sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0))[0]
       : null;
     const restoredKey = resumeMatchId ? getQuickMatchDraftKey(sport, resumeMatchId) : startNewMatch ? null : currentDraft?.draftKey || migrated?.key;
+    if (isKabaddiMigrationBackup(restoredKey)) {
+      navigate('/history', { replace: true });
+      return;
+    }
     const draft = restoredKey ? (migrated?.key === restoredKey ? migrated.draft : loadData(restoredKey, null)) : null;
     hydratedDraftKeyRef.current = restoredKey;
     setActiveDraftKey(restoredKey || null);
@@ -652,7 +658,8 @@ export default function MonoQuickMatch() {
           format: draft.format, names: [draft.team1Name || 'Team A', draft.team2Name || 'Team B'],
           colours: [normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a, normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b],
         });
-        if (migrated && !loadData(`${restoredKey}_before_kabaddi_v2`) && !saveData(`${restoredKey}_before_kabaddi_v2`, draft)) throw new Error('Could not retain original saved match');
+        const backupKey = kabaddiMigrationBackupKey(restoredKey);
+        if (migrated && !loadData(backupKey) && !saveData(backupKey, draft)) throw new Error('Could not retain original saved match');
         kabaddiRef.current = match;
         setKabaddiMatch(match);
         setGScore1(matchTotals(match)[0]); setGScore2(matchTotals(match)[1]);

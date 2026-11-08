@@ -218,7 +218,10 @@ export default function KabaddiLive({ initialMatch, colourStyle, title, subtitle
       canUndo={undoable} undoHint={undoHint}
       onRaidBy={raidBy} onMode={setMode} onMark={mark} onBonus={bonus} onResult={land} onTechnical={technical}
       raiderPick={raiderPick} onRaiderPick={setRaiderPick} raiderOptions={hasRoster(match, raiding) ? view.mat[raiding].onMat : []}
-      onTimeUp={() => save(callDeadline(match, at))}
+      onTimeUp={() => {
+        if (view.remainingMs > 0) { onFinish(); return; }
+        save(callDeadline(match, at));
+      }}
       onCount={(count) => {
         const marked = touchCount(match, count);
         const next = landRaid(marked, 'safe', { atMs: at });
@@ -271,7 +274,7 @@ export function KabaddiLiveBoard({
             <div className="kl-tools">
             <div className="kit-seg kl-mode" role="group" aria-label="What a tap on a player marks">
               <button type="button" aria-pressed={mode === 'touched'} onClick={() => onMode('touched')}>Touched</button>
-              <button type="button" disabled={view.rules.boundary === 'none'} aria-pressed={mode === 'out'} onClick={() => onMode('out')}>Stepped out</button>
+              {view.rules.boundary !== 'none' && <button type="button" aria-pressed={mode === 'out'} onClick={() => onMode('out')}>Stepped out</button>}
             </div>
             {!named && <div className={`kit-seg kl-counts${moreCounts ? ' kl-counts-more' : ''}`} role="group" aria-label="Quick touch count">
               {(moreCounts ? tokens.filter(p => p.on).map((_, i) => i + 1).filter(n => n >= 3) : [1, 2]).map(n => <button key={n} type="button" disabled={n > tokens.filter(p => p.on).length} onClick={() => { onCount(n); setMoreCounts(false); }}>+{n}</button>)}
@@ -345,7 +348,7 @@ export function KabaddiLiveBoard({
           ))}
         </BoardSheetGroup>
         <BoardSheetGroup>
-          {view.timed && <button type="button" className="sb-row" disabled={view.phase !== 'playing'} onClick={close(onTimeUp)}>{view.half === 1 ? 'Call half time' : 'Call full time'}</button>}
+          {view.timed && <button type="button" className="sb-row" disabled={view.phase !== 'playing' || (view.half === 1 && view.remainingMs > 0)} onClick={close(onTimeUp)}>{view.half === 1 ? 'Call half time' : 'Call full time'}</button>}
           {view.timed && <button type="button" className="sb-row" disabled={!scoring} onClick={close(onClock)}>{view.paused ? 'Resume clock' : 'Pause clock'}</button>}
         </BoardSheetGroup>
       </BoardOptionsSheet>

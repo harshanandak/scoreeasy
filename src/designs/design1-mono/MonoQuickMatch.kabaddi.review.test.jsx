@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { applyRaid, startHalf, timeUp } from '../../utils/kabaddiEngine';
 import { createKabaddiMatch } from '../../utils/kabaddiQuickMatch';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
@@ -106,8 +106,10 @@ describe('kabaddi scorer review regressions with durable storage', () => {
     const original = loadQuickMatch(ID);
     ctx.search = `?result=${ID}`;
     render(<MonoQuickMatch />);
-    expect(screen.getAllByText('23').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('17').length).toBeGreaterThan(0);
+    const result = screen.getByRole('region', { name: 'Match result' });
+    expect(within(result).getByRole('status')).toHaveTextContent('Royals 23');
+    expect(within(result).getByRole('status')).toHaveTextContent('Strikers 17');
+    expect(within(result).getByRole('heading', { name: 'Winner: Royals' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Raid by Royals' })).toBeNull();
     expect(loadQuickMatch(ID)).toEqual(original);
     expect(loadQuickMatchDrafts().filter(draft => draft.sport === 'kabaddi')).toEqual([]);
