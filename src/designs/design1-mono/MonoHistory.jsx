@@ -21,6 +21,7 @@ import {
 } from '../../utils/tournamentSync';
 import { shareText } from '../../mobile/share';
 import { MonoStatisticsPanel } from './MonoStatistics';
+import { clearQuickStatsRecovery } from '../../utils/quickStatsRecovery';
 import MonoSheet from './components/MonoSheet';
 import { deriveTeamColours, normaliseHex, teamColourVars } from '../../lib/teamColour';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
@@ -437,6 +438,10 @@ export default function MonoHistory() {
   };
 
   const clearMutableHistory = () => {
+    if (!clearQuickStatsRecovery()) {
+      setHistoryStatus('Could not clear local history. Please try again.');
+      return;
+    }
     const snapshot = {
       quick: quickMatches,
       legacy: loadHistory(),
