@@ -41,11 +41,13 @@ export function isSetComplete(set, rule) {
 
 export function isSetsMatchDecided({ sets = [], format = {}, sportConfig = {}, score1 = 0, score2 = 0 }) {
   if (format.type === 'single') {
-    return validateSingleSetScore(score1, score2, format.target, sportConfig.config?.winBy ?? 2, sportConfig.config?.maxPoints ?? null)
-      || sets.some(set => set.completed);
+    const complete = format.setsRules
+      ? isSetComplete({ score1, score2 }, setWinRule(format.setsRules, 0))
+      : validateSingleSetScore(score1, score2, format.target, sportConfig.config?.winBy ?? 2, sportConfig.config?.maxPoints ?? null);
+    return complete || sets.some(set => set.completed);
   }
   const { setsWon1, setsWon2 } = summarizeBestOfSets(sets);
-  const toWin = Math.ceil((format.sets || 3) / 2);
+  const toWin = format.setsRules?.setsToWin ?? Math.ceil((format.sets || 3) / 2);
   return setsWon1 >= toWin || setsWon2 >= toWin;
 }
 

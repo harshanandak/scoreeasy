@@ -34,6 +34,13 @@ it('requires full time or the selected points target, including no-draw overtime
   expect(isGoalsMatchDecided({ format: { mode: 'points', target: 21 }, score1: 21, score2: 1 })).toBe(true);
 });
 
+it('uses the frozen sets rule snapshot after the shared-rules migration', () => {
+  const format = { type: 'single', target: 25, setsRules: { sets: 1, setsToWin: 1, points: 11, winBy: 1, cap: null } };
+  expect(isSetsMatchDecided({ format, score1: 11, score2: 10 })).toBe(true);
+  const sets = [{ score1: 25, score2: 20, completed: true }, { score1: 25, score2: 20, completed: true }];
+  expect(isSetsMatchDecided({ sets, format: { type: 'best-of', sets: 3, setsRules: { setsToWin: 3 } } })).toBe(false);
+});
+
 it('never declares cricket decided before the chase, or just because the defender leads', () => {
   const input = { team1Score: { runs: 13, wickets: 1, balls: 6 }, team2Score: { runs: 0, wickets: 0, balls: 0 }, format: { overs: 20, players: 11 } };
   expect(isLimitedOversMatchDecided({ ...input, innings: 1 })).toBe(false);
