@@ -227,7 +227,8 @@ describe('DashboardLanding (Kit Home)', () => {
       });
 
       it('Recent: abandoned rows show the label, bold no team and never say "won"', () => {
-        seed([volleyball, abandonedVolleyball, abandonedCricket, kabaddi]);
+        // `volleyball` (yesterday) is the newest, so it is the Last match card; both abandoned records are Recent rows.
+        seed([volleyball, { ...abandonedVolleyball, date: iso(1.5 * day), completedAt: iso(1.5 * day) }, abandonedCricket, kabaddi]);
         renderDashboard();
         const rows = within(screen.getByRole('region', { name: 'Recent' })).getAllByRole('button', { name: /View details/ });
         const abandonedRows = rows.filter((row) => /Abandoned/.test(row.textContent));
