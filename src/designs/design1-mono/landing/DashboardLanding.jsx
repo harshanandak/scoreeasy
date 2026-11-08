@@ -159,7 +159,7 @@ function LastMatchHero({ match, navigate }) {
         {team('b', match.team2, score2)}
       </div>
       <p className="kit-last-detail">
-        {completedSets.length > 0
+        {completedSets.length > 0 && !isAbandoned(match)
           ? <>Sets {completedSets.map((set) => `${set.score1}–${set.score2}`).join(' · ')}</>
           : result}
       </p>
@@ -205,7 +205,9 @@ function MatchRow({ qm, onOpen }) {
   const team1Won = !isAbandoned(qm) && !isDrawToken(qm.winner) && qm.winner === qm.team1;
   const team2Won = !isAbandoned(qm) && !isDrawToken(qm.winner) && qm.winner === qm.team2;
   const when = [relativeDay(matchTime(qm)), isAbandoned(qm) ? ABANDONED_LABEL : null].filter(Boolean).join(' · ');
-  const label = [qm.sport === 'cricket' ? cricketScoreLine(qm) : `${qm.team1} ${score} ${qm.team2}`, qm.winner ? getWinnerLabel(qm.winner) : null, sportName, when].filter(Boolean).join(', ');
+  // An abandoned record names no winner, even if an older stale `winner` field is still stored.
+  const winnerText = qm.winner && !isAbandoned(qm) ? getWinnerLabel(qm.winner) : null;
+  const label = [qm.sport === 'cricket' ? cricketScoreLine(qm) : `${qm.team1} ${score} ${qm.team2}`, winnerText, sportName, when].filter(Boolean).join(', ');
   return (
     <button type="button" className="kit-row" onClick={onOpen} aria-label={`${label}. View details`}>
       <SportBadge sportId={qm.sport} />
@@ -215,7 +217,7 @@ function MatchRow({ qm, onOpen }) {
           {team1Won ? <strong>{qm.team1}</strong> : qm.team1} v {team2Won ? <strong>{qm.team2}</strong> : qm.team2}
           </>}
         </span>
-        <span className="kit-row-sub">{[sportName, when, qm.sport === 'cricket' && qm.winner ? getWinnerLabel(qm.winner) : null].filter(Boolean).join(' · ')}</span>
+        <span className="kit-row-sub">{[sportName, when, qm.sport === 'cricket' ? winnerText : null].filter(Boolean).join(' · ')}</span>
       </span>
       {qm.sport !== 'cricket' && <span className={`kit-row-score${score.length > 7 ? ' is-long' : ''}`}>{score}</span>}
       <Chevron />
