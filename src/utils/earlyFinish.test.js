@@ -5,6 +5,7 @@ import { isSetsMatchDecided } from './quickMatchSets';
 import { isLimitedOversMatchDecided, calculateCricketPointsTable } from './cricketCalculations';
 import { buildTennisQuickHistoryEntry } from './tennisQuickMatch';
 import { normalizeMatchForConvex } from './normalizeMatch';
+import { calculateSetsStandings } from './standingsCalculator';
 
 it('keeps the final score and undo snapshot but clears a premature winner', () => {
   const original = { score1: 2, score2: 1, winner: 'Royals', history: [{ score1: 1, score2: 1 }] };
@@ -54,4 +55,13 @@ it('preserves no result through cloud normalization and cricket standings withou
   for (const row of calculateCricketPointsTable([{ id: 'a' }, { id: 'b' }], [match])) {
     expect(row).toMatchObject({ played: 1, noResult: 1, won: 0, lost: 0, points: 0, nrr: 0 });
   }
+});
+
+it('counts a scoreless abandoned fixture as played and no result', () => {
+  const rows = calculateSetsStandings([{ id: 'a' }, { id: 'b' }], [{ team1Id: 'a', team2Id: 'b', status: 'completed', resultType: 'abandoned', sets: [] }], {});
+  for (const row of rows) expect(row).toMatchObject({ played: 1, noResult: 1, won: 0, lost: 0, matchPoints: 0 });
+});
+
+it('keeps Test runs keyed by team id when cloud records use display names', () => {
+  expect(normalizeMatchForConvex({ resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', team1Id: 'A', team2Id: 'B', innings: [{ teamId: 'A', runs: 13 }, { teamId: 'B', runs: 0 }] }, 'cricket')).toMatchObject({ resultType: 'abandoned', score1: 13, score2: 0 });
 });

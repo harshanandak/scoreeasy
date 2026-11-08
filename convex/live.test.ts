@@ -1124,7 +1124,7 @@ test("abandoned broadcasts retain the snapshot, expose no result and never archi
   await seedUser(t, "owner|early");
   const owner = t.withIdentity(identityFor("owner|early", "early"));
   const { matchId, token } = await owner.mutation(api.live.create, {
-    sport: "volleyball", scorecardKind: "volleyball", ...TEAMS, clientMatchId: "early-finish",
+    sport: "volleyball", scorecardKind: "volleyball", visibility: "public", ...TEAMS, clientMatchId: "early-finish",
   });
   await t.run(ctx => ctx.db.patch("liveMatches", matchId, { pointsA: 2, pointsB: 1 }));
   const result = await owner.mutation(api.live.finalize, { matchId, resultType: "abandoned" });

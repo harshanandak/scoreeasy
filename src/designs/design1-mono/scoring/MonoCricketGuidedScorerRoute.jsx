@@ -293,7 +293,9 @@ export default function MonoCricketGuidedScorerRoute() {
         guidedInnings: secondInnings ? [m.draftState?.innings1 ?? null, finalInnings] : [finalInnings],
         draftState: undefined, completedAt: now(),
       }));
-      return saveSportTournament(storageKey, updated);
+      const saved = saveSportTournament(storageKey, updated);
+      setPendingCompletion(saved ? null : { ...payload, innings: finalInnings });
+      return saved;
     }, navigateToTournament);
   };
 
