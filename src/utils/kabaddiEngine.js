@@ -397,7 +397,6 @@ export function applyRaid(state, event) {
     check(!state.events.some((entry) => entry.type === 'undo' && entry.targetId === event.id), 'client event was undone; use a new id for its replacement');
     return state;
   }
-  if (event.physicalTackle !== undefined) check(event.type === 'mixed' && typeof event.physicalTackle === 'boolean', 'physicalTackle is a mixed-ruling flag');
   if (event.expectedRevision !== undefined) check(event.expectedRevision === state.revision, 'expected revision is stale');
   check(PLAYING.includes(state.phase), 'scoring requires playing or an already-started pending raid');
   check(state.phase === 'playing' || state.activeRaid, 'deadline requires an existing raid');

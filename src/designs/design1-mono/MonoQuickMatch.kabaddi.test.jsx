@@ -9,7 +9,7 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () =
 vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
 vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
 vi.mock('../../utils/storage', () => ({
-  listDataKeys: () => [], loadQuickMatch: () => null, saveQuickMatch: data => { ctx.results.push(data); return true; }, clearData: () => true, isStaleQuickMatchDraft: () => false,
+  listDataKeys: () => [], loadQuickMatch: () => null, saveQuickMatch: data => { if (ctx.fail) return false; ctx.results.push(data); return true; }, clearData: () => true, isStaleQuickMatchDraft: () => false,
   loadData: (key, fallback) => key.includes('_before_') ? ctx.backups[key] || fallback : key.startsWith('se_quickmatch_draft_kabaddi') ? ctx.draft : fallback,
   saveData: (key, data) => {
     if (ctx.fail || (ctx.failBackup && key.includes('_before_'))) return false;
