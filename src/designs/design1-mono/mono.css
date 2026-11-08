@@ -556,6 +556,9 @@ button.mono-stat-card {
 .mono-hit {
   min-height: 44px;
   margin-block: -12px;
+  /* A 38 px wide "Home" reaches 44 px the same way, sideways. */
+  padding-inline: 3px;
+  margin-inline: -3px;
 }
 
 /* Same, for a back button that carried its own 24 px bottom margin (12 left after the 12 px lent). */

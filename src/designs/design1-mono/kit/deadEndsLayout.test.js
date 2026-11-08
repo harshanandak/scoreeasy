@@ -47,6 +47,8 @@ describe('tournament breadcrumb hit areas', () => {
     const crumb = rule(css, '.mono-hit');
     expect(crumb).toMatch(/min-height:\s*44px/);
     expect(crumb).toMatch(/margin-block:\s*-12px/);
+    expect(crumb).toMatch(/padding-inline:\s*3px/);
+    expect(crumb).toMatch(/margin-inline:\s*-3px/);
     const back = rule(css, '.mono-hit-back');
     expect(back).toMatch(/min-height:\s*44px/);
     expect(back).toMatch(/margin:\s*-12px 0 12px/);

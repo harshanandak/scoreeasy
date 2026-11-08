@@ -628,8 +628,8 @@ function WatchSkeleton() {
  */
 function WatchDeadEnd({ titleId, title, message, onRetry }) {
   return (
-    <div className="kit-screen" data-screen="watch-dead-end" style={{ minHeight: '100vh' }}>
-      <section className="kit-card kit-empty" aria-labelledby={titleId} style={{ marginTop: 72 }}>
+    <div className="kit-screen" data-screen="watch-dead-end" style={{ minHeight: '100vh', paddingTop: 72 }}>
+      <section className="kit-card kit-empty" aria-labelledby={titleId}>
         <p style={{ ...eyebrowStyle, marginBottom: 8 }}>Live match</p>
         <h1 id={titleId} style={{ margin: 0, font: '800 1.3rem/1.15 var(--se-font-display)', letterSpacing: '-0.02em' }}>
           {title}
