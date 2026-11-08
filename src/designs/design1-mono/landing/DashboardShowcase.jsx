@@ -59,7 +59,7 @@ const mockTournaments = [
 function Nav({ username, mobile }) {
   return (
     <nav style={{
-      position: 'sticky', top: 0, zIndex: 100,
+      position: 'sticky', top: 'var(--se-safe-top)', zIndex: 100,
       background: t.bg,
       borderBottom: '1.5px solid #1a1a1a',
     }}>

@@ -1,3 +1,4 @@
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
 import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
@@ -485,6 +486,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         winner: winnerLabel,
         winDesc,
         status: 'completed',
+        resultType: result.resultType || 'decided',
         followOnEnforced,
         draftState: undefined,
         date: completedAt,
@@ -503,6 +505,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
         winner,
         winDesc,
         status: 'completed',
+        resultType: result.resultType || 'decided',
         followOnEnforced,
         draftState: undefined,
         completedAt,
@@ -516,7 +519,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
 
     setSaveWarning('');
-    liveRef.current.finalize();
+    liveRef.current.finalize({ resultType: result.resultType || 'decided' });
     return true;
   };
 
@@ -585,14 +588,19 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
     }
   };
 
-  const handleFinish = () => {
-    if (scoringPrompt.isInteractionLocked) return;
+  const handleFinish = (confirmed = false) => {
+    confirmed = confirmed === true;
+    if (!confirmed && scoringPrompt.isInteractionLocked) return;
+    if (!getTestMatchCompletion(inningsRef.current, currentInningsIndex, team1Id, team2Id, format) && !confirmed) {
+      scoringPrompt.requestPrompt({ type: 'early-finish', title: 'End match?', message: EARLY_FINISH_MESSAGE, confirmLabel: 'End match', cancelLabel: 'Keep scoring' });
+      return;
+    }
     const snapshot = structuredClone({
       innings: inningsRef.current,
       currentInningsIndex,
       followOnEnforced,
       result: getTestMatchCompletion(inningsRef.current, currentInningsIndex, team1Id, team2Id, format)
-        || { winner: 'draw', desc: 'Match Drawn' },
+        || { winner: null, desc: '', resultType: 'abandoned' },
     });
     completion.complete(() => persistCompleteMatch(snapshot), finishScoring);
   };
@@ -626,6 +634,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const confirmPendingPrompt = () => {
     const promptType = scoringPrompt.pendingPrompt?.type;
     scoringPrompt.closePrompt();
+
+    if (promptType === 'early-finish') { handleFinish(true); return; }
 
     if (promptType === 'declare') {
       confirmDeclare();

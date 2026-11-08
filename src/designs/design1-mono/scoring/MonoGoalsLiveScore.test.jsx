@@ -1,3 +1,4 @@
+import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MonoGoalsLiveScore from './MonoGoalsLiveScore';
@@ -66,7 +67,7 @@ function renderScorer(withProvider) {
 
 function finish(exit, view) {
   if (exit === 'manual') {
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
   } else if (exit === 'target score') {
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
   } else {
@@ -103,7 +104,7 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
     h.tournaments[0].matches[0].draftState = { score1: 0, score2: 0, history: [] };
     renderScorer(true);
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     act(() => { vi.advanceTimersByTime(160); });
     fireEvent.click(screen.getByRole('button', { name: attack === 'score' ? 'Add 1 point to Red' : attack }));
     const stored = h.save.mock.calls.at(-1)[1].matches[0];
@@ -122,7 +123,7 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
       ? { mode: 'points', target: 4 }
       : exit === 'time expiry' ? { mode: 'timed', timeLimit: 60 } : {};
     const view = renderScorer(true);
-    if (exit === 'manual') fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    if (exit === 'manual') { fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish(); }
     else if (exit === 'target score') fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
     else {
       h.timer.elapsed = 120;
@@ -131,7 +132,7 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
     act(() => { vi.advanceTimersByTime(160); });
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     act(() => { vi.advanceTimersByTime(500); });
     expect(h.save).toHaveBeenLastCalledWith(storageKey, expect.objectContaining({
       matches: [expect.objectContaining({ status: 'completed', draftState: undefined,
@@ -152,7 +153,7 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
 
     expect(h.save).toHaveBeenLastCalledWith(storageKey, expect.objectContaining({
       matches: [expect.objectContaining({
-        status: 'completed', draftState: undefined, score1: exit === 'target score' ? 4 : 3, score2: 1, winner: 't1',
+        status: 'completed', draftState: undefined, score1: exit === 'target score' ? 4 : 3, score2: 1, winner: exit === 'manual' ? null : 't1', resultType: exit === 'manual' ? 'abandoned' : 'decided',
       })],
     }));
     expect(h.finalize).toHaveBeenCalledOnce();
@@ -172,7 +173,7 @@ describe.each(getGoalsSports())('$id completion back-stack (RA-1)', ({ id: sport
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
     finish('manual', view);
     expect(h.save).toHaveBeenLastCalledWith(storageKey, expect.objectContaining({
-      matches: [expect.objectContaining({ status: 'completed', score1: 2, score2: 1, winner: 't1' })],
+      matches: [expect.objectContaining({ status: 'completed', score1: 2, score2: 1, winner: null, resultType: 'abandoned' })],
     }));
   });
 

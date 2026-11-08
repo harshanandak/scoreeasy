@@ -1,3 +1,5 @@
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
+import { isGoalsMatchDecided } from '../../../utils/goalsScoring';
 import { useScoringProgress } from './scoringProgressContext';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -169,13 +171,19 @@ export default function MonoGoalsLiveScore() {
     }
   }, [tournament, timerStarted]);
 
+  const isDecidedScore = (a, b) => isGoalsMatchDecided({ format: effectiveFormat, score1: a, score2: b,
+    elapsedSeconds: timer.elapsed, drawAllowed: sportConfig.config.drawAllowed,
+    timeLimit: sport === 'football' ? getFootballMatchLimitSeconds({ timeLimitSeconds: effectiveFormat.timeLimit, timePresets: sportConfig.config.timePresets }) : effectiveFormat.timeLimit,
+    overtimePeriod });
   const finishMatch = (finalScore1, finalScore2) => completion.complete(() => {
+    const decided = isDecidedScore(finalScore1, finalScore2);
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       score1: finalScore1,
       score2: finalScore2,
       status: 'completed',
-      winner: determineWinner(finalScore1, finalScore2, m),
+      resultType: decided ? 'decided' : 'abandoned',
+      winner: decided ? determineWinner(finalScore1, finalScore2, m) : null,
       draftState: undefined,
       completedAt: new Date().toISOString(),
     }));
@@ -185,7 +193,7 @@ export default function MonoGoalsLiveScore() {
     }
     setSaveWarning('');
     saveTournamentToConvex(updatedTournament);
-    live.finalize();
+    live.finalize({ resultType: decided ? 'decided' : 'abandoned' });
     return true;
   }, completeMatch, 300);
 
@@ -345,8 +353,17 @@ export default function MonoGoalsLiveScore() {
   }, [score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked]); // Dependencies for addScore/undo
 
   // Save match and return
-  const saveMatch = () => {
-    if (scoringPrompt.isInteractionLocked) return;
+  const saveMatch = (confirmed = false) => {
+    confirmed = confirmed === true;
+    if (!confirmed && scoringPrompt.isInteractionLocked) return;
+    if (!isDecidedScore(score1, score2)) {
+      if (!confirmed) {
+        scoringPrompt.requestPrompt({ type: 'early-finish', title: 'End match?', message: EARLY_FINISH_MESSAGE, confirmLabel: 'End match', cancelLabel: 'Keep scoring' });
+        return;
+      }
+      finishMatch(score1, score2);
+      return;
+    }
 
     const completionState = getBasketballCompletionState({
       score1,
@@ -391,7 +408,10 @@ export default function MonoGoalsLiveScore() {
     cancelLabel: 'Keep scoring', confirmLabel: 'Discard', tone: 'danger', type: 'discard', title: 'Discard changes?',
     message: `Delete ${team1Name} v ${team2Name}, ${score1}–${score2}? This can't be undone.`,
   });
-  const confirmPendingPrompt = () => scoringPrompt.confirmDiscard(discardAndExit);
+  const confirmPendingPrompt = () => {
+    if (scoringPrompt.pendingPrompt?.type === 'early-finish') { scoringPrompt.closePrompt(); saveMatch(true); return; }
+    scoringPrompt.confirmDiscard(discardAndExit);
+  };
 
   if (!sportConfig || !tournament || !match) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">

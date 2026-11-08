@@ -1,3 +1,5 @@
+import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
+import { isLimitedOversMatchDecided } from '../../../utils/cricketCalculations';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
@@ -9,7 +11,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
-import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult, canManuallyCompleteUnlimitedMatch } from '../../../utils/cricketCalculations';
+import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
@@ -562,22 +564,16 @@ export default function MonoCricketLiveScore() {
   }, [scores, battingTeam, innings, history, tournament, format, isMatchComplete, pendingExtra, scoringPrompt.isInteractionLocked]);
 
   // Save match (complete)
-  const saveMatch = (winnerOverride) => {
-    if (!tournament || !match || scoringPrompt.isInteractionLocked) return;
-    const canManualComplete = canManuallyCompleteUnlimitedMatch(format, innings);
-    if (!isMatchComplete && !winnerOverride && !canManualComplete) {
-      scoringPrompt.showWarning('Complete both innings before ending the match.');
+  const saveMatch = (winnerOverride, confirmed = false) => {
+    confirmed = confirmed === true;
+    if (!tournament || !match || (!confirmed && scoringPrompt.isInteractionLocked)) return;
+    const decided = Boolean(winnerOverride) || isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam });
+    if (!decided && !confirmed) {
+      scoringPrompt.requestPrompt({ type: 'early-finish', title: 'End match?', message: EARLY_FINISH_MESSAGE, confirmLabel: 'End match', cancelLabel: 'Keep scoring' });
       return;
     }
 
-    if (!isMatchComplete && !winnerOverride && canManualComplete && innings === 1) {
-      setInnings(2);
-      setBattingTeam(2);
-      setSaveWarning('');
-      return;
-    }
-
-    if (scores.team1.balls > 0 || scores.team2.balls > 0) {
+    if (decided && (scores.team1.balls > 0 || scores.team2.balls > 0)) {
       triggerConfetti();
       triggerHaptic([100, 100, 100, 100, 100]);
     }
@@ -597,7 +593,8 @@ export default function MonoCricketLiveScore() {
       battingOrder: [match.team1Id, match.team2Id],
       team1Score: { runs: scores.team1.runs, balls: scores.team1.balls, wickets: scores.team1.wickets, allOut: scores.team1.allOut },
       team2Score: { runs: scores.team2.runs, balls: scores.team2.balls, wickets: scores.team2.wickets, allOut: scores.team2.allOut },
-      winner,
+      winner: decided ? winner : null,
+      resultType: decided ? 'decided' : 'abandoned',
       format,
       superOver: superOverPhase !== 'inactive' ? superOver : undefined,
     };
@@ -607,8 +604,9 @@ export default function MonoCricketLiveScore() {
       team1Score: completedMatch.team1Score,
       team2Score: completedMatch.team2Score,
       battingOrder: completedMatch.battingOrder,
-      winner,
-      winDesc: getLimitedOversResult(completedMatch),
+      winner: completedMatch.winner,
+      resultType: completedMatch.resultType,
+      winDesc: decided ? getLimitedOversResult(completedMatch) : '',
       superOver: completedMatch.superOver,
       status: 'completed',
       draftState: undefined,
@@ -623,7 +621,7 @@ export default function MonoCricketLiveScore() {
       }
       setSaveWarning('');
       saveTournamentToConvex(updatedTournament);
-      live.finalize();
+      live.finalize({ resultType: completedMatch.resultType });
       return true;
     }, () => {
       const destination = `/${sport || 'cricket'}/tournament/${id}`;
@@ -647,6 +645,7 @@ export default function MonoCricketLiveScore() {
   };
 
   const confirmPendingPrompt = () => {
+    if (scoringPrompt.pendingPrompt?.type === 'early-finish') { scoringPrompt.closePrompt(); saveMatch(undefined, true); return; }
     scoringPrompt.closePrompt();
     if (tournament) {
       const storageKey = sportConfig?.storageKey || 'se_cricket';

@@ -223,7 +223,9 @@ describe('documented contrast pairs', () => {
 // Kit S5 (go live + share), 601 -> 598: the sign-in live dot, share scrim and QR well use tokens (-3).
 // Kit S6 (Live destination), 598 -> 597: the Home strip dot uses the Live token (-1).
 // Cricket warning labels use the warning tokens (-4); combined baseline 593.
-const BASELINE = 593;
+// Guest landing in Kit (2026-11-08), 593 -> 590: GuestLanding drops its #d0d0d0, #fff and #ccc
+// fallbacks for Kit parts and tokens (-3); the new landing, demo and auth styles add 0.
+const BASELINE = 590;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

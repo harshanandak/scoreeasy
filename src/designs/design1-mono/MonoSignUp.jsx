@@ -21,6 +21,7 @@ export default function MonoSignUp() {
   return (
     <CloudAuthOnly>
       <MonoAuthPageFrame
+        title="Create account"
         subtitle="Create your account"
         helperText="Accounts add sync and recovery. Guest scoring stays available before you sign up."
       >
