@@ -1,0 +1,108 @@
+{
+  "method": "T3 integrated browser DOM getBoundingClientRect; no replacement screenshot available",
+  "sourceHead": "8c4cd1d82c36ed7af6bf83518ca13c69136b5917",
+  "measurements": [
+    {
+      "sport": "football",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End half"
+        }
+      ],
+      "height": 640,
+      "overflow": false,
+      "width": 360
+    },
+    {
+      "sport": "football",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End half"
+        }
+      ],
+      "height": 844,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "sport": "basketball",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End quarter"
+        }
+      ],
+      "height": 640,
+      "overflow": false,
+      "width": 360
+    },
+    {
+      "sport": "basketball",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End quarter"
+        }
+      ],
+      "height": 844,
+      "overflow": false,
+      "width": 390
+    },
+    {
+      "sport": "hockey",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End quarter"
+        }
+      ],
+      "height": 640,
+      "overflow": false,
+      "width": 360
+    },
+    {
+      "sport": "hockey",
+      "clock": "1:30",
+      "controls": [
+        {
+          "height": 48,
+          "label": "Resume clock"
+        },
+        {
+          "height": 48,
+          "label": "End quarter"
+        }
+      ],
+      "height": 844,
+      "overflow": false,
+      "width": 390
+    }
+  ]
+}

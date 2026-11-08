@@ -520,3 +520,33 @@ describe('MonoWatchMatch', () => {
     expect(feedTab.style.minHeight).toBe('44px');
   });
 });
+
+
+describe('period-aware spectator snapshots', () => {
+  it.each(['football', 'basketball', 'hockey'])('shows the %s paused clock and per-period score, then resumes from its clock basis', sport => {
+    const label = sport === 'football' ? '2nd half' : 'Q3';
+    const periodClock = { sport, phase: 'playing', elapsed: 30, startedAt: null, duration: 60, periodIndex: 2, regulationCount: 4 };
+    mocks.snapshot = { ...GOALS_SNAPSHOT, sport, servingTeam: undefined, periodLabel: label, periodClock, setScores: [{ a: 1, b: 0 }, { a: 2, b: 2 }], currentUnit: 3 };
+    mocks.meta = { ...META, sport };
+    const view = renderAt();
+    expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent(`${label} \u00b7 paused`);
+    fireEvent.click(screen.getByRole('tab', { name: 'Scorecard' }));
+    expect(screen.getByRole('table', { name: 'Period scores' })).toHaveTextContent('Reds');
+    expect(screen.getByRole('table', { name: 'Period scores' })).toHaveTextContent('Blues');
+    view.unmount();
+    mocks.snapshot = { ...mocks.snapshot, periodClock: { ...periodClock, startedAt: 1000 } };
+    vi.mocked(Date.now).mockReturnValue(11000);
+    renderAt();
+    expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent(`${label} \u00b7 0:20`);
+  });
+});
+
+
+it('shows the frozen terminal played time rather than projecting from the last scoring event', () => {
+  mocks.snapshot = { ...GOALS_SNAPSHOT, status: 'final', resultType: 'abandoned', lastEventAt: 10000, periodLabel: '1st half',
+    periodClock: { sport: 'football', phase: 'playing', elapsed: 30, startedAt: null, duration: 120, periodIndex: 0, regulationCount: 2, playedSeconds: 30 } };
+  mocks.meta = META;
+  renderAt();
+  expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent('0:30 played');
+  expect(screen.getByRole('banner', { name: 'Match scorebug' })).toHaveTextContent(/abandoned/i);
+});

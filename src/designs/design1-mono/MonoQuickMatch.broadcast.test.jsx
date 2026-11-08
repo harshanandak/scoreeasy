@@ -1,3 +1,5 @@
+import { normalizeMatchForConvex } from '../../utils/normalizeMatch';
+import { createPeriodMatch } from '../../utils/goalsPeriods';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { saveQuickMatch, saveData } from '../../utils/storage';
@@ -84,6 +86,7 @@ function seedVolleyball() {
 }
 
 beforeEach(() => {
+  saveQuickMatch.mockClear();
   live.point.mockClear();
   live.undo.mockClear();
   live.finalize.mockClear();
@@ -333,4 +336,156 @@ describe('MonoQuickMatch live broadcast wiring', () => {
     expect(live.point.mock.invocationCallOrder[0])
       .toBeLessThan(live.finalize.mock.invocationCallOrder[0]);
   });
+});
+
+
+describe('goals period board integration', () => {
+  function seedPeriodBoard() {
+    seedGoals();
+    ctx.draft.format = { mode: 'timed', timeLimit: 120, periods: { version: 1, sport: 'football', durations: [60, 60], regulationCount: 2, overtimeSeconds: 0 } };
+  }
+  it('pauses on the board, persists through refresh and resumes the stored clock', () => {
+    vi.useFakeTimers();
+    try {
+      seedPeriodBoard();
+      const view = render(<MonoQuickMatch />);
+      expect(screen.queryByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Pause clock' }));
+      const draft = structuredClone(saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1]);
+      expect(draft.periodState).toMatchObject({ elapsed: 10, startedAt: null });
+      view.unmount();
+      act(() => vi.advanceTimersByTime(90000));
+      ctx.draft = draft;
+      render(<MonoQuickMatch />);
+      expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:50');
+      fireEvent.click(screen.getByRole('button', { name: 'Resume clock' }));
+      act(() => vi.advanceTimersByTime(5000));
+      expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:45');
+    } finally { vi.useRealTimers(); }
+  });
+  it('advances a period and undoes the boundary with its score intact', () => {
+    seedPeriodBoard();
+    render(<MonoQuickMatch />);
+    expect(screen.queryByRole('button', { name: 'End half' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End half' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+    expect(screen.getByText('Half-time')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
+    expect(screen.getByText('2nd half')).toBeInTheDocument();
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 2, periodClock: { phase: 'playing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(screen.getByText('Half-time')).toBeInTheDocument();
+    const draft = saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1];
+    expect(draft.periodState).toMatchObject({ periodIndex: 0, phase: 'interval', scores: [{ A: 1, B: 0 }, { A: 0, B: 0 }] });
+    expect(live.point.mock.calls.at(-1)[0].snapshot).toMatchObject({ pointsA: 1, currentUnit: 1, periodClock: { phase: 'interval', startedAt: null } });
+  });
+});
+
+
+describe.each(['football', 'basketball', 'hockey'])('%s period completion', sport => {
+  function seedClock(periodIndex = 0, elapsed = 0) {
+    seedGoals(); ctx.sport = sport; ctx.draft.sport = sport;
+    const durations = sport === 'football' ? [60, 60] : [60, 60, 60, 60];
+    const periods = { version: 1, sport, durations, regulationCount: durations.length, overtimeSeconds: sport === 'basketball' ? 300 : 0 };
+    ctx.draft.format = { mode: 'timed', timeLimit: durations.length * 60, periods };
+    ctx.draft.periodState = { ...createPeriodMatch(periods, Date.now()), periodIndex, elapsed, startedAt: null };
+  }
+  it('signals zero without completing, keeps scoring available and requires a confirmed period end', () => {
+    seedClock(0, 60);
+    render(<MonoQuickMatch />);
+    expect(screen.getByRole('dialog', { name: "Time's up: end period?" })).toBeInTheDocument();
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep scoring' }));
+    fireEvent.click(screen.getByRole('button', { name: sport === 'basketball' ? 'Add +1 for Reds' : 'Add 1 to Reds' }));
+    expect(live.point.mock.calls.at(-1)[0].snapshot.pointsA).toBe(1);
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+  });
+  it('records a confirmed early finish as abandoned even with a lead', () => {
+    seedClock();
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: sport === 'basketball' ? 'Add +1 for Reds' : 'Add 1 to Reds' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent(/abandoned/i);
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    expect(saveQuickMatch.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', winner: null, score1: 1, score2: 0 });
+  });
+  it('saves full time only after the last period and separate full-time confirmation', () => {
+    seedClock(sport === 'football' ? 1 : 3, 60);
+    ctx.draft.gScore1 = 1;
+    ctx.draft.periodState.scores[0].A = 1;
+    render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+    expect(saveQuickMatch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm full time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+    expect(saveQuickMatch.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'decided', winner: 'Reds', periodState: { phase: 'finished' } });
+  });
+});
+
+
+describe('review regression: terminal quick clocks', () => {
+  function seedRunning() {
+    seedGoals();
+    const periods = { sport: 'football', durations: [120, 120] };
+    ctx.draft.format = { mode: 'timed', timeLimit: 240, periods };
+    ctx.draft.periodState = createPeriodMatch(periods, Date.now());
+  }
+  it('abandons with the same 30 seconds played in saved state and terminal broadcast', () => {
+    vi.useFakeTimers();
+    try {
+      seedRunning(); render(<MonoQuickMatch />);
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+      act(() => vi.advanceTimersByTime(20000));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+      const saved = saveQuickMatch.mock.calls.at(-1)[0];
+      expect(saved.periodState).toMatchObject({ elapsed: 30, startedAt: null });
+      expect(saved).toMatchObject({ resultType: 'abandoned', winner: null, elapsedSeconds: 30 });
+      expect(normalizeMatchForConvex(saved, 'football')).toMatchObject({ duration: 30, detail: { periodState: { elapsed: 30, startedAt: null } } });
+      expect(live.finalize.mock.calls.at(-1)[0]).toMatchObject({ resultType: 'abandoned', snapshot: { pointsA: 1, periodClock: { elapsed: 30, startedAt: null, playedSeconds: 30 } } });
+      expect(screen.getByText(/Football.*30s/)).toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+  });
+  it('sums 10 seconds actually played in each period instead of the configured lengths', () => {
+    vi.useFakeTimers();
+    try {
+      seedRunning(); render(<MonoQuickMatch />);
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'End half' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm period end' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start next period' }));
+      act(() => vi.advanceTimersByTime(10000));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+      fireEvent.click(screen.getByRole('button', { name: 'End match' }));
+      const saved = saveQuickMatch.mock.calls.at(-1)[0];
+      expect(saved.elapsedSeconds).toBe(20);
+      expect(saved.periodState.elapsedByPeriod).toEqual([10, 10]);
+      expect(saved.resultType).toBe('abandoned');
+    } finally { vi.useRealTimers(); }
+  });
+});
+
+
+it('keeps a running clock through a refresh gap and delayed score Undo', () => {
+  vi.useFakeTimers();
+  try {
+    seedGoals();
+    const periods = { sport: 'football', durations: [60, 60] };
+    ctx.draft.format = { mode: 'timed', timeLimit: 120, periods };
+    ctx.draft.periodState = createPeriodMatch(periods, Date.now());
+    const first = render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(10000));
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+    const draft = structuredClone(saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1]);
+    first.unmount();
+    act(() => vi.advanceTimersByTime(20000));
+    ctx.draft = draft; render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(10000));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:20');
+    expect(screen.getByLabelText('Reds score')).toHaveTextContent('0');
+  } finally { vi.useRealTimers(); }
 });

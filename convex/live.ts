@@ -1,3 +1,4 @@
+import { periodClockValidator, type PeriodClock } from "./lib/periodClock";
 import { v, ConvexError } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
@@ -61,6 +62,7 @@ const snapshotArgValidator = v.object({
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
+  periodClock: v.optional(periodClockValidator),
 });
 
 // The match-doc fields a snapshot patches (kept in one place so scorePoint and
@@ -73,6 +75,7 @@ function snapshotPatch(snap: {
   servingTeam?: "A" | "B";
   currentUnit: number;
   periodLabel?: string;
+  periodClock?: PeriodClock;
 }) {
   return {
     setsA: snap.setsA,
@@ -81,6 +84,7 @@ function snapshotPatch(snap: {
     servingTeam: snap.servingTeam,
     currentUnit: snap.currentUnit,
     periodLabel: snap.periodLabel,
+    periodClock: snap.periodClock,
   };
 }
 
@@ -610,6 +614,7 @@ const publicSnapshotValidator = v.object({
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
+  periodClock: v.optional(periodClockValidator),
   lastSeq: v.number(),
   startedAt: v.number(),
   lastEventAt: v.number(),
@@ -657,6 +662,7 @@ export const getByToken = query({
       servingTeam: match.servingTeam,
       currentUnit: match.currentUnit,
       periodLabel: match.periodLabel,
+      periodClock: match.periodClock,
       lastSeq: match.lastSeq,
       startedAt: match.startedAt,
       lastEventAt: match.lastEventAt,
@@ -727,6 +733,7 @@ const publicFeedItemValidator = v.object({
   setsB: v.number(),
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   periodLabel: v.optional(v.string()),
+  periodClock: v.optional(periodClockValidator),
   lastEventAt: v.number(),
   teamA: teamMetaValidator,
   teamB: teamMetaValidator,
@@ -781,6 +788,7 @@ export const listLiveFeed = query({
         setsB: m.setsB,
         servingTeam: m.servingTeam,
         periodLabel: m.periodLabel,
+        periodClock: m.periodClock,
         lastEventAt: m.lastEventAt,
         teamA: sanitizeTeamMeta(meta.teamA),
         teamB: sanitizeTeamMeta(meta.teamB),
