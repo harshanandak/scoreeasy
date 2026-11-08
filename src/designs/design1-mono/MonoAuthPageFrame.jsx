@@ -1,12 +1,17 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { sportIdentity } from "../../lib/sportIdentity";
 import { DEFAULT_GUEST_SCORING_PATH, getAuthReturnToFromSearch } from "../../utils/authRedirect";
 import BackArrow from "./components/BackArrow";
-import SportIcon from "./SportIcon";
-import { sportsTokens } from "./theme/sportsTokens";
+import { KitTop, KitWash } from "./kit/KitParts";
+import "./kit/auth.css";
 
-export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
+/* The Kit frame around Clerk's sign-in and sign-up (same wash, brand header, title and surface as
+   Home and setup). The auth widget itself is themed in clerkTheme.js; auth logic, providers and
+   routes are untouched. "Continue as guest" is a full-width control right under the card, so a
+   scorer who just wants to score is never pushed to sign in first. */
+export default function MonoAuthPageFrame({ children, helperText, subtitle, title }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [visible, setVisible] = useState(false);
@@ -19,51 +24,34 @@ export default function MonoAuthPageFrame({ children, helperText, subtitle }) {
 
   return (
     <div
-      className={`min-h-screen flex flex-col items-center justify-center px-6 mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
-      style={{ background: sportsTokens.color.canvas }}
+      className={`kit-screen kit-auth mono-transition ${visible ? "mono-visible" : "mono-hidden"}`}
+      data-screen="auth"
     >
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <SportIcon name="Volleyball" size={24} color={sportsTokens.color.action} />
-            <h1
-              className="font-mono"
-              style={{ fontSize: "0.875rem", fontWeight: 800, letterSpacing: "0", color: sportsTokens.color.inkStrong, lineHeight: 1.1 }}
-            >
-              SCORE<br />EASY
-            </h1>
-          </div>
-          <p className="text-sm font-swiss" style={{ color: sportsTokens.color.inkMuted }}>
-            {subtitle}
-          </p>
-        </div>
+      <KitWash from={sportIdentity("cricket")?.tint} to={sportIdentity("hockey")?.tint} />
+      <KitTop title="Score Easy" />
 
-        <div className="mono-account-panel">
-          {children}
-        </div>
+      {title ? (
+        <>
+          <h1 className="kit-title">{title}</h1>
+          <p className="kit-sub">{subtitle}</p>
+        </>
+      ) : (
+        <h1 className="kit-title">{subtitle}</h1>
+      )}
 
-        {helperText && (
-          <p className="text-xs font-swiss text-center mt-4" style={{ color: sportsTokens.color.inkSoft, lineHeight: 1.5 }}>
-            {helperText}
-          </p>
-        )}
+      <div className="kit-auth-panel">
+        {children}
+      </div>
 
-        <div className="text-center mt-8 flex flex-col items-center gap-3">
-          <button
-            onClick={() => navigate(guestTarget)}
-            className="mono-btn"
-            style={{ padding: "10px 18px", fontSize: "0.8125rem", borderColor: sportsTokens.color.action, color: sportsTokens.color.action, borderRadius: sportsTokens.component.button.radius }}
-          >
-            Continue as guest
-          </button>
-          <button
-            onClick={() => navigate("/app")}
-            className="text-xs bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mx-auto"
-            style={{ color: sportsTokens.color.inkMuted }}
-          >
-            <BackArrow /> Back to home
-          </button>
-        </div>
+      {helperText && <p className="kit-auth-help">{helperText}</p>}
+
+      <div className="kit-auth-guest">
+        <button type="button" onClick={() => navigate(guestTarget)} className="se-ctl">
+          Continue as guest
+        </button>
+        <button type="button" onClick={() => navigate("/app")} className="kit-auth-back">
+          <BackArrow /> Back to home
+        </button>
       </div>
     </div>
   );
@@ -73,4 +61,5 @@ MonoAuthPageFrame.propTypes = {
   children: PropTypes.node,
   helperText: PropTypes.string,
   subtitle: PropTypes.string.isRequired,
+  title: PropTypes.string,
 };
