@@ -203,10 +203,6 @@
   cursor: pointer;
 }
 
-.kit-row-score.is-long {
-  font-size: 1.05rem;
-}
-
 .kit-quiet {
   display: inline-flex;
   align-items: center;
