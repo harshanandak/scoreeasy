@@ -201,8 +201,8 @@ function formatQuickScore(match) {
 }
 
 function recordTeamResult(teamMap, team1, team2, score1, score2) {
-  teamMap[team1].played++;
-  teamMap[team2].played++;
+  teamMap[team1].resultMatches++;
+  teamMap[team2].resultMatches++;
   teamMap[team1].pointsFor += score1;
   teamMap[team1].pointsAgainst += score2;
   teamMap[team2].pointsFor += score2;
@@ -775,6 +775,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
           teamMap[team.name] = {
             name: team.name,
             played: 0,
+            resultMatches: 0,
             won: 0,
             lost: 0,
             pointsFor: 0,
@@ -827,8 +828,8 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
     setData(Object.values(teamMap)
       .map((row) => ({
         ...row,
-        averageMargin: row.played > 0
-          ? ((row.pointsFor - row.pointsAgainst) / row.played).toFixed(1)
+        averageMargin: row.resultMatches > 0
+          ? ((row.pointsFor - row.pointsAgainst) / row.resultMatches).toFixed(1)
           : '0.0',
       }))
       .sort((a, b) => b.won - a.won || b.pointsFor - a.pointsFor));
@@ -864,7 +865,7 @@ function TeamStatsTable({ sportName, sportIcon, tournaments, engine }) { // spor
                 <td className="text-center font-mono" style={{ padding: '12px 8px' }}>{row.pointsAgainst}</td>
                 <td className={`text-center font-mono ${Number(row.averageMargin) > 0 ? 'mono-table-action' : Number(row.averageMargin) < 0 ? 'mono-table-danger' : ''}`} style={{ padding: '12px 8px' }}>{row.averageMargin}</td>
                 <td className="text-center font-mono mono-table-action" style={{ padding: '12px 16px' }}>
-                  {row.played > 0 ? Math.round((row.won / row.played) * 100) : 0}%
+                  {row.resultMatches > 0 ? Math.round((row.won / row.resultMatches) * 100) : 0}%
                 </td>
               </tr>
             ))}

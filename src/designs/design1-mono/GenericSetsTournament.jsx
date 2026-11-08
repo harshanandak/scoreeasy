@@ -1,4 +1,4 @@
-import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
+import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -40,7 +40,7 @@ export default function GenericSetsTournament() {
         const isComplete = t1SetsWon >= setsToWin || t2SetsWon >= setsToWin;
         if (isComplete && m.status !== 'completed') {
           needsRepair = true;
-          return { ...m, status: 'completed', winner: t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id };
+          return { ...m, status: 'completed', resultType: 'decided', winner: t1SetsWon > t2SetsWon ? m.team1Id : m.team2Id };
         }
         return m;
       });
@@ -135,7 +135,7 @@ export default function GenericSetsTournament() {
   const deleteKnockoutScore = (matchId) => {
     const updatedKO = tournament.knockoutMatches.map(m => {
       if (m.id === matchId) {
-        return { ...m, sets: [], status: 'pending', winner: null };
+        return { ...resetMatchOutcome(m), sets: [], score1: null, score2: null };
       }
       return m;
     });

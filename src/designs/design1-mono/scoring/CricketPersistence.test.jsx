@@ -1,5 +1,6 @@
 import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { cricketFinishSeed } from '../../../test/cricketFinishFixtures';
@@ -7,6 +8,7 @@ import { ScoringCompletionContext } from './scoringCompletionContext';
 import MonoCricketGuidedScorerRoute from './MonoCricketGuidedScorerRoute';
 import MonoCricketTournament from '../MonoCricketTournament';
 import { calculateCricketPointsTable } from '../../../utils/cricketCalculations';
+import { useTournamentScoreClear } from '../hooks/useTournamentScoreClear';
 import { createInnings, applyDelivery, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 
 vi.mock('convex/react', () => ({
@@ -70,6 +72,22 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
 describe('cricket persistence transactions', () => {
+  it.each(['sets', 'goals'])('%s Clear drops old outcome metadata and Undo restores the exact abandoned record', scoreKind => {
+    const match = { id: 'm1', status: 'completed', resultType: 'abandoned', winner: null, winDesc: '', completedAt: '2026-10-21', setsWon1: 1, setsWon2: 0, sets: [{ score1: 2, score2: 1 }], score1: 2, score2: 1, draftState: { old: true } };
+    let current;
+    const { result } = renderHook(() => {
+      const [tournament, setTournament] = useState({ teams: [], matches: [match] });
+      current = tournament;
+      return useTournamentScoreClear({ scoreKind, setTournament, tournament, teams: [], tournamentScopeKey: 'test' });
+    });
+    act(() => result.current.requestScoreClear(match));
+    act(() => result.current.confirmScoreClear());
+    expect(current.matches[0]).toMatchObject({ status: 'pending', winner: null });
+    for (const field of ['resultType', 'winDesc', 'completedAt', 'setsWon1', 'setsWon2', 'draftState']) expect(current.matches[0][field]).toBeUndefined();
+    act(() => result.current.undoScoreClear());
+    expect(current.matches[0]).toEqual(match);
+  });
+
   it('clears an abandoned guided match and replays it to an explicitly decided chase win counted in standings', () => {
     seed('guided', match => {
       match.status = 'completed'; match.resultType = 'abandoned'; match.winner = null;

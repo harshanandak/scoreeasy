@@ -15,3 +15,12 @@ export function recordMatchOutcome(match, decided) {
     ...(decided ? {} : { winDesc: '' }),
   };
 }
+
+// Clearing a fixture starts a new outcome; keep only its setup and sport snapshot.
+export function resetMatchOutcome(match) {
+  const reset = { ...match, status: 'pending', winner: null };
+  for (const field of ['resultType', 'winDesc', 'completedAt', 'startedAt', 'endedAt', 'elapsedSeconds', 'setsWon1', 'setsWon2', 'draftState']) {
+    delete reset[field];
+  }
+  return reset;
+}

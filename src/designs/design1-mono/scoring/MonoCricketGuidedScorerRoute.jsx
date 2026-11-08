@@ -312,6 +312,7 @@ export default function MonoCricketGuidedScorerRoute() {
         const completed = {
           ...m,
           status: 'completed',
+          resultType: 'decided',
           battingOrder,
           cricketRules: m.cricketRules ?? fmt,
           [slotForTeam(m, battingOrder[1])]: agg,

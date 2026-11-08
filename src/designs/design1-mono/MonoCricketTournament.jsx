@@ -1,4 +1,4 @@
-import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
+import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -246,7 +246,11 @@ export default function MonoCricketTournament() {
       matches: prev.matches.map((m) => {
         if (m.id !== matchId) return m;
         return {
-          ...m,
+          ...resetMatchOutcome(m),
+          score1: null,
+          score2: null,
+          guidedInnings: null,
+          currentInningsIndex: undefined,
           team1Score: null,
           team2Score: null,
           innings: null,

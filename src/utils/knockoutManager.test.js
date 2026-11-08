@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { updateKnockoutBracket } from './knockoutManager';
+import { getTournamentWinner, updateKnockoutBracket } from './knockoutManager';
 
 const createPlayInSource = (winner) => ({
   id: 'play-in-1',
@@ -43,6 +43,18 @@ describe('updateKnockoutBracket', () => {
       { id: 'f', round: 'final', team1Id: null, team2Id: null, status: 'pending' },
     ];
     expect(updateKnockoutBracket(bracket)[2].team1Id).toBeNull();
+    expect(getTournamentWinner({ winnerMode: 'knockouts', teams: [{ id: 'A' }], knockoutMatches: [{ ...bracket[0], round: 'final' }] })).toBeNull();
+  });
+
+  it('clears a stale second downstream slot and then preserves the array reference', () => {
+    const bracket = [
+      { id: 's1', round: 'semi-1', team1Id: 'A', team2Id: 'D', status: 'completed', resultType: 'abandoned', winner: null },
+      { id: 's2', round: 'semi-2', team1Id: 'B', team2Id: 'C', status: 'completed', winner: 'B' },
+      { id: 'f', round: 'final', team1Id: null, team2Id: 'B', status: 'pending' },
+    ];
+    const cleared = updateKnockoutBracket(bracket);
+    expect(cleared[2]).toMatchObject({ team1Id: null, team2Id: null });
+    expect(updateKnockoutBracket(cleared)).toBe(cleared);
   });
   it('places a single play-in winner into the open seeded semi-final slot', () => {
     const playIn = {

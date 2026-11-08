@@ -37,6 +37,6 @@ describe('tournament completion repair uses frozen match length', () => {
     };
     render(<GenericSetsTournament />);
     expect(await screen.findByText('Completed')).toBeTruthy();
-    expect(h.save.mock.calls.at(-1)[1].matches[0]).toMatchObject({ status: 'completed', winner: 1 });
+    expect(h.save.mock.calls.at(-1)[1].matches[0]).toMatchObject({ status: 'completed', resultType: 'decided', winner: 1 });
   });
 });
