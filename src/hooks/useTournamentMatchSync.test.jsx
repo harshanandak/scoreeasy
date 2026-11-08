@@ -3,13 +3,15 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AuthContext } from '../auth/AuthContext';
 import { pendingMatchSaves } from '../utils/pendingMatchSaves';
 import { useTournamentMatchSync } from './useTournamentMatchSync';
+import { usePendingMatchSaves } from './usePendingMatchSaves';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock('convex/react', () => ({ useMutation: () => save }));
 let auth;
 let sequence = 0;
 const tournament = { id: 100, teams: [{ id: 'A', name: 'Alpha' }, { id: 'B', name: 'Beta' }], matches: [{ id: 1, team1Id: 'A', team2Id: 'B', score1: 2, score2: 1, status: 'completed', winner: 'A' }] };
-const wrapper = ({ children }) => <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+function Worker() { usePendingMatchSaves(); return null; }
+const wrapper = ({ children }) => <AuthContext.Provider value={auth}><Worker />{children}</AuthContext.Provider>;
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem('se_football', JSON.stringify([tournament]));

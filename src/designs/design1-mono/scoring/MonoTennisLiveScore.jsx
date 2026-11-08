@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
 import LiveBroadcastBar from '../live/LiveBroadcastBar';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMatchSync } from '../../../hooks/useMatchSync';
+import { enqueueQuickMatchSave } from '../../../hooks/useMatchSync';
 import { getSportById } from '../../../models/sportRegistry';
 import {
   clearData,
@@ -314,7 +314,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
   const quickDraftKey = isQuickMatch ? getTennisQuickDraftKey(matchId) : null;
   const lastClickRef = useRef(0);
   const { isAuthenticated, user, clerkUser } = useAuth();
-  const { syncMatch: syncQuickMatch } = useMatchSync({ sport, isAuthenticated, user, clerkUser });
+  const syncQuickMatch = (entry) => enqueueQuickMatchSave({ sport, isAuthenticated, user, clerkUser }, entry);
   const saveTournamentToConvex = useTournamentMatchSync({ sport, matchId });
   const navigateBack = () => navigate(isQuickMatch ? `/${sport}/quick` : `/${sport}/tournament/${id}`);
   const completeScoring = (path) => {

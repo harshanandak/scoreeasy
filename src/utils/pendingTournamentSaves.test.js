@@ -27,7 +27,7 @@ it('updates only the queued knockout fixture, preserving scores and new local ed
 it('persisted owner-scoped confirmation wins over a stale queue record and prunes it', () => {
   const record = enqueueMatchSave(owner, payload, undefined, reference);
   const tournament = JSON.parse(localStorage.getItem('se_football'))[0];
-  tournament.knockoutMatches[0] = { ...tournament.knockoutMatches[0], clientMatchId: payload.clientMatchId, syncOwnerId: owner, sync: { status: 'synced' } };
+  tournament.knockoutMatches[0] = { ...tournament.knockoutMatches[0], clientMatchId: payload.clientMatchId, syncOwnerId: owner, sync: { status: 'synced', completionId: record.completionId } };
   localStorage.setItem('se_football', JSON.stringify([tournament]));
   const key = `se_pending_match:${encodeURIComponent(owner)}:${encodeURIComponent(payload.clientMatchId)}`;
   localStorage.setItem(key, JSON.stringify({ ...record, state: 'failed' }));

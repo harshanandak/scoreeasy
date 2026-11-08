@@ -21,10 +21,10 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-it('replaces a rejected completion after Clear/replay, and Retry sends only the new result before confirming it', async () => {
+it.each([new ConvexError('Result rejected'), new TypeError('Failed to fetch')])('replaces a rejected completion after Clear/replay, and Retry sends only the new result before confirming it: %s', async error => {
   const original = enqueueMatchSave(owner, first, undefined, reference);
-  await attemptMatchSave(original, vi.fn().mockRejectedValue(new ConvexError('Result rejected')));
-  expect(pendingMatchSaves(owner)[0]).toMatchObject({ state: 'failed', terminal: true, payload: first });
+  await attemptMatchSave(original, vi.fn().mockRejectedValue(error));
+  expect(pendingMatchSaves(owner)[0]).toMatchObject({ state: 'failed', terminal: error instanceof ConvexError, payload: first });
   writeFixture(replay);
   const replacement = enqueueMatchSave(owner, replay, undefined, reference);
   expect(replacement).toMatchObject({ state: 'pending', terminal: false, attempts: 0, nextAttemptAt: 0, payload: replay });
@@ -53,4 +53,35 @@ it('an older in-flight acknowledgement never confirms or removes the replayed co
   expect(localResult()).toMatchObject({ score1: 0, score2: 3 });
   expect(localResult().sync.status).not.toBe('synced');
   expect(pendingMatchSaves(owner)[0]).toMatchObject({ payload: replay });
+  expect(pendingMatchSaves(owner)[0]).toMatchObject({ state: 'failed', terminal: true, priorCompletionSaved: true });
+  const saveReplay = vi.fn();
+  await attemptMatchSave(pendingMatchSaves(owner)[0], saveReplay, () => true, true);
+  expect(saveReplay).not.toHaveBeenCalled();
+  expect(localResult().sync.status).not.toBe('synced');
+});
+
+it('an older in-flight rejection cannot overwrite the replacement or its retry state', async () => {
+  const original = enqueueMatchSave(owner, first, undefined, reference);
+  let reject;
+  const request = attemptMatchSave(original, () => new Promise((resolve, rejectSave) => { reject = rejectSave; }));
+  await Promise.resolve();
+  writeFixture(replay);
+  const replacement = enqueueMatchSave(owner, replay, undefined, reference);
+  reject(new ConvexError('Old completion rejected'));
+  await request;
+  expect(pendingMatchSaves(owner)).toEqual([replacement]);
+  const saveReplay = vi.fn().mockResolvedValue('server-id');
+  await attemptMatchSave(replacement, saveReplay);
+  expect(saveReplay).toHaveBeenCalledExactlyOnceWith(replay);
+  expect(localResult().sync.status).toBe('synced');
+});
+
+it('ordinary Retry preserves the captured payload and completion identity', async () => {
+  const original = enqueueMatchSave(owner, first, undefined, reference);
+  await attemptMatchSave(original, vi.fn().mockRejectedValue(new ConvexError('Result rejected')));
+  const retryRecord = pendingMatchSaves(owner)[0];
+  const save = vi.fn().mockResolvedValue('server-id');
+  await attemptMatchSave(retryRecord, save, () => true, true);
+  expect(save).toHaveBeenCalledExactlyOnceWith(first);
+  expect(localResult().sync).toMatchObject({ status: 'synced', completionId: original.completionId });
 });

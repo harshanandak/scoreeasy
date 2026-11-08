@@ -5,13 +5,28 @@ const PREFIX = 'se_pending_match:';
 export const PENDING_SAVES_CHANGED = 'se-pending-match-saves-changed';
 export const RETRY_PENDING_SAVE = 'se-retry-pending-match-save';
 const inFlight = new Map();
-const confirmed = new Set();
+const confirmed = new Map();
 // Keep an actionable record in this session if device storage is full or blocked.
 const volatileRecords = new Map();
 const keyFor = (ownerId, clientMatchId) => `${PREFIX}${encodeURIComponent(ownerId)}:${encodeURIComponent(clientMatchId)}`;
 const notify = () => globalThis.dispatchEvent(new Event(PENDING_SAVES_CHANGED));
 
-export const isMatchSaveConfirmed = (ownerId, clientMatchId) => confirmed.has(keyFor(ownerId, clientMatchId));
+export const isMatchSaveConfirmed = (ownerId, clientMatchId, completionId) => {
+  const key = keyFor(ownerId, clientMatchId);
+  return confirmed.has(key) && confirmed.get(key) === completionId;
+};
+
+// Exclude sync metadata and guided delivery history; include the persisted result sent to the account.
+export function tournamentCompletionId(match) {
+  if (!match) return undefined;
+  return JSON.stringify([
+    match.status, match.completedAt, match.endedAt, match.date, match.savedAt, match.createdAt,
+    match.team1Id, match.team2Id, match.team1, match.team2, match.winner, match.resultType,
+    match.score1, match.score2, match.sets, match.setsWon1, match.setsWon2,
+    match.team1Score, match.team2Score, match.innings, match.winDesc, match.format,
+    match.elapsedSeconds, match.periodState, match.matchRole,
+  ]);
+}
 
 export function loadMatchSaveLocal({ quickMatchId, tournamentMatch }) {
   if (!tournamentMatch) return loadQuickMatch(quickMatchId);
@@ -22,8 +37,14 @@ export function loadMatchSaveLocal({ quickMatchId, tournamentMatch }) {
 
 function localSaveConfirmed(record) {
   const match = loadMatchSaveLocal(record);
-  return match?.clientMatchId === record.payload.clientMatchId && match?.syncOwnerId === record.ownerId && match?.sync?.status === 'synced';
+  return match?.clientMatchId === record.payload.clientMatchId && match?.syncOwnerId === record.ownerId && match?.sync?.status === 'synced'
+    && (!record.completionId || (match.sync.completionId === record.completionId && tournamentCompletionId(match) === record.completionId));
 }
+
+const sameCompletion = (a, b) => a?.completionId === b?.completionId
+  && (!a?.completionId || JSON.stringify(a.payload) === JSON.stringify(b?.payload));
+const currentRecord = (record) => pendingMatchSaves(record.ownerId, true).find((entry) => entry.payload.clientMatchId === record.payload.clientMatchId);
+const fixtureStillMatches = (record) => !record.completionId || tournamentCompletionId(loadMatchSaveLocal(record)) === record.completionId;
 
 function isTransportFailure(error) {
   if (error instanceof ConvexError || error?.name === 'ConvexError' || /\[CONVEX |ArgumentValidationError|unauthenticat|unauthoriz|forbidden|permission denied/i.test(error?.message || '')) return false;
@@ -37,17 +58,16 @@ export function pendingMatchSaves(ownerId, includeSynced = false) {
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key?.startsWith(`${PREFIX}${encodeURIComponent(ownerId)}:`)) continue;
-      if (!includeSynced && confirmed.has(key)) continue;
       try {
         const record = JSON.parse(localStorage.getItem(key));
-        if (record?.ownerId === ownerId && record.payload?.clientMatchId && (includeSynced || !localSaveConfirmed(record))) records.set(key, record);
+        if (record?.ownerId === ownerId && record.payload?.clientMatchId && (includeSynced || (!isMatchSaveConfirmed(ownerId, record.payload.clientMatchId, record.completionId) && !localSaveConfirmed(record)))) records.set(key, record);
       } catch { /* One unreadable record must not block other pending results. */ }
     }
   } catch {
     // Do not remove unreadable records; the local match remains authoritative.
   }
   for (const [key, record] of volatileRecords) {
-    if (record.ownerId === ownerId && (includeSynced || !localSaveConfirmed(record))) records.set(key, record);
+    if (record.ownerId === ownerId && (includeSynced || (!isMatchSaveConfirmed(ownerId, record.payload.clientMatchId, record.completionId) && !localSaveConfirmed(record)))) records.set(key, record);
   }
   return [...records.values()];
 }
@@ -76,18 +96,30 @@ function write(record) {
 }
 
 export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch) {
-  confirmed.delete(keyFor(ownerId, payload.clientMatchId));
+  const key = keyFor(ownerId, payload.clientMatchId);
+  const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
+  const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
   const existing = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === payload.clientMatchId);
-  if (existing) return existing;
-  const record = write({ ownerId, payload, quickMatchId, tournamentMatch, state: 'pending', attempts: 0, nextAttemptAt: 0 });
-  updateLocalMatch(record, 'pending');
+  if (existing && (!tournamentMatch || (existing.completionId === completionId && JSON.stringify(existing.payload) === JSON.stringify(payload)))) return existing;
+  const priorCompletionSaved = Boolean(tournamentMatch && (
+    (confirmed.has(key) && confirmed.get(key) !== completionId)
+    || (local?.syncOwnerId === ownerId && local?.sync?.status === 'synced' && local?.sync?.completionId && local.sync.completionId !== completionId)
+    || existing?.priorCompletionSaved
+  ));
+  confirmed.delete(key);
+  // A replacement waits behind any in-flight send; its old outcome cannot overwrite this record.
+  const record = write({ ownerId, payload, quickMatchId, tournamentMatch, completionId,
+    state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
+    priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
+  updateLocalMatch(record, record.state);
   return record;
 }
 
 function updateLocalMatch(record, status) {
   const match = loadMatchSaveLocal(record);
-  if (!match || localSaveConfirmed(record)) return;
-  const updated = { ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId, sync: { status } };
+  if (!match || !fixtureStillMatches(record) || localSaveConfirmed(record)) return;
+  const updated = { ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId,
+    sync: { status, ...(record.completionId ? { completionId: record.completionId } : {}) } };
   if (!record.tournamentMatch) {
     saveQuickMatch(updated);
     return;
@@ -106,6 +138,13 @@ export function isSaveInFlight(record) {
 export function attemptMatchSave(record, save, canSend = () => true, manual = false) {
   const key = keyFor(record.ownerId, record.payload.clientMatchId);
   if (inFlight.has(key)) return inFlight.get(key);
+  if (record.priorCompletionSaved) return Promise.resolve({ status: 'failed', clientMatchId: record.payload.clientMatchId });
+  const latest = currentRecord(record);
+  if (latest && !sameCompletion(latest, record)) return Promise.resolve({ status: latest.state, clientMatchId: record.payload.clientMatchId });
+  if (!fixtureStillMatches(record)) {
+    write({ ...record, state: 'failed', terminal: true });
+    return Promise.resolve({ status: 'failed', clientMatchId: record.payload.clientMatchId });
+  }
   if (!canSend() || navigator.onLine === false) return Promise.resolve({ status: 'pending', clientMatchId: record.payload.clientMatchId });
   if (!manual && (record.terminal || record.nextAttemptAt > Date.now())) return Promise.resolve({ status: record.state, clientMatchId: record.payload.clientMatchId });
   let persistedBeforeSend = false;
@@ -113,20 +152,35 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
   // Install the guard before notifying subscribers, which can also drain the queue.
   const request = Promise.resolve().then(async () => {
     if (!canSend()) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
+    if (!sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     record = write({ ...record, state: 'syncing', terminal: false });
     try {
       await save(record.payload);
+      const latest = currentRecord(record);
+      if (!latest && localSaveConfirmed(record)) {
+        confirmed.set(key, record.completionId);
+        return { status: 'synced', clientMatchId: record.payload.clientMatchId };
+      }
+      if (!sameCompletion(latest, record) || !fixtureStillMatches(record)) {
+        if (latest) {
+          const blocked = write({ ...latest, state: 'failed', terminal: true, priorCompletionSaved: true });
+          updateLocalMatch(blocked, 'failed');
+        }
+        return { status: 'failed', clientMatchId: record.payload.clientMatchId };
+      }
       updateLocalMatch(record, 'synced');
-      confirmed.add(key);
+      confirmed.set(key, record.completionId);
       // Only a server acknowledgement permits removal of a pending save.
       try { localStorage.removeItem(key); } catch { /* Retrying a retained record is idempotent. */ }
       volatileRecords.delete(key);
       return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     } catch (error) {
-      let acknowledged = confirmed.has(key) || localSaveConfirmed(record);
+      const latest = currentRecord(record);
+      if (latest && !sameCompletion(latest, record)) return { status: latest.state, clientMatchId: record.payload.clientMatchId };
+      let acknowledged = isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record);
       try { acknowledged ||= persistedBeforeSend && localStorage.getItem(key) === null; } catch { /* A failed read is not acknowledgement. */ }
       if (acknowledged) {
-        confirmed.add(key);
+        confirmed.set(key, record.completionId);
         volatileRecords.delete(key);
         try { localStorage.removeItem(key); } catch { /* The confirmation suppresses this stale record. */ }
         return { status: 'synced', clientMatchId: record.payload.clientMatchId };

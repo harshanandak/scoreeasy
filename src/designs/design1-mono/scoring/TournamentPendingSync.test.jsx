@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ConvexError } from 'convex/values';
 import { AuthContext } from '../../../auth/AuthContext';
 import { usePendingMatchSaves } from '../../../hooks/usePendingMatchSaves';
-import { pendingMatchSaves } from '../../../utils/pendingMatchSaves';
+import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves } from '../../../utils/pendingMatchSaves';
 import { cricketFinishSeed } from '../../../test/cricketFinishFixtures';
 import SetsScorer from './MonoSetsLiveScore';
 import GoalsScorer from './MonoGoalsLiveScore';
@@ -16,6 +16,7 @@ import GenericGoalsTournament from '../GenericGoalsTournament';
 import GenericSetsTournament from '../GenericSetsTournament';
 import MonoCricketTournament from '../MonoCricketTournament';
 import MonoMatchResult from '../components/MonoMatchResult';
+import MatchSyncStatus from '../components/MatchSyncStatus';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock('convex/react', () => ({ useMutation: () => save, useConvex: () => ({}), useQuery: () => [] }));
@@ -105,4 +106,37 @@ it('guest tournament results stay local with no cloud status or queue entry', as
   expect(save).not.toHaveBeenCalled();
   expect(screen.queryByText(/Couldn't save|Waiting for connection|Saved to your account/)).not.toBeInTheDocument();
   expect(Object.keys(localStorage).filter(key => key.startsWith('se_pending_match:'))).toEqual([]);
+});
+
+it('a late acknowledgement shows the replay as local only, never as saved', async () => {
+  const tournamentMatch = { storageKey: 'se_football', tournamentId: 100, matchId: 'm1' };
+  const payload = { sport: 'football', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 1, date: 1, clientMatchId: 'tournament:football:100:m1' };
+  const storeResult = (score1, score2, completedAt) => localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1, score2, completedAt }] }]));
+  storeResult(2, 1, 1);
+  const original = enqueueMatchSave(auth.user._id, payload, undefined, tournamentMatch);
+  let acknowledge;
+  const request = attemptMatchSave(original, () => new Promise(resolve => { acknowledge = resolve; }));
+  await Promise.resolve();
+  storeResult(0, 3, 2);
+  enqueueMatchSave(auth.user._id, { ...payload, score1: 0, score2: 3, date: 2 }, undefined, tournamentMatch);
+  render(<AuthContext.Provider value={auth}><MatchSyncStatus clientMatchId={payload.clientMatchId} tournamentMatch={tournamentMatch} /></AuthContext.Provider>);
+  await act(async () => { acknowledge('old-result'); await request; });
+  expect(screen.getByRole('status')).toHaveTextContent(/previous result.*already saved.*replay is local only/i);
+  expect(screen.queryByText('Saved to your account')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+});
+
+it('warns explicitly that a storage-full pending result is session-only and lost on refresh', () => {
+  const tournamentMatch = { storageKey: 'se_football', tournamentId: 100, matchId: 'm1' };
+  const payload = { sport: 'football', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 1, date: 1, clientMatchId: 'tournament:football:100:m1' };
+  localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1: 2, score2: 1 }] }]));
+  const write = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+    if (key.startsWith('se_pending_match:')) throw new DOMException('Full', 'QuotaExceededError');
+    return write.call(this, key, value);
+  });
+  enqueueMatchSave(auth.user._id, payload, undefined, tournamentMatch);
+  render(<AuthContext.Provider value={auth}><MatchSyncStatus clientMatchId={payload.clientMatchId} tournamentMatch={tournamentMatch} /></AuthContext.Provider>);
+  expect(screen.getByRole('status')).toHaveTextContent(/kept only for this session.*lost on refresh/i);
+  expect(screen.queryByText('Saved to your account')).not.toBeInTheDocument();
 });

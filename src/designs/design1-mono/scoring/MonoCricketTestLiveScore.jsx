@@ -8,7 +8,7 @@ import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMatchSync } from '../../../hooks/useMatchSync';
+import { enqueueQuickMatchSave } from '../../../hooks/useMatchSync';
 import MatchSyncStatus from '../components/MatchSyncStatus';
 import TournamentMatchSyncStatus from '../components/TournamentMatchSyncStatus';
 import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
@@ -40,7 +40,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const sportConfig = getSportById(sport || 'cricket');
   const isQuickMatch = storageMode === 'quick';
   const { isAuthenticated, user, clerkUser } = useAuth();
-  const { syncMatch: syncQuickMatch } = useMatchSync({ sport: sport || 'cricket', isAuthenticated, user, clerkUser });
+  const syncQuickMatch = (entry) => enqueueQuickMatchSave({ sport: sport || 'cricket', isAuthenticated, user, clerkUser }, entry);
   const saveTournamentToConvex = useTournamentMatchSync({ sport: sport || 'cricket', matchId });
 
   // Core state
