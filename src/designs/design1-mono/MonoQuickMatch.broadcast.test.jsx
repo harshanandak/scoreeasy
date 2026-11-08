@@ -465,3 +465,25 @@ describe('review regression: terminal quick clocks', () => {
     } finally { vi.useRealTimers(); }
   });
 });
+
+
+it('keeps a running clock through a refresh gap and delayed score Undo', () => {
+  vi.useFakeTimers();
+  try {
+    seedGoals();
+    const periods = { sport: 'football', durations: [60, 60] };
+    ctx.draft.format = { mode: 'timed', timeLimit: 120, periods };
+    ctx.draft.periodState = createPeriodMatch(periods, Date.now());
+    const first = render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(10000));
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 to Reds' }));
+    const draft = structuredClone(saveData.mock.calls.filter(([key]) => key.startsWith('se_quickmatch_draft_football_')).at(-1)[1]);
+    first.unmount();
+    act(() => vi.advanceTimersByTime(20000));
+    ctx.draft = draft; render(<MonoQuickMatch />);
+    act(() => vi.advanceTimersByTime(10000));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+    expect(screen.getByLabelText('Time remaining')).toHaveTextContent('0:20');
+    expect(screen.getByLabelText('Reds score')).toHaveTextContent('0');
+  } finally { vi.useRealTimers(); }
+});

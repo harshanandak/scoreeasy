@@ -188,7 +188,7 @@ function PinnedScorebug({ snapshot, nameA, nameB, kiosk }) {
   else if (snapshot.status === 'paused') eyebrow = 'PAUSED';
 
   const winner = isFinal && !isAbandoned(snapshot) ? winnerName(snapshot, nameA, nameB) : null;
-  const periodLine = snapshot.periodClock ? `${snapshot.periodLabel || `Q${snapshot.currentUnit}`} · ${isFinal ? formatPeriodClock(clockRemaining(snapshot.periodClock, snapshot.lastEventAt)) : snapshot.periodClock.startedAt == null ? 'paused' : formatPeriodClock(clockRemaining(snapshot.periodClock, Date.now()))}` : snapshot.periodLabel
+  const periodLine = snapshot.periodClock ? `${snapshot.periodLabel || `Q${snapshot.currentUnit}`} · ${isFinal ? `${formatPeriodClock(snapshot.periodClock.playedSeconds ?? snapshot.periodClock.elapsed)} played` : snapshot.periodClock.startedAt == null ? 'paused' : formatPeriodClock(clockRemaining(snapshot.periodClock, Date.now()))}` : snapshot.periodLabel
     ? snapshot.periodLabel
     : getSportById(snapshot.sport)?.engine === 'sets'
       ? `${snapshot.setsA}–${snapshot.setsB} sets`

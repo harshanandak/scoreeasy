@@ -236,8 +236,9 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     [enabled, flush, persistSeq],
   );
 
-  const finalize = useCallback(async ({ resultType } = {}) => {
+  const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     if (!enabled) return null;
+    if (snapshot) void point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot });
     // Drain DETERMINISTICALLY before archiving. flush() now AWAITS any in-flight
     // point() drain (instead of no-op'ing), so finalize cannot race ahead of the
     // last tap and make the backend archive a final score missing that point.
@@ -260,7 +261,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setError(e instanceof Error ? e : new Error(String(e)));
       return null;
     }
-  }, [enabled, flush, finalizeM]);
+  }, [enabled, point, flush, finalizeM]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {

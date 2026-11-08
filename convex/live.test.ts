@@ -1158,3 +1158,19 @@ describe("goals period snapshots", () => {
     await expect(t.mutation(api.live.scorePoint, { matchId: created.matchId, clientEventId: "intruder:1", team: "A", at: 3000, snapshot })).rejects.toThrow();
   });
 });
+
+
+test("terminal period clock uses the owned snapshot path and preserves played time", async () => {
+  const t = newClient();
+  await seedUser(t, "terminal-owner|1"); await seedUser(t, "terminal-other|1");
+  const owner = t.withIdentity(identityFor("terminal-owner|1", "terminal-owner"));
+  const other = t.withIdentity(identityFor("terminal-other|1", "terminal-other"));
+  const created = await createShared(owner, { sport: "football", scorecardKind: "goals", ...TEAMS, clientMatchId: "terminal-clock" });
+  const snapshot = { pointsA: 1, pointsB: 0, setsA: 0, setsB: 0, setScores: [{ a: 1, b: 0 }], currentUnit: 1, periodLabel: "1st half",
+    periodClock: { sport: "football", phase: "playing" as const, elapsed: 30, startedAt: null, duration: 120, periodIndex: 0, regulationCount: 2, playedSeconds: 30 } };
+  const input = { matchId: created.matchId, clientEventId: "terminal-clock:1", team: "A" as const, value: 0, type: "correction" as const, at: 30000, snapshot };
+  await expect(other.mutation(api.live.scorePoint, input)).rejects.toThrow();
+  await owner.mutation(api.live.scorePoint, input);
+  await owner.mutation(api.live.finalize, { matchId: created.matchId, resultType: "abandoned" });
+  expect(await t.query(api.live.getByToken, { token: created.token })).toMatchObject({ status: "final", resultType: "abandoned", periodClock: snapshot.periodClock });
+});

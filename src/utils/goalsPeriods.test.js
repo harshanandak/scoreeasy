@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { createPeriodMatch, periodElapsed, applyPeriodAction, undoPeriodAction, readPeriodMatch, periodPreset, periodResultDecided, periodTotals } from './goalsPeriods';
+import { createPeriodMatch, periodElapsed, applyPeriodAction, undoPeriodAction, readPeriodMatch, periodPreset, periodResultDecided, periodTotals, periodPlayedSeconds, freezePeriodMatch, periodSnapshot } from './goalsPeriods';
 
 const rules = { durations: [60, 60], overtimeSeconds: 30 };
 const act = (state, type, at, extra = {}) => applyPeriodAction(state, { type, at, ...extra });
@@ -136,5 +136,36 @@ describe('review regression: clocks survive Undo', () => {
     expect(periodElapsed(state, 40000)).toBe(10);
     state = act(state, 'endPeriod', 50000);
     expect(state.elapsedByPeriod).toEqual([10, 20]);
+  });
+});
+
+
+describe('playing-time ledger and terminal projection', () => {
+  it.each(['pause', 'endPeriod'])('undoing %s excludes stopped time and continues the retained playing time', type => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+    state = act(state, type, 10000);
+    state = undoPeriodAction(readPeriodMatch(JSON.parse(JSON.stringify(state))), 40000);
+    expect(periodElapsed(state, 50000)).toBe(20);
+    expect(periodPlayedSeconds(state, 50000)).toBe(20);
+  });
+  it('freezes total actual playing time across early boundaries and after Undo/restart', () => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60, 60] }, 0);
+    state = act(state, 'endPeriod', 10000); state = act(state, 'startPeriod', 20000);
+    state = undoPeriodAction(state, 30000);
+    state = act(state, 'startPeriod', 40000);
+    const frozen = freezePeriodMatch(state, 50000);
+    expect(frozen).toMatchObject({ elapsed: 20, elapsedByPeriod: [10, 20], startedAt: null });
+    expect(periodPlayedSeconds(frozen, 100000)).toBe(30);
+    expect(periodSnapshot(frozen, 0, 0).periodClock).toMatchObject({ elapsed: 20, playedSeconds: 30, startedAt: null });
+    expect(periodResultDecided(frozen, 1, 0, true)).toBe(false);
+  });
+  it('retains time actually played past zero until the scorer ends the period', () => {
+    let state = createPeriodMatch({ sport: 'football', durations: [60] }, 0);
+    state = act(state, 'endPeriod', 70000);
+    expect(state.elapsedByPeriod).toEqual([70]);
+    const frozen = freezePeriodMatch(state, 100000, true);
+    expect(periodPlayedSeconds(frozen, 200000)).toBe(70);
+    expect(frozen.phase).toBe('finished');
+    expect(periodResultDecided(frozen, 1, 0, true)).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, periodClock, periodLabel } from '../../../utils/goalsPeriods';
+import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, freezePeriodMatch, periodPlayedSeconds, periodSnapshot } from '../../../utils/goalsPeriods';
 import { useGoalsPeriodClock } from '../../../hooks/useGoalsPeriodClock';
 import GoalsPeriodControls from './GoalsPeriodControls';
 import TeamGoalsBoard from './TeamGoalsBoard';
@@ -172,7 +172,7 @@ export default function MonoGoalsLiveScore() {
   const buildLiveSnapshot = (pointsA = score1, pointsB = score2, state = periodState) => ({
     pointsA, pointsB, setsA: 0, setsB: 0, setScores: [], currentUnit: 1,
     periodLabel: sportConfig?.name,
-    ...(state ? { currentUnit: state.periodIndex + 1, periodLabel: periodLabel(state), periodClock: periodClock(state), setScores: state.scores.map(s => ({ a: s.A, b: s.B })) } : {}),
+    ...(state ? periodSnapshot(state, pointsA, pointsB) : {}),
   });
 
   // Start timer for timed mode
@@ -190,17 +190,18 @@ export default function MonoGoalsLiveScore() {
     overtimePeriod });
   const finishMatch = (finalScore1, finalScore2) => completion.complete(() => {
     const decided = isDecidedScore(finalScore1, finalScore2);
+    const frozenPeriod = periodState ? freezePeriodMatch(periodState, Date.now(), decided) : null;
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
       ...m,
       score1: finalScore1,
       score2: finalScore2,
       status: 'completed',
-      ...(periodState ? { periodState: { ...periodState, phase: decided ? 'finished' : periodState.phase, startedAt: null } } : {}),
+      ...(frozenPeriod ? { periodState: frozenPeriod } : {}),
       resultType: decided ? 'decided' : 'abandoned',
       winner: decided ? determineWinner(finalScore1, finalScore2, m) : null,
       draftState: undefined,
       completedAt: new Date().toISOString(),
-      ...(periodState ? { elapsedSeconds: periodState.durations.slice(0, periodState.periodIndex).reduce((a, b) => a + b, 0) + periodTime.elapsed } : {}),
+      ...(frozenPeriod ? { elapsedSeconds: periodPlayedSeconds(frozenPeriod, Date.now()) } : {}),
     }));
     if (!saveSportTournament(sportConfig.storageKey, updatedTournament)) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
@@ -208,7 +209,8 @@ export default function MonoGoalsLiveScore() {
     }
     setSaveWarning('');
     saveTournamentToConvex(updatedTournament);
-    live.finalize({ resultType: decided ? 'decided' : 'abandoned' });
+    if (frozenPeriod) setPeriodState(frozenPeriod);
+    live.finalize({ resultType: decided ? 'decided' : 'abandoned', ...(frozenPeriod ? { snapshot: periodSnapshot(frozenPeriod, finalScore1, finalScore2) } : {}) });
     return true;
   }, completeMatch, 300);
 
@@ -376,7 +378,7 @@ export default function MonoGoalsLiveScore() {
 
     globalThis.addEventListener('keydown', handleKeyPress);
     return () => globalThis.removeEventListener('keydown', handleKeyPress);
-  }, [score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked]); // Dependencies for addScore/undo
+  }, [periodState, score1, score2, history, sportConfig, tournament, sidesSwapped, scoringPrompt.isInteractionLocked, effectiveFormat, timerStarted, timer.elapsed, overtimePeriod]); // Dependencies for addScore/undo
 
   // Save match and return
   const saveMatch = (confirmed = false) => {

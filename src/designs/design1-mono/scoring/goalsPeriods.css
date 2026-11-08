@@ -1,5 +1,5 @@
 .gp-controls { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:6px 14px; }
-.gp-controls button { min-height:44px; padding:8px 14px; border:2px solid var(--se-color-ink); border-radius:12px; background:var(--se-color-surface); color:var(--se-color-ink); font:inherit; font-weight:750; touch-action:manipulation; }
+.gp-controls button { min-height:48px; padding:8px 14px; border:2px solid var(--se-color-ink); border-radius:12px; background:var(--se-color-surface); color:var(--se-color-ink); font:inherit; font-weight:750; touch-action:manipulation; }
 .gp-controls button:focus-visible { outline:3px solid var(--se-color-focus-ring); outline-offset:2px; }
 .gp-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
 .gp-fields input { width:100%; }

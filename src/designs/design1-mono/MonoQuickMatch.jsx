@@ -1,4 +1,4 @@
-import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, supportsGoalPeriods, periodPreset } from '../../utils/goalsPeriods';
+import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, supportsGoalPeriods, periodPreset, freezePeriodMatch, periodPlayedSeconds, periodSnapshot } from '../../utils/goalsPeriods';
 import { useGoalsPeriodClock } from '../../hooks/useGoalsPeriodClock';
 import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import GoalsPeriodControls from './scoring/GoalsPeriodControls';
@@ -742,7 +742,7 @@ export default function MonoQuickMatch() {
       setScores: [],
       currentUnit: 1,
       periodLabel: goalsPeriodLabel,
-      ...(periodState ? { currentUnit: periodState.periodIndex + 1, setScores: periodState.scores.map(s => ({ a: s.A, b: s.B })), periodClock: periodTime.clock } : {}),
+      ...(periodState ? periodSnapshot(periodState, gScore1, gScore2) : {}),
     };
   } else if (format.type === 'best-of') {
     const completed = sets.filter((s) => s.completed);
@@ -788,7 +788,7 @@ export default function MonoQuickMatch() {
   // it. A separate effect declared IMMEDIATELY AFTER the snapshot effect runs in
   // source order — so the last point enqueues BEFORE finalize drains+archives.
   useEffect(() => {
-    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType });
+    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType, ...(result?.periodState ? { snapshot: periodSnapshot(result.periodState, result.score1, result.score2) } : {}) });
   }, [phase]);
 
   // Apply cricket defaults when the quick-match sport route changes.
@@ -974,9 +974,10 @@ export default function MonoQuickMatch() {
 
     const matchId = liveMatchIdRef.current ?? entry.id;
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
+    const frozenPeriod = entry.periodState ? freezePeriodMatch(entry.periodState, Date.now(), decided) : null;
     const nextResult = {
       ...entry,
-      ...(entry.periodState ? { periodState: { ...entry.periodState, phase: decided ? 'finished' : entry.periodState.phase, startedAt: null } } : {}),
+      ...(frozenPeriod ? { periodState: frozenPeriod, elapsedSeconds: periodPlayedSeconds(frozenPeriod, Date.now()) } : {}),
       id: matchId,
       status: 'completed',
       clientMatchId,
@@ -989,6 +990,7 @@ export default function MonoQuickMatch() {
     if (!persistQuickMatch(nextResult)) return false;
     setShowEndConfirm(false);
     setResult(nextResult);
+    if (frozenPeriod) setPeriodState(frozenPeriod);
     clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
@@ -1300,7 +1302,7 @@ export default function MonoQuickMatch() {
   const makeTimerFields = () => ({
     startedAt: startedAtRef.current,
     endedAt: new Date().toISOString(),
-    elapsedSeconds: periodState ? periodState.durations.slice(0, periodState.periodIndex).reduce((a, b) => a + b, 0) + periodTime.elapsed : timer.elapsed,
+    elapsedSeconds: periodState ? periodPlayedSeconds(periodState, Date.now()) : timer.elapsed,
     ...(periodState ? { periodState } : {}),
   });
 
