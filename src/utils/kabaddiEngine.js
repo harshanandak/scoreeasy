@@ -73,7 +73,9 @@ export function assertState(state) {
     const partition = [...state.mat[team], ...state.outQueue[team].map((out) => out.slotId)];
     check(partition.length === state.rules.initialPlayers && new Set(partition).size === state.rules.initialPlayers && partition.every((slot) => slotsFor(team, state.rules.initialPlayers).includes(slot)), 'active and FIFO out slots must partition seven anonymous slots without duplicates');
     check(state.outQueue[team].every((out, i, queue) => typeof out.outEventId === 'string' && integer(out.outSequence, 1) && out.outSequence <= state.nextOutSequence && (i === 0 || out.outSequence > queue[i - 1].outSequence)), 'invalid FIFO out queue sequence');
-    check(integer(state.emptyStreak[team]) && state.emptyStreak[team] <= 2, 'empty streak must be 0–2');
+    check(integer(state.emptyStreak[team]) && state.emptyStreak[team] <= (state.rules.doOrDie?.emptyRaids ?? 0), 'invalid empty streak');
+    check(integer(state.raidsByTeam[team]), 'invalid raid count');
+    if (state.rules.strategy === 'pointsOnly') check(state.outQueue[team].length === 0, 'points-only players must stay');
   }
   check(state.courtSide.includes(0) && state.courtSide.includes(1), 'court sides must partition 0/1');
   check(state.raidsByTeam[0] + state.raidsByTeam[1] === state.raidNumber, 'raid counts must agree');

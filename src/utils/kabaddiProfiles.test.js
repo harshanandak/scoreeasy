@@ -70,6 +70,19 @@ describe('versioned kabaddi formats', () => {
     s.rules.end.halfMs = 42;
     expect(() => assertState(s)).toThrow();
   });
+
+  it('uses custom do-or-die counts, half reset and physical-only super tackles', () => {
+    const rules = { ...resolveKabaddiRules('standard'), doOrDie: { emptyRaids: 3, onFailure: 'raiderOut', carryAcrossHalf: false }, superTackle: { maxDefenders: 7, moment: 'raidStart', outcomes: 'physicalTackle', extraPoints: 1 } };
+    let s = begin('custom', rules);
+    s = raid(s, 'selfOut', { reason: 'Line ruling' });
+    expect(s.teams[1].score.superTackleExtra).toBe(0);
+    s = raid(s, 'tackled');
+    expect(s.teams[0].score.superTackleExtra).toBe(1);
+    for (let i = 0; i < 6; i++) s = raid(s);
+    expect(s.emptyStreak).toEqual([3, 3]);
+    s = startHalf(timeUp(s));
+    expect(s.emptyStreak).toEqual([0, 0]);
+  });
 });
 
 describe('saved club state migration', () => {
@@ -102,5 +115,25 @@ describe('saved club state migration', () => {
     const future = { version: 99 };
     expect(() => migrateKabaddiState(future)).toThrow();
     expect(future).toEqual({ version: 99 });
+  });
+
+  it('retains retry identity and undo across active drafts, half time and reopened results', async () => {
+    const legacy = await import('./kabaddiLegacyEngine');
+    let old = legacy.startHalf(legacy.createKabaddiState());
+    const input = { id: 'retained', type: 'touch', count: 2 };
+    old = legacy.applyRaid(old, input);
+    let migrated = migrateKabaddiState(old);
+    expect(applyRaid(migrated, input)).toBe(migrated);
+    expect(undo(migrated).teams.map(teamTotal)).toEqual([0, 0]);
+    old = legacy.startRaid(old, { id: 'draft' });
+    old.activeRaid.draft = { marks: [{ slot: 'A1', kind: 'touched' }], bonus: false };
+    migrated = migrateKabaddiState(old);
+    expect(migrated.activeRaid.draft).toEqual(old.activeRaid.draft);
+    old = legacy.cancelRaid(old);
+    old = legacy.timeUp(old);
+    expect(migrateKabaddiState(old).phase).toBe('halfTime');
+    old = legacy.startHalf(old);
+    old = legacy.finish(legacy.timeUp(old));
+    expect(migrateKabaddiState(legacy.reopen(old)).phase).toBe('finishReview');
   });
 });
