@@ -229,9 +229,9 @@ async function loadOwnedMatch(
   matchId: Id<"liveMatches">,
 ) {
   const match = await ctx.db.get("liveMatches", matchId);
-  if (!match) throw new Error("Live match not found");
+  if (!match) throw new ConvexError({ code: "match_not_found", message: "Live match not found" });
   if (match.ownerId !== ctx.user._id) {
-    throw new Error("Not authorized");
+    throw new ConvexError({ code: "not_authorized", message: "Not authorized" });
   }
   return match;
 }
@@ -488,7 +488,16 @@ export const finalize = authedMutation({
   args: { matchId: v.id("liveMatches"), resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))) },
   handler: async (ctx, args) => {
     const match = await loadOwnedMatch(ctx, args.matchId);
-    const resultType = match.status === "final" ? match.resultType : args.resultType;
+    const existing = await ctx.db
+      .query("matches")
+      .withIndex("by_operator_client_match", (q) =>
+        q.eq("operatedBy", ctx.user._id).eq("clientMatchId", match.clientMatchId),
+      )
+      .unique();
+    if (match.status === "final") {
+      return { matchId: existing?._id ?? null, archived: false };
+    }
+    const resultType = args.resultType;
     const now = Date.now();
 
     await ctx.db.patch(args.matchId, {
@@ -506,15 +515,6 @@ export const finalize = authedMutation({
     const team2 = meta?.teamB.name ?? "Team B";
 
     // Archive into `matches`, reusing clientMatchId dedup (§3.5).
-    const existing = await ctx.db
-      .query("matches")
-      .withIndex("by_operator_client_match", (q) =>
-        q
-          .eq("operatedBy", ctx.user._id)
-          .eq("clientMatchId", match.clientMatchId),
-      )
-      .unique();
-
     if (existing) {
       return { matchId: existing._id, archived: false };
     }
