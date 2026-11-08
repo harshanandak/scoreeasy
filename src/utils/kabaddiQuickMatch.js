@@ -14,7 +14,11 @@ export const matchTotals = match => match.state.teams.map(teamTotal);
 /** Unknown/corrupt engine data throws; it must never fall back to an empty match. */
 export function restoreKabaddiMatch(draft, setup) {
   if (draft.kabaddi) {
-    const state = migrateKabaddiState(draft.kabaddi.state);
+    let state = migrateKabaddiState(draft.kabaddi.state);
+    if (state.activeRaid && (!state.activeRaid.draft?.raidId || draft.kabaddi.draft)) {
+      const source = state.activeRaid.draft || draft.kabaddi.draft || { marks: [], bonus: false };
+      state = { ...state, activeRaid: { ...state.activeRaid, draft: { ...source, raidId: state.activeRaid.id, history: source.history || [] } } };
+    }
     const match = { ...draft.kabaddi, state, rosters: draft.kabaddi.rosters || [[], []] };
     // Older adapters held untracked points beside the engine. Absorb them once into its categories.
     if (Array.isArray(match.carried) && match.carried.some(n => n > 0)) {

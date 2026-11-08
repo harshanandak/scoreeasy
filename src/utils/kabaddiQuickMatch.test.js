@@ -48,6 +48,15 @@ describe('kabaddi storage adapter', () => {
     expect(() => assertState(match.state)).toThrow(/draft marks/);
   });
 
+  it('opens a saved v1 active raid with an editable engine draft', async () => {
+    const legacy = await import('./kabaddiLegacyEngine');
+    const state = legacy.startRaid(legacy.startHalf(legacy.createKabaddiState()), { id: 'old-active' });
+    const { match, migrated } = restoreKabaddiMatch({ kabaddi: { state } }, setup);
+    expect(migrated).toBe(true);
+    expect(draftOf(match)).toMatchObject({ raidId: 'old-active', marks: [], bonus: false });
+    expect(markDefender(match, 'B1', 'touched').state.activeRaid.draft.marks).toHaveLength(1);
+  });
+
   it('uses the engine for two-tap casual touch counts with all players staying', () => {
     let match = beginLiveRaid(createKabaddiMatch(setup), { atMs: 100 });
     match = landRaid(touchCount(match, 2), 'safe', { atMs: 200 });
