@@ -3,7 +3,7 @@ import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useAuth } from './useAuth';
 import { addAppStateChangeListener } from '../mobile/lifecycle';
-import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, PENDING_SAVES_CHANGED } from '../utils/pendingMatchSaves';
+import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, PENDING_SAVES_CHANGED } from '../utils/pendingMatchSaves';
 
 export function matchSaveOwner({ isAuthenticated, clerkUser, user }) {
   return isAuthenticated ? (clerkUser?.id || user?._id || null) : null;
@@ -35,6 +35,7 @@ export function usePendingMatchSaves(authOverride, process = true) {
     const run = () => {
       if (disposed) return;
       clearTimeout(timer);
+      pruneSyncedMatchSaves(ownerId);
       refresh((value) => value + 1);
       if (!ready || navigator.onLine === false) return;
       const records = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !isSaveInFlight(entry));

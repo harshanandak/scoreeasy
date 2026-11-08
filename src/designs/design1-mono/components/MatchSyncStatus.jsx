@@ -9,8 +9,8 @@ export default function MatchSyncStatus({ clientMatchId, quickMatchId, compact =
   if (!ownerId) return null;
   const local = loadQuickMatch(quickMatchId);
   const identity = local?.clientMatchId || clientMatchId;
-  const pending = records.find((record) => record.payload.clientMatchId === identity);
   const saved = isMatchSaveConfirmed(ownerId, identity) || (local?.clientMatchId === identity && local?.syncOwnerId === ownerId && local?.sync?.status === 'synced');
+  const pending = saved ? undefined : records.find((record) => record.payload.clientMatchId === identity);
   if (!pending && (compact || !saved)) return null;
   const failed = pending?.state === 'failed';
   const waiting = pending && !pending.terminal && (navigator.onLine === false || pending.state === 'pending');

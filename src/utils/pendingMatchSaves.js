@@ -22,26 +22,35 @@ function isTransportFailure(error) {
   return /NetworkError|TimeoutError/i.test(error?.name || '') || /failed to fetch|fetch failed|network|connection|socket|timed? ?out|transport|offline|load failed|ECONN|ENET|EAI_AGAIN/i.test(error?.message || '');
 }
 
-export function pendingMatchSaves(ownerId) {
+export function pendingMatchSaves(ownerId, includeSynced = false) {
   if (!ownerId) return [];
   const records = new Map();
   try {
     for (let index = 0; index < localStorage.length; index += 1) {
       const key = localStorage.key(index);
       if (!key?.startsWith(`${PREFIX}${encodeURIComponent(ownerId)}:`)) continue;
-      if (confirmed.has(key)) continue;
+      if (!includeSynced && confirmed.has(key)) continue;
       try {
         const record = JSON.parse(localStorage.getItem(key));
-        if (record?.ownerId === ownerId && record.payload?.clientMatchId && !localSaveConfirmed(record)) records.set(key, record);
+        if (record?.ownerId === ownerId && record.payload?.clientMatchId && (includeSynced || !localSaveConfirmed(record))) records.set(key, record);
       } catch { /* One unreadable record must not block other pending results. */ }
     }
   } catch {
     // Do not remove unreadable records; the local match remains authoritative.
   }
   for (const [key, record] of volatileRecords) {
-    if (record.ownerId === ownerId && !localSaveConfirmed(record)) records.set(key, record);
+    if (record.ownerId === ownerId && (includeSynced || !localSaveConfirmed(record))) records.set(key, record);
   }
   return [...records.values()];
+}
+
+export function pruneSyncedMatchSaves(ownerId) {
+  for (const record of pendingMatchSaves(ownerId, true)) {
+    if (!localSaveConfirmed(record)) continue;
+    const key = keyFor(ownerId, record.payload.clientMatchId);
+    try { localStorage.removeItem(key); } catch { /* The synced marker still prevents sending; retry cleanup on the next drain. */ }
+    volatileRecords.delete(key);
+  }
 }
 
 function write(record) {
@@ -69,7 +78,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId) {
 
 function updateLocalMatch(record, status) {
   const match = loadQuickMatch(record.quickMatchId);
-  if (!match) return;
+  if (!match || match.sync?.status === 'synced') return;
   saveQuickMatch({ ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId, sync: { status } });
 }
 
