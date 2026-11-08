@@ -1,3 +1,4 @@
+import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -403,6 +404,7 @@ export default function MonoCricketTournament() {
 
               return (
                 <div key={match.id} className="mono-card" style={{ padding: 0 }}>
+                  <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
                   {/* Match header */}
                   <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid #eee' }}>
                     <div className="flex items-center gap-2">

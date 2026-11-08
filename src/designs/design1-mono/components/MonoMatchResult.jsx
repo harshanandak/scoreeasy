@@ -7,6 +7,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import KitFinish from '../kit/KitFinish';
 import { finishFromVerdict } from '../kit/finishModel';
 import RouteRecoveryActions from './RouteRecoveryActions';
+import TournamentMatchSyncStatus from './TournamentMatchSyncStatus';
 
 /**
  * Presentational FULL-TIME result for a tournament match: the Kit Finish screen (plan 2026-10-22
@@ -33,6 +34,7 @@ export function MonoMatchResultView({
   onScorecard,
   onShare,
   onSignIn,
+  syncStatus,
 }) {
   const model = finishFromVerdict(verdict, { team1Name, team2Name, sets });
   return (
@@ -55,9 +57,9 @@ export function MonoMatchResultView({
         // match (guest -> cloud sync is a separate M1 issue), so the CTA is an honest account
         // benefit, not a promise to save THIS match. Hidden in local/offline auth mode, where
         // there is no cloud to sign into.
-        !isSignedIn && cloudAuthAvailable ? (
+        <>{syncStatus}{!isSignedIn && cloudAuthAvailable ? (
           <button type="button" className="kit-fin-signin" onClick={onSignIn}>Sign in</button>
-        ) : null
+        ) : null}</>
       }
     />
   );
@@ -94,6 +96,7 @@ MonoMatchResultView.propTypes = {
   onScorecard: PropTypes.func,
   onShare: PropTypes.func,
   onSignIn: PropTypes.func,
+  syncStatus: PropTypes.node,
 };
 
 function formatMeta(format) {
@@ -172,6 +175,7 @@ export default function MonoMatchResult() {
       // Tournament teams carry no picked colour yet: the engine's default pair, as on Home.
       isSignedIn={isAuthenticated}
       cloudAuthAvailable={cloudAuthAvailable}
+      syncStatus={<TournamentMatchSyncStatus sport={sport} tournament={tournament} match={match} />}
       onDone={() => navigate(`/${sport}/tournament/${id}`, { replace: true })}
       onScorecard={() => {}}
       onShare={() => {}}

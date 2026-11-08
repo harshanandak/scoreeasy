@@ -8,17 +8,17 @@ import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from 'convex/react';
-import { useMatchSync } from '../../../hooks/useMatchSync';
+import { enqueueQuickMatchSave } from '../../../hooks/useMatchSync';
 import MatchSyncStatus from '../components/MatchSyncStatus';
-import { api } from '../../../../convex/_generated/api';
+import TournamentMatchSyncStatus from '../components/TournamentMatchSyncStatus';
 import { loadSportTournaments, saveSportTournament, loadQuickMatch, saveQuickMatch, deleteQuickMatch } from '../../../utils/storage';
 import { ballsToOvers, calculateRunRate, getMaxWickets, canEnforceFollowOn, getTestMatchCompletion, isTestInningsComplete } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
 import { useAuth } from '../../../hooks/useAuth';
-import { buildTournamentConvexPayload, normalizeNonTeamWinner } from '../../../utils/tournamentSync';
+import { normalizeNonTeamWinner } from '../../../utils/tournamentSync';
+import { useTournamentMatchSync } from '../../../hooks/useTournamentMatchSync';
 import { CRICKET_RUN_VALUES, isCricketRunKey } from '../../../utils/cricketRunControls';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
@@ -40,8 +40,8 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const sportConfig = getSportById(sport || 'cricket');
   const isQuickMatch = storageMode === 'quick';
   const { isAuthenticated, user, clerkUser } = useAuth();
-  const { syncMatch: syncQuickMatch } = useMatchSync({ sport: sport || 'cricket', isAuthenticated, user, clerkUser });
-  const saveMatchMutation = useMutation(api.matches.save);
+  const syncQuickMatch = (entry) => enqueueQuickMatchSave({ sport: sport || 'cricket', isAuthenticated, user, clerkUser }, entry);
+  const saveTournamentToConvex = useTournamentMatchSync({ sport: sport || 'cricket', matchId });
 
   // Core state
   const [tournament, setTournament] = useState(null);
@@ -105,22 +105,6 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
 
-  const saveTournamentToConvex = (updatedTournament) => {
-    if (!isAuthenticated || !updatedTournament) return;
-    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
-      .find((m) => m.id === matchId || m.id === Number(matchId));
-    if (!savedMatch) return;
-    try {
-      const payload = buildTournamentConvexPayload({
-        sportId: sport || 'cricket',
-        tournament: updatedTournament,
-        match: savedMatch,
-      });
-      saveMatchMutation(payload).catch(() => {});
-    } catch {
-      // Local save is primary; sync failures are non-blocking.
-    }
-  };
 
   // Load match data
   const { scoringStarted } = useScoringProgress(
@@ -733,6 +717,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
           )}
           <p className="text-xs uppercase tracking-widest mb-4" style={{ color: 'var(--se-color-ink-muted)' }}>Match Complete</p>
           {isQuickMatch && <MatchSyncStatus clientMatchId={match?.clientMatchId || liveClientMatchId} quickMatchId={match?.id} />}
+          {!isQuickMatch && <TournamentMatchSyncStatus sport={sport || 'cricket'} tournament={tournament} match={match} />}
 
           {winnerName ? (
             <>

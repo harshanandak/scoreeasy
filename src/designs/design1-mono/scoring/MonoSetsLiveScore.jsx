@@ -6,8 +6,6 @@ import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from 'convex/react';
-import { api } from '../../../../convex/_generated/api';
 import { getSportById, isTeamColourTournamentSport } from '../../../models/sportRegistry';
 import TeamSetsBoard from './TeamSetsBoard';
 import { BoardSheetGroup } from './BoardShell';
@@ -15,8 +13,7 @@ import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
-import { useAuth } from '../../../hooks/useAuth';
-import { buildTournamentConvexPayload } from '../../../utils/tournamentSync';
+import { useTournamentMatchSync } from '../../../hooks/useTournamentMatchSync';
 import { useAppScoringPrompt } from '../components/AppScoringPrompt';
 import { triggerConfetti } from '../utils/confetti';
 import { useLiveBroadcast } from '../../../hooks/useLiveBroadcast';
@@ -37,8 +34,7 @@ export default function MonoSetsLiveScore() {
   const navigate = useNavigate();
   const completeProtectedScoring = useScoringCompletion();
   const { sport, id, matchId } = useParams();
-  const { isAuthenticated } = useAuth();
-  const saveMatchMutation = useMutation(api.matches.save);
+  const saveTournamentToConvex = useTournamentMatchSync({ sport, matchId });
   const navigateToTournament = () => navigate(`/${sport}/tournament/${id}`);
 
   // Core state
@@ -96,22 +92,6 @@ export default function MonoSetsLiveScore() {
   const lastClickRef = useRef(0);
   const isKnockoutRef = useRef(false);
 
-  const saveTournamentToConvex = (updatedTournament) => {
-    if (!isAuthenticated || !updatedTournament) return;
-    const savedMatch = [...(updatedTournament.matches || []), ...(updatedTournament.knockoutMatches || [])]
-      .find((m) => m.id === matchId || m.id === Number(matchId));
-    if (!savedMatch) return;
-    try {
-      const payload = buildTournamentConvexPayload({
-        sportId: sport,
-        tournament: updatedTournament,
-        match: savedMatch,
-      });
-      saveMatchMutation(payload).catch(() => {});
-    } catch {
-      // Local save is primary; sync failures are non-blocking.
-    }
-  };
 
   // Load tournament and match
   const { scoringStarted } = useScoringProgress(
