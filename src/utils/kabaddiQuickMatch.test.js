@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createKabaddiMatch, matchTotals, persistKabaddiDraft, restoreKabaddiMatch } from './kabaddiQuickMatch';
 import { beginLiveRaid, draftOf, landRaid, markDefender, reopenRaid, touchCount } from './kabaddiBoardModel';
 import { resolveKabaddiRules } from './kabaddiRules';
+import { assertState } from './kabaddiEngine';
 import { finishFromQuickResult } from '../designs/design1-mono/kit/finishModel';
 
 const setup = { format: { kabaddiRules: resolveKabaddiRules('quick') }, names: ['Royals', 'Strikers'], colours: [undefined, undefined] };
@@ -39,6 +40,12 @@ describe('kabaddi storage adapter', () => {
 
   it('propagates storage failure so the board can refuse to acknowledge the tap', () => {
     expect(persistKabaddiDraft({ key: 'draft', previous: {}, match: createKabaddiMatch(setup), save: () => false, nowIso: 'now' })).toBe(false);
+  });
+
+  it('rejects corrupt persisted draft marks before they can render or score', () => {
+    const match = beginLiveRaid(createKabaddiMatch(setup), { atMs: 100 });
+    match.state.activeRaid.draft.marks = [{ slot: 'A1', kind: 'touched' }];
+    expect(() => assertState(match.state)).toThrow(/draft marks/);
   });
 
   it('uses the engine for two-tap casual touch counts with all players staying', () => {

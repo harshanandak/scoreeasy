@@ -89,6 +89,18 @@ export function assertState(state) {
     check(raid.bonusEligibleAtStart === bonusEligible(state, raid.startMat[1 - raid.raidingTeam]) && raid.superEligibleAtStart === superEligible(state, raid.startMat[1 - raid.raidingTeam]), 'corrupt raid-start eligibility');
     check(raid.doOrDieAtStart === dodEligible(state, raid.raidingTeam), 'corrupt do-or-die snapshot');
     check(raid.startedBeforeHalfEnd === true && (state.rules.raidLimitMs === null ? raid.raidClock === null : raid.raidClock?.durationMs === state.rules.raidLimitMs && integer(raid.raidClock.remainingAtAnchorMs) && raid.raidClock.remainingAtAnchorMs <= state.rules.raidLimitMs && Number.isFinite(raid.raidClock.anchorMonotonicMs) && typeof raid.raidClock.running === 'boolean'), 'invalid active raid clock');
+    if (raid.draft) {
+      const validateDraft = draft => {
+        check(draft && Object.keys(draft).every(k => ['raidId', 'marks', 'bonus', 'bonusAt', 'history'].includes(k)), 'unknown draft field');
+        check((draft.raidId === undefined || draft.raidId === raid.id) && typeof draft.bonus === 'boolean', 'invalid draft identity or bonus');
+        check(!draft.bonus || raid.bonusEligibleAtStart, 'draft bonus is unavailable');
+        check(Array.isArray(draft.marks) && new Set(draft.marks.map(m => m.slot)).size === draft.marks.length && draft.marks.every(m => Object.keys(m).every(k => ['slot', 'kind'].includes(k)) && ['touched', 'out'].includes(m.kind) && state.mat[1 - raid.raidingTeam].includes(m.slot)), 'invalid draft marks');
+        check(draft.bonusAt === undefined || integer(draft.bonusAt) && draft.bonusAt <= state.rules.initialPlayers, 'invalid draft order');
+      };
+      validateDraft(raid.draft);
+      check(raid.draft.history === undefined || Array.isArray(raid.draft.history), 'invalid draft history');
+      for (const prior of raid.draft.history ?? []) validateDraft(prior);
+    }
   }
 }
 
