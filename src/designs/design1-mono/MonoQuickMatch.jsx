@@ -1,3 +1,7 @@
+import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, supportsGoalPeriods, periodPreset, freezePeriodMatch, periodPlayedSeconds, periodSnapshot } from '../../utils/goalsPeriods';
+import { useGoalsPeriodClock } from '../../hooks/useGoalsPeriodClock';
+import GoalsPeriodSetup from './components/GoalsPeriodSetup';
+import GoalsPeriodControls from './scoring/GoalsPeriodControls';
 import { getQuickCricketTransition } from '../../utils/cricketCalculations';
 import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutcome';
 import { isSetsMatchDecided } from '../../utils/quickMatchSets';
@@ -474,7 +478,7 @@ export default function MonoQuickMatch() {
   const [format, setFormat] = useState(() => {
     if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('quick') };
     if (isCricket) return buildCricketFormat(initialPreset);
-    if (initialFormatMode === 'standard') return applyStandardDefaults(sport, {});
+    if (initialFormatMode === 'standard') return supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
     return { type: 'single', target: 15, points: 25 };
   });
@@ -504,6 +508,8 @@ export default function MonoQuickMatch() {
   const [gScore1, setGScore1] = useState(0);
   const [gScore2, setGScore2] = useState(0);
   const [gScoreHistory, setGScoreHistory] = useState([]);
+  const [periodState, setPeriodState] = useState(null);
+  const periodTime = useGoalsPeriodClock(periodState);
   const [kabaddiMatch, setKabaddiMatch] = useState(null);
   const kabaddiRef = useRef(null);
 
@@ -636,6 +642,7 @@ export default function MonoQuickMatch() {
     // Drafts from before team colours (or with a tampered value) fall back to red v blue.
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
+    setPeriodState(draft.periodState?.version === 1 ? draft.periodState : draft.format?.periods?.version === 1 ? createPeriodMatch(draft.format.periods, Date.now()) : null);
     if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -710,6 +717,7 @@ export default function MonoQuickMatch() {
       gScore2,
       vScoreHistory,
       gScoreHistory,
+      periodState,
       cricketHistory,
       innings,
       battingTeam,
@@ -729,7 +737,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [periodState, kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -737,7 +745,7 @@ export default function MonoQuickMatch() {
   const tracksPointWinnerServe = format.setsRules?.version === 1 || sport === 'volleyball' || sport === 'badminton';
 
   // Quick goals boards track the whole match, not individual halves or quarters.
-  const goalsPeriodLabel = format.mode === 'points'
+  const goalsPeriodLabel = periodTime ? periodTime.label : format.mode === 'points'
     ? `First to ${format.target}`
     : format.mode === 'timed'
       ? `${format.timeLimit / 60} min match`
@@ -770,6 +778,7 @@ export default function MonoQuickMatch() {
       setScores: [],
       currentUnit: 1,
       periodLabel: goalsPeriodLabel,
+      ...(periodState ? periodSnapshot(periodState, gScore1, gScore2) : {}),
     };
   } else if (format.type === 'best-of') {
     const completed = sets.filter((s) => s.completed);
@@ -808,16 +817,16 @@ export default function MonoQuickMatch() {
     if (intent.kind === 'undo') {
       liveRef.current.undo({ at: intent.at, snapshot });
     } else {
-      liveRef.current.point({ team: intent.team, value: intent.kind === 'serve' ? 0 : intent.value ?? 1, ...(intent.kind === 'serve' ? { type: intent.type || 'serve_change' } : {}), at: intent.at, snapshot });
+      liveRef.current.point({ team: intent.team, value: intent.kind === 'serve' ? 0 : intent.value ?? 1, ...(intent.kind === 'serve' ? { type: intent.type || 'serve_change' } : intent.kind === 'period' ? { type: 'correction' } : {}), at: intent.at, snapshot });
     }
-  }, [scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name, goalsPeriodLabel]);
+  }, [periodState, scores, gScore1, gScore2, vScore1, vScore2, sets, currentSet, servingTeam, innings, battingTeam, isCricket, isGoals, format.type, tracksPointWinnerServe, team1Name, team2Name, goalsPeriodLabel]);
 
   // Finalize ordering (R1): finalizeMatch runs SYNCHRONOUSLY inside the scoring
   // handlers at auto-completion, so the winning point's broadcast effect runs AFTER
   // it. A separate effect declared IMMEDIATELY AFTER the snapshot effect runs in
   // source order — so the last point enqueues BEFORE finalize drains+archives.
   useEffect(() => {
-    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType });
+    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType, ...(result?.periodState ? { snapshot: periodSnapshot(result.periodState, result.score1, result.score2) } : {}) });
   }, [phase]);
 
   // Apply cricket defaults when the quick-match sport route changes.
@@ -843,7 +852,7 @@ export default function MonoQuickMatch() {
     setRulesOpen(false);
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
-      setFormat(applyStandardDefaults(sport, {}));
+      setFormat(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}));
     }
   }, [isCricket, sport]);
 
@@ -854,7 +863,7 @@ export default function MonoQuickMatch() {
 
     const defaults = getSportDefaults(sport);
     if (defaults && Object.keys(defaults).length > 0) {
-      setFormat(applyStandardDefaults(sport, {}));
+      setFormat(supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {}));
     }
   }, [formatMode, isCricket, sport]);
 
@@ -862,7 +871,7 @@ export default function MonoQuickMatch() {
   const isTimedMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'timed';
   const isPointsMode = isGoals && !(isKabaddi && kabaddiMatch) && format.mode === 'points';
   const timeLimit = isTimedMode ? format.timeLimit : null;
-  const remainingSeconds = isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
+  const remainingSeconds = periodTime ? periodTime.remaining : isTimedMode ? Math.max(0, timeLimit - timer.elapsed) : null;
   const isTimeUp = isTimedMode && remainingSeconds === 0;
   const scoringUnit = sportConfig?.config?.scoringUnit || 'point';
   // A no-draw sport tied at full time still needs ONE deciding score, so the
@@ -871,7 +880,7 @@ export default function MonoQuickMatch() {
   // needsDecidingScore goes false and the lock re-engages.
   const goalsDrawAllowed = sportConfig?.config?.drawAllowed ?? true;
   const needsDecidingScore = isTimeUp && !goalsDrawAllowed && gScore1 === gScore2;
-  const scoringLocked = isTimeUp && !needsDecidingScore;
+  const scoringLocked = periodState ? periodState.phase !== 'playing' : isTimeUp && !needsDecidingScore;
 
   // Timed mode: pause when the clock first reaches zero. Open the end prompt ONCE,
   // but only when the match is actually endable — not while a no-draw tie still
@@ -879,6 +888,7 @@ export default function MonoQuickMatch() {
   // tie). The one-shot ref resets whenever the clock isn't up (e.g. a new match).
   const timeUpPromptedRef = useRef(false);
   useEffect(() => {
+    if (periodState) return;
     if (!isTimeUp) {
       timeUpPromptedRef.current = false;
       return;
@@ -1007,8 +1017,10 @@ export default function MonoQuickMatch() {
 
     const matchId = liveMatchIdRef.current ?? entry.id;
     const clientMatchId = entry.clientMatchId || buildQuickMatchClientId(sport, matchId);
+    const frozenPeriod = entry.periodState ? freezePeriodMatch(entry.periodState, Date.now(), decided) : null;
     const nextResult = {
       ...entry,
+      ...(frozenPeriod ? { periodState: frozenPeriod, elapsedSeconds: periodPlayedSeconds(frozenPeriod, Date.now()) } : {}),
       id: matchId,
       status: 'completed',
       clientMatchId,
@@ -1021,6 +1033,7 @@ export default function MonoQuickMatch() {
     if (!persistQuickMatch(nextResult)) return false;
     setShowEndConfirm(false);
     setResult(nextResult);
+    if (frozenPeriod) setPeriodState(frozenPeriod);
     clearData(quickMatchDraftKey);
     setPhase('result');
     syncCompletedMatch(nextResult);
@@ -1129,12 +1142,14 @@ export default function MonoQuickMatch() {
     setCurrentSet(0);
     setVScoreHistory([]);
     setGScoreHistory([]);
+    setPeriodState(null);
     setCricketHistory([]);
     setScores({ team1: { runs: 0, balls: 0, wickets: 0, allOut: false }, team2: { runs: 0, balls: 0, wickets: 0, allOut: false } });
     setInnings(1);
     setBattingTeam(1);
-    const frozenFormat = supportsSetsRules(sport) ? freezeSetsFormat(sportConfig, { ...format, setsRules: undefined }) : format;
+    const frozenFormat = supportsSetsRules(sport) ? freezeSetsFormat(sportConfig, { ...format, setsRules: undefined }) : supportsGoalPeriods(sport) && format.mode === 'timed' && !format.periods ? periodPreset(sport, 'custom', sport === 'football' ? 2 : 4, format.timeLimit / 60 / (sport === 'football' ? 2 : 4)) : format;
     setFormat(frozenFormat);
+    setPeriodState(frozenFormat.periods?.version === 1 ? createPeriodMatch(frozenFormat.periods, Date.now()) : null);
     setServingTeam(frozenFormat.setsRules?.initialServer ?? (supportsSetsRules(sport) ? null : 1));
     setLastAction('');
     setSidesSwapped(false);
@@ -1339,7 +1354,8 @@ export default function MonoQuickMatch() {
   const makeTimerFields = () => ({
     startedAt: startedAtRef.current,
     endedAt: new Date().toISOString(),
-    elapsedSeconds: timer.elapsed,
+    elapsedSeconds: periodState ? periodPlayedSeconds(periodState, Date.now()) : timer.elapsed,
+    ...(periodState ? { periodState } : {}),
   });
 
   const finishCricketMatch = (finalScores) => {
@@ -1684,6 +1700,7 @@ export default function MonoQuickMatch() {
 
     broadcastIntentRef.current = { kind: 'point', team: team === 1 ? 'A' : 'B', value, at: Date.now() };
 
+    if (periodState) setPeriodState(applyPeriodAction(periodState, { type: 'score', team: team === 1 ? 'A' : 'B', value, at: now }));
     if (team === 1) setGScore1(newS1);
     else setGScore2(newS2);
     setGScoreHistory(prev => [...prev, { team, value }]);
@@ -1703,6 +1720,13 @@ export default function MonoQuickMatch() {
 
   const undoGoal = () => {
     if (completion.locked) return;
+    if (periodState) {
+      const previous = undoPeriodAction(periodState, Date.now());
+      const totals = periodTotals(previous);
+      broadcastIntentRef.current = { kind: 'period', team: 'A', value: 0, at: Date.now() };
+      setPeriodState(previous); setGScore1(totals.A); setGScore2(totals.B); setLastAction('Undid last action');
+      return;
+    }
     if (gScoreHistory.length === 0) return;
     void correctionImpact();
 
@@ -1723,6 +1747,12 @@ export default function MonoQuickMatch() {
       return;
     }
 
+    if (periodState) {
+      const next = applyPeriodAction(periodState, { type: 'score', team: team === 1 ? 'A' : 'B', value: delta, at: Date.now() });
+      const totals = periodTotals(next); setPeriodState(next); setGScore1(totals.A); setGScore2(totals.B);
+      broadcastIntentRef.current = { kind: 'period', team: 'A', value: 0, at: Date.now() };
+      setLastAction(`${teamName} correction`); return;
+    }
     void correctionImpact();
     broadcastIntentRef.current = delta > 0
       ? { kind: 'point', team: team === 1 ? 'A' : 'B', value: delta, at: Date.now() }
@@ -1744,7 +1774,7 @@ export default function MonoQuickMatch() {
     : isCricket
     ? isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })
     : isGoals
-      ? isGoalsMatchDecided({ format, score1: gScore1, score2: gScore2, elapsedSeconds: timer.elapsed, drawAllowed: sportConfig?.config?.drawAllowed ?? true })
+      ? periodState ? periodResultDecided(periodState, gScore1, gScore2, sportConfig?.config?.drawAllowed ?? true) : isGoalsMatchDecided({ format, score1: gScore1, score2: gScore2, elapsedSeconds: timer.elapsed, drawAllowed: sportConfig?.config?.drawAllowed ?? true })
       : isSetsMatchDecided({ sets, format, sportConfig, score1: vScore1, score2: vScore2 });
   const commitKabaddi = next => {
     if (completion.locked || !quickMatchDraftKey) return false;
@@ -1781,6 +1811,13 @@ export default function MonoQuickMatch() {
       const finalTotals = matchTotals(finalMatch);
       void liveRef.current.point({ team: 'A', value: 0, at: Date.now(), type: 'kabaddi_state', kabaddi: { kind: 'state' }, snapshot: { pointsA: finalTotals[0], pointsB: finalTotals[1], setsA: 0, setsB: 0, setScores: [], currentUnit: finalMatch.state.half, kabaddi: kabaddiSnapshot(finalMatch) } });
     }
+  };
+
+  const applyGoalPeriod = (type) => {
+    if (completion.locked) return;
+    broadcastIntentRef.current = { kind: 'period', team: 'A', value: 0, at: Date.now() };
+    setPeriodState(applyPeriodAction(periodState, { type, at: Date.now() }));
+    setLastAction('');
   };
 
   const endMatchGoals = () => {
@@ -1866,6 +1903,7 @@ export default function MonoQuickMatch() {
     setShowEndConfirm(false);
     setSidesSwapped(false);
     setGScoreHistory([]);
+    setPeriodState(null);
     kabaddiRef.current = null; setKabaddiMatch(null);
     setVScoreHistory([]);
     setSets([{ score1: 0, score2: 0, completed: false }]);
@@ -2251,8 +2289,9 @@ export default function MonoQuickMatch() {
           </div>
         ))}
 
+        {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
         {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
-        <section className="kit-setup-field" aria-labelledby="setup-format-label">
+        !format.periods && <section className="kit-setup-field" aria-labelledby="setup-format-label">
           <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
           <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />
           {goalsRow && (
@@ -2275,7 +2314,6 @@ export default function MonoQuickMatch() {
             )}
           </div>
         </section>
-
         )}
 
         <div className="kit-setup-field">
@@ -2332,7 +2370,7 @@ export default function MonoQuickMatch() {
   }
 
   // === SCORING PHASE ===
-  const timerDisplay = isTimedMode
+  const timerDisplay = periodTime ? periodTime.formatted : isTimedMode
     ? formatCountdown(remainingSeconds)
     : timer.formatted;
   const timerColor = isTimeUp ? 'var(--destructive)' : 'var(--se-color-ink-muted)';
@@ -2610,7 +2648,7 @@ export default function MonoQuickMatch() {
         const last = gScoreHistory.at(-1);
         const undoHint = last ? `back to ${halves.map(h => Math.max(0, h.score - (last.team === h.team ? last.value : 0))).join('–')}` : '';
         const boardScore = halves.map(h => h.score).join('–');
-        const status = isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? goalsPeriodLabel : '';
+        const status = periodTime ? `${periodTime.label}${periodTime.paused && periodState.phase === 'playing' ? ' · paused' : ''}` : isTimeUp ? (sport === 'basketball' && needsDecidingScore ? 'Deciding score needed' : 'Full Time') : isPointsMode ? goalsPeriodLabel : '';
         const summary = <div className="sb-confirm-summary"><span>{sportConfig.name}{status ? ` · ${status}` : ''}</span><strong>{boardScore}</strong></div>;
         return <>
           <h1 className="sr-only">{quickMatchScoringHeading}</h1>
@@ -2622,13 +2660,14 @@ export default function MonoQuickMatch() {
             subtitle={`${isTimedMode ? `${goalsPeriodLabel} · ` : ''}${goalsDrawAllowed ? 'Draws allowed' : 'No draws'}`}
             colourStyle={teamColourStyle} halves={halves}
             clock={timerDisplay} clockLabel={isTimedMode ? 'Time remaining' : 'Time elapsed'}
-            status={status} isTimeUp={isTimeUp} scoringLocked={scoringLocked}
+            status={status} isTimeUp={!periodState && isTimeUp} scoringLocked={scoringLocked}
             lastLine={lastAction ? `${lastAction} · ${boardScore}` : 'Choose a scoring action for either team'}
             momentTeam={last && (lastAction === `${getTeamLabel(last.team)} · All Out (+2)` || (sport === 'basketball' && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value}`) || (!sportConfig.config.quickButtons?.length && last.value > 0 && lastAction === `${getTeamLabel(last.team)} +${last.value} ${scoringUnit}${last.value === 1 ? '' : 's'}`)) ? last.team : undefined}
-            actionCount={gScoreHistory.length} canUndo={gScoreHistory.length > 0} undoHint={undoHint}
+            actionCount={periodState?.history.length ?? gScoreHistory.length} canUndo={periodState ? periodState.history.length > 0 : gScoreHistory.length > 0} undoHint={periodState ? "Previous action" : undoHint}
             isLive={Boolean(live?.isLive)} onScore={addGoal} onUndo={undoGoal}
             onSwap={handleSideSwap} onCorrect={(team) => adjustGoalScore(team, -1)}
             onFinish={requestEndMatch} onDiscard={requestDiscardQuickMatch}
+            periodControls={periodState && <GoalsPeriodControls state={periodState} remaining={periodTime.remaining} onAction={applyGoalPeriod} onFinish={requestEndMatch} locked={completion.locked} tied={gScore1 === gScore2} />}
             notice={<ScoringNotice message={saveWarning} />}
             live={cloudAuthAvailable ? <LiveBroadcastBar broadcast={live} descriptor={liveDescriptor} enabled={liveEnabled} onEnableChange={setLiveEnabled} /> : null}
           />

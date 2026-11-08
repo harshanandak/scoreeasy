@@ -1,5 +1,6 @@
 import { kabaddiSnapshotValidator, kabaddiUpdateValidator, kabaddiRaidValidator, validateKabaddiSnapshot, validateKabaddiRaid, validateKabaddiUpdate } from './lib/kabaddiValidators';
 import { v, ConvexError, Infer } from "convex/values";
+import { periodClockValidator } from "./lib/periodClock";
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query, QueryCtx, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -63,6 +64,7 @@ const snapshotArgValidator = v.object({
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
   kabaddi: v.optional(kabaddiSnapshotValidator),
+  periodClock: v.optional(periodClockValidator),
 });
 
 // The match-doc fields a snapshot patches (kept in one place so scorePoint and
@@ -78,6 +80,7 @@ function snapshotPatch(snap: Infer<typeof snapshotArgValidator>) {
     currentUnit: snap.currentUnit,
     periodLabel: snap.periodLabel,
     ...(snap.kabaddi ? { kabaddi: snap.kabaddi } : {}),
+    periodClock: snap.periodClock,
   };
 }
 
@@ -645,6 +648,7 @@ const publicSnapshotValidator = v.object({
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   currentUnit: v.number(),
   periodLabel: v.optional(v.string()),
+  periodClock: v.optional(periodClockValidator),
   lastSeq: v.number(),
   startedAt: v.number(),
   lastEventAt: v.number(),
@@ -693,6 +697,7 @@ export const getByToken = query({
       servingTeam: match.servingTeam,
       currentUnit: match.currentUnit,
       periodLabel: match.periodLabel,
+      periodClock: match.periodClock,
       lastSeq: match.lastSeq,
       startedAt: match.startedAt,
       lastEventAt: match.lastEventAt,
@@ -766,6 +771,7 @@ const publicFeedItemValidator = v.object({
   setsB: v.number(),
   servingTeam: v.optional(v.union(v.literal("A"), v.literal("B"))),
   periodLabel: v.optional(v.string()),
+  periodClock: v.optional(periodClockValidator),
   lastEventAt: v.number(),
   teamA: teamMetaValidator,
   teamB: teamMetaValidator,
@@ -820,6 +826,7 @@ export const listLiveFeed = query({
         setsB: m.setsB,
         servingTeam: m.servingTeam,
         periodLabel: m.periodLabel,
+        periodClock: m.periodClock,
         lastEventAt: m.lastEventAt,
         teamA: sanitizeTeamMeta(meta.teamA),
         teamB: sanitizeTeamMeta(meta.teamB),
