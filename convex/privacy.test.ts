@@ -150,11 +150,17 @@ describe("explicit live sharing", () => {
     { sport: "cricket", pointsA: 2, pointsB: 0, currentUnit: 1, periodLabel: "A 2/0 (0.1 ov)" },
     { sport: "cricket-test", pointsA: 102, pointsB: 100, currentUnit: 3, periodLabel: "A 2/0 (0.1 ov)" },
   ])("$sport shares the local score atomically and reshares private progress", async ({ sport, ...score }) => {
-    const { t, owner, matchId, token } = await fixture();
+    const { t, owner } = await fixture();
+    const game = sport === "cricket-test" ? "cricket" : sport;
+    const scorecardKind = sport === "football" ? "goals" : game;
+    const { matchId, token } = await owner.mutation(api.live.create, {
+      sport: game, scorecardKind, teamA: { name: "A" }, teamB: { name: "B" },
+      clientMatchId: `snapshot-${sport}`,
+    });
     const snapshot = { ...score, setsA: 0, setsB: 0, setScores: [], servingTeam: "A" as const };
     expect(await t.query(api.live.getByToken, { token })).toBeNull();
     await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot });
-    expect(await t.query(api.live.getByToken, { token })).toMatchObject(snapshot);
+    expect(await t.query(api.live.getByToken, { token })).toMatchObject({ ...snapshot, sport: game, scorecardKind });
     await owner.mutation(api.live.scorePoint, {
       matchId, team: "A", value: 1, clientEventId: sport, at: 2,
       snapshot: { ...snapshot, pointsA: snapshot.pointsA + 1 },
