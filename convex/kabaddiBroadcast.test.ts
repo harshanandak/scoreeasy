@@ -96,7 +96,7 @@ describe('kabaddi live publication', () => {
     ['last-raid team index', (k: Infer<typeof kabaddiSnapshotValidator>) => { k.lastRaid!.team = 3; }],
     ['last-raid half index', (k: Infer<typeof kabaddiSnapshotValidator>) => { k.lastRaid!.half = 3; }],
     ['last-raid dismissal pair', (k: Infer<typeof kabaddiSnapshotValidator>) => { k.lastRaid!.lostSlots = [[]]; }],
-    ['last-raid dismissal counts', (k: Infer<typeof kabaddiSnapshotValidator>) => { k.lastRaid!.lostSlots[1] = []; }],
+    ['last-raid dismissal counts', (k: Infer<typeof kabaddiSnapshotValidator>) => { k.lastRaid!.lost[1] = k.lastRaid!.lostSlots[1].length + 1; }],
     ['unknown version', (k: Infer<typeof kabaddiSnapshotValidator>) => { Object.assign(k, { version: 99 }); }],
   ])('rejects malformed nested state: %s', (_label, corrupt) => {
     const started = beginLiveRaid(createKabaddiMatch({ names: ['A', 'B'], colours: [undefined, undefined] }), { atMs: 100, raider: undefined });
