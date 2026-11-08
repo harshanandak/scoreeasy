@@ -1,3 +1,4 @@
+import { isAbandoned, ABANDONED_LABEL } from './matchOutcome';
 import { ballsToOvers } from './cricketCalculations';
 
 export function getResultOutcome(winner) {
@@ -16,7 +17,7 @@ export function getShareStatusText(response) {
 
 export function buildResultShareText(result, { isCricket = false } = {}) {
   if (!result) return '';
-  const outcome = getResultOutcome(result.winner);
+  const outcome = isAbandoned(result) ? ABANDONED_LABEL : getResultOutcome(result.winner);
 
   if (isCricket && result.team1Score && result.team2Score) {
     const team1Score = `${result.team1Score.runs}/${result.team1Score.wickets} (${ballsToOvers(result.team1Score.balls)} ov)`;

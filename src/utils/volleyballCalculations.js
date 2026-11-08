@@ -1,3 +1,4 @@
+import { isAbandoned } from './matchOutcome';
 // Volleyball scoring calculations
 
 export function validateSetScore(score1, score2, minPoints = 25, isDecider = false) {
@@ -47,6 +48,7 @@ export function calculateVolleyballStandings(teams, matches) {
   const stats = teams.map(team => ({
     teamId: team.id,
     teamName: team.name,
+    noResult: 0,
     played: 0,
     won: 0,
     lost: 0,
@@ -65,6 +67,7 @@ export function calculateVolleyballStandings(teams, matches) {
 
     t1.played++;
     t2.played++;
+    if (isAbandoned(match)) { t1.noResult++; t2.noResult++; return; }
     t1.pointsFor += match.score1;
     t1.pointsAgainst += match.score2;
     t2.pointsFor += match.score2;

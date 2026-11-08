@@ -147,6 +147,7 @@ export default function MonoMatchResult() {
     team2: team2Name,
     winnerSide,
     status: 'completed',
+    resultType: match.resultType,
     // Pass the persisted shape through untouched — matchVerdict derives the
     // sets-won tally from setsWon1/2, or counts sets[] for the tennis tournament
     // save which persists no tally at all. Collapsing to `?? 0` here rendered a
