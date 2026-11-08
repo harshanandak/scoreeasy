@@ -356,7 +356,8 @@ export default function MonoSetsLiveScore() {
     setCurrentSet(last.currentSet);
     if (Object.hasOwn(last, 'servingTeam')) setServingTeam(last.servingTeam);
     if (typeof last.sidesSwapped === 'boolean') setSidesSwapped(last.sidesSwapped);
-    if (last.scoringMode) setScoringMode(last.scoringMode);
+    // Frozen (version 1) rules own the scoring mode; only legacy matches restore it from history.
+    if (rules?.version !== 1 && last.scoringMode) setScoringMode(last.scoringMode);
     setHistory(prev => prev.slice(0, -1));
   };
 
