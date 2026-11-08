@@ -119,9 +119,11 @@ describe("explicit live sharing", () => {
     const args = { clientMatchId: "private-live" };
     await expect(t.query(api.live.getOwnedSession, args)).rejects.toThrow(/authenticated/i);
     expect(await other.query(api.live.getOwnedSession, args)).toBeNull();
-    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: false });
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: false, visibility: "private" });
     await owner.mutation(api.live.setVisibility, { matchId, visibility: "public", snapshot: SHARED_SCORE });
-    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: true });
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ matchId, token, isShared: true, visibility: "public" });
+    await owner.mutation(api.live.setVisibility, { matchId, visibility: "unlisted", snapshot: SHARED_SCORE });
+    expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ isShared: true, visibility: "unlisted" });
     await owner.mutation(api.live.setVisibility, { matchId, visibility: "private" });
     expect(await owner.query(api.live.getOwnedSession, args)).toMatchObject({ isShared: false });
     expect(await t.query(api.live.getByToken, { token })).toBeNull();

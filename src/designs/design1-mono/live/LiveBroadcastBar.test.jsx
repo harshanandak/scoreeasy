@@ -54,10 +54,20 @@ describe('LiveBroadcastBar (b0z)', () => {
     renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Go live/i })).not.toBeInTheDocument();
-    await waitFor(() => expect(broadcast.restore).toHaveBeenCalledWith({ clientMatchId: 'cm1' }));
+    await waitFor(() => expect(broadcast.restore).toHaveBeenCalledWith({ clientMatchId: 'cm1', getSnapshot: expect.any(Function) }));
     expect(broadcast.goLive).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
     await waitFor(() => expect(broadcast.setVisibility).toHaveBeenCalledWith('private'));
+  });
+
+  it('gives restore the latest committed descriptor snapshot without another restore', async () => {
+    const broadcast = makeBroadcast({ restore: vi.fn().mockResolvedValue(null) });
+    const onEnableChange = vi.fn();
+    const { rerender } = renderBar({ broadcast, descriptor, enabled: false, onEnableChange });
+    const snapshot = { pointsA: 4, pointsB: 2 };
+    rerender(<MemoryRouter><LiveBroadcastBar broadcast={broadcast} descriptor={{ ...descriptor, snapshot }} enabled={false} onEnableChange={onEnableChange} /></MemoryRouter>);
+    await waitFor(() => expect(broadcast.restore).toHaveBeenCalledTimes(1));
+    expect(broadcast.restore.mock.calls[0][0].getSnapshot()).toEqual(snapshot);
   });
 
   it('re-share uses the latest descriptor snapshot through goLive, not a visibility-only write', () => {

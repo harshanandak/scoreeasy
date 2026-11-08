@@ -64,6 +64,50 @@ function setup(opts) {
 }
 
 describe('useLiveBroadcast', () => {
+  it.each(['public', 'unlisted'])('syncs the current committed snapshot once after restoring a %s session', async (visibility) => {
+    let resolve;
+    h.query.mockReturnValue(new Promise((done) => { resolve = done; }));
+    let snapshot = GO.snapshot;
+    const { result, rerender } = renderHook(({ enabled }) => useLiveBroadcast({ enabled }), {
+      initialProps: { enabled: false },
+    });
+    let restoring;
+    act(() => { restoring = result.current.restore({ ...GO, getSnapshot: () => snapshot }); });
+    snapshot = { ...GO.snapshot, pointsA: 3, pointsB: 1 };
+    await act(async () => {
+      await result.current.point({ team: 'A', at: 1, snapshot });
+      snapshot = { ...snapshot, pointsA: 2 };
+      await result.current.undo({ at: 2, snapshot });
+    });
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+    await act(async () => {
+      resolve({ matchId: 'mid1', token: 'TOK', lastSeq: 7, isShared: true, visibility });
+      await restoring;
+    });
+    await act(async () => { rerender({ enabled: true }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility, snapshot });
+    expect(h.spies['live:create']).not.toHaveBeenCalled();
+    await act(async () => { await result.current.point({ team: 'B', at: 3, snapshot: { ...snapshot, pointsB: 2 } }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not publish a private restored session even with a current snapshot', async () => {
+    h.query.mockResolvedValue({ matchId: 'mid1', token: 'TOK', lastSeq: 0, isShared: false, visibility: 'private' });
+    const { result } = setup();
+    await act(async () => { await result.current.restore({ ...GO, getSnapshot: () => GO.snapshot }); });
+    expect(h.spies['live:setVisibility']).not.toHaveBeenCalled();
+    expect(result.current.isShared).toBe(false);
+  });
+
+  it('does not add a snapshot sync to normal scoring without a restore', async () => {
+    h.get('live:create').mockResolvedValue({ matchId: 'mid1', token: 'TOK' });
+    const { result } = setup();
+    await act(async () => { await result.current.goLive(GO); });
+    await act(async () => { await result.current.point({ team: 'A', at: 1, snapshot: { ...GO.snapshot, pointsA: 1 } }); });
+    await act(async () => { await result.current.undo({ at: 2, snapshot: GO.snapshot }); });
+    expect(h.spies['live:setVisibility']).toHaveBeenCalledExactlyOnceWith({ matchId: 'mid1', visibility: 'public', snapshot: GO.snapshot });
+  });
+
   it('ignores a delayed restore after the scorer resets to a different match', async () => {
     let resolve;
     h.query.mockReturnValue(new Promise((done) => { resolve = done; }));
