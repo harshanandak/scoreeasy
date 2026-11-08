@@ -70,3 +70,38 @@ it.each(['matches', 'knockoutMatches'])('preserves reconnect confirmation when a
       syncOwnerId: owner, sync: { status: 'synced', completionId: record.completionId } }],
   });
 });
+
+it('preserves confirmation when the fixture snapshot predates enqueueing', async () => {
+  const snapshot = loadSportTournaments('se_football')[0];
+  const record = enqueueMatchSave(owner, payload, undefined, reference);
+  await attemptMatchSave(record, vi.fn().mockResolvedValue('server-id'));
+  saveSportTournament('se_football', snapshot);
+  expect(loadSportTournaments('se_football')[0].knockoutMatches[0]).toMatchObject({
+    clientMatchId: payload.clientMatchId, syncOwnerId: owner,
+    sync: { status: 'synced', completionId: record.completionId },
+  });
+});
+
+it.each([
+  ['Clear', { status: 'scheduled', score1: null, score2: null, sync: undefined }],
+  ['replay', { score1: 0, score2: 3, completedAt: 2, sync: undefined }],
+  ['another account', { syncOwnerId: 'another-account', sync: { status: 'pending' } }],
+  ['another result identity', { clientMatchId: 'another-result', sync: { status: 'pending' } }],
+])('does not transfer confirmation to %s', async (_label, changes) => {
+  const record = enqueueMatchSave(owner, payload, undefined, reference);
+  await attemptMatchSave(record, vi.fn().mockResolvedValue('server-id'));
+  const tournament = loadSportTournaments('se_football')[0];
+  const replacement = { ...tournament.knockoutMatches[0], ...changes };
+  saveSportTournament('se_football', { ...tournament, knockoutMatches: [replacement] });
+  expect(loadSportTournaments('se_football')[0].knockoutMatches[0]).toEqual(JSON.parse(JSON.stringify(replacement)));
+});
+
+it.each([undefined, 'different-completion'])('does not preserve an unproven stored confirmation (%s)', async (completionId) => {
+  const record = enqueueMatchSave(owner, payload, undefined, reference);
+  await attemptMatchSave(record, vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+  const snapshot = loadSportTournaments('se_football')[0];
+  const match = snapshot.knockoutMatches[0];
+  localStorage.setItem('se_football', JSON.stringify([{ ...snapshot, knockoutMatches: [{ ...match, sync: { status: 'synced', completionId } }] }]));
+  saveSportTournament('se_football', snapshot);
+  expect(loadSportTournaments('se_football')[0].knockoutMatches[0]).toEqual(match);
+});

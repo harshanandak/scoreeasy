@@ -1,5 +1,6 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
+import { tournamentCompletionId } from './tournamentSync';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -361,12 +362,29 @@ export const loadAllStatistics = () => {
 };
 
 // === GENERIC SPORT STORAGE (works with any sport via storageKey) ===
+function preserveTournamentConfirmations(matches, storedMatches = []) {
+  return matches?.map(match => {
+    const stored = storedMatches?.find(entry => String(entry.id) === String(match.id));
+    if (!stored?.clientMatchId || !stored.syncOwnerId || stored.sync?.status !== 'synced' || !stored.sync.completionId
+      || (match.clientMatchId && match.clientMatchId !== stored.clientMatchId)
+      || (match.syncOwnerId && match.syncOwnerId !== stored.syncOwnerId)
+      || tournamentCompletionId(stored) !== stored.sync.completionId
+      || tournamentCompletionId(match) !== stored.sync.completionId) return match;
+    // A fixture screen can save its older snapshot after the queue acknowledges this completion.
+    return { ...match, clientMatchId: stored.clientMatchId, syncOwnerId: stored.syncOwnerId, sync: stored.sync };
+  });
+}
+
 export const saveSportTournament = (storageKey, tournamentData) => {
   const tournaments = loadData(storageKey, []);
   const existingIndex = tournaments.findIndex(t => t.id === tournamentData.id);
 
   if (existingIndex >= 0) {
-    tournaments[existingIndex] = tournamentData;
+    const stored = tournaments[existingIndex];
+    tournaments[existingIndex] = { ...tournamentData,
+      matches: preserveTournamentConfirmations(tournamentData.matches, stored.matches),
+      knockoutMatches: preserveTournamentConfirmations(tournamentData.knockoutMatches, stored.knockoutMatches),
+    };
   } else {
     tournaments.push(tournamentData);
   }
