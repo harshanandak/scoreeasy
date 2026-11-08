@@ -252,4 +252,42 @@ describe('Matches operation-bound Undo', () => {
     expect(restoreMatchHistory(cleared.id)).toBe(true);
     expect(ids()).toEqual(['first', 'last']);
   });
+
+  it('keeps a failed sixth removal alongside all prior recoveries until expiry', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T10:00:00Z'));
+    const operations = Array.from({ length: 5 }, (_, index) => {
+      const match = completed(`capacity-${index}`);
+      saveQuickMatches([...loadQuickMatches(), match]);
+      return removeMatchHistory(match.id, 'delete');
+    });
+    const failure = failWrites('se_quickmatches');
+    expect(removeMatchHistory('first', 'delete')).toBeNull();
+    failure.mockRestore();
+    const stored = JSON.parse(localStorage.getItem(RECOVERY_KEY));
+    expect(stored).toHaveLength(6);
+    expect(stored.slice(0, 5).map(operation => operation.id)).toEqual(operations.map(operation => operation.id));
+    vi.setSystemTime(new Date('2026-11-10T10:00:00Z'));
+    expect(stored.map(operation => restoreMatchHistory(operation.id))).toEqual(Array(6).fill('unavailable'));
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+  });
+
+  it('reports a failed Clear barrier write and keeps every operation retryable', () => {
+    const deleted = removeMatchHistory('middle', 'delete');
+    mount();
+    const setItem = Storage.prototype.setItem;
+    let recoveryWrites = 0;
+    const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key === RECOVERY_KEY && ++recoveryWrites === 2) throw new Error('clear barrier write failed');
+      return setItem.call(this, key, value);
+    });
+    clear();
+    expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
+    expect(JSON.parse(localStorage.getItem(RECOVERY_KEY))).toHaveLength(2);
+    failure.mockRestore();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
+    expect(ids()).toEqual(['first', 'last']);
+    expect(restoreMatchHistory(deleted.id)).toBe(true);
+    expect(ids()).toEqual(['first', 'middle', 'last']);
+  });
 });

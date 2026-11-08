@@ -28,6 +28,8 @@ const recovery = createHistoryRecovery('se_matches_pending_undo', {
   loadMatches,
   saveMatches,
   isRemovable: (match, kind) => match.source === 'quick' ? match.record.status === 'completed' : kind === 'clear',
+  keepFailedOperations: true,
+  clearPreviousOnClear: true,
 });
 
 export const removeMatchHistory = (id, kind) => recovery.remove(

@@ -12,10 +12,13 @@ function prune(operations) {
     Number.isFinite(operation.createdAt) && operation.createdAt <= now &&
     now - operation.createdAt < MAX_AGE_MS &&
     Array.isArray(operation.items) && Array.isArray(operation.order)
-  )).slice(-MAX_OPERATIONS);
+  ));
 }
 
-export function createHistoryRecovery(key, { loadMatches, saveMatches, isRemovable }) {
+export function createHistoryRecovery(key, {
+  loadMatches, saveMatches, isRemovable,
+  keepFailedOperations = false, clearPreviousOnClear = false,
+}) {
   const writeRecoveries = operations => saveData(key, prune(operations));
 
   function loadRecoveries() {
@@ -39,17 +42,23 @@ export function createHistoryRecovery(key, { loadMatches, saveMatches, isRemovab
     };
     // Persist recovery before deletion so navigation or a refresh cannot strand it.
     const previous = loadRecoveries();
-    if (!writeRecoveries([...previous, recovery])) return null;
+    const pending = [...previous, recovery];
+    if (!saveData(key, pending)) return null;
     const removedIds = new Set(items.map(({ match }) => String(match.id)));
     const saved = saveMatches(current.filter(match => !removedIds.has(String(match.id))));
     if (saved !== true) {
       // A partial removal still needs its durable recovery and an Undo control.
       if (saved === 'rollback-failed') return { ...recovery, failed: true };
-      // Include the oldest operation that appending may have evicted at capacity.
+      if (keepFailedOperations) return null;
       if (!saveData(key, previous)) {
         console.warn('[ScoreEasy] Could not restore the prior recovery list after a failed removal.');
       }
       return null;
+    }
+    // Eviction and a deliberate Clear barrier commit only after every match write succeeds.
+    const committed = clearPreviousOnClear && kind === 'clear' ? [recovery] : pending.slice(-MAX_OPERATIONS);
+    if (JSON.stringify(committed) !== JSON.stringify(pending) && !writeRecoveries(committed)) {
+      return keepFailedOperations ? { ...recovery, failed: true } : null;
     }
     return recovery;
   }
