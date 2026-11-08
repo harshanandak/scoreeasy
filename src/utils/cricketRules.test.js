@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { guidedRulesForMatch, resolveGuidedRules, guidedCompletionReason } from './cricketRules';
 import { applyDelivery, createInnings, deriveChase, deriveInnings, makeDelivery } from './cricketEngine';
+import { makeFormat } from './cricketEngine';
 
 describe('versioned guided rules', () => {
   const setup = { overs: 5, players: 6, freeHit: false, lastManStands: true, noLBW: true,
@@ -46,5 +47,10 @@ describe('versioned guided rules', () => {
     const rules = resolveGuidedRules({ overs: null });
     expect(rules.maxLegalBalls).toBeNull();
     expect(guidedCompletionReason(createInnings(), { runs: 1, wkts: 0, legalBalls: 1000 }, rules)).toBeNull();
+  });
+
+  it('keeps setup powerplay labels when an engine format also supplies an empty default list', () => {
+    const rules = resolveGuidedRules({ ...makeFormat(), powerplay: setup.powerplay });
+    expect(rules.powerplays).toEqual(setup.powerplay);
   });
 });

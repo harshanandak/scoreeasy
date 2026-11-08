@@ -18,7 +18,7 @@ export function resolveGuidedRules(setup = {}) {
     ballsPerOver: setup.ballsPerOver ?? 6,
     playersPerSide: setup.playersPerSide ?? setup.players ?? 11,
     maxOversPerBowler: setup.maxOversPerBowler ?? null,
-    powerplays: setup.powerplays ?? setup.powerplay ?? [],
+    powerplays: setup.powerplay ?? setup.powerplays ?? [],
     freeHitOnNoBall: setup.freeHitOnNoBall ?? setup.freeHit ?? true,
     houseRules: {
       ...Object.fromEntries(['tennisBall', 'boxCricket', 'oneTipOneHand', 'noLBW', 'lastManStands',
