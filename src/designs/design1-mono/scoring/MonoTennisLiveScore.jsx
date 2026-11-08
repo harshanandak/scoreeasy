@@ -621,13 +621,10 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
 
   const saveQuickMatch = () => {
     const completedAt = new Date().toISOString();
-    const entry = buildTennisQuickHistoryEntry({
-      match,
-      sets,
-      isComplete: isMatchComplete,
-      completedAt,
-      finished: true,
-    });
+    const entry = {
+      ...buildTennisQuickHistoryEntry({ match, sets, isComplete: isMatchComplete, completedAt, finished: true }),
+      clientMatchId: match.clientMatchId || liveClientMatchId,
+    };
 
     const ok = saveStoredQuickMatch(entry);
     if (!ok) {
@@ -635,7 +632,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       return false;
     }
 
-    void syncQuickMatch({ ...entry, clientMatchId: entry.clientMatchId || liveClientMatchId });
+    void syncQuickMatch(entry);
     clearData(quickDraftKey);
     setSaveWarning('');
     live.finalize({ resultType: entry.resultType });

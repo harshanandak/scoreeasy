@@ -18,10 +18,10 @@ export function usePendingMatchSaves(authOverride, process = true) {
   const active = useRef(null);
   active.current = { ownerId, ready, save };
   const [, refresh] = useState(0);
-  const retry = (clientMatchId) => {
+  const send = (clientMatchId, manual = false) => {
     const record = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === clientMatchId);
     if (!record) return Promise.resolve({ status: 'idle', clientMatchId });
-    return attemptMatchSave(record, save, () => active.current.ownerId === ownerId && active.current.ready);
+    return attemptMatchSave(record, save, () => active.current.ownerId === ownerId && active.current.ready, manual);
   };
   useEffect(() => {
     if (!process) {
@@ -32,23 +32,23 @@ export function usePendingMatchSaves(authOverride, process = true) {
     }
     let timer;
     let disposed = false;
-    const run = (force = false) => {
+    const run = () => {
       if (disposed) return;
       clearTimeout(timer);
       refresh((value) => value + 1);
       if (!ready || navigator.onLine === false) return;
-      const records = pendingMatchSaves(ownerId).filter((entry) => !isSaveInFlight(entry));
+      const records = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !isSaveInFlight(entry));
       for (const record of records) {
-        if (force || record.nextAttemptAt <= Date.now()) {
+        if (record.nextAttemptAt <= Date.now()) {
           void attemptMatchSave(record, active.current.save, () => !disposed && active.current.ownerId === ownerId && active.current.ready);
         }
       }
-      const upcoming = pendingMatchSaves(ownerId).filter((entry) => !isSaveInFlight(entry));
+      const upcoming = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !isSaveInFlight(entry));
       if (upcoming.length) timer = setTimeout(() => run(), Math.max(1000, Math.min(...upcoming.map((entry) => entry.nextAttemptAt)) - Date.now()));
     };
     const changed = () => run();
-    const reconnect = () => run(true);
-    const foreground = () => { if (document.visibilityState === 'visible') run(true); };
+    const reconnect = () => run();
+    const foreground = () => { if (document.visibilityState === 'visible') run(); };
     globalThis.addEventListener(PENDING_SAVES_CHANGED, changed);
     globalThis.addEventListener('storage', changed);
     globalThis.addEventListener('online', reconnect);
@@ -73,5 +73,5 @@ export function usePendingMatchSaves(authOverride, process = true) {
       document.removeEventListener('visibilitychange', foreground);
     };
   }, [ownerId, ready, process]);
-  return { ownerId, records: pendingMatchSaves(ownerId), retry, save, ready };
+  return { ownerId, records: pendingMatchSaves(ownerId), retry: (id) => send(id, true), send, save, ready };
 }

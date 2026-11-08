@@ -42,7 +42,7 @@ it('shows Waiting for connection while offline and saves on reconnect', async ()
 });
 
 it('shows confirmed account status on Finish and hides every cloud status for guests', () => {
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, syncOwnerId: 'owner', sync: { status: 'synced' } }]));
+  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, clientMatchId: 'quick:football:m1', syncOwnerId: 'owner', sync: { status: 'synced' } }]));
   const { rerender } = render(<AuthContext.Provider value={auth}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);
   expect(screen.getByText('Saved to your account')).toBeInTheDocument();
   rerender(<AuthContext.Provider value={{ isAuthenticated: false }}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);
