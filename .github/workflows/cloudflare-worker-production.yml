@@ -14,22 +14,33 @@ on:
 permissions:
   contents: read
 
-env:
-  CLOUDFLARE_WORKER_NAME: scoreeasy
-  CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
-  # Production tier: live Clerk instance. VITE_CONVEX_URL is intentionally NOT set
-  # here — `convex deploy --cmd` injects the just-deployed PRODUCTION Convex URL
-  # into the build, so the frontend is never built against a Convex deployment that
-  # lacks the functions it calls.
-  VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || secrets.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-  VITE_SENTRY_DSN: ${{ vars.PRODUCTION_VITE_SENTRY_DSN || secrets.PRODUCTION_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
-
 concurrency:
   group: cloudflare-production
   cancel-in-progress: false
 
 jobs:
+  reject-non-master:
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject non-master dispatch
+        env:
+          DISPATCH_REF: ${{ github.ref }}
+        run: |
+          echo "::error::Production deployment requires refs/heads/master; received $DISPATCH_REF."
+          exit 1
+
   deploy:
+    if: github.ref == 'refs/heads/master'
+    env:
+      CLOUDFLARE_WORKER_NAME: scoreeasy
+      CLOUDFLARE_WORKERS_SUBDOMAIN: harshananda57
+      # Production tier: live Clerk instance. VITE_CONVEX_URL is intentionally NOT set
+      # here — `convex deploy --cmd` injects the just-deployed PRODUCTION Convex URL
+      # into the build, so the frontend is never built against a Convex deployment that
+      # lacks the functions it calls.
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || secrets.PRODUCTION_VITE_CLERK_PUBLISHABLE_KEY || vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+      VITE_SENTRY_DSN: ${{ vars.PRODUCTION_VITE_SENTRY_DSN || secrets.PRODUCTION_VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN || secrets.VITE_SENTRY_DSN }}
     timeout-minutes: 20
     name: Deploy Worker production
     runs-on: ubuntu-latest
