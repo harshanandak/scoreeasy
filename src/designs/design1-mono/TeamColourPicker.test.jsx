@@ -88,6 +88,7 @@ describe('TeamColourPicker', () => {
     expect(sheetCss).not.toMatch(/outline:\s*(none|0)\b/);
     renderPicker();
     for (const b of swatches()) {
+      expect(b).toHaveClass('kit-sw');
       expect(b).not.toHaveAttribute('tabindex', '-1');
       expect(b.style.outline).toBe('');
     }
