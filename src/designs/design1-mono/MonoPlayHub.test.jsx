@@ -72,7 +72,8 @@ describe('MonoPlayHub (Kit S1)', () => {
       expect(tile.style.getPropertyValue('--sport-hi')).toBe(identity.hi);
       expect(tile.style.getPropertyValue('--sport-core')).toBe(identity.core);
       expect(tile.style.getPropertyValue('--sport-lo')).toBe(identity.lo);
-      expect(tile.style.getPropertyValue('--sport-mark')).toMatch(/^url\(/);
+      // The tile draws the sport's own icon (sportIcons.jsx), not a mask variable.
+      expect(tile.querySelector('.kit-tile-mark svg')).toBeInTheDocument();
 
       const labelRows = contrastReport({ [id]: identity }).filter(([label]) => label.includes('label on'));
       expect(labelRows.length).toBeGreaterThan(0);

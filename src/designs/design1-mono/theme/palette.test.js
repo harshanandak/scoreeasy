@@ -239,7 +239,10 @@ describe('documented contrast pairs', () => {
 // Tournaments in Kit, PR 4 (setup), 293 -> 180: MonoTournamentSetup drops its inline #111/#888/#bbb/#ddd/#eee/
 // #fff greys, the squad-warning ambers and reds and the sticky-bar shadow (-113) for tokens; the new
 // tournamentSetup.css and setup parts use tokens only (+0).
-const BASELINE = 175;
+// Sport marks on the approved icons, 175 -> 173: lib/sportMarks.js goes (its data-URI masks were the
+// only place a hex literal could not be a token), taking its white/black luminance-mask pair (-2).
+// Every mark now renders the icon component (kit/SportMark), which paints in currentColor (+0).
+const BASELINE = 173;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions

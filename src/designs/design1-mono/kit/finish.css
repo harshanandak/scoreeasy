@@ -30,13 +30,10 @@
   background: linear-gradient(168deg, var(--sport-hi, var(--se-color-surface-warm)), var(--sport-core, var(--se-color-surface-warm)) 55%, var(--sport-lo, var(--se-color-surface-warm)));
 }
 
-.kit-fin-badge::after {
-  content: '';
+.kit-fin-badge > .se-sport-mark {
   position: absolute;
   inset: 6px;
-  background: var(--sport-on, var(--se-color-ink));
-  -webkit-mask: var(--sport-mark) center / contain no-repeat;
-  mask: var(--sport-mark) center / contain no-repeat;
+  color: var(--sport-on, var(--se-color-ink));
 }
 
 .kit-fin-title {

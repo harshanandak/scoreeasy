@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
+import SportMark from '../kit/SportMark';
 import './teamBoard.css';
 
 // Team-colour scorer for sets sports: "Refined Soft with Mono-strength controls" (Harsha,
@@ -12,13 +13,14 @@ import './teamBoard.css';
 // (MonoQuickMatch), so the board can't disagree with the match state.
 // Layout is thumb-first: status at the top, the two point keys in the middle, Undo and the options
 // sheet in the bottom thumb zone. Team colour is the engine's --team-{a,b}-* variables (colourStyle).
-// The sport's mark (--sport-mark, when the sport has one) sits on the serving team's key only, so
+// The sport's icon (sportId, when the sport has one) sits on the serving team's key only, so
 // the decoration names the game and carries the serve instead of being wallpaper.
 
 export default function TeamSetsBoard({
   title,
   subtitle,
   sportColour,
+  sportId,
   setUnit = 'Set',
   isLive,
   colourStyle,
@@ -43,7 +45,6 @@ export default function TeamSetsBoard({
 }) {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const sheetId = useId();
-  const hasMark = Boolean(colourStyle['--sport-mark']);
 
   return (
     <div className="sb tsb" style={colourStyle} data-team-board="">
@@ -69,7 +70,7 @@ export default function TeamSetsBoard({
             disabled={scoringDisabled}
             aria-label={`Add point for ${h.name}`}
           >
-            {hasMark && h.serving && <span className="tsb-mark" aria-hidden="true" />}
+            {h.serving && <SportMark sportId={sportId} className="tsb-mark" />}
             {h.serving && <span className="tsb-srv">Serving</span>}
             <span className="tsb-who">{h.name}</span>
             <span className="tsb-big">{h.score}</span>
@@ -142,6 +143,7 @@ TeamSetsBoard.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
   sportColour: PropTypes.string,
+  sportId: PropTypes.string,
   setUnit: PropTypes.string,
   isLive: PropTypes.bool,
   colourStyle: PropTypes.object.isRequired,
