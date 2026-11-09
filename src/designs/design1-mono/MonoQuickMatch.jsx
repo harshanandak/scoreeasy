@@ -15,6 +15,7 @@ import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabad
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
+import { SetsRulesStep } from './kit/SetsSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -50,7 +51,7 @@ import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetPointState, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
 import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, supportsSetsRules } from '../../models/setsRules';
-import SetsRulesControls, { ServerChoice } from './scoring/SetsRulesControls';
+import { ServerChoice } from './scoring/SetsRulesControls';
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
@@ -69,7 +70,6 @@ import {
   formatChoices,
   goalsDetail,
   selectedFormatChoice,
-  setPointPresets,
   setupRulesLine,
 } from './kit/setupFormats';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
@@ -1935,8 +1935,7 @@ export default function MonoQuickMatch() {
   // colour), the format as one segmented control and its rules line, then the one Go. Cricket's
   // Gully/Custom and the sets sports' points live one tap away in the rules editor.
   const cricketHasRules = isCricket && (cricketPreset === 'gully' || cricketPreset === 'custom');
-  const setPoints = engine === 'sets' && !isTennis ? setPointPresets(sportConfig) : [];
-  const hasRulesEditor = cricketHasRules || setPoints.length > 0;
+  const hasRulesEditor = cricketHasRules;
   const selectedCricketFormat = isCricket
     ? CRICKET_FORMATS.find(f => f.id === cricketPreset)
     : null;
@@ -2052,7 +2051,6 @@ export default function MonoQuickMatch() {
       { key: 'trialBall', label: 'Trial ball' },
       { key: 'oneTipOneHand', label: 'One tip one hand' },
     ];
-    const setsSingle = format.type !== 'best-of';
     return (
       <div className="kit-screen kit-setup" data-screen="setup-rules" style={sportVars}>
         <KitWash from={sportTint} to={sportTint} />
@@ -2200,23 +2198,6 @@ export default function MonoQuickMatch() {
           </>
         )}
 
-        {!isCricket && setPoints.length > 0 && (
-          <div className="kit-rules-group">
-            <p id="rules-points-label" className="kit-setup-label">{setsSingle ? 'Points to win' : 'Points per set'}</p>
-            <KitSegmented
-              labelledBy="rules-points-label"
-              options={setPoints.map(n => ({ id: `p-${n}`, label: String(n) }))}
-              value={setsSingle ? `p-${format.target}` : `p-${format.points}`}
-              onChange={(id) => {
-                const n = Number(id.slice(2));
-                setFormat(prev => ({ ...prev, ...(setsSingle ? { target: n } : { points: n }), ...(prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
-              }}
-            />
-          </div>
-        )}
-
-        {supportsSetsRules(sport) && <SetsRulesControls sport={sport} format={format} onChange={setFormat} names={[team1Name, team2Name]} />}
-
         <p className="kit-setup-rules">{rulesLine}</p>
         <button type="button" className="se-ctl kit-rules-done" onClick={() => setRulesOpen(false)}>
           Done
@@ -2247,7 +2228,7 @@ export default function MonoQuickMatch() {
 
       if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
 
-      if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
+      if (supportsSetsRules(sport)) return <SetsRulesStep sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // set sports with rules to edit (tennis has none)
 
       if (isCricket) return null; // cricket
 
@@ -2306,7 +2287,7 @@ export default function MonoQuickMatch() {
                     />
                   </div>
                 )}
-                {rulesRepeatPreset
+                {rulesStepNode ? null : rulesRepeatPreset
                   ? hasRulesEditor && <button type="button" className="kit-linkbtn" onClick={() => setRulesOpen(true)}>Edit rules</button>
                   : <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />}
               </section>
