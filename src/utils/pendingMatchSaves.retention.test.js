@@ -135,3 +135,69 @@ it.each([false, true])('hydrates a compact acknowledgement over only its matchin
   if (replacement) expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ payload: { score1: 9 }, storageFailed: true, state: 'pending' });
   else expect(queue.pendingMatchSaves(owner)).toEqual([]);
 });
+
+it('persists a pending save and survives reload without crypto.subtle', async () => {
+  vi.stubGlobal('crypto', {});
+  await enqueue();
+  expect(await store.loadPendingSaveFallback(owner)).toEqual([
+    expect.objectContaining({ ownerId: owner, payload, state: 'pending', storageFailed: false }),
+  ]);
+  await refresh();
+  expect(queue.pendingMatchSaves(owner)).toEqual([
+    expect.objectContaining({ ownerId: owner, payload, state: 'pending', storageFailed: false }),
+  ]);
+  await queue.attemptMatchSave(queue.pendingMatchSaves(owner)[0], vi.fn().mockResolvedValue('server-id'));
+  expectCompact(await store.loadPendingSaveFallback(owner), 1);
+  await refresh();
+  expect(queue.pendingMatchSaves(owner)).toEqual([]);
+});
+
+it('compacts and hydrates an existing save when crypto.subtle becomes unavailable', async () => {
+  const record = await enqueue();
+  expect(await store.loadPendingSaveFallback(owner)).toHaveLength(1);
+  vi.stubGlobal('crypto', {});
+  await queue.attemptMatchSave(record, vi.fn().mockResolvedValue('server-id'));
+  queue.pruneSyncedMatchSaves(owner);
+  await queue.hydratePendingMatchSaves(owner);
+  expectCompact(await store.loadPendingSaveFallback(owner), 1);
+  await refresh();
+  const send = vi.fn();
+  await queue.attemptMatchSave(record, send);
+  expect(send).not.toHaveBeenCalled();
+});
+
+it.each(['unchanged', 'changed score', 'new completion time'])('rebuilds a quick completion later without replaying an acknowledgement (%s)', async change => {
+  const options = { sport: 'football', isAuthenticated: true, user: { _id: owner } };
+  const match = { id: 'quick-result', clientMatchId: payload.clientMatchId, status: 'completed',
+    team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', completedAt: 10 };
+  writeLocal.call(localStorage, 'se_quickmatches', JSON.stringify([match]));
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(1000);
+  const firstTab = await import('../hooks/useMatchSync');
+  firstTab.enqueueQuickMatchSave(options, match);
+  await queue.hydratePendingMatchSaves(owner);
+  const send = vi.fn().mockResolvedValue('server-id');
+  await queue.attemptMatchSave(queue.pendingMatchSaves(owner)[0], send);
+  expect(send).toHaveBeenCalledTimes(1);
+  expectCompact(await store.loadPendingSaveFallback(owner), 1);
+  // Quota blocked sync metadata, so another tab still has the original unsynced snapshot.
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([match]);
+  await refresh();
+  clock.mockReturnValue(2000);
+  const laterTab = await import('../hooks/useMatchSync');
+  const rebuilt = change === 'changed score' ? { ...match, score1: 4 }
+    : change === 'new completion time' ? { ...match, completedAt: 20 } : { ...match };
+  laterTab.enqueueQuickMatchSave(options, rebuilt);
+  await queue.hydratePendingMatchSaves(owner);
+  const records = queue.pendingMatchSaves(owner);
+  if (change === 'unchanged') {
+    expect(records).toEqual([]);
+  } else {
+    expect(records).toHaveLength(1);
+    expect(records[0].payload.score1).toBe(rebuilt.score1);
+    await queue.attemptMatchSave(records[0], send);
+  }
+  expect(send).toHaveBeenCalledTimes(change === 'unchanged' ? 1 : 2);
+  expectCompact(await store.loadPendingSaveFallback(owner), 1);
+  await refresh();
+  expect(queue.pendingMatchSaves(owner)).toEqual([]);
+});
