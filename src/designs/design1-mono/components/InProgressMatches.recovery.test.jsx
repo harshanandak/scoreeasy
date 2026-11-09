@@ -3,7 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import InProgressMatches from './InProgressMatches';
 import { getAppEntryTarget, loadAppEntryState, loadInProgressMatches } from '../../../utils/appEntry';
-import { inProgressProblem } from '../../../utils/inProgressMatch';
 
 const healthy = { sport: 'volleyball', quickMatchId: 'ok', phase: 'scoring', team1Name: 'Royals', team2Name: 'Strikers', vScore1: 3, vScore2: 2, updatedAt: '2026-11-09' };
 // The draft sits under one key but names another id, so its resume link points at a draft that is not there.
@@ -69,9 +68,18 @@ describe('Home kept-match list: entries that cannot open', () => {
     expect(saved[0].matches[1]).toEqual(expect.objectContaining({ id: 'm2', status: 'pending' }));
   });
 
-  it('flags an unknown or retired sport as unable to open', () => {
-    expect(inProgressProblem({ kind: 'quick', sport: 'retired-sport', entryPath: '/retired-sport/quick' })).toBeTruthy();
-    expect(inProgressProblem({ kind: 'quick', sport: 'volleyball', entryPath: '/volleyball/quick' })).toBeNull();
+  it('one entry with damaged score data does not crash Home: it becomes a Cannot-open row with Remove', () => {
+    localStorage.setItem('se_quickmatch_draft_volleyball_ok', JSON.stringify(healthy));
+    localStorage.setItem('se_tennis_quick_draft_t1', JSON.stringify({
+      id: 't1', status: 'in-progress', team1Name: 'Ace', team2Name: 'Bee', sets: [null], updatedAt: '2026-11-08',
+    }));
+    renderList();
+    expect(screen.getByRole('button', { name: /^Resume.*Royals v Strikers/ })).toBeInTheDocument();
+    const row = screen.getByRole('button', { name: /^Remove.*Ace v Bee/ }).closest('article');
+    expect(row).toHaveTextContent("Can't open this match");
+    fireEvent.click(within(row).getByRole('button', { name: /^Remove/ }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
+    expect(localStorage.getItem('se_tennis_quick_draft_t1')).toBeNull();
   });
 
   it('never auto-resumes into a lone entry that cannot open', () => {
