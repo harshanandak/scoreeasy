@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -16,7 +17,7 @@ vi.mock('../../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ i
 vi.mock('../live/LiveBroadcastBar', () => ({ default: () => null }));
 vi.mock('../utils/confetti', () => ({ triggerConfetti: vi.fn() }));
 
-beforeEach(() => { localStorage.clear(); });
+beforeEach(() => { localStorage.clear(); setMatchStorageScope('no-provider-owner'); });
 afterEach(cleanup);
 
 const cases = [
@@ -33,7 +34,7 @@ it.each(cases)('%s finishes without a ConvexProvider and durably queues its sign
       draftState: { scoringStarted: true, score1: 2, score2: 1, sets: [set], currentSet: 0, history: [] } }],
   };
   const seed = sport === 'cricket' ? cricketFinishSeed(kind) : { [`se_${sport}`]: [tournament] };
-  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
   render(<AuthContext.Provider value={{ isAuthenticated: true, user: { _id: 'no-provider-owner' } }}>
     <MemoryRouter initialEntries={[`/${sport}/tournament/100/match/m1/score`]}><Routes>
       <Route path="/:sport/tournament/:id/match/:matchId/score" element={<Scorer />} />
@@ -48,5 +49,5 @@ it.each(cases)('%s finishes without a ConvexProvider and durably queues its sign
   expect(pendingMatchSaves('no-provider-owner')).toEqual([expect.objectContaining({
     state: 'pending', attempts: 0, payload: expect.objectContaining({ clientMatchId: `tournament:${sport}:100:m1` }),
   })]);
-  await waitFor(() => expect(JSON.parse(localStorage.getItem(`se_${sport}`))[0].matches[0].status).toBe('completed'));
+  await waitFor(() => expect(JSON.parse(localStorage.getItem(matchStorageKey(`se_${sport}`)))[0].matches[0].status).toBe('completed'));
 });

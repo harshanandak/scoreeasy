@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -158,7 +159,7 @@ describe('app entry route contract', () => {
   });
 
   it('sends returning local players with recent matches to the app dashboard route', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1' }]));
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 'recent-1' }]));
 
     renderApp('/');
 
@@ -169,7 +170,7 @@ describe('app entry route contract', () => {
   });
 
   it('sends draft-only quick-match players to the draft scorer route', async () => {
-    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
     }));
@@ -183,7 +184,7 @@ describe('app entry route contract', () => {
   });
 
   it('sends tennis quick-live draft players to the draft scorer route', async () => {
-    globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_tennis_quick_draft_match-1'), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
       status: 'in-progress',
@@ -198,7 +199,7 @@ describe('app entry route contract', () => {
   });
 
   it('sends in-progress cricket Test quick matches to the draft scorer route', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
       status: 'in-progress',
@@ -535,7 +536,7 @@ describe('app entry route contract', () => {
 
   it('does not show app bottom navigation after scoring starts', async () => {
     simulatedScoringStarted = true;
-    globalThis.localStorage.setItem('se_tennis_quick_draft_match-1', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_tennis_quick_draft_match-1'), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
       status: 'in-progress',

@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from './accountStorage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { waitFor } from '@testing-library/dom';
 import { IDBFactory } from 'fake-indexeddb';
@@ -11,7 +12,8 @@ beforeEach(async () => {
   vi.resetModules();
   vi.stubGlobal('indexedDB', new IDBFactory());
   localStorage.clear();
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...payload, id: 'quota-match', status: 'completed' }]));
+  setMatchStorageScope(owner);
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...payload, id: 'quota-match', status: 'completed' }]));
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
   queue = await import('./pendingMatchSaves');
   block = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
@@ -70,7 +72,7 @@ it('keeps fallback durable after space is freed and acknowledges without a dupli
   expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
   await refresh();
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({ score1: 2, score2: 1, sync: { status: 'synced' } });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0]).toMatchObject({ score1: 2, score2: 1, sync: { status: 'synced' } });
 });
 
 it('preserves permanent rejection across fallback refresh and only retries manually', async () => {
@@ -93,7 +95,7 @@ it('lets a local synced marker suppress a stale fallback record without sending'
   queue.enqueueMatchSave(owner, payload, 'quota-match');
   await durable();
   block.mockRestore();
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...payload, id: 'quota-match', syncOwnerId: owner, sync: { status: 'synced' } }]));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...payload, id: 'quota-match', syncOwnerId: owner, sync: { status: 'synced' } }]));
   await refresh();
   queue.pruneSyncedMatchSaves(owner);
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
@@ -130,7 +132,7 @@ it.each(['success', 'rejection'])('guards a newer durable tournament completion 
   const setItem = block.getMockImplementation();
   block.mockRestore();
   const write = Storage.prototype.setItem;
-  const fixture = result => write.call(localStorage, 'se_football', JSON.stringify([{ id: 100, matches: [{
+  const fixture = result => write.call(localStorage, matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [{
     id: 'final', status: 'completed', score1: result.score1, score2: result.score2, completedAt: result.date,
   }] }]));
   fixture(first);
@@ -152,5 +154,5 @@ it.each(['success', 'rejection'])('guards a newer durable tournament completion 
   await refresh();
   expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ payload: replay, state: outcome === 'success' ? 'failed' : 'pending' });
   if (outcome === 'success') expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ terminal: true, priorCompletionSaved: true });
-  expect(JSON.parse(localStorage.getItem('se_football'))[0].matches[0]).toMatchObject({ score1: 0, score2: 3 });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].matches[0]).toMatchObject({ score1: 0, score2: 3 });
 });

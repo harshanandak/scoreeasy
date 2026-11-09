@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from './accountStorage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ConvexError } from 'convex/values';
 import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves } from './pendingMatchSaves';
@@ -8,14 +9,15 @@ const replay = { ...first, score1: 0, score2: 3, winner: 'Beta', date: 2 };
 let owner;
 let sequence = 0;
 function writeFixture(payload) {
-  localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [], knockoutMatches: [{
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [], knockoutMatches: [{
     id: 'final', status: 'completed', score1: payload.score1, score2: payload.score2, completedAt: payload.date,
   }] }]));
 }
-const localResult = () => JSON.parse(localStorage.getItem('se_football'))[0].knockoutMatches[0];
+const localResult = () => JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].knockoutMatches[0];
 beforeEach(() => {
   localStorage.clear();
   owner = `replay-owner-${++sequence}`;
+  setMatchStorageScope(owner);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   writeFixture(first);
 });

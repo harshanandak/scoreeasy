@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,7 +11,7 @@ vi.mock('./scoring/MonoSetsLiveScore', () => ({
 }));
 
 function seedTournament() {
-  localStorage.setItem('se_volleyball', JSON.stringify([{
+  localStorage.setItem(matchStorageKey('se_volleyball'), JSON.stringify([{
     id: 't1', name: 'Club Cup', teams: [{ id: 'a', name: 'Aces' }, { id: 'b', name: 'Bees' }, { id: 'c', name: 'Cats' }],
     matches: [
       { id: 'm1', team1Id: 'a', team2Id: 'b', status: 'in-progress', draftState: { sets: [null] } },
@@ -42,7 +43,7 @@ describe('a crashed tournament scorer can discard its own fixture', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Scoring screen crashed');
     fireEvent.click(screen.getByRole('button', { name: /^Discard this match.*Aces v Bees/ }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
-    const [tournament] = JSON.parse(localStorage.getItem('se_volleyball'));
+    const [tournament] = JSON.parse(localStorage.getItem(matchStorageKey('se_volleyball')));
     expect(tournament.matches[0]).toEqual(expect.objectContaining({ id: 'm1', status: 'pending' }));
     expect(tournament.matches[0].draftState).toBeUndefined();
     expect(tournament.matches[1]).toEqual(expect.objectContaining({ id: 'm2', status: 'in-progress', draftState: { vScore1: 2, vScore2: 1 } }));

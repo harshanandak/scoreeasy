@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBDatabase, IDBFactory } from 'fake-indexeddb';
@@ -23,7 +24,7 @@ function mount() {
 }
 function fixture(result) {
   const match = { id: 'final', status: 'completed', score1: result.score1, score2: result.score2, completedAt: result.date };
-  writeLocal.call(localStorage, 'se_football', JSON.stringify([{ id: 100, matches: [match] }]));
+  writeLocal.call(localStorage, matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [match] }]));
   return match;
 }
 function failFallbackWrites() {
@@ -41,7 +42,7 @@ async function seedDurable() {
 beforeEach(() => {
   owner = `dirty-hydration-${++sequence}`;
   vi.stubGlobal('indexedDB', new IDBFactory());
-  localStorage.clear();
+  localStorage.clear(); setMatchStorageScope(owner);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
   save.mockReset().mockResolvedValue('server-id');
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
@@ -67,7 +68,7 @@ it('keeps a replacement and its warning through readable IDB hydration after its
   await waitFor(() => expect(save).toHaveBeenCalledExactlyOnceWith({ ...replacement, expectedOwnerId: owner }));
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
   expect(pendingMatchSaves(owner)).toEqual([]);
-  expect(JSON.parse(localStorage.getItem('se_football'))[0].matches).toEqual([match]);
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].matches).toEqual([match]);
 });
 
 it('keeps an uncommitted permanent rejection terminal and session-only through hydration and foreground retries', async () => {

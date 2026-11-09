@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
@@ -31,7 +32,7 @@ function open(path) {
 }
 function seed(sport, id, overrides = {}) {
   const draft = { sport, quickMatchId: id, phase: 'scoring', team1Name: `Royals ${id}`, team2Name: 'Strikers', vScore1: 12, vScore2: 9, gScore1: 12, gScore2: 9, currentSet: 0, sets: [{ score1: 12, score2: 9, completed: false }], format: { type: 'single', target: 25 }, vScoreHistory: [{ vScore1: 11, vScore2: 9, sets: [{ score1: 11, score2: 9, completed: false }], currentSet: 0 }], updatedAt: '2020-01-01', ...overrides };
-  localStorage.setItem(`se_quickmatch_draft_${sport}_${id}`, JSON.stringify(draft));
+  localStorage.setItem(matchStorageKey(`se_quickmatch_draft_${sport}_${id}`), JSON.stringify(draft));
   return draft;
 }
 beforeEach(() => { cleanup(); localStorage.clear(); });
@@ -75,7 +76,7 @@ it('the plain quick route restores the latest started match even at zero, withou
   open('/volleyball/quick');
   expect(await screen.findByRole('button', { name: 'Add point for Royals 32' })).toHaveTextContent('0');
   expect(loadInProgressMatches()).toHaveLength(2);
-  expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_31'))).toEqual(older);
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatch_draft_volleyball_31')))).toEqual(older);
 });
 
 it.each(['/app', '/history'])('%s shows named cricket innings, unplayed opponents and the chase target', async path => {
@@ -118,7 +119,7 @@ it('retains old tennis games, current set and Undo on resume, and confirms Disca
   const blank = { games1: 0, games2: 0, points1: 0, points2: 0, completed: false, isTiebreak: false };
   const previousSets = [{ ...blank, games1: 6, completed: true }, { ...blank, games1: 2, games2: 1 }, blank];
   const sets = [previousSets[0], { ...previousSets[1], points1: 1 }, blank];
-  localStorage.setItem('se_tennis_quick_draft_6', JSON.stringify({ id: 6, sport: 'tennis', status: 'in-progress', team1Name: 'Anya', team2Name: 'Ravi', format: { sets: 3 }, sets, updatedAt: '2020-01-01', draftState: { sets, currentSet: 1, history: [{ sets: previousSets, currentSet: 1 }] } }));
+  localStorage.setItem(matchStorageKey('se_tennis_quick_draft_6'), JSON.stringify({ id: 6, sport: 'tennis', status: 'in-progress', team1Name: 'Anya', team2Name: 'Ravi', format: { sets: 3 }, sets, updatedAt: '2020-01-01', draftState: { sets, currentSet: 1, history: [{ sets: previousSets, currentSet: 1 }] } }));
   open('/tennis/quick/live/6');
   expect(await screen.findByRole('button', { name: /^Anya: 15/ })).toHaveTextContent('2 games');
   expect(screen.getByText('Set 2 of 3')).toBeVisible();
@@ -127,20 +128,20 @@ it('retains old tennis games, current set and Undo on resume, and confirms Disca
   fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Anya v Ravi, 2–1 games');
-  expect(localStorage.getItem('se_tennis_quick_draft_6')).not.toBeNull();
+  expect(localStorage.getItem(matchStorageKey('se_tennis_quick_draft_6'))).not.toBeNull();
 });
 
 it('requires confirmation before deleting a scoreless tennis match', async () => {
   const blank = { games1: 0, games2: 0, points1: 0, points2: 0, completed: false, isTiebreak: false };
-  localStorage.setItem('se_tennis_quick_draft_7', JSON.stringify({ id: 7, sport: 'tennis', status: 'in-progress', team1Name: 'Anya', team2Name: 'Ravi', format: { sets: 3 }, sets: [blank, blank, blank] }));
+  localStorage.setItem(matchStorageKey('se_tennis_quick_draft_7'), JSON.stringify({ id: 7, sport: 'tennis', status: 'in-progress', team1Name: 'Anya', team2Name: 'Ravi', format: { sets: 3 }, sets: [blank, blank, blank] }));
   open('/tennis/quick/live/7');
   fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard match' }));
   const dialog = screen.getByRole('dialog');
   expect(dialog).toHaveTextContent('Anya v Ravi, 0–0 games');
-  expect(localStorage.getItem('se_tennis_quick_draft_7')).not.toBeNull();
+  expect(localStorage.getItem(matchStorageKey('se_tennis_quick_draft_7'))).not.toBeNull();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Keep scoring' }));
-  expect(localStorage.getItem('se_tennis_quick_draft_7')).not.toBeNull();
+  expect(localStorage.getItem(matchStorageKey('se_tennis_quick_draft_7'))).not.toBeNull();
 });
 
 it('History rows only Resume: Delete is not on a kept-match row (board Discard is the way to drop one)', async () => {
@@ -156,13 +157,13 @@ it('keeps an orphan terminal snapshot when restore cannot find its completed His
   open('/volleyball/quick?resume=9');
   await screen.findByRole('button', { name: /Resume Volleyball: Royals 9/ });
   expect(loadQuickMatches()).toEqual([]);
-  expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_9'))).toEqual(draft);
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatch_draft_volleyball_9')))).toEqual(draft);
 });
 
 it('keeps a legacy numeric zero identity through migration, Resume and Finish', async () => {
   const draft = seed('volleyball', 0);
-  localStorage.removeItem('se_quickmatch_draft_volleyball_0');
-  localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify(draft));
+  localStorage.removeItem(matchStorageKey('se_quickmatch_draft_volleyball_0'));
+  localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify(draft));
   open('/volleyball/quick');
   expect(await screen.findByRole('button', { name: 'Add point for Royals 0' })).toHaveTextContent('12');
   expect(loadInProgressMatches()[0].quickMatchId).toBe(0);

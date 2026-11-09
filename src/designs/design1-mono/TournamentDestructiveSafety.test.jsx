@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PropTypes from 'prop-types';
@@ -12,11 +13,11 @@ const VOLLEYBALL_KEY = 'se_volleyball';
 const FOOTBALL_KEY = 'se_football';
 
 function seedStorage(key, tournaments) {
-  globalThis.localStorage.setItem(key, JSON.stringify(tournaments));
+  globalThis.localStorage.setItem(matchStorageKey(key), JSON.stringify(tournaments));
 }
 
 function readTournaments(key) {
-  const raw = globalThis.localStorage.getItem(key);
+  const raw = globalThis.localStorage.getItem(matchStorageKey(key));
   return raw ? JSON.parse(raw) : [];
 }
 

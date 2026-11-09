@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -14,7 +15,7 @@ vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ isLi
 beforeEach(() => { cleanup(); localStorage.clear(); });
 
 it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket'])('finishing undecided %s keeps the score without awarding a result', async sport => {
-  localStorage.setItem(`se_quickmatch_draft_${sport}_41`, JSON.stringify({
+  localStorage.setItem(matchStorageKey(`se_quickmatch_draft_${sport}_41`), JSON.stringify({
     sport, quickMatchId: 41, phase: 'scoring', team1Name: 'Royals', team2Name: 'Strikers',
     vScore1: 2, vScore2: 1, gScore1: 2, gScore2: 1, currentSet: 0,
     sets: [{ score1: 2, score2: 1, completed: false }],
@@ -44,7 +45,7 @@ it.each([calculateGoalsStandings, calculateSetsStandings])('abandoned fixtures a
 });
 
 it('excludes abandoned leaders from form, streaks and biggest wins', async () => {
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 41, sport: 'football', status: 'completed', resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', score1: 2, score2: 1, date: new Date().toISOString() }]));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 41, sport: 'football', status: 'completed', resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', score1: 2, score2: 1, date: new Date().toISOString() }]));
   render(<MemoryRouter><MonoStatisticsPanel /></MemoryRouter>);
   expect(await screen.findByText('No winner yet')).toBeVisible();
   expect(screen.getByText('No form yet')).toBeVisible();
@@ -53,7 +54,7 @@ it('excludes abandoned leaders from form, streaks and biggest wins', async () =>
 });
 
 it('keeps old stored wins and excludes abandoned matches from the win-rate denominator and streak', async () => {
-  localStorage.setItem('se_quickmatches', JSON.stringify([
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([
     { id: 42, sport: 'football', status: 'completed', resultType: 'abandoned', team1: 'Royals', team2: 'Strikers', score1: 99, score2: 0, date: '2026-11-09' },
     { id: 41, sport: 'football', status: 'completed', winner: 'Royals', team1: 'Royals', team2: 'Strikers', score1: 2, score2: 1, date: '2026-11-08' },
   ]));

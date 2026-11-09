@@ -6,7 +6,7 @@ import { addAppStateChangeListener } from '../mobile/lifecycle';
 import { attemptMatchSave, hydratePendingMatchSaves, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, resumeOwnerMatchSaves, PENDING_SAVES_CHANGED, RETRY_PENDING_SAVE } from '../utils/pendingMatchSaves';
 
 export function matchSaveOwner({ isAuthenticated, clerkUser, user }) {
-  return isAuthenticated ? (clerkUser?.id || user?._id || null) : null;
+  return clerkUser?.id || (isAuthenticated ? user?._id : null) || null;
 }
 
 export function usePendingMatchSaveStatus() {
@@ -36,7 +36,7 @@ export function usePendingMatchSaves(authOverride) {
   const auth = useAuth();
   const currentAuth = authOverride || auth;
   const ownerId = matchSaveOwner(currentAuth);
-  const ready = Boolean(ownerId && currentAuth.user);
+  const ready = Boolean(ownerId && currentAuth.isAuthenticated && currentAuth.user);
   const save = useMutation(api.matches.save);
   const active = useRef(null);
   active.current = { ownerId, ready, save };

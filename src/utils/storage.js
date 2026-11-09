@@ -2,6 +2,7 @@
 import { migrateTournaments } from './formatMigration';
 import { tournamentCompletionId } from './tournamentSync';
 import { markSaveFailed, markSaveOk } from './saveHealth';
+import { scopedMatchStorage } from './accountStorage';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -221,7 +222,7 @@ const isPrivateMode = !storageAvailable;
 
 // Get the active storage backend
 function getStorage() {
-  return storageAvailable ? globalThis.localStorage : memoryFallback;
+  return scopedMatchStorage(storageAvailable ? globalThis.localStorage : memoryFallback);
 }
 
 // --- Quota Handling ---

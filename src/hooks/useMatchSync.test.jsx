@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useMatchSync } from './useMatchSync';
@@ -9,7 +10,7 @@ vi.mock('convex/react', () => ({ useMutation: () => save }));
 const options = { sport: 'football', isAuthenticated: true, user: { _id: 'owner' }, team1Players: [], team2Players: [] };
 const match = { id: 'm1', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', date: '2026-11-01T12:00:00Z' };
 const key = 'se_pending_match:owner:quick%3Afootball%3Am1';
-beforeEach(() => { localStorage.clear(); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
+beforeEach(() => { localStorage.clear(); setMatchStorageScope('owner'); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 it('keeps a durable pending record when a save fails', async () => {
@@ -17,18 +18,18 @@ it('keeps a durable pending record when a save fails', async () => {
   const { result } = renderHook(() => useMatchSync(options));
   await act(async () => { await result.current.syncMatch(match); });
   expect(result.current.syncState).toBe('failed');
-  expect(JSON.parse(localStorage.getItem(key))).toMatchObject({ payload: { clientMatchId: 'quick:football:m1' }, state: 'failed' });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toMatchObject({ payload: { clientMatchId: 'quick:football:m1' }, state: 'failed' });
 });
 
 it('reconnect retries the same clientMatchId and removes only the confirmed record', async () => {
   save.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValue('server-id');
   const { result } = renderHook(() => useMatchSync(options));
   await act(async () => { await result.current.syncMatch(match); });
-  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(key)).nextAttemptAt);
+  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(matchStorageKey(key))).nextAttemptAt);
   await act(async () => { window.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
   expect(save.mock.calls[1][0].clientMatchId).toBe(save.mock.calls[0][0].clientMatchId);
-  await waitFor(() => expect(localStorage.getItem(key)).toBeNull());
+  await waitFor(() => expect(localStorage.getItem(matchStorageKey(key))).toBeNull());
   expect(result.current.syncState).toBe('synced');
 });
 
@@ -36,19 +37,19 @@ it('recovers a pending save after the hook unmounts and remounts', async () => {
   save.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValue('server-id');
   const first = renderHook(() => useMatchSync(options));
   await act(async () => { await first.result.current.syncMatch(match); });
-  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(key)).nextAttemptAt);
+  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(matchStorageKey(key))).nextAttemptAt);
   first.unmount();
   renderHook(() => useMatchSync(options));
   await act(async () => { window.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
-  expect(localStorage.getItem(key)).toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
 });
 
 it('leaves guest results local without sync status or pending records', async () => {
   const { result } = renderHook(() => useMatchSync({ ...options, isAuthenticated: false, user: null }));
   await act(async () => { await result.current.syncMatch(match); });
   expect(result.current.syncState).toBe('idle');
-  expect(localStorage.getItem(key)).toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
   expect(save).not.toHaveBeenCalled();
 });
 
@@ -59,7 +60,7 @@ it('does not retry another account pending records', async () => {
   rerender({ ...options, user: { _id: 'other-owner' } });
   await act(async () => { window.dispatchEvent(new Event('online')); });
   expect(save).toHaveBeenCalledTimes(1);
-  expect(localStorage.getItem(key)).not.toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).not.toBeNull();
 });
 
 it('backs off failed requests instead of retrying in a tight loop', async () => {
@@ -78,24 +79,25 @@ it('backs off failed requests instead of retrying in a tight loop', async () => 
 });
 
 it('retries on foreground and retains the local score after a failure', async () => {
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, sport: 'football', status: 'completed' }]));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...match, sport: 'football', status: 'completed' }]));
   save.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValue('server-id');
   const { result } = renderHook(() => useMatchSync(options));
   await act(async () => { await result.current.syncMatch(match); });
-  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(key)).nextAttemptAt);
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({ score1: 2, score2: 1 });
+  vi.spyOn(Date, 'now').mockReturnValue(JSON.parse(localStorage.getItem(matchStorageKey(key))).nextAttemptAt);
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0]).toMatchObject({ score1: 2, score2: 1 });
   await act(async () => { window.dispatchEvent(new Event('focus')); });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].sync.status).toBe('synced');
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0].sync.status).toBe('synced');
 });
 
 it('queues during account bootstrap and sends when that same account is ready', async () => {
   const initialProps = { ...options, user: null, clerkUser: { id: 'clerk-owner' } };
+  setMatchStorageScope(initialProps.clerkUser.id);
   save.mockResolvedValue('server-id');
   const { result, rerender } = renderHook((props) => useMatchSync(props), { initialProps });
   await act(async () => { await result.current.syncMatch(match); });
   expect(save).not.toHaveBeenCalled();
-  expect(localStorage.getItem('se_pending_match:clerk-owner:quick%3Afootball%3Am1')).not.toBeNull();
+  expect(localStorage.getItem(matchStorageKey('se_pending_match:clerk-owner:quick%3Afootball%3Am1'))).not.toBeNull();
   rerender({ ...initialProps, user: options.user });
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
 });
@@ -117,7 +119,7 @@ it.each([
   save.mockRejectedValue(error);
   const { result } = renderHook(() => useMatchSync(options));
   await act(async () => { await result.current.syncMatch(match); });
-  expect(JSON.parse(localStorage.getItem(key))).toMatchObject({ state: 'failed', terminal: true });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toMatchObject({ state: 'failed', terminal: true });
   await act(async () => {
     window.dispatchEvent(new Event('online'));
     window.dispatchEvent(new Event('focus'));
@@ -128,7 +130,7 @@ it.each([
   save.mockResolvedValue('server-id');
   await act(async () => { await result.current.retrySync(); });
   expect(save).toHaveBeenCalledTimes(2);
-  expect(localStorage.getItem(key)).toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
 });
 
 it('foreground and reconnect respect the deadline; only manual Retry overrides it', async () => {
