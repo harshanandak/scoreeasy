@@ -2,6 +2,7 @@ import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTourname
 import { ConvexError } from 'convex/values';
 import { tournamentCompletionId } from './tournamentSync';
 import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { guestClaimKey, readGuestClaim } from './guestMatchOwnership';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -164,6 +165,10 @@ function write(record) {
 export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch, quickCompletion) {
   const key = keyFor(ownerId, payload.clientMatchId);
   const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
+  if (local?.syncOwnerId && local.syncOwnerId !== ownerId) return undefined;
+  let claimed;
+  try { claimed = localStorage.getItem(guestClaimKey(payload.clientMatchId)) !== null; } catch { /* Ordinary signed-in saves retain the existing IndexedDB fallback. Guest claiming requires a durable claim first. */ }
+  if (claimed && readGuestClaim(payload.clientMatchId)?.ownerId !== ownerId) return undefined;
   const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
   const existing = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === payload.clientMatchId);
   if (existing && (!tournamentMatch || (existing.completionId === completionId && JSON.stringify(existing.payload) === JSON.stringify(payload)))) return existing;

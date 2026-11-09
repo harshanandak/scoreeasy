@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { claimGuestMatchSaves } from './guestMatchUploads';
+import { claimGuestMatchSaves, consumeGuestUploadNotice } from './guestMatchUploads';
+import { enqueueQuickMatchSave } from '../hooks/useMatchSync';
 import { loadQuickMatch, saveQuickMatch, saveSportTournament, loadSportTournaments } from './storage';
 import { attemptMatchSave, pendingMatchSaves } from './pendingMatchSaves';
 
@@ -27,6 +28,26 @@ describe('automatic guest upload claim', () => {
     saveQuickMatch({ ...guest, syncOwnerId: 'X', sync: { status: 'synced' } });
     expect(claimGuestMatchSaves('Y')).toEqual([]);
   });
+  it('keeps the first account binding when a stale board overwrites local sync metadata', () => {
+    saveQuickMatch({ ...guest, id: 'stale' });
+    claimGuestMatchSaves('X');
+    saveQuickMatch({ ...guest, id: 'stale' });
+    expect(claimGuestMatchSaves('Y')).toEqual([]);
+    expect(enqueueQuickMatchSave({ sport: 'football', isAuthenticated: true, user: { _id: 'Y' } }, { ...guest, id: 'stale' }).status).toBe('idle');
+    expect(pendingMatchSaves('Y')).toEqual([]);
+  });
+  it('leaves the result local when the owner claim cannot be persisted', () => {
+    saveQuickMatch({ ...guest, id: 'quota' });
+    const original = Storage.prototype.setItem;
+    const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (key.startsWith('se_guest_match_claim:')) throw new DOMException('Full', 'QuotaExceededError');
+      return original.call(this, key, value);
+    });
+    expect(claimGuestMatchSaves('X')).toEqual([]);
+    expect(loadQuickMatch('quota').syncOwnerId).toBeUndefined();
+    blocked.mockRestore();
+    expect(claimGuestMatchSaves('X')).toHaveLength(1);
+  });
   it('queues guest tournament results through the same owner-bound queue', () => {
     saveSportTournament('se_football', { id: 'cup', teams: [{ id: 'a', name: 'North' }, { id: 'b', name: 'South' }], matches: [{ ...guest, team1Id: 'a', team2Id: 'b' }] });
     expect(claimGuestMatchSaves('X')).toContain('tournament:football:cup:guest');
@@ -39,6 +60,7 @@ describe('automatic guest upload claim', () => {
     claimGuestMatchSaves('X');
     const save = vi.fn().mockResolvedValue('cloud-id');
     const record = pendingMatchSaves('X')[0];
+    expect(consumeGuestUploadNotice('X')).toBe(0);
     expect((await attemptMatchSave(record, save)).status).toBe('pending');
     expect(save).not.toHaveBeenCalled();
     Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
@@ -47,5 +69,8 @@ describe('automatic guest upload claim', () => {
     expect(claimGuestMatchSaves('X')).toEqual([]);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0][0].expectedOwnerId).toBe('X');
+    expect(consumeGuestUploadNotice('Y')).toBe(0);
+    expect(consumeGuestUploadNotice('X')).toBe(1);
+    expect(consumeGuestUploadNotice('X')).toBe(0);
   });
 });
