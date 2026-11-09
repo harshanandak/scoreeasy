@@ -54,7 +54,7 @@ describe('KabaddiSetup rules panel saves what the old panel saved', () => {
     render(<Host />);
     expect(screen.queryByTestId('kabaddi-rules-panel')).toBeNull();
     openRules();
-    expect(screen.getByRole('button', { name: 'Done' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Change rules' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('kabaddi-rules-panel')).toBeInTheDocument();
   });
 

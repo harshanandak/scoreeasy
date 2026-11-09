@@ -3,6 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
+import { teamColourGroup } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ sport: 'kabaddi', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
@@ -153,8 +154,8 @@ describe('Kabaddi shared goals board', () => {
   it('offers the team colour pickers in Kabaddi setup', () => {
     ctx.draft = null;
     render(<MonoQuickMatch />);
-    expect(screen.getByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
+    expect(teamColourGroup('A')).toBeInTheDocument();
+    expect(teamColourGroup('B')).toBeInTheDocument();
   });
 
   it('retains the classic goals scorer for an explicit registry opt-out', () => {

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
+import { findTeamColourGroup, teamColourGroup } from '../../test/teamColour';
 
 // Direction E in quick match: team colours picked on setup, kept in the draft, shared to the
 // live meta, and painted on the board for sports that opt in (volleyball first). Drives the real
@@ -256,8 +257,8 @@ describe('quick match team colour: setup', () => {
   it('offers a colour picker per team for volleyball', async () => {
     ctx.sport = 'volleyball';
     render(<MonoQuickMatch />);
-    const teamA = await screen.findByRole('group', { name: 'Team A colour' });
-    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
+    const teamA = await findTeamColourGroup('A');
+    expect(teamColourGroup('B')).toBeInTheDocument();
     const yellow = within(teamA).getByRole('button', { name: 'Yellow' });
     fireEvent.click(yellow);
     expect(yellow).toHaveAttribute('aria-pressed', 'true');

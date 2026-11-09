@@ -1,5 +1,5 @@
-// Kit S2 quick setup parts (plan 2026-10-22 §9 S2, prototype `setup`): the 48px segmented control,
-// the 48px stepper and the matchup preview. Colour comes only from --se-color-* tokens and engine
+// Kit S2 quick setup parts (plan 2026-10-22 §9 S2, prototype `setup`): the 48px segmented control
+// and the 48px stepper. Colour comes only from --se-color-* tokens and engine
 // output (--team-a-*, --team-b-* from teamColour.js via useTeamColours), so dark mode is a token swap.
 import PropTypes from 'prop-types';
 import './kit.css';
@@ -60,50 +60,4 @@ KitStepper.propTypes = {
   onIncrease: PropTypes.func.isRequired,
   canDecrease: PropTypes.bool,
   canIncrease: PropTypes.bool,
-};
-
-/**
- * The setup's one hand-drawn accent: a loose "v" between the two teams (the ui-back/ui-chev stroke
- * family from the hand-drawn layer, 2.1 on the 24 grid, in ink on the surface disc).
- */
-function HandV() {
-  return (
-    <svg className="kit-mu-v" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6.3 7.1C8.2 10.7 9.9 14.3 11.8 18.3" />
-      <path d="M11.3 17.8C13.3 13.8 15.4 9.9 17.9 5.6" />
-    </svg>
-  );
-}
-
-/**
- * The matchup preview: two keys the way the board will show them. Team-colour sports paint each
- * key in its engine-gated team gradient (the engine's on-colour for the text, re-derived on every
- * pick, clash split included); other sports get neutral surface keys. Decorative for assistive
- * tech: the names live in the inputs and the colours in the pickers.
- */
-export function MatchupPreview({ nameA, nameB, coloured, colourStyle }) {
-  return (
-    <div
-      className={`kit-mu${coloured ? ' is-team' : ''}`}
-      style={coloured ? colourStyle : undefined}
-      aria-hidden="true"
-      data-testid="matchup-preview"
-    >
-      <div className="kit-mu-key kit-mu-a">
-        <b>{nameA.trim() || 'Team A'}</b>
-        <span>0</span>
-      </div>
-      <div className="kit-mu-key kit-mu-b">
-        <b>{nameB.trim() || 'Team B'}</b>
-        <span>0</span>
-      </div>
-      <span className="kit-mu-vs"><HandV /></span>
-    </div>
-  );
-}
-MatchupPreview.propTypes = {
-  nameA: PropTypes.string.isRequired,
-  nameB: PropTypes.string.isRequired,
-  coloured: PropTypes.bool,
-  colourStyle: PropTypes.object,
 };

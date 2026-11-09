@@ -5,6 +5,7 @@ import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
 import * as sportRegistry from '../../models/sportRegistry';
+import { teamColourGroup } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -245,13 +246,13 @@ describe('MonoQuickMatch setup clarity', () => {
     renderQuickMatch();
     fireEvent.change(await screen.findByRole('textbox', { name: 'Team A name' }), { target: { value: 'Royals' } });
     const preview = screen.getByTestId('matchup-preview');
-    expect(preview).toHaveTextContent('Royals');
+    expect(within(preview).getByRole('textbox', { name: 'Team A name' })).toHaveValue('Royals');
 
-    fireEvent.click(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Yellow' }));
+    fireEvent.click(within(teamColourGroup('A')).getByRole('button', { name: 'Yellow' }));
     const expected = deriveTeamColours('#facc15', DEFAULT_TEAM_COLOURS.b);
     expect(preview.style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
     expect(preview.style.getPropertyValue('--team-a-on')).toBe(expected.A.on);
-    expect(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Yellow' }))
+    expect(within(teamColourGroup('A')).getByRole('button', { name: 'Yellow' }))
       .toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -270,8 +271,8 @@ describe('MonoQuickMatch setup clarity', () => {
   it('offers cricket team colours and uses them in its matchup preview', async () => {
     renderQuickMatch('/cricket/quick');
     expect(await screen.findByTestId('matchup-preview')).toHaveClass('is-team');
-    expect(screen.getByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
+    expect(teamColourGroup('A')).toBeInTheDocument();
+    expect(teamColourGroup('B')).toBeInTheDocument();
   });
 
   it('switches format from the segmented control and states the new rules', async () => {
@@ -314,6 +315,19 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(await screen.findByText('21 points a set · win by 2 · decider to 15 · cap 27')).toBeInTheDocument();
   });
 
+  it.each([['volleyball', 'Edit rules'], ['kabaddi', 'Change rules'], ['tennis', null], ['cricket', null], ['football', null]])(
+    '%s: Start is available with the defaults and the rules sit on one row',
+    async (sport, rulesAction) => {
+      renderQuickMatch(`/${sport}/quick`);
+      const start = await screen.findByRole('button', { name: /^Start / });
+      expect(start).not.toHaveAttribute('aria-disabled', 'true');
+      expect(screen.getByRole('textbox', { name: 'Team A name' })).toHaveValue('Team A');
+      expect(screen.queryAllByRole('group', { name: /colour$/ })).toHaveLength(0);
+      if (rulesAction) expect(screen.getByRole('button', { name: rulesAction })).toBeInTheDocument();
+      else expect(screen.queryByRole('button', { name: /rules$/i })).toBeNull();
+    },
+  );
+
   it('keeps the switch to tournament setup', async () => {
     renderQuickMatchWithLocation('/football/quick');
     fireEvent.click(await screen.findByRole('button', { name: 'Switch to tournament setup' }));
@@ -329,11 +343,11 @@ describe('MonoQuickMatch setup clarity', () => {
       </MemoryRouter>,
     );
     expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Royals');
-    expect(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Maroon' }))
+    expect(within(teamColourGroup('A')).getByRole('button', { name: 'Maroon' }))
       .toHaveAttribute('aria-pressed', 'true');
-    expect(within(screen.getByRole('group', { name: 'Team B colour' })).getByRole('button', { name: 'Sky' }))
+    expect(within(teamColourGroup('B')).getByRole('button', { name: 'Sky' }))
       .toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('matchup-preview')).toHaveTextContent('Strikers');
+    expect(within(screen.getByTestId('matchup-preview')).getByRole('textbox', { name: 'Team B name' })).toHaveValue('Strikers');
   });
 });
 

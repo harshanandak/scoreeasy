@@ -5,6 +5,7 @@ import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
 import { sportMarkMaskUrl } from '../../lib/sportMarks';
 import { getGoalsSports, isTeamColourSport } from '../../models/sportRegistry';
+import { teamColourGroup } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ sport: 'hockey', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
@@ -142,8 +143,8 @@ describe('Hockey shared goals board', () => {
 
   it('offers team colour selection in hockey setup', () => {
     ctx.draft=null; render(<MonoQuickMatch />);
-    fireEvent.click(within(screen.getByRole('group', {name:'Team A colour'})).getByRole('button', {name:'Yellow'}));
-    fireEvent.click(within(screen.getByRole('group', {name:'Team B colour'})).getByRole('button', {name:'Blue'}));
+    fireEvent.click(within(teamColourGroup('A')).getByRole('button', {name:'Yellow'}));
+    fireEvent.click(within(teamColourGroup('B')).getByRole('button', {name:'Blue'}));
     fireEvent.change(screen.getByLabelText('Team A name'), {target:{value:'Strikers'}});
     fireEvent.change(screen.getByLabelText('Team B name'), {target:{value:'United'}});
     fireEvent.click(screen.getByRole('button', {name:'Start hockey'}));

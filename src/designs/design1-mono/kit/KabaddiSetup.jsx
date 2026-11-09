@@ -3,6 +3,7 @@ import { KABADDI_PRESETS, kabaddiRulesLine, resolveKabaddiRules } from '../../..
 import { KitChoiceGrid } from './KitFormControls';
 import { KitSegmented } from './KitSetupParts';
 import KabaddiRulesPanel from './KabaddiRulesPanel';
+import RulesRow from './RulesRow';
 
 const NAMED = KABADDI_PRESETS.filter(p => p.id !== 'custom');
 const CUSTOM = KABADDI_PRESETS.find(p => p.id === 'custom');
@@ -21,11 +22,8 @@ export default function KabaddiSetup({ format, onChange, names = ['Team A', 'Tea
     <h2 id="kabaddi-format-label" className="kit-setup-label">What are you playing?</h2>
     <KitChoiceGrid labelledBy="kabaddi-format-label" options={options} value={isNamed ? r.presetId : 'custom'}
       onChange={id => { if (id !== 'custom') setRules(resolveKabaddiRules(id)); }} />
-    <div className="kit-setup-rules-row">
-      <p className="kit-setup-rules">{kabaddiRulesLine(r)}</p>
-      <button type="button" className="se-ctl kit-rules-toggle" aria-expanded={expanded} aria-controls="kabaddi-rules-panel"
-        onClick={() => setExpanded(v => !v)}>{expanded ? 'Done' : 'Change rules'}</button>
-    </div>
+    <RulesRow label="Rules" summary={kabaddiRulesLine(r)} actionLabel="Change rules" expanded={expanded}
+      controls="kabaddi-rules-panel" onClick={() => setExpanded(v => !v)} />
     {expanded && <div id="kabaddi-rules-panel"><KabaddiRulesPanel rules={r} onChange={setRules} /></div>}
     <div style={{ marginTop: 16 }}>
       <p id="kabaddi-first-raid" className="kit-setup-label">First raid</p>

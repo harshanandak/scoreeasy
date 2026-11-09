@@ -3,6 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
+import { teamColourGroup } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
@@ -133,8 +134,8 @@ describe('Football shared goals board', () => {
 
   it('offers team colour selection in football setup', () => {
     ctx.draft=null; render(<MonoQuickMatch />);
-    fireEvent.click(within(screen.getByRole('group', {name:'Team A colour'})).getByRole('button', {name:'Yellow'}));
-    fireEvent.click(within(screen.getByRole('group', {name:'Team B colour'})).getByRole('button', {name:'Blue'}));
+    fireEvent.click(within(teamColourGroup('A')).getByRole('button', {name:'Yellow'}));
+    fireEvent.click(within(teamColourGroup('B')).getByRole('button', {name:'Blue'}));
     fireEvent.change(screen.getByLabelText('Team A name'), {target:{value:'Rovers'}});
     fireEvent.change(screen.getByLabelText('Team B name'), {target:{value:'City'}});
     fireEvent.click(screen.getByRole('button', {name:'Start football'}));

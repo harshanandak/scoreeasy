@@ -56,7 +56,9 @@ import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
 import { getSetupStartLabel } from '../../utils/startActions';
 import { KitWash, GoArrow } from './kit/KitParts';
-import { KitSegmented, KitStepper, MatchupPreview } from './kit/KitSetupParts';
+import { KitSegmented, KitStepper } from './kit/KitSetupParts';
+import TeamRows from './kit/TeamRows';
+import RulesRow from './kit/RulesRow';
 import {
   applyFormatChoice,
   applyGoalsDetail,
@@ -2211,25 +2213,15 @@ export default function MonoQuickMatch() {
           </div>
         )}
 
-        <MatchupPreview nameA={team1Name} nameB={team2Name} coloured={teamColourOn} colourStyle={teamColourStyle} />
-
-        {teamFields.map(t => (
-          <div key={t.n} ref={t.ref} className="kit-setup-field">
-            <label htmlFor={`quick-team-${t.n}`} className="kit-setup-label">
-              Team {t.letter} name
-            </label>
-            <input
-              id={`quick-team-${t.n}`}
-              type="text"
-              className="kit-setup-input"
-              placeholder={`Team ${t.letter}`}
-              value={t.name}
-              onChange={e => { t.setName(e.target.value); t.setShow(e.target.value.length >= 2); }}
-              onFocus={() => t.setShow(true)}
-              maxLength={50}
-              autoComplete="off"
-            />
-            {t.show && (t.loading || t.empty || t.results.length > 0) && (
+        <TeamRows
+          coloured={teamColourOn}
+          colourStyle={teamColourStyle}
+          teams={teamFields.map(t => ({
+            n: t.n, letter: t.letter, name: t.name, colour: t.colour, rowRef: t.ref,
+            onName: e => { t.setName(e.target.value); t.setShow(e.target.value.length >= 2); },
+            onFocus: () => t.setShow(true),
+            onColour: t.setColour,
+            suggestions: t.show && (t.loading || t.empty || t.results.length > 0) && (
               <div className="kit-setup-suggest">
                 {t.loading && <p role="status">Searching teams…</p>}
                 {t.empty && <p role="status">No saved teams match “{t.query}”.</p>}
@@ -2245,12 +2237,9 @@ export default function MonoQuickMatch() {
                   </button>
                 ))}
               </div>
-            )}
-            {teamColourOn && (
-              <TeamColourPicker label={`Team ${t.letter} colour`} value={t.colour} onChange={t.setColour} />
-            )}
-          </div>
-        ))}
+            ),
+          }))}
+        />
 
         {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
         {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
@@ -2268,22 +2257,18 @@ export default function MonoQuickMatch() {
               />
             </div>
           )}
-          <div className="kit-setup-rules-row">
-            <p className="kit-setup-rules">{rulesLine}</p>
-            {hasRulesEditor && (
-              <button type="button" className="kit-setup-link" onClick={() => setRulesOpen(true)}>
-                Edit rules
-              </button>
-            )}
-          </div>
+          <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />
         </section>
         )}
 
         <div className="kit-setup-field">
-          <button type="button" onClick={toggleRosterSetup} className="kit-setup-link" aria-expanded={showRosterSetup}>
-            {showRosterSetup ? 'Hide players' : 'Add players'}
-            {playerCount > 0 && !showRosterSetup && <span>&nbsp;({playerCount})</span>}
-          </button>
+          <RulesRow
+            label="Players"
+            summary={playerCount > 0 ? `${playerCount} added` : 'Optional: name who plays'}
+            actionLabel={showRosterSetup ? 'Hide players' : `Add players${playerCount > 0 ? ` (${playerCount})` : ''}`}
+            expanded={showRosterSetup}
+            onClick={toggleRosterSetup}
+          />
           {showRosterSetup && (
             <div className="kit-setup-roster">
               {teamFields.map(t => (
