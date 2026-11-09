@@ -1,6 +1,7 @@
 // LocalStorage utility for persistent data
 import { migrateTournaments } from './formatMigration';
 import { tournamentCompletionId } from './tournamentSync';
+import { markSaveFailed, markSaveOk } from './saveHealth';
 
 // One-time migration from old 'gamescore_' prefix to 'se_'
 function migrateStoragePrefix() {
@@ -232,8 +233,11 @@ function getStorage() {
 function safeSave(key, data) {
   try {
     getStorage().setItem(key, JSON.stringify(data));
+    markSaveOk(key);
     return { success: true };
   } catch (error) {
+    // Remember the failure until this key saves again: the newest data may live only in memory.
+    markSaveFailed(key);
     if (
       error?.name === 'QuotaExceededError' ||
       error?.code === 22 ||
@@ -305,6 +309,7 @@ export const loadData = (key, defaultValue = null) => {
 export const clearData = (key) => {
   try {
     getStorage().removeItem(key);
+    markSaveOk(key);
     return true;
   } catch (error) {
     console.error('Error clearing data:', error);

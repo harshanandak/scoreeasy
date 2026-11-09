@@ -15,8 +15,11 @@ import { setupNativeChrome } from './mobile/nativeChrome';
 import { shouldLoadReactGrab } from './utils/reactGrab';
 import './index.css';
 import { purgeRetiredSportData } from './utils/storage';
+import { installChunkReloadHandler } from './utils/chunkReload';
+import ErrorBoundary from './components/ErrorBoundary';
 
 purgeRetiredSportData();
+installChunkReloadHandler();
 
 const CloudAuthRoot = lazy(() => import('./auth/CloudAuthRoot'));
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -367,6 +370,8 @@ function RootApp() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RootApp />
+    <ErrorBoundary>
+      <RootApp />
+    </ErrorBoundary>
   </React.StrictMode>,
 );
