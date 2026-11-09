@@ -236,7 +236,10 @@ describe('documented contrast pairs', () => {
 // Tournaments in Kit, PR 3 (cricket hub), 403 -> 293: MonoCricketTournament drops its inline #111/#888/#bbb/#eee/
 // #0066ff greys and blues, the NRR red and green and the live-card wash (-110) for tokens; the cricket
 // fixture view and the new fixture parts add 0.
-const BASELINE = 293;
+// Tournaments in Kit, PR 4 (setup), 293 -> 180: MonoTournamentSetup drops its inline #111/#888/#bbb/#ddd/#eee/
+// #fff greys, the squad-warning ambers and reds and the sticky-bar shadow (-113) for tokens; the new
+// tournamentSetup.css and setup parts use tokens only (+0).
+const BASELINE = 180;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
