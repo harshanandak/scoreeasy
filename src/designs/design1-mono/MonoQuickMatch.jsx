@@ -14,6 +14,8 @@ import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabad
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
+import { SetsRulesStep, TennisRulesStep } from './kit/SetsSetup';
+import { CricketRulesStep } from './kit/CricketSetup';
 import { GoalsGameStep, GoalsRulesStep } from './kit/GoalsSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
@@ -49,8 +51,8 @@ import LiveBroadcastBar from './live/LiveBroadcastBar';
 import PlayerSearchInput from './components/PlayerSearchInput';
 import { cloneSetsSnapshot } from '../../utils/cloneSetsSnapshot';
 import { applySetPoint, getBestOfResultScore, getSetPointState, getSetWinRule, isSetComplete } from '../../utils/quickMatchSets';
-import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, supportsSetsRules } from '../../models/setsRules';
-import SetsRulesControls, { ServerChoice } from './scoring/SetsRulesControls';
+import { broadcastServer, endChangeDue, firstServerForSet, freezeSetsFormat, serveAfterPoint, supportsSetsRules, applySetsPreset } from '../../models/setsRules';
+import { ServerChoice } from './scoring/SetsRulesControls';
 import { buildResultShareText, getShareStatusText } from '../../utils/quickMatchResult';
 import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
@@ -65,13 +67,15 @@ import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs, loadCustomSetup, saveC
 import SportMark from './kit/SportMark';
 import {
   isCustomSetup,
+  setupSourcePreset,
+  matchesSetupPreset,
+  setupRuleValues,
   applyFormatChoice,
   applyGoalsDetail,
   describeFormatChoices,
   formatChoices,
   goalsDetail,
   selectedFormatChoice,
-  setPointPresets,
   setupRulesLine,
 } from './kit/setupFormats';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
@@ -609,7 +613,8 @@ export default function MonoQuickMatch() {
       setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
       setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
       setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
-      if (saved.customSetupSource) setCustomSetupSource(saved.customSetupSource);
+      const savedSource = saved.customSetupSource || (isCricket && lastCustomSetup && matchesSetupPreset(setupRuleValues(sportConfig, saved.format), setupRuleValues(sportConfig, lastCustomSetup.format)) ? lastCustomSetup.source : null);
+      if (savedSource) setCustomSetupSource(savedSource);
       if (saved.format) setFormat(saved.format);
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
@@ -660,7 +665,9 @@ export default function MonoQuickMatch() {
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
     setPeriodState(draft.periodState?.version === 1 ? draft.periodState : draft.format?.periods?.version === 1 ? createPeriodMatch(draft.format.periods, Date.now()) : null);
-    if (draft.customSetupSource) setCustomSetupSource(draft.customSetupSource);
+    const restoredSource = draft.customSetupSource || (isCricket && lastCustomSetup && matchesSetupPreset(setupRuleValues(sportConfig, draft.format), setupRuleValues(sportConfig, lastCustomSetup.format)) ? lastCustomSetup.source : null);
+    if (restoredSource) setCustomSetupSource(restoredSource);
+    if (isCricket && draft.format?.preset) { setCricketPreset(draft.format.preset); setFormatMode(draft.format.preset === 'custom' ? 'custom' : 'standard'); }
     if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -1941,12 +1948,9 @@ export default function MonoQuickMatch() {
   };
 
   // === SETUP PHASE ===
-  // Kit S2 (plan 2026-10-22 §9 S2): one compact screen. The matchup preview, both teams (name +
-  // colour), the format as one segmented control and its rules line, then the one Go. Cricket's
-  // Gully/Custom and the sets sports' points live one tap away in the rules editor.
+  // Game chooses the format, Teams records teams and toss, and Rules edits the current values.
   const cricketHasRules = isCricket && (cricketPreset === 'gully' || cricketPreset === 'custom');
-  const setPoints = engine === 'sets' && !isTennis ? setPointPresets(sportConfig) : [];
-  const hasRulesEditor = cricketHasRules || setPoints.length > 0;
+  const hasRulesEditor = cricketHasRules;
   const selectedCricketFormat = isCricket
     ? CRICKET_FORMATS.find(f => f.id === cricketPreset)
     : null;
@@ -1970,6 +1974,7 @@ export default function MonoQuickMatch() {
   const chooseCricketFormat = (presetId) => {
     const preset = CRICKET_FORMATS.find(f => f.id === presetId);
     if (!preset) return;
+    setCustomSetupSource(null);
     setCricketPreset(preset.id);
     setFormatMode(preset.customizable ? 'custom' : 'standard');
     setFormat(buildCricketFormat(preset.id));
@@ -1981,7 +1986,13 @@ export default function MonoQuickMatch() {
       chooseCricketFormat(choiceId);
       return;
     }
-    setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
+    const next = applyFormatChoice(sportConfig, choiceId, format);
+    if (supportsSetsRules(sport)) {
+      const source = setupSourcePreset(sportConfig, format, customSetupSource);
+      const customised = isCustomSetup(next, source, sportConfig);
+      setCustomSetupSource(customised ? source : null);
+      setFormat(customised ? applySetsPreset(sport, 'custom', next) : next);
+    } else setFormat(next);
   };
   // New matches always start with standard rules; saved custom rules are opt-in on Rules.
   useEffect(() => { setSetupStep(0); if (!restoredDraftRef.current && !resultMatchId) setCustomSetupSource(null); }, [sport]);
@@ -2051,7 +2062,6 @@ export default function MonoQuickMatch() {
       { key: 'trialBall', label: 'Trial ball' },
       { key: 'oneTipOneHand', label: 'One tip one hand' },
     ];
-    const setsSingle = format.type !== 'best-of';
     return (
       <div className="kit-screen kit-setup" data-screen="setup-rules" style={sportVars}>
         <KitWash from={sportTint} to={sportTint} />
@@ -2199,23 +2209,6 @@ export default function MonoQuickMatch() {
           </>
         )}
 
-        {!isCricket && setPoints.length > 0 && (
-          <div className="kit-rules-group">
-            <p id="rules-points-label" className="kit-setup-label">{setsSingle ? 'Points to win' : 'Points per set'}</p>
-            <KitSegmented
-              labelledBy="rules-points-label"
-              options={setPoints.map(n => ({ id: `p-${n}`, label: String(n) }))}
-              value={setsSingle ? `p-${format.target}` : `p-${format.points}`}
-              onChange={(id) => {
-                const n = Number(id.slice(2));
-                setFormat(prev => ({ ...prev, ...(setsSingle ? { target: n } : { points: n }), ...(prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
-              }}
-            />
-          </div>
-        )}
-
-        {supportsSetsRules(sport) && <SetsRulesControls sport={sport} format={format} onChange={setFormat} names={[team1Name, team2Name]} />}
-
         <p className="kit-setup-rules">{rulesLine}</p>
         <button type="button" className="se-ctl kit-rules-done" onClick={() => setRulesOpen(false)}>
           Done
@@ -2246,9 +2239,11 @@ export default function MonoQuickMatch() {
 
       if (supportsGoalPeriods(sport)) return <GoalsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} />; // goals sports (basketball, football, hockey)
 
-      if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
+      if (isTennis) return <TennisRulesStep format={format} onChange={setFormat} />;
+      if (supportsSetsRules(sport)) return <SetsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // Set sports use their existing editable rules; tennis keeps its fixed scoring rules.
 
-      if (isCricket) return null; // cricket
+      if (isCricket) return <CricketRulesStep sportConfig={sportConfig} format={format} cricketPreset={cricketPreset} source={customSetupSource} onSourceChange={setCustomSetupSource}
+        onChange={next => { setFormat(next); setCricketPreset(next.preset); setFormatMode(next.preset === 'custom' ? 'custom' : 'standard'); }} />; // cricket
 
       return null;
     })();
@@ -2304,7 +2299,7 @@ export default function MonoQuickMatch() {
                     />
                   </div>
                 )}
-                {rulesRepeatPreset
+                {rulesStepNode ? null : rulesRepeatPreset
                   ? hasRulesEditor && <button type="button" className="kit-linkbtn" onClick={() => setRulesOpen(true)}>Edit rules</button>
                   : <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />}
               </section>
