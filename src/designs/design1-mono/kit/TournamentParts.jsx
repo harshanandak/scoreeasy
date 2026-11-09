@@ -136,7 +136,7 @@ export function StandingsTable({ label, columns, rows }) {
   return (
     <div className="kit-team-table" role="table" aria-label={label} style={{ '--kit-team-cols': cells.length }}>
       <div className="kit-team-header" role="row">
-        {['Rank', 'Team', ...columns.map((column) => column.header)].map((header) => (
+        {['Team', ...columns.map((column) => column.header)].map((header) => (
           <span key={header} role="columnheader">{header}</span>
         ))}
       </div>
