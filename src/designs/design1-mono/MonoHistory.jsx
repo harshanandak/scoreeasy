@@ -716,23 +716,23 @@ export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [
                 ))
               )}
 
-              {clearableCount > 0 && (
-                pendingClear && !pendingClear.cleared ? (
-                  <div className="kit-card kit-confirm">
-                    <p>Clear local history?</p>
-                    <p>Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.</p>
-                    <div className="kit-btnrow">
-                      <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={() => setPendingClear(null)}>Cancel</button>
-                      <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={clearMutableHistory}>Clear</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ marginTop: 14, textAlign: 'center' }}>
-                    <button type="button" className="kit-quiet" onClick={confirmClearMutableHistory}>Clear local history</button>
-                  </div>
-                )
-              )}
             </>
+          )}
+          {clearableCount > 0 && (
+            pendingClear && !pendingClear.cleared ? (
+              <div className="kit-card kit-confirm">
+                <p>Clear local history?</p>
+                <p>Saved tournaments stay. Older match records and quick matches can be restored before leaving this screen.</p>
+                <div className="kit-btnrow">
+                  <button type="button" className="se-ctl" style={{ flex: 1 }} onClick={() => setPendingClear(null)}>Cancel</button>
+                  <button type="button" className="se-ctl kit-danger" style={{ flex: 1 }} onClick={clearMutableHistory}>Clear</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: 14, textAlign: 'center' }}>
+                <button type="button" className="kit-quiet" onClick={confirmClearMutableHistory}>Clear local history</button>
+              </div>
+            )
           )}
           {loadMore && (cloudStatus === 'CanLoadMore' || cloudStatus === 'LoadingMore') && (
             <button type="button" className="se-ctl" disabled={!online || cloudStatus === 'LoadingMore'} onClick={loadMore}>

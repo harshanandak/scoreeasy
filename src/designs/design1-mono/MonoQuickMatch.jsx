@@ -29,6 +29,7 @@ import { OVERS_PRESETS, CRICKET_FORMATS, buildCricketFormat, ballsToOvers, calcu
 import BackArrow from './components/BackArrow';
 import { validateSingleSetScore } from '../../utils/volleyballCalculations';
 import { clearData, saveData, loadData, loadQuickMatch, saveQuickMatch } from '../../utils/storage';
+import { recordGuestMatch } from '../../utils/pendingMatchSaves';
 import { createQuickMatchId, getQuickMatchDraftKey, migrateQuickMatchDraft } from '../../utils/quickMatchDrafts';
 import { loadQuickMatchDrafts } from '../../utils/appEntry';
 import { inProgressTimestamp } from '../../utils/inProgressMatch';
@@ -1126,6 +1127,7 @@ export default function MonoQuickMatch() {
     // Test format (4 innings) → save to quick match storage and navigate to test scorer
     if (isCricket && format.totalInnings === 4) {
       const matchId = createQuickMatchId();
+      if (!isAuthenticated) recordGuestMatch(`${sport}:quick:${matchId}`);
       const nowIso = new Date().toISOString();
       const match = {
         id: matchId, sport,
@@ -1150,6 +1152,7 @@ export default function MonoQuickMatch() {
 
     if (isTennis) {
       const matchId = createQuickMatchId();
+      if (!isAuthenticated) recordGuestMatch(`tennis:quick:${matchId}`);
       const nowIso = new Date().toISOString();
       const draft = buildTennisQuickDraft({
         matchId,
@@ -1177,6 +1180,7 @@ export default function MonoQuickMatch() {
     setResult(null);
     resetSync();
     liveMatchIdRef.current = createQuickMatchId();
+    if (!isAuthenticated) recordGuestMatch(buildQuickMatchClientId(sport, liveMatchIdRef.current));
     setActiveDraftKey(getQuickMatchDraftKey(sport, liveMatchIdRef.current));
     hydratedDraftKeyRef.current = getQuickMatchDraftKey(sport, liveMatchIdRef.current);
     draftHydratedSportRef.current = `${sport}::${liveMatchIdRef.current}`;
@@ -1886,6 +1890,7 @@ export default function MonoQuickMatch() {
     // matching the setup→start path — otherwise a rematch has no clientMatchId and
     // can't go live. null for setup; the start handler mints there.
     liveMatchIdRef.current = nextPhase === 'scoring' ? createQuickMatchId() : null;
+    if (!isAuthenticated && liveMatchIdRef.current) recordGuestMatch(buildQuickMatchClientId(sport, liveMatchIdRef.current));
     setActiveDraftKey(nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null);
     hydratedDraftKeyRef.current = nextPhase === 'scoring' ? getQuickMatchDraftKey(sport, liveMatchIdRef.current) : null;
     if (nextPhase === 'scoring') {

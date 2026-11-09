@@ -22,7 +22,7 @@ export function mergeAccountHistory(local, cloud, ownerId, userId, ownership = n
     const owners = ownership?.get(match.clientMatchId);
     if (owners && [...owners].some(owner => owner !== ownerId && owner !== userId)) continue;
     if (match.syncOwnerId && match.syncOwnerId !== ownerId && match.syncOwnerId !== userId) continue;
-    if (!match.syncOwnerId && !owners?.size && !ownership && !match.isLegacy) continue;
+    if (!match.syncOwnerId && !owners?.size && (!ownership || (ownership.partial && !ownership.has(match.clientMatchId))) && !match.isLegacy) continue;
     entries.set(match.clientMatchId || match.id, match);
   }
   for (const match of cloud) {

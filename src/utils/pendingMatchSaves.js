@@ -2,8 +2,9 @@ import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTourname
 import { ConvexError } from 'convex/values';
 import { getTournamentMatchClientId, getTournamentMatches, tournamentCompletionId } from './tournamentSync';
 import { getSportsList } from '../models/sportRegistry';
-import { fallbackCompletionMatches, loadMatchOwners, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { isMatchOwner, fallbackCompletionMatches, loadMatchOwners, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
 import { guestClaimKey, readGuestClaim } from './guestMatchOwnership';
+import { localOwnerEvidence, rememberMatchOwner, revokeGuestMatch } from './matchOwnershipEvidence';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -48,10 +49,16 @@ export async function hydratePendingMatchSaves(ownerId) {
 }
 
 function persistFallback(key, record) {
+  const revision = revisions.get(key);
   const pending = (pendingWrites.get(key) || Promise.resolve()).then(() =>
     storePendingSaveFallback(key, { ...record, storageFailed: false }));
   const settled = pending.then((stored) => {
-    if (volatileRecords.get(key) !== record) return;
+    if (revisions.get(key) !== revision) return;
+    if (!stored.conflictingOwners) {
+      rememberMatchOwner(record.payload.clientMatchId, record.ownerId);
+      updateLocalMatch(record, record.state);
+    } else { try { localStorage.removeItem(key); } catch { /* The durable mismatch remains authoritative. */ } }
+    if (volatileRecords.get(key) !== record && !stored.conflictingOwners) return;
     dirtyRecords.delete(key);
     volatileRecords.set(key, cacheFallback(stored, record));
     if (stored.state === 'synced') confirmed.set(key, stored.completionId);
@@ -73,7 +80,7 @@ async function confirmFallback(record) {
     await pendingWrites.get(key);
     return volatileRecords.get(key)?.storageFailed === false;
   }
-  if (!globalThis.indexedDB) return false;
+  if (!globalThis.indexedDB) return rememberMatchOwner(record.payload.clientMatchId, record.ownerId) || !loadMatchSaveLocal(record);
   try { await storePendingSaveFallback(key, { ...record, state: 'synced' }); return true; }
   catch { return false; }
 }
@@ -127,9 +134,8 @@ export function pendingMatchSaves(ownerId, includeSynced = false) {
   return [...records.values()];
 }
 
-export async function matchOwners() {
-  await Promise.allSettled([...pendingWrites.values()]);
-  const records = [...volatileRecords.values()];
+function ownershipRecords() {
+  const records = [...localOwnerEvidence(), ...volatileRecords.values()];
   for (let index = 0; index < localStorage.length; index += 1) {
     const key = localStorage.key(index);
     if (key?.startsWith(PREFIX) || key?.startsWith('se_guest_match_claim:')) records.push(JSON.parse(localStorage.getItem(key)));
@@ -145,7 +151,31 @@ export async function matchOwners() {
       }
     }
   }
-  return loadMatchOwners(records);
+  return records;
+}
+
+export async function matchOwners() {
+  await Promise.allSettled([...pendingWrites.values()]);
+  return loadMatchOwners(ownershipRecords());
+}
+
+export function localMatchOwners() {
+  let records;
+  try { records = ownershipRecords(); } catch { records = [...volatileRecords.values()]; }
+  const owners = new Map();
+  owners.partial = true;
+  for (const record of records) {
+    const id = record?.clientMatchId || record?.payload?.clientMatchId;
+    if (!id || record.ownerId === undefined || (record.ownershipPending && !record.conflictingOwners)) continue;
+    if (!owners.has(id)) owners.set(id, new Set());
+    for (const owner of record.conflictingOwners || (record.ownerId ? [record.ownerId] : [])) owners.get(id).add(owner);
+  }
+  return owners;
+}
+
+export function recordGuestMatch(id) {
+  if (!localMatchOwners().get(id)?.size) rememberMatchOwner(id, null);
+  notify();
 }
 
 export function pruneSyncedMatchSaves(ownerId) {
@@ -195,6 +225,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
   let claimed;
   try { claimed = localStorage.getItem(guestClaimKey(payload.clientMatchId)) !== null; } catch { /* Ordinary signed-in saves retain the existing IndexedDB fallback. Guest claiming requires a durable claim first. */ }
   if (claimed && readGuestClaim(payload.clientMatchId)?.ownerId !== ownerId) return undefined;
+  if (!revokeGuestMatch(payload.clientMatchId)) return undefined;
   const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
   const existing = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === payload.clientMatchId);
   if (existing && (!tournamentMatch || (existing.completionId === completionId && JSON.stringify(existing.payload) === JSON.stringify(payload)))) return existing;
@@ -204,18 +235,26 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
     || existing?.priorCompletionSaved
   ));
   confirmed.delete(key);
+  const conflictingOwners = globalThis.indexedDB ? []
+    : [...(localMatchOwners().get(payload.clientMatchId) || [])].filter(owner => owner !== ownerId);
   // A replacement waits behind any in-flight send; its old outcome cannot overwrite this record.
   const record = write({ ownerId, payload, quickMatchId, tournamentMatch, completionId,
+    ...(globalThis.indexedDB ? { ownershipPending: true } : {}),
+    ...(conflictingOwners.length ? { conflictingOwners, ownerMismatch: true } : {}),
     ...(claimed ? { guestClaimed: true } : {}),
     ...(quickCompletion ? { quickCompletionFingerprint: matchSaveFingerprint(JSON.parse(tournamentCompletionId(quickCompletion))) } : {}),
-    state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
+    state: priorCompletionSaved && !conflictingOwners.length ? 'failed' : 'pending', terminal: priorCompletionSaved && conflictingOwners.length === 0,
     priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
-  updateLocalMatch(record, record.state);
+  if (!globalThis.indexedDB && !conflictingOwners.length) {
+    rememberMatchOwner(payload.clientMatchId, ownerId);
+    updateLocalMatch(record, record.state);
+  }
   notify();
   return record;
 }
 
 function updateLocalMatch(record, status) {
+  if (record.conflictingOwners) return;
   const match = loadMatchSaveLocal(record);
   if (!match || !fixtureStillMatches(record) || localSaveConfirmed(record)) return;
   const updated = { ...match, clientMatchId: record.payload.clientMatchId, syncOwnerId: record.ownerId,
@@ -263,12 +302,24 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
   const request = Promise.resolve().then(async () => {
     if (!canSend()) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     if (pendingWrites.has(key)) await pendingWrites.get(key);
+    if (currentRecord(record)?.conflictingOwners) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     if (!sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     record = write({ ...record, state: 'syncing', terminal: false });
     if (pendingWrites.has(key)) await pendingWrites.get(key);
     if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     if (!canSend() || !sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
+    if (globalThis.indexedDB) {
+      let allowed = null;
+      try { allowed = await isMatchOwner(record.payload.clientMatchId, record.ownerId); } catch { /* Unknown ownership must not send. */ }
+      if (!allowed) {
+        write({ ...record, state: 'pending', ownerMismatch: allowed === false, terminal: false,
+          nextAttemptAt: allowed === false ? 0 : Date.now() + 5000 });
+        if (pendingWrites.has(key)) await pendingWrites.get(key);
+        return { status: 'pending', clientMatchId: record.payload.clientMatchId };
+      }
+      if (!canSend()) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
+    }
     try {
       await save({ ...record.payload, expectedOwnerId: record.ownerId });
       if (record.storageBackend === 'indexedDB') await hydratePendingMatchSaves(record.ownerId);

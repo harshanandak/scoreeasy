@@ -3,6 +3,7 @@ const STORE = 'records';
 const OWNERS = 'owners';
 
 function putOwner(store, record) {
+  if (record?.conflictingOwners) return;
   const clientMatchId = record?.clientMatchId || record?.payload?.clientMatchId;
   if (clientMatchId && record.ownerId) store.put({ clientMatchId, ownerId: record.ownerId }, [clientMatchId, record.ownerId]);
 }
@@ -46,16 +47,29 @@ function transaction(mode, action) {
 
 export function loadMatchOwners(records) {
   return transaction('readwrite', (_store, complete, owners) => {
-    records.forEach(record => putOwner(owners, record));
-    const read = owners.getAll();
-    read.onsuccess = () => {
-      const result = new Map();
-      for (const { clientMatchId, ownerId } of read.result) {
-        if (!result.has(clientMatchId)) result.set(clientMatchId, new Set());
-        result.get(clientMatchId).add(ownerId);
-      }
-      complete(result);
+    const backfill = index => {
+      if (index === records.length) { readOwners(); return; }
+      const record = records[index];
+      const id = record?.clientMatchId || record?.payload?.clientMatchId;
+      if (!id || !record.ownerId || record.conflictingOwners) { backfill(index + 1); return; }
+      const existing = owners.index('clientMatchId').getAll(id);
+      existing.onsuccess = () => {
+        if (existing.result.every(entry => entry.ownerId === record.ownerId)) putOwner(owners, record);
+        backfill(index + 1);
+      };
     };
+    const readOwners = () => {
+      const read = owners.getAll();
+      read.onsuccess = () => {
+        const result = new Map();
+        for (const { clientMatchId, ownerId } of read.result) {
+          if (!result.has(clientMatchId)) result.set(clientMatchId, new Set());
+          result.get(clientMatchId).add(ownerId);
+        }
+        complete(result);
+      };
+    };
+    backfill(0);
   });
 }
 
@@ -67,6 +81,13 @@ export function claimMatchOwner(clientMatchId, ownerId) {
       if (available) putOwner(owners, { clientMatchId, ownerId });
       complete(available);
     };
+  });
+}
+
+export function isMatchOwner(clientMatchId, ownerId) {
+  return transaction('readonly', (_store, complete, owners) => {
+    const read = owners.index('clientMatchId').getAll(clientMatchId);
+    read.onsuccess = () => complete(read.result.length ? read.result.every(record => record.ownerId === ownerId) : null);
   });
 }
 
@@ -109,25 +130,35 @@ export function storePendingSaveFallback(key, record) {
     syncedAt: record.syncedAt || Date.now(), storageBackend: 'indexedDB', storageFailed: false,
     ...(record.quickCompletionFingerprint ? { quickCompletionFingerprint: record.quickCompletionFingerprint } : {}),
   };
-  const marker = record.state === 'synced' ? compact : record;
+  const marker = record.state === 'synced' ? compact : { ...record, ownershipPending: false };
   return transaction('readwrite', (store, complete, owners) => {
-    // Ownership commits with the queue record and survives its acknowledgement/pruning.
-    putOwner(owners, record);
-    const read = store.get(key);
-    read.onsuccess = () => {
-      const previous = read.result;
-      // A stale tab cannot overwrite acknowledgement of the same completion.
-      if (previous?.state === 'synced' && fallbackCompletionMatches(previous, record)) {
-        if (previous.payload) {
-          store.put(compact, key);
-          complete(compact);
-          return;
-        }
-        complete(previous);
+    const ownership = owners.index('clientMatchId').getAll(compact.clientMatchId);
+    ownership.onsuccess = () => {
+      const conflictingOwners = ownership.result.map(entry => entry.ownerId).filter(owner => owner !== record.ownerId);
+      if (conflictingOwners.length) {
+        const blocked = { ...record, state: 'pending', ownerMismatch: true, terminal: false, conflictingOwners };
+        store.put(blocked, key);
+        complete(blocked);
         return;
       }
-      store.put(marker, key);
-      complete(marker);
+      // Ownership commits with the queue record and survives acknowledgement/pruning.
+      putOwner(owners, record);
+      const read = store.get(key);
+      read.onsuccess = () => {
+        const previous = read.result;
+        // A stale tab cannot overwrite acknowledgement of the same completion.
+        if (previous?.state === 'synced' && fallbackCompletionMatches(previous, record)) {
+          if (previous.payload) {
+            store.put(compact, key);
+            complete(compact);
+            return;
+          }
+          complete(previous);
+          return;
+        }
+        store.put(marker, key);
+        complete(marker);
+      };
     };
   });
 }

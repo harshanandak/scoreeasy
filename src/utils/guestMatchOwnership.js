@@ -1,4 +1,5 @@
 import { claimMatchOwner } from './pendingMatchSaveStore';
+import { revokeGuestMatch } from './matchOwnershipEvidence';
 
 const PREFIX = 'se_guest_match_claim:';
 export const guestClaimKey = id => `${PREFIX}${encodeURIComponent(id)}`;
@@ -60,6 +61,6 @@ export async function acquireGuestClaim(claim) {
     });
     if (!acquired) return false;
   } else if (!navigator.locks?.request) return false;
-  if (!await claimMatchOwner(claim.clientMatchId, claim.ownerId)) return false;
+  if (!revokeGuestMatch(claim.clientMatchId) || !await claimMatchOwner(claim.clientMatchId, claim.ownerId)) return false;
   return writeGuestClaim(claim);
 }
