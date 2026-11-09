@@ -143,24 +143,18 @@ it('requires confirmation before deleting a scoreless tennis match', async () =>
   expect(localStorage.getItem('se_tennis_quick_draft_7')).not.toBeNull();
 });
 
-it('History confirms with teams and score, cancellation retains both, deletion removes only the chosen draft', async () => {
+it('History rows only Resume: Delete is not on a kept-match row (board Discard is the way to drop one)', async () => {
   seed('volleyball', 1); seed('kabaddi', 2);
   open('/history');
-  fireEvent.click(await screen.findByRole('button', { name: /Delete Volleyball: Royals 1/ }));
-  const dialog = screen.getByRole('dialog');
-  expect(dialog).toHaveTextContent('Royals 1 v Strikers, 12–9');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Keep match' }));
+  expect(await screen.findByRole('button', { name: /Resume Volleyball: Royals 1/ })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Delete (Volleyball|Kabaddi):/ })).toBeNull();
   expect(loadInProgressMatches()).toHaveLength(2);
-  fireEvent.click(screen.getByRole('button', { name: /Delete Volleyball: Royals 1/ }));
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
-  expect(loadInProgressMatches().map(m => m.quickMatchId)).toEqual([2]);
-  expect(screen.queryByRole('button', { name: /Resume Volleyball/ })).toBeNull();
 });
 
 it('keeps an orphan terminal snapshot when restore cannot find its completed History record', async () => {
   const draft = seed('volleyball', 9, { status: 'completed', winner: 'Royals 9' });
   open('/volleyball/quick?resume=9');
-  await screen.findByRole('button', { name: /Delete Volleyball: Royals 9/ });
+  await screen.findByRole('button', { name: /Resume Volleyball: Royals 9/ });
   expect(loadQuickMatches()).toEqual([]);
   expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_volleyball_9'))).toEqual(draft);
 });

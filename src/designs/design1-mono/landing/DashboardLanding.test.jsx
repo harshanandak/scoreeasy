@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DashboardLanding, { relativeDay, scorePair } from './DashboardLanding';
@@ -324,6 +324,12 @@ describe('DashboardLanding (Kit Home)', () => {
       };
       globalThis.localStorage.setItem(`se_quickmatch_draft_${sport}_${id}`, JSON.stringify(value));
     };
+    // A kept-match row only resumes; Discard lives on the scoring board and clears the draft.
+    // Returning Home re-reads the list on focus.
+    const discardOnBoard = (sport, id) => act(() => {
+      globalThis.localStorage.removeItem(`se_quickmatch_draft_${sport}_${id}`);
+      globalThis.dispatchEvent(new Event('focus'));
+    });
     const cricket = {
       id: 'cr-1', sport: 'cricket', team1: 'Lions', team2: 'Tigers', score1: 164, score2: 158, winner: 'Lions',
       status: 'completed', team1Score: { runs: 164, wickets: 6 }, team2Score: { runs: 158, wickets: 9 },
@@ -386,13 +392,12 @@ describe('DashboardLanding (Kit Home)', () => {
       await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/history'));
     });
 
-    it('drops the start button and recounts once the last match in progress is deleted', async () => {
+    it('drops the start button and recounts once the last match in progress is discarded on its board', async () => {
       draft('volleyball', 1);
       seed([volleyball, kabaddi]);
       const { container } = renderDashboard();
       expect(screen.getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: /Delete Volleyball: Royals 1/ }));
-      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+      discardOnBoard('volleyball', 1);
       await waitFor(() => expect(screen.queryByRole('heading', { name: 'In progress' })).not.toBeInTheDocument());
       expect(screen.queryByRole('button', { name: 'Start a match' })).not.toBeInTheDocument();
       // Back to the returning Home: the last match is the hero and Rematch is the only Go.
@@ -401,11 +406,10 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(screen.getByText('2 matches scored this week')).toBeInTheDocument();
     });
 
-    it('returns to first run when the only match in progress is deleted', async () => {
+    it('returns to first run when the only match in progress is discarded on its board', async () => {
       draft('volleyball', 1);
       renderDashboard();
-      fireEvent.click(screen.getByRole('button', { name: /Delete Volleyball: Royals 1/ }));
-      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+      discardOnBoard('volleyball', 1);
       expect(await screen.findByRole('heading', { name: 'Play your first match.' })).toBeInTheDocument();
     });
   });

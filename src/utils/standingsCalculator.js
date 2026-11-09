@@ -25,9 +25,8 @@ export function calculateSetsStandings(teams, matches, config) {
   }));
 
   matches.forEach(match => {
-    // Skip pending matches
     if ((!match.sets || match.sets.length === 0) && !isAbandoned(match)) return;
-    if (match.status === 'pending') return;
+    if (match.status !== 'completed' && match.status !== 'abandoned') return;
 
     const t1 = stats.find(s => s.teamId === match.team1Id);
     const t2 = stats.find(s => s.teamId === match.team2Id);
@@ -113,11 +112,10 @@ export function calculateGoalsStandings(teams, matches, config) {
   }));
 
   matches.forEach(match => {
-    // Skip pending matches
     const s1 = match.score1;
     const s2 = match.score2;
     if (s1 === null || s1 === undefined || s2 === null || s2 === undefined) return;
-    if (match.status === 'pending') return;
+    if (match.status !== 'completed' && match.status !== 'abandoned') return;
 
     const t1 = stats.find(s => s.teamId === match.team1Id);
     const t2 = stats.find(s => s.teamId === match.team2Id);
