@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { HandUnderline } from '../kit/KitParts';
+import SportMark from '../kit/SportMark';
 import './kabaddiScoreStrip.css';
 
 // Kabaddi score strip, round 5 (exploration k2, 2026-11-01). Two team cards in the app's own team
@@ -54,7 +55,7 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
             <section key={team} className={`k5-team k5-team-${side(team)}${momentTeam === team ? ' k5-moment' : ''}`}
               aria-label={`${names[team]} ${view.totals[team]}${raider === team ? ', raiding' : ''}, ${on} of ${view.seats} on the mat`}>
               <span className="k5-name">
-                {raider === team && <i className="k5-mark" aria-hidden="true" />}
+                {raider === team && <SportMark sportId="kabaddi" className="k5-mark" />}
                 <span className="k5-name-text">{names[team]}</span>
               </span>
               {gain > 0 && <em className="k5-pend" aria-label={`${gain} pending`}>+{gain}</em>}
@@ -81,7 +82,7 @@ export default function KabaddiScoreStrip({ view, names, clock, halfWord, scorin
               {secs !== null && <circle className="k5-arc" cx="32" cy="32" r="27" strokeDasharray={RING} strokeDashoffset={RING * (1 - frac)} />}
               <circle className="k5-disc" cx="32" cy="32" r="22" />
             </svg>
-            <span className="k5-ring-in">{secs === null ? <i className="k5-disc-mark" aria-hidden="true" /> : <b>{secs}</b>}</span>
+            <span className="k5-ring-in">{secs === null ? <SportMark sportId="kabaddi" className="k5-disc-mark" /> : <b>{secs}</b>}</span>
           </span>
           <b className="k5-clock">{view.timed ? clock : `Raid ${view.raidNumber}`}</b>
           <small>{halfWord}</small>

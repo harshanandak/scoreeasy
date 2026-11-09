@@ -79,11 +79,12 @@ describe('TeamColourPicker', () => {
     expect(colourNameOf('#7a1020')).toBe('Maroon');
   });
 
-  it('keeps every swatch at least 44px and never turns the focus ring off', () => {
+  it('keeps every swatch at least 48px and never turns the focus ring off', () => {
     const face = sheetCss.match(/\n\.kit-sw-face \{[^}]*\}/)[0];
-    expect(Number(face.match(/height: (\d+)px/)[1])).toBeGreaterThanOrEqual(44);
+    expect(Number(face.match(/height: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
     const cell = sheetCss.match(/\n\.kit-sw \{[^}]*\}/)[0];
-    expect(Number(cell.match(/min-height: (\d+)px/)[1])).toBeGreaterThanOrEqual(44);
+    expect(Number(cell.match(/min-width: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
+    expect(Number(cell.match(/min-height: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
     expect(sheetCss).not.toMatch(/outline:\s*(none|0)\b/);
     renderPicker();
     for (const b of swatches()) {

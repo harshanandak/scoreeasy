@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
+import SportMark from '../kit/SportMark';
 import './goalsBoard.css';
 
 // Presentation only. Registry actions and scorer-owned clock/handlers let later goals sports
@@ -26,7 +27,7 @@ export default function TeamGoalsBoard({
       <BoardHeader title={title} subtitle={subtitle} sportColour="var(--sport-core)" isLive={isLive} onFinish={onFinish} />
       {notice}
       <div className="tgb-meta">
-        <span className="tgb-sport"><i className="tgb-sport-mark" aria-hidden="true" />{sportConfig.name}</span>
+        <span className="tgb-sport"><SportMark sportId={sportConfig.id} className="tgb-sport-mark" />{sportConfig.name}</span>
         <span className="tgb-clock" aria-label={clockLabel}>{isTimeUp ? "Time's up!" : clock}</span>
         {status && <span className="tgb-status">{status}</span>}
       </div>

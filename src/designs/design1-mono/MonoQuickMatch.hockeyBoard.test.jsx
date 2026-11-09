@@ -3,7 +3,6 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
-import { sportMarkMaskUrl } from '../../lib/sportMarks';
 import { getGoalsSports, isTeamColourSport } from '../../models/sportRegistry';
 import { teamColourGroup, teamNameInput } from '../../test/teamColour';
 
@@ -58,8 +57,7 @@ describe('Hockey shared goals board', () => {
     expect(screen.getByLabelText('Time remaining')).toHaveTextContent('9:48');
     act(() => vi.advanceTimersByTime(1000));
     expect(screen.getByLabelText('Time remaining')).toHaveTextContent('9:47');
-    expect(board().querySelector('.tgb-sport-mark')).toBeInTheDocument();
-    expect(board().style.getPropertyValue('--sport-mark')).toBe(sportMarkMaskUrl('hockey'));
+    expect(board().querySelector('.tgb-sport-mark svg')).toBeInTheDocument();
     for (const name of ['Strikers', 'United']) {
       const key = screen.getByRole('button', { name: `Add 1 to ${name}` });
       expect(key).toHaveClass('tgb-team');

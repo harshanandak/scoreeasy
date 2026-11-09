@@ -1,23 +1,25 @@
 import PropTypes from 'prop-types';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import { getSportById, getSportsList } from '../../../models/sportRegistry';
 import { deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
 import { sportIdentity, sportIdentityVars } from '../../../lib/sportIdentity';
-import { FilterChip, GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportTile } from '../kit/KitParts';
+import { GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge } from '../kit/KitParts';
 import '../kit/history.css';
 import './landing.css';
 import { buildDemo } from './landingDemo';
-import useIsMobile from './useIsMobile';
+import { LANDING_FAQ } from './landingFaq';
+import { ICON_BY_SPORT_ID } from './sportIcons';
 
 /* The guest landing (/marketing), in the Kit look of Home, Play and the boards. Above the fold it is
    an app: one primary action (start a match), sign in secondary, and a match scored by the real
-   engines. Below it, it explains the product in the numbered, confident voice of the original
-   marketing page (01 / APP EXPERIENCE ... 04 / HOW IT WORKS). The sport the scorer picks is held
-   once, so the chip, the example card and the Start buttons always name the same game. Every claim
-   below the fold is true of the shipped app: guest scoring and tournaments are open to guests,
-   scoring is saved on the device first; saving to an account and the live link need a sign in. */
+   engines. Below it, it explains the product in the numbered voice of the original marketing page
+   (01 / FEATURES ... 03 / FAQ). The sport the scorer picks is held once, so the picker, the example
+   card and the Start buttons always name the same game. Every claim here is true of the shipped app:
+   guest scoring and tournaments are open to guests, scoring is saved on the device first; saving to
+   an account and the live link need a sign in. The hero sub-line carries the no-account, offline and
+   sport-list facts once; the FAQ answers (landingFaq.js) are also in index.html as JSON-LD. */
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const sports = getSportsList();
@@ -26,25 +28,22 @@ function sportPlayPath(sportId) {
   return sportId ? `/play?sport=${sportId}` : '/play';
 }
 
-const EXPERIENCE_STATS = [
-  { value: String(sports.length), label: 'Sports ready', detail: `Cricket, kabaddi, volleyball and ${sports.length - 3} more, all picked from one list.` },
-  { value: '0', label: 'Sign-ups needed', detail: 'Score your first point without an account.' },
-  { value: 'OFFLINE', label: 'No signal needed', detail: 'Keep scoring with no signal. Your matches save on your phone.' },
-];
-
-const EXPERIENCE_NOTES = [
-  'Pick a sport here and it is already chosen on the play screen.',
-  'You never have to sign in to score.',
-  'Use it in your browser, or on Android and iOS.',
-];
+/* Hand-drawn 24px glyphs, one per feature. `sportId` only tints the badge with that sport's engine-gated
+   identity, so the five rows are not one flat grey. */
+const GLYPHS = {
+  rules: <><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.7 2.7L16 9.5" /></>,
+  account: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></>,
+  share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 10.7l6.8-4.4M8.6 13.3l6.8 4.4" /></>,
+  undo: <><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 010 12h-3" /></>,
+  trophy: <><path d="M8 4h8v5a4 4 0 01-8 0V4z" /><path d="M8 6H4v1a4 4 0 004 4M16 6h4v1a4 4 0 01-4 4M12 13v4M8 20h8" /></>,
+};
 
 const FEATURES = [
-  { tag: 'Start', title: 'No sign-up to start', desc: 'Start a match from your browser or the app without an account. Every point is saved on your phone first, so a weak signal never costs one.' },
-  { tag: 'Account', title: 'Save to your account', desc: 'Sign in and every match you finish is saved to your account. Without one, matches stay on this phone.' },
-  { tag: 'Share', title: 'Live share link', desc: 'Signed in, you can go live and send a link so friends follow the score. A match stays private until you share it.' },
-  { tag: 'Undo', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
-  { tag: 'Rules', title: 'Real rules, every sport', desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.' },
-  { tag: 'Organize', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings, scored match by match.' },
+  { glyph: 'rules', sportId: 'cricket', title: 'Each sport’s own rules', desc: 'Deuce, sets, overs and raids follow the real game.' },
+  { glyph: 'undo', sportId: 'badminton', title: 'Undo that follows', desc: 'Undo takes a point back, with the score, serve and set.' },
+  { glyph: 'trophy', sportId: 'hockey', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings.' },
+  { glyph: 'share', sportId: 'football', title: 'Live share link', desc: 'Signed in, send a link so friends follow the score.' },
+  { glyph: 'account', sportId: 'tennis', title: 'Saved to your account', desc: 'Sign in to keep every finished match.' },
 ];
 
 const STEPS = [
@@ -71,56 +70,113 @@ function Head({ id, eyebrow, children }) {
 
 Head.propTypes = { id: PropTypes.string.isRequired, eyebrow: PropTypes.string.isRequired, children: PropTypes.node.isRequired };
 
-function ExampleCard({ demo }) {
-  const sport = getSportById(demo.sportId);
-  const colours = teamColourVars(deriveTeamColours(...demo.colours));
-  const [teamA, teamB] = demo.teams;
-  const label = `${teamA.name} ${teamA.score}, ${teamB.name} ${teamB.score}. ${demo.status}`;
-  const team = (side, row) => (
-    <div className="kit-last-team">
-      <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
-      <span className="kit-last-name">
-        {row.name}
-        {row.meta && <small className="kit-landing-meta">{row.meta}</small>}
-      </span>
-      <span className="kit-last-score">{row.score}</span>
-    </div>
-  );
-
+function Glyph({ name }) {
   return (
-    <div className="kit-last kit-landing-card" style={colours} data-testid="landing-example">
-      <div className="kit-last-meta">
-        <span className="kit-sport-chip" style={sportIdentityVars(sport.id)}>
-          <i aria-hidden="true" />{sport.name}
-        </span>
-        <span className="kit-chip">Example match</span>
-      </div>
-      <div className="kit-last-teams" role="group" aria-label={label}>
-        {team('a', teamA)}
-        {team('b', teamB)}
-      </div>
-      <p className="kit-last-detail">{demo.status}</p>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      {GLYPHS[name]}
+    </svg>
+  );
+}
+
+Glyph.propTypes = { name: PropTypes.string.isRequired };
+
+/* The sport picker: a 3 x 3 grid of the real sport tiles (the row badge from the Kit and the
+   sport's own doodle). Nothing scrolls and nothing is cut off; the chosen sport is an ink fill. */
+function SportPicker({ selectedId, onSelect }) {
+  return (
+    <div className="kit-landing-picker" role="group" aria-label="Pick a sport">
+      {sports.map((sport) => {
+        const selected = sport.id === selectedId;
+        return (
+          <button
+            key={sport.id}
+            type="button"
+            className={`kit-pick${selected ? ' is-selected' : ''}`}
+            aria-pressed={selected ? 'true' : 'false'}
+            onClick={() => onSelect(sport.id)}
+          >
+            <SportBadge sportId={sport.id} />
+            <span className="kit-pick-name">{sport.name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-ExampleCard.propTypes = {
+SportPicker.propTypes = { selectedId: PropTypes.string.isRequired, onSelect: PropTypes.func.isRequired };
+
+/* One half of the board: the team's name over its one big number, on the team's own colour. A sport
+   with a suffix (cricket wickets, "/5") sets it small beside the number. */
+function ScoreField({ team, side }) {
+  return (
+    <div className={`kit-score-field kit-score-field-${side}`}>
+      <span className="kit-score-name">{team.name}</span>
+      <span className="kit-score-num">
+        {team.score}
+        {team.suffix && <small>{team.suffix}</small>}
+      </span>
+    </div>
+  );
+}
+
+ScoreField.propTypes = {
+  team: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    score: PropTypes.string.isRequired,
+    suffix: PropTypes.string,
+  }).isRequired,
+  side: PropTypes.oneOf(['a', 'b']).isRequired,
+};
+
+/* The example scorecard, a split board: a LIVE dot, the sport's icon and name, the two teams on their
+   own colour halves with a VS badge on the seam, and one line of context (the chase, the set count,
+   the half-time score). Every number and the context line come from the sport's engine
+   (landingDemo.js); this only lays them out. */
+function ScoreCard({ demo }) {
+  const sport = getSportById(demo.sportId);
+  const Icon = ICON_BY_SPORT_ID[sport.id];
+  const vars = { ...sportIdentityVars(sport.id), ...teamColourVars(deriveTeamColours(...demo.colours)) };
+  const [teamA, teamB] = demo.teams;
+  const hasSuffix = demo.teams.some((team) => team.suffix);
+  const label = `${teamA.name} ${teamA.score}${teamA.suffix ?? ''}, ${teamB.name} ${teamB.score}${teamB.suffix ?? ''}. ${demo.context}`;
+
+  return (
+    <article className={`kit-score${hasSuffix ? ' has-suffix' : ''}`} style={vars} data-testid="landing-example" aria-label={label}>
+      <header className="kit-score-top">
+        <span className="kit-score-live"><i className="kit-score-dot" aria-hidden="true" />LIVE</span>
+        <span className="kit-score-sport">
+          <span className="kit-score-glyph" aria-hidden="true">
+            {Icon && <Icon size={20} color="currentColor" strokeWidth={2} />}
+          </span>
+          {sport.name}
+        </span>
+      </header>
+      <div className="kit-score-fields">
+        <ScoreField team={teamA} side="a" />
+        <ScoreField team={teamB} side="b" />
+        <span className="kit-score-vs" aria-hidden="true">VS</span>
+      </div>
+      <p className="kit-score-context">{demo.context}</p>
+    </article>
+  );
+}
+
+ScoreCard.propTypes = {
   demo: PropTypes.shape({
     sportId: PropTypes.string.isRequired,
     colours: PropTypes.arrayOf(PropTypes.string).isRequired,
-    status: PropTypes.string.isRequired,
+    context: PropTypes.string.isRequired,
     teams: PropTypes.arrayOf(PropTypes.shape({
       name: PropTypes.string.isRequired,
       score: PropTypes.string.isRequired,
-      meta: PropTypes.string,
+      suffix: PropTypes.string,
     })).isRequired,
   }).isRequired,
 };
 
 export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
-  const navigate = useNavigate();
-  const mobile = useIsMobile();
   const [selectedId, setSelectedId] = useState(sports[0].id);
   const selected = getSportById(selectedId);
   const demo = useMemo(() => buildDemo(selectedId), [selectedId]);
@@ -129,18 +185,18 @@ export default function GuestLanding() {
   const signupPath = cloudAuthAvailable ? '/signup' : PRODUCTION_SIGNUP_URL;
 
   return (
-    <div className="kit-screen kit-landing" data-screen="guest-landing">
+    <div className="kit-screen kit-landing" data-screen="guest-landing" style={sportIdentityVars(selectedId)}>
       <KitWash from={sportIdentity(selectedId)?.tint} to={sportIdentity(nextSport.id)?.tint} />
       <KitTop title="Score Easy" />
 
       <div className="kit-landing-top">
         <header className="kit-landing-hero">
-          <p className="kit-landing-eyebrow">Universal score tracker</p>
+          <p className="kit-landing-eyebrow">Scoreboard app for local matches</p>
           <h1 className="kit-title">
-            Score any game <HandUnderline>on your phone</HandUnderline>.
+            Free live scoreboard app, <HandUnderline>on your phone</HandUnderline>.
           </h1>
           <p className="kit-sub">
-            Start in seconds with no account. It works offline, and once you sign in, the matches you score are saved to your account.
+            Score cricket, kabaddi, volleyball, badminton, football, basketball, tennis, table tennis and hockey. No account needed, and it keeps working offline.
           </p>
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath}>
@@ -152,77 +208,33 @@ export default function GuestLanding() {
 
         <section className="kit-landing-example" aria-labelledby="landing-example-title">
           <KitSection id="landing-example-title" title="See a match being scored" />
-          <div className="kit-landing-chips" role="group" aria-label="Pick a sport">
-            {sports.map((sport) => (
-              <FilterChip
-                key={sport.id}
-                label={sport.name}
-                sportId={sport.id}
-                pressed={sport.id === selectedId}
-                onClick={() => setSelectedId(sport.id)}
-              />
-            ))}
-          </div>
-          <ExampleCard demo={demo} />
+          <SportPicker selectedId={selectedId} onSelect={setSelectedId} />
+          <ScoreCard demo={demo} />
           <p className="kit-landing-note">
-            Scored by the same rules the app uses for each sport. Tap Start to score your own.
+            An example match, scored by the same rules the app uses for each sport. Tap Start to score your own.
           </p>
         </section>
       </div>
 
-      <section aria-labelledby="landing-experience-title">
-        <Head id="landing-experience-title" eyebrow="01 / App experience">Start first. Save later.</Head>
-        <ul className="kit-landing-stats">
-          {EXPERIENCE_STATS.map((stat) => (
-            <li key={stat.label} className="kit-card">
-              <b>{stat.value}</b>
-              <span className="kit-landing-label">{stat.label}</span>
-              <p>{stat.detail}</p>
-            </li>
-          ))}
-        </ul>
-        <ul className="kit-list kit-landing-notes">
-          {EXPERIENCE_NOTES.map((note, i) => (
-            <li key={note} className="kit-row">
-              <span className="kit-row-text">
-                <span className="kit-landing-label">{`App 0${i + 1}`}</span>
-                <span className="kit-row-title">{note}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section aria-labelledby="landing-features-title">
-        <Head id="landing-features-title" eyebrow="02 / Features">Everything you need.</Head>
-        <ul className="kit-landing-features">
+        <Head id="landing-features-title" eyebrow="01 / Features">What it does.</Head>
+        <ul className="kit-list kit-landing-featlist">
           {FEATURES.map((feature) => (
-            <li key={feature.title} className="kit-card">
-              <span className="kit-chip">{feature.tag}</span>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
+            <li key={feature.title} className="kit-row">
+              <span className="kit-badge" style={sportIdentityVars(feature.sportId)} aria-hidden="true">
+                <Glyph name={feature.glyph} />
+              </span>
+              <div className="kit-row-text">
+                <h3 className="kit-row-title">{feature.title}</h3>
+                <p className="kit-row-sub">{feature.desc}</p>
+              </div>
             </li>
           ))}
         </ul>
-      </section>
-
-      <section aria-labelledby="landing-sports-title">
-        <Head id="landing-sports-title" eyebrow="03 / Sports">{`${sports.length} sports. Your rules.`}</Head>
-        <div className="kit-grid3 kit-landing-tiles">
-          {sports.map((sport) => (
-            <SportTile
-              key={sport.id}
-              sport={sport}
-              mini={mobile}
-              selected={sport.id === selectedId}
-              onSelect={(picked) => navigate(sportPlayPath(picked.id))}
-            />
-          ))}
-        </div>
       </section>
 
       <section aria-labelledby="landing-how-title">
-        <Head id="landing-how-title" eyebrow="04 / How it works">Three steps.</Head>
+        <Head id="landing-how-title" eyebrow="02 / How it works">Score a match in three steps.</Head>
         <ol className="kit-list kit-steps kit-landing-steps">
           {STEPS.map((step) => (
             <li key={step.label} className="kit-row">
@@ -234,6 +246,20 @@ export default function GuestLanding() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="landing-faq-title">
+        <Head id="landing-faq-title" eyebrow="03 / FAQ">Questions people ask.</Head>
+        <ul className="kit-list kit-landing-faq">
+          {LANDING_FAQ.map((item) => (
+            <li key={item.question} className="kit-row">
+              <div className="kit-row-text">
+                <h3 className="kit-row-title">{item.question}</h3>
+                <p className="kit-row-sub">{item.answer}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="kit-landing-ready" aria-labelledby="landing-ready-title">

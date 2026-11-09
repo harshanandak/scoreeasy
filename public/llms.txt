@@ -1,0 +1,12 @@
+# Score Easy
+
+> Score Easy is a free live scoreboard app for local matches. You pick a sport, name the teams and score the match on your phone. It covers cricket, kabaddi, volleyball, badminton, football, basketball, tennis, table tennis and hockey, and each sport is scored by its own rules. You do not need an account to score, and scoring keeps working offline. Signing in saves finished matches to your account and lets you share a live link so friends can follow the score. A match stays private until you share it.
+
+Score Easy runs in a phone or desktop browser at https://scoreeasy.app. Scoring is saved on your device first, so a weak signal does not lose a point. Tournaments (round-robin and knockout brackets with standings) and undo are built in.
+
+## Pages
+
+- [Score Easy home](https://scoreeasy.app/marketing): what the app does, a sample scorecard for each sport, how it works and common questions.
+- [Privacy](https://scoreeasy.app/privacy): what is stored on your device and what is stored in the cloud when you sign in.
+- [Terms](https://scoreeasy.app/terms): how to use the app.
+- [Contact](https://scoreeasy.app/contact): support email and what to include in a bug report.

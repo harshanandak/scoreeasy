@@ -144,7 +144,7 @@ function expectBoardDock(hidden) {
 }
 
 describe('board dock visibility', () => {
-  it('hides the dock on guided cricket lineup setup, a sub-screen with its own Back', async () => {
+  it('keeps guided cricket lineup setup in the app shell', async () => {
     const entries = cricketFinishSeed('guided');
     const match = entries.se_cricket[0].matches[0];
     match.team1Score = { runs: 0, balls: 0, wickets: 0, allOut: false };
@@ -152,17 +152,21 @@ describe('board dock visibility', () => {
     Object.entries(entries).forEach(([key, value]) => seed(key, value));
     renderApp(['/cricket/tournament/100/match/m1/score']);
     await settleRoute();
-    expectBoardDock(true);
+    expectBoardDock(false);
     expect(nativeBack.install).not.toHaveBeenCalled();
   });
 
-  it.each(['/app', '/play', '/history'])('shows the dock on the top-level tab screen %s', async path => {
+  it.each(['/app', '/play', '/history', '/tennis/tournament', '/profile/no-such-user'])('shows the dock on ordinary app screens %s', async path => {
+    if (path.startsWith('/profile')) {
+      authState.current = { ...GUEST, authMode: 'cloud', cloudAuthAvailable: true };
+      convexState.useQuery = (_fn, args) => (args && args !== 'skip' && 'username' in args ? null : []);
+    }
     renderApp([path]);
     await settleRoute();
     expectBoardDock(false);
   });
 
-  it.each(['/volleyball/quick', '/kabaddi/quick', '/basketball/quick', '/tennis/tournament'])('hides the dock on the sub-screen %s', async path => {
+  it.each(['/volleyball/quick', '/kabaddi/quick', '/basketball/quick', '/tennis/tournament/new'])('hides the dock on setup with a fixed Start bar %s', async path => {
     renderApp([path]);
     await settleRoute();
     expectBoardDock(true);
@@ -1053,8 +1057,7 @@ describe('navigation decisions (2026-10-21)', () => {
     expect(screen.queryByRole('button', { name: 'Rematch' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(currentRoute()).toBe('/volleyball/tournament/100'));
-    // A tournament page is a sub-screen with its own Back, not a tab screen.
-    expectBoardDock(true);
+    expectBoardDock(false);
   });
 
   it('quick results keep Rematch and its fresh scorer leaves without warning', async () => {

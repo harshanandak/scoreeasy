@@ -1,8 +1,10 @@
+import { resolveKabaddiRules } from '../../utils/kabaddiRules';
+import { matchStorageKey } from '../../utils/accountStorage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
-import { loadCustomSetup, SETUP_PREFS_KEY } from '../../utils/setupPrefs';
+import { loadCustomSetup, saveCustomSetup, SETUP_PREFS_KEY } from '../../utils/setupPrefs';
 import { closeOpenSheet, findTeamNameInput, goToSetupStep, teamColourGroup } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
@@ -95,7 +97,7 @@ describe('remembered quick setup', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
     await screen.findByRole('button', { name: 'Add point for Royals' });
 
-    const stored = globalThis.localStorage.getItem(SETUP_PREFS_KEY);
+    const stored = globalThis.localStorage.getItem(matchStorageKey(SETUP_PREFS_KEY));
     expect(JSON.parse(stored).volleyball).toEqual({ colours: ['#facc15', '#1d4ed8'], formatId: 'sets-1' });
     expect(stored).not.toContain('Royals');
 
@@ -112,11 +114,11 @@ describe('remembered quick setup', () => {
     expect(screen.queryByText(/Using your last colours/)).toBeNull();
     expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAttribute('aria-checked', 'true');
     expect(within(teamColourGroup('A')).getByRole('button', { name: 'Red' })).toHaveAttribute('aria-pressed', 'true');
-    expect(globalThis.localStorage.getItem(SETUP_PREFS_KEY)).not.toContain('volleyball');
+    expect(globalThis.localStorage.getItem(matchStorageKey(SETUP_PREFS_KEY))).not.toContain('volleyball');
   });
 
   it('does not carry one sport into another', async () => {
-    globalThis.localStorage.setItem(SETUP_PREFS_KEY, JSON.stringify({ volleyball: { colours: ['#facc15', '#1d4ed8'], formatId: 'sets-1' } }));
+    globalThis.localStorage.setItem(matchStorageKey(SETUP_PREFS_KEY), JSON.stringify({ volleyball: { colours: ['#facc15', '#1d4ed8'], formatId: 'sets-1' } }));
     renderQuick('/badminton/quick');
     expect(await screen.findByRole('button', { name: 'Start badminton' })).toBeInTheDocument();
     expect(screen.queryByText(/Using your last colours/)).toBeNull();
@@ -145,4 +147,18 @@ it('starts kabaddi standard and offers the last custom rules only on request', a
   fireEvent.click(screen.getByRole('radio', { name: 'Standard' }));
   goToSetupStep('Rules');
   expect(screen.getByRole('spinbutton', { name: 'Minutes a half' })).toHaveValue('20');
+});
+
+
+it('applies saved kabaddi rules without replacing this first raid for this match', async () => {
+  saveCustomSetup('kabaddi', { format: { kabaddiRules: resolveKabaddiRules('custom', { ...resolveKabaddiRules('standard'), raidLimitMs: 45000 }), openingRaidTeam: 0 } });
+  renderQuick('/kabaddi/quick');
+  await screen.findByRole('radio', { name: 'Standard' });
+  goToSetupStep('Teams');
+  fireEvent.click(within(screen.getByRole('group', { name: 'First raid' })).getByRole('button', { name: 'Team B' }));
+  goToSetupStep('Rules');
+  fireEvent.click(screen.getByRole('button', { name: /Use my last custom setup/ }));
+  expect(screen.getByRole('spinbutton', { name: 'Raid seconds' })).toHaveValue('45');
+  goToSetupStep('Teams');
+  expect(within(screen.getByRole('group', { name: 'First raid' })).getByRole('button', { name: 'Team B' })).toHaveAttribute('aria-pressed', 'true');
 });

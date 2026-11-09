@@ -2,6 +2,7 @@ import { EARLY_FINISH_MESSAGE } from '../../../utils/matchOutcome';
 import { BoardBar, BoardHeader, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
+import SportMark from '../kit/SportMark';
 import './cricketBoard.css';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
@@ -810,7 +811,7 @@ export default function MonoCricketTestLiveScore({ storageMode }) {
 
         {/* Batting team — hero */}
         <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
-          <span className="cricket-mark" aria-hidden="true" />
+          <SportMark sportId="cricket" className="cricket-mark" />
           <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
             {battingTeamName} batting
           </p>

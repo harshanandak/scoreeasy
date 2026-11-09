@@ -22,7 +22,7 @@ describe('CricketRulesStep', () => {
     expect(screen.getByRole('spinbutton', { name: 'Players per side' })).toHaveValue('11');
     expect(screen.getByRole('button', { name: '20' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: '10' }));
-    expect(latest).toEqual(buildCricketFormat('custom', cricketRuleValues({ ...buildCricketFormat('T20'), overs: 10 })));
+    expect(latest).toEqual(buildCricketFormat('custom', cricketRuleValues({ ...buildCricketFormat('T20'), overs: 10, powerplay: [] })));
     expect(screen.getByRole('heading', { name: /^Customised.*from T20/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset to T20' }));
     expect(latest).toEqual(buildCricketFormat('T20'));
@@ -89,4 +89,42 @@ describe('CricketRulesStep', () => {
     fireEvent.click(screen.getByRole('button', { name: 'By overs' }));
     expect(latest).toMatchObject({ trackOvers: true, maxBalls: null });
   });
+});
+
+
+it('syncs typed overs after Reset without interrupting typing', () => {
+  render(<Host preset="T20" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Custom' }));
+  const input = screen.getByRole('spinbutton', { name: 'Custom overs (1 to 50)' });
+  fireEvent.change(input, { target: { value: '1' } });
+  expect(screen.getByRole('spinbutton', { name: 'Custom overs (1 to 50)' })).toBe(input);
+  fireEvent.change(input, { target: { value: '12' } });
+  expect(latest.overs).toBe(12);
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to T20' }));
+  expect(screen.getByRole('button', { name: '20' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('spinbutton', { name: 'Custom overs (1 to 50)' })).toBeNull();
+});
+
+it('keeps free hit visible and editable and drops stale powerplay on a length change', () => {
+  render(<Host preset="T20" />); openMore();
+  expect(screen.getByRole('switch', { name: 'Free hit after a no-ball' })).toHaveAttribute('aria-checked', 'true');
+  fireEvent.click(screen.getByRole('switch', { name: 'Free hit after a no-ball' }));
+  expect(latest.freeHit).toBe(false);
+  expect(screen.getByRole('heading', { name: /^Customised.*from T20/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to T20' }));
+  fireEvent.click(screen.getByRole('button', { name: '10' }));
+  expect(latest.freeHit).toBe(true);
+  expect(latest.powerplay).toEqual([]);
+});
+
+it('uses all players for the wickets hint when last man bats', () => {
+  render(<Host />); openMore();
+  fireEvent.click(screen.getByRole('switch', { name: 'Last man bats' }));
+  expect(screen.getByText('6 wickets to bowl a team out')).toBeInTheDocument();
+});
+
+it('does not mark the unedited Custom preset as Customised', () => {
+  render(<Host preset="custom" />);
+  expect(screen.getByRole('heading', { name: /^Custom / })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
 });
