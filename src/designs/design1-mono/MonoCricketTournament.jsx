@@ -1,6 +1,4 @@
 import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
-import { resetMatchOutcome } from '../../utils/matchOutcome';
-import { resetLiveGeneration } from '../../lib/live/liveSession';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -9,6 +7,8 @@ import { getSportById } from '../../models/sportRegistry';
 import { isGroupStageComplete, initializeKnockoutStage, updateKnockoutBracket, isTournamentComplete, getTournamentWinner } from '../../utils/knockoutManager';
 import KnockoutMatchCard from './KnockoutMatchCard';
 import TournamentNotFoundActions from './components/TournamentNotFoundActions';
+import TournamentScoreClearActions from './components/TournamentScoreClearActions';
+import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { getKnockoutRoundGroups, getTournamentProgressCounts } from '../../utils/tournamentDisplay';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
@@ -86,6 +86,10 @@ export default function MonoCricketTournament() {
     }
   }, [tournament?.knockoutMatches]);
 
+  const scoreClear = useTournamentScoreClear({
+    scoreKind: 'cricket', setTournament, teams: tournament?.teams, tournament,
+    tournamentScopeKey: `${sportId}:${id}`,
+  });
   const knockoutDisplay = useTournamentKnockoutDisplay({
     tournament,
     tab,
@@ -109,32 +113,6 @@ export default function MonoCricketTournament() {
   };
 
   const { completedMatches, totalMatches } = getTournamentProgressCounts(tournament);
-
-  const clearScore = (matchId) => {
-    resetLiveGeneration(`${sportId}:${id}:${matchId}`);
-    setTournament(prev => ({
-      ...prev,
-      matches: prev.matches.map((m) => {
-        if (m.id !== matchId) return m;
-        return {
-          ...resetMatchOutcome(m),
-          score1: null,
-          score2: null,
-          guidedInnings: null,
-          currentInningsIndex: undefined,
-          team1Score: null,
-          team2Score: null,
-          innings: null,
-          winner: null,
-          winDesc: null,
-          followOnEnforced: false,
-          superOver: null,
-          draftState: null,
-          status: 'pending',
-        };
-      }),
-    }));
-  };
 
   const { hasKnockouts, tabs, tournamentTypeLabel } = knockoutDisplay;
   const knockoutRoundGroups = getKnockoutRoundGroups(tournament.knockoutMatches);
@@ -166,6 +144,7 @@ export default function MonoCricketTournament() {
       navigate={navigate}
       getTeamName={getTeamName}
       engine="custom-cricket"
+      scoreClear={scoreClear}
     />
   );
 
@@ -242,12 +221,13 @@ export default function MonoCricketTournament() {
                   chips={chips}
                   live={view.live}
                   end={view.complete && (
-                    <button type="button" onClick={() => clearScore(match.id)} className="kit-quiet kit-fx-clear">
+                    <button type="button" onClick={() => scoreClear.requestScoreClear(match)} className="kit-quiet kit-fx-clear">
                       Clear
                     </button>
                   )}
                 >
                   <TournamentMatchSyncStatus compact sport={sportId} tournament={tournament} match={match} />
+                  <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} showUndo={false} />
 
                   <div className="kit-last-teams">
                     <FixtureTeam
@@ -382,6 +362,12 @@ export default function MonoCricketTournament() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+      {scoreClear.clearedScore && (
+        <div className="kit-toast">
+          <span role="status" aria-live="polite">Cleared the saved score for {scoreClear.clearedScore.label}.</span>
+          <button type="button" onClick={scoreClear.undoScoreClear}>Undo clear score</button>
         </div>
       )}
     </div>
