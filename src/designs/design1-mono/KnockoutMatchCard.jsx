@@ -21,7 +21,9 @@ function getScoreInfo(match, engine) {
   } else if (engine === 'goals') {
     hasScore = match.score1 !== null && match.score1 !== undefined;
   } else if (engine === 'custom-cricket') {
-    hasScore = match.team1Score !== null;
+    // The Test scorer saves innings, winner and winDesc and leaves team1Score null, so innings or a
+    // finished match count as scored too.
+    hasScore = match.team1Score !== null || match.innings?.length > 0 || match.status === 'completed';
   }
 
   return { hasScore, t1SetsWon, t2SetsWon };
@@ -67,7 +69,10 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
   if (!abandoned) matchWinner = t1SetsWon > t2SetsWon ? 'team1' : 'team2';
 
   // Cricket knockouts show the innings line and overs like a group fixture (sets and goals are unchanged).
-  const cricket = engine === 'custom-cricket' && hasScore ? cricketFixtureView(match, tournament?.format) : null;
+  // Units follow the scorer's fallback order: the match's own format, then the knockout format, then the tournament's.
+  const cricket = engine === 'custom-cricket' && hasScore
+    ? cricketFixtureView(match, tournament?.knockoutConfig?.format || tournament?.format)
+    : null;
 
   return (
     <FixtureCard label={match.label} chips={getStatusChip(match)} live={match.status === 'in-progress'}>
