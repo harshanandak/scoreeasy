@@ -14,6 +14,7 @@ const confirmed = new Map();
 const volatileRecords = new Map();
 const pendingWrites = new Map();
 const revisions = new Map();
+const dirtyRecords = new Set();
 const keyFor = (ownerId, clientMatchId) => `${PREFIX}${encodeURIComponent(ownerId)}:${encodeURIComponent(clientMatchId)}`;
 const notify = () => globalThis.dispatchEvent(new Event(PENDING_SAVES_CHANGED));
 
@@ -27,6 +28,9 @@ export async function hydratePendingMatchSaves(ownerId) {
       if (record?.ownerId !== ownerId || !record.payload?.clientMatchId) continue;
       const key = keyFor(ownerId, record.payload.clientMatchId);
       if (beforeRead.get(key) !== revisions.get(key)) continue;
+      // Failed writes leave newer session state that a successful read cannot replace.
+      if (dirtyRecords.has(key) && !(record.state === 'synced' && sameCompletion(volatileRecords.get(key), record))) continue;
+      dirtyRecords.delete(key);
       volatileRecords.set(key, record);
       if (record.state === 'synced') confirmed.set(key, record.completionId);
     }
@@ -38,10 +42,15 @@ function persistFallback(key, record) {
     storePendingSaveFallback(key, { ...record, storageFailed: false }));
   const settled = pending.then((stored) => {
     if (volatileRecords.get(key) !== record) return;
+    dirtyRecords.delete(key);
     volatileRecords.set(key, stored);
     if (stored.state === 'synced') confirmed.set(key, stored.completionId);
     notify();
-  }).catch(() => { /* Retain the actionable session record if both stores refuse writes. */ })
+  }).catch(() => {
+    if (volatileRecords.get(key) !== record) return;
+    volatileRecords.set(key, { ...record, storageFailed: true });
+    notify();
+  })
     .finally(() => { if (pendingWrites.get(key) === settled) pendingWrites.delete(key); });
   pendingWrites.set(key, settled);
 }
@@ -132,6 +141,7 @@ function write(record) {
   if (useFallback) {
     const previous = volatileRecords.get(key);
     record = { ...record, storageBackend: 'indexedDB', storageFailed: !(previous?.storageFailed === false && sameCompletion(previous, record)) };
+    dirtyRecords.add(key);
     volatileRecords.set(key, record);
     if (globalThis.indexedDB) persistFallback(key, record);
   }
