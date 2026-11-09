@@ -75,7 +75,7 @@ describe('GuestLanding', () => {
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
 
-  it('shows a picker tile for every registered sport, three across with no scrolling row', () => {
+  it('shows exactly one picker tile for every registered sport', () => {
     renderLanding();
 
     for (const sport of getSportsList()) {
@@ -85,7 +85,7 @@ describe('GuestLanding', () => {
     expect(within(screen.getByRole('group', { name: 'Pick a sport' })).getAllByRole('button')).toHaveLength(9);
   });
 
-  it('keeps the chip, the example card and every Start button on the same sport', () => {
+  it('keeps the picker, the example card and every Start button on the same sport', () => {
     renderLanding();
 
     expect(pickFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
@@ -177,7 +177,7 @@ describe('GuestLanding', () => {
     expect(screen.getByText('Scoreboard app for local matches')).toBeInTheDocument();
   });
 
-  it('lists the sports once, in the picker, and has no second sports section or tile grid', () => {
+  it('has no second sports section or tile grid below the picker', () => {
     renderLanding();
 
     expect(screen.queryByText(/\/ Sports$/)).not.toBeInTheDocument();

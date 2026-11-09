@@ -34,13 +34,13 @@ describe('landing demo', () => {
     expect(scores(demo)).toEqual(['15', '12']);
   });
 
-  it('counts table tennis games from the sets engine: game 3 of 5, 1-1 in games, 8-6 in the game', () => {
+  it('counts table tennis from the sets engine: set 3 of 5, 1-1 in sets, 8-6 in the set', () => {
     const demo = buildDemo('tabletennis');
-    expect(demo.context).toMatch(/^(Game|Set) 3 of 5 · (games|sets) 1-1$/);
+    expect(demo.context).toBe('Set 3 of 5 · sets 1-1');
     expect(scores(demo)).toEqual(['8', '6']);
   });
 
-  it('reads tennis as 30-15 in game five of set two, after a 6-3 first set', () => {
+  it('reads tennis as 30-15 at 3-2 in set two', () => {
     const demo = buildDemo('tennis');
     expect(demo.context).toBe('Set 2 · games 3-2');
     expect(scores(demo)).toEqual(['30', '15']);
