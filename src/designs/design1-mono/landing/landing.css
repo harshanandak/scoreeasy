@@ -36,6 +36,89 @@
   margin-top: 0;
 }
 
+/* ---- numbered mono eyebrows and heavy headlines (the original page's voice, in Kit tokens) ---- */
+.kit-landing-eyebrow,
+.kit-landing-label {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font: 700 0.72rem/1.2 var(--se-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.kit-landing-hero .kit-landing-eyebrow {
+  margin-top: 6px;
+}
+
+.kit-landing-head {
+  margin: 40px 2px 14px;
+}
+
+.kit-landing-head h2 {
+  margin: 8px 0 0;
+  font: 800 clamp(1.75rem, 8vw, 2.3rem)/1 var(--se-font-display);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+/* ---- 01 stat cards and notes ---- */
+.kit-landing-stats,
+.kit-landing-features {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-landing-stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kit-landing-stats b {
+  font: 800 2.4rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-landing-stats p,
+.kit-landing-features p {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.kit-landing-notes {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-landing-notes .kit-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+/* ---- 02 feature cards ---- */
+.kit-landing-features li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.kit-landing-features h3 {
+  margin: 0;
+  font: 800 1.1rem/1.15 var(--se-font-display);
+  letter-spacing: -0.01em;
+}
+
 /* ---- sport chips: one scrolling row, thumb-sized ---- */
 .kit-landing-chips {
   display: flex;
@@ -188,6 +271,30 @@
 
   .kit-landing-tiles {
     gap: 14px;
+  }
+
+  .kit-landing-head {
+    margin-top: 56px;
+  }
+
+  .kit-landing-head h2 {
+    font-size: 2.8rem;
+  }
+
+  .kit-landing-stats,
+  .kit-landing-features {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .kit-landing-notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .kit-landing-notes .kit-row + .kit-row {
+    border-top: 0;
+    border-left: 1px solid var(--se-color-line-soft);
   }
 
   .kit-landing-steps {
