@@ -197,3 +197,105 @@ it('retains an unresolved finish after a transport failure and retries from root
   expect(h.scorePoint.mock.invocationCallOrder[0]).toBeLessThan(h.finalize.mock.invocationCallOrder[0]);
   root.unmount();
 });
+
+it('does not persist a pre-restore finish without a terminal snapshot', async () => {
+  saveSession(clientMatchId, { seq: 7, isShared: true });
+  const pending = deferred();
+  h.query.mockReturnValue(pending.promise);
+  const scorer = renderHook(() => useLiveBroadcast({ enabled: false }));
+  let restoring;
+  await act(async () => { restoring = scorer.result.current.restore({ clientMatchId }); });
+  await act(async () => { await scorer.result.current.finalize({ resultType: 'decided' }); });
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  expect(load()).toEqual([]);
+  expect(h.finalize).not.toHaveBeenCalled();
+  await act(async () => { pending.resolve(restoredSession); await restoring; });
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  scorer.unmount();
+});
+
+it('applies the terminal snapshot before finalize when the server already has the next local event id', async () => {
+  saveSession(clientMatchId, { seq: 7, isShared: true });
+  h.online = false;
+  const pending = deferred();
+  h.query.mockReturnValueOnce(pending.promise).mockResolvedValue({ ...restoredSession, lastSeq: 8 });
+  const seen = new Set([`${clientMatchId}:8`]);
+  let serverSnapshot = { ...terminal, pointsA: 4 };
+  let finalizedSnapshot;
+  const order = [];
+  h.scorePoint.mockImplementation(async ({ clientEventId, snapshot }) => {
+    if (seen.has(clientEventId)) return { existing: true };
+    seen.add(clientEventId);
+    serverSnapshot = snapshot;
+    order.push('terminal');
+    return {};
+  });
+  h.finalize.mockImplementation(async () => {
+    finalizedSnapshot = serverSnapshot;
+    order.push('finalize');
+    return { archived: true };
+  });
+  const scorer = renderHook(() => useLiveBroadcast({ enabled: false }));
+  let restoring;
+  await act(async () => { restoring = scorer.result.current.restore({ clientMatchId }); });
+  await act(async () => { await scorer.result.current.finalize(finish); });
+  const queuedId = load()[0].clientEventId;
+  scorer.unmount();
+  h.online = true;
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await waitFor(() => {
+    expect(h.finalize).toHaveBeenCalledTimes(1);
+    expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  });
+  expect(finalizedSnapshot).toEqual(terminal);
+  expect(order).toEqual(['terminal', 'finalize']);
+  expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ clientEventId: queuedId, snapshot: terminal }));
+  await act(async () => { pending.resolve({ ...restoredSession, lastSeq: 8 }); await restoring; });
+  await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+  expect(h.finalize).toHaveBeenCalledTimes(1);
+  root.unmount();
+});
+
+it('does not persist or send a disabled private session with a saved id but no positive sharing flag', async () => {
+  saveSession(clientMatchId, { seq: 7, matchId: 'live-private', token: 'PRIVATE' });
+  const pending = deferred();
+  h.query.mockReturnValue(pending.promise);
+  const scorer = renderHook(() => useLiveBroadcast({ enabled: false }));
+  let restoring;
+  await act(async () => { restoring = scorer.result.current.restore({ clientMatchId }); });
+  h.query.mockClear();
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await act(async () => { await scorer.result.current.finalize(finish); });
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  expect(load()).toEqual([]);
+  expect(h.query).not.toHaveBeenCalled();
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.undo).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  expect(h.create).not.toHaveBeenCalled();
+  expect(h.setVisibility).not.toHaveBeenCalled();
+  await act(async () => {
+    pending.resolve({ ...restoredSession, matchId: 'live-private', isShared: false });
+    await restoring;
+  });
+  scorer.unmount();
+  root.unmount();
+});
+
+it('cancels a null lookup and does not query the unresolved finish again on the next trigger', async () => {
+  enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  h.query.mockResolvedValue(null);
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await act(async () => { await flushLiveSession(clientMatchId, h); });
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  expect(loadSession(clientMatchId).broadcastError.code).toBe('match_not_found');
+  expect(load()).toEqual([]);
+  const calls = h.query.mock.calls.length;
+  await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+  expect(h.query).toHaveBeenCalledTimes(calls);
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  root.unmount();
+});
