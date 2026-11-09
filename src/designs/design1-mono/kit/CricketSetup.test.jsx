@@ -3,24 +3,29 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { getSportById } from '../../../models/sportRegistry';
 import { buildCricketFormat } from '../../../utils/cricketCalculations';
-import { CricketRulesStep } from './CricketSetup';
+import { CricketRulesStep, cricketRuleValues } from './CricketSetup';
 
 // Mirrors how MonoQuickMatch holds `format`: the step reports the whole next format.
 let latest;
 function Host({ preset = 'gully' }) {
   const [format, setFormat] = useState(() => buildCricketFormat(preset));
+  const [source, setSource] = useState(null);
   latest = format;
-  return <CricketRulesStep sportConfig={getSportById('cricket')} format={format} cricketPreset={preset} onChange={setFormat} />;
+  return <CricketRulesStep sportConfig={getSportById('cricket')} format={format} cricketPreset={format.preset} source={source} onSourceChange={setSource} onChange={setFormat} />;
 }
 const openMore = () => fireEvent.click(screen.getByRole('button', { name: 'More rules' }));
 
 describe('CricketRulesStep', () => {
-  it('says a fixed format is fixed and offers no rules to change', () => {
+  it('shows T20 values and changes to the same Custom config, with a reverse path', () => {
     render(<Host preset="T20" />);
-    expect(screen.getByRole('heading', { level: 2, name: /^T20 · 20 overs · 11 players · 1 innings each/ })).toBeInTheDocument();
-    expect(screen.getByText(/These rules are fixed for T20/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'More rules' })).toBeNull();
-    expect(screen.queryByRole('spinbutton')).toBeNull();
+    expect(screen.getByRole('heading', { level: 2, name: /^T20/ })).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Players per side' })).toHaveValue('11');
+    expect(screen.getByRole('button', { name: '20' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '10' }));
+    expect(latest).toEqual(buildCricketFormat('custom', cricketRuleValues({ ...buildCricketFormat('T20'), overs: 10 })));
+    expect(screen.getByRole('heading', { name: /^Customised.*from T20/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to T20' }));
+    expect(latest).toEqual(buildCricketFormat('T20'));
   });
 
   it('shows gully overs, players and match type, with a plain summary line', () => {
@@ -30,7 +35,7 @@ describe('CricketRulesStep', () => {
     expect(screen.getByRole('spinbutton', { name: 'Players per side' })).toHaveValue('6');
     expect(screen.getByRole('group', { name: 'Match type' })).toBeInTheDocument();
     expect(screen.getByText('One team bats, the other bowls')).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: 'Scoring format' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Scoring format' })).toBeInTheDocument();
   });
 
   it('keeps the old patches: overs, players and match type', () => {

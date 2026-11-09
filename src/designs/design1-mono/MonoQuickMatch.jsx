@@ -613,7 +613,8 @@ export default function MonoQuickMatch() {
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
           || CRICKET_FORMATS.find(f => f.id === (saved.format?.totalInnings === 4 ? 'test' : 'custom'));
-        setCricketPreset(preset.id);
+        setCustomSetupSource(null);
+    setCricketPreset(preset.id);
         setFormatMode(preset.customizable ? 'custom' : 'standard');
       }
       setResult(saved);
@@ -1965,6 +1966,7 @@ export default function MonoQuickMatch() {
   const chooseCricketFormat = (presetId) => {
     const preset = CRICKET_FORMATS.find(f => f.id === presetId);
     if (!preset) return;
+    setCustomSetupSource(null);
     setCricketPreset(preset.id);
     setFormatMode(preset.customizable ? 'custom' : 'standard');
     setFormat(buildCricketFormat(preset.id));
@@ -2242,7 +2244,8 @@ export default function MonoQuickMatch() {
 
       if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
 
-      if (isCricket) return <CricketRulesStep sportConfig={sportConfig} format={format} cricketPreset={cricketPreset} onChange={setFormat} />; // cricket
+      if (isCricket) return <CricketRulesStep sportConfig={sportConfig} format={format} cricketPreset={cricketPreset} source={customSetupSource} onSourceChange={setCustomSetupSource}
+        onChange={next => { setFormat(next); setCricketPreset(next.preset); setFormatMode(next.preset === 'custom' ? 'custom' : 'standard'); }} />; // cricket
 
       return null;
     })();
