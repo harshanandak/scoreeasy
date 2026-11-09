@@ -25,8 +25,6 @@ jobs:
     name: Build iOS Simulator App
     runs-on: macos-15
     timeout-minutes: 30
-    env:
-      SWIFTPM_PATH: ${{ runner.temp }}/swiftpm
 
     steps:
       - name: Checkout
@@ -48,6 +46,7 @@ jobs:
           sw_vers
           xcodebuild -version
           echo "xcode-version=$(xcodebuild -version | tr '\n' '-')" >> "$GITHUB_OUTPUT"
+          echo "SWIFTPM_PATH=$RUNNER_TEMP/swiftpm" >> "$GITHUB_ENV"
           xcodebuild -showsdks
           node --version
           bun --version
