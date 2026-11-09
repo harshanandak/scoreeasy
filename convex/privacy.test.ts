@@ -49,8 +49,8 @@ describe("saved match ownership", () => {
 
   test("tagging a player never grants access to the scorer's private match or stats", async () => {
     const { owner, other, ownerId, otherId, savedId } = await fixture();
-    expect((await owner.query(api.matches.getByUser, { userId: ownerId })).map((m) => m._id)).toEqual([savedId]);
-    expect(await other.query(api.matches.getByUser, { userId: otherId })).toEqual([]);
+    expect((await owner.query(api.matches.getByUser, { userId: ownerId })).page.map((m) => m._id)).toEqual([savedId]);
+    expect((await other.query(api.matches.getByUser, { userId: otherId })).page).toEqual([]);
     expect(await other.query(api.matches.getRecent, { userId: otherId })).toEqual([]);
     expect(await other.query(api.matches.getUserStats, { userId: otherId })).toMatchObject({ totalMatches: 0, gamesOperated: 0 });
   });
@@ -78,7 +78,7 @@ describe("saved match ownership", () => {
   test("finalized matches remain in the scorer's private history", async () => {
     const { owner, ownerId, matchId } = await fixture();
     const result = await owner.mutation(api.live.finalize, { matchId });
-    expect((await owner.query(api.matches.getByUser, { userId: ownerId })).some((m) => m._id === result.matchId)).toBe(true);
+    expect((await owner.query(api.matches.getByUser, { userId: ownerId })).page.some((m) => m._id === result.matchId)).toBe(true);
   });
 });
 
