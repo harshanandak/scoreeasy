@@ -1,7 +1,8 @@
 import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
-import { FixtureCard, FixtureTeam, SetChips } from './kit/TournamentParts';
+import { FixtureCard, FixtureResult, FixtureTeam, SetChips } from './kit/TournamentParts';
+import { cricketFixtureView } from './kit/cricketFixture';
 
 function getScoreInfo(match, engine) {
   let hasScore = false;
@@ -65,6 +66,9 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
   let matchWinner = null;
   if (!abandoned) matchWinner = t1SetsWon > t2SetsWon ? 'team1' : 'team2';
 
+  // Cricket knockouts show the innings line and overs like a group fixture (sets and goals are unchanged).
+  const cricket = engine === 'custom-cricket' && hasScore ? cricketFixtureView(match, tournament?.format) : null;
+
   return (
     <FixtureCard label={match.label} chips={getStatusChip(match)} live={match.status === 'in-progress'}>
       <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
@@ -72,14 +76,18 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
       <div className="kit-last-teams">
         <FixtureTeam
           name={team1Ready ? getTeamName(match.team1Id) : 'TBD'}
-          score={getTeamScore(engine, hasScore, t1SetsWon, match.score1)}
+          score={cricket ? cricket.scores[0] : getTeamScore(engine, hasScore, t1SetsWon, match.score1)}
+          detail={cricket?.details[0]}
+          wide={cricket?.wide}
           winner={isTeam1Winner}
           loser={isTeam1Loser}
           tbd={!team1Ready}
         />
         <FixtureTeam
           name={team2Ready ? getTeamName(match.team2Id) : 'TBD'}
-          score={getTeamScore(engine, hasScore, t2SetsWon, match.score2)}
+          score={cricket ? cricket.scores[1] : getTeamScore(engine, hasScore, t2SetsWon, match.score2)}
+          detail={cricket?.details[1]}
+          wide={cricket?.wide}
           winner={isTeam2Winner}
           loser={isTeam2Loser}
           tbd={!team2Ready}
@@ -89,6 +97,8 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
       {hasScore && engine === 'sets' && match.sets.length > 0 && (
         <SetChips sets={match.sets} abandoned={abandoned} matchWinner={matchWinner} />
       )}
+
+      {cricket?.result && <FixtureResult tone={cricket.abandoned ? 'warn' : undefined}>{cricket.result}</FixtureResult>}
 
       {bothReady && (
         <button type="button" onClick={() => navigate(`/${sport}/tournament/${id}/match/${match.id}/score`)} className="se-ctl">

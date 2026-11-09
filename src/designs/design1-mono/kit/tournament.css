@@ -303,6 +303,44 @@
   font-weight: 600;
 }
 
+/* Cricket: the innings line is the score (runs/wickets), with overs faced quietly under it. A long
+   line (a Test's two innings) steps down and wraps rather than crowding the team name. */
+.kit-fx-score {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  text-align: right;
+}
+
+.kit-fx-score.is-wide {
+  flex: 0 1 55%;
+  font-size: 1.15rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.kit-fx-ov {
+  color: var(--se-color-ink-soft);
+  font: 550 0.8rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.kit-fx-result {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--se-color-line-soft);
+  color: var(--se-color-ink);
+  font-size: 0.92rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.kit-fx-result.is-warn {
+  color: var(--se-color-warning);
+}
+
 /* Set scores: one pill per set. A set the match winner took reads live, one they lost reads danger;
    the higher number is always bold, so the colour never carries the meaning alone. */
 .kit-fx-sets {
@@ -502,4 +540,11 @@
   .kit-tcard-open {
     transition: none;
   }
+}
+
+.kit-nrr-note {
+  margin-top: 12px;
+  padding: 0 8px;
+  text-align: left;
+  font-weight: 550;
 }
