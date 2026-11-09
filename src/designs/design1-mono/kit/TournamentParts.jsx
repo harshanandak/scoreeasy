@@ -79,22 +79,41 @@ FixtureCard.propTypes = {
   children: PropTypes.node,
 };
 
-/** A team row inside a fixture: name left, score right. The winner is heavier, the loser quieter. */
-export function FixtureTeam({ name, score, winner = false, loser = false, tbd = false }) {
+/**
+ * A team row inside a fixture: name left, score right. The winner is heavier, the loser quieter.
+ * `detail` is an optional quiet line under the score (cricket: overs faced). `wide` steps the score
+ * down so a long line (a Test's two innings) wraps instead of pushing the name; set it on both
+ * teams of a fixture so the two scores stay the same size.
+ */
+export function FixtureTeam({ name, score, detail, wide = false, winner = false, loser = false, tbd = false }) {
+  const hasScore = score !== undefined && score !== null;
   return (
     <div className={cx('kit-last-team', winner && 'is-winner', loser && 'is-loser', tbd && 'is-tbd')}>
       <span className="kit-last-name">{name}</span>
-      {score !== undefined && score !== null && <span className="kit-last-score kit-fx-score">{score}</span>}
+      {hasScore && (
+        <span className={cx('kit-last-score kit-fx-score', wide && 'is-wide')}>
+          {score}
+          {detail && <small className="kit-fx-ov">{detail}</small>}
+        </span>
+      )}
     </div>
   );
 }
 FixtureTeam.propTypes = {
   name: PropTypes.string.isRequired,
   score: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  detail: PropTypes.string,
+  wide: PropTypes.bool,
   winner: PropTypes.bool,
   loser: PropTypes.bool,
   tbd: PropTypes.bool,
 };
+
+/** The result line under a finished fixture ("Royals won by 5 wickets", "Match Tied", "Abandoned · no result"). */
+export function FixtureResult({ children, tone }) {
+  return <p className={cx('kit-fx-result', tone && `is-${tone}`)}>{children}</p>;
+}
+FixtureResult.propTypes = { children: PropTypes.node.isRequired, tone: PropTypes.oneOf(['warn']) };
 
 /**
  * Set scores for a sets match, as pills. `abandoned` gives neutral pills with no winner emphasis;
