@@ -102,7 +102,8 @@ describe('GuestLanding', () => {
 
     const card = screen.getByTestId('landing-example');
     expect(within(card).getByText('India')).toBeInTheDocument();
-    expect(within(card).getByText(/^\d+\/\d+$/)).toBeInTheDocument();
+    // Both innings: India's finished 20 overs and Australia's reply.
+    expect(within(card).getAllByText(/^\d+\/\d+$/)).toHaveLength(2);
 
     fireEvent.click(pickFor('Volleyball'));
     expect(within(card).getByText('Eagles')).toBeInTheDocument();
@@ -119,7 +120,7 @@ describe('GuestLanding', () => {
     expect(within(card).getByText('20 overs')).toBeInTheDocument();
     expect(within(card).getByText('5.3 overs')).toBeInTheDocument();
     expect(within(card).getByText('Batting')).toBeInTheDocument();
-    expect(within(card).getByText(/^Australia need d+ off 87 balls · required rate d+.d{2}$/)).toBeInTheDocument();
+    expect(within(card).getByText(/^Australia need \d+ off 87 balls · required rate \d+\.\d{2}$/)).toBeInTheDocument();
 
     // Set sports: the finished sets as a grid, the set in play as the big number, and the server.
     fireEvent.click(pickFor('Volleyball'));
