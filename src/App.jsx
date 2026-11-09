@@ -5,10 +5,15 @@ import { usePendingMatchSaves } from './hooks/usePendingMatchSaves';
 import { usePendingLiveFinalizations } from './hooks/usePendingLiveFinalizations';
 import { useGuestMatchUploads } from './hooks/useGuestMatchUploads';
 import GuestUploadNotice from './components/GuestUploadNotice';
+import MatchStorageBoundary from './auth/MatchStorageBoundary';
 
 const Design = lazy(() => import('./designs/design1-mono/index'));
 
 export default function App() {
+  return <MatchStorageBoundary><AccountApp /></MatchStorageBoundary>;
+}
+
+function AccountApp() {
   const matchQueue = usePendingMatchSaves();
   const guestUploadNotice = useGuestMatchUploads(matchQueue);
   const liveErrors = usePendingLiveFinalizations();

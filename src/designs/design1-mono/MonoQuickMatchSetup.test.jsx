@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
@@ -114,14 +115,14 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start tennis' }));
 
     expect(await screen.findByText('Real tennis scorer')).toBeInTheDocument();
-    expect(JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]')).toHaveLength(0);
+    expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey('se_quickmatches')) || '[]')).toHaveLength(0);
     let draftKey = null;
     for (let index = 0; index < globalThis.localStorage.length; index += 1) {
       const key = globalThis.localStorage.key(index);
-      if (key?.startsWith('se_tennis_quick_draft_')) draftKey = key;
+      if (key?.startsWith(matchStorageKey('se_tennis_quick_draft_'))) draftKey = key;
     }
     expect(draftKey).toBeTruthy();
-    expect(JSON.parse(globalThis.localStorage.getItem(draftKey))).toMatchObject({
+    expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey(draftKey)))).toMatchObject({
       sport: 'tennis',
       team1: 'Team A',
       team2: 'Team B',
@@ -135,7 +136,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start cricket' }));
 
     expect(await screen.findByText('Cricket Test Match scorer')).toBeInTheDocument();
-    expect(JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]')).toEqual([
+    expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey('se_quickmatches')) || '[]')).toEqual([
       expect.objectContaining({
         sport: 'cricket',
         status: 'in-progress',
@@ -346,8 +347,8 @@ it.each([['football', 2, 45], ['basketball', 4, 10], ['hockey', 4, 15]])('freeze
   expect(screen.getByRole('combobox', { name: 'Timing preset' })).toHaveValue('custom');
   fireEvent.click(screen.getByRole('button', { name: `Start ${sport}` }));
   expect(screen.getByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
-  const key = Object.keys(localStorage).find(key => key.startsWith(`se_quickmatch_draft_${sport}_`));
-  const draft = JSON.parse(localStorage.getItem(key));
+  const key = Object.keys(localStorage).find(key => key.startsWith(matchStorageKey(`se_quickmatch_draft_${sport}_`)));
+  const draft = JSON.parse(localStorage.getItem(matchStorageKey(key)));
   expect(draft.periodState).toMatchObject({ version: 1, sport, durations: Array(count).fill(180) });
   first.unmount(); globalThis.localStorage.clear();
   renderQuickMatch(`/${sport}/quick`);

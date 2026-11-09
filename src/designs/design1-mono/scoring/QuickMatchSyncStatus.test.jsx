@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -24,6 +25,7 @@ beforeEach(() => {
   localStorage.clear();
   save.mockReset();
   auth = { isAuthenticated: true, user: { _id: `status-owner-${++owner}` }, cloudAuthAvailable: true };
+  setMatchStorageScope(auth.user._id);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -32,18 +34,18 @@ function blockQueueAndMetadataWrites() {
   const write = Storage.prototype.setItem;
   let resultWritten = false;
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-    if (key.startsWith('se_pending_match:') || (resultWritten && key === 'se_quickmatches')) {
+    if (key.startsWith('se_pending_match:') || (resultWritten && key === matchStorageKey('se_quickmatches'))) {
       throw new DOMException('Full', 'QuotaExceededError');
     }
     const result = write.call(this, key, value);
-    if (key === 'se_quickmatches' && JSON.parse(value).some((match) => match.status === 'completed')) resultWritten = true;
+    if (key === matchStorageKey('se_quickmatches') && JSON.parse(value).some((match) => match.status === 'completed')) resultWritten = true;
     return result;
   });
 }
 
 function mountTest() {
   const seed = cricketFinishSeed('test-quick');
-  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
   return render(
     <AuthContext.Provider value={auth}>
       <Worker />
@@ -76,14 +78,14 @@ it('persists the quick Test canonical identity in the first completed write even
   blockQueueAndMetadataWrites();
   fireEvent.click(screen.getByRole('button', { name: '2 runs' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].clientMatchId).toBe('cricket:quick:300');
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0].clientMatchId).toBe('cricket:quick:300');
 });
 
 it('keeps the volatile tennis warning visible on Finish and History after the result write succeeds', async () => {
   const set = { games1: 6, games2: 0, points1: 0, points2: 0, completed: true };
   const match = { id: 'tennis-status', sport: 'tennis', team1: 'Alpha', team2: 'Beta', team1Name: 'Alpha', team2Name: 'Beta', status: 'in-progress', format: { sets: 3 }, sets: [set, set, { ...set, games1: 0, completed: false }] };
-  localStorage.setItem('se_quickmatches', JSON.stringify([match]));
-  localStorage.setItem('se_tennis_quick_draft_tennis-status', JSON.stringify(match));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([match]));
+  localStorage.setItem(matchStorageKey('se_tennis_quick_draft_tennis-status'), JSON.stringify(match));
   save.mockRejectedValue(new Error('Result rejected'));
   render(
     <AuthContext.Provider value={auth}>
@@ -102,7 +104,7 @@ it('keeps the volatile tennis warning visible on Finish and History after the re
   blockQueueAndMetadataWrites();
   fireEvent.click(finish);
   expect(await screen.findByText(/Keep this screen open/)).toBeInTheDocument();
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].clientMatchId).toBe('tennis:quick:tennis-status');
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0].clientMatchId).toBe('tennis:quick:tennis-status');
   fireEvent.click(screen.getByRole('button', { name: 'History' }));
   expect(await screen.findByText(/Keep this screen open/)).toBeInTheDocument();
 });

@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -52,7 +53,7 @@ function seedOlderHistoryMatch() {
 }
 
 function readQuickMatches() {
-  const raw = globalThis.localStorage.getItem(QUICK_MATCHES_KEY);
+  const raw = globalThis.localStorage.getItem(matchStorageKey(QUICK_MATCHES_KEY));
   return raw ? JSON.parse(raw) : [];
 }
 

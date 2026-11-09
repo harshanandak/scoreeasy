@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -63,13 +64,13 @@ describe.each(cases)('persisted completion: $name', ({ sport, Component, result,
     };
     if (quick) {
       saveQuickMatch(match);
-      if (!withoutDraft) localStorage.setItem(sport === 'tennis' ? 'se_tennis_quick_draft_300' : `se_quickmatch_draft_${sport}`, JSON.stringify(draft));
+      if (!withoutDraft) localStorage.setItem(matchStorageKey(sport === 'tennis' ? 'se_tennis_quick_draft_300' : `se_quickmatch_draft_${sport}`), JSON.stringify(draft));
     } else {
-      localStorage.setItem(`se_${sport}`, JSON.stringify([tournament]));
+      localStorage.setItem(matchStorageKey(`se_${sport}`), JSON.stringify([tournament]));
       loadSportTournaments(`se_${sport}`);
     }
     const key = quick ? 'se_quickmatches' : `se_${sport}`;
-    const persisted = JSON.parse(localStorage.getItem(key));
+    const persisted = JSON.parse(localStorage.getItem(matchStorageKey(key)));
     const start = quick ? (sport === 'tennis' ? '/tennis/quick/live/300' : `/${sport}/quick`) : `/${sport}/tournament/100/match/m1/score`;
     const destination = quick ? (sport === 'tennis' ? '/tennis/quick?result=300' : '/history')
       : `/${sport}/tournament/100${result ? '/match/m1/result' : ''}`;
@@ -87,7 +88,7 @@ describe.each(cases)('persisted completion: $name', ({ sport, Component, result,
     await waitFor(() => expect(screen.getByLabelText('Hydrated route').textContent).toBe(destination));
     fireEvent.keyDown(globalThis, { key: 'q' });
     fireEvent.keyDown(globalThis, { key: '4' });
-    expect(JSON.parse(localStorage.getItem(key))).toEqual(persisted);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toEqual(persisted);
     expect(live.point).not.toHaveBeenCalled();
     expect(live.undo).not.toHaveBeenCalled();
     expect(live.finalize).not.toHaveBeenCalled();

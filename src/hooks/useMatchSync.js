@@ -26,7 +26,7 @@ export function useMatchSync({ sport, isAuthenticated, user, clerkUser, team1Pla
   const queue = usePendingMatchSaves({ isAuthenticated, user, clerkUser });
   const [current, setCurrent] = useState(null);
   const pending = queue.records.find((entry) => entry.payload.clientMatchId === current?.id);
-  const syncState = !isAuthenticated || !current || current.ownerId !== queue.ownerId ? 'idle'
+  const syncState = !queue.ownerId || !current || current.ownerId !== queue.ownerId ? 'idle'
     : pending ? (navigator.onLine === false && !pending.terminal ? 'pending' : pending.state) : 'synced';
 
   const syncMatch = async (match) => {

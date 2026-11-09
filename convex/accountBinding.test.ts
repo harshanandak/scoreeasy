@@ -28,6 +28,14 @@ async function data(t: ReturnType<typeof convexTest>) {
   }));
 }
 
+test("local storage migration only receives a Convex alias bound to the requested Clerk account", async () => {
+  const { t, a, b, ids } = await setup();
+  expect(await t.query(api.users.getCurrent, { expectedOwnerId: "A" })).toBeNull();
+  expect(await b.query(api.users.getCurrent, { expectedOwnerId: "A" })).toBeNull();
+  expect(await a.query(api.users.getCurrent, { expectedOwnerId: "A" })).toMatchObject({ _id: ids.a });
+  expect(await a.query(api.users.getCurrent, {})).toMatchObject({ _id: ids.a });
+});
+
 test("submitted save rejects a switched identity without writing any match data, then saves once for its owner", async () => {
   const { t, a, b, ids } = await setup();
   const args = { ...saved, expectedOwnerId: "A" };

@@ -1,3 +1,4 @@
+import { matchStorageKey } from './accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ENTRY_PATH,
@@ -18,14 +19,14 @@ describe('app entry contract', () => {
     const now = new Date().toISOString();
     const sports = getSportsList().filter((sport) => sport.id !== 'tennis');
     for (const sport of sports) {
-      localStorage.setItem(`se_quickmatch_draft_${sport.id}`, JSON.stringify({ sport: sport.id, quickMatchId: 1, phase: 'scoring', updatedAt: now }));
+      localStorage.setItem(matchStorageKey(`se_quickmatch_draft_${sport.id}`), JSON.stringify({ sport: sport.id, quickMatchId: 1, phase: 'scoring', updatedAt: now }));
     }
-    localStorage.setItem(getTennisQuickDraftKey('tennis-1'), JSON.stringify({ id: 'tennis-1', status: 'in-progress', updatedAt: now }));
-    localStorage.setItem('se_quickmatches', JSON.stringify([
+    localStorage.setItem(matchStorageKey(getTennisQuickDraftKey('tennis-1')), JSON.stringify({ id: 'tennis-1', status: 'in-progress', updatedAt: now }));
+    localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([
       { id: 'test-1', sport: 'cricket', status: 'in-progress', format: { totalInnings: 4 }, updatedAt: now },
       { id: 'finished', sport: 'cricket', status: 'completed', format: { totalInnings: 4 } },
     ]));
-    localStorage.setItem('se_football', JSON.stringify([
+    localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([
       { id: 1, name: 'Cup', matches: [{ id: 'm1', status: 'pending' }], knockoutMatches: [] },
       { id: 2, matches: [{ status: 'completed' }] },
       { id: 3, matches: [{ status: 'completed' }], knockoutMatches: [{ status: 'pending' }] },
@@ -38,14 +39,14 @@ describe('app entry contract', () => {
     ]));
     expect(entries).toHaveLength(sports.length + 4);
     expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
-    for (const sport of sports) expect(JSON.parse(localStorage.getItem(`se_quickmatch_draft_${sport.id}_1`)).quickMatchId).toBe(1);
+    for (const sport of sports) expect(JSON.parse(localStorage.getItem(matchStorageKey(`se_quickmatch_draft_${sport.id}_1`))).quickMatchId).toBe(1);
     expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
   });
 
   it('excludes setup and completed drafts but retains old scoring drafts', () => {
-    localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({ phase: 'setup' }));
-    localStorage.setItem('se_quickmatch_draft_football', JSON.stringify({ phase: 'scoring', updatedAt: '2020-01-01' }));
-    localStorage.setItem(getTennisQuickDraftKey('old'), JSON.stringify({ status: 'completed' }));
+    localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({ phase: 'setup' }));
+    localStorage.setItem(matchStorageKey('se_quickmatch_draft_football'), JSON.stringify({ phase: 'scoring', updatedAt: '2020-01-01' }));
+    localStorage.setItem(matchStorageKey(getTennisQuickDraftKey('old')), JSON.stringify({ status: 'completed' }));
     expect(loadInProgressMatches()).toEqual([expect.objectContaining({ sport: 'football' })]);
   });
   beforeEach(() => {
@@ -83,7 +84,7 @@ describe('app entry contract', () => {
   });
 
   it('detects in-progress quick-match drafts as returning-player state', () => {
-    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
       quickMatchId: 1,
@@ -93,7 +94,7 @@ describe('app entry contract', () => {
   });
 
   it('routes generic draft-only app entry to the draft scorer path', () => {
-    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
       quickMatchId: 1,
@@ -109,13 +110,13 @@ describe('app entry contract', () => {
   it('resumes old generic quick-match drafts on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
-    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
       updatedAt: '2026-05-30T12:00:00.000Z',
       quickMatchId: 1,
     }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     const state = loadAppEntryState();
 
@@ -125,7 +126,7 @@ describe('app entry contract', () => {
   });
 
   it('routes tennis quick-live drafts to the draft scorer path', () => {
-    globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey(getTennisQuickDraftKey('match-1')), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
       status: 'in-progress',
@@ -139,7 +140,7 @@ describe('app entry contract', () => {
   });
 
   it('routes in-progress cricket Test quick matches to the draft scorer path', () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
       status: 'in-progress',
@@ -155,7 +156,7 @@ describe('app entry contract', () => {
   });
 
   it('does not use completed cricket Test quick matches as app-entry scorer routes', () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
       status: 'completed',
@@ -173,7 +174,7 @@ describe('app entry contract', () => {
   it('keeps older completed quick matches without explicit completed status as returning state', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'legacy-result-1',
       sport: 'football',
       winner: 'Team A',
@@ -193,7 +194,7 @@ describe('app entry contract', () => {
   it('resumes old cricket Test quick matches on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
       status: 'in-progress',
@@ -212,13 +213,13 @@ describe('app entry contract', () => {
   it('resumes old tennis quick-live drafts on app entry', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-01T12:00:00.000Z'));
-    globalThis.localStorage.setItem(getTennisQuickDraftKey('match-1'), JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey(getTennisQuickDraftKey('match-1')), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
       status: 'in-progress',
       updatedAt: '2026-05-30T12:00:00.000Z',
     }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     const state = loadAppEntryState();
 
@@ -229,28 +230,28 @@ describe('app entry contract', () => {
 
   it('checks saved tournaments without rewriting storage during app entry', () => {
     const storedTournament = [{ id: 'cup-1', name: 'Office Cup' }];
-    globalThis.localStorage.setItem('se_volleyball', JSON.stringify(storedTournament));
+    globalThis.localStorage.setItem(matchStorageKey('se_volleyball'), JSON.stringify(storedTournament));
 
     expect(loadReturningPlayerState()).toBe(true);
-    expect(JSON.parse(globalThis.localStorage.getItem('se_volleyball'))).toEqual(storedTournament);
+    expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey('se_volleyball')))).toEqual(storedTournament);
   });
 
   it('ignores malformed tournament storage during app entry', () => {
-    globalThis.localStorage.setItem('se_volleyball', JSON.stringify({ id: 'bad-cup' }));
+    globalThis.localStorage.setItem(matchStorageKey('se_volleyball'), JSON.stringify({ id: 'bad-cup' }));
 
     expect(loadReturningPlayerState()).toBe(false);
   });
 
   it('keeps corrupt session storage from hiding other returning-player state', () => {
-    globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
+    globalThis.localStorage.setItem(matchStorageKey('gs_sessions'), JSON.stringify({ id: 'bad-session' }));
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 'recent-1', sport: 'cricket' }]));
 
     expect(loadActiveSessionSummaries()).toEqual([]);
     expect(loadReturningPlayerState()).toBe(true);
   });
 
   it('does not route legacy history-only users to an empty app dashboard', () => {
-    globalThis.localStorage.setItem('gs_history', JSON.stringify([{ id: 'legacy-1' }]));
+    globalThis.localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([{ id: 'legacy-1' }]));
 
     expect(loadReturningPlayerState()).toBe(false);
     expect(getAppEntryTarget(loadAppEntryState())).toBe(PUBLIC_MARKETING_PATH);

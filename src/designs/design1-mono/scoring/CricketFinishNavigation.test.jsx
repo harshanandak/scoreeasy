@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -23,7 +24,7 @@ function CompletionDestination() {
 }
 
 function seed(kind) {
-  Object.entries(cricketFinishSeed(kind)).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(cricketFinishSeed(kind)).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
 }
 
 function renderScorer(kind, complete) {
@@ -71,7 +72,7 @@ describe('cricket finish navigation', () => {
     expect(await screen.findByText('Match Drawn')).toBeInTheDocument();
     expect(parseFloat(getComputedStyle(screen.getByRole('button', { name: 'Save & Return' })).minHeight)).toBeGreaterThanOrEqual(48);
     const key = kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
-    const finished = JSON.parse(localStorage.getItem(key));
+    const finished = JSON.parse(localStorage.getItem(matchStorageKey(key)));
     const match = kind === 'test-quick' ? finished[0] : finished[0].matches[0];
     expect(match).toMatchObject({ status: 'completed', winner: kind === 'test-quick' ? 'Draw' : 'draw' });
     expect(match.draftState).toBeUndefined();
@@ -80,10 +81,10 @@ describe('cricket finish navigation', () => {
     expect(await screen.findByText('Match Drawn')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
     fireEvent.keyDown(globalThis, { key: '4' });
-    expect(JSON.parse(localStorage.getItem(key))).toEqual(finished);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toEqual(finished);
     fireEvent.click(screen.getByRole('button', { name: 'Save & Return' }));
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath);
-    expect(JSON.parse(localStorage.getItem(key))).toEqual(finished);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toEqual(finished);
   });
 
   it.each(cases)('%s exits through protected completion after saving the result', async (kind) => {
@@ -93,7 +94,7 @@ describe('cricket finish navigation', () => {
     await finish(kind);
     await waitFor(() => expect(complete).toHaveBeenCalledWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath));
     expect(complete).toHaveBeenCalledTimes(1);
-    const data = JSON.parse(localStorage.getItem(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket'));
+    const data = JSON.parse(localStorage.getItem(matchStorageKey(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket')));
     const match = kind === 'test-quick' ? data[0] : data[0].matches[0];
     expect(match.status).toBe('completed');
     expect(match.draftState).toBeUndefined();
@@ -126,7 +127,7 @@ describe('cricket finish navigation', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Match options' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Finish & save' })); confirmEarlyFinish();
     expect(complete).toHaveBeenCalledExactlyOnceWith(kind === 'test-quick' ? quickCompletionPath : tournamentPath);
-    const data = JSON.parse(localStorage.getItem(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket'));
+    const data = JSON.parse(localStorage.getItem(matchStorageKey(kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket')));
     const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
     expect(saved).toMatchObject({ status: 'completed', winner: null, resultType: 'abandoned', completedAt: expect.any(String) });
     expect(saved.innings).toHaveLength(4);
@@ -136,14 +137,14 @@ describe('cricket finish navigation', () => {
   it.each(['limited', 'test-tournament', 'test-quick'])('%s retains a scoring stroke and Undo after remount, then saves the corrected innings', async (kind) => {
     const fixture = cricketFinishSeed(kind);
     if (kind === 'limited') fixture.se_cricket[0].matches[0].draftState.scores.team2 = { runs: 0, balls: 0, wickets: 0, allOut: false };
-    Object.entries(fixture).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+    Object.entries(fixture).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
     const complete = vi.fn();
     const first = renderScorer(kind, complete);
     const runButton = kind === 'limited' ? '1' : '1 run';
     fireEvent.click(await screen.findByRole('button', { name: runButton, exact: true }));
     const storageKey = kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
     await waitFor(() => {
-      const saved = JSON.parse(localStorage.getItem(storageKey));
+      const saved = JSON.parse(localStorage.getItem(matchStorageKey(storageKey)));
       expect((kind === 'test-quick' ? saved[0] : saved[0].matches[0]).draftState.history).toHaveLength(1);
     });
     first.unmount();
@@ -152,7 +153,7 @@ describe('cricket finish navigation', () => {
     if (kind === 'limited') fireEvent.click(screen.getByRole('button', { name: '4', exact: true }));
     await finish(kind);
     await waitFor(() => expect(complete).toHaveBeenCalledTimes(1));
-    const data = JSON.parse(localStorage.getItem(storageKey));
+    const data = JSON.parse(localStorage.getItem(matchStorageKey(storageKey)));
     const saved = kind === 'test-quick' ? data[0] : data[0].matches[0];
     expect(saved.status).toBe('completed');
     expect(kind === 'limited' ? saved.team2Score : saved.innings[3]).toMatchObject({ runs: 4, balls: 1, wickets: 0 });

@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -246,7 +247,7 @@ describe('app route recovery', () => {
   });
 
   it('resolves a legacy game resume link against a saved tennis quick draft', async () => {
-    globalThis.localStorage.setItem('se_tennis_quick_draft_resume-1', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_tennis_quick_draft_resume-1'), JSON.stringify({
       id: 'resume-1',
       sport: 'tennis',
       status: 'in-progress',
@@ -261,7 +262,7 @@ describe('app route recovery', () => {
   });
 
   it('resolves a legacy game resume link against a saved cricket Test quick match', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-resume-1',
       sport: 'cricket',
       status: 'in-progress',
@@ -277,7 +278,7 @@ describe('app route recovery', () => {
   });
 
   it('falls back to recovery when a saved draft is already completed', async () => {
-    globalThis.localStorage.setItem('se_tennis_quick_draft_done-1', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_tennis_quick_draft_done-1'), JSON.stringify({
       id: 'done-1',
       sport: 'tennis',
       status: 'completed',

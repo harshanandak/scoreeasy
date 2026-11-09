@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { readFileSync } from 'node:fs';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -22,7 +23,7 @@ afterEach(() => { vi.useRealTimers(); });
 it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'kabaddi', 'hockey', 'cricket'])(
   '%s restores into an in-flow polite notice after the header and keeps scoring, Undo and Finish usable', (sport) => {
     ctx.sport = sport;
-    localStorage.setItem(`se_quickmatch_draft_${sport}`, JSON.stringify({
+    localStorage.setItem(matchStorageKey(`se_quickmatch_draft_${sport}`), JSON.stringify({
       phase: 'scoring', sport, quickMatchId: 3003, team1Name: 'Royals', team2Name: 'Strikers',
       updatedAt: new Date().toISOString(), lastAction: '',
       ...(sport === 'cricket' ? {} : { format: sport === 'volleyball' || sport === 'badminton' || sport === 'tabletennis'
@@ -55,7 +56,7 @@ it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'ka
 
 it('restores the same score, Undo history and picked colours after a refresh with the notice showing', () => {
   ctx.sport = 'volleyball';
-  localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+  localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
     phase: 'scoring', sport: 'volleyball', quickMatchId: 3003,
     team1Name: 'Royals', team2Name: 'Strikers', team1Color: '#7c3aed', team2Color: '#fbbf24',
     format: { type: 'best-of', sets: 3, points: 25 },

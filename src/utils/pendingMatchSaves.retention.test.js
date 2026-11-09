@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from './accountStorage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { waitFor } from '@testing-library/dom';
 import { IDBDatabase, IDBFactory } from 'fake-indexeddb';
@@ -13,6 +14,7 @@ beforeEach(async () => {
   vi.resetModules();
   vi.stubGlobal('indexedDB', new IDBFactory());
   localStorage.clear();
+  setMatchStorageScope(owner);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   queue = await import('./pendingMatchSaves');
   store = await import('./pendingMatchSaveStore');
@@ -109,7 +111,7 @@ it('queues and sends a new completion with the same clientMatchId after compacti
 
 it.each([false, true])('hydrates a compact acknowledgement over only its matching dirty completion (replacement: %s)', async replacement => {
   const reference = { storageKey: 'se_football', tournamentId: 100, matchId: 'final' };
-  const fixture = result => writeLocal.call(localStorage, 'se_football', JSON.stringify([{ id: 100, matches: [{
+  const fixture = result => writeLocal.call(localStorage, matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [{
     id: 'final', status: 'completed', score1: result.score1, score2: result.score2, completedAt: result.date,
   }] }]));
   fixture(payload);
@@ -170,7 +172,7 @@ it.each(['unchanged', 'changed score', 'new completion time'])('rebuilds a quick
   const options = { sport: 'football', isAuthenticated: true, user: { _id: owner } };
   const match = { id: 'quick-result', clientMatchId: payload.clientMatchId, status: 'completed',
     team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', completedAt: 10 };
-  writeLocal.call(localStorage, 'se_quickmatches', JSON.stringify([match]));
+  writeLocal.call(localStorage, matchStorageKey('se_quickmatches'), JSON.stringify([match]));
   const clock = vi.spyOn(Date, 'now').mockReturnValue(1000);
   const firstTab = await import('../hooks/useMatchSync');
   firstTab.enqueueQuickMatchSave(options, match);
@@ -180,7 +182,7 @@ it.each(['unchanged', 'changed score', 'new completion time'])('rebuilds a quick
   expect(send).toHaveBeenCalledTimes(1);
   expectCompact(await store.loadPendingSaveFallback(owner), 1);
   // Quota blocked sync metadata, so another tab still has the original unsynced snapshot.
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([match]);
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual([match]);
   await refresh();
   clock.mockReturnValue(2000);
   const laterTab = await import('../hooks/useMatchSync');
