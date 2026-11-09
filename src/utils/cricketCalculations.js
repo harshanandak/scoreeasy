@@ -14,9 +14,7 @@ export function clearCricketMatchScore(match) {
     followOnEnforced: false,
     superOver: null,
   };
-  for (const field of ['currentInningsIndex', 'clientMatchId', 'syncOwnerId', 'sync']) {
-    delete cleared[field];
-  }
+  delete cleared.currentInningsIndex;
   return cleared;
 }
 
