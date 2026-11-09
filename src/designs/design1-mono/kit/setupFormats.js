@@ -2,7 +2,10 @@
 // sport, the format object each choice produces, and the one-line rules summary under it. Pure (no
 // React). It reads the rules the scorers already play to (sportRegistry config, sportDefaults,
 // cricketCalculations, quickMatchSets) and adds none: the summary states what the board will do.
-import { CRICKET_FORMATS } from '../../../utils/cricketCalculations';
+import { CRICKET_FORMATS, buildCricketFormat } from '../../../utils/cricketCalculations';
+import { periodPreset } from '../../../utils/goalsPeriods';
+import { resolveKabaddiRules, KABADDI_PRESETS } from '../../../utils/kabaddiRules';
+import { withoutSetupToss } from '../../../utils/setupPrefs';
 import { applyStandardDefaults } from '../../../utils/sportDefaults';
 import { freezeSetsFormat, supportsSetsRules } from '../../../models/setsRules';
 
@@ -170,6 +173,7 @@ function setsLine(sportConfig, format) {
 }
 
 function goalsLine(sportConfig, format) {
+  if (format.periods) return `${format.periods.durations.length} \u00d7 ${format.periods.durations[0] / 60} min`;
   const config = sportConfig?.config || {};
   if (format.mode === 'timed') {
     const minutes = Math.round((format.timeLimit || 0) / 60);
@@ -233,7 +237,57 @@ export function setupPresetTitle(label, customised) {
   return customised ? `Customised · from ${label}` : label;
 }
 
-export function isCustomSetup(format) {
-  return format.kabaddiRules?.presetId === 'custom' || format.periodPreset === 'custom'
-    || format.rulesPreset === 'Custom school' || format.formatMode === 'custom' || format.preset === 'custom';
+export function baseKabaddiPreset(rules) {
+  if (rules.presetId !== 'custom') return rules.presetId;
+  if (/^House rules/.test(rules.source || '')) return 'quick';
+  if (/^Rectangular baseline/.test(rules.source || '')) return 'pro';
+  return rules.court ? 'women' : 'standard';
+}
+
+/** Only rule values participate. Card names, unused mode fields and toss results do not. */
+export function setupRuleValues(sportConfig, format = {}) {
+  const rules = withoutSetupToss(format);
+  if (rules.kabaddiRules) {
+    const { presetId: _preset, ...kabaddi } = rules.kabaddiRules;
+    return kabaddi;
+  }
+  if (sportConfig?.engine === 'goals') {
+    if (rules.mode === 'points') return { mode: 'points', target: rules.target };
+    if (rules.mode !== 'timed') return { mode: 'free' };
+    if (!rules.periods) return { mode: 'timed', timeLimit: rules.timeLimit };
+    const { source: _source, ...periods } = rules.periods;
+    return { mode: 'timed', timeLimit: rules.timeLimit, periods };
+  }
+  if (supportsSetsRules(sportConfig?.id)) {
+    const { preset: _preset, initialServer: _server, perSetServers: _servers, ...sets } = freezeSetsFormat(sportConfig, rules).setsRules;
+    return sets;
+  }
+  if (sportConfig?.engine === 'custom-cricket') {
+    const { id: _id, name: _name, desc: _desc, preset: _preset, customizable: _editable, gullyRules: _gully, formatMode: _mode, ...cricket } = rules;
+    return { ...cricket, maxBalls: cricket.maxBalls ?? null, lastManStands: Boolean(cricket.lastManStands), trialBall: Boolean(cricket.trialBall), oneTipOneHand: Boolean(cricket.oneTipOneHand) };
+  }
+  const { rulesPreset: _preset, formatMode: _mode, ...values } = rules;
+  return values;
+}
+
+export function setupSourcePreset(sportConfig, format, source) {
+  if (source?.format) return source;
+  if (format.kabaddiRules) {
+    const id = baseKabaddiPreset(format.kabaddiRules);
+    return { label: KABADDI_PRESETS.find(p => p.id === id)?.label, format: { kabaddiRules: resolveKabaddiRules(id) } };
+  }
+  if (sportConfig?.engine === 'custom-cricket') {
+    const preset = buildCricketFormat(format.preset || 'custom');
+    return { label: preset.name, format: preset };
+  }
+  if (sportConfig?.engine === 'goals') {
+    const preset = periodPreset(sportConfig.id, format.periods ? (format.periodPreset || 'custom') : 'casual');
+    return { label: preset.periods?.source || 'Quick casual', format: preset };
+  }
+  return { label: 'Standard', format: applyStandardDefaults(sportConfig?.id, {}) };
+}
+
+export function isCustomSetup(format, source, sportConfig) {
+  const base = setupSourcePreset(sportConfig, format, source);
+  return !matchesSetupPreset(setupRuleValues(sportConfig, format), setupRuleValues(sportConfig, base.format));
 }

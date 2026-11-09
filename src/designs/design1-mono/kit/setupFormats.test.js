@@ -141,3 +141,13 @@ describe('preset rule comparison', () => {
     expect(setupPresetTitle('T20', true)).toBe('Customised · from T20');
   });
 });
+
+
+it('compares only rule values for custom labels and preference saves', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { resolveKabaddiRules } = await import('../../../utils/kabaddiRules');
+  const standard = resolveKabaddiRules('standard');
+  const config = { id: 'kabaddi' };
+  expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', standard), openingRaidTeam: 1 }, null, config)).toBe(false);
+  expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', { ...standard, raidLimitMs: 45000 }) }, null, config)).toBe(true);
+});

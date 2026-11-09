@@ -32,6 +32,7 @@ import { useScoringCompletion } from './scoringCompletionContext';
 import { BoardHeader, BoardBar, BoardOptionsSheet, BoardSheetGroup } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
+import SportMark from '../kit/SportMark';
 import './teamBoard.css';
 import './tennisBoard.css';
 
@@ -786,7 +787,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
           onClick={() => canScoreCurrentSet && addPoint(h.team)} disabled={!canScoreCurrentSet}
           aria-label={`${h.name}: ${h.score}. ${scoreCardAssistiveHint}`}
         >
-          {h.serving && <><span className="tsb-mark" aria-hidden="true" /><span className="tsb-srv">Serving</span></>}
+          {h.serving && <><SportMark sportId={sport} className="tsb-mark" /><span className="tsb-srv">Serving</span></>}
           <span className="tsb-who">{h.serving && <span className="tennis-server" aria-hidden="true">{'\u25cf '}</span>}{h.name}</span>
           <span key={scoreAnimKey[h.team === 1 ? 'left' : 'right']} className="tsb-big mono-score-animate">{h.score}</span>
           <span className="tsb-word">{h.games} {h.games === 1 ? 'game' : 'games'}</span>

@@ -1,7 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../../lib/teamColour';
-import { sportMarkMaskUrl } from '../../../lib/sportMarks';
 
 const ctx = vi.hoisted(() => ({ draft: null, saved: null, navigate: vi.fn(), descriptor: null }));
 vi.mock('convex/react', () => ({
@@ -41,8 +40,7 @@ it('uses picked colours, serve dot and tennis mark, saves 15–0 and restores it
   const board = () => document.querySelector('[data-tennis-board]');
   expect(board()).not.toBeNull();
   expect(board().style.getPropertyValue('--team-a-core')).toBe(deriveTeamColours('#2563eb', '#facc15').A.core);
-  expect(board().style.getPropertyValue('--sport-mark')).toBe(sportMarkMaskUrl('tennis'));
-  expect(key('Anya').querySelector('.tsb-mark')).not.toBeNull();
+  expect(key('Anya').querySelector('.tsb-mark svg')).not.toBeNull();
   expect(key('Anya').querySelector('.tennis-server')).toHaveTextContent('●');
   fireEvent.click(key('Anya'));
   expect(score('Anya')).toBe('15');
