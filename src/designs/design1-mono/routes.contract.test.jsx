@@ -970,7 +970,8 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: action, exact: true }));
-    expectBoardDock(action === 'Rematch');
+    // Rematch opens a scorer and New Match opens setup; neither is a top-level tab screen.
+    expectBoardDock(true);
     const draft = loadInProgressMatches().find(match => match.sport === 'football') || null;
     if (action === 'Rematch') expect(draft.scoringStarted).toBe(false);
     else expect(draft).toBeNull();
@@ -1034,11 +1035,11 @@ describe('navigation decisions (2026-10-21)', () => {
     await waitFor(() => expect(currentRoute()).toBe('/app'));
   });
 
-  it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket', 'tennis'])('%s setup leaves without a guard and shows bottom navigation', async (sport) => {
+  it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket', 'tennis'])('%s setup leaves without a guard and hides the bottom navigation (a sub-screen with its own Back)', async (sport) => {
     renderApp([`/${sport}/quick`]);
     await settleRoute();
     expect(nativeBack.install).not.toHaveBeenCalled();
-    expect(document.querySelector('.global-bottom-nav')).toBeInTheDocument();
+    expectBoardDock(true);
   });
 
   it('tournament results hide Rematch and return to their tournament', async () => {
@@ -1052,7 +1053,8 @@ describe('navigation decisions (2026-10-21)', () => {
     expect(screen.queryByRole('button', { name: 'Rematch' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(currentRoute()).toBe('/volleyball/tournament/100'));
-    expectBoardDock(false);
+    // A tournament page is a sub-screen with its own Back, not a tab screen.
+    expectBoardDock(true);
   });
 
   it('quick results keep Rematch and its fresh scorer leaves without warning', async () => {

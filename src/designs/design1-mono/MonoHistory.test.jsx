@@ -7,7 +7,7 @@ import MonoHistory from './MonoHistory';
 import MonoQuickMatch from './MonoQuickMatch';
 import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 import { shareText } from '../../mobile/share';
-import { findTeamNameInput, teamNameInput } from '../../test/teamColour';
+import { findTeamNameInput, teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
 // MonoQuickMatch (the Rematch target) reads Convex; History itself does not.
@@ -82,7 +82,8 @@ function renderHistoryAndSetup() {
   );
 }
 
-const swatch = (team, name) => within(screen.getByRole('group', { name: `Team ${team} colour` })).getByRole('button', { name });
+// Colour lives in the team sheet; this opens the right sheet first.
+const swatch = (team, name) => within(teamColourGroup(team)).getByRole('button', { name });
 
 function renderHistory() {
   return render(

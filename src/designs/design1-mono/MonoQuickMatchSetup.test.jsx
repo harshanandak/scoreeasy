@@ -294,7 +294,7 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(screen.getByRole('spinbutton', { name: 'Number of periods' })).toHaveValue(2);
     expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(45);
     fireEvent.change(screen.getByRole('combobox', { name: 'Timing preset' }), { target: { value: 'casual' } });
-    fireEvent.click(screen.getByRole('button', { name: 'First to' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'First to' }));
     fireEvent.click(screen.getByRole('button', { name: '5 goals' }));
     expect(screen.getByText('First to 5 goals wins')).toBeInTheDocument();
   });

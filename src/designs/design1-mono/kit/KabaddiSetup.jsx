@@ -78,7 +78,8 @@ export function KabaddiRulesStep({ format, onChange }) {
     <div className="kit-rules-line">
       <h2 id="kabaddi-rules-summary">
         <b>{isCustom ? `Custom, based on ${baseLabel}` : baseLabel}</b>
-        <span>{isCustom && count > 0 ? ` · ${count} ${count === 1 ? 'change' : 'changes'}` : ` · ${kabaddiBlurb(r)}`}</span>
+        {' '}
+        <span>{isCustom && count > 0 ? `· ${count} ${count === 1 ? 'change' : 'changes'}` : `· ${kabaddiBlurb(r)}`}</span>
       </h2>
       {isCustom && <button type="button" className="kit-linkbtn" onClick={() => setRules(resolveKabaddiRules(baseId))}>Reset to {baseLabel}</button>}
     </div>
