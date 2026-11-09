@@ -33,7 +33,7 @@ it.each([new ConvexError('Result rejected'), new TypeError('Failed to fetch')])(
   const save = vi.fn(() => new Promise(resolve => { acknowledge = resolve; }));
   const retry = attemptMatchSave(pendingMatchSaves(owner)[0], save, () => true, true);
   await Promise.resolve();
-  expect(save).toHaveBeenCalledExactlyOnceWith(replay);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...replay, expectedOwnerId: owner });
   expect(localResult().sync.status).not.toBe('synced');
   acknowledge('server-id');
   await retry;
@@ -72,7 +72,7 @@ it('an older in-flight rejection cannot overwrite the replacement or its retry s
   expect(pendingMatchSaves(owner)).toEqual([replacement]);
   const saveReplay = vi.fn().mockResolvedValue('server-id');
   await attemptMatchSave(replacement, saveReplay);
-  expect(saveReplay).toHaveBeenCalledExactlyOnceWith(replay);
+  expect(saveReplay).toHaveBeenCalledExactlyOnceWith({ ...replay, expectedOwnerId: owner });
   expect(localResult().sync.status).toBe('synced');
 });
 
@@ -82,6 +82,6 @@ it('ordinary Retry preserves the captured payload and completion identity', asyn
   const retryRecord = pendingMatchSaves(owner)[0];
   const save = vi.fn().mockResolvedValue('server-id');
   await attemptMatchSave(retryRecord, save, () => true, true);
-  expect(save).toHaveBeenCalledExactlyOnceWith(first);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...first, expectedOwnerId: owner });
   expect(localResult().sync).toMatchObject({ status: 'synced', completionId: original.completionId });
 });

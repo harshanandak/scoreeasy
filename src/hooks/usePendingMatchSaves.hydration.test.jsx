@@ -64,7 +64,7 @@ it('keeps a replacement and its warning through readable IDB hydration after its
   expect(screen.getByRole('status')).toHaveTextContent(/kept only for this session.*lost on refresh/i);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   await act(async () => { window.dispatchEvent(new Event('online')); });
-  await waitFor(() => expect(save).toHaveBeenCalledExactlyOnceWith(replacement));
+  await waitFor(() => expect(save).toHaveBeenCalledExactlyOnceWith({ ...replacement, expectedOwnerId: owner }));
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
   expect(pendingMatchSaves(owner)).toEqual([]);
   expect(JSON.parse(localStorage.getItem('se_football'))[0].matches).toEqual([match]);

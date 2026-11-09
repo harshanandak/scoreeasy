@@ -1,4 +1,4 @@
-import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ConvexError } from 'convex/values';
 import { AuthContext } from '../auth/AuthContext';
@@ -108,4 +108,41 @@ it('captures the live owner before create/publication submission and blocks B fr
   expect(h.query).not.toHaveBeenCalled();
   expect(h.setVisibility).not.toHaveBeenCalled();
   expect(other.result.current.token).toBeNull();
+});
+
+it.each(['private', 'public'])('retains a rejected %s visibility request for A and replays it only after A returns', async visibility => {
+  h.create.mockResolvedValue({ matchId: 'visibility-A', token: 'TOKEN' });
+  h.setVisibility.mockResolvedValue({ ok: true });
+  let account = 'A';
+  const hook = renderHook(() => useLiveBroadcast(), { wrapper: ({ children }) => wrapper({ account, children }) });
+  await act(async () => { await hook.result.current.goLive({ clientMatchId: 'visibility-bound', sport: 'football', scorecardKind: 'goals', teamA: { name: 'A' }, teamB: { name: 'B' }, snapshot }); });
+  let reject;
+  h.setVisibility.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; }));
+  let request;
+  await act(async () => { request = hook.result.current.setVisibility(visibility, { snapshot }); await Promise.resolve(); });
+  account = 'B'; hook.rerender();
+  await act(async () => { reject(mismatch()); await request; });
+  expect(loadSession('visibility-bound')).toMatchObject({ ownerId: 'A', visibilityIntent: { visibility, snapshot } });
+  expect(hook.result.current.token).toBeNull();
+  h.setVisibility.mockClear();
+  await act(async () => { await flushLiveSession('visibility-bound', { ...h, ownerId: 'B' }); });
+  expect(h.setVisibility).not.toHaveBeenCalled();
+  await act(async () => { await flushLiveSession('visibility-bound', { ...h, ownerId: 'A' }); });
+  expect(h.setVisibility).toHaveBeenCalledExactlyOnceWith({ matchId: 'visibility-A', expectedOwnerId: 'A', visibility, snapshot });
+  expect(loadSession('visibility-bound')).not.toHaveProperty('visibilityIntent');
+});
+
+it.each(['acknowledge', 'reject'])('handles a same-account signout/signin with a late save %s', async outcome => {
+  const samePayload = { ...payload, clientMatchId: `same-account-${outcome}` };
+  let settle;
+  h.save.mockImplementationOnce(() => new Promise((resolve, reject) => { settle = outcome === 'acknowledge' ? resolve : reject; })).mockResolvedValue('saved');
+  enqueueMatchSave('same-A', samePayload);
+  const worker = renderHook(({ account }) => usePendingMatchSaves(auth(account)), { initialProps: { account: 'same-A' } });
+  await act(async () => { await Promise.resolve(); });
+  worker.rerender({ account: null });
+  await act(async () => { settle(outcome === 'acknowledge' ? 'saved' : mismatch()); });
+  worker.rerender({ account: 'same-A' });
+  await waitFor(() => expect(pendingMatchSaves('same-A')).toEqual([]));
+  expect(h.save).toHaveBeenCalledTimes(outcome === 'acknowledge' ? 1 : 2);
+  for (const [args] of h.save.mock.calls) expect(args.expectedOwnerId).toBe('same-A');
 });

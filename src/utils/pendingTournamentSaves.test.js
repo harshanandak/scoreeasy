@@ -58,7 +58,7 @@ it.each(['matches', 'knockoutMatches'])('preserves reconnect confirmation when a
   const save = vi.fn(() => new Promise(resolve => { acknowledge = resolve; }));
   const retry = attemptMatchSave(pendingMatchSaves(owner)[0], save, () => true, true);
   await Promise.resolve();
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
   acknowledge('server-id');
   expect(await retry).toMatchObject({ status: 'synced' });
   expect(loadSportTournaments('se_football')[0][collection][0].sync.status).toBe('synced');
