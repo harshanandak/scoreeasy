@@ -5,7 +5,7 @@ import MatchStorageBoundary from './MatchStorageBoundary';
 import { loadData, saveData } from '../utils/storage';
 import { setMatchStorageScope } from '../utils/accountStorage';
 import { useState } from 'react';
-import { rememberSignedInAccount } from './localAccount';
+import { LAST_ACCOUNT, rememberSignedInAccount } from './localAccount';
 import { getAuthBootstrapMode, shouldUseCloudAuthRoot } from './bootstrap';
 
 function Board() {
@@ -33,6 +33,30 @@ it('retains the Clerk account namespace when Convex authentication is temporaril
   fireEvent.click(screen.getByRole('button', { name: 'Score 0' }));
   rerender(view({ id: 'clerk-X' }, false));
   expect(screen.getByRole('button', { name: 'Score 1' })).toBeInTheDocument();
+});
+
+it('revokes and switches a mounted local account on marker storage events', () => {
+  setMatchStorageScope('clerk-X');
+  saveData('se_quickmatch_draft_football_live', 8);
+  setMatchStorageScope('clerk-Y');
+  saveData('se_quickmatch_draft_football_live', 3);
+  setMatchStorageScope(null);
+  rememberSignedInAccount('clerk-X');
+  render(<LocalAuthProvider reason="offline"><MatchStorageBoundary><Board /></MatchStorageBoundary></LocalAuthProvider>);
+  expect(screen.getByRole('button', { name: 'Score 8' })).toBeInTheDocument();
+  rememberSignedInAccount(null);
+  fireEvent(window, new StorageEvent('storage', { key: LAST_ACCOUNT, oldValue: 'clerk-X', newValue: null }));
+  expect(screen.getByRole('button', { name: 'Score 0' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Score 0' }));
+  rememberSignedInAccount('clerk-Y');
+  fireEvent(window, new StorageEvent('storage', { key: LAST_ACCOUNT, oldValue: null, newValue: 'clerk-Y' }));
+  expect(screen.getByRole('button', { name: 'Score 3' })).toBeInTheDocument();
+  rememberSignedInAccount(null);
+  fireEvent(document, new Event('visibilitychange'));
+  expect(screen.getByRole('button', { name: 'Score 1' })).toBeInTheDocument();
+  rememberSignedInAccount('clerk-X');
+  fireEvent(window, new Event('focus'));
+  expect(screen.getByRole('button', { name: 'Score 8' })).toBeInTheDocument();
 });
 
 it.each([false, true])('offline cold start after sign-in keeps account scoring (explicit sign-out: %s)', signedOut => {

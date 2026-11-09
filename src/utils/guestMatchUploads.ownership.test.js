@@ -78,6 +78,34 @@ it('checks pending ownership before copying an already scoped guest result', asy
   expect(localStorage.getItem(scope.matchStorageKey('se_quickmatches', 'Y'))).toBeNull();
 });
 
+it('quarantines unmarked legacy undo journals despite durable pending ownership', async () => {
+  localStorage.removeItem('se_quickmatches');
+  const store = await import('./pendingMatchSaveStore');
+  await store.storePendingSaveFallback(key, { ownerId: 'X', payload, quickMatchId: match.id, state: 'pending' });
+  const scope = await import('./accountStorage');
+  const storage = await import('./storage');
+  const { claimGuestMatchSaves } = await import('./guestMatchUploads');
+  const journal = [{ id: 'undo', kind: 'delete', createdAt: Date.now(), items: [{ match, index: 0 }], order: [match.id] }];
+  const sources = ['se_stats_pending_undo', 'se_matches_pending_undo', 'gamescore_stats_pending_undo', 'gamescore_matches_pending_undo'];
+  for (const source of sources) localStorage.setItem(source, JSON.stringify(journal));
+  scope.setMatchStorageScope(null);
+  await scope.resolveMatchStorageOwnership();
+  for (const logical of ['se_stats_pending_undo', 'se_matches_pending_undo']) expect(storage.loadData(logical)).toBeNull();
+  scope.setMatchStorageScope('Y');
+  await claimGuestMatchSaves('Y');
+  for (const logical of ['se_stats_pending_undo', 'se_matches_pending_undo']) expect(storage.loadData(logical)).toBeNull();
+  scope.setMatchStorageScope('X');
+  await claimGuestMatchSaves('X');
+  for (const logical of ['se_stats_pending_undo', 'se_matches_pending_undo']) expect(storage.loadData(logical)).toBeNull();
+  for (const source of sources) expect(JSON.parse(localStorage.getItem(source))).toEqual(journal);
+  // A guest journal is retained outside playable storage before any guest transfer.
+  const guestKey = scope.matchStorageKey('se_stats_pending_undo', null);
+  localStorage.setItem(guestKey, JSON.stringify(journal));
+  await claimGuestMatchSaves('Y');
+  expect(localStorage.getItem(guestKey)).toBeNull();
+  expect(JSON.parse(localStorage.getItem(`se_local_migration:${encodeURIComponent(guestKey)}:undo`))).toEqual(journal[0]);
+});
+
 it('also respects another owner localStorage record with ownerMismatch set', async () => {
   localStorage.setItem(key, JSON.stringify({ ownerId: 'X', payload, quickMatchId: match.id, ownerMismatch: true, state: 'pending' }));
   const { claimGuestMatchSaves } = await import('./guestMatchUploads');

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import { createContext, useContext, useMemo } from 'react';
-import { lastSignedInAccount } from './localAccount';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { LAST_ACCOUNT, lastSignedInAccount } from './localAccount';
 
 const LOCAL_AUTH_STATE = {
   authMode: 'local',
@@ -22,14 +22,28 @@ export function LocalAuthProvider({
   reason = 'missing-config',
   cloudAuthAvailable = false,
 }) {
+  const [localAccountId, setLocalAccountId] = useState(lastSignedInAccount);
+  useEffect(() => {
+    const refresh = () => setLocalAccountId(lastSignedInAccount());
+    const onStorage = event => { if (event.key === LAST_ACCOUNT || event.key === null) refresh(); };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    refresh();
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
   const value = useMemo(
     () => ({
       ...LOCAL_AUTH_STATE,
       cloudAuthAvailable,
       authModeReason: reason,
-      localAccountId: lastSignedInAccount(),
+      localAccountId,
     }),
-    [cloudAuthAvailable, reason],
+    [cloudAuthAvailable, reason, localAccountId],
   );
 
   return (

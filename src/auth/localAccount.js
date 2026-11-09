@@ -1,4 +1,4 @@
-const LAST_ACCOUNT = 'se_last_signed_in_account';
+export const LAST_ACCOUNT = 'se_last_signed_in_account';
 
 export function lastSignedInAccount() {
   try { return localStorage.getItem(LAST_ACCOUNT) || null; }

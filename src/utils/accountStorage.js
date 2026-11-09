@@ -30,6 +30,13 @@ export async function resolveMatchStorageOwnership() {
 const keys = storage => Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter(Boolean);
 const prefix = owner => owner ? `${ROOT}account:${encodeURIComponent(owner)}:` : `${ROOT}guest:`;
 const logicalKey = key => key.replace(/^gamescore_/, 'se_');
+const undoJournal = key => key === 'se_matches_pending_undo' || key === 'se_stats_pending_undo';
+function undoJournalOwner(value) {
+  const operations = Array.isArray(value) ? value : [value];
+  if (operations.some(operation => !Array.isArray(operation?.items) || !operation.items.length)) return null;
+  const owners = operations.flatMap(operation => operation.items.map(item => (item?.match?.record || item?.match)?.syncOwnerId));
+  return owners[0] && owners.every(owner => owner === owners[0]) ? owners[0] : null;
+}
 const scoped = key => matchKeys.has(key) || /^se_(quickmatch_draft_|tennis_quick_draft_|kabaddi_backup_)/.test(key);
 export const getMatchStorageScope = () => activeOwner;
 export const matchStorageKey = (key, owner = activeOwner) => scoped(key) ? `${prefix(owner)}${key}` : key;
@@ -82,6 +89,11 @@ function canonicalize(value) {
     key === 'syncOwnerId' && data === legacyOwner ? activeOwner : canonicalize(data)]));
 }
 function split(value, key, ownership) {
+  if (undoJournal(key)) {
+    const owner = undoJournalOwner(value);
+    if (!owner) throw new Error('Undo journal ownership is not explicit');
+    return new Map([[owner, value]]);
+  }
   const groups = new Map();
   const add = (owner, row) => groups.set(owner, [...(groups.get(owner) || []), row]);
   for (const row of Array.isArray(value) ? value : [value]) {
@@ -137,6 +149,7 @@ export function migrateMatchStorage(storage = globalThis.localStorage) {
       if (preferred != null) {
         try { value = merge(value, JSON.parse(preferred)); } catch { continue; }
       }
+      if (undoJournal(logical) && !undoJournalOwner(value)) continue;
       const backup = `${BACKUP}${encodeURIComponent(source)}`;
       try {
         if (storage.getItem(backup) === null) storage.setItem(backup, raw);
@@ -144,6 +157,7 @@ export function migrateMatchStorage(storage = globalThis.localStorage) {
         for (let [owner, data] of alias ? [[activeOwner, value]] : split(value, logical, ownership)) {
           if (alias) data = canonicalize(data);
           if (owner === legacyOwner && legacyOwner) { owner = activeOwner; data = canonicalize(data); }
+          if (undoJournal(logical) && (!owner || undoJournalOwner(data) !== owner)) throw new Error('Undo journal owner does not match destination');
           const target = matchStorageKey(logical, owner);
           writeVerified(storage, target, merge(data, JSON.parse(storage.getItem(target))));
         }
@@ -174,6 +188,18 @@ export async function claimGuestStorage(owner, reserve, storage = globalThis.loc
   const ownership = await resolveMatchStorageOwnership();
   migrateMatchStorage(storage);
   let changed = false;
+  // Quarantine transient guest undo before moving matches that it could otherwise restore as guest.
+  for (const source of keys(storage).filter(key => key.startsWith(prefix(null)) && undoJournal(key.slice(prefix(null).length)))) {
+    try {
+      const journal = JSON.parse(storage.getItem(source));
+      for (const operation of Array.isArray(journal) ? journal : [journal]) {
+        writeVerified(storage, `${BACKUP}${encodeURIComponent(source)}:${encodeURIComponent(rowId(operation))}`, operation);
+      }
+      storage.removeItem(source);
+      if (storage.getItem(source) !== null) throw new Error('Guest undo journal could not be quarantined');
+      changed = true;
+    } catch (error) { markSaveFailed(source); throw error; }
+  }
   for (const source of keys(storage).filter(key => key.startsWith(prefix(null)))) {
     const key = source.slice(prefix(null).length);
     const initial = JSON.parse(storage.getItem(source));
