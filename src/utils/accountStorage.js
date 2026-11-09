@@ -45,7 +45,7 @@ function merge(original, existing) {
   }
   return [...rows.values()];
 }
-const ownerOf = row => row?.syncOwnerId || row?.record?.syncOwnerId || row?.match?.syncOwnerId || null;
+const ownerOf = row => row?.syncOwnerId || (row?.record && ownerOf(row.record)) || (row?.match && ownerOf(row.match)) || null;
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (!value || typeof value !== 'object') return value;
@@ -57,7 +57,12 @@ function split(value) {
   const add = (owner, row) => groups.set(owner, [...(groups.get(owner) || []), row]);
   for (const row of Array.isArray(value) ? value : [value]) {
     const fixtures = [...(row?.matches || []), ...(row?.knockoutMatches || [])];
-    if (!ownerOf(row) && fixtures.length) {
+    if (Array.isArray(row?.items)) {
+      for (const owner of new Set(row.items.map(item => ownerOf(item.match)))) {
+        const items = row.items.filter(item => ownerOf(item.match) === owner);
+        add(owner, { ...row, items, order: row.order?.filter(id => items.some(item => String(item.match?.id) === String(id))) });
+      }
+    } else if (!ownerOf(row) && fixtures.length) {
       for (const owner of new Set(fixtures.map(ownerOf))) add(owner, { ...row,
         matches: row.matches?.filter(match => ownerOf(match) === owner),
         knockoutMatches: row.knockoutMatches?.filter(match => ownerOf(match) === owner),

@@ -1,4 +1,4 @@
-import { matchStorageKey } from '../utils/accountStorage';
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, renderHook, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useMatchSync } from './useMatchSync';
@@ -10,7 +10,7 @@ vi.mock('convex/react', () => ({ useMutation: () => save }));
 const options = { sport: 'football', isAuthenticated: true, user: { _id: 'owner' }, team1Players: [], team2Players: [] };
 const match = { id: 'm1', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', date: '2026-11-01T12:00:00Z' };
 const key = 'se_pending_match:owner:quick%3Afootball%3Am1';
-beforeEach(() => { localStorage.clear(); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
+beforeEach(() => { localStorage.clear(); setMatchStorageScope('owner'); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 it('keeps a durable pending record when a save fails', async () => {

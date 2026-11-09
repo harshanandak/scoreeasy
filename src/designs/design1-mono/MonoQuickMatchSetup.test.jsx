@@ -119,7 +119,7 @@ describe('MonoQuickMatch setup clarity', () => {
     let draftKey = null;
     for (let index = 0; index < globalThis.localStorage.length; index += 1) {
       const key = globalThis.localStorage.key(index);
-      if (key?.startsWith('se_tennis_quick_draft_')) draftKey = key;
+      if (key?.startsWith(matchStorageKey('se_tennis_quick_draft_'))) draftKey = key;
     }
     expect(draftKey).toBeTruthy();
     expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey(draftKey)))).toMatchObject({
@@ -347,7 +347,7 @@ it.each([['football', 2, 45], ['basketball', 4, 10], ['hockey', 4, 15]])('freeze
   expect(screen.getByRole('combobox', { name: 'Timing preset' })).toHaveValue('custom');
   fireEvent.click(screen.getByRole('button', { name: `Start ${sport}` }));
   expect(screen.getByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
-  const key = Object.keys(localStorage).find(key => key.startsWith(`se_quickmatch_draft_${sport}_`));
+  const key = Object.keys(localStorage).find(key => key.startsWith(matchStorageKey(`se_quickmatch_draft_${sport}_`)));
   const draft = JSON.parse(localStorage.getItem(matchStorageKey(key)));
   expect(draft.periodState).toMatchObject({ version: 1, sport, durations: Array(count).fill(180) });
   first.unmount(); globalThis.localStorage.clear();

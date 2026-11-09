@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,7 +25,7 @@ function crashAt(path, message, state) {
 }
 
 function seedQuickMatch() {
-  localStorage.setItem(DRAFT_KEY, JSON.stringify({
+  localStorage.setItem(matchStorageKey(DRAFT_KEY), JSON.stringify({
     sport: 'volleyball', quickMatchId: 'abc', phase: 'scoring', team1Name: 'Royals', team2Name: 'Strikers',
     vScore1: 12, vScore2: 9, sets: [{ score1: 12, score2: 9, completed: false }], currentSet: 0,
     format: { type: 'single', target: 25 }, updatedAt: '2026-11-09',
@@ -68,7 +69,7 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
     expect(dialog).toHaveTextContent('12–9');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Keep match' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(localStorage.getItem(matchStorageKey(DRAFT_KEY))).not.toBeNull();
     expect(loadInProgressMatches()).toHaveLength(1);
     expect(assign).not.toHaveBeenCalled();
   });
@@ -78,7 +79,7 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
     crashAt('/volleyball/quick?resume=abc');
     fireEvent.click(screen.getByRole('button', { name: /^Discard this match/ }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
-    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(localStorage.getItem(matchStorageKey(DRAFT_KEY))).toBeNull();
     expect(loadInProgressMatches()).toEqual([]);
     expect(assign).toHaveBeenCalledWith('/app');
   });
@@ -120,12 +121,12 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
     seedQuickMatch();
     crashAt('/volleyball/quick?result=finished-1');
     expect(screen.queryByRole('button', { name: /Discard this match/ })).not.toBeInTheDocument();
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(localStorage.getItem(matchStorageKey(DRAFT_KEY))).not.toBeNull();
   });
 
   it('on the bare quick URL offers the draft the scorer restores: the newest one', () => {
     seedQuickMatch();
-    localStorage.setItem('se_quickmatch_draft_volleyball_old', JSON.stringify({
+    localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball_old'), JSON.stringify({
       sport: 'volleyball', quickMatchId: 'old', phase: 'scoring', team1Name: 'Lions', team2Name: 'Tigers',
       vScore1: 1, vScore2: 0, updatedAt: '2020-01-01',
     }));
@@ -134,14 +135,14 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
   });
 
   it('still offers Discard when the score data is damaged, naming the match from its team names', () => {
-    localStorage.setItem('se_tennis_quick_draft_t1', JSON.stringify({
+    localStorage.setItem(matchStorageKey('se_tennis_quick_draft_t1'), JSON.stringify({
       id: 't1', status: 'in-progress', team1Name: 'Ace', team2Name: 'Bee', sets: [null], updatedAt: '2026-11-09',
     }));
     crashAt('/tennis/quick/live/t1');
     fireEvent.click(screen.getByRole('button', { name: /^Discard this match.*Ace v Bee/ }));
     expect(screen.getByRole('dialog')).toHaveTextContent('Ace v Bee');
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
-    expect(localStorage.getItem('se_tennis_quick_draft_t1')).toBeNull();
+    expect(localStorage.getItem(matchStorageKey('se_tennis_quick_draft_t1'))).toBeNull();
     expect(assign).toHaveBeenCalledWith('/app');
   });
 });

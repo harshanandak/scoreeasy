@@ -264,7 +264,7 @@ export default function MonoHistory() {
   const client = useConvex();
   const ownerId = matchSaveOwner(auth);
   const userId = auth.user?._id;
-  if (client && ownerId && userId) {
+  if (client && auth.isAuthenticated && ownerId && userId) {
     return (
       <ErrorBoundary key={`${ownerId}:${userId}`} captureToSentry={false}
         fallback={<HistoryContent ownerId={ownerId} userId={userId} cloudStatus="Failed" />}>

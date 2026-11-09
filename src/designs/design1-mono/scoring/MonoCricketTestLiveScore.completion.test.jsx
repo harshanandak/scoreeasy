@@ -36,7 +36,7 @@ function seed(mode, wickets = 0, amend = () => {}) {
 function rejectResultWrites(mode) {
   const write = Storage.prototype.setItem;
   return vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-    if (key === keyFor(mode)) {
+    if (key === matchStorageKey(keyFor(mode))) {
       const data = JSON.parse(value);
       const match = mode === 'test-quick' ? data[0] : data[0].matches[0];
       if (match.status === 'completed') throw new DOMException('Result storage is full', 'QuotaExceededError');

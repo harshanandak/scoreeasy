@@ -45,7 +45,7 @@ function mount(kind, complete = vi.fn()) {
 function rejectResults(kind) {
   const write = Storage.prototype.setItem;
   return vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-    if (key === keyFor(kind)) {
+    if (key === matchStorageKey(keyFor(kind))) {
       const data = JSON.parse(value);
       if ((kind === 'test-quick' ? data[0] : data[0].matches[0]).status === 'completed') {
         throw new DOMException('Storage full', 'QuotaExceededError');

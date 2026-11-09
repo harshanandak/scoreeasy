@@ -611,7 +611,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(await screen.findByRole('heading', { name: /winner: alpha/i })).toBeInTheDocument();
     const write = Storage.prototype.setItem;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (sport === 'tennis' ? key.startsWith('se_tennis_quick_draft_') : key === matchStorageKey('se_quickmatches')) {
+      if (sport === 'tennis' ? key.startsWith(matchStorageKey('se_tennis_quick_draft_')) : key === matchStorageKey('se_quickmatches')) {
         throw new DOMException('Storage full', 'QuotaExceededError');
       }
       return write.call(this, key, value);

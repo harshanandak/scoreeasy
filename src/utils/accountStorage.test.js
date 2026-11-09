@@ -111,6 +111,19 @@ describe('copy, verify, remove migration', () => {
     expect(storage.loadQuickMatch(match.id)).toMatchObject(match);
   });
 
+  it('keeps owned deleted matches inside their account when migrating undo journals', () => {
+    const owned = { ...match, id: 'private-deleted', syncOwnerId: 'clerk-X' };
+    localStorage.setItem('se_matches_pending_undo', JSON.stringify([{ id: 'undo', kind: 'delete', items: [
+      { match: { id: 'quick:private-deleted', source: 'quick', record: owned }, index: 0 },
+      { match: { id: 'quick:offline', source: 'quick', record: match }, index: 1 },
+    ], order: ['quick:private-deleted', 'quick:offline'] }]));
+    expect(storage.loadData('se_matches_pending_undo')[0].items.map(item => item.match.id)).toEqual(['quick:offline']);
+    scope.setMatchStorageScope('clerk-X');
+    const recovery = storage.loadData('se_matches_pending_undo')[0];
+    expect(recovery.items[0].match.record).toEqual(owned);
+    expect(recovery.order).toEqual(['quick:private-deleted']);
+  });
+
   it('splits mixed-owner tournament fixtures without exposing another account and keeps guest results', () => {
     localStorage.setItem('se_football', JSON.stringify([{ id: 'cup', matches: [match, { ...match, id: 'X', syncOwnerId: 'clerk-X' }, { ...match, id: 'Y', syncOwnerId: 'clerk-Y' }] }]));
     expect(storage.loadSportTournaments('se_football')[0].matches.map(m => m.id)).toEqual(['offline']);

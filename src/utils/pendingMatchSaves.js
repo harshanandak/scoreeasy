@@ -79,7 +79,7 @@ export const isMatchSaveConfirmed = (ownerId, clientMatchId, completionId) => {
   return confirmed.has(key) && confirmed.get(key) === completionId;
 };
 
-export function loadMatchSaveLocal({ ownerId, quickMatchId, tournamentMatch }) {
+export function loadMatchSaveLocal({ ownerId = getMatchStorageScope(), quickMatchId, tournamentMatch }) {
   return withMatchStorageScope(ownerId, () => {
     if (!tournamentMatch) return loadQuickMatch(quickMatchId);
     const { storageKey, tournamentId, matchId } = tournamentMatch;
