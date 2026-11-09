@@ -1,7 +1,7 @@
 import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTournament } from './storage';
 import { ConvexError } from 'convex/values';
 import { tournamentCompletionId } from './tournamentSync';
-import { fallbackCompletionMatches, loadPendingSaveFallback, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -32,10 +32,9 @@ export async function hydratePendingMatchSaves(ownerId) {
       const key = keyFor(ownerId, record.payload.clientMatchId);
       if (beforeRead.get(key) !== revisions.get(key)) continue;
       const previous = volatileRecords.get(key);
-      const matches = record.state === 'synced' && await fallbackCompletionMatches(previous, stored);
+      const matches = record.state === 'synced' && fallbackCompletionMatches(previous, stored);
       // Failed writes leave newer session state that a successful read cannot replace.
       if (dirtyRecords.has(key) && !matches) continue;
-      if (beforeRead.get(key) !== revisions.get(key)) continue;
       if (matches) record = cacheFallback(stored, previous);
       dirtyRecords.delete(key);
       changed ||= JSON.stringify(volatileRecords.get(key)) !== JSON.stringify(record);
@@ -162,7 +161,7 @@ function write(record) {
   return record;
 }
 
-export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch) {
+export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch, quickCompletion) {
   const key = keyFor(ownerId, payload.clientMatchId);
   const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
   const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
@@ -176,6 +175,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
   confirmed.delete(key);
   // A replacement waits behind any in-flight send; its old outcome cannot overwrite this record.
   const record = write({ ownerId, payload, quickMatchId, tournamentMatch, completionId,
+    ...(quickCompletion ? { quickCompletionFingerprint: matchSaveFingerprint(JSON.parse(tournamentCompletionId(quickCompletion))) } : {}),
     state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
     priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
   updateLocalMatch(record, record.state);

@@ -38,25 +38,37 @@ export function loadPendingSaveFallback(ownerId) {
   });
 }
 
-export async function fallbackCompletionMatches(a, b) {
+export function matchSaveFingerprint(value) {
+  const serialized = JSON.stringify(value, (key, entry) => entry && typeof entry === 'object' && !Array.isArray(entry)
+    ? Object.fromEntries(Object.keys(entry).sort().map(name => [name, entry[name]])) : entry);
+  let hash = 0xcbf29ce484222325n;
+  for (let index = 0; index < serialized.length; index += 1) {
+    hash = BigInt.asUintN(64, (hash ^ BigInt(serialized.charCodeAt(index))) * 0x100000001b3n);
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+export function fallbackCompletionMatches(a, b) {
   if (!a || !b) return false;
-  if (a?.completionId !== b?.completionId) return false;
-  return await payloadFingerprint(a) === await payloadFingerprint(b);
+  if (a.completionId !== b.completionId) return false;
+  if (a.quickCompletionFingerprint && b.quickCompletionFingerprint
+    && a.quickCompletionFingerprint !== b.quickCompletionFingerprint) return false;
+  return payloadFingerprint(a) === payloadFingerprint(b);
 }
 
-async function payloadFingerprint(record) {
+function payloadFingerprint(record) {
   if (record.payloadFingerprint) return record.payloadFingerprint;
-  const bytes = new TextEncoder().encode(JSON.stringify(record.payload));
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+  // Quick payload dates are generated during normalization, not completion identity.
+  return matchSaveFingerprint(record.tournamentMatch ? record.payload : { ...record.payload, date: undefined });
 }
 
-export async function storePendingSaveFallback(key, record) {
-  const fingerprint = await payloadFingerprint(record);
+export function storePendingSaveFallback(key, record) {
+  const fingerprint = payloadFingerprint(record);
   const compact = {
     ownerId: record.ownerId, clientMatchId: record.clientMatchId || record.payload.clientMatchId,
     completionId: record.completionId, payloadFingerprint: fingerprint, state: 'synced',
     syncedAt: record.syncedAt || Date.now(), storageBackend: 'indexedDB', storageFailed: false,
+    ...(record.quickCompletionFingerprint ? { quickCompletionFingerprint: record.quickCompletionFingerprint } : {}),
   };
   const marker = record.state === 'synced' ? compact : record;
   return transaction('readwrite', (store, complete) => {
@@ -64,8 +76,7 @@ export async function storePendingSaveFallback(key, record) {
     read.onsuccess = () => {
       const previous = read.result;
       // A stale tab cannot overwrite acknowledgement of the same completion.
-      if (previous?.state === 'synced' && previous.completionId === record.completionId
-        && (previous.payloadFingerprint === fingerprint || (previous.payload && JSON.stringify(previous.payload) === JSON.stringify(record.payload)))) {
+      if (previous?.state === 'synced' && fallbackCompletionMatches(previous, record)) {
         if (previous.payload) {
           store.put(compact, key);
           complete(compact);
