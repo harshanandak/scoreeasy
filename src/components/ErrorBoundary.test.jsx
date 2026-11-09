@@ -11,10 +11,9 @@ vi.mock('@sentry/react', () => ({
 
 const CHUNK_MESSAGE = 'Failed to fetch dynamically imported module: https://scoreeasy.app/assets/MonoPlayHub-deadbeef.js';
 
-function StaleRoute() {
-  const Route = lazy(() => Promise.reject(new TypeError(CHUNK_MESSAGE)));
-  return <Route />;
-}
+// Module level on purpose: a lazy() created inside render is a new component every render and
+// would suspend forever instead of surfacing the rejection.
+const StaleRoute = lazy(() => Promise.reject(new TypeError(CHUNK_MESSAGE)));
 
 function Thrower({ message }) {
   throw new Error(message);
