@@ -156,7 +156,9 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeEnabled();
     expect(screen.getByRole('radio', { name: 'T20' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText('20 overs · 11 players · 1 innings each')).toBeInTheDocument();
+    // The rules line now lives in the Rules step, not under the Game cards.
+    goToSetupStep('Rules');
+    expect(screen.getByRole('heading', { level: 2, name: /^T20 · 20 overs · 11 players · 1 innings each/ })).toBeInTheDocument();
   });
 
   it('opens cricket query presets on the matching setup step after route switches', async () => {
