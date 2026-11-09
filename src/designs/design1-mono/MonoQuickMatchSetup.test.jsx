@@ -371,7 +371,7 @@ it.each([['football', 2, 45], ['basketball', 4, 10], ['hockey', 4, 15]])('freeze
   expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(String(minutes));
   fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes per period' }), { target: { value: '3' } });
   // Editing a period makes the rules Custom: the summary says so.
-  expect(screen.getByRole('heading', { name: /^Custom school\/event/ })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: `Start ${sport}` }));
   expect(screen.getByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
   const key = Object.keys(localStorage).find(key => key.startsWith(matchStorageKey(`se_quickmatch_draft_${sport}_`)));
