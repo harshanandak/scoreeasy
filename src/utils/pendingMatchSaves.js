@@ -1,5 +1,8 @@
 import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTournament } from './storage';
 import { ConvexError } from 'convex/values';
+import { tournamentCompletionId } from './tournamentSync';
+
+export { tournamentCompletionId } from './tournamentSync';
 
 const PREFIX = 'se_pending_match:';
 export const PENDING_SAVES_CHANGED = 'se-pending-match-saves-changed';
@@ -15,18 +18,6 @@ export const isMatchSaveConfirmed = (ownerId, clientMatchId, completionId) => {
   const key = keyFor(ownerId, clientMatchId);
   return confirmed.has(key) && confirmed.get(key) === completionId;
 };
-
-// Exclude sync metadata and guided delivery history; include the persisted result sent to the account.
-export function tournamentCompletionId(match) {
-  if (!match) return undefined;
-  return JSON.stringify([
-    match.status, match.completedAt, match.endedAt, match.date, match.savedAt, match.createdAt,
-    match.team1Id, match.team2Id, match.team1, match.team2, match.winner, match.resultType,
-    match.score1, match.score2, match.sets, match.setsWon1, match.setsWon2,
-    match.team1Score, match.team2Score, match.innings, match.winDesc, match.format,
-    match.elapsedSeconds, match.periodState, match.matchRole,
-  ]);
-}
 
 export function loadMatchSaveLocal({ quickMatchId, tournamentMatch }) {
   if (!tournamentMatch) return loadQuickMatch(quickMatchId);
