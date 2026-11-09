@@ -15,6 +15,7 @@ import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabad
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
+import { CricketRulesStep } from './kit/CricketSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -2249,7 +2250,7 @@ export default function MonoQuickMatch() {
 
       if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
 
-      if (isCricket) return null; // cricket
+      if (isCricket) return <CricketRulesStep sportConfig={sportConfig} format={format} cricketPreset={cricketPreset} onChange={setFormat} />; // cricket
 
       return null;
     })();
@@ -2306,7 +2307,7 @@ export default function MonoQuickMatch() {
                     />
                   </div>
                 )}
-                {rulesRepeatPreset
+                {rulesStepNode ? null : rulesRepeatPreset
                   ? hasRulesEditor && <button type="button" className="kit-linkbtn" onClick={() => setRulesOpen(true)}>Edit rules</button>
                   : <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />}
               </section>
