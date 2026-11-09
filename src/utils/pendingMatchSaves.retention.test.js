@@ -101,7 +101,7 @@ it('queues and sends a new completion with the same clientMatchId after compacti
   expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ payload: replacement, state: 'pending', storageFailed: false });
   const send = vi.fn().mockResolvedValue('new-server-id');
   await queue.attemptMatchSave(record, send);
-  expect(send).toHaveBeenCalledExactlyOnceWith(replacement);
+  expect(send).toHaveBeenCalledExactlyOnceWith({ ...replacement, expectedOwnerId: owner });
   await refresh();
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
   expectCompact(await store.loadPendingSaveFallback(owner), 1);

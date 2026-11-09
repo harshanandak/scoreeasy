@@ -38,7 +38,7 @@ it.each(['quota', 'unavailable'])('retains a finished save through refresh when 
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   const save = vi.fn().mockResolvedValue('server-id');
   await queue.attemptMatchSave(queue.pendingMatchSaves(owner)[0], save);
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
   await refresh();
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
 });
@@ -67,7 +67,7 @@ it('keeps fallback durable after space is freed and acknowledges without a dupli
   const save = vi.fn().mockResolvedValue('server-id');
   const record = queue.pendingMatchSaves(owner)[0];
   await Promise.all([queue.attemptMatchSave(record, save), queue.attemptMatchSave(record, save)]);
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
   await refresh();
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
   expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({ score1: 2, score2: 1, sync: { status: 'synced' } });

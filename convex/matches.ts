@@ -1,7 +1,8 @@
 import { v } from "convex/values";
 import { QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { authedMutation, authedQuery } from "./lib/functions";
+import { authedQuery } from "./lib/functions";
+import { matchSaveMutation } from "./lib/matchSaveMutation";
 
 async function getMatchesForUserId(ctx: QueryCtx, userId: Id<"users">) {
   const matches = await ctx.db.query("matches")
@@ -59,7 +60,7 @@ function sortMatchesByDate(matches: Doc<"matches">[]) {
   return [...matches].sort((a, b) => b.date - a.date);
 }
 
-export const save = authedMutation({
+export const save = matchSaveMutation({
   args: {
     sport: v.string(),
     team1: v.string(),
